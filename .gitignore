@@ -5,6 +5,7 @@
 /artifacts/
 /build/
 /builds/
+/docs/*.import
 
 # Local captures and desktop screenshots, including their Godot import settings.
 /screenshots/

@@ -164,8 +164,9 @@ func _run() -> void:
 	game.state.coins = 500.0
 	game.hud.update_state(game.state)
 	var previous_rolls: int = game.state.roll_count
+	var expected_pulls: int = 1 + int(game.state.crown_bonus_active())
 	press("roll:normal")
-	check(game.state.roll_count == previous_rolls + 1, "Roll House button resolves a real roll")
+	check(game.state.roll_count == previous_rolls + expected_pulls, "Roll House button resolves its real roll and any equipped crown bonus")
 	check(game.state.coins >= 0.0, "roll balance never becomes negative")
 	await finish_spin()
 	game.hud.close_panel()

@@ -30,8 +30,9 @@ func _run() -> void:
 		return
 	var world := World.new()
 	root.add_child(world)
-	world.set_day_time(56.25)
+	world.set_day_time(75.0)
 	world.build_world(1)
+	check(is_equal_approx(float(world.day_cycle_info().duration), 60.0), "a full day/night cycle lasts one minute")
 	check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "time can be restored before the first world build")
 	var environment_id: int = world._day_environment.get_instance_id()
 	var sun_id: int = world._sun.get_instance_id()
@@ -42,7 +43,7 @@ func _run() -> void:
 	var monotonic_daylight: bool = true
 	var continuous_sky: bool = true
 	for step in range(181):
-		world.set_day_time(float(step) * 0.125)
+		world.set_day_time(float(step) / 6.0)
 		var daylight: float = world.day_cycle_info().daylight
 		monotonic_daylight = monotonic_daylight and daylight <= last_daylight + 0.00001
 		if step > 0:
@@ -52,28 +53,28 @@ func _run() -> void:
 		last_color = world._day_environment.background_color
 	check(monotonic_daylight, "daylight declines continuously until midnight across 180 transition samples")
 	check(continuous_sky, "all twilight color transitions remain smooth across 180 transition samples")
-	check(is_zero_approx(last_daylight), "midnight is reached at 22.5 seconds")
+	check(is_zero_approx(last_daylight), "midnight is reached at 30 seconds")
 	check(is_zero_approx(world._sun.light_energy) and world._moon.light_energy >= 0.3, "night replaces sunlight with readable moonlight")
 	check(world._day_environment.ambient_light_energy >= 0.35, "night retains ambient light for farming")
 	check(world._day_environment.get_instance_id() == environment_id and world._sun.get_instance_id() == sun_id and world._moon.get_instance_id() == moon_id and world.get_child_count() == child_count, "frame updates reuse the same environment and lights")
 	world.set_day_time(0.0)
 	var noon_sky: Color = world._day_environment.background_color
 	var noon_rotation: Vector3 = world._sun.rotation
-	world.set_day_time(45.0)
+	world.set_day_time(60.0)
 	check(world._day_environment.background_color.is_equal_approx(noon_sky) and world._sun.rotation.is_equal_approx(noon_rotation), "one complete loop returns to matching midday light and sun direction")
-	world.set_day_time(45.0 - 0.001)
+	world.set_day_time(60.0 - 0.001)
 	var before_wrap: Color = world._day_environment.background_color
 	var before_rotation: Vector3 = world._sun.rotation
-	world.set_day_time(45.0 + 0.001)
+	world.set_day_time(60.0 + 0.001)
 	check(world._day_environment.background_color.is_equal_approx(before_wrap) and world._sun.rotation.distance_to(before_rotation) < 0.001, "loop boundary remains smooth")
-	world.set_day_time(45.0 * 20000.0 + 11.25)
+	world.set_day_time(60.0 * 20000.0 + 15.0)
 	check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "long-running saves retain an accurate cycle")
 	for invalid_time in [NAN, INF, -1.0]:
 		world.set_day_time(invalid_time)
 		check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "invalid time cannot corrupt light properties")
 	var dusk_colors: Array[Color] = []
 	for island in [1, 2, 3]:
-		world.set_day_time(11.25)
+		world.set_day_time(15.0)
 		world.switch_island(island)
 		check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "island %d travel keeps the saved cycle phase" % island)
 		dusk_colors.append(world._day_environment.background_color)
@@ -91,7 +92,7 @@ func _run() -> void:
 		for index in range(world.plot_positions.size()):
 			plots.append({"unlocked": true, "stage": 3, "crop": "icecap" if island == 3 else ("sunburst" if island == 2 else "russet"), "tilled": true, "watered": true, "pests": index == 4, "pest_ticks": 0, "pest_damage": 0.0, "frozen": island == 3 and index == 5})
 		world.update_plots(plots)
-		for moment in [{"name": "day", "time": 0.0}, {"name": "dusk", "time": 11.25}, {"name": "night", "time": 22.5}]:
+		for moment in [{"name": "day", "time": 0.0}, {"name": "dusk", "time": 15.0}, {"name": "night", "time": 30.0}]:
 			world.set_day_time(moment.time)
 			await shot("day-cycle-island-%d-%s" % [island, moment.name])
 		await physics_frame
@@ -112,13 +113,13 @@ func _check_main_integration() -> void:
 	root.add_child(game)
 	game.set_process(false)
 	check(game.test_mode, "real main scene uses the isolated test farm")
-	game.state.elapsed = 22.5
+	game.state.elapsed = 30.0
 	game._process(0.125)
-	check(is_equal_approx(float(game.world.day_cycle_info().seconds), 22.625), "main updates the sky directly from the live state clock")
+	check(is_equal_approx(float(game.world.day_cycle_info().seconds), 30.125), "main updates the sky directly from the live state clock")
 	check(float(game.world.day_cycle_info().daylight) < 0.001, "main integration actually renders nighttime at the saved midnight phase")
 	var save_data: Dictionary = game.state._save_data()
 	var restored: Dictionary = JSON.parse_string(JSON.stringify(save_data))
-	check(game.state._valid_save(restored) and is_equal_approx(float(restored.elapsed), 22.625), "existing save schema preserves fractional day phase without new mandatory fields")
+	check(game.state._valid_save(restored) and is_equal_approx(float(restored.elapsed), 30.125), "existing save schema preserves fractional day phase without new mandatory fields")
 	game.state.current_island = 2
 	game.state.island2_unlocked = true
 	game._on_island_changed(2)

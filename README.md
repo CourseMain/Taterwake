@@ -1,5 +1,11 @@
 # Taterland
 
+**[Play Taterland in your browser — no download needed](https://coursemain.github.io/Taterwake/)**
+
+Open the link on a computer with a keyboard and mouse or trackpad. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
+
+**v1.0.0:** New farms begin with a gentle, interactive first-island tutorial. Grow and sell one harvest, meet every Valley helper, and learn the tools a little at a time. Pests wait for their protected practice lesson; stock surges wait until you finish. Existing players can choose **☰ → First island guided tour** while visiting the Valley.
+
 Small potatoes. Big possibilities.
 
 A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.
@@ -8,13 +14,13 @@ A 3D potato farming game about growing crops, riding wild markets and building y
 - Time harvests around stock surges of up to **+3,000%**.
 - Choose from **five player builds** and collect clothing with farming, market and mutation bonuses.
 - Take buyer contracts, fire up a winter furnace, and discover rare rewards at the Roll House.
-- Farm through a **45-second day–night cycle** across three islands.
+- Farm through a **60-second day–night cycle** across three islands.
 
 The Roll House uses coins earned in the game. There are no real-money purchases.
 
-## Play in a browser
+## Download and play locally
 
-Use **Taterland-Web.zip** from a release, or [build it from source](#build-the-browser-edition) using the steps below. Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+For a local copy, use **Taterland-Web.zip** from a release, or [build it from source](#build-the-browser-edition) using the steps below. Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 

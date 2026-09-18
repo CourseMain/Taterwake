@@ -1,5 +1,14 @@
 # Taterland gameplay guide
 
+[Play in your browser](https://coursemain.github.io/Taterwake/) — no download needed.
+
+## Your first farm
+
+New farms start a saved, step-by-step Valley tutorial: move around, buy one Russet seed, hoe a marked bed, plant, water, harvest and sell. Then meet the inventory, toolsmith, Wash & Sort workshop, challenge keeper, Roll House, Duck Patrol and dock. Tools and interface elements appear as they are introduced, with gentle sound cues. The guided tour leaves the rest of Island 1 for you to discover.
+
+Random pests and stock surges pause during the guide. One practice pest appears only after its introduction and cannot damage your crops. On completion or skip, normal hazards resume with fresh countdowns; the first scheduled stock surge is three minutes away. You can skip or resume the saved guide. Established farms can use **☰ → First island guided tour** in the Valley for an informational replay that pauses and preserves their existing farm.
+
+
 Return to the [project README](../README.md) for downloads and setup. Spud Valley is the name of your first island.
 
 ## Farming and controls
@@ -36,7 +45,7 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 
 Two-finger vertical scrolling, native pinch gestures and mouse wheels zoom smoothly. Fine trackpad scroll amounts are preserved, and a wider zoom range exposes the surrounding buildings. Scrolling inside a menu stays within that menu.
 
-A smooth **45-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
+A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
 
 Watered crops grow in real time. Growth times are unchanged by the slower market clock: Russet 10s, Golden 30s, Giant 45s, Radioactive 90s, Sunburst 45s and Icecap 60s. Earned build bonuses can improve growth speed. Menus do not pause crops or quotes; closing the game adds no offline farming.
 

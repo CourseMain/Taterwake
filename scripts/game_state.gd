@@ -87,6 +87,9 @@ const MAX_INVENTORY: int = 1000000000000000
 
 var build_system: Node = null
 var activity_system: Node = null
+# Progress is saved; the scene controller decides when to resume the guided lesson.
+var tutorial_progress: Dictionary = {"version": 1, "step": 0, "completed": false, "plot": 5}
+var tutorial_active: bool = false
 var coins: float = 240.0
 var selected_crop: String = "russet"
 var tracked_seeds: Array[String] = ["russet", "golden", "giant", "radioactive"]
@@ -219,7 +222,7 @@ func winter_info() -> Dictionary:
 
 
 func _start_frost() -> void:
-	if not island3_unlocked:
+	if tutorial_active or not island3_unlocked:
 		return
 	frost_active = true
 	frost_timer = 20.0
@@ -592,6 +595,8 @@ func surge_info() -> Dictionary:
 
 
 func _start_surge() -> void:
+	if tutorial_active:
+		return
 	surge_crop = selected_crop if available_crops().has(selected_crop) else "russet"
 	surge_factor = rng.randf_range(6.0, MAX_PRICE_MULTIPLIER)
 	surge_remaining = SURGE_DURATION
@@ -644,6 +649,8 @@ func travel_to(id: int) -> String:
 
 
 func _toggle_export() -> void:
+	if tutorial_active:
+		return
 	export_active = not export_active
 	if export_active:
 		export_cycles += 1
@@ -725,8 +732,110 @@ func claim_quest(id: String) -> String:
 	return _finish("Choose a quest from the Golden Shores board.")
 
 
+func set_tutorial_active(active: bool) -> void:
+	if active == tutorial_active:
+		return
+	tutorial_active = active
+	# A repeat tour is a paused view of an established farm. Preserve every
+	# timer, quote, crop and infestation so opening it cannot cleanse hazards.
+	if bool(tutorial_progress.get("tour_only", false)):
+		changed.emit()
+		return
+	# Start and finish without a queued flash, damaged lesson crop, or an
+	# almost-expired countdown. Completing a lesson never ambushes the player.
+	current_event = ""
+	event_name = "OPEN MARKET"
+	event_strength = 1.0
+	event_remaining = 0.0
+	_event_in = 8.0
+	surge_remaining = 0.0
+	surge_factor = 1.0
+	surge_timer = SURGE_INTERVAL
+	pest_timer = rng.randf_range(25.0, 100.0)
+	export_active = false
+	export_factor = 1.0
+	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT) if island2_unlocked else 120.0
+	frost_active = false
+	frost_cleared = 0
+	frost_timer = rng.randf_range(120.0, 220.0)
+	thaw_remaining = 0.0
+	boost_remaining = 0.0
+	boost_factor = 1.0
+	_market_clock = 0.0
+	_relief_clock = 0.0
+	for field in island_plots.values():
+		for plot in field:
+			plot["pests"] = false
+			plot["pest_elapsed"] = 0.0
+			plot["ripe_age"] = 0.0
+			plot["frozen"] = false
+	if active:
+		for id in CROP_IDS:
+			var base: float = float(CROPS[id]["base"])
+			_market_core[id] = {"seed": base * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO, "sell": base}
+			market[id]["history"] = [base]
+		news = "Take your time. Your crops are safe and the market is calm during the farm tour."
+	else:
+		news = "Your farm is ready. The market resumes shortly; your first stock surge is three minutes away."
+	_refresh_market(false)
+	export_changed.emit(false)
+	changed.emit()
+
+
+func spawn_tutorial_pest(index: int) -> bool:
+	if not tutorial_active or bool(tutorial_progress.get("tour_only", false)) or current_island != 1 or index < 0 or index >= plots.size():
+		return false
+	var plot: Dictionary = plots[index]
+	if not bool(plot["unlocked"]) or int(plot["stage"]) <= 0:
+		return false
+	# Only one harmless demonstration patch exists, even after a lesson resumes.
+	for field in island_plots.values():
+		for other_plot in field:
+			other_plot["pests"] = false
+			other_plot["pest_elapsed"] = 0.0
+	plot["pests"] = true
+	plot["pest_ticks"] = 0
+	plot["pest_damage"] = 0.0
+	plot["pest_destroyed"] = false
+	plot["ripe_age"] = 0.0
+	changed.emit()
+	return true
+
+
+func _update_tutorial(delta: float) -> void:
+	if bool(tutorial_progress.get("tour_only", false)):
+		return
+	var step: float = minf(delta, 3600.0)
+	var dirty: bool = false
+	elapsed += step
+	# Keep growth genuine while freezing every source of background pressure.
+	# Frozen timers never enter the ordinary event-boundary loop below.
+	for field_id in island_plots:
+		var growth_speed: float = _growth_speed(int(field_id))
+		for plot in island_plots[field_id]:
+			if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"] and not bool(plot.get("frozen", false)):
+				plot["stage"] = 2
+				plot["elapsed"] = minf(float(CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
+				if float(plot["elapsed"]) >= float(CROPS[plot["crop"]]["grow"]):
+					plot["stage"] = 3
+					dirty = true
+	if combo_time > 0.0:
+		combo_time = maxf(0.0, combo_time - step)
+		if combo_time < 0.000001:
+			combo_time = 0.0
+			combo_count = 0
+			combo_multiplier = 1
+			harvest_chain.emit(0, 1)
+			dirty = true
+	if dirty:
+		changed.emit()
+
+
 func update(delta: float) -> void:
 	if not is_finite(delta) or delta <= 0.0:
+		return
+	if tutorial_active:
+		_update_tutorial(delta)
 		return
 	# Resolve timer boundaries in order, so a long frame cannot skip a price tick.
 	var remaining: float = minf(delta, 3600.0)
@@ -873,6 +982,8 @@ func update(delta: float) -> void:
 
 
 func _pest_damage_tick(plot: Dictionary) -> void:
+	if tutorial_active:
+		return
 	plot["pest_elapsed"] = 0.0
 	plot["pest_ticks"] = mini(3, int(plot.get("pest_ticks", 0)) + 1)
 	plot["pest_damage"] = float(plot["pest_ticks"]) / 3.0
@@ -901,6 +1012,8 @@ func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
 
 
 func _infest_random_plots() -> int:
+	if tutorial_active:
+		return 0
 	var eligible: Array[int] = []
 	for index in range(plots.size()):
 		if plots[index]["unlocked"] and int(plots[index]["stage"]) > 0 and not bool(plots[index].get("pests", false)):
@@ -1561,7 +1674,7 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 
 
 func activate_roll_boost() -> void:
-	if pending_roll_boost <= 0.0:
+	if tutorial_active or pending_roll_boost <= 0.0:
 		return
 	boost_factor = pending_roll_boost
 	pending_roll_boost = 0.0
@@ -1572,6 +1685,8 @@ func activate_roll_boost() -> void:
 
 
 func _market_tick() -> void:
+	if tutorial_active:
+		return
 	for id in CROP_IDS:
 		var volatility: float = float(CROPS[id]["vol"]) * 0.55 * (event_strength if current_event == "chaos" else 1.0) * (1.8 if current_island == 2 else 1.0)
 		var core: Dictionary = _market_core[id]
@@ -1602,6 +1717,9 @@ func _refresh_market(record_history: bool = true) -> void:
 		var current: float = minf(float(CROPS[id]["base"]) * MAX_PRICE_MULTIPLIER, float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
 		if surge_remaining > 0.0 and id == surge_crop:
 			current = float(CROPS[id]["base"]) * minf(MAX_PRICE_MULTIPLIER, surge_factor * item_stock_factor())
+		if tutorial_active:
+			current = float(CROPS[id]["base"])
+			seed_factor = 1.0
 		# A seed buys one plant's normal yield: its live price follows the same quote,
 		# including exports and spikes. Combos, mastery and mutations reward farming.
 		market[id]["seed"] = current * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO * seed_factor * item_seed_factor() * _build_bonus("seed_factor", 1.0)
@@ -1614,6 +1732,8 @@ func _refresh_market(record_history: bool = true) -> void:
 
 
 func _start_event(id: String = "") -> void:
+	if tutorial_active:
+		return
 	if EVENT_IDS.has(id):
 		current_event = id
 	else:
@@ -1740,6 +1860,8 @@ func _reject_purchase(message: String) -> String:
 
 
 func reset_game() -> void:
+	tutorial_active = false
+	tutorial_progress = {"version": 1, "step": 0, "completed": false, "plot": 5}
 	if is_instance_valid(build_system) and build_system.has_method("reset_builds"):
 		build_system.reset_builds()
 	if is_instance_valid(activity_system) and activity_system.has_method("reset"):
@@ -1818,6 +1940,7 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "economy_revision": ECONOMY_REVISION, "mechanics_revision": MECHANICS_REVISION,
+		"tutorial_progress": tutorial_progress.duplicate(true),
 		"export_cycle_sold": export_cycle_sold, "export_qualified_cycles": export_qualified_cycles,
 		"export_factor": export_factor, "event_strength": event_strength,
 		"lifetime_sales": lifetime_sales, "island_sales": island_sales,
@@ -1909,6 +2032,11 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		data = _migrate_pests(data)
 	if int(data.get("mechanics_revision", 0)) < 4:
 		data = _migrate_qol(data)
+	tutorial_active = false
+	# An established farm gets its normal game back, without a surprise tutorial.
+	tutorial_progress = data.get("tutorial_progress", {"version": 1, "step": 0, "completed": true, "plot": 5}).duplicate(true)
+	for key in ["version", "step", "plot"]:
+		tutorial_progress[key] = int(tutorial_progress[key])
 	tracked_seeds.assign(data["tracked_seeds"])
 	for key in ["coins", "event_remaining", "elapsed", "combo_time", "luck", "permanent_yield", "boost_remaining", "boost_factor", "export_timer", "export_factor", "event_strength", "lifetime_sales", "pending_roll_boost", "frost_timer", "thaw_remaining", "pest_timer", "surge_timer", "surge_remaining", "surge_factor"]:
 		set(key, float(data[key]))
@@ -2251,6 +2379,10 @@ func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary:
 		return false
 	var data: Dictionary = raw
+	if data.has("tutorial_progress"):
+		var progress: Variant = data["tutorial_progress"]
+		if not progress is Dictionary or not _number(progress.get("version"), 1.0, 1.0, true) or not _number(progress.get("step"), 0.0, 100.0, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0.0, 23.0, true):
+			return false
 	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("valid_data") and not build_system.valid_data(data["builds"]):
 		return false
 	if data.has("activities") and is_instance_valid(activity_system) and activity_system.has_method("valid_data") and not activity_system.valid_data(data["activities"]):

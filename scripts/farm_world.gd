@@ -90,6 +90,13 @@ var _gear_hat_id: String = ""
 var _gear_hat: Node3D
 var _equipped_loadout: Dictionary = {}
 var _gear_catalog: Dictionary = {}
+var _tutorial_focus: String = ""
+var _tutorial_show_labels: bool = true
+var _tutorial_station_roots: Dictionary = {}
+var _tutorial_label_layers: Array[Node3D] = []
+var _tutorial_marker: Label3D
+var _tutorial_plot_outline: Node3D
+var _tutorial_marker_height: float = 0.0
 
 const GRASS := Color("8ebd78")
 const SOIL := Color("705037")
@@ -97,7 +104,12 @@ const LEAF := Color("517e43")
 const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
-const DAY_CYCLE_SECONDS: float = 45.0
+const DAY_CYCLE_SECONDS: float = 60.0
+const TUTORIAL_STATION_NAMES: Dictionary = {
+	"barn": "THE BARN", "market": "SEED MARKET", "tools": "TOOLSMITH",
+	"roll": "ROLL HOUSE", "builds": "WASH & SORT", "duck_patrol": "DUCK PATROL",
+	"quests": "FARMING CHALLENGES", "island": "ISLAND FERRY", "activities": "ISLAND ACTIVITY",
+}
 
 func build_world(island: int = 1) -> void:
 	_clear_world()
@@ -172,6 +184,90 @@ func build_world(island: int = 1) -> void:
 	set_roll_available(_roll_available)
 	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
+	_prepare_tutorial_guidance()
+	set_tutorial_focus(_tutorial_focus, _tutorial_show_labels)
+
+
+func _prepare_tutorial_guidance() -> void:
+	# A parent layer hides signs without overwriting their own visibility. This
+	# keeps live station status updates and normal label visibility intact.
+	for station_roots: Array in _tutorial_station_roots.values():
+		for station_root: Node3D in station_roots:
+			for label: Label3D in station_root.find_children("*", "Label3D", true, false):
+				if label.billboard == BaseMaterial3D.BILLBOARD_DISABLED:
+					continue
+				var layer := Node3D.new()
+				layer.name = "TutorialSignVisibility"
+				label.get_parent().add_child(layer)
+				label.reparent(layer)
+				_tutorial_label_layers.append(layer)
+	_tutorial_marker = _label(self, "", Vector3.ZERO, 30, Color("fff0a3"))
+	_tutorial_marker.name = "TutorialDestination"
+	_tutorial_marker.outline_modulate = Color("354b3a")
+	_tutorial_marker.outline_size = 10
+	_tutorial_marker.visible = false
+	_tutorial_plot_outline = Node3D.new()
+	_tutorial_plot_outline.name = "TutorialTargetBed"
+	add_child(_tutorial_plot_outline)
+	for axis: int in range(2):
+		for side: float in [-1.0, 1.0]:
+			var point := Vector3(side * 1.06, 0.25, 0.0) if axis == 0 else Vector3(0.0, 0.25, side * 1.06)
+			var dimensions := Vector3(0.12, 0.06, 2.24) if axis == 0 else Vector3(2.24, 0.06, 0.12)
+			var edge := _box(_tutorial_plot_outline, point, dimensions, Color("ffe290"))
+			var material := edge.material_override.duplicate() as StandardMaterial3D
+			material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			edge.material_override = material
+			edge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_tutorial_plot_outline.visible = false
+
+
+func station_position(station: String) -> Vector3:
+	# The last target for a station is its main entrance (the ferry dock rather
+	# than the distant island miniature, and the workshop rather than its NPC).
+	var station_roots: Array = _tutorial_station_roots.get(station, [])
+	return (station_roots.back() as Node3D).position if not station_roots.is_empty() else Vector3.ZERO
+
+
+func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
+	_tutorial_focus = station
+	_tutorial_show_labels = show_labels
+	for layer: Node3D in _tutorial_label_layers:
+		layer.visible = show_labels
+	if not is_instance_valid(_tutorial_marker):
+		return
+	_tutorial_marker.visible = false
+	_tutorial_plot_outline.visible = false
+	if station.is_empty():
+		return
+	var point: Vector3
+	var title: String = str(TUTORIAL_STATION_NAMES.get(station, ""))
+	if station.begins_with("plot:"):
+		var plot_text: String = station.trim_prefix("plot:")
+		if not plot_text.is_valid_int():
+			return
+		var index: int = int(plot_text)
+		if index < 0 or index >= plot_positions.size():
+			return
+		point = plot_positions[index] + Vector3(0.0, 1.85, 0.0)
+		_tutorial_plot_outline.position = plot_positions[index]
+		_tutorial_plot_outline.visible = true
+		_tutorial_marker.font_size = 72
+		_tutorial_marker.pixel_size = 0.025
+	elif _tutorial_station_roots.has(station):
+		_tutorial_marker.font_size = 38
+		_tutorial_marker.pixel_size = 0.019
+		var station_roots: Array = _tutorial_station_roots[station]
+		var station_root: Node3D = station_roots.back()
+		point = station_root.position + Vector3(0.0, 3.0, 0.0)
+		for label: Label3D in station_root.find_children("*", "Label3D", true, false):
+			if label.billboard != BaseMaterial3D.BILLBOARD_DISABLED:
+				point.y = maxf(point.y, to_local(label.global_position).y + 0.8)
+	else:
+		return
+	_tutorial_marker.text = "▼" if title.is_empty() else title + "\n▼"
+	_tutorial_marker.position = point
+	_tutorial_marker_height = point.y
+	_tutorial_marker.visible = true
 
 
 func switch_island(id: int) -> void:
@@ -245,6 +341,10 @@ func _clear_world() -> void:
 	_duck_label = null
 	_furnace_flame = null
 	_gear_hat = null
+	_tutorial_station_roots.clear()
+	_tutorial_label_layers.clear()
+	_tutorial_marker = null
+	_tutorial_plot_outline = null
 
 func _lighting() -> void:
 	var environment_node := WorldEnvironment.new()
@@ -543,6 +643,8 @@ func set_player_position(pos: Vector3) -> void:
 
 func animate(delta: float, moving: bool) -> void:
 	_time += delta
+	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
+		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
 	if is_instance_valid(player):
 		player.rotation.y = lerp_angle(player.rotation.y, _player_heading, 1.0 - exp(-12.0 * delta))
 	if is_instance_valid(_player_body):
@@ -826,6 +928,12 @@ func _sign(pos: Vector3, title: String, color: Color) -> void:
 	_label(root, title, Vector3(0.0, 1.25, 0.13), 27, CREAM, false)
 
 func _target(parent: Node3D, pos: Vector3, size: Vector3, key: String, value: Variant) -> void:
+	if key == "station":
+		var station: String = str(value)
+		var station_roots: Array = _tutorial_station_roots.get(station, [])
+		if not station_roots.has(parent):
+			station_roots.append(parent)
+		_tutorial_station_roots[station] = station_roots
 	var body := StaticBody3D.new()
 	parent.add_child(body)
 	body.position = pos

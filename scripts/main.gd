@@ -8,6 +8,7 @@ const BuildsScript = preload("res://scripts/player_builds.gd")
 const ActivitiesScript = preload("res://scripts/island_activities.gd")
 const PestAlert = preload("res://scripts/pest_alert.gd")
 const RewardFeedback = preload("res://scripts/reward_feedback.gd")
+const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const WALK_SPEED: float = 7.0
 const NO_TILES: Array[int] = []
 const CAMERA_ZOOM_MIN: float = 18.0
@@ -48,6 +49,9 @@ var fanfare_island: int = 1
 var surge_beat_clock: float = 0.0
 var pest_alert: Node
 var _zoom_target_size: float = 38.0
+var tutorial: Node
+var tutorial_notes: Array[float] = []
+var tutorial_note_clock: float = 0.0
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -93,14 +97,18 @@ func _ready() -> void:
 	state.island_changed.connect(_on_island_changed)
 	state.export_changed.connect(_on_export_changed)
 	_setup_sound()
+	tutorial = TutorialScript.new()
+	tutorial.name = "FirstIslandTutorial"
+	add_child(tutorial)
+	tutorial.setup(self)
 	_on_state_changed()
 	state.activate_roll_boost()
 	hud.set_tool(selected_tool)
 	if not test_mode:
-		if returning:
+		if not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
+			tutorial.start()
+		elif returning:
 			hud.show_toast("Your farm is restored. The market is open!")
-		else:
-			hud.show_panel("help", state)
 	get_tree().auto_accept_quit = false
 
 func _register_inputs() -> void:
@@ -128,8 +136,9 @@ func _process(delta: float) -> void:
 	for plot in state.plots:
 		if bool(plot.get("pests", false)) and int(plot.stage) > 0:
 			infested += 1
-	pest_alert.update(delta, infested)
-	builds.update(delta, processing_step)
+	pest_alert.update(delta, infested if not _tutorial_active() else 0)
+	if not _tutorial_active():
+		builds.update(delta, processing_step)
 	var moving: bool = false
 	if not hud.is_panel_open():
 		var input_vector: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -163,6 +172,8 @@ func _process(delta: float) -> void:
 			hover_elapsed = 0.0
 			_update_hover()
 	world.animate(delta, moving)
+	if _tutorial_active():
+		tutorial.update(delta)
 	ui_elapsed += delta
 	if ui_elapsed > 0.2:
 		ui_elapsed = 0.0
@@ -176,6 +187,11 @@ func _process(delta: float) -> void:
 	if save_elapsed >= 10.0 and not test_mode:
 		state.save_game()
 		save_elapsed = 0.0
+	if not tutorial_notes.is_empty():
+		tutorial_note_clock -= delta
+		if tutorial_note_clock <= 0.0:
+			_play_tone(tutorial_notes.pop_front(), 0.11)
+			tutorial_note_clock = 0.14
 	_pump_audio()
 	if hud.is_roll_animating():
 		roll_sound_elapsed += delta
@@ -297,6 +313,8 @@ func _cancel_walk() -> void:
 		world.highlight_tiles(NO_TILES)
 
 func _select_tool(tool: String) -> void:
+	if _tutorial_active() and not tutorial.allows_tool(tool):
+		return
 	if tool not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return
 	selected_tool = tool
@@ -305,6 +323,8 @@ func _select_tool(tool: String) -> void:
 		_update_hover()
 
 func queue_plot(index: int) -> void:
+	if _tutorial_active() and not tutorial.allows_plot(index, selected_tool):
+		return
 	if index < 0 or index >= state.plots.size():
 		return
 	if not state.plots[index].unlocked:
@@ -317,6 +337,8 @@ func queue_plot(index: int) -> void:
 	_preview_area(index, pending_tool)
 
 func perform_plot(index: int, tool: String = "hoe") -> void:
+	if _tutorial_active() and not tutorial.allows_plot(index, tool):
+		return
 	if index < 0 or index >= state.plots.size():
 		return
 	var action: String = tool
@@ -334,6 +356,8 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)))
 		var pitch: float = 440.0 + float(state.combo_multiplier) * 28.0 if action == "harvest" else float({"hoe": 220.0, "plant": 440.0, "water": 660.0, "pest": 880.0}.get(action, 330.0))
 		_play_tone(pitch, 0.16 if action == "harvest" else 0.10)
+	if _tutorial_active():
+		tutorial.update(0.0)
 
 func _interact_nearby() -> void:
 	var nearest: int = -1
@@ -413,6 +437,12 @@ func _on_state_changed() -> void:
 		_update_market_impact()
 
 func _update_market_impact() -> void:
+	if _tutorial_active():
+		hud.set_market_intensity(state.current_island, 0.0)
+		surge_live = false
+		surge_band = 0
+		fanfare_remaining = 0.0
+		return
 	var peak: float = float(state.market[state.selected_crop].change)
 	var crazy: bool = peak > 300.0
 	var band: int = 2 if peak > 1000.0 else (1 if crazy else 0)
@@ -457,6 +487,14 @@ func _on_export_changed(active: bool) -> void:
 
 func _on_action(action: String) -> void:
 	if hud.is_roll_animating():
+		return
+	if action.begins_with("tutorial:"):
+		match action.get_slice(":", 1):
+			"next": tutorial.next()
+			"skip": tutorial.finish()
+			"restart": tutorial.start(true)
+		return
+	if _tutorial_active() and not tutorial.allows_action(action):
 		return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
@@ -582,6 +620,8 @@ func _on_action(action: String) -> void:
 				var loaded: bool = state.load_game()
 				if loaded:
 					state.activate_roll_boost()
+					if not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
+						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
 		"reset":
 			_cancel_walk()
@@ -589,11 +629,15 @@ func _on_action(action: String) -> void:
 			world.set_player_position(Vector3(0, 0, 9))
 			_select_tool("hoe")
 			hud.close_panel()
-			hud.show_panel("help", state)
+			tutorial.start()
+	if _tutorial_active():
+		tutorial.observe_action(action)
 
 func _on_purchase_completed(receipt: Dictionary) -> void:
 	hud.show_purchase(receipt)
 	_play_tone(740.0, 0.12)
+	if _tutorial_active():
+		tutorial.observe_purchase(receipt)
 
 func _on_purchase_rejected(message: String) -> void:
 	hud.show_toast(message)
@@ -610,7 +654,7 @@ func _on_notification(message: String) -> void:
 			return
 
 func _on_reward(title: String, detail: String, rarity: String) -> void:
-	if rolling_request:
+	if rolling_request or _tutorial_active():
 		return
 	hud.show_reward(title, detail, rarity)
 	world.play_reward(rarity)
@@ -627,12 +671,26 @@ func _on_roll_revealed(_title: String, _detail: String, rarity: String) -> void:
 	sparkle_tone = celebrate
 
 func _on_pest_warning(_index: int, destroyed: bool) -> void:
+	if _tutorial_active():
+		return
 	if is_instance_valid(pest_alert):
 		pest_alert.notify_attack(destroyed)
 
 func _on_chain(count: int, multiplier: int) -> void:
 	if count > 0:
 		_play_tone(400.0 + float(multiplier) * 40.0, 0.25)
+
+func _tutorial_active() -> bool:
+	return is_instance_valid(tutorial) and tutorial.active
+
+func play_tutorial_cue(kind: String) -> void:
+	# Short, warm notes guide progress without borrowing the jackpot fanfare.
+	match kind:
+		"pest": tutorial_notes.assign([329.63, 220.0, 329.63])
+		"visit": tutorial_notes.assign([587.33, 783.99])
+		"finish": tutorial_notes.assign([523.25, 659.25, 783.99, 1046.50])
+		_: tutorial_notes.assign([523.25, 659.25])
+	tutorial_note_clock = 0.0
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:

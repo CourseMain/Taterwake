@@ -164,6 +164,16 @@ var _batch_kind: String = "normal"
 var _trophies_open: bool = false
 var _trophy_signature: String = ""
 var _frozen_crown: bool = false
+var _tutorial: Dictionary = {}
+var _tutorial_card: PanelContainer
+var _tutorial_title: Label
+var _tutorial_body: Label
+var _tutorial_progress: Label
+var _tutorial_next: Button
+var _tutorial_skip: Button
+var _stats_card: PanelContainer
+var _menu_button: Button
+var _hotbar: PanelContainer
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -173,6 +183,9 @@ func _process(delta: float) -> void:
 		if _purchase_remaining == 0.0:
 			_purchase_box.hide()
 			_purchase_receipt.clear()
+	if not _tutorial.is_empty():
+		_apply_tutorial_visibility()
+		return
 	if not is_instance_valid(_surge_style):
 		return
 	var accent: Color = _island_accent()
@@ -187,11 +200,16 @@ func _island_accent() -> Color:
 	return Color("32ff8c") if _island_id() == 1 else (Color("ffd22b") if _island_id() == 2 else Color("39bcff"))
 
 func _refresh_seed_visibility() -> void:
-	var showing: bool = _selected_tool == "plant" and not is_panel_open()
+	var showing: bool = _selected_tool == "plant" and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
 	if is_instance_valid(_crop_row):
 		_crop_row.visible = showing
+		var first_seed: bool = not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
+		_crop_row.anchor_left = 0.5 if first_seed else 0.0
+		_crop_row.anchor_right = 0.5 if first_seed else 1.0
+		_crop_row.offset_left = -150.0 if first_seed else 28.0
+		_crop_row.offset_right = 150.0 if first_seed else -28.0
 	if is_instance_valid(_tracked_box):
-		_tracked_box.visible = showing and not _tracked_ids().is_empty()
+		_tracked_box.visible = showing and not _tracked_ids().is_empty() and (_tutorial.is_empty() or "stock" in _tutorial.get("features", []))
 	if is_instance_valid(_context_box):
 		_context_box.offset_top = -300 if showing else -184
 		_context_box.offset_bottom = -258 if showing else -142
@@ -229,6 +247,162 @@ func build_ui() -> void:
 	_build_notices()
 	_build_export_strip()
 	_build_modal()
+	_build_tutorial()
+
+func _build_tutorial() -> void:
+	_tutorial_card = _card(Color("17382d"), 15)
+	_tutorial_card.name = "FirstIslandGuide"
+	_tutorial_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	_place(_tutorial_card, Rect2(28, 108, 219, 0))
+	_tutorial_card.z_index = 30
+	var contents: VBoxContainer = _vbox(10)
+	_tutorial_card.add_child(contents)
+	_tutorial_progress = _label("YOUR FIRST FARM", 11, GOLD, true)
+	_tutorial_progress.add_theme_font_override("font", _compact_heading_font())
+	contents.add_child(_tutorial_progress)
+	_tutorial_title = _wrap("Welcome home", 21, CREAM, true)
+	_tutorial_title.add_theme_font_override("font", _compact_heading_font())
+	contents.add_child(_tutorial_title)
+	_tutorial_body = _wrap("", 15, Color("e2ead9"))
+	var guide_font: FontVariation = FontVariation.new()
+	guide_font.base_font = UI_FONT
+	guide_font.variation_opentype = _font.variation_opentype
+	_tutorial_body.add_theme_font_override("font", guide_font)
+	contents.add_child(_tutorial_body)
+	_tutorial_next = _button("Let's grow →", "tutorial:next")
+	_tutorial_next.name = "TutorialNext"
+	contents.add_child(_tutorial_next)
+	_tutorial_skip = _button("Skip introduction", "tutorial:skip")
+	_tutorial_skip.name = "TutorialSkip"
+	_tutorial_skip.flat = true
+	_tutorial_skip.custom_minimum_size.y = 28
+	_tutorial_skip.add_theme_font_size_override("font_size", 11)
+	_tutorial_skip.add_theme_color_override("font_color", Color("c7d5bf"))
+	_tutorial_skip.add_theme_stylebox_override("normal", _style(Color.TRANSPARENT, 4, 6))
+	contents.add_child(_tutorial_skip)
+	_tutorial_card.hide()
+
+func set_tutorial(info: Dictionary) -> void:
+	if not is_instance_valid(root):
+		build_ui()
+	_restore_tutorial_buttons()
+	_tutorial = info.duplicate(true)
+	if _tutorial.is_empty():
+		_tutorial_card.hide()
+		_stats_card.show()
+		_stats_card.size.x = 763.0
+		for key: String in ["coins", "market_name", "luck"]:
+			_top[key].get_parent().show()
+		_menu_button.show()
+		_hotbar.show()
+		for button: Button in _tool_buttons.values():
+			button.show()
+		_hotbar.offset_left = -254
+		_hotbar.offset_right = 254
+		_quick_sell.show()
+		_export_box.show()
+		set_context(_context.text)
+		_refresh_seed_visibility()
+	else:
+		_tutorial_progress.text = "FIRST FARM  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
+		_tutorial_title.text = str(info.get("title", "Your first farm"))
+		_tutorial_body.text = str(info.get("body", ""))
+		_tutorial_next.text = str(info.get("continue_label", "Continue →"))
+		_tutorial_next.visible = bool(info.get("continue", false))
+		_tutorial_card.show()
+		# Clear a previous surge immediately, including its child process, so a
+		# replay never flashes through the guide or resumes a stale jackpot.
+		_market_impact.set_quote(_island_id(), 0.0)
+		_market_impact.remaining = 0.0
+		_market_impact._reward_remaining = 0.0
+		_market_impact.set_countdown(_island_id(), 180.0)
+		_market_impact.hide()
+		_market_impact.set_process(false)
+		_toast_timer.stop()
+		_reward_timer.stop()
+		_apply_tutorial_visibility()
+	if is_panel_open():
+		if _panel_kind in ["pause", "menu"] or (_panel_kind == "market" and _panel_crops != _market_crops()):
+			show_panel(_panel_kind, _state)
+		else:
+			_refresh_panel()
+	_apply_tutorial_buttons()
+	if _tutorial.is_empty() and is_instance_valid(_state):
+		update_state(_state)
+
+func _tutorial_allows(action: String) -> bool:
+	if _tutorial.is_empty() or action in ["tutorial:next", "tutorial:skip", "close"]:
+		return true
+	if not _tutorial.has("allowed_actions"):
+		return true
+	for permitted: String in _tutorial.allowed_actions:
+		if action == permitted or (permitted.ends_with(":") and action.begins_with(permitted)):
+			return true
+	return false
+
+func _restore_tutorial_buttons() -> void:
+	if not is_instance_valid(root):
+		return
+	for node: Node in root.find_children("*", "Button", true, false):
+		if node.has_meta("tutorial_disabled"):
+			node.disabled = bool(node.get_meta("tutorial_disabled"))
+			node.remove_meta("tutorial_disabled")
+
+func _apply_tutorial_buttons() -> void:
+	if _tutorial.is_empty():
+		return
+	for node: Node in root.find_children("*", "Button", true, false):
+		if not node.has_meta("hud_action"):
+			continue
+		if not _tutorial_allows(str(node.get_meta("hud_action"))):
+			if not node.has_meta("tutorial_disabled"):
+				node.set_meta("tutorial_disabled", node.disabled)
+			node.disabled = true
+
+func _apply_tutorial_visibility() -> void:
+	if _tutorial.is_empty() or not is_instance_valid(_tutorial_card):
+		return
+	var features: Array = _tutorial.get("features", [])
+	var tools: Array = _tutorial.get("tools", [])
+	_stats_card.visible = "coins" in features or "stock" in features or "roll" in features
+	_top.coins.get_parent().visible = "coins" in features
+	_top.market_name.get_parent().visible = "stock" in features
+	_top.luck.get_parent().visible = "roll" in features
+	var revealed_stats: int = int("coins" in features) + int("stock" in features) + int("roll" in features)
+	_stats_card.size.x = 763.0 if revealed_stats >= 3 else (510.0 if revealed_stats == 2 else 225.0)
+	if "stock" in features:
+		_top.market_name.text = "STOCKS PAUSED"
+		_top.price.text = "After the tour"
+	_menu_button.visible = "menu" in features
+	_hotbar.visible = not tools.is_empty()
+	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 92.0 + maxi(0, tools.size() - 1) * 6.0)
+	_hotbar.offset_left = -hotbar_width * 0.5
+	_hotbar.offset_right = hotbar_width * 0.5
+	for tool: String in _tool_buttons:
+		_tool_buttons[tool].visible = tool in tools
+	if "stock" not in features:
+		for crop: String in _crop_buttons:
+			_crop_buttons[crop].visible = crop == "russet"
+	_quick_sell.visible = "market" in features and "harvest" in tools
+	_island_button.hide()
+	_sidebar_box.hide()
+	_context_box.hide()
+	_combo_box.hide()
+	_toast_box.hide()
+	_reward_box.hide()
+	_export_box.hide()
+	_market_impact.hide()
+	_refresh_seed_visibility()
+	# Logical game size is preserved by the viewport. Measure the modal's
+	# clear margin too, keeping this guide outside every shop's controls.
+	var available_width: float = _modal_card.position.x - 44.0 if is_panel_open() else 219.0
+	var card_width: float = minf(219.0, maxf(180.0, available_width))
+	_tutorial_card.position = Vector2(28.0, 108.0)
+	_tutorial_title.custom_minimum_size.x = card_width - 30.0
+	_tutorial_body.custom_minimum_size.x = card_width - 30.0
+	_tutorial_card.size = Vector2(card_width, 0.0)
+	if _tutorial_card.get_index() != root.get_child_count() - 1:
+		_tutorial_card.move_to_front()
 
 func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -285,6 +459,7 @@ func _card(color: Color = CREAM, padding: int = 16) -> PanelContainer:
 
 func _button(text: String, action: String, primary: bool = false) -> Button:
 	var button: Button = Button.new()
+	button.set_meta("hud_action", action)
 	button.text = text
 	button.set_meta("action", action)
 	button.custom_minimum_size.y = 39
@@ -304,6 +479,8 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if not _tutorial_allows(action):
+		return
 	if _rolling:
 		return
 	if action.begins_with("batch:"):
@@ -380,6 +557,7 @@ func _build_top() -> void:
 	wordmark.add_child(_label("LAND", 32, INK, true))
 
 	var stats: PanelContainer = _card(CREAM, 12)
+	_stats_card = stats
 	_place(stats, Rect2(387, 21, 524, 72))
 	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var row: HBoxContainer = _hbox(20)
@@ -404,6 +582,7 @@ func _build_top() -> void:
 	island.add_theme_font_size_override("font_size", 14)
 	_island_button = island
 	var menu_button: Button = _button("", "menu")
+	_menu_button = menu_button
 	menu_button.name = "MainMenuButton"
 	menu_button.tooltip_text = "Farm menu · Debug money & luck · Esc"
 	_place(menu_button, Rect2(1174, 21, 78, 72))
@@ -482,6 +661,7 @@ func _build_footer() -> void:
 	for crop: String in _all_crop_ids():
 		_add_crop_chip(crop)
 	var hotbar: PanelContainer = _card(Color("223d33"), 7)
+	_hotbar = hotbar
 	hotbar.name = "ToolHotbar"
 	root.add_child(hotbar)
 	hotbar.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -689,6 +869,7 @@ func update_state(state: Node) -> void:
 	_state = state
 	if not is_instance_valid(root):
 		build_ui()
+	_restore_tutorial_buttons()
 	_sync_crop_catalog()
 	_update_island_style()
 	var crop: String = str(state.get("selected_crop"))
@@ -721,6 +902,8 @@ func update_state(state: Node) -> void:
 	_combo_box.visible = combo_time > 0 and _purchase_remaining <= 0.0
 	_combo_label.text = "HARVEST CHAIN  ×%d" % int(state.get("combo_multiplier"))
 	_combo_bar.value = combo_time
+	_apply_tutorial_visibility()
+	_apply_tutorial_buttons()
 	if is_panel_open():
 		if _panel_kind in ["activities", "duck_patrol", "menu", "pause"] and _panel_island != _island_id():
 			show_panel(_panel_kind, state)
@@ -737,6 +920,8 @@ func update_state(state: Node) -> void:
 func set_tool(tool: String) -> void:
 	if tool not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return
+	if not _tutorial.is_empty() and tool not in _tutorial.get("tools", []):
+		return
 	_selected_tool = tool
 	_refresh_seed_visibility()
 	var names: Dictionary = {"hoe": "Hoe", "plant": "Seeds", "water": "Watering can", "harvest": "Harvest scythe", "pest": "Bug sprayer"}
@@ -747,14 +932,17 @@ func set_tool(tool: String) -> void:
 		button.add_theme_stylebox_override("normal", _style(Color("f9d782") if key == tool else PAPER, 5, 10, GOLD if key == tool else Color.TRANSPARENT))
 		var caption: Label = button.get_meta("caption")
 		caption.add_theme_color_override("font_color", INK)
+	_apply_tutorial_visibility()
 
 func set_context(text: String) -> void:
 	if is_instance_valid(_context):
 		_context.text = text
 		_context_box.visible = not text.is_empty() and not text.begins_with("WASD") and not text.begins_with("GOLDEN SHORES · 2") and not text.begins_with("SPUD VALLEY ·")
+		if not _tutorial.is_empty():
+			_context_box.hide()
 
 func show_toast(text: String) -> void:
-	if _rolling:
+	if _rolling or not _tutorial.is_empty():
 		return
 	if not is_instance_valid(root):
 		build_ui()
@@ -805,7 +993,7 @@ func show_purchase(receipt: Dictionary) -> void:
 	_purchase_box.show()
 
 func show_reward(title: String, detail: String, rarity: String) -> void:
-	if _rolling:
+	if _rolling or not _tutorial.is_empty():
 		return
 	if not is_instance_valid(root):
 		build_ui()
@@ -835,6 +1023,7 @@ func close_panel() -> void:
 	_stake_kind = "normal"
 	_reset_pending = false
 	_all_in_pending = false
+	_apply_tutorial_visibility()
 
 func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	if _rolling:
@@ -878,6 +1067,8 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_modal.show()
 	_refresh_seed_visibility()
 	_modal.move_to_front()
+	_apply_tutorial_visibility()
+	_apply_tutorial_buttons()
 
 func _heading(title: String, subtitle: String) -> void:
 	_modal_title.text = title
@@ -909,7 +1100,8 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 	_refs[action] = button
 
 func _build_market() -> void:
-	_heading("The Spud Exchange", "Buy seeds low. Grow them yourself. Decide when to sell.")
+	var first_seed: bool = _tutorial_seed_market()
+	_heading("Meet the seed seller" if first_seed else "The Spud Exchange", "Start small. One Russet seed is all you need." if first_seed else "Buy seeds low. Grow them yourself. Decide when to sell.")
 	_info("market_note", "Prices stay live. Changes are vs opening prices; graphs show recent sale prices.")
 	_panel_crops = _market_crops()
 	for crop: String in _panel_crops:
@@ -926,6 +1118,8 @@ func _build_market() -> void:
 		var change: Label = _label("+0%", 14, GREEN, true)
 		header.add_child(sell)
 		header.add_child(change)
+		sell.visible = not first_seed
+		change.visible = not first_seed
 		_refs[crop + ":price"] = sell
 		_refs[crop + ":change"] = change
 		var row: HBoxContainer = _hbox(10)
@@ -933,17 +1127,23 @@ func _build_market() -> void:
 		var graph: Control = Sparkline.new()
 		graph.custom_minimum_size = Vector2(118, 36)
 		row.add_child(graph)
+		graph.visible = not first_seed
+		if first_seed:
+			row.add_child(_icon({"kind": "seed", "id": "russet", "crop": "russet"}, 78))
 		_refs[crop + ":graph"] = graph
 		var quote: Label = _wrap("", 12, MUTED)
+		quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(quote)
 		_refs[crop + ":quote"] = quote
 		for qty: int in [1, 5]:
 			var action: String = "buy:%s:%d" % [crop, qty]
-			var buy: Button = _button("Buy %d" % qty, action)
+			var buy: Button = _button("Buy %d" % qty, action, first_seed and qty == 1)
+			buy.visible = not first_seed or qty == 1
 			row.add_child(buy)
 			_refs[action] = buy
 		var sell_button: Button = _button("Sell held", "sell:" + crop + ":-1", true)
 		row.add_child(sell_button)
+		sell_button.visible = not first_seed
 		_refs["sell:" + crop + ":-1"] = sell_button
 
 func _build_barn() -> void:
@@ -1207,6 +1407,13 @@ func _build_pause() -> void:
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	for entry: Array in entries:
+		var tutorial_feature: String = str(entry[1])
+		if tutorial_feature == "activities":
+			tutorial_feature = "duck_patrol"
+		elif tutorial_feature in ["tracked_prices", "dex"]:
+			tutorial_feature = "stock" if tutorial_feature == "tracked_prices" else "inventory"
+		if not _tutorial.is_empty() and tutorial_feature not in _tutorial.get("features", []):
+			continue
 		var button: Button = _button("", str(entry[1]))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size.y = 92
@@ -1230,6 +1437,8 @@ func _build_pause() -> void:
 		var button: Button = _button(entry[0], entry[1])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		utility.add_child(button)
+	if _tutorial.is_empty():
+		_body.add_child(_button("First island guided tour", "tutorial:restart"))
 	_body.add_child(_button("Back to the farm", "close", true))
 	if _reset_pending:
 		_info("reset_warning", "Replace this farm with a new one? This cannot be undone.", CHERRY, 14)
@@ -1243,18 +1452,22 @@ func _build_pause() -> void:
 func _refresh_panel() -> void:
 	if not is_instance_valid(_state):
 		return
+	_restore_tutorial_buttons()
 	var coins: float = float(_state.get("coins"))
 	if _panel_kind == "roll" and _crate_reel:
 		var system: Object = _build_system()
 		var crates: int = int(system.get("build_crates")) if system != null else 0
 		_refs.roll_purse.text = "BUILD-ONLY REEL · %d crate%s remaining" % [crates, "" if crates == 1 else "s"]
 		_set_button("build:open_crate", "Opening crate…" if _rolling else ("Open another · %d owned" % crates if crates > 0 else "You need a Build Crate"), _rolling or crates <= 0)
+		_apply_tutorial_buttons()
 		return
 	var markets: Dictionary = _state.get("market")
 	var storage: Dictionary = _state.get("storage")
 	match _panel_kind:
 		"market":
 			_refs.market_note.text = ("EXPORT ×%.1f · %.1fs left. " % [float(_state.get("export_factor")), float(_state.get("export_timer"))] if bool(_state.get("export_active")) else "") + "Changes vs opening prices; graphs show recent sale prices."
+			if _tutorial_seed_market():
+				_refs.market_note.text = "Buy one Russet seed. Your next step is the garden." if _tutorial_allows("buy:russet:1") else "Browse for now. Purchases unlock after the tour."
 			for crop: String in _panel_crops:
 				var quote: Dictionary = markets.get(crop, {})
 				var sell: float = float(quote.get("sell", 0))
@@ -1265,9 +1478,13 @@ func _refresh_panel() -> void:
 				_refs[crop + ":change"].text = _change_text(change)
 				_refs[crop + ":change"].add_theme_color_override("font_color", color)
 				_refs[crop + ":quote"].text = "%s\nSeed %s · Held %s" % [_trend(change, quote.get("history", [])), _money(seed), _number(float(storage.get(crop, 0)))]
+				if _tutorial_seed_market():
+					_refs[crop + ":quote"].text = "Seed %s each\nOwned %s seeds · Grows in 10s" % [_money(seed), _number(float(_state.get("seed_inventory").get(crop, 0)))]
 				var history: Array = quote.get("history", [])
 				_refs[crop + ":graph"].set_history(history, color)
-				_set_button("buy:" + crop + ":1", "Buy 1", coins < seed)
+				var single_buy: String = "buy:" + crop + ":1"
+				var guided_purchase: bool = not _tutorial.is_empty() and crop == "russet" and _tutorial_allows(single_buy)
+				_set_button(single_buy, "Buy 1 Russet" if guided_purchase else "Buy 1", coins < seed)
 				_set_button("buy:" + crop + ":5", "Buy 5", coins < seed * 5)
 				_set_button("sell:" + crop + ":-1", "Sell held", float(storage.get(crop, 0)) <= 0)
 		"barn", "inventory":
@@ -1370,6 +1587,7 @@ func _refresh_panel() -> void:
 				claim.visible = complete and not claimed
 				claim.disabled = claimed or not complete
 				claim.text = "Claim reward"
+	_apply_tutorial_buttons()
 
 func _set_button(key: String, text: String, disabled: bool) -> void:
 	var button: Button = _refs.get(key) as Button
@@ -1408,6 +1626,8 @@ func _island_id() -> int:
 	return maxi(1, int(_state.get("current_island"))) if is_instance_valid(_state) else 1
 
 func _market_crops() -> Array[String]:
+	if _tutorial_seed_market():
+		return ["russet"]
 	if not is_instance_valid(_state) or not _state.has_method("available_crops"):
 		return CROP_IDS.duplicate()
 	var result: Array[String] = []
@@ -1415,6 +1635,9 @@ func _market_crops() -> Array[String]:
 	for id: Variant in available:
 		result.append(str(id))
 	return result
+
+func _tutorial_seed_market() -> bool:
+	return not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
 
 func _known_crops() -> Array[String]:
 	var result: Array[String] = []
@@ -1571,7 +1794,7 @@ func _on_roll_finished(result: Dictionary) -> void:
 	_show_roll_accounting()
 	_refresh_panel()
 	_top.coins.text = _money(float(_state.get("coins")))
-	if RewardFeedback.celebrates(tier):
+	if RewardFeedback.celebrates(tier) and _tutorial.is_empty():
 		_market_impact.reward(_island_id(), 6.0)
 	roll_revealed.emit(title, detail, tier)
 
@@ -1711,11 +1934,15 @@ func _catalog_number(key: String, fallback: float) -> float:
 	return float(constants.get(key, fallback))
 
 func set_market_intensity(island: int, percent: float) -> void:
+	if not _tutorial.is_empty():
+		return
 	if not is_instance_valid(root):
 		build_ui()
 	_market_impact.set_quote(island, percent)
 
 func show_market_surge(island: int, intensity: float, seconds: float) -> void:
+	if not _tutorial.is_empty():
+		return
 	if not is_instance_valid(root):
 		build_ui()
 	_market_impact.surge(island, intensity, seconds)
@@ -1867,6 +2094,10 @@ func _update_tracked_prices() -> void:
 		label.add_theme_constant_override("shadow_outline_size", 3 if fresh else 0)
 
 func _update_surge_timer() -> void:
+	if not _tutorial.is_empty():
+		_surge_active = false
+		_surge_urgent = false
+		return
 	if not _state.has_method("surge_info"):
 		return
 	var info: Dictionary = _state.call("surge_info")
