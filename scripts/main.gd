@@ -383,7 +383,7 @@ func _update_hover() -> void:
 		descriptions["activities"] = "DUCK PATROL · Train ducks to clear pests" if state.current_island == 1 else ("BUYER CONTRACTS · Supply harvests or valuable mutations" if state.current_island == 2 else "FROST FURNACE · Burn Icecaps for a growth and processing burst")
 		descriptions["duck_patrol"] = "DUCK PATROL · Train this island's ducks to clear pests"
 		descriptions["tools"] = "TOOL UPGRADES · Meet the toolsmith · Work more beds with each action"
-		hud.set_context(descriptions.get(str(hit.station), "TATERWAKE"))
+		hud.set_context(descriptions.get(str(hit.station), "TATERLAND"))
 	else:
 		hud.set_context("")
 

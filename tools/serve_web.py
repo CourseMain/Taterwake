@@ -78,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
         with create_server(directory, args.port) as server:
             # Godot's PWA cache keys its start page as index.html, not '/'.
             url = f"http://127.0.0.1:{server.server_port}/index.html"
-            print(f"Serving Taterwake at {url}", flush=True)
+            print(f"Serving Taterland at {url}", flush=True)
             print("Keep this terminal open while playing. Press Ctrl+C to stop.", flush=True)
             if args.open:
                 webbrowser.open(url)

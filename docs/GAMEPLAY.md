@@ -1,4 +1,4 @@
-# Taterwake gameplay guide
+# Taterland gameplay guide
 
 Return to the [project README](../README.md) for downloads and setup. Spud Valley is the name of your first island.
 

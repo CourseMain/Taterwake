@@ -213,7 +213,7 @@ func build_ui() -> void:
 	title_font.variation_opentype = {weight_axis: 700.0}
 	_heading_font = title_font
 	root = Control.new()
-	root.name = "TaterwakeHUD"
+	root.name = "TaterlandHUD"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var theme: Theme = Theme.new()
@@ -377,7 +377,7 @@ func _build_top() -> void:
 	brand.add_child(wordmark)
 	wordmark.add_child(_label("TATER", 32, INK, true))
 	wordmark.add_child(_label("/", 32, GOLD, true))
-	wordmark.add_child(_label("WAKE", 32, INK, true))
+	wordmark.add_child(_label("LAND", 32, INK, true))
 
 	var stats: PanelContainer = _card(CREAM, 12)
 	_place(stats, Rect2(387, 21, 524, 72))
@@ -668,7 +668,7 @@ func _build_modal() -> void:
 	var titles: VBoxContainer = _vbox(3)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
-	_modal_title = _wrap("Welcome to Taterwake", 28, INK, true)
+	_modal_title = _wrap("Welcome to Taterland", 28, INK, true)
 	_modal_subtitle = _wrap("Good soil. Wild markets.", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
@@ -1176,7 +1176,7 @@ func _build_quests() -> void:
 		_refs["quest:" + id] = claim
 
 func _build_help() -> void:
-	_heading("Welcome to Taterwake", "A little manual farming. A very wild potato market.")
+	_heading("Welcome to Taterland", "A little manual farming. A very wild potato market.")
 	var intro: PanelContainer = _card(INK, 18)
 	_body.add_child(intro)
 	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))

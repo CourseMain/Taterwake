@@ -171,7 +171,7 @@ def verify_export(directory: Path) -> None:
 
 
 def package_readme(release: str) -> str:
-    return f"""TATERWAKE — BROWSER EDITION
+    return f"""TATERLAND — BROWSER EDITION
 Built from the game's Web preset using Godot {release}.
 
 PLAY THIS DOWNLOAD
@@ -284,7 +284,7 @@ def build(engine: Path) -> tuple[Path, Path]:
     distribution = PROJECT / "dist"
     distribution.mkdir(exist_ok=True)
     destination = distribution / "web"
-    archive_destination = distribution / "Taterwake-Web.zip"
+    archive_destination = distribution / "Taterland-Web.zip"
     if destination.is_symlink() or (destination.exists() and not destination.is_dir()):
         raise BuildError(f"Expected an ordinary export folder at {destination}.")
     with tempfile.TemporaryDirectory(prefix=".web-build-", dir=distribution) as temporary:
@@ -307,7 +307,7 @@ def build(engine: Path) -> tuple[Path, Path]:
         shutil.copyfile(PROJECT / "assets/licenses/Godot-COPYRIGHT.txt", staging / "COPYRIGHT-Godot.txt")
         (staging / "README-WEB.txt").write_text(package_readme(release), encoding="utf-8")
         add_launchers(staging)
-        archive_path = scratch / "Taterwake-Web.zip"
+        archive_path = scratch / "Taterland-Web.zip"
         with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
             for path in sorted(staging.rglob("*")):
                 if path.is_file():

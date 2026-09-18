@@ -10,7 +10,7 @@ cd "$project_dir" || exit 1
 python3 "$project_dir/tools/export_web.py"
 export_status=$?
 if (( export_status == 0 )); then
-  print '\nBuild ready in dist/web. Share dist/Taterwake-Web.zip.'
+  print '\nBuild ready in dist/web. Share dist/Taterland-Web.zip.'
   print 'Starting the local browser preview. Press Ctrl+C here to stop it.'
   python3 "$project_dir/tools/serve_web.py" --open
 else

@@ -28,3 +28,8 @@
 
 # Preserve upstream font license text verbatim.
 assets/fonts/OFL*.txt -whitespace
+docs/LICENSE-*.txt -whitespace
+docs/COPYRIGHT-*.txt -whitespace
+
+# Preserve generated Godot browser files verbatim.
+docs/index.* -whitespace

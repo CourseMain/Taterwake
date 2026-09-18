@@ -14,6 +14,7 @@
 # Local saves, secrets and editor state.
 spud_valley_save*.json*
 taterwake_save*.json*
+taterland_save*.json*
 *.save
 *.sav
 .env
