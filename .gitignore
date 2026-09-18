@@ -1,0 +1,47 @@
+# Godot editor cache and generated builds.
+.godot/
+/dist/
+/.tools/
+/artifacts/
+/build/
+/builds/
+
+# Local captures and desktop screenshots, including their Godot import settings.
+/screenshots/
+/Screenshot*
+/screenshot*
+
+# Local saves, secrets and editor state.
+spud_valley_save*.json*
+taterwake_save*.json*
+*.save
+*.sav
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!*.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+secrets/
+.credentials/
+export_credentials.cfg
+.vscode/
+.idea/
+
+# Python and operating-system output.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+*~

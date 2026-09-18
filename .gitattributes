@@ -1,0 +1,30 @@
+* text=auto
+*.gd text eol=lf
+*.gdshader text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.godot text eol=lf
+*.cfg text eol=lf
+*.uid text eol=lf
+*.import text eol=lf
+*.py text eol=lf
+*.command text eol=lf
+*.md text eol=lf
+*.svg text eol=lf
+*.bat text eol=crlf
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.mp4 binary
+*.zip binary
+*.pck binary
+*.wasm binary
+
+# Preserve upstream font license text verbatim.
+assets/fonts/OFL*.txt -whitespace
