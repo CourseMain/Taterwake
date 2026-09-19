@@ -93,12 +93,12 @@ func run() -> void:
 		hud.show_panel("duck_patrol", state)
 		check(hud._modal_title.text == "Duck patrol" and hud._refs.has("activity:duck"), "island %d duck station opens dedicated patrol controls" % island)
 		check(not hud._refs.has("activity:contract:bulk") and not hud._refs.has("activity:furnace:icecap"), "island %d duck controls contain no unrelated buyer or furnace" % island)
-		check(hud._refs["activity:duck:detail"].text.begins_with("%d duck" % island), "island %d patrol describes the correct flock size" % island)
+		check(hud._refs["activity:duck:detail"].text.begins_with("0 / %d ducks" % island) and hud._refs.has("activity:duck:speed"), "island %d has separate count and speed choices" % island)
 		if island == 2:
 			await capture("purchase-ducks-island2")
 		activities.duck_level = 3
 		hud.update_state(state)
-		check(hud._refs["activity:duck"].disabled and hud._refs["activity:duck"].text == "Fully trained", "island %d patrol refresh safely shows fully trained flock" % island)
+		check(hud._refs["activity:duck"].disabled and hud._refs["activity:duck"].text == "Flock full" and hud._refs["activity:duck:speed"].disabled, "island %d independently shows full flock and top speed" % island)
 		activities.duck_level = 0
 		hud.show_panel("activities", state)
 		if island == 1:

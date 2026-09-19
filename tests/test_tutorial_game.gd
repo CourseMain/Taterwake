@@ -85,8 +85,13 @@ func run() -> void:
 	lesson("inventory")
 	for pair: Array in [["inventory", "inventory"], ["tools", "tools"], ["builds", "builds"], ["quests", "quests"], ["roll", "roll"]]:
 		lesson(str(pair[0]))
-		check(button("tutorial:next") == null or button("tutorial:next").disabled, "must visit " + str(pair[0]) + " before continuing")
-		game._on_action(str(pair[1]))
+		if pair[0] == "inventory":
+			check(button("tutorial:next").text.begins_with("Open bag"), "inventory lesson has a direct open button")
+			press("tutorial:next")
+			lesson("inventory")
+		else:
+			check(button("tutorial:next").disabled, "must visit " + str(pair[0]) + " before continuing")
+			game._on_action(str(pair[1]))
 		check(game.hud.is_panel_open(), "NPC panel opens: " + str(pair[1]))
 		if pair[1] == "roll":
 			var rolls: int = game.state.roll_count
@@ -113,7 +118,14 @@ func run() -> void:
 	check(game.state.surge_timer == 180.0, "stock clock still paused at full interval")
 	press("tutorial:next")
 	lesson("dock")
-	game._on_action("island")
+	game.queue_ferry()
+	check(game.walking and not game.hud.is_panel_open(), "ferry lesson starts a walk, not a remote menu")
+	for frame: int in range(500):
+		game._process(0.04)
+		if not game.walking:
+			break
+	check(game.world.player.position.distance_to(game.world.ferry_position()) < 0.4, "tutorial reaches dock beyond old movement limit")
+	check(game.hud.is_panel_open() and game.tutorial.visited, "arriving at ferry completes the visit")
 	press("tutorial:next")
 	lesson("finish")
 	press("tutorial:next")
@@ -135,6 +147,11 @@ func run() -> void:
 	game._on_action("barn")
 	press("tutorial:next")
 	lesson("inventory")
+	press("tutorial:exit")
+	check(game.tutorial.active and button("tutorial:stay") != null, "exit requires a deliberate second choice")
+	press("tutorial:stay")
+	check(game.tutorial.active and button("tutorial:skip") == null, "keep learning returns to the same lesson")
+	press("tutorial:exit")
 	press("tutorial:skip")
 	check(not game.tutorial.active and game.state.tutorial_progress.completed, "skip safely restores normal play")
 	# Save/resume uses test-only paths and resumes the exact protected pest stage.
@@ -152,6 +169,6 @@ func run() -> void:
 	DirAccess.remove_absolute(path)
 	game.queue_free()
 	await process_frame
-	await create_timer(0.15).timeout
+	await create_timer(0.4).timeout
 	print("TUTORIAL SCENE: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

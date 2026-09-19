@@ -63,7 +63,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	farm.notified.connect(func(message: String):
-		if message.contains("IN 15 SECONDS"): warnings_seen += 1)
+		if message.contains("IN 15s"): warnings_seen += 1)
 	check(farm.current_island == 1 and farm.field_columns() == 6 and farm.field_rows() == 4, "starter island dimensions preserved")
 	check(farm.plots.size() == 24 and farm.island_plots["2"].size() == 48 and not farm.island2_unlocked, "only second island adds a forty-eight-bed field")
 	check(farm.CROP_IDS.size() == 6 and farm.available_crops().size() == 4, "Sunburst excluded from first-island market")
@@ -177,7 +177,7 @@ func _run() -> void:
 	check(farm.market.russet.sell == farm._market_core.russet.sell, "ordinary crops do not receive export multiplier")
 	check(is_equal_approx(farm.market.sunburst.seed, farm.market.sunburst.sell * 3.0 * 0.45), "export seeds rise with their sale quote rather than staying implausibly cheap")
 	farm._start_event("golden_craze")
-	check(is_equal_approx(farm.market.golden.sell, minf(farm.CROPS.golden.base * State.MAX_PRICE_MULTIPLIER, farm._market_core.golden.sell * factor * farm.event_strength)), "brief export can combine with an independent brief event")
+	check(is_equal_approx(farm.market.golden.sell, minf(farm.CROPS.golden.base * farm.stock_cap(), farm._market_core.golden.sell * factor * farm.event_strength)), "brief export can combine with an independent brief event")
 	farm.update(5.01)
 	check(not farm.export_active and farm.export_factor == 1.0 and farm.export_timer >= 75.0 - 0.02 and farm.export_timer <= 180.0, "export removes its multiplier within five seconds and randomizes next delivery")
 	check(farm.market.golden.sell == farm._market_core.golden.sell, "expired export and event restore the ordinary quote")
@@ -376,7 +376,7 @@ func _run() -> void:
 	farm._toggle_export()
 	farm.export_factor = 6.0
 	farm._refresh_market()
-	check(farm.market.sunburst.sell == farm.CROPS.sunburst.base * State.MAX_PRICE_MULTIPLIER and is_equal_approx(farm.market.sunburst.change, 3000.0), "all stacked offers respect the hard plus-three-thousand-percent price ceiling")
+	check(farm.market.sunburst.sell == farm.CROPS.sunburst.base * farm.stock_cap() and is_equal_approx(farm.market.sunburst.change, 2999.0), "all stacked Shores offers respect the plus-2999-percent island ceiling")
 	check(is_equal_approx(farm.market.sunburst.seed, farm.market.sunburst.sell * 1.35), "seed quote follows the capped effective sale quote")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "maximum capped market stack remains a valid save")
 	farm.reset_game()

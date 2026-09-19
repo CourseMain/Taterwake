@@ -210,13 +210,14 @@ func _test_ducks_and_services() -> void:
 	_fresh()
 	_failure(func(): return activities.buy_duck(), "unaffordable duck training")
 	state.coins = 1000000.0
-	for rank in [1, 2, 3]:
-		var receipt: Dictionary = _success(func(): return activities.buy_duck(), "duck", "duck_patrol", 1, Activities.DUCK_COSTS[rank - 1], "duck training level %d" % rank)
-		check(activities.duck_level == rank and int(receipt.get("level", -1)) == rank, "duck receipt shows committed training level %d" % rank)
-		check(activities.duck_patrols["1"].size() == 1 and activities.duck_patrols["2"].size() == 2 and activities.duck_patrols["3"].size() == 3, "training level %d keeps every island's flock" % rank)
-	_failure(func(): return activities.buy_duck(), "maximum duck training")
+	_success(func(): return activities.hire_duck(), "duck", "duck_patrol", 1, 1500.0, "hire one Valley duck")
+	_failure(func(): return activities.hire_duck(), "Valley duck capacity")
+	for rank in [1, 2]:
+		var receipt: Dictionary = _success(func(): return activities.train_ducks(), "duck", "duck_speed", 1, Activities.DUCK_COSTS[rank], "duck speed level %d" % rank)
+		check(activities.duck_speed() == rank and int(receipt.get("level", -1)) == rank and activities.duck_count() == 1, "speed receipt follows speed upgrade without adding ducks")
+	_failure(func(): return activities.train_ducks(), "maximum duck speed")
 	state.current_island = 2
-	_failure(func(): return activities.buy_duck(), "maximum duck training after travel")
+	_failure(func(): return activities.train_ducks(), "empty Shores flock cannot train")
 	for island in [1, 2, 3]:
 		_fresh()
 		state.island2_unlocked = island >= 2

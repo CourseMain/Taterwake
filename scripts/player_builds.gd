@@ -2,11 +2,11 @@ extends Node
 ## Persistent, selectable farming specializations. Processing needs a loaded batch.
 const IDS: Array[String] = ["farmer", "gambler", "investor", "scientist", "industrialist"]
 const DESCRIPTIONS: Dictionary = {
-	"farmer": "Bigger manual harvests, faster growth and wider tool areas.",
-	"gambler": "Better reward quality, unusual potatoes and mutation chances.",
-	"investor": "Cheaper seeds, more buying opportunities and a paid market call.",
-	"scientist": "Mutation research and experiments using your harvested potatoes.",
-	"industrialist": "Load a processing machine, then hold the finished batch for a good price."
+	"farmer": "Grow more. Harvest bigger.",
+	"gambler": "Better rolls. Rarer spuds.",
+	"investor": "Cheaper seeds. Better deals.",
+	"scientist": "Turn harvests into experiments.",
+	"industrialist": "Process crops for extra profit."
 }
 var state
 var active: String = "farmer"
@@ -95,29 +95,29 @@ func activity_info() -> Dictionary:
 	match active:
 		"farmer":
 			title = "FIELD DRESSING"
-			description = "Use 10 held potatoes to boost harvest yield and growth for 30 seconds."
+			description = "10 potatoes → 30s of bigger, faster crops."
 			action_label = "Dress the field · 10 potatoes"
 			ready = ready and held >= 10
 		"gambler":
 			title = "READ THE TABLE"
 			var cost: float = state.roll_cost("normal") * 0.5
-			description = "Pay %s for +50%% reward quality on your next roll. Uses the currently open island's stakes." % state.money(cost)
+			description = "%s → +50%% quality on your next roll." % state.money(cost)
 			action_label = "Scout next roll · " + state.money(cost)
 			ready = ready and state.roll_available() and state.coins >= cost and next_roll_charge == 0.0
 		"investor":
 			title = "CALL A BUYER"
 			var cost: float = float(state.market[crop].seed) * 10.0
-			description = "Pay %s to bring a five-second crop buying offer. Prepare a harvest before calling." % state.money(cost)
+			description = "%s → a 5-second buying offer. Have crops ready!" % state.money(cost)
 			action_label = "Call buyer · " + state.money(cost)
 			ready = ready and state.coins >= cost
 		"scientist":
 			title = "MUTATION EXPERIMENT"
-			description = "Use 20 held potatoes for mutation research. Success chance %.1f%%, including equipped mutation clothing. Every experiment builds research." % (experiment_chance() * 100.0)
+			description = "20 potatoes → %.1f%% mutation chance + research." % (experiment_chance() * 100.0)
 			action_label = "Experiment · 20 potatoes"
 			ready = ready and held >= 20
 		"industrialist":
 			title = "BATCH PROCESSOR"
-			description = "Load 100 held potatoes. The machine grades them into a more valuable batch; choose when to sell it."
+			description = "100 potatoes → a premium batch. Sell when ready."
 			action_label = "Load processor · 100 potatoes"
 			ready = ready and held >= 100 and processing.is_empty()
 	var progress: float = float(processing.get("elapsed", 0.0)) / float(processing.get("duration", 1.0))

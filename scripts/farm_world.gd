@@ -2,6 +2,7 @@ class_name FarmWorld
 extends Node3D
 
 const FarmerAvatar = preload("res://scripts/farmer_avatar.gd")
+const GeometryBatcher = preload("res://scripts/world_geometry_batcher.gd")
 
 signal plot_clicked(index: int)
 signal station_clicked(station: String)
@@ -33,11 +34,17 @@ var _villagers: Array[Node3D] = []
 var _toolsmiths: Array[Node3D] = []
 var _time: float = 0.0
 var _day_elapsed: float = 0.0
+var _applied_day_time: float = -1.0
 var _day_environment: Environment
 var _sun: DirectionalLight3D
 var _moon: DirectionalLight3D
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _materials: Dictionary = {}
+# Primitive resources are immutable and reused across crops and island rebuilds.
+var _box_meshes: Dictionary = {}
+var _cylinder_meshes: Dictionary = {}
+var _sphere_mesh: SphereMesh
+var _geometry_batcher := GeometryBatcher.new()
 var current_island: int = 1
 var _island2_unlocked: bool = false
 var _island3_unlocked: bool = false
@@ -97,6 +104,7 @@ var _tutorial_label_layers: Array[Node3D] = []
 var _tutorial_marker: Label3D
 var _tutorial_plot_outline: Node3D
 var _tutorial_marker_height: float = 0.0
+var _tutorial_trail: Array[Node3D] = []
 
 const GRASS := Color("8ebd78")
 const SOIL := Color("705037")
@@ -105,6 +113,11 @@ const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
 const DAY_CYCLE_SECONDS: float = 60.0
+const FERRY_ROUTES: Dictionary = {
+	1: [Vector3(7, 0, 7.7), Vector3(7, 0, -4.7), Vector3(15, 0, -4.7), Vector3(15, 0, -12), Vector3(11.5, 0, -12), Vector3(11.5, 0, -15.5)],
+	2: [Vector3(10.2, 0, 10.6), Vector3(16, 0, 10.6), Vector3(16, 0, 9.6)],
+	3: [Vector3(12.8, 0, 14), Vector3(20.6, 0, 14), Vector3(20.6, 0, 10), Vector3(22, 0, 10)],
+}
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "THE BARN", "market": "SEED MARKET", "tools": "TOOLSMITH",
 	"roll": "ROLL HOUSE", "builds": "WASH & SORT", "duck_patrol": "DUCK PATROL",
@@ -151,6 +164,7 @@ func build_world(island: int = 1) -> void:
 		_quest_board(Vector3(-15.0, 0.0, 14.0))
 		_winter_ferry()
 		_ice_forge(Vector3(18.0, 0.0, 2.0))
+	_ferry_path()
 	_processing_station(Vector3(-18.0, 0.0, 3.5) if current_island == 3 else (Vector3(-15.0, 0.0, -1.0) if current_island == 2 else Vector3(-12.0, 0.0, -1.0)))
 	_activity_station()
 	player = Node3D.new()
@@ -184,8 +198,21 @@ func build_world(island: int = 1) -> void:
 	set_roll_available(_roll_available)
 	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
+	_batch_world_geometry()
 	_prepare_tutorial_guidance()
 	set_tutorial_focus(_tutorial_focus, _tutorial_show_labels)
+
+
+func _batch_world_geometry() -> void:
+	# These individual meshes change transform, material or visibility at runtime.
+	# All Node3D roots stay intact, including gates, ducks, rotors and tutorials.
+	var mutable_meshes: Dictionary = {}
+	for collection: Array in [_soil_meshes, _snowflakes, _processing_potatoes, _processing_steam, _furnace_steam, _export_flags]:
+		for node: Node3D in collection:
+			mutable_meshes[node.get_instance_id()] = true
+	if is_instance_valid(_processing_light):
+		mutable_meshes[_processing_light.get_instance_id()] = true
+	_geometry_batcher.batch_tree(self, mutable_meshes)
 
 
 func _prepare_tutorial_guidance() -> void:
@@ -219,13 +246,118 @@ func _prepare_tutorial_guidance() -> void:
 			edge.material_override = material
 			edge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_tutorial_plot_outline.visible = false
+	for index: int in range(6):
+		var chevron := Node3D.new()
+		chevron.name = "TutorialTrail%d" % index
+		add_child(chevron)
+		for side: float in [-1.0, 1.0]:
+			var wing := _box(chevron, Vector3(side * 0.26, 0.0, -0.26), Vector3(0.20, 0.05, 0.80), Color("ffe290"))
+			wing.rotation.y = -side * PI / 4.0
+			var glow: StandardMaterial3D = wing.material_override.duplicate()
+			glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			wing.material_override = glow
+			wing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		chevron.hide()
+		_tutorial_trail.append(chevron)
 
 
 func station_position(station: String) -> Vector3:
+	if station == "island":
+		return ferry_position()
 	# The last target for a station is its main entrance (the ferry dock rather
 	# than the distant island miniature, and the workshop rather than its NPC).
 	var station_roots: Array = _tutorial_station_roots.get(station, [])
 	return (station_roots.back() as Node3D).position if not station_roots.is_empty() else Vector3.ZERO
+
+
+func ferry_position() -> Vector3:
+	return FERRY_ROUTES[current_island].back()
+
+
+func farm_bounds() -> Rect2:
+	return Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-17, -5, 35, 17))
+
+
+func clamp_walk_position(point: Vector3) -> Vector3:
+	point.y = 0.0
+	var bounds: Rect2 = farm_bounds()
+	var closest := Vector3(clampf(point.x, bounds.position.x, bounds.end.x), 0, clampf(point.z, bounds.position.y, bounds.end.y))
+	# Extend the first island only along its new path and pier, not into the sea
+	# or through the row of shops. The other two boarding areas are on land.
+	if current_island == 1:
+		var route: Array = FERRY_ROUTES[1]
+		for index: int in range(2, route.size() - 1):
+			var a: Vector3 = route[index]
+			var b: Vector3 = route[index + 1]
+			var margin: float = 0.65
+			var candidate := Vector3(clampf(point.x, minf(a.x, b.x) - margin, maxf(a.x, b.x) + margin), 0,
+				clampf(point.z, minf(a.z, b.z) - margin, maxf(a.z, b.z) + margin))
+			if point.distance_squared_to(candidate) < point.distance_squared_to(closest):
+				closest = candidate
+	return closest
+
+
+func _route_anchor(point: Vector3) -> Dictionary:
+	var route: Array = FERRY_ROUTES[current_island]
+	var best: Dictionary = {"point": route[0], "distance": INF, "along": 0.0}
+	var along: float = 0.0
+	for index: int in range(route.size() - 1):
+		var a: Vector3 = route[index]
+		var b: Vector3 = route[index + 1]
+		var candidate: Vector3 = Geometry3D.get_closest_point_to_segment(point, a, b)
+		var distance: float = point.distance_squared_to(candidate)
+		if distance < float(best.distance):
+			best = {"point": candidate, "distance": distance, "along": along + a.distance_to(candidate)}
+		along += a.distance_to(b)
+	return best
+
+
+func walk_route(from: Vector3, to: Vector3, follow_ferry: bool = false) -> Array[Vector3]:
+	from.y = 0.0
+	to = clamp_walk_position(to)
+	if not follow_ferry and not (current_island == 1 and (from.z < -5.0 or to.z < -5.0)):
+		return [to]
+	var start: Dictionary = _route_anchor(from)
+	var finish: Dictionary = _route_anchor(to)
+	var route: Array = FERRY_ROUTES[current_island]
+	var result: Array[Vector3] = [start.point]
+	var bends: Array[Vector3] = []
+	var along: float = 0.0
+	for index: int in range(1, route.size()):
+		along += (route[index - 1] as Vector3).distance_to(route[index])
+		if along > minf(start.along, finish.along) and along < maxf(start.along, finish.along):
+			bends.append(route[index])
+	if float(start.along) > float(finish.along):
+		bends.reverse()
+	result.append_array(bends)
+	result.append(finish.point)
+	result.append(to)
+	return result
+
+
+func _ferry_path() -> void:
+	var path := _root("FerryPath", Vector3.ZERO)
+	var route: Array = FERRY_ROUTES[current_island]
+	var color := Color("d4bc82") if current_island == 1 else (Color("e2c78e") if current_island == 2 else Color("a9bbc6"))
+	# Existing village roads lead to these spurs; leave the wooden pier exposed.
+	var first: int = 1 if current_island == 1 else 0
+	for index: int in range(first, route.size() - 1):
+		var a: Vector3 = route[index]
+		var b: Vector3 = route[index + 1]
+		if current_island == 1 and index == route.size() - 2:
+			b.z = -14.0
+		var length: float = a.distance_to(b)
+		var strip := _box(path, (a + b) * 0.5 + Vector3(0, 0.045, 0), Vector3(2.2, 0.08, length + 0.25), color)
+		strip.rotation.y = atan2(b.x - a.x, b.z - a.z)
+		for step: int in range(int(length / 0.85)):
+			var paver := _box(path, a.move_toward(b, (step + 0.5) * 0.85) + Vector3(0, 0.10, 0), Vector3(0.78, 0.035, 0.43), color.lightened(0.18))
+			paver.rotation.y = strip.rotation.y
+	# Compact signs stay in the world; the tutorial can hide them with other signs.
+	var sign := _root("FerryWayfinder", route[first] + Vector3(1.35, 0, 1.15))
+	_cylinder(sign, Vector3(0, 0.65, 0), 0.08, 0.08, 1.3, Color("8d704f"), 6)
+	_box(sign, Vector3(0, 1.3, 0), Vector3(1.9, 0.65, 0.15), TEAL if current_island != 3 else Color("577c97"))
+	_label(sign, "FERRY →", Vector3(0, 1.32, 0.1), 23, CREAM, false)
+	_target(sign, Vector3(0, 0.85, 0), Vector3(2.0, 1.7, 0.4), "station", "island")
 
 
 func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
@@ -237,6 +369,8 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 		return
 	_tutorial_marker.visible = false
 	_tutorial_plot_outline.visible = false
+	for chevron: Node3D in _tutorial_trail:
+		chevron.hide()
 	if station.is_empty():
 		return
 	var point: Vector3
@@ -258,7 +392,7 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 		_tutorial_marker.pixel_size = 0.019
 		var station_roots: Array = _tutorial_station_roots[station]
 		var station_root: Node3D = station_roots.back()
-		point = station_root.position + Vector3(0.0, 3.0, 0.0)
+		point = station_position(station) + Vector3(0.0, 3.0, 0.0)
 		for label: Label3D in station_root.find_children("*", "Label3D", true, false):
 			if label.billboard != BaseMaterial3D.BILLBOARD_DISABLED:
 				point.y = maxf(point.y, to_local(label.global_position).y + 0.8)
@@ -311,6 +445,7 @@ func _clear_world() -> void:
 	_tool_time = 0.0
 	_time = 0.0
 	_day_environment = null
+	_applied_day_time = -1.0
 	_sun = null
 	_moon = null
 	_export_particle_clock = 0.0
@@ -345,6 +480,7 @@ func _clear_world() -> void:
 	_tutorial_label_layers.clear()
 	_tutorial_marker = null
 	_tutorial_plot_outline = null
+	_tutorial_trail.clear()
 
 func _lighting() -> void:
 	var environment_node := WorldEnvironment.new()
@@ -389,6 +525,9 @@ func set_day_time(elapsed: float) -> void:
 	_day_elapsed = fposmod(elapsed, DAY_CYCLE_SECONDS)
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
+	if _day_elapsed == _applied_day_time:
+		return
+	_applied_day_time = _day_elapsed
 	var phase: float = _day_elapsed / DAY_CYCLE_SECONDS
 	var orbit: float = phase * TAU
 	var height: float = cos(orbit)
@@ -572,6 +711,7 @@ func update_plots(plots: Array) -> void:
 				_sphere(root, point, Vector3(0.32, 0.2, 0.25), Color("969888"))
 			_box(root, Vector3(0.0, 0.43, 0.0), Vector3(1.15, 0.12, 0.16), Color("bc9d6d")).rotation.z = 0.46
 			_box(root, Vector3(0.0, 0.43, 0.0), Vector3(1.15, 0.12, 0.16), Color("bc9d6d")).rotation.z = -0.46
+			_geometry_batcher.batch_siblings(root)
 			continue
 		if not tilled and stage == 0:
 			for weed_index in range(3):
@@ -588,6 +728,7 @@ func update_plots(plots: Array) -> void:
 					var remains := Vector3(-0.48 + float(stalk) * 0.48, 0.33, 0.05)
 					_bar(root, remains, remains + Vector3(0.08, 0.16, 0.0), 0.035, Color("b69255"))
 					_sphere(root, remains + Vector3(0.10, -0.08, 0.16), Vector3(0.14, 0.055, 0.09), Color("ad8545"))
+			_geometry_batcher.batch_siblings(root)
 			continue
 		for crop in range(4):
 			var pos := Vector3(-0.48 + float(crop % 2) * 0.96, 0.25, -0.48 + float(crop / 2) * 0.96)
@@ -620,6 +761,7 @@ func update_plots(plots: Array) -> void:
 		if stage == 3:
 			var sparkle := _gem(root, Vector3(0.0, 1.53, 0.0), crop_color if crop_kind == "radioactive" else GOLD, 0.12)
 			_ripe_sparkles.append(sparkle)
+		_geometry_batcher.batch_siblings(root)
 	_update_pest_caption_density()
 
 
@@ -645,6 +787,30 @@ func animate(delta: float, moving: bool) -> void:
 	_time += delta
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
+		var destination: Vector3 = _tutorial_marker.position
+		destination.y = 1.15
+		var origin: Vector3 = player.position
+		origin.y = 1.15
+		var direction: Vector3 = destination - origin
+		var distance: float = direction.length()
+		var guide: Curve3D
+		if _tutorial_focus == "island" and distance > 3.0:
+			guide = Curve3D.new()
+			guide.add_point(origin)
+			for point: Vector3 in walk_route(player.position, ferry_position(), true):
+				var raised := Vector3(point.x, 1.15, point.z)
+				if raised.distance_to(guide.get_point_position(guide.point_count - 1)) > 0.01:
+					guide.add_point(raised)
+		for index: int in range(_tutorial_trail.size()):
+			var chevron: Node3D = _tutorial_trail[index]
+			chevron.visible = distance > 3.0
+			chevron.position = origin.lerp(destination, float(index + 1) / 8.0)
+			if guide != null:
+				var along: float = guide.get_baked_length() * float(index + 1) / 8.0
+				chevron.position = guide.sample_baked(along)
+				direction = guide.sample_baked(along + 0.1) - chevron.position
+			chevron.rotation.y = atan2(direction.x, direction.z)
+			chevron.scale = Vector3.ONE * (1.05 + 0.15 * sin(_time * 3.0 - index * 0.65))
 	if is_instance_valid(player):
 		player.rotation.y = lerp_angle(player.rotation.y, _player_heading, 1.0 - exp(-12.0 * delta))
 	if is_instance_valid(_player_body):
@@ -810,7 +976,7 @@ func _windmill(pos: Vector3) -> void:
 	_sphere(_rotor, Vector3(0.0, 0.0, 0.14), Vector3(0.27, 0.27, 0.18), GOLD)
 
 func _scenery() -> void:
-	for pos in [Vector3(-17.1, 0, -11), Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(16.1, 0, -10.5), Vector3(17.3, 0, -0.5), Vector3(14.7, 0, 9.7), Vector3(9.2, 0, 12.4)]:
+	for pos in [Vector3(-17.1, 0, -11), Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3, 0, -0.5), Vector3(14.7, 0, 9.7), Vector3(9.2, 0, 12.4)]:
 		_tree(pos, _rng.randf_range(0.85, 1.2))
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(12, 0, 12), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
@@ -824,7 +990,9 @@ func _scenery() -> void:
 		_cylinder(self, pos, 0.025, 0.02, 0.32, Color("567e4b"), 4)
 		var flower_color: Color = Color("f8daa2") if i % 3 == 0 else (Color("d8a3a0") if i % 3 == 1 else Color("f7f0cd"))
 		_sphere(self, pos + Vector3(0.0, 0.19, 0.0), Vector3(0.13, 0.07, 0.13), flower_color)
-	_fence(Vector3(-15.7, 0.0, -13.0), Vector3(14.6, 0.0, -13.0), 14)
+	# Leave a proper opening where the ferry path crosses the northern fence.
+	_fence(Vector3(-15.7, 0.0, -13.0), Vector3(10.0, 0.0, -13.0), 12)
+	_fence(Vector3(13.0, 0.0, -13.0), Vector3(14.6, 0.0, -13.0), 1)
 	_fence(Vector3(18.6, 0.0, -11.3), Vector3(18.6, 0.0, 9.0), 10)
 	# A pond, bridge and dock form a quiet corner beside the village.
 	var pond := _sphere(self, Vector3(12.0, 0.0, 4.5), Vector3(3.45, 0.055, 2.6), Color("729f96"))
@@ -963,9 +1131,11 @@ func _mat(color: Color) -> StandardMaterial3D:
 
 func _box(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	instance.mesh = mesh
+	if not _box_meshes.has(size):
+		var mesh := BoxMesh.new()
+		mesh.size = size
+		_box_meshes[size] = mesh
+	instance.mesh = _box_meshes[size]
 	instance.material_override = _mat(color)
 	instance.position = pos
 	parent.add_child(instance)
@@ -973,12 +1143,13 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInst
 
 func _sphere(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	mesh.radius = 1.0
-	mesh.height = 2.0
-	mesh.radial_segments = 9
-	mesh.rings = 5
-	instance.mesh = mesh
+	if _sphere_mesh == null:
+		_sphere_mesh = SphereMesh.new()
+		_sphere_mesh.radius = 1.0
+		_sphere_mesh.height = 2.0
+		_sphere_mesh.radial_segments = 9
+		_sphere_mesh.rings = 5
+	instance.mesh = _sphere_mesh
 	instance.scale = size
 	instance.position = pos
 	instance.material_override = _mat(color)
@@ -991,12 +1162,15 @@ func _leaf(parent: Node3D, pos: Vector3, size: Vector3, color: Color, angle: flo
 
 func _cylinder(parent: Node3D, pos: Vector3, bottom: float, top: float, height: float, color: Color, sides: int = 8) -> MeshInstance3D:
 	var instance := MeshInstance3D.new()
-	var mesh := CylinderMesh.new()
-	mesh.bottom_radius = bottom
-	mesh.top_radius = top
-	mesh.height = height
-	mesh.radial_segments = sides
-	instance.mesh = mesh
+	var shape := Vector4(bottom, top, height, float(sides))
+	if not _cylinder_meshes.has(shape):
+		var mesh := CylinderMesh.new()
+		mesh.bottom_radius = bottom
+		mesh.top_radius = top
+		mesh.height = height
+		mesh.radial_segments = sides
+		_cylinder_meshes[shape] = mesh
+	instance.mesh = _cylinder_meshes[shape]
 	instance.material_override = _mat(color)
 	instance.position = pos
 	parent.add_child(instance)
@@ -1278,7 +1452,7 @@ func _golden_shores() -> void:
 	_gem(root, Vector3(0.0, 1.1, -0.6), GOLD, 0.42)
 	_travel_label = _label(root, "GOLDEN SHORES  ·  LOCKED", Vector3(0.0, 4.8, 0.0), 32, Color("ffe5a4"))
 	_target(root, Vector3(0.0, 1.25, 0.0), Vector3(9.0, 3.8, 7.0), "station", "island")
-	# A gated dock points toward the future island; it cannot be walked onto.
+	# The boarding area stays reachable even before the next island unlocks.
 	var dock := _root("GoldenShoresDock", Vector3(11.5, 0.0, -14.0))
 	for i in range(10):
 		_box(dock, Vector3(0.0, 0.13, -float(i) * 0.44), Vector3(1.9, 0.15, 0.39), Color("b79867"))
@@ -1287,6 +1461,7 @@ func _golden_shores() -> void:
 			_cylinder(dock, Vector3(x, 0.38, z), 0.10, 0.10, 1.25, Color("8d704f"), 6)
 	_dock_gate = Node3D.new()
 	dock.add_child(_dock_gate)
+	_dock_gate.position.z = -3.7
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
 	_dock_label = _label(dock, "ISLAND 2  /  LOCKED", Vector3(0.0, 1.85, -0.4), 22, Color("ffe6aa"))
@@ -1680,7 +1855,7 @@ func _winter_ferry() -> void:
 		for z in [-1.22,1.22]:
 			_cylinder(ferry,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
 			_sphere(ferry,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
-	_crate(ferry,Vector3(0.0,0.66,0.0),true)
+	_crate(ferry,Vector3(1.1,0.66,-0.75),true)
 	_dock_label = _label(ferry,"FERRY · VALLEY / SHORES",Vector3(0.0,2.35,0.0),25,Color("f6edcd"))
 	_target(ferry,Vector3(0.1,0.95,0.0),Vector3(3.7,2.5,3.2),"station","island")
 	# Only the two already-playable destinations appear offshore.
@@ -1907,6 +2082,7 @@ func _build_pest_swarm(parent: Node3D) -> void:
 			var wing := _sphere(bug, Vector3(side*0.16, 0.07, -0.03), Vector3(0.15, 0.025, 0.095), Color("d8dfb6"))
 			wing.rotation.z = side*0.28
 			_bar(bug, Vector3(side*0.052,0.08,0.19),Vector3(side*0.11,0.15,0.27),0.009,Color("536044"))
+		_geometry_batcher.batch_siblings(bug)
 
 
 func _update_pest_visual(index: int, data: Dictionary, infested: bool, damage: float) -> void:
@@ -1957,6 +2133,7 @@ func _update_pest_visual(index: int, data: Dictionary, infested: bool, damage: f
 		warning.text = ""
 	warning.visible = not warning.text.is_empty()
 	if not infested:
+		warning.scale = Vector3.ONE
 		_crop_roots[index].position = Vector3.ZERO
 		_crop_roots[index].rotation = Vector3.ZERO
 
@@ -1996,15 +2173,13 @@ func _animate_pests(delta: float) -> void:
 		var swarm: Node3D = _pest_roots[i]
 		var visual: Dictionary = _pest_visuals[i]
 		var warning: Label3D = _pest_labels[i]
-		if bool(visual["destroyed"]):
+		if bool(visual["destroyed"]) and float(visual["caption_time"]) > 0.0:
 			visual["caption_time"] = maxf(0.0, float(visual["caption_time"]) - delta)
 			if float(visual["caption_time"]) == 0.0:
 				warning.text = ""
 				warning.hide()
-		else:
-			warning.position.y = 2.14
+		# Healthy beds and expired captions need no scene-property writes.
 		if not swarm.visible:
-			warning.scale = Vector3.ONE
 			continue
 		_pest_borders[i].position.y = (sin(_time * 5.0 + float(i) * 0.4) + 1.0) * 0.025
 		visual["shake_time"] = maxf(0.0, float(visual["shake_time"]) - delta)
@@ -2090,7 +2265,7 @@ func _activity_station() -> void:
 func set_activity_state(info: Dictionary) -> void:
 	_activity_info = info.duplicate(true)
 	if is_instance_valid(_duck_label):
-		_duck_label.text = "%d DUCK%s · %s" % [current_island, "" if current_island == 1 else "S", "TRAIN PATROL" if int(info.get("duck_level", 0)) == 0 else "LV.%d" % int(info.get("duck_level", 0))]
+		_duck_label.text = "DUCK PATROL · %d / %d" % [int(info.get("duck_count", 0)), current_island]
 	if not is_instance_valid(_activity_label):
 		return
 	match current_island:
@@ -2113,7 +2288,7 @@ func _animate_activities(delta: float) -> void:
 		var patrol: Dictionary = patrols[index] if index < patrols.size() else {}
 		var target: int = int(patrol.get("target", -1))
 		var from: int = int(patrol.get("from", target))
-		var active: bool = int(_activity_info.get("duck_level", 0)) > 0
+		var active: bool = bool(patrol.get("trained", false))
 		if active and target >= 0 and target < plot_positions.size():
 			var destination: Vector3 = plot_positions[target] + Vector3(0.65, 0.08, 0.35)
 			var origin: Vector3 = plot_positions[from] + Vector3(0.65, 0.08, 0.35) if from >= 0 and from < plot_positions.size() else destination

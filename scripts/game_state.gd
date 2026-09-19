@@ -13,12 +13,14 @@ signal purchase_rejected(message: String)
 
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 7
-const MAX_PRICE_MULTIPLIER: float = 31.0
+const MECHANICS_REVISION: int = 8
+const MAX_PRICE_MULTIPLIER: float = 501.0
+const ROCKET_INTERVAL: float = 1800.0
 const MARKET_TICK_SECONDS: float = 5.0
 const STARTER_MARKET_SECONDS: float = 3.0
 const SURGE_INTERVAL: float = 180.0
-const SURGE_DURATION: float = 5.0
+const SURGE_DURATION: float = 10.0
+const NATURAL_STOCK_CHANCE: float = 0.015
 const PEST_TICK_SECONDS: float = 5.0
 const ISLAND2_UNLOCK_COST: float = 1000000.0
 const ISLAND2_UNLOCK_HARVEST: int = 500
@@ -57,29 +59,29 @@ const ITEM_CATALOG: Dictionary = {
 	"aurora": {"name": "Aurora Heart", "rarity": "mystery", "description": "A little northern light grows inside it.", "effect": "+10% crop yield per copy", "max_count": 3},
 	"compass": {"name": "Evergreen Compass", "rarity": "mystery", "description": "Its needle follows rare mutations.", "effect": "+25% mutation chance per copy", "max_count": 3},
 	"bottomless_sack": {"name": "Impossible Potato Sack", "rarity": "mystery", "description": "It has more inside than outside.", "effect": "+20% barn capacity per copy", "max_count": 3},
-	"straw_hat": {"name": "Harvest Straw Hat", "kind": "gear", "slot": "head", "color": "d9b457", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Wear this hat for a bigger harvest. Extra copies do not stack.", "effect": "+8% crop yield while equipped", "max_count": 10},
-	"lucky_cap": {"name": "Lucky Patchwork Cap", "kind": "gear", "slot": "head", "color": "ae79df", "rarity": "rare", "bonuses": {"luck": 0.25}, "description": "Luck sewn into every patch. Effective permanent luck caps at 10x.", "effect": "+0.25x roll, mutation and market luck while equipped", "max_count": 10},
-	"traders_visor": {"name": "Trader's Visor", "kind": "gear", "slot": "head", "color": "63b982", "rarity": "epic", "bonuses": {"stock": 0.08}, "description": "Better crop quotes while worn. Seed prices follow the same quote.", "effect": "+8% stock prices while equipped", "max_count": 10},
-	"harvest_gloves": {"name": "Harvest Gauntlets", "kind": "gear", "slot": "hands", "color": "c28349", "rarity": "epic", "bonuses": {"yield": 0.12}, "description": "Bring home more potatoes from every manual harvest. Extra copies do not stack.", "effect": "+12% crop yield while equipped", "max_count": 10},
-	"prospectors_hat": {"name": "Prospector's Gold Hat", "kind": "gear", "slot": "head", "color": "f0c750", "rarity": "legendary", "bonuses": {"stock": 0.15}, "description": "Buyers know a serious grower. The global +3000% stock ceiling still applies.", "effect": "+15% stock prices while equipped", "max_count": 5},
-	"aurora_crown": {"name": "Aurora Crown", "kind": "gear", "slot": "head", "color": "70e9e1", "rarity": "mythic", "bonuses": {"luck": 1.0}, "description": "Wear before purchasing to earn one free pull at the same stake per transaction, including a batch. The bonus never chains; a newly won crown starts on your next purchase.", "effect": "+1x luck and +1 free roll per purchase while equipped", "max_count": 5},
-	"market_monocle": {"name": "Bull Market Monocle", "kind": "gear", "slot": "charm", "color": "ead889", "rarity": "relic", "bonuses": {"stock": 0.10}, "description": "Spot the value hiding in every potato. Seed prices remain linked.", "effect": "+10% stock prices while equipped", "max_count": 3},
-	"loaded_dice": {"name": "Impossible Lucky Dice", "kind": "gear", "slot": "charm", "color": "ce8fe8", "rarity": "mystery", "bonuses": {"luck": 1.5}, "description": "A rare piece of luck you can carry between islands. Effective permanent luck caps at 10x.", "effect": "+1.5x roll, mutation and market luck while equipped", "max_count": 3},
-	"farmer_shirt": {"name": "Fieldwork Shirt", "kind": "gear", "slot": "body", "role": "farmer", "color": "75bc60", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Roomy pockets for a larger crop. Farmer build makes its bonuses 25% stronger.", "effect": "+8% crop yield while equipped", "max_count": 5},
-	"farmer_pants": {"name": "Grower's Dungarees", "kind": "gear", "slot": "legs", "role": "farmer", "color": "528449", "rarity": "rare", "bonuses": {"growth": 0.08}, "description": "Made for long days in the fields. Farmer build makes its bonuses 25% stronger.", "effect": "+8% crop growth speed while equipped", "max_count": 5},
-	"farmer_boots": {"name": "Field Boots", "kind": "gear", "slot": "feet", "role": "farmer", "color": "8b713f", "rarity": "rare", "bonuses": {"growth": 0.06}, "description": "Leave healthy soil with every step. Farmer build makes its bonuses 25% stronger.", "effect": "+6% crop growth speed while equipped", "max_count": 5},
-	"gambler_shirt": {"name": "High Roller Jacket", "kind": "gear", "slot": "body", "role": "gambler", "color": "b776ec", "rarity": "epic", "bonuses": {"luck": 0.35}, "description": "A lucky lining for the next reveal. Gambler build makes its bonuses 25% stronger.", "effect": "+0.35x luck while equipped", "max_count": 5},
-	"gambler_pants": {"name": "Lucky Pocket Trousers", "kind": "gear", "slot": "legs", "role": "gambler", "color": "7750a8", "rarity": "epic", "bonuses": {"luck": 0.20, "mutation": 0.10}, "description": "Something unusual always turns up in these pockets. Gambler build makes their bonuses 25% stronger.", "effect": "+0.20x luck and +10% mutation chance while equipped", "max_count": 5},
-	"gambler_boots": {"name": "Seven-League Sneakers", "kind": "gear", "slot": "feet", "role": "gambler", "color": "d398f1", "rarity": "rare", "bonuses": {"luck": 0.15}, "description": "Step up to the reel with a little luck. Gambler build makes their bonuses 25% stronger.", "effect": "+0.15x luck while equipped", "max_count": 5},
-	"investor_shirt": {"name": "Market Maker Waistcoat", "kind": "gear", "slot": "body", "role": "investor", "color": "ecc15e", "rarity": "epic", "bonuses": {"stock": 0.10}, "description": "A familiar face at every market. Investor build makes its bonuses 25% stronger; seed prices stay linked.", "effect": "+10% stock prices while equipped", "max_count": 5},
-	"investor_pants": {"name": "Broker's Trousers", "kind": "gear", "slot": "legs", "role": "investor", "color": "98763d", "rarity": "rare", "bonuses": {"stock": 0.05}, "description": "Dressed for the next buyer contract. Investor build makes their bonuses 25% stronger; seed prices stay linked.", "effect": "+5% stock prices while equipped", "max_count": 5},
-	"investor_shoes": {"name": "Closing Bell Shoes", "kind": "gear", "slot": "feet", "role": "investor", "color": "d5a946", "rarity": "epic", "bonuses": {"stock": 0.07}, "description": "Polished for a good sale. Investor build makes their bonuses 25% stronger; seed prices stay linked.", "effect": "+7% stock prices while equipped", "max_count": 5},
-	"scientist_coat": {"name": "Mutation Lab Coat", "kind": "gear", "slot": "body", "role": "scientist", "color": "b4eeea", "rarity": "epic", "bonuses": {"mutation": 0.25}, "description": "A field lab you can wear. Scientist build makes its bonuses 25% stronger.", "effect": "+25% mutation chance while equipped", "max_count": 5},
-	"scientist_pants": {"name": "Research Cargo Pants", "kind": "gear", "slot": "legs", "role": "scientist", "color": "4a969a", "rarity": "rare", "bonuses": {"mutation": 0.15}, "description": "Keep every experiment close at hand. Scientist build makes their bonuses 25% stronger.", "effect": "+15% mutation chance while equipped", "max_count": 5},
-	"scientist_boots": {"name": "Growth Lab Boots", "kind": "gear", "slot": "feet", "role": "scientist", "color": "6fdbdc", "rarity": "epic", "bonuses": {"mutation": 0.10, "growth": 0.05}, "description": "A little science in the soil. Scientist build makes their bonuses 25% stronger.", "effect": "+10% mutation chance and +5% growth speed while equipped", "max_count": 5},
-	"industrialist_overalls": {"name": "Factory Overalls", "kind": "gear", "slot": "body", "role": "industrialist", "color": "f39858", "rarity": "epic", "bonuses": {"processing": 0.25}, "description": "Keep the grading line running. Industrialist build makes their bonuses 25% stronger.", "effect": "+25% processing speed while equipped", "max_count": 5},
-	"industrialist_pants": {"name": "Workshop Workpants", "kind": "gear", "slot": "legs", "role": "industrialist", "color": "a35f3d", "rarity": "rare", "bonuses": {"processing": 0.15}, "description": "Built for shifts at the processor. Industrialist build makes their bonuses 25% stronger.", "effect": "+15% processing speed while equipped", "max_count": 5},
-	"industrialist_boots": {"name": "Steel-Toe Harvest Boots", "kind": "gear", "slot": "feet", "role": "industrialist", "color": "db8045", "rarity": "epic", "bonuses": {"processing": 0.10, "yield": 0.03}, "description": "Carry the harvest straight to the machine. Industrialist build makes their bonuses 25% stronger.", "effect": "+10% processing speed and +3% crop yield while equipped", "max_count": 5},
+	"straw_hat": {"name": "Harvest Straw Hat", "kind": "gear", "slot": "head", "color": "d9b457", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Bigger harvests. One hat at a time.", "effect": "+8% crop yield while equipped", "max_count": 10},
+	"lucky_cap": {"name": "Lucky Patchwork Cap", "kind": "gear", "slot": "head", "color": "ae79df", "rarity": "rare", "bonuses": {"luck": 0.25}, "description": "Lucky patches. Permanent luck caps at 10×.", "effect": "+0.25x roll, mutation and market luck while equipped", "max_count": 10},
+	"traders_visor": {"name": "Trader's Visor", "kind": "gear", "slot": "head", "color": "63b982", "rarity": "epic", "bonuses": {"stock": 0.08}, "description": "Better quotes. Seed costs follow.", "effect": "+8% stock prices while equipped", "max_count": 10},
+	"harvest_gloves": {"name": "Harvest Gauntlets", "kind": "gear", "slot": "hands", "color": "c28349", "rarity": "epic", "bonuses": {"yield": 0.12}, "description": "Bring home a bigger harvest.", "effect": "+12% crop yield while equipped", "max_count": 10},
+	"prospectors_hat": {"name": "Prospector's Gold Hat", "kind": "gear", "slot": "head", "color": "f0c750", "rarity": "legendary", "bonuses": {"stock": 0.15}, "description": "Golden deals. Higher caps in winter.", "effect": "+15% stock prices while equipped", "max_count": 5},
+	"aurora_crown": {"name": "Aurora Crown", "kind": "gear", "slot": "head", "color": "70e9e1", "rarity": "mythic", "bonuses": {"luck": 1.0}, "description": "Equip before buying: +1 free pull per purchase, including batches. Never chains.", "effect": "+1x luck and +1 free roll per purchase while equipped", "max_count": 5},
+	"market_monocle": {"name": "Bull Market Monocle", "kind": "gear", "slot": "charm", "color": "ead889", "rarity": "relic", "bonuses": {"stock": 0.10}, "description": "Better crop quotes. Seed costs follow.", "effect": "+10% stock prices while equipped", "max_count": 3},
+	"loaded_dice": {"name": "Impossible Lucky Dice", "kind": "gear", "slot": "charm", "color": "ce8fe8", "rarity": "mystery", "bonuses": {"luck": 1.5}, "description": "Carry your luck. Permanent luck caps at 10×.", "effect": "+1.5x roll, mutation and market luck while equipped", "max_count": 3},
+	"farmer_shirt": {"name": "Fieldwork Shirt", "kind": "gear", "slot": "body", "role": "farmer", "color": "75bc60", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop yield while equipped", "max_count": 5},
+	"farmer_pants": {"name": "Grower's Dungarees", "kind": "gear", "slot": "legs", "role": "farmer", "color": "528449", "rarity": "rare", "bonuses": {"growth": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop growth speed while equipped", "max_count": 5},
+	"farmer_boots": {"name": "Field Boots", "kind": "gear", "slot": "feet", "role": "farmer", "color": "8b713f", "rarity": "rare", "bonuses": {"growth": 0.06}, "description": "Farmer build: +25% gear bonuses.", "effect": "+6% crop growth speed while equipped", "max_count": 5},
+	"gambler_shirt": {"name": "High Roller Jacket", "kind": "gear", "slot": "body", "role": "gambler", "color": "b776ec", "rarity": "epic", "bonuses": {"luck": 0.35}, "description": "Gambler build: +25% gear bonuses.", "effect": "+0.35x luck while equipped", "max_count": 5},
+	"gambler_pants": {"name": "Lucky Pocket Trousers", "kind": "gear", "slot": "legs", "role": "gambler", "color": "7750a8", "rarity": "epic", "bonuses": {"luck": 0.20, "mutation": 0.10}, "description": "Gambler build: +25% gear bonuses.", "effect": "+0.20x luck and +10% mutation chance while equipped", "max_count": 5},
+	"gambler_boots": {"name": "Seven-League Sneakers", "kind": "gear", "slot": "feet", "role": "gambler", "color": "d398f1", "rarity": "rare", "bonuses": {"luck": 0.15}, "description": "Gambler build: +25% gear bonuses.", "effect": "+0.15x luck while equipped", "max_count": 5},
+	"investor_shirt": {"name": "Market Maker Waistcoat", "kind": "gear", "slot": "body", "role": "investor", "color": "ecc15e", "rarity": "epic", "bonuses": {"stock": 0.10}, "description": "Investor build: +25% gear bonuses.", "effect": "+10% stock prices while equipped", "max_count": 5},
+	"investor_pants": {"name": "Broker's Trousers", "kind": "gear", "slot": "legs", "role": "investor", "color": "98763d", "rarity": "rare", "bonuses": {"stock": 0.05}, "description": "Investor build: +25% gear bonuses.", "effect": "+5% stock prices while equipped", "max_count": 5},
+	"investor_shoes": {"name": "Closing Bell Shoes", "kind": "gear", "slot": "feet", "role": "investor", "color": "d5a946", "rarity": "epic", "bonuses": {"stock": 0.07}, "description": "Investor build: +25% gear bonuses.", "effect": "+7% stock prices while equipped", "max_count": 5},
+	"scientist_coat": {"name": "Mutation Lab Coat", "kind": "gear", "slot": "body", "role": "scientist", "color": "b4eeea", "rarity": "epic", "bonuses": {"mutation": 0.25}, "description": "Scientist build: +25% gear bonuses.", "effect": "+25% mutation chance while equipped", "max_count": 5},
+	"scientist_pants": {"name": "Research Cargo Pants", "kind": "gear", "slot": "legs", "role": "scientist", "color": "4a969a", "rarity": "rare", "bonuses": {"mutation": 0.15}, "description": "Scientist build: +25% gear bonuses.", "effect": "+15% mutation chance while equipped", "max_count": 5},
+	"scientist_boots": {"name": "Growth Lab Boots", "kind": "gear", "slot": "feet", "role": "scientist", "color": "6fdbdc", "rarity": "epic", "bonuses": {"mutation": 0.10, "growth": 0.05}, "description": "Scientist build: +25% gear bonuses.", "effect": "+10% mutation chance and +5% growth speed while equipped", "max_count": 5},
+	"industrialist_overalls": {"name": "Factory Overalls", "kind": "gear", "slot": "body", "role": "industrialist", "color": "f39858", "rarity": "epic", "bonuses": {"processing": 0.25}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+25% processing speed while equipped", "max_count": 5},
+	"industrialist_pants": {"name": "Workshop Workpants", "kind": "gear", "slot": "legs", "role": "industrialist", "color": "a35f3d", "rarity": "rare", "bonuses": {"processing": 0.15}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+15% processing speed while equipped", "max_count": 5},
+	"industrialist_boots": {"name": "Steel-Toe Harvest Boots", "kind": "gear", "slot": "feet", "role": "industrialist", "color": "db8045", "rarity": "epic", "bonuses": {"processing": 0.10, "yield": 0.03}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+10% processing speed and +3% crop yield while equipped", "max_count": 5},
 }
 
 const MAX_MONEY: float = 1.0e300
@@ -97,6 +99,14 @@ var surge_timer: float = SURGE_INTERVAL
 var surge_remaining: float = 0.0
 var surge_crop: String = "russet"
 var surge_factor: float = 1.0
+var surge_kind: String = "normal"
+var rocket_timer: float = ROCKET_INTERVAL
+var rocket_pending: bool = false
+var rocket_factor: float = 1.0
+var rocket_crop: String = "icecap"
+var natural_remaining: float = 0.0
+var natural_factor: float = 1.0
+var natural_crop: String = "russet"
 var seed_inventory: Dictionary = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var storage: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var capacity: int = 200
@@ -128,7 +138,7 @@ var quest_progress: Dictionary = {"ground": 0, "sunburst": 0, "combo": 0, "expor
 var quest_claimed: Array[String] = []
 var golden_hat: bool = false
 var market: Dictionary = {}
-var news: String = "Harvest the ripe Russets, watch the market, and choose when to sell. Prices update every 3 seconds here. Watch for brief offers and prepare your harvest!"
+var news: String = "Harvest your Russets. Catch a good price. Sell with F!"
 var event_name: String = "OPEN MARKET"
 var event_remaining: float = 0.0
 var elapsed: float = 0.0
@@ -218,7 +228,7 @@ func unlock_island3() -> String:
 func winter_info() -> Dictionary:
 	return {"phase": "THAW AUCTION" if thaw_remaining > 0.0 else ("FROSTBREAK" if frost_active else "WINTER CALM"),
 		"timer": thaw_remaining if thaw_remaining > 0.0 else frost_timer, "progress": frost_cleared,
-		"target": frost_target_count, "description": "Hoe every icy bed before the storm ends to earn a five-second Icecap x8 auction and one seed. Winter storms pause when you leave."}
+		"target": frost_target_count, "description": "Hoe every icy bed → 1 seed + 5s of 8× Icecap prices."}
 
 
 func _start_frost() -> void:
@@ -303,7 +313,7 @@ func debug_info() -> Dictionary:
 	return {"luck_multiplier": debug_luck_multiplier, "normal_luck": normal_luck(), "effective_luck": effective_luck(),
 		"money_modified": debug_money_modified, "active": debug_luck_multiplier > 1.0 or debug_money_modified,
 		"money_min": 0.0, "money_limit": DEBUG_MONEY_LIMIT, "luck_min": 1.0, "luck_limit": DEBUG_LUCK_LIMIT,
-		"description": "Money multiplies the current purse once: x0.1 keeps a tenth, x0 clears it. Debug luck multiplies your normal capped luck. Coin edits stay when luck is reset, and their later trophies stay marked DEBUG."}
+		"description": "Money changes once. Luck stays boosted until reset. Trophies are marked DEBUG."}
 
 
 func valid_debug_settings(money_multiplier: float, luck_multiplier: float) -> bool:
@@ -591,18 +601,56 @@ func set_tracked_seed(id: String, enabled: bool) -> bool:
 
 func surge_info() -> Dictionary:
 	return {"active": surge_remaining > 0.0, "timer": surge_remaining if surge_remaining > 0.0 else surge_timer,
-		"crop": surge_crop if surge_remaining > 0.0 else selected_crop, "percent": float(market[surge_crop]["change"]) if surge_remaining > 0.0 else 500.0}
+		"crop": surge_crop if surge_remaining > 0.0 else selected_crop, "percent": float(market[surge_crop]["change"]) if surge_remaining > 0.0 else 500.0,
+		"minimum": 3000 if current_island >= 3 else 500, "maximum": 10000 if current_island >= 3 else 2999,
+		"rocket_timer": rocket_timer, "rocket_pending": rocket_pending, "kind": surge_kind}
 
 
-func _start_surge() -> void:
+func stock_cap() -> float:
+	return 101.0 if current_island >= 3 else 30.99
+
+
+func natural_stock_chance() -> float:
+	return NATURAL_STOCK_CHANCE
+
+
+func _natural_boom_roll(low: float, high: float) -> float:
+	# Natural high quotes use the same low-end weighting at every luck level.
+	return lerpf(low, high, pow(rng.randf(), 2.7))
+
+
+func _boom_roll(low: float, high: float) -> float:
+	# Top-end quotes remain rare; useful luck improves the shape, never the cap.
+	var weight: float = lerpf(2.7, 1.5, (clampf(effective_luck(), 1.0, 10.0) - 1.0) / 9.0)
+	return lerpf(low, high, pow(rng.randf(), weight))
+
+
+func _prepare_rocket() -> void:
+	rocket_pending = true
+	rocket_timer = ROCKET_INTERVAL
+	rocket_factor = _boom_roll(151.0, MAX_PRICE_MULTIPLIER)
+	rocket_crop = selected_crop
+
+
+func complete_rocket_launch() -> void:
+	if not rocket_pending or current_island < 3 or tutorial_active:
+		return
+	rocket_pending = false
+	_start_surge(true)
+	rocket_factor = 1.0
+	changed.emit()
+
+
+func _start_surge(rocket: bool = false) -> void:
 	if tutorial_active:
 		return
-	surge_crop = selected_crop if available_crops().has(selected_crop) else "russet"
-	surge_factor = rng.randf_range(6.0, MAX_PRICE_MULTIPLIER)
+	surge_kind = "rocket" if rocket else "normal"
+	surge_crop = rocket_crop if rocket else (selected_crop if available_crops().has(selected_crop) else "russet")
+	surge_factor = rocket_factor if rocket else _boom_roll(31.0 if current_island >= 3 else 6.0, stock_cap())
 	surge_remaining = SURGE_DURATION
 	surge_timer = SURGE_INTERVAL
 	_refresh_market()
-	notified.emit("STOCK SURGE! %s +%.0f%% for 5 seconds!" % [CROPS[surge_crop]["name"], float(market[surge_crop]["change"])])
+	notified.emit("STOCK SURGE! %s +%.0f%% for %.0f seconds!" % [CROPS[surge_crop]["name"], float(market[surge_crop]["change"]), SURGE_DURATION])
 
 
 func total_mastery() -> int:
@@ -622,10 +670,12 @@ func unlock_island2() -> String:
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
 	for plot in island_plots["2"]:
 		plot["unlocked"] = true
-	return _complete_purchase({"kind": "island", "id": "2", "name": "Golden Shores", "quantity": 1, "cost": ISLAND2_UNLOCK_COST}, "GOLDEN SHORES UNLOCKED! Sail to 48 new patches, Sunburst potatoes, +100% harvest yield, and Export Rush. Shipments arrive unpredictably; watch for the 15-second warning!")
+	return _complete_purchase({"kind": "island", "id": "2", "name": "Golden Shores", "quantity": 1, "cost": ISLAND2_UNLOCK_COST}, "GOLDEN SHORES! 48 beds · 2× harvests · Sunburst potatoes")
 
 
 func travel_to(id: int) -> String:
+	if rocket_pending:
+		return _finish("Rocket launching—boarding resumes after liftoff.")
 	if id not in [1, 2, 3]:
 		return _finish("The ferry visits Spud Valley, Golden Shores, and Frosthollow.")
 	if id == 3 and not island3_unlocked:
@@ -636,6 +686,14 @@ func travel_to(id: int) -> String:
 		return _finish("You are already on %s." % island_name().capitalize())
 	island_plots[str(current_island)] = plots
 	current_island = id
+	natural_remaining = 0.0
+	natural_factor = 1.0
+	if surge_kind == "rocket" and id < 3:
+		surge_kind = "normal"
+		surge_remaining = 0.0
+		surge_factor = 1.0
+	elif surge_kind == "normal":
+		surge_factor = minf(surge_factor, stock_cap())
 	_market_clock = fmod(_market_clock, market_tick_seconds())
 	plots = island_plots[str(id)]
 	combo_count = 0
@@ -643,6 +701,7 @@ func travel_to(id: int) -> String:
 	combo_time = 0.0
 	if not available_crops().has(selected_crop):
 		selected_crop = "russet"
+	_refresh_market(false)
 	harvest_chain.emit(0, 1)
 	island_changed.emit(id)
 	return _finish("Welcome to %s! Both farms keep growing while you travel. Your coins, tools, seeds, and barn come with you." % island_name().capitalize())
@@ -670,23 +729,23 @@ func _toggle_export() -> void:
 
 func quest_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = [
-		{"id": "ground", "title": "BREAK NEW GROUND", "description": "Hoe all 48 empty beds on Golden Shores.", "target": 48, "reward_text": "$100K + 5 Sunburst seeds", "coins": 100000.0},
-		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Manually harvest 10,000 Sunburst potatoes on Golden Shores.", "target": 10000, "reward_text": "$10M", "coins": 10000000.0},
-		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Chain all 48 ripe patches on Golden Shores before your combo expires.", "target": 48, "reward_text": "$25M", "coins": 25000000.0},
-		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell at least 100 Golden or Sunburst potatoes in each of 3 different Export Rush shipments on Golden Shores.", "target": 3, "reward_text": "$5B", "coins": 5000000000.0},
-		{"id": "mutation", "title": "STRUCK GOLD", "description": "Find 3 mutations while manually harvesting on Golden Shores.", "target": 3, "reward_text": "$100M + Golden Hat", "coins": 100000000.0},
+		{"id": "ground", "title": "BREAK NEW GROUND", "description": "Hoe all 48 Shores beds.", "target": 48, "reward_text": "$100K + 5 Sunburst seeds", "coins": 100000.0},
+		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Harvest 10,000 Sunbursts by hand.", "target": 10000, "reward_text": "$10M", "coins": 10000000.0},
+		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest all 48 Shores beds in one combo.", "target": 48, "reward_text": "$25M", "coins": 25000000.0},
+		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell 100+ Golden/Sunburst per Export Rush. Do it 3 times.", "target": 3, "reward_text": "$5B", "coins": 5000000000.0},
+		{"id": "mutation", "title": "STRUCK GOLD", "description": "Harvest 3 mutations on the Shores.", "target": 3, "reward_text": "$100M + Golden Hat", "coins": 100000000.0},
 	]
 	if current_island == 1:
 		entries = [
-			{"id": "starter_crash", "title": "BUY THE DIP", "description": "Buy 10 seeds while a market crash is active.", "target": 10, "reward_text": "$750 + 2 Golden seeds", "coins": 750.0},
-			{"id": "starter_spike", "title": "SELL THE SPIKE", "description": "Sell 10 potatoes at twice their usual base price or higher.", "target": 10, "reward_text": "$2.5K", "coins": 2500.0},
-			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Chain 12 ripe patches before your harvest combo expires.", "target": 12, "reward_text": "$5K", "coins": 5000.0},
+			{"id": "starter_crash", "title": "BUY THE DIP", "description": "Buy 10 seeds during a crash.", "target": 10, "reward_text": "$750 + 2 Golden seeds", "coins": 750.0},
+			{"id": "starter_spike", "title": "SELL THE SPIKE", "description": "Sell 10 potatoes at 2× base price or better.", "target": 10, "reward_text": "$2.5K", "coins": 2500.0},
+			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Harvest 12 beds in one combo.", "target": 12, "reward_text": "$5K", "coins": 5000.0},
 		]
 	elif current_island == 3:
 		entries = [
 			{"id": "winter_ground", "title": "BREAK THE FROZEN GROUND", "description": "Hoe all 80 new beds in Frosthollow.", "target": 80, "reward_text": "$20B + 5 Icecap seeds", "coins": 20000000000.0},
-			{"id": "winter_harvest", "title": "WINTER HARVEST", "description": "Manually harvest 100,000 potatoes in Frosthollow.", "target": 100000, "reward_text": "$1T", "coins": 1000000000000.0},
-			{"id": "winter_frost", "title": "FROSTBREAKER", "description": "Clear every frozen bed in 3 Frostbreak challenges before time runs out.", "target": 3, "reward_text": "$5T", "coins": 5000000000000.0},
+			{"id": "winter_harvest", "title": "WINTER HARVEST", "description": "Harvest 100,000 winter potatoes by hand.", "target": 100000, "reward_text": "$1T", "coins": 1000000000000.0},
+			{"id": "winter_frost", "title": "FROSTBREAKER", "description": "Beat the clock in 3 full Frostbreaks.", "target": 3, "reward_text": "$5T", "coins": 5000000000000.0},
 		]
 	for entry in entries:
 		entry["progress"] = quest_progress[entry["id"]]
@@ -752,6 +811,9 @@ func set_tutorial_active(active: bool) -> void:
 	surge_factor = 1.0
 	surge_timer = SURGE_INTERVAL
 	pest_timer = rng.randf_range(25.0, 100.0)
+	surge_kind = "normal"
+	natural_remaining = 0.0
+	natural_factor = 1.0
 	export_active = false
 	export_factor = 1.0
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT) if island2_unlocked else 120.0
@@ -837,14 +899,20 @@ func update(delta: float) -> void:
 	if tutorial_active:
 		_update_tutorial(delta)
 		return
+	if rocket_pending:
+		return
 	# Resolve timer boundaries in order, so a long frame cannot skip a price tick.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
-	while remaining > 0.000001:
+	while remaining >= 0.000001:
 		var step: float = minf(remaining, market_tick_seconds() - _market_clock)
 		step = minf(step, 15.0 - _relief_clock)
 		step = minf(step, pest_timer)
 		step = minf(step, surge_timer)
+		if current_island >= 3:
+			step = minf(step, rocket_timer)
+		if natural_remaining > 0.0:
+			step = minf(step, natural_remaining)
 		if is_instance_valid(activity_system) and activity_system.has_method("next_boundary"):
 			step = minf(step, maxf(0.000001, float(activity_system.next_boundary())))
 		if surge_remaining > 0.0:
@@ -909,21 +977,33 @@ func update(delta: float) -> void:
 			pest_timer = rng.randf_range(25.0, 100.0)
 			dirty = true
 		surge_timer = maxf(0.0, surge_timer - step)
+		if natural_remaining > 0.0:
+			natural_remaining = maxf(0.0, natural_remaining - step)
+			if natural_remaining < 0.000001:
+				natural_remaining = 0.0
+				natural_factor = 1.0
+				_refresh_market()
+				dirty = true
 		if surge_remaining > 0.0:
 			surge_remaining = maxf(0.0, surge_remaining - step)
 			if surge_remaining < 0.000001:
 				surge_remaining = 0.0
 				surge_factor = 1.0
+				surge_kind = "normal"
 				_refresh_market()
 				dirty = true
-		if surge_timer < 0.000001:
+		if current_island >= 3:
+			rocket_timer = maxf(0.0, rocket_timer - step)
+		var rocket_due: bool = current_island >= 3 and rocket_timer < 0.000001
+		if surge_timer < 0.000001 and not rocket_due:
 			_start_surge()
 			dirty = true
 		if island2_unlocked:
 			var previous_export_timer: float = export_timer
 			export_timer = maxf(0.0, export_timer - step)
-			if not export_active and previous_export_timer > 15.0 and export_timer <= 15.0:
-				news = "EXPORT RUSH IN 15 SECONDS! Golden and Sunburst get a random x2–x6 offer for about 5 seconds. Open your barn and prepare to sell!"
+			if not export_active and previous_export_timer > 15.000001 and export_timer <= 15.000001:
+				export_timer = 15.0
+				news = "EXPORT RUSH IN 15s! Get Golden and Sunburst crops ready."
 				notified.emit(news)
 				dirty = true
 			if export_timer < 0.000001:
@@ -977,6 +1057,13 @@ func update(delta: float) -> void:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
+		if rocket_due:
+			# Every clock consumes this final substep before the cinematic freezes
+			# simulation. The coincident ordinary surge waits for the rocket.
+			_prepare_rocket()
+			surge_timer = maxf(0.000001, surge_timer)
+			dirty = true
+			break
 	if dirty:
 		changed.emit()
 
@@ -1137,7 +1224,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			return _finish("Already watered, or no seed planted. Water once after planting; crops then grow in real time.")
 		return _finish("These patches are already tilled or occupied. Plant seeds in prepared soil.")
 	if action == "pest":
-		return _finish("Sprayed pests off %d patches! Further damage has stopped. Damage already done lasts until this harvest; collect ripe crops soon." % affected)
+		return _finish("Cleared %d beds! Damage stopped. Harvest ripe crops soon." % affected)
 	if action == "harvest":
 		return _finish("Harvested %s potatoes from %d patches! Combo x%d. Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, combo_multiplier, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
 	if action == "hoe" and thawed > 0:
@@ -1428,14 +1515,14 @@ func _roll_odds_with_stake(stake_bonus: float) -> Array[Dictionary]:
 	# tier equally only suppressed Commons and left rare-item ratios unchanged.
 	var rarity_powers: Array[float] = [0.0, 1.0, 1.12, 1.25, 1.40, 1.52, 1.80, 2.15]
 	var entries: Array[Dictionary] = [
-		{"tier": "common", "chance": 55.0, "description": "70% empty sack / 30% refund of 10% of your stake. No seed rewards."},
-		{"tier": "rare", "chance": 24.89, "description": "Wearable hats, shirts, pants and shoes for your build. Equip one item per slot."},
-		{"tier": "epic", "chance": 12.0, "description": "Build clothing, a visor, gauntlets, or permanent luck/yield."},
-		{"tier": "legendary", "chance": 5.0, "description": "Prospector's Gold Hat plus tool upgrades or a five-second market offer."},
-		{"tier": "mythic", "chance": 2.0, "description": "Aurora Crown plus mutation potatoes worth at most 75% of the stake."},
-		{"tier": "jackpot", "chance": 1.0, "description": "Receive 20 times your stake in fictional game coins."},
-		{"tier": "relic", "chance": 0.1, "description": "A passive keepsake or equippable market charm; base chance 0.1%."},
-		{"tier": "mystery", "chance": 0.01, "description": "An exceptionally rare passive keepsake or luck charm.", "hidden_chance": true},
+		{"tier": "common", "chance": 55.0, "description": "70% empty · 30% chance of a 10% refund"},
+		{"tier": "rare", "chance": 24.89, "description": "Hats, shirts, pants and shoes. Equip for bonuses."},
+		{"tier": "epic", "chance": 12.0, "description": "Build gear or permanent luck/yield."},
+		{"tier": "legendary", "chance": 5.0, "description": "Gold Hat + tool upgrades or a 5s offer."},
+		{"tier": "mythic", "chance": 2.0, "description": "Aurora Crown + mutations worth up to 75% of stake."},
+		{"tier": "jackpot", "chance": 1.0, "description": "20× your stake in game coins!"},
+		{"tier": "relic", "chance": 0.1, "description": "Permanent relic or market charm · Base 0.1%"},
+		{"tier": "mystery", "chance": 0.01, "description": "Ultra-rare relic or luck charm.", "hidden_chance": true},
 	]
 	var total: float = 0.0
 	for index in range(entries.size()):
@@ -1618,7 +1705,7 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 				var gain: float = maxf(0.0, minf(10.0 - luck, 0.1 * sqrt(float(scale))))
 				luck += gain
 				title = "LUCKY SPUD CHARM"
-				detail = "+%.2fx permanent mutation luck (now %.2fx; cap 10x). Improves positive market events, mutations, and the displayed roll odds." % [gain, luck]
+				detail = "+%.2fx permanent luck · Now %.2fx / 10x" % [gain, luck]
 			else:
 				var gain: float = maxf(0.0, minf(2.0 - permanent_yield, 0.005 * sqrt(float(scale))))
 				permanent_yield += gain
@@ -1698,6 +1785,10 @@ func _market_tick() -> void:
 			movement = rng.randf_range(0.0, volatility * 0.8) if rng.randf() < 0.62 else rng.randf_range(-volatility, 0.0)
 		core["sell"] = base * clampf(exp(log_ratio * 0.82 + movement), 0.35, 3.0)
 		core["seed"] = float(core["sell"]) * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO
+	if surge_remaining <= 0.0 and natural_remaining <= 0.0 and rng.randf() < natural_stock_chance():
+		natural_crop = selected_crop
+		natural_factor = _natural_boom_roll(71.0 if current_island >= 3 else 21.0, stock_cap())
+		natural_remaining = SURGE_DURATION
 	_refresh_market(true)
 
 
@@ -1714,9 +1805,12 @@ func _refresh_market(record_history: bool = true) -> void:
 			sale_factor *= export_factor
 		if id == "icecap" and thaw_remaining > 0.0:
 			sale_factor *= 8.0
-		var current: float = minf(float(CROPS[id]["base"]) * MAX_PRICE_MULTIPLIER, float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
+		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
+		if natural_remaining > 0.0 and id == natural_crop:
+			current = maxf(current, float(CROPS[id]["base"]) * minf(stock_cap(), natural_factor * item_stock_factor()))
 		if surge_remaining > 0.0 and id == surge_crop:
-			current = float(CROPS[id]["base"]) * minf(MAX_PRICE_MULTIPLIER, surge_factor * item_stock_factor())
+			var ceiling: float = MAX_PRICE_MULTIPLIER if surge_kind == "rocket" and current_island >= 3 else stock_cap()
+			current = float(CROPS[id]["base"]) * minf(ceiling, surge_factor * item_stock_factor())
 		if tutorial_active:
 			current = float(CROPS[id]["base"])
 			seed_factor = 1.0
@@ -1818,17 +1912,20 @@ func format_number(value: float) -> String:
 	var absolute: float = absf(value)
 	if absolute > 0.0 and absolute < 0.01:
 		return String.num_scientific(value)
-	if absolute >= 1.0e18:
+	if absolute >= 1.0e36:
 		var exponent: int = int(floor(log(absolute) / log(10.0)))
 		var mantissa: float = value / pow(10.0, exponent)
 		if absf(snappedf(mantissa, 0.01)) >= 10.0:
 			exponent += 1
 			mantissa /= 10.0
 		return ("%.2f" % mantissa).trim_suffix("0").trim_suffix("0").trim_suffix(".") + "e" + str(exponent)
-	var suffixes: Array[String] = ["", "K", "M", "B", "T", "Qa"]
+	var suffixes: Array[String] = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]
 	var scaled: float = value
 	var level: int = 0
 	while absf(scaled) >= 1000.0 and level < suffixes.size() - 1:
+		scaled /= 1000.0
+		level += 1
+	if level > 0 and absf(round(scaled)) >= 1000.0 and level < suffixes.size() - 1:
 		scaled /= 1000.0
 		level += 1
 	if level == 0:
@@ -1898,11 +1995,19 @@ func reset_game() -> void:
 	surge_remaining = 0.0
 	surge_crop = "russet"
 	surge_factor = 1.0
+	surge_kind = "normal"
+	rocket_timer = ROCKET_INTERVAL
+	rocket_pending = false
+	rocket_factor = 1.0
+	rocket_crop = "icecap"
+	natural_remaining = 0.0
+	natural_factor = 1.0
+	natural_crop = "russet"
 	seed_inventory = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	storage = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
-	news = "Harvest ripe Russets, watch the market, and choose when to sell. Prices update every 3 seconds here. Watch for brief offers and prepare your harvest!"
+	news = "Harvest your Russets. Catch a good price. Sell with F!"
 	event_name = "OPEN MARKET"
 	event_remaining = 0.0
 	elapsed = 0.0
@@ -1948,6 +2053,8 @@ func _save_data() -> Dictionary:
 		"island3_unlocked": island3_unlocked, "frost_timer": frost_timer, "frost_active": frost_active,
 		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "thaw_remaining": thaw_remaining, "pest_timer": pest_timer, "coins": coins, "coins_scientific": String.num_scientific(coins), "selected_crop": selected_crop,
 		"tracked_seeds": tracked_seeds, "surge_timer": surge_timer, "surge_remaining": surge_remaining, "surge_crop": surge_crop, "surge_factor": surge_factor,
+		"surge_kind": surge_kind, "rocket_timer": rocket_timer, "rocket_pending": rocket_pending, "rocket_factor": rocket_factor, "rocket_crop": rocket_crop,
+		"natural_remaining": natural_remaining, "natural_factor": natural_factor, "natural_crop": natural_crop,
 		"seed_inventory": seed_inventory, "storage": storage, "capacity": capacity, "tools": tools,
 		"plots": plots, "current_island": current_island, "island2_unlocked": island2_unlocked,
 		"island_plots": island_plots, "shores_first_mutation": shores_first_mutation,
@@ -2051,6 +2158,16 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		set(key, str(data[key]))
 	for key in ["island2_unlocked", "shores_first_mutation", "export_active", "golden_hat", "island3_unlocked", "frost_active"]:
 		set(key, bool(data[key]))
+	surge_kind = str(data.get("surge_kind", "normal"))
+	rocket_timer = float(data.get("rocket_timer", ROCKET_INTERVAL))
+	rocket_pending = bool(data.get("rocket_pending", false))
+	rocket_factor = float(data.get("rocket_factor", 1.0))
+	rocket_crop = str(data.get("rocket_crop", "icecap"))
+	natural_remaining = float(data.get("natural_remaining", 0.0))
+	natural_factor = float(data.get("natural_factor", 1.0))
+	natural_crop = str(data.get("natural_crop", "russet"))
+	if int(data.get("mechanics_revision", 0)) < 8:
+		surge_factor = minf(surge_factor, stock_cap())
 	for key in ["seed_inventory", "storage", "tools", "market", "mastery", "last_roll", "quest_progress", "island_sales", "inventory_items"]:
 		set(key, data[key].duplicate(true))
 	# Old farms retain every collectible and receive zero owned copies of new gear.
@@ -2375,6 +2492,45 @@ func _valid_precise_coins(data: Dictionary) -> bool:
 	return (json_value is int or json_value is float) and numeric == float(json_value)
 
 
+func _saved_stock_cap(data: Dictionary, crop: String) -> float:
+	if int(data.get("mechanics_revision", 0)) < 8:
+		return 31.0
+	if int(data["current_island"]) >= 3 and str(data["surge_kind"]) == "rocket" and crop == str(data["surge_crop"]) and float(data["surge_remaining"]) > 0.0:
+		return MAX_PRICE_MULTIPLIER
+	return 101.0 if int(data["current_island"]) >= 3 else 30.99
+
+
+func _valid_stock_events(data: Dictionary) -> bool:
+	if not _number(data.get("current_island"), 1, 3, true):
+		return false
+	var winter: bool = int(data["current_island"]) >= 3
+	var cap: float = 101.0 if winter else 30.99
+	if not data.get("surge_kind") is String or data["surge_kind"] not in ["normal", "rocket"] or not data.get("rocket_pending") is bool:
+		return false
+	if not _number(data.get("rocket_timer"), 0.000001, ROCKET_INTERVAL) or not _number(data.get("rocket_factor"), 1.0, MAX_PRICE_MULTIPLIER):
+		return false
+	if not _number(data.get("natural_remaining"), 0, SURGE_DURATION) or not _number(data.get("natural_factor"), 1.0, cap):
+		return false
+	for key: String in ["rocket_crop", "natural_crop", "surge_crop"]:
+		if not data.get(key) is String or data[key] not in CROP_IDS:
+			return false
+	if not _number(data.get("surge_remaining"), 0, SURGE_DURATION) or not _number(data.get("surge_factor"), 1, MAX_PRICE_MULTIPLIER):
+		return false
+	if bool(data["rocket_pending"]):
+		if not winter or float(data["rocket_factor"]) < 151.0 or not is_equal_approx(float(data["rocket_timer"]), ROCKET_INTERVAL):
+			return false
+	elif float(data["rocket_factor"]) != 1.0:
+		return false
+	if data["surge_kind"] == "rocket":
+		if not winter or float(data["surge_remaining"]) <= 0.0 or float(data["surge_factor"]) < 151.0:
+			return false
+	elif float(data["surge_factor"]) > cap:
+		return false
+	if float(data["natural_remaining"]) == 0.0:
+		return float(data["natural_factor"]) == 1.0
+	return float(data["natural_factor"]) >= 21.0
+
+
 func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary:
 		return false
@@ -2403,6 +2559,8 @@ func _valid_save(raw: Variant) -> bool:
 	if data.has("mechanics_revision") and (not newest or not _number(data["mechanics_revision"], 2.0, float(MECHANICS_REVISION), true)):
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 6 and not data.has("equipment"):
+		return false
+	if int(data.get("mechanics_revision", 0)) >= 8 and not _valid_stock_events(data):
 		return false
 	if not data.has("mechanics_revision") and (data.has("export_cycle_sold") or data.has("export_qualified_cycles")):
 		return false
@@ -2435,7 +2593,7 @@ func _valid_save(raw: Variant) -> bool:
 	if int(data.get("mechanics_revision", 0)) >= 4:
 		ranges["surge_timer"] = [0.000001, SURGE_INTERVAL, false]
 		ranges["surge_remaining"] = [0.0, SURGE_DURATION, false]
-		ranges["surge_factor"] = [1.0, MAX_PRICE_MULTIPLIER, false]
+		ranges["surge_factor"] = [1.0, MAX_PRICE_MULTIPLIER if int(data.get("mechanics_revision", 0)) >= 8 else 31.0, false]
 		if not data.has("surge_crop") or not data["surge_crop"] is String or not CROP_IDS.has(data["surge_crop"]):
 			return false
 		if not data.has("tracked_seeds") or not data["tracked_seeds"] is Array or data["tracked_seeds"].size() > CROP_IDS.size():
@@ -2525,7 +2683,7 @@ func _valid_save(raw: Variant) -> bool:
 				return false
 			if rebalanced and key == "market_core" and not _number(entry["sell"], float(CROPS[id]["base"]) * 0.35 - 0.000001, float(CROPS[id]["base"]) * 3.0 + 0.000001):
 				return false
-			if data.has("mechanics_revision") and key == "market" and float(entry["sell"]) > float(CROPS[id]["base"]) * MAX_PRICE_MULTIPLIER + 0.000001:
+			if data.has("mechanics_revision") and key == "market" and float(entry["sell"]) > float(CROPS[id]["base"]) * _saved_stock_cap(data, id) + 0.000001:
 				return false
 			if key == "market":
 				if not entry.has("change") or not _number(entry["change"], -100.0, 1.0e22):

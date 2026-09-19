@@ -43,6 +43,8 @@ func run() -> void:
 	check(menu_debug != null, "Debug is discoverable in the three-line menu")
 	menu_debug.pressed.emit()
 	check(game.hud._panel_kind == "debug", "menu Debug card opens the actual controls")
+	game.hud._refs.debug_code.text = "ORIGINALLYSPUDREPUBLIC"
+	game.hud._refs.debug_unlock.pressed.emit()
 	find_button("debug_money:10").pressed.emit()
 	find_button("debug_luck:100").pressed.emit()
 	check(game.hud._refs.debug_money.value == 10 and game.hud._refs.debug_luck.value == 100, "money and luck presets change their numeric controls")

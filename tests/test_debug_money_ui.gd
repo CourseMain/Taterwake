@@ -51,6 +51,8 @@ func run() -> void:
 	game.set_process(false)
 	game.state.coins = 1e20
 	game._on_action("debug")
+	game.hud._refs.debug_code.text = "ORIGINALLYSPUDREPUBLIC"
+	game.hud._refs.debug_unlock.pressed.emit()
 	game.hud.action_requested.connect(func(action: String) -> void: sent_action = action)
 	for source: String in ["0.1", "0.01"]:
 		game.state.coins = 1000.0
@@ -126,7 +128,7 @@ func run() -> void:
 	check(game.state.coins == 1e19 and not game.hud._refs.roll_accounting.visible, "full all-in is charged then a real10percent refund remains hidden during the reel")
 	game.hud._spinner._process(5)
 	var receipt: String = game.hud._refs.roll_accounting.text
-	check(game.hud._refs.roll_accounting.visible and receipt.contains("Spent $1e20") and receipt.contains("Returned $1e19") and receipt.contains("Balance $1e19"), "receipt distinguishes full payment from the later10percent return")
+	check(game.hud._refs.roll_accounting.visible and receipt.contains("Spent $100Qi") and receipt.contains("Returned $10.0Qi") and receipt.contains("Balance $10.0Qi"), "receipt distinguishes full payment from the later10percent return")
 	check(receipt.contains("10% stake refunds") and game.hud._refs.roll_accounting.tooltip_text.contains("Net change: $" + String.num_scientific(-9e19)), "refund source and net change are explained")
 	await shot("all-in-refund")
 	game.state._grant_item("aurora_crown")

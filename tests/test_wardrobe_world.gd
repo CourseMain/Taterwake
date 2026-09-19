@@ -35,7 +35,6 @@ func run() -> void:
 	game.state.mastery.russet = 30000
 	game.state.unlock_island2()
 	game.state.unlock_island3()
-	game.activities.buy_duck()
 	for id in ["straw_hat", "lucky_cap", "farmer_shirt", "farmer_pants", "farmer_boots", "harvest_gloves", "market_monocle", "investor_shirt", "scientist_coat", "gambler_shirt", "industrialist_overalls", "industrialist_pants", "industrialist_boots"]:
 		game.state._grant_item(id)
 	game._on_action("gear:equip:straw_hat")
@@ -49,6 +48,8 @@ func run() -> void:
 	game._on_action("gear:equip:straw_hat")
 	for island in [1, 2, 3]:
 		game.state.travel_to(island)
+		for _duck in range(island):
+			game.activities.hire_duck()
 		game.state.pest_timer = 100.0
 		game.state._event_in = 100.0
 		for plot in game.state.plots:

@@ -93,6 +93,11 @@ func run() -> void:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)
+		if kind == "debug":
+			game.hud._refs.debug_code.text = "ORIGINALLYSPUDREPUBLIC"
+			game.hud._refs.debug_unlock.pressed.emit()
+			await settle()
+			check_menu("unlocked debug controls")
 		if kind == "inventory":
 			game.hud._act("inventory_tab:gear")
 			await settle()

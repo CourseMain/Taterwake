@@ -40,11 +40,14 @@ func _run() -> void:
 		check(world._tutorial_marker.visible and world._tutorial_marker.text.length() > 1, "%s gets one named destination marker" % station)
 		var point: Vector3 = world.station_position(station)
 		check(is_equal_approx(point.x, world._tutorial_marker.position.x) and is_equal_approx(point.z, world._tutorial_marker.position.z), "%s marker points at its station" % station)
-	check(world.station_position("island").is_equal_approx(Vector3(11.5, 0.0, -14.0)), "ferry guidance points to reachable dock, not offshore miniature")
+	check(world.station_position("island").is_equal_approx(Vector3(11.5, 0.0, -15.5)), "ferry guidance points to reachable boarding area, not offshore miniature")
 	world.set_tutorial_focus("market")
 	var marker_y: float = world._tutorial_marker.position.y
 	world.animate(0.3, false)
 	check(absf(world._tutorial_marker.position.y - marker_y) > 0.01, "destination marker gently bobs")
+	for wing: Node3D in world._tutorial_trail[0].get_children():
+		var tip: Vector3 = wing.transform * Vector3(0, 0, 0.4)
+		check(absf(tip.x) < 0.05 and tip.z > 0.0, "trail chevron points forward toward destination")
 	await shot("tutorial-marker-market")
 	world.set_tutorial_focus("plot:4")
 	check(world._tutorial_marker.visible and is_equal_approx(world._tutorial_marker.position.x, world.plot_positions[4].x) and is_equal_approx(world._tutorial_marker.position.z, world.plot_positions[4].z), "crop and pest lessons can mark the real target plot")

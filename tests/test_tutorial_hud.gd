@@ -26,7 +26,7 @@ func settle() -> void:
 		await process_frame
 
 func guide(tools: Array = [], features: Array = [], allowed: Array = []) -> Dictionary:
-	return {"title": "Your first potato", "body": "Meet the friendly island shopkeepers at your own pace. Buy one Russet seed, then bring it to the glowing garden bed. Every tool will appear when you need it.", "step": 3, "total": 20, "tools": tools, "features": features, "allowed_actions": allowed, "continue": true}
+	return {"id": "market", "title": "Grab a seed", "body": "Follow the arrow to the market.\nBuy 1 Russet seed.", "step": 3, "total": 20, "tools": tools, "features": features, "allowed_actions": allowed, "continue": true}
 
 func button_for(action: String) -> Button:
 	for node: Node in hud.root.find_children("*", "Button", true, false):
@@ -64,7 +64,14 @@ func run() -> void:
 	check(actions.is_empty(), "blocked actions never reach game state")
 	hud._act("tutorial:next")
 	hud._act("tutorial:skip")
-	check(actions == ["tutorial:next", "tutorial:skip"], "guide buttons remain responsive independently of feature whitelist")
+	check(actions == ["tutorial:next"], "unguarded skip cannot dispatch an exit")
+	hud._tutorial_skip.pressed.emit()
+	check(actions.size() == 1 and hud._tutorial_exit_box.visible and not hud._tutorial_next.visible, "exit control reveals a separate choice without ending the tutorial")
+	hud._act("tutorial:stay")
+	check(hud._tutorial_next.visible and not hud._tutorial_exit_box.visible, "keep learning safely restores Next")
+	hud._act("tutorial:exit")
+	hud._act("tutorial:skip")
+	check(actions == ["tutorial:next", "tutorial:skip"], "deliberate skip dispatches once")
 	actions.clear()
 	hud.set_tutorial(guide(["hoe", "plant"], ["coins", "market"], ["tool:", "buy:russet:1", "market", "close"]))
 	hud.set_tool("plant")
@@ -81,6 +88,12 @@ func run() -> void:
 	check(visible_crops == 1 and hud._crop_buttons.russet.visible, "Russet is the sole first planting choice")
 	hud.show_panel("market", state)
 	await settle()
+	var purchase_guide: Dictionary = guide(["hoe", "plant"], ["coins", "market"], ["tool:", "buy:russet:1", "market", "close"])
+	purchase_guide["continue"] = false
+	hud.set_tutorial(purchase_guide)
+	hud._update_tutorial_pointer()
+	check(hud._tutorial_pointer.target == hud._refs["buy:russet:1"], "pointer targets the real enabled Russet buy button")
+	check(hud._tutorial_next.visible and hud._tutorial_next.disabled and hud._tutorial_skip.get_global_rect().end.y < hud._tutorial_next.get_global_rect().position.y, "exit is above the lesson and cannot replace the disabled action prompt")
 	check(not hud._refs["buy:russet:1"].disabled and hud._refs["buy:russet:5"].disabled and not hud._refs.has("buy:golden:1"), "first purchase explicitly allows one Russet seed only")
 	check(hud._panel_crops == ["russet"] and not hud._refs["buy:russet:5"].visible and not hud._refs["sell:russet:-1"].visible and not hud._refs["russet:graph"].visible, "first market removes other crops, bulk buys, sell buttons, and price graphs")
 	check(hud._known_crops().size() >= 4, "simplified seed market leaves full inventory crop catalog intact")

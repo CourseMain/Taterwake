@@ -1,6 +1,6 @@
 extends SceneTree
 const State = preload("res://scripts/game_state.gd")
-const SAVE = "user://spud_valley_qol_test.json"
+const SAVE = "user://spud_valley_qol_test_only.json"
 var checks: int = 0
 var failures: int = 0
 var farm
@@ -112,18 +112,19 @@ func run() -> void:
 	var down: int = 0
 	farm.rng.seed = 93939
 	for _tick in range(2000):
-		quote = farm.market.russet.sell
+		# The underlying walk continues while temporary stock quotes are pinned.
+		quote = farm._market_core.russet.sell
 		farm._market_tick()
-		if farm.market.russet.sell > quote: up += 1
-		elif farm.market.russet.sell < quote: down += 1
+		if farm._market_core.russet.sell > quote: up += 1
+		elif farm._market_core.russet.sell < quote: down += 1
 	check(up > down and down > 500, "starter market has more upward ticks while retaining substantial downward movement")
 	clean_farm()
 	farm.select_crop("golden")
 	farm.update(179.999)
 	check(farm.surge_remaining == 0.0 and farm.surge_timer < 0.01, "guaranteed surge never starts before three minutes")
 	farm.update(0.001)
-	check(farm.surge_remaining == 5.0 and farm.surge_timer == 180.0 and farm.surge_crop == "golden", "three-minute boundary starts a five-second surge in selected crop")
-	check(farm.market.golden.change >= 500.0 and farm.market.golden.change <= 3000.0, "guaranteed final quote is within plus five-hundred to three-thousand percent")
+	check(farm.surge_remaining == 10.0 and farm.surge_timer == 180.0 and farm.surge_crop == "golden", "three-minute boundary starts a ten-second surge in selected crop")
+	check(farm.market.golden.change >= 500.0 and farm.market.golden.change <= 2999.0, "guaranteed final quote is within plus five-hundred to 2999 percent")
 	quote = farm.market.golden.sell
 	farm._start_event("crash")
 	farm.boost_remaining = 5.0
@@ -135,12 +136,12 @@ func run() -> void:
 	check(farm.surge_crop == "golden" and farm.market.golden.sell == quote, "changing selected seed cannot transfer or duplicate active surge")
 	var saved_ok: bool = farm.save_game(SAVE)
 	var loaded_ok: bool = farm.load_game(SAVE)
-	check(saved_ok and loaded_ok and farm.surge_remaining == 5.0 and is_equal_approx(farm.market.golden.sell, quote), "active surge and exact countdown persist through save/load")
-	farm.update(5.0)
-	check(farm.surge_remaining == 0.0 and farm.surge_factor == 1.0 and is_equal_approx(farm.surge_timer, 175.0), "surge ends after five seconds while next start stays three minutes apart")
+	check(saved_ok and loaded_ok and farm.surge_remaining == 10.0 and is_equal_approx(farm.market.golden.sell, quote), "active surge and exact countdown persist through save/load")
+	farm.update(10.0)
+	check(farm.surge_remaining == 0.0 and farm.surge_factor == 1.0 and is_equal_approx(farm.surge_timer, 170.0), "surge ends after ten seconds while next start stays three minutes apart")
 	check(farm.market.golden.sell < farm.CROPS.golden.base * 6.0, "surge quote returns to bounded underlying price after expiry")
-	farm.update(175.0)
-	check(farm.surge_crop == "russet" and farm.surge_remaining == 5.0, "next surge starts exactly three minutes after the previous one")
+	farm.update(170.0)
+	check(farm.surge_crop == "russet" and farm.surge_remaining == 10.0, "next surge starts exactly three minutes after the previous one")
 	farm.coins = 2.0e11
 	farm.mastery.russet = 30000
 	farm.unlock_island2()
@@ -152,7 +153,7 @@ func run() -> void:
 	farm.select_crop("icecap")
 	farm.surge_timer = 0.1
 	farm.update(0.1)
-	check(farm.surge_crop == "icecap" and farm.market.icecap.change >= 500.0 and farm.market.icecap.change <= 3000.0, "winter selected crop receives the same bounded guaranteed surge")
+	check(farm.surge_crop == "icecap" and farm.market.icecap.change >= 3000.0 and farm.market.icecap.change <= 10000.0, "winter selected crop receives its larger bounded guaranteed surge")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "combined winter travel, settings and surge state remains a valid save")
 	farm.set_tracked_seed("icecap", true)
 	farm.travel_to(1)
@@ -206,7 +207,7 @@ func run() -> void:
 	check(not farm.load_game(SAVE) and farm.tracked_seed_ids().size() == 4, "duplicate tracked settings are rejected without modifying the live farm")
 	invalid_state = safe_state.duplicate(true)
 	invalid_state.surge_remaining = 5.0
-	invalid_state.surge_factor = State.MAX_PRICE_MULTIPLIER + 0.01
+	invalid_state.surge_factor = farm.stock_cap() + 0.01
 	write_snapshot(invalid_state)
 	check(not farm.load_game(SAVE) and farm.surge_remaining == 0.0, "over-cap saved surges are rejected without activating any price effect")
 	invalid_state = safe_state.duplicate(true)
@@ -219,10 +220,10 @@ func run() -> void:
 		if message.begins_with("STOCK SURGE!"): surge_messages.append(message)
 	)
 	farm.update(3600.0)
-	check(surge_messages.size() == 20 and farm.surge_remaining == 5.0 and farm.surge_timer == 180.0, "one long update produces exactly one surge every three minutes with no overlapping starts")
+	check(surge_messages.size() == 20 and farm.surge_remaining == 10.0 and farm.surge_timer == 180.0, "one long update produces exactly one surge every three minutes with no overlapping starts")
 	var bounded: bool = true
 	for id in farm.CROP_IDS:
-		bounded = bounded and is_finite(farm.market[id].sell) and farm.market[id].sell > 0.0 and farm.market[id].sell <= farm.CROPS[id].base * State.MAX_PRICE_MULTIPLIER
+		bounded = bounded and is_finite(farm.market[id].sell) and farm.market[id].sell > 0.0 and farm.market[id].sell <= farm.CROPS[id].base * farm.stock_cap()
 	check(bounded and farm.coins == 240.0 and farm.roll_count == 0, "an hour of overlapping market events keeps finite capped quotes and awards no money or rolls automatically")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()

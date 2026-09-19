@@ -116,7 +116,7 @@ func _run() -> void:
 	check(activities.valid_data(saved), "in-flight furnace and patrol data validate")
 	activities.reset()
 	check(activities.duck_level == 0 and activities.furnace_remaining == 0, "reset clears purchased activities and running boosts")
-	check(activities.load_data(saved) and activities.furnace_remaining == 10 and activities.furnace_cooldown == 50 and activities.duck_level == 3, "saved activity state resumes exact timers and purchases")
+	check(activities.load_data(saved) and activities.furnace_remaining == 10 and activities.furnace_cooldown == 50 and activities.duck_speeds["1"] == 2 and activities.duck_counts["1"] == 1 and activities.duck_count() == 0, "saved activity state resumes timers and separate island purchases")
 	state.current_island = 2
 	check(activities.growth_speed_multiplier() == 1 and activities.processing_speed_multiplier() == 1, "winter heat never buffs other islands")
 	activities.update(10)
@@ -207,7 +207,7 @@ func _test_flocks() -> void:
 	for island in [1, 2, 3]:
 		state.travel_to(island)
 		var data: Dictionary = activities.info()
-		check(data.duck_count == island and data.ducks.size() == island, "island%d has one physical duck per island number before training" % island)
+		check(data.duck_count == 0 and data.duck_capacity == island and data.ducks.size() == island, "island%d starts with empty patrol slots and the correct capacity" % island)
 		check(not data.ducks[0].trained, "untrained island%d flock is marked as idle for coop visuals" % island)
 	state.travel_to(2)
 	for index in [3, 8]:
@@ -215,8 +215,13 @@ func _test_flocks() -> void:
 	activities.update(8.0)
 	check(state.plots[3].pests and state.plots[8].pests and activities.duck_clears == 0, "idle untrained ducks cannot secretly remove pests")
 	var balance: float = state.coins
-	activities.buy_duck()
-	check(activities.duck_level == 1 and is_equal_approx(state.coins, balance - 1500.0), "first global patrol training can be bought on Island2")
+	activities.hire_duck()
+	check(activities.duck_count() == 1 and is_equal_approx(balance - state.coins, 25000000.0), "first Shores duck charges its own island price")
+	activities.hire_duck()
+	check(activities.duck_count() == 2 and is_equal_approx(balance - state.coins, 75000000.0), "second duck is a separate purchase")
+	var full_balance: float = state.coins
+	activities.hire_duck()
+	check(activities.duck_count() == 2 and state.coins == full_balance, "Shores capacity blocks a third duck without charge")
 	state.update(1.0)
 	var flock: Array = activities.info().ducks
 	check(flock[0].target != flock[1].target and [3, 8].has(int(flock[0].target)) and [3, 8].has(int(flock[1].target)), "two ducks reserve distinct infested targets")
@@ -225,6 +230,11 @@ func _test_flocks() -> void:
 	state.travel_to(3)
 	for index in [3, 5, 7]:
 		_infest(index)
+	activities.train_ducks()
+	check(activities.duck_count() == 0 and activities.duck_speed() == 0, "cannot train an empty winter flock")
+	for _duck: int in range(3):
+		activities.hire_duck()
+	check(activities.duck_count() == 3 and activities.duck_capacity() == 3, "winter can hire three ducks")
 	state.plots[3].pest_ticks = 1
 	state.plots[3].pest_damage = 1.0 / 3.0
 	state.update(1.0)
@@ -248,12 +258,13 @@ func _test_flocks() -> void:
 	activities.update(1.0)
 	var previous_progress: float = activities.info().ducks[0].progress
 	state.travel_to(3)
-	activities.buy_duck()
-	check(activities.duck_level == 2 and activities.duck_interval() == 3.0, "winter training upgrades the shared rank for every flock")
+	state.coins = 1e16
+	activities.train_ducks()
+	check(activities.duck_speed() == 1 and activities.duck_interval() == 3.0 and activities.duck_count() == 3, "speed upgrade improves only winter speed without adding a duck")
 	state.travel_to(2)
-	check(is_equal_approx(activities.info().ducks[0].progress, previous_progress), "global training preserves in-flight route progress on other islands")
+	check(activities.duck_interval() == 4.0 and is_equal_approx(activities.info().ducks[0].progress, previous_progress), "winter training leaves Shores speed and route progress untouched")
 	var snapshot: Dictionary = activities.save_data()
-	check(int(snapshot.version) == 2 and snapshot.duck_patrols.size() == 3 and activities.valid_data(snapshot), "version2 save contains all independent island flocks")
+	check(int(snapshot.version) == 3 and snapshot.duck_patrols.size() == 3 and activities.valid_data(snapshot), "version3 save contains ownership, speed and all patrol paths")
 	check(state.save_game(SAVE), "multi-island patrols serialize with the farm")
 	state.reset_game()
 	check(state.load_game(SAVE) and activities.save_data().duck_patrols == snapshot.duck_patrols, "farm reload restores every duck path, clock and clear count")
@@ -282,7 +293,7 @@ func _test_flocks() -> void:
 	# The flock rule derives from island numbers rather than a hard-coded list.
 	state.island_plots["4"] = state._empty_winter(true)
 	state.current_island = 4
-	check(activities.info().duck_count == 4 and activities.info().ducks.size() == 4, "future island4 automatically receives four ducks")
+	check(activities.info().duck_count == 0 and activities.info().duck_capacity == 4 and activities.info().ducks.size() == 4, "future island4 has four hire slots")
 	state.current_island = 2
 	state.island_plots.erase("4")
 

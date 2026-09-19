@@ -6,6 +6,10 @@
 
 New farms start a saved, step-by-step Valley tutorial: move around, buy one Russet seed, hoe a marked bed, plant, water, harvest and sell. Then meet the inventory, toolsmith, Wash & Sort workshop, challenge keeper, Roll House, Duck Patrol and dock. Tools and interface elements appear as they are introduced, with gentle sound cues. The guided tour leaves the rest of Island 1 for you to discover.
 
+Follow the gold trail and highlighted buttons. Each lesson shows one short action, a tool icon and progress. The large gold button advances the tour when ready. The small **×** opens **Keep learning / End tutorial**, so one accidental click cannot skip the guide.
+
+Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. The Valley path goes around the Roll House and through an opening in the fence. You can visit the dock during the tutorial; sailing still requires the normal island unlocks.
+
 Random pests and stock surges pause during the guide. One practice pest appears only after its introduction and cannot damage your crops. On completion or skip, normal hazards resume with fresh countdowns; the first scheduled stock surge is three minutes away. You can skip or resume the saved guide. Established farms can use **☰ → First island guided tour** in the Valley for an informational replay that pauses and preserves their existing farm.
 
 
@@ -29,7 +33,7 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | 3 | Water |
 | 4 | Harvest |
 | 5 | Bug sprayer |
-| E / Space | Use selected tool on nearby bed |
+| E / Space | Use selected tool on nearby bed / board nearby ferry |
 | B | Market |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
@@ -55,15 +59,15 @@ Pests appear on planted fields at random 25–100-second intervals and when ripe
 
 ## The live crop market
 
-Quotes refresh every **three seconds on Island 1**, with slightly more upward movement, and every **five seconds on Islands 2 and 3**. Prices stay bounded and can still fall. Brief shortages, crashes, Golden crazes, seed panics, mystery buyers, supply collapses, seed fairs and festivals vary their target and strength. Their multipliers expire, rather than compounding forever. All stacked normal crop sale quotes are capped at **+3,000%** against base value.
+Quotes refresh every **three seconds on Island 1**, with slightly more upward movement, and every **five seconds on Islands 2 and 3**. Brief market events vary their target and strength, then expire. Normal quotes cap at **+2,999%** in the Valley and Shores, **+10,000%** in Frosthollow.
 
-The compact stock countdown sits at the upper left beneath the wordmark, leaving the centre of the map and barn visible. Its final **10 seconds flash and build up colored energy**. A visible **three-minute countdown** guarantees a five-second **+500% to +3,000% surge** for the crop selected when the timer ends. The surge overrides stacked multipliers, then expires back to normal pricing. The countdown and active opportunity persist when saving.
+Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher rolls are rarer; luck improves the odds. The timer flashes in the final 10 seconds. Outside scheduled booms, each fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on luck, gear, builds or debug luck. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
 
 Press **2** or click the Seeds hotbar slot to show crop choices and tracked seed quotes. Selecting another tool hides both strips. Use **Tracked Seed Prices** in the menu to choose which seed quotes appear in this tray. Your choices are saved; price changes show old → new values with green/up or red/down feedback.
 
 Seeds normally cost **45% of the live crop quote × base plant yield**, before discounts or seed premiums. A huge crop quote therefore also makes its seeds expensive. Combos, mastery, mutations and build choices reward actual farming.
 
-The selected crop at the top of the screen controls the market feedback. Above **+300%**, screen edges and corners pulse with mist; above **+1,000%**, stronger flashes and a brighter fanfare mark the opportunity. Saturated flowing mist, energy ribbons, rings and lightning frame the screen; winter effects add snow. Green belongs to Spud Valley, gold to Golden Shores, and icy blue to Frosthollow. The center stays clear for farming and trading.
+The selected crop at the top of the screen controls the market feedback. Mist begins above **+300%**, bigger rhythmic effects at **+500%**, and a musical jackpot at **+3,000%**. Green belongs to Spud Valley, gold to Golden Shores, and icy blue to Frosthollow. The center stays readable for farming and trading.
 
 ## Three islands
 
@@ -83,8 +87,8 @@ Each island has local challenges around its farming and economic events. Claim c
 
 Open the three-line menu or visit the new island station for these activities:
 
-- **Every island — Duck patrol.** Spud Valley has **one duck**, Golden Shores **two**, and Frosthollow **three**. Click the coop or choose **Duck patrol** in the menu for its dedicated training page; buyer contracts and the furnace stay at their own stations. Train the whole patrol for $1.5K. Each duck clears one infested bed every four seconds; training for $15K and $150K improves this to three and two seconds. Ducks choose separate targets and prioritize threatened crops. They cannot restore eaten yield. All ducks share your existing training, and their routes resume when you revisit an island. Untrained ducks wait at their coop. Farming tools remain manual.
-- **Golden Shores — Buyer contracts.** Choose a bulk harvest order or a mutation commission for your selected crop. Deliver stored potatoes in parts; each shipment locks its live quote with a **25% bulk / 50% mutation bonus**. Finish the order to collect payment. Orders have no expiry; the next buyer arrives after 25 seconds. Targets gradually increase as you complete orders, giving harvest and mutation builds different opportunities.
+- **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. First-duck costs are **$1.5K / $25M / $750B**; each additional duck costs another multiple of that base. Speed costs scale with the island too. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
+- **Golden Shores — Buyer contracts.** Pick a crop, then compare two buyer cards: **bulk +25%** or **mutations +50%**. Each shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
 - **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth and 3× processing for 20 seconds**. Heat affects watered winter crops and a loaded processor while you are on the winter island; it does not plant, harvest or shorten ability cooldowns. The furnace can fire once per minute. Time it against the stock countdown; heat cannot be stacked or refreshed early.
 
 ## Inventory and builds
@@ -137,7 +141,7 @@ Gacha now contains **23 wearable items**, including the previous hats, gloves an
 | Scientist | Mutation chances and crop growth |
 | Industrialist | Faster processing and a little extra harvest yield |
 
-The original eight keepsakes remain passive collectibles. Normal effective luck stays capped at 10×, stock prices stay below the overall +3,000% ceiling, and seeds follow improved sale prices. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves Scientist experiments as well as field mutations; the experiment panel shows its actual chance. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
+The original eight keepsakes remain passive collectibles. Normal effective luck stays capped at 10×, stock gear respects the current island's cap (or the active rocket crop's cap), and seeds follow improved sale prices. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves Scientist experiments as well as field mutations; the experiment panel shows its actual chance. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
 
 An equipped **Aurora Crown grants one free extra roll per paid purchase**, at the same stake value, in addition to its +1 luck. A single purchase gives two results; a winter ×3 or ×5 purchase gives four or six. The Crown must be equipped before buying, so winning one activates its bonus for your next purchase. Free rolls cannot trigger more free rolls, and the result cards identify the **AURORA BONUS**.
 
@@ -149,6 +153,16 @@ The Roll House's collapsible **Trophy cabinet** records your 16 rarest distinct 
 
 ## Debug controls
 
-Open **☰ → Debug: money & luck**, in the first row of the menu, to set money and luck multipliers. Applying money multiplies your current purse **once** (×0–×1,000,000); the money control then returns to ×1. Decimals and scientific notation work: `0.1` keeps 10%, `0.01` keeps 1%, and `1e-20` turns a `$1e20` purse into `$1`. Explicit `0` clears your coins. The preview shows the resulting balance before applying; invalid input or a positive multiplier that would underflow to zero is rejected. Debug luck is a persistent ×1–×1,000 multiplier on normal effective luck, so it can deliberately exceed the normal 10× cap. The panel shows normal luck, debug luck and the resulting value separately. Money changes and debug luck are saved with the farm.
+Open **☰ → Debug: money, luck & time** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-Resetting debug luck returns it to ×1 and keeps your current coins. Changing money, including reducing it, marks subsequent trophies as DEBUG even after luck is reset. Debug settings do not unlock islands or remove stock price limits.
+Applying money multiplies your current purse **once** (×0–×1,000,000); the money control then returns to ×1. Decimals and scientific notation work: `0.1` keeps 10%, `0.01` keeps 1%, and `1e-20` turns a `$1e20` purse into `$1`. Explicit `0` clears your coins. The preview shows the resulting balance before applying; invalid input or a positive multiplier that would underflow to zero is rejected. Debug luck is a persistent ×1–×1,000 multiplier on normal effective luck, so it can deliberately exceed the normal 10× cap. The panel shows normal luck, debug luck and the resulting value separately. Money changes and debug luck are saved with the farm.
+
+Choose **1×, 2×, 5×, 10× or 30×** simulation speed to test crops, markets, pests, abilities and processing. Movement, interface animations, sounds, reward reels and the rocket film stay at normal speed. The simulation advances at most one second per rendered frame, so the highest setting depends on frame rate. Time speed starts at **1×** each session and is not saved.
+
+**Reset luck + time** returns both to ×1 and keeps your current coins. **Lock debug · restore 1× time** closes access and restores normal time while preserving money and luck. Changing money, including reducing it, marks subsequent trophies as DEBUG even after luck is reset. Debug settings do not unlock islands or remove stock price limits.
+
+### Stock Rocket
+
+Every **30 minutes spent on Island 3**, a Stock Rocket launches into the night sky. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +15,000–50,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
+
+Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +15,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.

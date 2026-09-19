@@ -3,26 +3,26 @@ extends Node
 ## beyond one Russet seed, no forced wagers, and no island-completion rewards.
 
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Welcome to Taterland", "body": "Let's grow one potato together, then meet the island's helpers. Prices and pests will wait for you. Take your time.", "next": true, "label": "Show me around"},
-	{"id": "walk", "title": "A little wander", "body": "Click an open patch of ground to walk there, or use WASD / arrow keys. Scroll or pinch your trackpad to zoom. Try moving a few steps."},
-	{"id": "market", "title": "Meet the seed seller", "body": "Click the marked Farmer's Market, then buy 1 Russet seed. Seed prices normally follow crop values; today the market is calm.", "focus": "market"},
-	{"id": "hoe", "title": "1 · Prepare the soil", "body": "Your first tool is the hoe. Press 1, then click the marked empty bed. Your farmer walks over and tills it. One action at a time.", "tool": "hoe"},
-	{"id": "plant", "title": "2 · Plant a Russet", "body": "Press 2 for Seeds, then click the same marked bed. The seed tray appears only while you use seeds. Russets are quick, friendly starter potatoes.", "tool": "plant"},
-	{"id": "water", "title": "3 · Give it a drink", "body": "Press 3, then click your planted bed. Crops need watering once before they grow. You do the farming; the clock handles the growing.", "tool": "water"},
-	{"id": "grow", "title": "Watch it grow", "body": "A watered Russet takes about 10 seconds to ripen. Look for its full leafy plant. You can move or zoom while you wait. Nothing will attack it."},
-	{"id": "harvest", "title": "4 · Your first harvest", "body": "Press 4, then click the marked ripe bed. Potatoes go into storage first. Harvesting and selling are separate, so you choose when to cash in.", "tool": "harvest"},
-	{"id": "sell", "title": "Meet the barn keeper", "body": "Click the marked Barn and sell your Russets. The coins at the top are your spending money. Later, a good stock price makes the same harvest worth more.", "focus": "barn"},
-	{"id": "inventory", "title": "Everything has a place", "body": "Press I to open Inventory. Crops, seeds, mutations, tools and clothing live here. Gear fits one item per body slot; its bonuses work while equipped.", "panel": "inventory"},
-	{"id": "tools", "title": "Meet the toolsmith", "body": "Click the marked Tool Upgrades stall. Better tools work more beds with each action. Field and barn upgrades add room. Have a look; buying can wait until after the tour.", "focus": "tools", "panel": "tools"},
-	{"id": "builds", "title": "Wash, sort and specialize", "body": "Click Wash & Sort. You start as a Farmer. Rolls can unlock Gambler, Investor, Scientist and Industrialist builds, each with different strengths. This is also your processing workshop.", "focus": "builds", "panel": "builds"},
-	{"id": "quests", "title": "Meet the challenge keeper", "body": "Click Farming Challenges. These goals reward ordinary farming, smart buying and well-timed sales. Work toward them as you play; you do not need to finish the island during this tour.", "focus": "quests", "panel": "quests"},
-	{"id": "roll", "title": "Meet the Roll House host", "body": "Click the Roll House to see gear, build crates and reward chances. Rolls spend earned game coins. Bigger stakes change the odds; keep money for seeds. No roll is required now.", "focus": "roll", "panel": "roll"},
-	{"id": "pest_intro", "title": "Ready to meet a pest?", "body": "Normally pests arrive at random or after ripe crops sit for 25 seconds. They eat crop yield. Next, we'll place one harmless practice pest on a marked bed.", "next": true, "label": "Try the sprayer"},
-	{"id": "pest", "title": "5 · Shoo that pest", "body": "Press 5 for the sprayer, then click the marked crop. Walk over and spray it clean. This practice pest cannot damage your potatoes, and no other pests can arrive yet.", "tool": "pest"},
-	{"id": "ducks", "title": "Meet Duck Patrol", "body": "Click the marked duck pond. Hire and train ducks to clear pests for you: one here, two on the Shores, three in winter. You can still use your sprayer any time.", "focus": "duck_patrol", "panel": "duck_patrol"},
-	{"id": "stocks", "title": "Catch the next big price", "body": "The stock timer tracks a surge every 3 minutes. Surges last 5 seconds and can reach +3,000%. Hold potatoes, then sell with F. The timer starts fresh after this tour.", "next": true},
-	{"id": "dock", "title": "Meet the dock keeper", "body": "Click the marked dock to preview travel. Golden Shores brings buyer contracts; Frosthollow brings a furnace. Both unlock through farming progress. Stay here and build your farm at your own pace.", "focus": "island", "panel": "island"},
-	{"id": "finish", "title": "Your farm, your pace", "body": "You know the loop: buy, hoe, plant, water, harvest, sell. The three-line menu holds everything else, including this tour. Start farming when you're ready; your first surge is 3 minutes away.", "next": true, "label": "Let's farm!"},
+	{"id": "welcome", "title": "Your first spud!", "body": "Grow. Sell. Meet the locals.\nPests and stock surges can wait.", "next": true, "label": "Start farming →", "icon": "russet"},
+	{"id": "walk", "title": "Stretch those legs", "body": "Click the ground to walk.\nWASD works too. Scroll to zoom.", "key": "WASD"},
+	{"id": "market", "title": "Grab a seed", "body": "Follow the arrow to the market.\nBuy 1 Russet seed.", "focus": "market", "icon": "russet"},
+	{"id": "hoe", "title": "Break new ground", "body": "Click the gold bed to till it.", "tool": "hoe", "key": "1 · HOE"},
+	{"id": "plant", "title": "Plant your spud", "body": "Click the gold bed to plant.", "tool": "plant", "key": "2 · SEEDS"},
+	{"id": "water", "title": "A little drink", "body": "Water the gold bed once.", "tool": "water", "key": "3 · WATER"},
+	{"id": "grow", "title": "Here it grows…", "body": "A few seconds to your first harvest.", "icon": "russet"},
+	{"id": "harvest", "title": "Dig in!", "body": "Click the gold bed.\nYour potatoes go into storage.", "tool": "harvest", "key": "4 · HARVEST"},
+	{"id": "sell", "title": "Your first payday", "body": "Follow the arrow to the barn.\nSell your Russets.", "focus": "barn"},
+	{"id": "inventory", "title": "Your stash", "body": "Open your bag. Crops, gear and loot live here.", "panel": "inventory", "key": "I · INVENTORY"},
+	{"id": "tools", "title": "Work more beds", "body": "Visit the toolsmith.\nBigger tools = fewer clicks.", "focus": "tools", "panel": "tools"},
+	{"id": "builds", "title": "Pick your style", "body": "Visit Wash & Sort.\nStart Farmer. Unlock four more builds.", "focus": "builds", "panel": "builds"},
+	{"id": "quests", "title": "Farm. Get rewarded.", "body": "Meet the challenge keeper.\nEarn rewards while you grow and sell.", "focus": "quests", "panel": "quests"},
+	{"id": "roll", "title": "Meet the Roll House", "body": "Gear. Builds. Rare loot.\nHave a look—save your coins for now.", "focus": "roll", "panel": "roll"},
+	{"id": "pest_intro", "title": "An uninvited guest", "body": "Pests nibble crops left too long.\nTry one harmless practice pest.", "next": true, "label": "Try the sprayer →"},
+	{"id": "pest", "title": "Shoo!", "body": "Spray the gold bed.\nThis practice pest cannot hurt it.", "tool": "pest", "key": "5 · SPRAYER"},
+	{"id": "ducks", "title": "Your feathered crew", "body": "Visit Duck Patrol.\nHire ducks. Upgrade their speed.", "focus": "duck_patrol", "panel": "duck_patrol"},
+	{"id": "stocks", "title": "Catch the boom", "body": "Every 3 min: +500–2,999%.\n10 seconds to sell with F!", "next": true, "key": "F · SELL"},
+	{"id": "dock", "title": "To the ferry!", "body": "Follow the path. Press E at the dock.\nOr click the ferry to walk there.", "focus": "island", "panel": "island"},
+	{"id": "finish", "title": "Make it your farm", "body": "Plant → grow → sell → repeat.\nYour first surge is 3 minutes away.", "next": true, "label": "Let's farm! →"},
 ]
 const TOUR_SKIP: Array[String] = ["walk", "hoe", "plant", "water", "grow", "harvest", "pest"]
 var game: Node
@@ -163,21 +163,21 @@ func refresh() -> void:
 	if current_id() == "grow":
 		var plot: Dictionary = game.state.plots[_plot_index()]
 		var seconds: int = maxi(0, int(ceil(10.0 - float(plot.elapsed))))
-		body = "About %ds to ripe. Water once, then let it grow. You can move or zoom while you wait. Nothing will attack your crops during the tour." % seconds
+		body = "Ready in %ds.\nYour first payday is growing!" % seconds
 	if _tour_only() and current_id() == "market":
-		body = "Click the marked Farmer's Market. Buy seeds here, then plant and water them. Seeds follow crop prices, so compare costs before a big purchase. This replay does not spend your coins."
+		body = "Visit the seed seller.\nSeed costs follow crop prices."
 		can_continue = visited
 	if _tour_only() and current_id() == "sell":
-		body = "Click the marked Barn. Harvested potatoes wait here until you sell. Compare their price before cashing in, and expand storage when you need room. No sale is needed during this replay."
+		body = "Visit the barn.\nStore your harvest. Sell at the right price."
 		can_continue = visited
 	if _tour_only() and current_id() == "welcome":
-		body = "Take a quick tour of the Valley's helpers. Your farm is paused while you look around. This replay keeps your crops and coins, and does not require any purchases."
+		body = "Meet the Valley crew.\nYour farm pauses while you explore."
 	if _tour_only() and current_id() == "pest_intro":
-		body = "Pests arrive at random or after ripe crops sit for 25 seconds. Press 5 and click an infested crop to walk over and spray. This replay leaves your crops alone."
+		body = "Pests nibble idle crops.\nPress 5, then click a pest to spray."
 	if _tour_only() and current_id() == "stocks":
-		body = "The timer tracks a surge every 3 minutes. Surges last 5 seconds and can reach +3,000%. Hold potatoes, then sell with F. Your paused market resumes when this replay ends."
+		body = "Every 3 min: a 10-second surge.\nSell with F. Your market is paused."
 	if _tour_only() and current_id() == "finish":
-		body = "Buy, hoe, plant, water, harvest, sell. Use the three-line menu for everything else. Your farm and market will resume where you left them when you close this tour."
+		body = "Ready to grow?\nYour farm resumes where you left it."
 	var shown_step: int = 0
 	var shown_total: int = 0
 	for index: int in range(STEPS.size()):
@@ -188,8 +188,9 @@ func refresh() -> void:
 			shown_step += 1
 	game.hud.set_tutorial({"title": str(step.title), "body": body, "step": shown_step, "total": shown_total,
 		"tools": _tools(), "features": _features(), "continue": can_continue,
-		"continue_label": str(step.get("label", "Next")) if not (_tour_only() and current_id() == "pest_intro") else "Next",
-		"focus": focus, "allowed_actions": allowed_actions()})
+		"continue_label": str(step.get("label", "Next stop →")) if not (_tour_only() and current_id() == "pest_intro") else "Next stop →",
+		"id": current_id(), "key": str(step.get("key", "")), "tool": str(step.get("tool", "")),
+		"tour_only": _tour_only(), "visited": visited, "focus": focus, "allowed_actions": allowed_actions()})
 	game.world.set_tutorial_focus(focus)
 
 func update(_delta: float) -> void:

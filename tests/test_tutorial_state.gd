@@ -99,7 +99,7 @@ func _run() -> void:
 	state.update(1.1)
 	check(state.plots[0].pests, "ordinary ripe-crop pests resume after their actual grace period")
 	state._start_surge()
-	check(state.surge_remaining > 0.0, "ordinary stock surges resume after lesson")
+	check(state.surge_remaining == 10.0, "ordinary stock surges resume after lesson with the full ten-second window")
 	state.set_tutorial_active(true)
 	state.tutorial_progress = {"version": 1, "step": 6, "completed": false, "plot": 5, "visited": ["market"]}
 	var path: String = "user://tutorial_state_test_%d.json" % OS.get_process_id()

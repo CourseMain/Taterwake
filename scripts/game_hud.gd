@@ -171,9 +171,18 @@ var _tutorial_body: Label
 var _tutorial_progress: Label
 var _tutorial_next: Button
 var _tutorial_skip: Button
+var _tutorial_key: Label
+var _tutorial_icon: Control
+var _tutorial_meter: ProgressBar
+var _tutorial_exit_box: VBoxContainer
+var _tutorial_exit_pending: bool = false
+var _tutorial_pointer: Control
 var _stats_card: PanelContainer
 var _menu_button: Button
 var _hotbar: PanelContainer
+var _debug_unlocked: bool = false
+var _debug_time_multiplier: float = 1.0
+var _debug_access_error: String = ""
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -185,6 +194,7 @@ func _process(delta: float) -> void:
 			_purchase_receipt.clear()
 	if not _tutorial.is_empty():
 		_apply_tutorial_visibility()
+		_update_tutorial_pointer()
 		return
 	if not is_instance_valid(_surge_style):
 		return
@@ -257,9 +267,30 @@ func _build_tutorial() -> void:
 	_tutorial_card.z_index = 30
 	var contents: VBoxContainer = _vbox(10)
 	_tutorial_card.add_child(contents)
+	var top_row: HBoxContainer = _hbox(2)
+	contents.add_child(top_row)
 	_tutorial_progress = _label("YOUR FIRST FARM", 11, GOLD, true)
 	_tutorial_progress.add_theme_font_override("font", _compact_heading_font())
-	contents.add_child(_tutorial_progress)
+	_tutorial_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_row.add_child(_tutorial_progress)
+	_tutorial_skip = _button("×", "tutorial:exit")
+	_tutorial_skip.name = "TutorialSkip"
+	_tutorial_skip.tooltip_text = "End tutorial"
+	_tutorial_skip.custom_minimum_size = Vector2(26, 26)
+	_tutorial_skip.add_theme_font_size_override("font_size", 20)
+	for style_name: String in ["normal", "hover", "pressed"]:
+		_tutorial_skip.add_theme_stylebox_override(style_name, _style(Color("29493b") if style_name != "normal" else Color.TRANSPARENT, 0, 5))
+		_tutorial_skip.add_theme_color_override("font_" + ("color" if style_name == "normal" else style_name + "_color"), Color("acbfae"))
+	top_row.add_child(_tutorial_skip)
+	_tutorial_meter = ProgressBar.new()
+	_tutorial_meter.custom_minimum_size.y = 5
+	_tutorial_meter.show_percentage = false
+	_tutorial_meter.add_theme_stylebox_override("background", _style(Color("305140"), 0, 3))
+	_tutorial_meter.add_theme_stylebox_override("fill", _style(GOLD, 0, 3))
+	contents.add_child(_tutorial_meter)
+	_tutorial_icon = _icon({"kind": "crop", "crop": "russet"}, 54)
+	_tutorial_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	contents.add_child(_tutorial_icon)
 	_tutorial_title = _wrap("Welcome home", 21, CREAM, true)
 	_tutorial_title.add_theme_font_override("font", _compact_heading_font())
 	contents.add_child(_tutorial_title)
@@ -269,26 +300,45 @@ func _build_tutorial() -> void:
 	guide_font.variation_opentype = _font.variation_opentype
 	_tutorial_body.add_theme_font_override("font", guide_font)
 	contents.add_child(_tutorial_body)
+	_tutorial_key = _label("", 13, GOLD, true)
+	_tutorial_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	contents.add_child(_tutorial_key)
 	_tutorial_next = _button("Let's grow →", "tutorial:next")
 	_tutorial_next.name = "TutorialNext"
+	_tutorial_next.custom_minimum_size.y = 48
+	_tutorial_next.add_theme_stylebox_override("normal", _style(GOLD, 9, 10))
+	_tutorial_next.add_theme_stylebox_override("hover", _style(Color("ffeaa1"), 9, 10))
+	_tutorial_next.add_theme_stylebox_override("pressed", _style(Color("e9b94f"), 9, 10))
+	_tutorial_next.add_theme_stylebox_override("disabled", _style(Color("274b3b"), 9, 10))
+	_tutorial_next.add_theme_color_override("font_disabled_color", Color("c2d7c0"))
 	contents.add_child(_tutorial_next)
-	_tutorial_skip = _button("Skip introduction", "tutorial:skip")
-	_tutorial_skip.name = "TutorialSkip"
-	_tutorial_skip.flat = true
-	_tutorial_skip.custom_minimum_size.y = 28
-	_tutorial_skip.add_theme_font_size_override("font_size", 11)
-	_tutorial_skip.add_theme_color_override("font_color", Color("c7d5bf"))
-	_tutorial_skip.add_theme_stylebox_override("normal", _style(Color.TRANSPARENT, 4, 6))
-	contents.add_child(_tutorial_skip)
+	_tutorial_exit_box = _vbox(8)
+	contents.add_child(_tutorial_exit_box)
+	_tutorial_exit_box.add_child(_wrap("Leave the tutorial?", 15, CREAM, true))
+	var stay: Button = _button("Keep learning →", "tutorial:stay")
+	stay.add_theme_stylebox_override("normal", _style(GOLD, 9, 10))
+	_tutorial_exit_box.add_child(stay)
+	var leave: Button = _button("End tutorial", "tutorial:skip")
+	leave.add_theme_stylebox_override("normal", _style(Color("294438"), 9, 10))
+	leave.add_theme_color_override("font_color", Color("c9d1c4"))
+	_tutorial_exit_box.add_child(leave)
+	_tutorial_exit_box.hide()
 	_tutorial_card.hide()
+	_tutorial_pointer = preload("res://scripts/tutorial_pointer.gd").new()
+	root.add_child(_tutorial_pointer)
+	_tutorial_pointer.hide()
 
 func set_tutorial(info: Dictionary) -> void:
 	if not is_instance_valid(root):
 		build_ui()
 	_restore_tutorial_buttons()
+	if info.get("step", -1) != _tutorial.get("step", -1):
+		_tutorial_exit_pending = false
 	_tutorial = info.duplicate(true)
 	if _tutorial.is_empty():
 		_tutorial_card.hide()
+		_tutorial_exit_pending = false
+		_tutorial_pointer.hide()
 		_stats_card.show()
 		_stats_card.size.x = 763.0
 		for key: String in ["coins", "market_name", "luck"]:
@@ -307,8 +357,22 @@ func set_tutorial(info: Dictionary) -> void:
 		_tutorial_progress.text = "FIRST FARM  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
 		_tutorial_title.text = str(info.get("title", "Your first farm"))
 		_tutorial_body.text = str(info.get("body", ""))
-		_tutorial_next.text = str(info.get("continue_label", "Continue →"))
-		_tutorial_next.visible = bool(info.get("continue", false))
+		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Follow gold arrow ↓"
+		_tutorial_next.disabled = not bool(info.get("continue", false))
+		if info.get("id") == "inventory" and not bool(info.get("continue", false)):
+			_tutorial_next.text = "Open bag [I] →"
+			_tutorial_next.disabled = false
+		elif info.get("id") == "walk":
+			_tutorial_next.text = "Try a few steps"
+		elif info.get("id") == "grow":
+			_tutorial_next.text = "Growing…"
+		_tutorial_key.text = str(info.get("key", ""))
+		_tutorial_key.visible = not _tutorial_key.text.is_empty()
+		_tutorial_meter.value = 100.0 * float(info.get("step", 1)) / maxf(1.0, float(info.get("total", 20)))
+		var tool: String = str(info.get("tool", ""))
+		var activity: String = "duck" if info.get("id") == "ducks" else ("contract" if info.get("id") == "quests" else "")
+		_tutorial_icon.item = {"kind": "tool", "id": tool} if not tool.is_empty() else ({"kind": "activity", "id": activity} if not activity.is_empty() else {"kind": "crop", "crop": "russet"})
+		_tutorial_icon.queue_redraw()
 		_tutorial_card.show()
 		# Clear a previous surge immediately, including its child process, so a
 		# replay never flashes through the guide or resumes a stale jackpot.
@@ -331,7 +395,7 @@ func set_tutorial(info: Dictionary) -> void:
 		update_state(_state)
 
 func _tutorial_allows(action: String) -> bool:
-	if _tutorial.is_empty() or action in ["tutorial:next", "tutorial:skip", "close"]:
+	if _tutorial.is_empty() or action in ["tutorial:next", "tutorial:skip", "tutorial:exit", "tutorial:stay", "close"]:
 		return true
 	if not _tutorial.has("allowed_actions"):
 		return true
@@ -401,8 +465,30 @@ func _apply_tutorial_visibility() -> void:
 	_tutorial_title.custom_minimum_size.x = card_width - 30.0
 	_tutorial_body.custom_minimum_size.x = card_width - 30.0
 	_tutorial_card.size = Vector2(card_width, 0.0)
+	_tutorial_next.visible = not _tutorial_exit_pending
+	_tutorial_exit_box.visible = _tutorial_exit_pending
 	if _tutorial_card.get_index() != root.get_child_count() - 1:
 		_tutorial_card.move_to_front()
+
+func _update_tutorial_pointer() -> void:
+	_tutorial_pointer.target = null
+	_tutorial_pointer.visible = not _tutorial.is_empty() and not _tutorial_exit_pending
+	if not _tutorial_pointer.visible:
+		return
+	var target: Control = null
+	if not _tutorial_next.disabled:
+		target = _tutorial_next
+	elif is_panel_open():
+		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else ("sell:russet:-1" if _tutorial.get("id") == "sell" else "")
+		for node: Node in _body.find_children("*", "Button", true, false):
+			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
+				target = node
+				break
+	else:
+		var tool: String = str(_tutorial.get("tool", ""))
+		if _tool_buttons.has(tool):
+			target = _tool_buttons[tool]
+	_tutorial_pointer.target = target
 
 func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -481,6 +567,20 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 func _act(action: String) -> void:
 	if not _tutorial_allows(action):
 		return
+	if action in ["tutorial:exit", "tutorial:stay"]:
+		_tutorial_exit_pending = action == "tutorial:exit"
+		_apply_tutorial_visibility()
+		_update_tutorial_pointer()
+		return
+	if action == "tutorial:skip":
+		if not _tutorial_exit_pending:
+			return
+		_tutorial_exit_pending = false
+	if action == "tutorial:next" and not bool(_tutorial.get("continue", false)):
+		if _tutorial.get("id") == "inventory":
+			action = "inventory"
+		else:
+			return
 	if _rolling:
 		return
 	if action.begins_with("batch:"):
@@ -489,6 +589,14 @@ func _act(action: String) -> void:
 	if action == "toggle_trophies":
 		_trophies_open = not _trophies_open
 		_refresh_trophies()
+		return
+	if action == "debug_unlock":
+		if _refs.has("debug_code"):
+			var code: String = _refs.debug_code.text
+			_refs.debug_code.clear()
+			action_requested.emit("debug:unlock:" + code)
+		return
+	if (action.begins_with("debug:") or action.begins_with("debug_")) and not _debug_unlocked:
 		return
 	if action.begins_with("debug_money:") or action.begins_with("debug_luck:"):
 		var field: String = "debug_money" if action.begins_with("debug_money:") else "debug_luck"
@@ -974,7 +1082,13 @@ func show_purchase(receipt: Dictionary) -> void:
 	var detail: String = "Purchased"
 	match kind:
 		"seeds": detail = "Owned %d" % int(combined.get("total", quantity))
-		"tool", "duck": detail = "Level %d" % int(combined.get("level", 1))
+		"tool": detail = "Level %d" % int(combined.get("level", 1))
+		"duck":
+			if str(combined.get("id", "")) == "duck_patrol":
+				title = "+1 patrol duck"
+				detail = "%d on patrol" % int(combined.get("total", 1))
+			else:
+				detail = "%.0fs per bed" % float(combined.get("interval", 4.0 - float(combined.get("level", 1))))
 		"barn":
 			title = "+%d barn spaces" % int(combined.quantity)
 			detail = "Capacity %d" % int(combined.get("total", quantity))
@@ -1147,7 +1261,7 @@ func _build_market() -> void:
 		_refs["sell:" + crop + ":-1"] = sell_button
 
 func _build_barn() -> void:
-	_heading("Your inventory", "Dress your farmer. One equipped item per slot; spare gear stays in your collection.")
+	_heading("Your inventory", "Your crops. Your gear. Your next big build.")
 	_info("inventory_total", "")
 	_panel_crops = _known_crops()
 	_inventory_sections.clear()
@@ -1199,7 +1313,7 @@ func _build_barn() -> void:
 			_refs["item:" + id + ":action"] = button
 	for section: String in ["crops", "gear", "items", "builds"]:
 		if _inventory_sections[section].get_child_count() == 0:
-			_inventory_sections[section].add_child(_wrap("Nothing here yet. Your harvests and discoveries will appear as you farm.", 15, MUTED))
+			_inventory_sections[section].add_child(_wrap("Empty for now. Keep farming!", 15, MUTED))
 	_offer("A roomier barn", "", "Upgrade", "upgrade:barn", false, _inventory_sections.crops)
 
 	var sell_rare: Button = _button("Sell all mutation crates", "sell_mutations")
@@ -1208,11 +1322,11 @@ func _build_barn() -> void:
 	_set_inventory_tab()
 
 func _build_tools() -> void:
-	_heading("Tools for bigger harvests", "You do the farming. Better equipment reaches more tiles per action.")
+	_heading("Tools for bigger harvests", "More beds with every click.")
 	for tool: String in ["hoe", "water", "harvest"]:
 		var names: Dictionary = {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe"}
 		_offer(names[tool], "", "Upgrade", "upgrade:" + tool, true)
-	_offer("Open the rest of the field", "Unlock all 24 garden beds. Every patch is still farmed by hand.", "$1.8K", "upgrade:expansion")
+	_offer("More room to grow", "Unlock all 24 beds.", "$1.8K", "upgrade:expansion")
 	var row: HBoxContainer = _hbox(10)
 	_body.add_child(row)
 	var dex_button: Button = _button("PotatoDex  [P]", "dex")
@@ -1221,7 +1335,7 @@ func _build_tools() -> void:
 	var island_button: Button = _button("Explore the islands", "island")
 	island_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(island_button)
-	_info("tool_tip", "1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Bug sprayer. Click a hotbar slot to equip it.", MUTED, 13)
+	_info("tool_tip", "Equip tools with keys 1–5 or the hotbar.", MUTED, 13)
 
 func _build_roll() -> void:
 	_heading("BUILD CRATE" if _crate_reel else "The Questionable Shack", "")
@@ -1240,7 +1354,7 @@ func _build_roll() -> void:
 	var result_title: Label = _wrap("PICK A STAKE. LET IT ROLL.", 18, GOLD, true)
 	result_box.add_child(result_title)
 	_refs["roll_result_title"] = result_title
-	var result_detail: Label = _wrap("Reel previews use current odds. The final centre card is your result.", 13, Color("dbcee9"))
+	var result_detail: Label = _wrap("Your prize lands in the centre.", 13, Color("dbcee9"))
 	result_box.add_child(result_detail)
 	_refs["roll_result_detail"] = result_detail
 	var receipt: Label = _wrap("", 12, CASINO_LIGHT)
@@ -1253,7 +1367,7 @@ func _build_roll() -> void:
 	_refs["batch_results"] = batch_results
 	if _crate_reel:
 		result_title.text = "ONE CRATE. ONE BUILD."
-		result_detail.text = "Every card is a farming style. Your crate grants one build level."
+		result_detail.text = "One crate → one build level."
 		var open_button: Button = _button("Open another Build Crate", "build:open_crate", true)
 		_body.add_child(open_button)
 		_refs["build:open_crate"] = open_button
@@ -1329,26 +1443,26 @@ func _build_dex() -> void:
 		_info("mastery:" + crop, "", INK, 16)
 	_info("dex_bonus", "", GREEN, 14)
 	_info("dex_entries", "", MUTED, 15)
-	_info("dex_tip", "Mutations are rare harvest surprises. Keep them in the barn, or sell their crates at the crop's current price and mutation multiplier.", MUTED, 14)
+	_info("dex_tip", "Mutation value = live crop price × rarity multiplier.", MUTED, 14)
 
 func _build_island() -> void:
 	_heading("New islands. Bigger harvests.", "Your crops keep growing while you travel.")
-	_offer("SPUD VALLEY", "Your home patch: up to 24 garden beds, four familiar crops, and the village market.", "Travel", "travel:1", true)
-	_offer("GOLDEN SHORES", "48 open beds · 2× harvest yield · 4× mutation chance. Grow Sunburst potatoes in 45 seconds, with a guaranteed Golden mutation on your first Sunburst harvest.", "Travel", "travel:2", true)
+	_offer("SPUD VALLEY", "24 beds · 4 crops · Home sweet home", "Travel", "travel:1", true)
+	_offer("GOLDEN SHORES", "48 beds · 2× yield · 4× mutations\nFirst Sunburst harvest: guaranteed Golden mutation.", "Travel", "travel:2", true)
 	_info("island_requirements", "", CORAL, 15)
-	_offer("A ticket to Golden Shores", "Harvest %s potatoes and bring %s. Your tools, seeds, and barn travel with you." % [_number(_catalog_number("ISLAND2_UNLOCK_HARVEST", 500)), _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000))], "Unlock · $1M", "island_unlock")
+	_offer("A ticket to Golden Shores", "%s harvests + %s" % [_number(_catalog_number("ISLAND2_UNLOCK_HARVEST", 500)), _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000))], "Unlock · $1M", "island_unlock")
 	_refs["island_unlock_card"] = _body.get_child(_body.get_child_count() - 1)
-	_info("island_rush", "Export ships bring brief, unpredictable Golden and Sunburst price surges. Use Sell held [F] to catch your price. Five quests reward hands-on farming.", MUTED, 14)
+	_info("island_rush", "Buyer contracts · Five quests · Big stock surges", MUTED, 14)
 	if _island_id() >= 2 or _flag("island3_unlocked"):
-		_offer("FROST HOLLOW", "80 winter beds · 3× harvests · Icecap potatoes. Break frozen ground during Frostbreak to unleash a brief Icecap thaw bonus.", "Travel", "travel:3", true)
+		_offer("FROST HOLLOW", "80 beds · 3× yield · Icecaps\nBreak frozen beds for a stock bonus.", "Travel", "travel:3", true)
 		_info("winter_requirements", "", Color("6594b8"), 14)
-		_offer("A passage through the ice", "Bring %s and %s total harvests. Your inventory and equipment travel with you." % [_money(_catalog_number("ISLAND3_UNLOCK_COST", 1e11)), _number(_catalog_number("ISLAND3_UNLOCK_HARVEST", 25000))], "Unlock · $100B", "island3_unlock")
+		_offer("A passage through the ice", "%s + %s harvests" % [_money(_catalog_number("ISLAND3_UNLOCK_COST", 1e11)), _number(_catalog_number("ISLAND3_UNLOCK_HARVEST", 25000))], "Unlock · $100B", "island3_unlock")
 		_refs["winter_unlock_card"] = _body.get_child(_body.get_child_count() - 1)
 	var quests: Button = _button("Local quest board  [Q]", "quests")
 	_body.add_child(quests)
 
 func _build_quests() -> void:
-	_heading(str(_state.call("island_name")).capitalize() + " quest board", "Real farming. Rewards worth getting your hands dirty for.")
+	_heading(str(_state.call("island_name")).capitalize() + " quests", "Grow it. Ship it. Claim it.")
 	_info("quest_note", "", CORAL, 14)
 	for quest: Dictionary in _quests():
 		var id: String = str(quest.get("id", ""))
@@ -1380,13 +1494,13 @@ func _build_help() -> void:
 	var intro: PanelContainer = _card(INK, 18)
 	_body.add_child(intro)
 	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))
-	_help_step("01  Put your hands in the soil", "Move with WASD or arrows. Two-finger scroll, pinch, or the mouse wheel zooms the camera. Choose 1 Hoe, 2 Seeds, 3 Water, 4 Harvest, or 5 Bug sprayer. Seed choices appear only with [2]. Click a bed or stand near it and press E to use your equipped tool.")
-	_help_step("02  Let things grow", "After watering, Russets grow in 10 seconds, Golden in 30, Giant in 45, and Radioactive in 90. Sunburst takes 45 seconds; Icecap takes 60. Crops and prices keep moving while you browse. There is no offline growth.")
-	_help_step("03  Read the market", "Open Market [B] for seed prices, sale prices, changes, and trend lines. Buy seeds when they look cheap. Harvests stay in Inventory [I] until you sell; prices can rise or crash while you wait.")
-	_help_step("04  Farm bigger, by hand", "Tools [U] expand the area of a single action. Harvest quickly to chain temporary ×1, ×2, ×4, ×8, and ×16 bonuses. Keep the chain alive within 3.5 seconds.")
-	_help_step("05  Take a chance", "The Roll House [R] spends earned game coins on rare rewards, with a chance of nothing. PotatoDex [P] records discoveries and crop mastery. Earn 500 harvests and $1M to unlock Golden Shores: 48 beds, Sunburst potatoes, and five farming quests [Q].")
-	_help_step("06  Catch the export rush", "After unlocking Golden Shores, watch for the export ship. Golden and Sunburst surge for five seconds. Select a crop and press F to sell your held harvest immediately. Crops keep growing on both islands while you travel.")
-	_help_step("07  Break the winter ice", "Frosthollow has 80 beds and Icecap potatoes. During Frostbreak, use your hoe on the frozen beds before the 20-second storm ends. Clear them all to earn a seed and a five-second Icecap auction. Inventory [I] holds crops, seeds, builds, mutations, and permanent items. Tools stay in the hotbar.")
+	_help_step("01  Move & farm", "WASD to walk · Two-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
+	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 30s · Giant/Sunburst 45s · Icecap 60s · Radioactive 90s")
+	_help_step("03  Buy low. Sell high.", "B: Market · I: Inventory · F: Sell held\nSurges last 10 seconds. Save crops for the right price.")
+	_help_step("04  Go bigger", "U: Upgrade tools\nChain harvests within 3.5s for up to ×16 bonuses.")
+	_help_step("05  Find your build", "R: Roll for gear and builds using game coins. Empty rolls happen.\nP: Discoveries · Q: Quests")
+	_help_step("06  Hire a crew", "Ducks clear pests: up to 1 / 2 / 3 per island.\nHire more or train them for speed.")
+	_help_step("07  Winter tricks", "Burn 25 Icecaps for faster growth.\nFrostbreak: hoe icy beds within 20s for a seed + stock bonus.")
 	_body.add_child(_button("Let's get growing  →", "close", true))
 
 func _help_step(title: String, detail: String) -> void:
@@ -1403,7 +1517,7 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Market", "market", "B", "trader_token"], ["Debug: money & luck", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
+	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Market", "market", "B", "trader_token"], ["Debug: money, luck & time", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	for entry: Array in entries:
@@ -1467,7 +1581,7 @@ func _refresh_panel() -> void:
 		"market":
 			_refs.market_note.text = ("EXPORT ×%.1f · %.1fs left. " % [float(_state.get("export_factor")), float(_state.get("export_timer"))] if bool(_state.get("export_active")) else "") + "Changes vs opening prices; graphs show recent sale prices."
 			if _tutorial_seed_market():
-				_refs.market_note.text = "Buy one Russet seed. Your next step is the garden." if _tutorial_allows("buy:russet:1") else "Browse for now. Purchases unlock after the tour."
+				_refs.market_note.text = "Buy 1 Russet → head to the gold bed." if _tutorial_allows("buy:russet:1") else "Just browsing. Shop after the tour."
 			for crop: String in _panel_crops:
 				var quote: Dictionary = markets.get(crop, {})
 				var sell: float = float(quote.get("sell", 0))
@@ -1697,7 +1811,7 @@ func _build_export_strip() -> void:
 	_export_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(_export_title)
 	_top["surge"] = _export_title
-	_export_detail = _label("+500–3,000% stock surge", 12, Color("8cdaa9"), true)
+	_export_detail = _label("+500–2,999% stock boom", 12, Color("8cdaa9"), true)
 	_export_detail.add_theme_font_override("font", compact_font)
 	_export_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(_export_detail)
@@ -1924,7 +2038,7 @@ func _refresh_inventory() -> void:
 				detail = "ACTIVE · " + (detail if not detail.is_empty() else str(entry.get("description", "Permanent bonus")))
 		_refs[key + ":detail"].text = detail
 	var barn_cost: float = 500.0 * pow(5.0, int(_state.get("barn_level")))
-	_refs["upgrade:barn:detail"].text = "More room for your held potatoes. Tools and permanent items have their own space."
+	_refs["upgrade:barn:detail"].text = "More space for your harvest."
 	_set_button("upgrade:barn", _money(barn_cost), float(_state.get("coins")) < barn_cost)
 	var mutations: Array = _state.get("mutations")
 	_set_button("sell_mutations", "Sell all mutation crates", mutations.is_empty())
@@ -2102,27 +2216,36 @@ func _update_surge_timer() -> void:
 		return
 	var info: Dictionary = _state.call("surge_info")
 	var seconds: int = ceili(maxf(0.0, float(info.get("timer", 180))))
+	var rocket_seconds: int = ceili(float(info.get("rocket_timer", 1800)))
+	var rocket_soon: bool = _island_id() >= 3 and rocket_seconds <= 10
+	var span: String = "+3,000–10,000%" if _island_id() >= 3 else "+500–2,999%"
 	_surge_active = bool(info.get("active", false))
-	_surge_urgent = not _surge_active and seconds <= 10
+	_surge_urgent = not _surge_active and (seconds <= 10 or rocket_soon)
 	var accent: Color = _island_accent()
 	_export_title.text = "JACKPOT · %ds · SELL [F]" % seconds if _surge_active else "NEXT STOCK  %d:%02d" % [seconds / 60, seconds % 60]
+	if _surge_active and str(info.get("kind", "normal")) == "rocket":
+		_export_title.text = "ROCKET · %ds · SELL [F]" % seconds
+	elif rocket_soon and not _surge_active:
+		_export_title.text = "ROCKET IN  %ds" % rocket_seconds
 	_export_title.add_theme_font_size_override("font_size", 22 if _surge_active else 25)
 	_export_title.add_theme_color_override("font_color", Color.WHITE if _surge_active or _surge_urgent else CREAM)
-	_export_detail.text = "%s  +%.0f%%" % [_crop_name(str(info.get("crop", "russet"))).to_upper(), float(info.get("percent", 500))] if _surge_active else ("GET READY · +500–3,000%" if _surge_urgent else "+500–3,000% stock surge")
+	_export_detail.text = "%s  +%.0f%%" % [_crop_name(str(info.get("crop", "russet"))).to_upper(), float(info.get("percent", 500))] if _surge_active else ("GET READY · " + span if _surge_urgent else span + " stock boom")
+	if rocket_soon and not _surge_active:
+		_export_detail.text = "+15,000–50,000% AFTER LIFTOFF"
+	elif _island_id() >= 3 and not _surge_active and not _surge_urgent:
+		_export_detail.text = "3K–10K%% · ROCKET %d:%02d" % [rocket_seconds / 60, rocket_seconds % 60]
 	# Keep only actionable island activities as a single short secondary line.
 	if not _surge_active and not _surge_urgent:
-		if _island_id() == 3 and bool(_state.get("frost_active")):
-			_export_detail.text = "Frostbreak %d/%d · %.0fs · Hoe [1]" % [int(_state.get("frost_cleared")), int(_state.get("frost_target_count")), float(_state.get("frost_timer"))]
-		elif _island_id() == 3 and float(_state.get("thaw_remaining")) > 0.0:
-			_export_detail.text = "ICECAP AUCTION · %.0fs · Sell [F]" % float(_state.get("thaw_remaining"))
-		elif _island_id() == 2 and bool(_state.get("export_active")):
+		if _island_id() == 2 and bool(_state.get("export_active")):
 			_export_detail.text = "Export · %.0fs · Golden / Sunburst" % float(_state.get("export_timer"))
 	_export_detail.add_theme_color_override("font_color", accent)
-	_export_bar.max_value = 5.0 if _surge_active else (10.0 if _surge_urgent else 180.0)
+	_export_bar.max_value = 10.0 if _surge_active else (10.0 if _surge_urgent else 180.0)
 	_export_bar.value = float(info.get("timer", 180)) if _surge_active or _surge_urgent else 180.0 - float(info.get("timer", 180))
+	if rocket_soon and not _surge_active:
+		_export_bar.value = rocket_seconds
 	_export_bar.get_theme_stylebox("fill").bg_color = accent
 	_toast_box.position.y = 205
-	_market_impact.set_countdown(_island_id(), float(info.get("timer", 180)) if not _surge_active else 180.0)
+	_market_impact.set_countdown(_island_id(), minf(float(info.get("timer", 180)), float(rocket_seconds) if _island_id() >= 3 else 180.0) if not _surge_active else 180.0)
 
 func _effective_luck() -> float:
 	return float(_state.call("effective_luck")) if is_instance_valid(_state) and _state.has_method("effective_luck") else float(_state.get("luck"))
@@ -2192,7 +2315,7 @@ func _build_activities() -> void:
 	_heading(str(data.get("title", "Island activities")), str(data.get("description", "A different way to work your farm on each island.")))
 	var hero: HBoxContainer = _hbox(15)
 	_body.add_child(hero)
-	hero.add_child(_icon({"kind": "activity", "id": "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")}, 92))
+	hero.add_child(_icon({"kind": "activity", "id": "contract" if _island_id() == 2 else "furnace"}, 64))
 	var description: VBoxContainer = _vbox(5)
 	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hero.add_child(description)
@@ -2209,24 +2332,55 @@ func _build_activities() -> void:
 			crop_row.add_child(_label("Crop to supply", 14, INK, true))
 			var crop_choice: OptionButton = OptionButton.new()
 			crop_choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			crop_choice.add_theme_font_size_override("font_size", 14)
+			crop_choice.add_theme_color_override("font_color", INK)
+			crop_choice.add_theme_color_override("font_hover_color", INK)
+			crop_choice.add_theme_stylebox_override("normal", _style(PAPER, 8, 8, Color("b8c7a5")))
+			crop_choice.add_theme_stylebox_override("hover", _style(Color("e4edcf"), 8, 8, GREEN))
 			for crop: String in _market_crops():
 				crop_choice.add_item(_crop_name(crop))
 				crop_choice.set_item_metadata(crop_choice.item_count - 1, crop)
 			crop_choice.item_selected.connect(func(index: int) -> void: _act("crop:" + str(crop_choice.get_item_metadata(index))))
 			crop_row.add_child(crop_choice)
 			_refs["contract_crop_choice"] = crop_choice
-			_offer("Bulk buyer · huge harvests", "Supply ordinary potatoes. Quantity builds can complete shipments quickly. Pays market value +25%.", "Choose bulk", "activity:contract:bulk", true)
-			_offer("Collector · valuable mutations", "Supply mutation potatoes. Scientist and Gambler builds get a different route. Pays mutation value +50%.", "Choose mutations", "activity:contract:mutation")
-			_offer("Ship your contract", "Partial deliveries count. Prices lock when each shipment leaves; payment arrives when the order is complete.", "Deliver held", "activity:deliver", true)
-			_info("activity_hint", "Choose a crop and buyer, then ship potatoes you already hold. One contract at a time; no deadline.", MUTED)
+			var choices: HBoxContainer = _hbox(12)
+			_body.add_child(choices)
+			_refs["contract_choices"] = choices
+			for kind: String in ["bulk", "mutation"]:
+				var card: PanelContainer = _card(Color("e4edcf") if kind == "bulk" else Color("ece0f2"), 14)
+				card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				choices.add_child(card)
+				var column: VBoxContainer = _vbox(6)
+				card.add_child(column)
+				var offer_icon: Control = _icon({"kind": "crop", "crop": "sunburst"}, 48)
+				column.add_child(offer_icon)
+				_refs["contract_icon:" + kind] = offer_icon
+				column.add_child(_label("BULK BUYER" if kind == "bulk" else "MUTATION COLLECTOR", 15, INK, true))
+				column.add_child(_label("+25% PAY" if kind == "bulk" else "+50% PAY", 25, GREEN if kind == "bulk" else Color("8155ac"), true))
+				var detail_label: Label = _wrap("", 14, INK)
+				column.add_child(detail_label)
+				_refs["contract_offer:" + kind] = detail_label
+				var choose: Button = _button("Take order →", "activity:contract:" + kind, true)
+				column.add_child(choose)
+				_refs["activity:contract:" + kind] = choose
+			var progress: ProgressBar = ProgressBar.new()
+			progress.custom_minimum_size.y = 14
+			progress.show_percentage = false
+			progress.add_theme_stylebox_override("fill", _style(GREEN, 0, 7))
+			progress.add_theme_stylebox_override("background", _style(Color("dce2cf"), 0, 7))
+			_body.add_child(progress)
+			_refs["contract_progress"] = progress
+			_offer("Ship your harvest", "Live price locks per shipment. Paid when the order is full.", "Deliver held", "activity:deliver", true)
+			_refs["contract_delivery"] = _body.get_child(_body.get_child_count() - 1)
+			_info("activity_hint", "Partial deliveries welcome · No deadline", MUTED)
 		3:
-			_offer("Feed the frost furnace", "Burn 25 spare Icecaps for 20 seconds of 2.5× growth and 3× processing. Time the heat with the next stock surge.", "Burn 25 Icecaps", "activity:furnace:icecap", true)
-			_info("activity_hint", "The furnace consumes stored potatoes, never seeds or mutations. It is ready again 60 seconds after ignition.", MUTED)
+			_offer("Feed the frost furnace", "20s burst · 2.5× growth · 3× processing", "Burn 25 Icecaps", "activity:furnace:icecap", true)
+			_info("activity_hint", "Uses stored Icecaps · 60s between bursts", MUTED)
 			_body.add_child(_button("Winter Roll House · 3 or 5 rolls together", "roll"))
 	_refresh_activities()
 
 func _build_duck_patrol() -> void:
-	_heading("Duck patrol", "Train your flock once. Protect every island you visit.")
+	_heading("Duck patrol", "More ducks. Faster patrols. Fewer pests.")
 	var hero: HBoxContainer = _hbox(15)
 	_body.add_child(hero)
 	hero.add_child(_icon({"kind": "activity", "id": "duck"}, 92))
@@ -2239,22 +2393,26 @@ func _build_duck_patrol() -> void:
 	var detail: Label = _wrap("", 14, MUTED)
 	description.add_child(detail)
 	_refs["activity_detail"] = detail
-	_offer("Duck patrol · shared training", "", "Train patrol", "activity:duck", true)
+	_offer("Flock size", "", "Hire a duck", "activity:duck", true)
+	_offer("Patrol speed", "", "Train ducks", "activity:duck:speed", true)
 	_info("duck_summary", "", MUTED, 12)
-	_info("activity_hint", "Your ducks patrol while you plant, water and harvest. Spraying still helps when several beds need attention at once.", MUTED)
+	_info("activity_hint", "This island's flock works while you visit.", MUTED)
 	_refresh_duck_patrol()
 
 func _refresh_duck_patrol() -> void:
 	if not _refs.has("activity:duck"):
 		return
 	var data: Dictionary = _activity_info()
-	var duck_level: int = int(data.get("duck_level", 0))
-	var duck_count: int = int(data.get("duck_count", _island_id()))
-	_set_button("activity:duck", "Fully trained" if duck_level >= 3 else ("Hire · " if duck_level == 0 else "Train · ") + _money(float(data.get("duck_cost", 1500))), not bool(data.get("duck_can_buy", false)))
-	_refs["activity:duck:detail"].text = "%d duck%s on this island · Rank %d / 3\nOne upgrade trains every island's flock. Each duck clears a pest patch every %.1fs while you visit." % [duck_count, "" if duck_count == 1 else "s", duck_level, float(data.get("duck_interval", 4))]
-	_refs.duck_summary.text = "1 duck in the Valley · 2 on the Shores · 3 in Frosthollow. Cleared pests: %d. Crop damage already taken stays." % int(data.get("duck_clears", 0))
-	_refs.activity_status.text = "PATROL LEVEL %d / 3" % duck_level if duck_level > 0 else "MEET YOUR PEST PATROL"
-	_refs.activity_detail.text = "%d infestations cleared · %.1fs between beds" % [int(data.get("duck_clears", 0)), float(data.get("duck_interval", 4))] if duck_level > 0 else "Hire your flock, then let it waddle from bed to bed hunting pests."
+	var count: int = int(data.get("duck_count", 0))
+	var capacity: int = int(data.get("duck_capacity", _island_id()))
+	var speed: int = int(data.get("duck_speed", 0))
+	_set_button("activity:duck", "Flock full" if count >= capacity else "Hire +1 · " + _money(float(data.get("duck_cost", 1500))), not bool(data.get("duck_can_buy", false)))
+	_refs["activity:duck:detail"].text = "%d / %d ducks · Each duck covers a different bed." % [count, capacity]
+	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else "Faster · " + _money(float(data.get("duck_speed_cost", 15000)))), not bool(data.get("duck_can_train", false)))
+	_refs["activity:duck:speed:detail"].text = "%.0fs → %.0fs per bed" % [float(data.get("duck_interval", 4)), maxf(2.0, float(data.get("duck_interval", 4)) - 1.0)] if speed < 2 else "2s per bed · Maximum speed"
+	_refs.duck_summary.text = "Island limits: 1 / 2 / 3 ducks · %d pests cleared" % int(data.get("duck_clears", 0))
+	_refs.activity_status.text = "%d / %d DUCKS ON PATROL" % [count, capacity]
+	_refs.activity_detail.text = "%.0fs between beds" % float(data.get("duck_interval", 4)) if count > 0 else "Build your feathered crew."
 
 func _refresh_activities() -> void:
 	if _island_id() == 1:
@@ -2270,14 +2428,26 @@ func _refresh_activities() -> void:
 			var active: bool = not contract.is_empty()
 			var crop_choice: OptionButton = _refs.contract_crop_choice
 			crop_choice.disabled = active
+			_refs.contract_choices.visible = not active
+			_refs.contract_delivery.visible = active
+			_refs.contract_progress.visible = active
+			_refs.contract_progress.value = 100.0 * float(contract.get("delivered", 0)) / maxf(1.0, float(contract.get("target", 1)))
+			for kind: String in ["bulk", "mutation"]:
+				var offer: Dictionary = data.get(kind + "_offer", {})
+				var crop: String = str(offer.get("crop", "sunburst"))
+				_refs["contract_icon:" + kind].item = {"kind": "crop", "crop": crop} if kind == "bulk" else {"kind": "mutation", "id": "mutation:" + crop + ":crystal", "crop": crop}
+				_refs["contract_icon:" + kind].queue_redraw()
+				var unit: String = ("mutation" if int(offer.get("target", 1)) == 1 else "mutations") if kind == "mutation" else "potatoes"
+				_refs["contract_offer:" + kind].text = "%s %s · Held %s\n%s" % [_number(float(offer.get("target", 0))), unit, _number(float(offer.get("held", 0))), "Pays the full rarity value + bonus" if kind == "mutation" else "At this price: " + _money(float(offer.get("base_quote", 0)))]
 			for index: int in range(crop_choice.item_count):
 				if str(crop_choice.get_item_metadata(index)) == str(contract.get("crop", data.get("contract_crop", "sunburst"))):
 					crop_choice.select(index)
 			_refs.activity_status.text = (str(contract.get("crop_name", "Harvest")).to_upper() + (" MUTATIONS" if str(contract.get("kind", "bulk")) == "mutation" else " BULK ORDER")) if active else ("NEXT BUYER IN %ds" % ceili(cooldown) if cooldown > 0 else "PICK YOUR BUYER")
-			_refs.activity_detail.text = "%s / %s delivered · Held %s\nShipment credit %s · paid when complete" % [_number(float(contract.get("delivered", 0))), _number(float(contract.get("target", 1))), _number(float(contract.get("held", 0))), _money(float(contract.get("credit", 0)))] if active else "%d completed orders. Supply volume or chase valuable mutations." % int(data.get("contract_completed", 0))
-			_set_button("activity:contract:bulk", "Order active" if active else "Choose bulk", active or cooldown > 0)
-			_set_button("activity:contract:mutation", "Order active" if active else "Choose mutations", active or cooldown > 0)
-			_set_button("activity:deliver", "Deliver held", not bool(contract.get("can_deliver", false)))
+			_refs.activity_detail.text = "%s / %s shipped · %s banked" % [_number(float(contract.get("delivered", 0))), _number(float(contract.get("target", 1))), _money(float(contract.get("credit", 0)))] if active else "%d orders completed · Choose your crop below" % int(data.get("contract_completed", 0))
+			_set_button("activity:contract:bulk", "Take bulk order →", active or cooldown > 0)
+			_set_button("activity:contract:mutation", "Take rare order →", active or cooldown > 0)
+			var amount: int = int(contract.get("ship_amount", 0))
+			_set_button("activity:deliver", "Ship %s →" % _number(amount) if amount > 0 else "Harvest more first", not bool(contract.get("can_deliver", false)))
 		3:
 			var remaining: float = float(data.get("furnace_remaining", 0))
 			var cooldown: float = float(data.get("furnace_cooldown", 0))
@@ -2340,7 +2510,7 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 		_refs["equipment:" + slot] = button
 		_refs["equipment:" + slot + ":icon"] = icon
 		_refs["equipment:" + slot + ":name"] = name_label
-	var rules: Label = _wrap("Only worn gear gives bonuses · Extra copies do not stack · Matching build: +25% gear bonuses", 12, MUTED)
+	var rules: Label = _wrap("Equip for bonuses · No duplicate stacking · Matching build: +25%", 12, MUTED)
 	parent.add_child(rules)
 	var totals: Label = _wrap("", 12, GREEN, true)
 	parent.add_child(totals)
@@ -2387,8 +2557,48 @@ func _refresh_equipment() -> void:
 func _debug_info() -> Dictionary:
 	return _state.call("debug_info") if is_instance_valid(_state) and _state.has_method("debug_info") else {"luck_multiplier": 1.0, "normal_luck": _effective_luck(), "effective_luck": _effective_luck(), "money_limit": 1e6, "luck_limit": 1000.0}
 
+func set_debug_session(unlocked: bool, speed: float = 1.0, error: String = "") -> void:
+	var changed_access: bool = _debug_unlocked != unlocked
+	_debug_unlocked = unlocked
+	_debug_time_multiplier = speed if unlocked else 1.0
+	_debug_access_error = error
+	if _panel_kind != "debug":
+		return
+	if changed_access:
+		show_panel("debug", _state)
+	elif _refs.has("debug_access_error"):
+		_refs.debug_access_error.text = error
+	else:
+		_refresh_debug()
+
+func _focus_debug_code() -> void:
+	if _panel_kind == "debug" and _refs.has("debug_code") and is_instance_valid(_refs.debug_code):
+		_refs.debug_code.grab_focus()
+
 func _build_debug() -> void:
-	_heading("Debug controls", "Multiply your current money up or down, or turn up your luck. Changes are saved with your farm.")
+	if not _debug_unlocked:
+		_heading("Debug access", "Enter the access code to unlock controls for this session.")
+		_info("debug_access_note", "Money, luck and time controls are locked.", MUTED, 16)
+		var code: LineEdit = LineEdit.new()
+		code.secret = true
+		code.max_length = 64
+		code.placeholder_text = "Access code"
+		code.custom_minimum_size = Vector2(0, 46)
+		code.add_theme_color_override("font_color", INK)
+		code.add_theme_color_override("font_placeholder_color", MUTED)
+		code.add_theme_font_size_override("font_size", 18)
+		code.add_theme_stylebox_override("normal", _style(PAPER, 10, 12, Color("c6d3bd")))
+		code.add_theme_stylebox_override("focus", _style(CREAM, 10, 12, GREEN))
+		code.text_submitted.connect(func(_text: String) -> void: _act("debug_unlock"))
+		_body.add_child(code)
+		_refs["debug_code"] = code
+		_info("debug_access_error", _debug_access_error, CHERRY, 14)
+		var unlock: Button = _button("Unlock debug", "debug_unlock", true)
+		_body.add_child(unlock)
+		_refs["debug_unlock"] = unlock
+		call_deferred("_focus_debug_code")
+		return
+	_heading("Debug controls", "Money and luck save. Time speed resets each session.")
 	var data: Dictionary = _debug_info()
 	_info("debug_balance", "", INK, 20)
 	_info("debug_luck_status", "", GREEN, 15)
@@ -2435,6 +2645,20 @@ func _build_debug() -> void:
 			preset.add_theme_stylebox_override("normal", _style(CREAM, 10, 8, Color("c6d3bd")))
 			preset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			row.add_child(preset)
+	var time_card: PanelContainer = _card(PAPER, 14)
+	_body.add_child(time_card)
+	var time_column: VBoxContainer = _vbox(8)
+	time_card.add_child(time_column)
+	_refs["debug_time_status"] = _label("GAME TIME", 15, INK, true)
+	time_column.add_child(_refs.debug_time_status)
+	var time_row: HBoxContainer = _hbox(8)
+	time_column.add_child(time_row)
+	for speed: int in [1, 2, 5, 10, 30]:
+		var choice: Button = _button("%d×" % speed, "debug:time:%d" % speed)
+		choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		time_row.add_child(choice)
+		_refs["debug_time_%d" % speed] = choice
+	_info("debug_time_note", "Crops, markets, pests and abilities follow game time.", MUTED, 13)
 	_info("debug_preview", "", GREEN, 14)
 	var actions: HBoxContainer = _hbox(9)
 	_body.add_child(actions)
@@ -2442,11 +2666,12 @@ func _build_debug() -> void:
 	apply.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(apply)
 	_refs["debug_apply"] = apply
-	var reset: Button = _button("Reset debug luck", "debug:reset")
+	var reset: Button = _button("Reset luck + time", "debug:reset")
 	reset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(reset)
 	_refs["debug_reset"] = reset
-	_info("debug_note", "Money: 0.1 keeps 10%; 1e-20 scales a $1e20 purse to $1; 0 clears it. Apply resets this field to ×1. Luck reset keeps your coins. Edited farms keep DEBUG trophies.", MUTED, 13)
+	_info("debug_note", "Money: 0.1 = 10% · 0 = empty purse\nReset keeps coins. Debug trophies stay marked.", MUTED, 13)
+	_body.add_child(_button("Lock debug · restore 1× time", "debug:lock"))
 	_refresh_debug()
 
 func _debug_money_value() -> Dictionary:
@@ -2476,7 +2701,10 @@ func _refresh_debug() -> void:
 		var after: float = minf(1e300, coins * multiplier)
 		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s\nSet debug luck to %.2f×" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after), float(_refs.debug_luck.value)]
 		_refs.debug_preview.add_theme_color_override("font_color", GREEN)
-	_refs.debug_reset.disabled = is_equal_approx(float(data.get("luck_multiplier", 1)), 1.0)
+	_refs.debug_reset.disabled = is_equal_approx(float(data.get("luck_multiplier", 1)), 1.0) and is_equal_approx(_debug_time_multiplier, 1.0)
+	_refs.debug_time_status.text = "GAME TIME · %d×" % int(_debug_time_multiplier)
+	for speed: int in [1, 2, 5, 10, 30]:
+		_refs["debug_time_%d" % speed].disabled = is_equal_approx(_debug_time_multiplier, float(speed))
 
 func _precise_money(amount: float) -> String:
 	return "$" + String.num_scientific(amount)
@@ -2511,7 +2739,7 @@ func _refresh_trophies() -> void:
 	for child: Node in gallery.get_children():
 		gallery.remove_child(child)
 		child.queue_free()
-	gallery.add_child(_wrap("Your rarest drops, kept between visits. The odds shown are the actual chance of that rarity tier on the recorded roll, not the individual item.", 12, CASINO_LIGHT))
+	gallery.add_child(_wrap("Your rarest drops. Odds show that roll's rarity tier, not the specific item.", 12, CASINO_LIGHT))
 	if trophies.is_empty():
 		gallery.add_child(_wrap("No trophies yet. Rare and better drops will appear here.", 14, CREAM))
 		return
