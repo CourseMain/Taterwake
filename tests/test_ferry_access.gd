@@ -58,6 +58,7 @@ func run() -> void:
 		event.pressed = true
 		event.position = game.world.camera.unproject_position(boarding + Vector3(0, 0.8, 0))
 		check(game.world.pick(event.position).get("station", "") == "island", "island %d dock can be clicked" % island)
+		event.position *= root.get_visible_rect().size / Vector2(game.farm_viewport.size)
 		game._unhandled_input(event)
 		check(game.walking and game.pending_ferry and not game.hud.is_panel_open(), "clicking ferry walks over before opening travel")
 		finish_walk()

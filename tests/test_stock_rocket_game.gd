@@ -48,6 +48,7 @@ func run() -> void:
 	game._process(0.01)
 	game.rocket_cutscene.set_process(false)
 	check(game.rocket_cutscene.active and not game.hud.is_panel_open(), "pending rocket starts full-screen launch and closes menus")
+	check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED, "opaque rocket film suspends hidden farm rendering")
 	check(game.state.surge_remaining == 0.0, "no simultaneous normal boom consumes the selling window")
 	var elapsed: float = game.state.elapsed
 	var frost: float = game.state.frost_timer
@@ -63,6 +64,7 @@ func run() -> void:
 	await shot("stock-rocket-live-launch")
 	game.rocket_cutscene._process(game.rocket_cutscene.DURATION - 3.3)
 	check(not game.state.rocket_pending and not game.rocket_cutscene.active, "finished signal releases simulation once")
+	check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS, "farm drawing resumes with the selling window")
 	check(game.state.surge_kind == "rocket" and game.state.surge_remaining == 10.0, "ten full seconds start after cinematic finishes")
 	check(game.surge_band == 4 and game.hud._market_impact.tier == 4, "rocket quote activates strongest island-coloured stock effects")
 	check(game.hud._export_title.text.contains("ROCKET"), "rocket selling window is labelled clearly")

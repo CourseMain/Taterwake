@@ -3,6 +3,7 @@ extends RefCounted
 ## labels and every gameplay-owned mesh remain in their original hierarchy.
 var _box := BoxMesh.new()
 var _cylinders: Dictionary = {}
+var _compiler := preload("res://scripts/static_mesh_compiler.gd").new()
 
 func batch_tree(parent: Node3D, mutable_meshes: Dictionary) -> void:
 	for child: Node in parent.get_children():
@@ -12,6 +13,7 @@ func batch_tree(parent: Node3D, mutable_meshes: Dictionary) -> void:
 	batch_siblings(parent, mutable_meshes)
 
 func batch_siblings(parent: Node3D, mutable_meshes: Dictionary = {}) -> void:
+	_compiler.merge_siblings(parent, mutable_meshes)
 	var groups: Dictionary = {}
 	for child: Node in parent.get_children():
 		if not child is MeshInstance3D or mutable_meshes.has(child.get_instance_id()):

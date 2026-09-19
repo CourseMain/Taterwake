@@ -19,12 +19,12 @@ func _run() -> void:
 	root.add_child(world)
 	for island: int in [1, 2, 3]:
 		world.build_world(island)
-		check(world.find_children("*", "MultiMeshInstance3D", true, false).size() > 100, "island %d batches repeated static geometry" % island)
+		check(world.find_children("CompiledGeometry*", "MeshInstance3D", true, false).size() > 30, "island %d compiles static geometry into shared-colour surfaces" % island)
 		var plots: Array = []
 		for index: int in range(world.plot_positions.size()):
 			plots.append({"unlocked": true, "stage": 3, "crop": "icecap" if island == 3 else "russet", "tilled": true, "watered": true, "pests": true, "frozen": island == 3})
 		world.update_plots(plots)
-		check(world._crop_roots[0].find_children("*", "MultiMeshInstance3D", false, false).size() >= 6, "crop geometry is batched within its shaking parent")
+		check(world._crop_roots[0].find_children("CompiledGeometry*", "MeshInstance3D", false, false).size() == 1, "all ordinary crop colours share one surface within the shaking parent")
 		check(world._pest_roots[0].get_child_count() == 3, "three beetle parents remain independently animated")
 		var meshes: int = world.find_children("*", "MeshInstance3D", true, false).size()
 		world.update_plots(plots)

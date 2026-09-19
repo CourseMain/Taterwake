@@ -1582,12 +1582,12 @@ func set_graphics_quality(mode: String) -> void:
 func _build_graphics() -> void:
 	_heading("Graphics", "Choose what feels best on this device.")
 	_info("graphics_current", "", GREEN, 19)
-	for entry: Array in [["balanced", "Balanced", "Sharper picture · gentle shadows"], ["smooth", "Smooth", "Lighter rendering · no moving shadows"]]:
+	for entry: Array in [["balanced", "Balanced", "Clear farm · gentle shadows"], ["smooth", "Smooth", "Faster farm · shadows off"], ["crisp", "Crisp", "Sharpest farm · needs more power"]]:
 		var choice: Button = _button(str(entry[1]) + "\n" + str(entry[2]), "graphics:" + str(entry[0]))
-		choice.custom_minimum_size.y = 86
+		choice.custom_minimum_size.y = 70
 		_body.add_child(choice)
 		_refs["graphics_" + str(entry[0])] = choice
-	_info("graphics_note", "Same farm. Same rocket show.\nSaved on this device. Change it any time.", MUTED, 15)
+	_info("graphics_note", "Sharp menus in every mode.\nSaved on this device.", MUTED, 15)
 	_body.add_child(_button("Back to farm", "close"))
 	_refresh_graphics()
 
@@ -1595,7 +1595,7 @@ func _refresh_graphics() -> void:
 	if not _refs.has("graphics_current"):
 		return
 	_refs.graphics_current.text = "Using " + _graphics_quality.capitalize()
-	for mode: String in ["balanced", "smooth"]:
+	for mode: String in ["balanced", "smooth", "crisp"]:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:

@@ -10,6 +10,7 @@ const PestAlert = preload("res://scripts/pest_alert.gd")
 const RewardFeedback = preload("res://scripts/reward_feedback.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
+const FarmViewport = preload("res://scripts/farm_viewport.gd")
 const WALK_SPEED: float = 7.0
 const NO_TILES: Array[int] = []
 const CAMERA_ZOOM_MIN: float = 18.0
@@ -44,6 +45,7 @@ var save_elapsed: float = 0.0
 var test_mode: bool = false
 var sound_player: AudioStreamPlayer
 var audio_playback: AudioStreamGeneratorPlayback
+var _silent_audio := PackedVector2Array()
 var audio_phase: float = 0.0
 var tone_frequency: float = 440.0
 var tone_remaining: float = 0.0
@@ -70,6 +72,7 @@ var stock_shake_clock: float = 0.0
 var debug_unlocked: bool = false
 var debug_time_multiplier: float = 1.0
 var graphics_quality: String = "balanced"
+var farm_viewport: SubViewport
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -95,7 +98,10 @@ func _ready() -> void:
 	add_child(pest_alert)
 	world = WorldScript.new()
 	world.name = "FarmWorld"
-	add_child(world)
+	farm_viewport = FarmViewport.new()
+	farm_viewport.name = "FarmViewport"
+	add_child(farm_viewport)
+	farm_viewport.add_child(world)
 	world.build_world(state.current_island)
 	_reset_camera_zoom()
 	world.set_day_time(state.elapsed)
@@ -257,11 +263,8 @@ func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 		return
 	graphics_quality = mode
 	world.set_graphics_quality(mode)
+	farm_viewport.set_quality(mode)
 	hud.set_graphics_quality(mode)
-	if OS.has_feature("web"):
-		var browser_graphics = JavaScriptBridge.get_interface("taterlandGraphics")
-		if browser_graphics != null:
-			browser_graphics.setQuality(mode)
 	if persist and not test_mode:
 		if GraphicsPreferences.save_mode(mode) != OK:
 			hud.show_toast("Graphics changed. This browser could not save the preference.")
@@ -380,7 +383,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			var hit: Dictionary = world.pick(event.position)
+			var hit: Dictionary = world.pick(farm_viewport.to_farm_position(event.position))
 			if hit.has("plot_index"):
 				queue_plot(int(hit.plot_index))
 			elif hit.has("station"):
@@ -531,7 +534,7 @@ func _preview_area(index: int, tool: String) -> void:
 		world.highlight_tiles(NO_TILES)
 
 func _update_hover() -> void:
-	var hit: Dictionary = world.pick(get_viewport().get_mouse_position())
+	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(get_viewport().get_mouse_position()))
 	hover_plot = int(hit.get("plot_index", -1))
 	_preview_area(pending_plot if walking and pending_plot >= 0 else hover_plot, pending_tool if walking else selected_tool)
 	if hover_plot >= 0:
@@ -637,9 +640,11 @@ func _start_rocket_if_ready() -> void:
 	if not test_mode:
 		state.save_game()
 	rocket_cutscene.start(state.current_island)
+	farm_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 
 func _on_rocket_finished() -> void:
+	farm_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	state.complete_rocket_launch()
 	if not test_mode:
 		state.save_game()
@@ -928,6 +933,11 @@ func _pump_audio() -> void:
 	if audio_playback == null:
 		return
 	var frames: int = audio_playback.get_frames_available()
+	if tone_remaining <= 0.0 and fanfare_remaining <= 0.0 and (surge_band < 3 or state.rocket_pending):
+		# Silence is a bulk transfer, not 22,050 interpreted push_frame calls/sec.
+		_silent_audio.resize(frames)
+		audio_playback.push_buffer(_silent_audio)
+		return
 	var fanfare_pitch: float = 1.0 if fanfare_island == 1 else (1.12246 if fanfare_island == 2 else 1.25992)
 	var stock_pitch: float = 1.0 if state.current_island == 1 else (1.12246 if state.current_island == 2 else 1.25992)
 	var stock_playing: bool = surge_band >= 3 and not state.rocket_pending

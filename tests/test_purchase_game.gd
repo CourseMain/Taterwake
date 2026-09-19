@@ -29,6 +29,7 @@ func click_station(point: Vector3, expected: String) -> void:
 	event.pressed = true
 	event.position = game.world.camera.unproject_position(point)
 	check(game.world.pick(event.position).get("station", "") == expected, "ray hits " + expected)
+	event.position *= root.get_visible_rect().size / Vector2(game.farm_viewport.size)
 	game._unhandled_input(event)
 	check(game.hud._panel_kind == expected, "world click opens " + expected)
 

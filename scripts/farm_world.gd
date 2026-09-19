@@ -519,7 +519,7 @@ func _lighting() -> void:
 
 
 func set_graphics_quality(mode: String) -> void:
-	graphics_quality = mode if mode in ["balanced", "smooth"] else "balanced"
+	graphics_quality = mode if mode in ["balanced", "smooth", "crisp"] else "balanced"
 	_apply_graphics_quality()
 
 
@@ -1150,6 +1150,7 @@ func _mat(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color.srgb_to_linear()
 	material.roughness = 0.88
+	material.set_meta("static_colour", true)
 	_materials[key] = material
 	return material
 

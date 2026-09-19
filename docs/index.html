@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name="game-version" content="1.0.1.5">
+		<meta name="game-version" content="1.0.1.75">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 		<title>Taterland</title>
 		<style>
@@ -127,29 +127,26 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2331664,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2338420,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
-// Keep high-DPI laptops and 4K displays from rendering millions of unnecessary
-// pixels. CSS still fills the window; Godot fits the complete game into it.
-function getGameCanvasSize(width, height, deviceScale, quality = 'balanced') {
+// Keep UI at Retina resolution. FarmViewport independently budgets the 3D farm;
+// changing farm quality must never blur menu text, icons or the rocket film.
+function getGameCanvasSize(width, height, deviceScale) {
 	const w = Math.max(1, Number.isFinite(width) ? width : 1280);
 	const h = Math.max(1, Number.isFinite(height) ? height : 800);
-	const smooth = quality === 'smooth';
-	const dpr = Math.max(1, Math.min(smooth ? 1 : 1.5, Number.isFinite(deviceScale) ? deviceScale : 1));
-	const scale = Math.min(dpr, (smooth ? 1280 : 1920) / w, (smooth ? 800 : 1200) / h,
-		Math.sqrt((smooth ? 1024000 : 2073600) / (w * h)));
+	const dpr = Math.max(1, Math.min(2, Number.isFinite(deviceScale) ? deviceScale : 1));
+	const scale = Math.min(dpr, 3840 / w, 2400 / h, Math.sqrt(8294400 / (w * h)));
 	return [Math.max(1, Math.floor(w * scale)), Math.max(1, Math.floor(h * scale))];
 }
 
 (function () {
 	const canvas = document.getElementById('canvas');
-	let graphicsQuality = 'balanced';
 	let resizeQueued = false;
 	function fitGameCanvas() {
 		resizeQueued = false;
-		const [width, height] = getGameCanvasSize(window.innerWidth, window.innerHeight, window.devicePixelRatio, graphicsQuality);
+		const [width, height] = getGameCanvasSize(window.innerWidth, window.innerHeight, window.devicePixelRatio);
 		if (canvas.width !== width) canvas.width = width;
 		if (canvas.height !== height) canvas.height = height;
 	}
@@ -159,13 +156,6 @@ function getGameCanvasSize(width, height, deviceScale, quality = 'balanced') {
 			requestAnimationFrame(fitGameCanvas);
 		}
 	}
-	window.taterlandGraphics = {
-		setQuality(mode) {
-			if (mode !== 'balanced' && mode !== 'smooth') return;
-			graphicsQuality = mode;
-			queueCanvasResize();
-		}
-	};
 	fitGameCanvas();
 	window.addEventListener('resize', queueCanvasResize);
 	document.addEventListener('fullscreenchange', queueCanvasResize);

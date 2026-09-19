@@ -153,9 +153,11 @@ The Roll House's collapsible **Trophy cabinet** records your 16 rarest distinct 
 
 ## Graphics
 
-Open **☰ → Graphics**, or use **⚙** on the tutorial card. **Balanced** keeps a sharper picture with short, gentle shadows. **Smooth** removes cast shadows and reduces browser rendering resolution, useful if moving or zooming still stutters. Both keep the complete map, the day/night colours and the full rocket show. Your choice is saved on this device separately from the farm.
+Open **☰ → Graphics**, or use **⚙** on the tutorial card. **Balanced** keeps a clear farm with gentle shadows. **Smooth** draws a lighter farm without shadows. **Crisp** gives the sharpest farm and smoother edges, using more graphics power. Text, menus, icons and the rocket film stay sharp in every mode. Your choice is saved on this device separately from the farm.
 
-If Smooth still struggles, try a smaller browser window or the native Godot version. Performance varies with the device and browser. To load a newly published version, close all Taterland tabs and reopen the play link; keep the same browser profile to retain your farm.
+If movement in Safari seems capped at 30 FPS, check **System Settings → Battery → Low Power Mode** and use Automatic/Never instead of Low Power while playing. Low Power Mode can also be enabled while plugged in. Try Chrome/Firefox or run the native Godot project if browser performance is still poor. The Web ZIP is still a browser build, not a native app. [Godot's browser guidance](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html), [Apple's power mode guide](https://support.apple.com/en-nz/101613).
+
+To load a newly published version, close all Taterland tabs and reopen the play link; keep the same browser profile to retain your farm.
 
 ## Debug controls
 

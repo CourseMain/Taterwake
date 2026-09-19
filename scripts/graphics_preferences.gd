@@ -1,7 +1,7 @@
 extends RefCounted
 ## Device-local presentation settings; independent of farm progress and debug.
 const PATH: String = "user://taterland_graphics.cfg"
-const MODES: Array[String] = ["balanced", "smooth"]
+const MODES: Array[String] = ["balanced", "smooth", "crisp"]
 
 static func load_mode(path: String = PATH) -> String:
 	var config := ConfigFile.new()

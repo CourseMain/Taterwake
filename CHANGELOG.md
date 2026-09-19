@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1.75
+
+- Decoupled the 3D farm from the Retina-resolution UI. Smooth no longer blurs menu text or icons.
+- Added Crisp mode with a larger farm render budget and 4× antialiasing; Balanced and Smooth retain 2×.
+- Compiled immutable sibling geometry into shared vertex-colour surfaces and reused identical crop meshes. Animated roots, individual plants, colliders and gameplay references remain intact.
+- Preserved map proportions and precise clicks across window sizes and all three islands.
+- Stopped drawing the hidden farm during the rocket film; its 10-second selling window still starts after playback.
+- Removed per-sample script work while audio is silent. Existing booms, sound effects, saves and economy rules are unchanged.
+- Documented Safari alternatives and Low Power Mode troubleshooting.
+
 ## 1.0.1.5
 
 - Rebuilt the Stock Rocket show around a glass potato cargo cabin, bright yellow/blue/red/orange/pink accents, money trails and a new original launch score.

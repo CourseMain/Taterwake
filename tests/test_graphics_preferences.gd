@@ -22,6 +22,7 @@ func run() -> void:
 	check(Preferences.load_mode(TEST_PATH) == "smooth", "Smooth survives a new settings read")
 	check(Preferences.save_mode("unknown", TEST_PATH) == ERR_INVALID_PARAMETER, "invalid mode cannot replace saved setting")
 	check(Preferences.load_mode(TEST_PATH) == "smooth", "rejected setting preserves previous choice")
+	check(Preferences.save_mode("crisp", TEST_PATH) == OK and Preferences.load_mode(TEST_PATH) == "crisp", "Crisp is a persisted device option")
 	var corrupt := ConfigFile.new()
 	corrupt.set_value("graphics", "quality", 42)
 	corrupt.save(TEST_PATH)
@@ -38,6 +39,10 @@ func run() -> void:
 	await process_frame
 	check(game.hud._panel_kind == "graphics", "menu action opens actual graphics panel")
 	check(game.hud._refs.graphics_balanced.disabled, "selected Balanced control is clear")
+	var backing_size: Vector2i = root.size
+	game.hud._refs.graphics_crisp.pressed.emit()
+	check(game.graphics_quality == "crisp" and game.world._sun.shadow_enabled, "Crisp keeps shadows and selects the sharp farm mode")
+	check(game.farm_viewport.msaa_3d == Viewport.MSAA_4X and root.size == backing_size, "Crisp raises farm antialiasing independently of UI resolution")
 	game.hud._refs.graphics_smooth.pressed.emit()
 	check(game.graphics_quality == "smooth" and game.world.graphics_quality == "smooth", "button updates world and controller")
 	check(not game.world._sun.shadow_enabled, "Smooth removes costly shadow map")

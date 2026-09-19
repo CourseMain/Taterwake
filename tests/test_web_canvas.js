@@ -12,26 +12,21 @@ let checks = 0;
 for (const [width, height, dpr] of [[1280,800,1], [1280,800,2], [1920,1080,2], [3840,2160,2], [2560,1600,2], [960,600,1], [640,360,2], [390,844,3], [800,600,1.25]]) {
 	const [w,h] = context.getGameCanvasSize(width,height,dpr);
 	assert.ok(Number.isInteger(w) && Number.isInteger(h) && w > 0 && h > 0);
-	assert.ok(w <= 1920 && h <= 1200 && w*h <= 2073600, 'bounded GPU pixel load');
+	assert.ok(w <= 3840 && h <= 2400 && w*h <= 8294400, 'bounded full-resolution UI canvas');
 	assert.ok(Math.abs(w/h - width/height) < 2/h, 'resize preserves the window aspect ratio');
 	assert.ok(w <= width*dpr && h <= height*dpr, 'never renders beyond native resolution');
 	checks += 4;
 }
-for (const [width,height,dpr] of [[1280,800,2], [1920,1080,2], [3840,2160,2], [600,900,2], [640,360,1]]) {
-	const balanced = context.getGameCanvasSize(width,height,dpr,'balanced');
-	const [w,h] = context.getGameCanvasSize(width,height,dpr,'smooth');
-	assert.ok(w <= 1280 && h <= 800 && w*h <= 1024000, 'Smooth limits GPU work');
-	assert.ok(w*h <= balanced[0]*balanced[1], 'Smooth never costs more pixels');
-	assert.ok(Math.abs(w/h - width/height) < 2/h, 'Smooth keeps the full map proportions');
-	checks += 3;
+for (const mode of ['balanced', 'smooth', 'crisp']) {
+ const dimensions = context.getGameCanvasSize(1280,800,2,mode);
+ assert.equal(dimensions[0],2560,'every mode keeps native Retina text');
+ assert.equal(dimensions[1],1600,'3D settings cannot shrink UI');
+ checks += 2;
 }
-const retina = context.getGameCanvasSize(1280,800,2);
-assert.ok(retina[0]*retina[1] < 1280*800*4*0.51, 'retina game renders at most half the old pixels');
-assert.ok(retina[0] > 1280 && retina[1] > 800, 'retains extra sharpness above CSS resolution');
 for (const value of [NaN, Infinity, 0, -4]) {
 	const dimensions = context.getGameCanvasSize(value,value,value);
 	assert.ok(dimensions.every(n => Number.isInteger(n) && n > 0));
 	checks++;
 }
 assert.match(fs.readFileSync(path.join(__dirname, '../export_presets.cfg'),'utf8'), /html\/canvas_resize_policy=0/);
-console.log(`WEB CANVAS: ${checks + 3} checks passed`);
+console.log(`WEB CANVAS: ${checks + 1} checks passed`);

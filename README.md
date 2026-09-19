@@ -4,7 +4,9 @@
 
 Open the link on a computer with a keyboard and mouse or trackpad. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.1.5:** Launch a rocket packed with potatoes, colourful money trails and a new jackpot soundtrack. Bigger stock booms are progressively rarer, with no gear-driven pile-up at the cap. Browser shadows are cleaner, and **☰ → Graphics → Smooth** provides a lighter option for slower devices.
+**v1.0.1.75:** Sharper browser text and menus, fewer farm draw calls, and independent 3D quality. Open **☰ → Graphics**: choose **Crisp** for the sharpest farm, **Balanced** for everyday play, or **Smooth** for lighter rendering. All three keep sharp menus and the full rocket show.
+
+If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
 
 New farms begin with a guided first harvest. Pests and stock booms wait until their lessons; established players can replay the tour from **☰ → First island guided tour** in the Valley.
 
