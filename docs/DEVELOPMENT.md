@@ -48,11 +48,19 @@ The Web preset uses the Compatibility renderer and a single-threaded WebGL build
 
 ### Browser rendering budget
 
-The web shell owns canvas resolution (`html/canvas_resize_policy=0`). It fills the window while limiting backing resolution to a 1.5 device scale, 1920px width, 1200px height and 2,073,600 pixels. Window and fullscreen changes resize it on the next animation frame. The Web override uses 2× MSAA; native world rendering retains 4×.
+The web shell owns canvas resolution (`html/canvas_resize_policy=0`). It fills the window while limiting backing resolution to a 1.5 device scale, 1920px width, 1200px height and 2,073,600 pixels. Window and fullscreen changes resize it on the next animation frame. The Web override uses 2× MSAA; native world rendering retains 4×. The Smooth setting lowers the backing resolution to at most 1280×800 / 1,024,000 pixels and a device scale of 1. The shell exposes `window.taterlandGraphics.setQuality` to Godot through JavaScriptBridge; it resizes the existing canvas without restarting the game.
 
 Static world geometry shares primitive meshes and batches compatible siblings into MultiMeshes. Interactive roots, collision targets and animated parts remain separate. The rocket score is original generated audio baked into `assets/audio/stock-rocket-launch.wav`; regenerate it with `godot --headless --path . --script tools/bake_stock_rocket_audio.gd`.
 
 Measured at 1280×800 with native OpenGL, 4× MSAA and all beds ripe, draw calls dropped from 4,714 to 1,362 (Valley), 11,336 to 2,450 (Shores) and 20,446 to 3,621 (winter). These isolated fixture results describe rendering work, not browser frame rates. Reproduce with `tests/benchmark_world_rendering.gd`; pass `-- --integration-test --label=run` and keep the window visible.
+
+### Shadows and device preferences
+
+Balanced uses a single orthographic shadow map, zero pancake extrusion and a stable steep sun direction. Terrain shells do not cast onto the ocean. The 60-second cycle still changes the sky and light colours and intensities; Smooth disables the shadow map. The camera far plane covers all island geometry without the previous excess range.
+
+`GraphicsPreferences` stores only the validated quality mode in `user://taterland_graphics.cfg`. It never modifies farm progress, debug settings or simulation timing. Integration tests use a separate temporary settings file. `test_graphics_preferences.gd`, `test_world_graphics_quality.gd` and `test_web_canvas.js` cover menu wiring, travel persistence, shadow bounds and resolution limits.
+
+In an isolated native 1280×800, 2× MSAA, ripe Golden Shores fixture, legacy dusk averaged 3,116.5 draw calls, Balanced 2,291 and Smooth 1,162. These quantify reduced renderer work, not Safari frame rates. Reproduce with `tests/benchmark_shadow_modes.gd`.
 
 ## GitHub Pages
 

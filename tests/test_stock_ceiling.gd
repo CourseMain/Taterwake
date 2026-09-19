@@ -52,6 +52,7 @@ func natural_sample(state, luck: float, debug_luck: float = 1.0) -> Dictionary:
 	var hits: int = 0
 	var hit_ticks: Array[int] = []
 	var factors: Array[float] = []
+	var quotes: Array[float] = []
 	var total: float = 0.0
 	var bounded: bool = true
 	var low: float = 71.0 if state.current_island >= 3 else 21.0
@@ -64,12 +65,13 @@ func natural_sample(state, luck: float, debug_luck: float = 1.0) -> Dictionary:
 			hits += 1
 			hit_ticks.append(_index)
 			factors.append(state.natural_factor)
+			quotes.append(state.market[state.selected_crop].sell)
 			total += (state.natural_factor - low) / (state.stock_cap() - low)
 			bounded = bounded and state.natural_remaining == 10.0 and state.natural_crop == state.selected_crop
 			bounded = bounded and state.natural_factor >= low and state.natural_factor <= state.stock_cap()
 			bounded = bounded and state.market[state.selected_crop].change >= (low - 1.0) * 100.0 - 0.000001
 			bounded = bounded and state.market[state.selected_crop].sell <= state.CROPS[state.selected_crop].base * state.stock_cap() + 0.000001
-	return {"hits": hits, "mean": total / maxi(hits, 1), "bounded": bounded, "hit_ticks": hit_ticks, "factors": factors, "chance": state.natural_stock_chance()}
+	return {"hits": hits, "mean": total / maxi(hits, 1), "bounded": bounded, "hit_ticks": hit_ticks, "factors": factors, "quotes": quotes, "chance": state.natural_stock_chance()}
 
 func _run() -> void:
 	var state = State.new()
@@ -87,7 +89,7 @@ func _run() -> void:
 		var lucky: Dictionary = scheduled_sample(state, 10.0)
 		check(ordinary.bounded and lucky.bounded, "island %d scheduled factors stay in range at both luck levels" % island)
 		check(ordinary.mean > 0.15 and ordinary.mean < 0.40 and ordinary.bottom > ordinary.top * 2, "island %d ordinary scheduled booms favor the low end" % island)
-		check(lucky.mean > ordinary.mean + 0.04 and lucky.mean < 0.55 and lucky.bottom > lucky.top, "island %d luck improves boom strength while high values remain rarer" % island)
+		check(lucky.mean > ordinary.mean + 0.025 and lucky.mean < 0.32 and lucky.bottom > lucky.top, "island %d luck modestly improves boom strength while high values remain rarer" % island)
 		state.debug_luck_multiplier = 1.0
 		state.surge_factor = cap
 		state._refresh_market(false)
@@ -105,14 +107,18 @@ func _run() -> void:
 		state.build_system = builds
 		var build_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
 		check(builds.event_chance_bonus() > 0.0, "investor setup exercises a real positive-event bonus")
+		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes"]:
+			state._grant_item(id)
+		var outfit_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
+		check(is_equal_approx(state.item_stock_factor(), 1.525), "natural independence includes the maximum stock outfit")
 		state.build_system = null
 		builds.free()
 		check(regular_spikes.hits >= 100 and regular_spikes.hits <= 200, "island %d natural spikes occur about 1.5 percent of eligible ticks" % island)
 		check(regular_spikes.mean > 0.15 and regular_spikes.mean < 0.40, "island %d natural strength still favors low values" % island)
-		for sample in [regular_spikes, lucky_spikes, debug_spikes, build_spikes]:
+		for sample in [regular_spikes, lucky_spikes, debug_spikes, build_spikes, outfit_spikes]:
 			check(sample.chance == 0.015, "island %d natural odds stay exactly 1.5 percent across luck, debug luck, and investor bonuses" % island)
 			check(sample.bounded, "island %d natural spikes use the selected crop, correct band, and full ten seconds" % island)
-			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors, "island %d identical seeded natural occurrences and magnitudes are independent of luck and build bonuses" % island)
+			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors and sample.quotes == regular_spikes.quotes, "island %d identical seeded natural occurrences and magnitudes are independent of luck, stock gear, and build bonuses" % island)
 	state.reset_game()
 	state.select_crop("golden")
 	state.surge_timer = 0.25

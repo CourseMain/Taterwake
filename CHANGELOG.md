@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1.5
+
+- Rebuilt the Stock Rocket show around a glass potato cargo cabin, bright yellow/blue/red/orange/pink accents, money trails and a new original launch score.
+- Boom magnitude now follows a smooth falling probability curve: higher percentages are progressively rarer. Stock gear improves scheduled/rocket roll strength without multiplying results into the ceiling; natural spikes remain independent of luck and gear.
+- Removed large ocean-edge shadow artifacts, stabilized daylight shadow direction and reduced shadow rendering work. Day/night colours and lighting continue cycling.
+- Added **Graphics → Balanced / Smooth**, saved separately on each device. Smooth removes cast shadows and lowers browser pixel load while preserving gameplay and the full rocket show.
+- Preserved 10-second booms, the 1.5% natural spike trigger, all island ranges, saved farms and the code-locked debug controls.
+
 ## 1.0.1
 
 - Stock booms last 10 seconds. Natural spikes have a flat 1.5% chance per fresh quote; their odds and strength ignore luck bonuses.

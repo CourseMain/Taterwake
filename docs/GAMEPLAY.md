@@ -61,7 +61,7 @@ Pests appear on planted fields at random 25–100-second intervals and when ripe
 
 Quotes refresh every **three seconds on Island 1**, with slightly more upward movement, and every **five seconds on Islands 2 and 3**. Brief market events vary their target and strength, then expire. Normal quotes cap at **+2,999%** in the Valley and Shores, **+10,000%** in Frosthollow.
 
-Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher rolls are rarer; luck improves the odds. The timer flashes in the final 10 seconds. Outside scheduled booms, each fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on luck, gear, builds or debug luck. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
+Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher percentages become smoothly rarer all the way to the ceiling. Without bonuses, the four equal quarters of any boom range have approximately **57.8% / 29.7% / 10.9% / 1.6%** of rolls, from lowest to highest. Luck and equipped stock gear modestly improve scheduled and rocket rolls while preserving that downward trend. These are magnitude odds after a boom triggers, not trigger chances. The timer flashes in the final 10 seconds. Outside active booms and spikes, each eligible fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on luck, gear, builds or debug luck. Sampled boom quotes are final: export, thaw, roll and flash-offer multipliers do not stack onto them. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
 
 Press **2** or click the Seeds hotbar slot to show crop choices and tracked seed quotes. Selecting another tool hides both strips. Use **Tracked Seed Prices** in the menu to choose which seed quotes appear in this tray. Your choices are saved; price changes show old → new values with green/up or red/down feedback.
 
@@ -141,7 +141,7 @@ Gacha now contains **23 wearable items**, including the previous hats, gloves an
 | Scientist | Mutation chances and crop growth |
 | Industrialist | Faster processing and a little extra harvest yield |
 
-The original eight keepsakes remain passive collectibles. Normal effective luck stays capped at 10×, stock gear respects the current island's cap (or the active rocket crop's cap), and seeds follow improved sale prices. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves Scientist experiments as well as field mutations; the experiment panel shows its actual chance. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
+The original eight keepsakes remain passive collectibles. Normal effective luck stays capped at 10×, stock gear improves ordinary sale quotes and the strength odds of scheduled/rocket booms within their caps, and seeds follow actual sale prices. Equipping gear during a boom cannot inflate its preselected quote. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves Scientist experiments as well as field mutations; the experiment panel shows its actual chance. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
 
 An equipped **Aurora Crown grants one free extra roll per paid purchase**, at the same stake value, in addition to its +1 luck. A single purchase gives two results; a winter ×3 or ×5 purchase gives four or six. The Crown must be equipped before buying, so winning one activates its bonus for your next purchase. Free rolls cannot trigger more free rolls, and the result cards identify the **AURORA BONUS**.
 
@@ -150,6 +150,12 @@ Frosthollow also offers **×3 and ×5 multi-rolls** at normal, big or stupid sta
 The illustrated horizontal reel lands on the actual reward. Common, Rare and build results use a short confirmation tone with no reward flash, screen mist or world celebration. Epic and higher tiers keep the big effects; Relic and mysterious discoveries get a longer reveal. A market reward starts after the reel ends so its window is usable.
 
 The Roll House's collapsible **Trophy cabinet** records your 16 rarest distinct Rare-or-better discoveries, including free Crown rolls. Each trophy shows its artwork, tier, repeat count, island, roll number and the actual chance of that tier on its recorded roll. These are tier odds, not the odds of a particular item. History starts with rolls made after this update; past results are not invented. Debug-assisted discoveries are marked **DEBUG** and recorded separately from normal discoveries.
+
+## Graphics
+
+Open **☰ → Graphics**, or use **⚙** on the tutorial card. **Balanced** keeps a sharper picture with short, gentle shadows. **Smooth** removes cast shadows and reduces browser rendering resolution, useful if moving or zooming still stutters. Both keep the complete map, the day/night colours and the full rocket show. Your choice is saved on this device separately from the farm.
+
+If Smooth still struggles, try a smaller browser window or the native Godot version. Performance varies with the device and browser. To load a newly published version, close all Taterland tabs and reopen the play link; keep the same browser profile to retain your farm.
 
 ## Debug controls
 
@@ -163,6 +169,6 @@ Choose **1×, 2×, 5×, 10× or 30×** simulation speed to test crops, markets, 
 
 ### Stock Rocket
 
-Every **30 minutes spent on Island 3**, a Stock Rocket launches into the night sky. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +15,000–50,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
+Every **30 minutes spent on Island 3**, a rocket packed with potato passengers blasts into the night sky, with yellow, blue, red, orange and pink money trails and an original rising jackpot score. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +15,000–50,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
 
 Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +15,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.

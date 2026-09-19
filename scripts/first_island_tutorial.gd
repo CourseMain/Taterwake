@@ -110,7 +110,7 @@ func _features() -> Array[String]:
 	return result
 
 func allowed_actions() -> Array[String]:
-	var result: Array[String] = ["close", "save", "tutorial:next", "tutorial:skip"]
+	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	for feature: String in _features():
 		if feature not in ["coins", "stock"]:
 			result.append(feature)

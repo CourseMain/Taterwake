@@ -45,6 +45,7 @@ var _box_meshes: Dictionary = {}
 var _cylinder_meshes: Dictionary = {}
 var _sphere_mesh: SphereMesh
 var _geometry_batcher := GeometryBatcher.new()
+var graphics_quality: String = "balanced"
 var current_island: int = 1
 var _island2_unlocked: bool = false
 var _island3_unlocked: bool = false
@@ -493,10 +494,8 @@ func _lighting() -> void:
 	add_child(environment_node)
 	_sun = DirectionalLight3D.new()
 	_sun.name = "CycleSun"
-	_sun.shadow_enabled = true
-	_sun.directional_shadow_max_distance = 90.0
-	_sun.shadow_bias = 0.08
 	add_child(_sun)
+	_apply_graphics_quality()
 	# A gentle fill keeps crops, paths and the farmer readable throughout night.
 	# Both lights use Compatibility features shared by native and web renderers.
 	_moon = DirectionalLight3D.new()
@@ -514,7 +513,33 @@ func _lighting() -> void:
 	add_child(camera)
 	camera.look_at(Vector3(0.0, 0.3, 0.5) if current_island == 3 else (Vector3(0.0, 0.3, -1.0) if current_island == 2 else Vector3(-0.3, 0.3, -1.2)))
 	camera.current = true
-	camera.far = 200.0
+	# All three islands, offshore previews and the ocean fit within 90 units
+	# of camera depth. A tight far plane improves orthographic shadow precision.
+	camera.far = 110.0
+
+
+func set_graphics_quality(mode: String) -> void:
+	graphics_quality = mode if mode in ["balanced", "smooth"] else "balanced"
+	_apply_graphics_quality()
+
+
+func _apply_graphics_quality() -> void:
+	if not is_instance_valid(_sun):
+		return
+	# One map suits this orthographic diorama; four perspective shadow splits
+	# waste detail and introduce visible boundaries across the flat island.
+	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	_sun.directional_shadow_max_distance = 110.0
+	_sun.directional_shadow_fade_start = 1.0
+	# Large unsubdivided terrain near a shadow frustum can produce triangular
+	# pancake artifacts. Keep the full geometry inside the shadow projection.
+	_sun.directional_shadow_pancake_size = 0.0
+	_sun.shadow_bias = 0.04
+	_sun.shadow_opacity = 0.68
+	# Daylight intensity and colour still complete the full 60-second cycle.
+	# Stable, steeper light avoids long crawling palm/roof silhouettes.
+	_sun.rotation_degrees = Vector3(-60.0, -35.0, 0.0)
+	_sun.shadow_enabled = graphics_quality != "smooth"
 
 
 func set_day_time(elapsed: float) -> void:
@@ -543,7 +568,6 @@ func set_day_time(elapsed: float) -> void:
 	_day_environment.ambient_light_energy = lerpf(0.44, 0.45, daylight)
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
 	_sun.light_energy = 0.65 * daylight
-	_sun.rotation_degrees = Vector3(-48.0 + 24.0 * sin(orbit), -35.0 + 32.0 * sin(orbit), 0.0)
 	_moon.light_energy = 0.48 * (1.0 - daylight)
 
 
@@ -1232,6 +1256,11 @@ func _prism(parent: Node3D, pos: Vector3, width: float, depth: float, height: fl
 	instance.mesh = surface.commit()
 	instance.material_override = _mat(color)
 	instance.position = pos
+	# The broad island shells receive prop shadows but do not cast enormous
+	# low-poly silhouettes onto the ocean or their own thin shoreline layers.
+	instance.name = "IslandTerrainShell"
+	instance.set_meta("terrain_shell", true)
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(instance)
 
 func highlight_tiles(indices: Array[int]) -> void:

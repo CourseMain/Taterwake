@@ -17,6 +17,14 @@ for (const [width, height, dpr] of [[1280,800,1], [1280,800,2], [1920,1080,2], [
 	assert.ok(w <= width*dpr && h <= height*dpr, 'never renders beyond native resolution');
 	checks += 4;
 }
+for (const [width,height,dpr] of [[1280,800,2], [1920,1080,2], [3840,2160,2], [600,900,2], [640,360,1]]) {
+	const balanced = context.getGameCanvasSize(width,height,dpr,'balanced');
+	const [w,h] = context.getGameCanvasSize(width,height,dpr,'smooth');
+	assert.ok(w <= 1280 && h <= 800 && w*h <= 1024000, 'Smooth limits GPU work');
+	assert.ok(w*h <= balanced[0]*balanced[1], 'Smooth never costs more pixels');
+	assert.ok(Math.abs(w/h - width/height) < 2/h, 'Smooth keeps the full map proportions');
+	checks += 3;
+}
 const retina = context.getGameCanvasSize(1280,800,2);
 assert.ok(retina[0]*retina[1] < 1280*800*4*0.51, 'retina game renders at most half the old pixels');
 assert.ok(retina[0] > 1280 && retina[1] > 800, 'retains extra sharpness above CSS resolution');

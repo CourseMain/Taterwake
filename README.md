@@ -4,7 +4,7 @@
 
 Open the link on a computer with a keyboard and mouse or trackpad. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.1:** Stock booms now last **10 seconds**, with a flat **1.5% natural spike chance** unaffected by luck. Catch island jackpots and winter's Stock Rocket, follow clearer tutorial arrows and ferry paths, and enjoy a lighter browser renderer. Debug controls now require an access code and include simulation speed.
+**v1.0.1.5:** Launch a rocket packed with potatoes, colourful money trails and a new jackpot soundtrack. Bigger stock booms are progressively rarer, with no gear-driven pile-up at the cap. Browser shadows are cleaner, and **☰ → Graphics → Smooth** provides a lighter option for slower devices.
 
 New farms begin with a guided first harvest. Pests and stock booms wait until their lessons; established players can replay the tour from **☰ → First island guided tour** in the Valley.
 

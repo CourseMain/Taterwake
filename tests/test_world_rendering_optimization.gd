@@ -58,7 +58,7 @@ func _run() -> void:
 	hash.start(HashingContext.HASH_SHA256)
 	hash.update(sound.data)
 	check(sound.format == AudioStreamWAV.FORMAT_16_BITS and sound.mix_rate == 22050 and sound.stereo, "import keeps original uncompressed stereo PCM")
-	check(hash.finish().hex_encode() == "2e14c91ffbebab2c36609113ec127d81e8b63a860b5fffdd60e0b2e926eee6cc", "baked launch score exactly matches every original generated PCM byte")
+	check(hash.finish().hex_encode() == "c401ba3ac808e5b1f399c2da1985a9b0d8df8423ca379e20c5b3aaa92e888918", "baked crowded-spud launch score matches the deterministic offline PCM")
 	world.queue_free()
 	await process_frame
 	print("WORLD RENDERING OPTIMIZATION: %d checks, %d failures" % [checks, failures])

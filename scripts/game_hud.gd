@@ -183,6 +183,7 @@ var _hotbar: PanelContainer
 var _debug_unlocked: bool = false
 var _debug_time_multiplier: float = 1.0
 var _debug_access_error: String = ""
+var _graphics_quality: String = "balanced"
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -273,6 +274,15 @@ func _build_tutorial() -> void:
 	_tutorial_progress.add_theme_font_override("font", _compact_heading_font())
 	_tutorial_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_row.add_child(_tutorial_progress)
+	var graphics: Button = _button("⚙", "graphics")
+	graphics.name = "TutorialGraphics"
+	graphics.tooltip_text = "Graphics · smoother play"
+	graphics.custom_minimum_size = Vector2(26, 26)
+	graphics.add_theme_font_size_override("font_size", 18)
+	for style_name: String in ["normal", "hover", "pressed"]:
+		graphics.add_theme_stylebox_override(style_name, _style(Color("29493b") if style_name != "normal" else Color.TRANSPARENT, 0, 5))
+		graphics.add_theme_color_override("font_" + ("color" if style_name == "normal" else style_name + "_color"), Color("acbfae"))
+	top_row.add_child(graphics)
 	_tutorial_skip = _button("×", "tutorial:exit")
 	_tutorial_skip.name = "TutorialSkip"
 	_tutorial_skip.tooltip_text = "End tutorial"
@@ -1176,6 +1186,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
+		"graphics": _build_graphics()
 		_: _build_help()
 	_refresh_panel()
 	_modal.show()
@@ -1547,7 +1558,7 @@ func _build_pause() -> void:
 		row.add_child(name_label)
 	var utility: HBoxContainer = _hbox(8)
 	_body.add_child(utility)
-	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["How to play", "help"]]:
+	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["How to play", "help"]]:
 		var button: Button = _button(entry[0], entry[1])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		utility.add_child(button)
@@ -1562,6 +1573,30 @@ func _build_pause() -> void:
 		var reset_button: Button = _button("Start a new farm…", "request_reset")
 		reset_button.add_theme_font_size_override("font_size", 12)
 		_body.add_child(reset_button)
+
+func set_graphics_quality(mode: String) -> void:
+	_graphics_quality = mode
+	if _panel_kind == "graphics":
+		_refresh_graphics()
+
+func _build_graphics() -> void:
+	_heading("Graphics", "Choose what feels best on this device.")
+	_info("graphics_current", "", GREEN, 19)
+	for entry: Array in [["balanced", "Balanced", "Sharper picture · gentle shadows"], ["smooth", "Smooth", "Lighter rendering · no moving shadows"]]:
+		var choice: Button = _button(str(entry[1]) + "\n" + str(entry[2]), "graphics:" + str(entry[0]))
+		choice.custom_minimum_size.y = 86
+		_body.add_child(choice)
+		_refs["graphics_" + str(entry[0])] = choice
+	_info("graphics_note", "Same farm. Same rocket show.\nSaved on this device. Change it any time.", MUTED, 15)
+	_body.add_child(_button("Back to farm", "close"))
+	_refresh_graphics()
+
+func _refresh_graphics() -> void:
+	if not _refs.has("graphics_current"):
+		return
+	_refs.graphics_current.text = "Using " + _graphics_quality.capitalize()
+	for mode: String in ["balanced", "smooth"]:
+		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
 	if not is_instance_valid(_state):

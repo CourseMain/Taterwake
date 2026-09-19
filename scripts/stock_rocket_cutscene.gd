@@ -6,6 +6,9 @@ signal finished
 const DURATION: float = 7.4
 const IGNITION_AT: float = 2.05
 const LIFTOFF_AT: float = 2.65
+const MONEY_PARTICLES: int = 42
+const POTATO_COLORS: Array[Color] = [Color("e9af62"), Color("f3c981"), Color("dc9755"), Color("f6d99b")]
+const CELEBRATION_COLORS: Array[Color] = [Color("ffe34a"), Color("36beff"), Color("ff5262"), Color("ff963d"), Color("ff76da")]
 const LAUNCH_SOUND = preload("res://assets/audio/stock-rocket-launch.wav")
 const SKY_SHADER = preload("res://scripts/stock_rocket_sky.gdshader")
 var active: bool = false
@@ -19,8 +22,11 @@ var _sound: AudioStreamWAV
 var _font: Font
 var _bold_font: Font
 var _accent := Color("81f7dc")
+var _ellipse_unit := PackedVector2Array()
 
 func _ready() -> void:
+	for point: int in range(24):
+		_ellipse_unit.append(Vector2.from_angle(float(point) / 24.0 * TAU))
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_font = ThemeDB.fallback_font
@@ -43,7 +49,7 @@ func _ready() -> void:
 	add_child(_art)
 	_player = AudioStreamPlayer.new()
 	_player.name = "RocketLaunchAudio"
-	_player.volume_db = -5.0
+	_player.volume_db = -4.0
 	add_child(_player)
 	# Baked from the original deterministic score; no sample loop on the web main thread.
 	_sound = LAUNCH_SOUND
@@ -120,7 +126,7 @@ func _rocket_position() -> Vector2:
 	return Vector2(640.0 + bend * bend * 220.0, 626.0 - _altitude() + _camera_offset())
 
 func _rocket_scale() -> float:
-	return lerpf(1.0, 0.10, smoothstep(3.95, 6.3, elapsed))
+	return lerpf(1.0, 0.10, smoothstep(3.65, 6.3, elapsed))
 
 func _shake() -> Vector2:
 	var attack: float = smoothstep(IGNITION_AT, LIFTOFF_AT + 0.08, elapsed)
@@ -138,6 +144,8 @@ func _draw_film() -> void:
 	_draw_constellations(camera)
 	_draw_landscape(camera)
 	_draw_smoke(camera, false)
+	_draw_colour_ribbons()
+	_draw_money_streams()
 	if elapsed < 6.3:
 		var rocket: Vector2 = _rocket_position()
 		var scale_factor: float = _rocket_scale()
@@ -207,54 +215,102 @@ func _draw_landscape(camera: float) -> void:
 		_art.draw_circle(light_position, 7, Color(1.0, 0.67, 0.23, 0.05))
 		_art.draw_circle(light_position, 2.0, Color("f6cc87"))
 
+func _draw_potato(center: Vector2, radius: float, character: int, alpha: float = 1.0) -> void:
+	var ink: Color = Color("382840")
+	var skin: Color = POTATO_COLORS[character % POTATO_COLORS.size()]
+	var bounce: float = sin(elapsed * 4.0 + character * 1.7) * _ignition() * radius * 0.08
+	center.y += bounce
+	_ellipse(center, Vector2(radius * 0.84, radius), Color(ink, alpha))
+	_ellipse(center + Vector2(-radius * 0.05, -radius * 0.05), Vector2(radius * 0.74, radius * 0.91), Color(skin, alpha))
+	_ellipse(center + Vector2(-radius * 0.28, -radius * 0.34), Vector2(radius * 0.20, radius * 0.29), Color("ffe9b4") * Color(1, 1, 1, alpha * 0.72))
+	for side: float in [-1.0, 1.0]:
+		_art.draw_circle(center + Vector2(side * radius * 0.29, -radius * 0.12), radius * 0.095, Color(ink, alpha))
+		_ellipse(center + Vector2(side * radius * 0.48, radius * 0.16), Vector2(radius * 0.19, radius * 0.10), Color("ff8b8c") * Color(1, 1, 1, alpha * 0.9))
+	_art.draw_arc(center + Vector2(0, radius * 0.10), radius * 0.25, 0.16, PI - 0.16, 8, Color(ink, alpha), maxf(1.3, radius * 0.07), true)
+	# Tiny freckles and a jaunty sprout give every passenger a distinct face.
+	_art.draw_circle(center + Vector2(radius * 0.30, -radius * 0.60), radius * 0.055, Color(ink, alpha * 0.4))
+	if character % 3 == 0:
+		_art.draw_line(center + Vector2(0, -radius * 0.83), center + Vector2(-radius * 0.13, -radius * 1.12), Color("73db98") * Color(1, 1, 1, alpha), maxf(2.0, radius * 0.11), true)
+		_ellipse(center + Vector2(radius * 0.07, -radius * 1.07), Vector2(radius * 0.20, radius * 0.09), Color("a9f1a8") * Color(1, 1, 1, alpha))
+
 func _draw_rocket() -> void:
-	var edge := Color("182a39")
-	# Curved nacelle, blue shaded side, warm ivory main hull, copper nose.
-	_poly(PackedVector2Array([Vector2(-38, -91), Vector2(-76, -35), Vector2(-80, 12), Vector2(-37, -9), Vector2(-20, -75)]), Color("70bac6"), edge, 4)
-	_poly(PackedVector2Array([Vector2(38, -91), Vector2(76, -35), Vector2(80, 12), Vector2(37, -9), Vector2(20, -75)]), Color("488697"), edge, 4)
-	_poly(PackedVector2Array([Vector2(-35, -28), Vector2(-31, 7), Vector2(31, 7), Vector2(35, -28)]), Color("4a5765"), edge, 4)
-	_art.draw_rect(Rect2(-24, -17, 48, 10), Color("202b3e"))
-	var hull := PackedVector2Array()
-	for i in range(21):
-		var t: float = float(i) / 20.0
-		var point: Vector2 = Vector2(0, -268).bezier_interpolate(Vector2(-49, -231), Vector2(-48, -189), Vector2(-43, -43), t)
-		hull.append(point)
-	hull.append(Vector2(-31, -26))
-	hull.append(Vector2(31, -26))
-	for i in range(21):
-		var t: float = 1.0 - float(i) / 20.0
-		var point: Vector2 = Vector2(0, -268).bezier_interpolate(Vector2(49, -231), Vector2(48, -189), Vector2(43, -43), t)
-		hull.append(point)
-	_poly(hull, Color("f1e5c9"), edge, 4)
-	_poly(PackedVector2Array([Vector2(15, -246), Vector2(34, -212), Vector2(42, -162), Vector2(43, -43), Vector2(31, -27), Vector2(15, -27), Vector2(24, -111), Vector2(22, -213)]), Color("b9cdd0"))
-	var nose := PackedVector2Array([Vector2(-32, -217)])
-	for i in range(21):
-		var angle: float = PI + float(i) / 20.0 * PI
-		var x: float = cos(angle) * 32.0
-		var y: float = -217.0 - pow(maxf(0.0, -sin(angle)), 1.2) * 51.0
-		nose.append(Vector2(x, y))
-	_poly(nose, Color("e99c77"), edge, 3)
-	_art.draw_line(Vector2(-18, -223), Vector2(-5, -246), Color("ffcf9b"), 5.0, true)
-	_art.draw_line(Vector2(-42, -66), Vector2(42, -66), Color("739da5"), 11.0, true)
-	_art.draw_line(Vector2(-41, -73), Vector2(40, -73), Color("e2c286"), 3.0, true)
-	# The brave little potato in the porthole anchors this in Taterland.
-	_art.draw_circle(Vector2(0, -158), 35, edge)
-	_art.draw_circle(Vector2(0, -160), 31, Color("7bb6c5"))
-	_art.draw_circle(Vector2(0, -160), 25, Color("203e54"))
-	_ellipse(Vector2(0, -154), Vector2(17, 21), Color("d7a779"))
-	_ellipse(Vector2(-3, -158), Vector2(12, 16), Color("e8c28a"))
-	_art.draw_circle(Vector2(-6, -157), 2.2, edge)
-	_art.draw_circle(Vector2(6, -157), 2.2, edge)
-	_art.draw_arc(Vector2(0, -155), 7, 0.24, PI - 0.24, 14, edge, 1.6, true)
-	_art.draw_circle(Vector2(-11, -151), 3, Color("d79372"))
-	_art.draw_circle(Vector2(11, -151), 3, Color("d79372"))
-	_art.draw_arc(Vector2(0, -160), 26, PI * 1.07, PI * 1.53, 18, Color(0.85, 0.98, 1.0, 0.60), 3, true)
-	for angle: float in [0.0, PI * 0.5, PI, PI * 1.5]:
-		_art.draw_circle(Vector2(0, -160) + Vector2.from_angle(angle) * 29.0, 2, Color("e4e8cb"))
-	_text("SPUD", Vector2(0, -103), 16, edge, true, true)
-	_text("01", Vector2(0, -82), 12, Color("557081"), true)
-	_poly(PackedVector2Array([Vector2(-7, -79), Vector2(7, -79), Vector2(10, 8), Vector2(0, 17), Vector2(-10, 8)]), Color("8dc3c7"), edge, 3)
-	_art.draw_line(Vector2(-25, -196), Vector2(-29, -184), Color("fff6df"), 4.0, true)
+	var edge := Color("172c48")
+	# Candy-coloured boosters frame a big, visibly full glass passenger hold.
+	for side: float in [-1.0, 1.0]:
+		var fin: Color = Color("ff983d") if side < 0 else Color("ff76da")
+		_poly(PackedVector2Array([Vector2(side * 48, -112), Vector2(side * 108, -64), Vector2(side * 120, 19), Vector2(side * 58, -13), Vector2(side * 34, -84)]), fin, edge, 4)
+		_poly(PackedVector2Array([Vector2(side * 78, -168), Vector2(side * 93, -144), Vector2(side * 93, -25), Vector2(side * 66, -25), Vector2(side * 66, -144)]), Color("37bcff"), edge, 4)
+		_art.draw_line(Vector2(side * 72, -130), Vector2(side * 72, -45), Color("b9f2ff"), 5, true)
+		_art.draw_rect(Rect2(side * 79 - 14, -32, 28, 20), Color("ffe34a"))
+	_poly(PackedVector2Array([Vector2(-42, -30), Vector2(-34, 11), Vector2(34, 11), Vector2(42, -30)]), Color("324d72"), edge, 4)
+	_art.draw_rect(Rect2(-27, -9, 54, 13), Color("17243d"))
+	var hull := PackedVector2Array([Vector2(0, -364), Vector2(-31, -338), Vector2(-51, -303), Vector2(-60, -268), Vector2(-63, -83), Vector2(-55, -46), Vector2(-36, -26), Vector2(36, -26), Vector2(55, -46), Vector2(63, -83), Vector2(60, -268), Vector2(51, -303), Vector2(31, -338)])
+	_poly(hull, Color("fff1c9"), edge, 5)
+	_poly(PackedVector2Array([Vector2(26, -327), Vector2(49, -297), Vector2(58, -261), Vector2(61, -84), Vector2(53, -48), Vector2(32, -29), Vector2(21, -29), Vector2(40, -90), Vector2(41, -264)]), Color("a7d9ed"))
+	_poly(PackedVector2Array([Vector2(0, -364), Vector2(-31, -338), Vector2(-49, -307), Vector2(49, -307), Vector2(31, -338)]), Color("ff536b"), edge, 4)
+	_art.draw_line(Vector2(-22, -324), Vector2(-4, -347), Color("ffc49d"), 6, true)
+	_art.draw_circle(Vector2(0, -279), 30, edge)
+	_art.draw_circle(Vector2(0, -280), 26, Color("329dc7"))
+	_draw_potato(Vector2(0, -277), 20, 0)
+	_art.draw_arc(Vector2(0, -280), 24, PI * 1.09, PI * 1.52, 12, Color(0.88, 1.0, 1.0, 0.8), 3, true)
+	# Four close-packed rows plus the captain: thirteen potatoes, no empty hold.
+	_poly(PackedVector2Array([Vector2(-49, -241), Vector2(49, -241), Vector2(50, -84), Vector2(43, -74), Vector2(-43, -74), Vector2(-50, -84)]), Color("1f4762"), edge, 3)
+	for row: int in range(4):
+		for column: int in range(3):
+			var crew: int = 1 + row * 3 + column
+			_draw_potato(Vector2((column - 1) * 30.0 + (2.0 if row % 2 else -2.0), -220.0 + row * 39.0), 21.0, crew)
+	_art.draw_line(Vector2(-47, -238), Vector2(-47, -86), Color(0.66, 0.93, 1.0, 0.62), 3, true)
+	_art.draw_line(Vector2(46, -236), Vector2(46, -84), Color(0.56, 0.84, 1.0, 0.34), 3, true)
+	_art.draw_line(Vector2(-59, -66), Vector2(58, -66), Color("ffd949"), 13, true)
+	_text("SPUD EXPRESS", Vector2(0, -43), 12, edge, true, true)
+	_poly(PackedVector2Array([Vector2(-8, -36), Vector2(8, -36), Vector2(12, 13), Vector2(0, 24), Vector2(-12, 13)]), Color("ff536b"), edge, 3)
+
+func _draw_money_symbol(center: Vector2, radius: float, index: int, alpha: float) -> void:
+	var color: Color = CELEBRATION_COLORS[index % CELEBRATION_COLORS.size()]
+	if index % 3 == 0:
+		_text("$", center + Vector2(0, radius * 0.56), int(radius * 2.0), Color(color, alpha), true, true)
+		return
+	var width: float = radius * (0.54 + absf(cos(elapsed * 2.7 + index)) * 0.46)
+	_ellipse(center + Vector2(2, 3), Vector2(width + 2, radius + 2), Color("182a49") * Color(1, 1, 1, alpha * 0.6))
+	_ellipse(center, Vector2(width, radius), Color(color.darkened(0.12), alpha))
+	_ellipse(center + Vector2(-1, -1), Vector2(width * 0.81, radius * 0.81), Color(color.lightened(0.20), alpha))
+	if width > radius * 0.70:
+		_text("$", center + Vector2(0, radius * 0.42), int(radius * 1.35), Color("27364f") * Color(1, 1, 1, alpha), true, true)
+
+func _draw_money_streams() -> void:
+	var energy: float = smoothstep(IGNITION_AT - 0.18, LIFTOFF_AT + 0.3, elapsed) * (1.0 - smoothstep(5.8, 6.35, elapsed))
+	if energy <= 0.0:
+		return
+	var origin: Vector2 = _rocket_position()
+	for index: int in range(MONEY_PARTICLES):
+		var life: float = fposmod(index * 0.137 + elapsed * 0.53, 1.0)
+		var side: float = -1.0 if index % 2 == 0 else 1.0
+		var spread: float = 91.0 + life * (170.0 + index % 4 * 23.0)
+		var point: Vector2 = origin + Vector2(side * spread, 15.0 + life * 190.0 - sin(life * PI) * 190.0)
+		point.y -= smoothstep(3.0, 4.4, elapsed) * (index % 5) * 58.0
+		if point.x < 450.0 and point.y > 300.0 and point.y < 445.0 and elapsed < 5.6:
+			continue
+		if point.x > 825.0 and point.y > 340.0 and point.y < 550.0 and elapsed < LIFTOFF_AT:
+			continue
+		var opacity: float = energy * smoothstep(0.0, 0.15, life) * (1.0 - smoothstep(0.84, 1.0, life))
+		var color: Color = CELEBRATION_COLORS[index % 5]
+		_art.draw_line(point + Vector2(-side * 7, 10), point + Vector2(-side * 16, 26), Color(color, opacity * 0.34), 3, true)
+		_draw_money_symbol(point, 11.0 + index % 4 * 3.0, index, opacity)
+
+func _draw_colour_ribbons() -> void:
+	var energy: float = smoothstep(2.3, 3.7, elapsed) * (1.0 - smoothstep(5.7, 6.3, elapsed))
+	if energy <= 0.0:
+		return
+	for ribbon: int in range(5):
+		var points := PackedVector2Array()
+		var side: float = -1.0 if ribbon % 2 == 0 else 1.0
+		for point: int in range(20):
+			var progress: float = float(point) / 19.0
+			var spread: float = 55.0 + pow(progress, 0.70) * (235.0 + ribbon * 35.0)
+			points.append(Vector2(640 + side * spread + sin(progress * PI * 2.0 - elapsed * 1.8 + ribbon) * 25.0 * progress, 665 - progress * 575 + _camera_offset() * 0.12))
+		var color: Color = CELEBRATION_COLORS[ribbon]
+		_art.draw_polyline(points, Color(color, energy * 0.06), 19.0, true)
+		_art.draw_polyline(points, Color(color, energy * 0.55), 3.0 + ribbon % 2, true)
 
 func _draw_exhaust(origin: Vector2, rocket_size: float) -> void:
 	if elapsed < IGNITION_AT:
@@ -293,7 +349,7 @@ func _draw_smoke(camera: float, foreground: bool) -> void:
 		var point := Vector2(640 + direction * (30.0 + age * speed), 653 + camera - age * (15.0 + index % 5 * 8.0))
 		var radius: float = 16.0 + age * (28.0 + index % 3 * 10.0)
 		var opacity: float = minf(1.0, age * 6.0) * (1.0 - smoothstep(1.3, 4.1, age))
-		var smoke_color: Color = Color("687681") if foreground else Color("384957")
+		var smoke_color: Color = Color("716999") if foreground else Color("414d7b")
 		smoke_color = smoke_color.lerp(Color("efb980"), clampf(1.0 - absf(point.x - 640.0) / 270.0, 0.0, 1.0) * _ignition() * 0.62)
 		_art.draw_circle(point, radius, Color(smoke_color, opacity * 0.85))
 		_art.draw_circle(point + Vector2(direction * radius * 0.34, -radius * 0.34), radius * 0.73, Color(smoke_color.lightened(0.10), opacity * 0.73))
@@ -303,12 +359,12 @@ func _draw_motion_lines() -> void:
 	var energy: float = smoothstep(3.2, 4.6, elapsed) * (1.0 - smoothstep(5.55, 6.25, elapsed))
 	if energy <= 0.0:
 		return
-	for index in range(32):
+	for index in range(24):
 		var x: float = 40 + fposmod(index * 191.7, 1200.0)
 		if absf(x - _rocket_position().x) < 100:
 			continue
 		var y: float = fposmod(index * 173.4 + elapsed * (170.0 + index * 6), 820.0)
-		_art.draw_line(Vector2(x, y), Vector2(x - 3, y + energy * (16 + index % 5 * 12)), Color(0.67, 0.85, 1.0, energy * 0.22), 1.5, true)
+		_art.draw_line(Vector2(x, y), Vector2(x - 3, y + energy * (16 + index % 5 * 12)), Color(CELEBRATION_COLORS[index % 5], energy * 0.48), 1.5, true)
 
 func _draw_titles() -> void:
 	var fade: float = 1.0 - smoothstep(4.8, 5.6, elapsed)
@@ -316,25 +372,25 @@ func _draw_titles() -> void:
 	_text("TATERLAND  /  SPACE PROGRAM", Vector2(105, 93), 15, Color("b2cbd9") * Color(1, 1, 1, fade), false, true)
 	_text("MISSION  0%d" % island, Vector2(1105, 94), 13, Color(0.65, 0.78, 0.84, fade), true)
 	if elapsed < LIFTOFF_AT:
-		_text("A LITTLE SPUD.", Vector2(88, 350), 31, Color("f5ecce"), false, true)
-		_text("A GIANT LEAP.", Vector2(88, 391), 31, _accent, false, true)
-		_text("The market is going somewhere new.", Vector2(89, 424), 16, Color("9ab4c6"))
+		_text("FULL OF SPUDS.", Vector2(88, 350), 31, Color("f5ecce"), false, true)
+		_text("BOUND FOR THE MOON.", Vector2(88, 391), 31, _accent, false, true)
+		_text("One crowded rocket. One wild market.", Vector2(89, 424), 16, Color("9ab4c6"))
 		var remaining: int = maxi(1, 3 - int(elapsed / (IGNITION_AT / 3.0)))
 		var countdown: float = fposmod(elapsed, IGNITION_AT / 3.0) / (IGNITION_AT / 3.0)
 		var ring := Vector2(905, 437)
 		_art.draw_arc(ring, 61, -PI * 0.5, PI * 1.5, 90, Color(0.65, 0.83, 0.85, 0.12), 2, true)
 		_art.draw_arc(ring, 61, -PI * 0.5, -PI * 0.5 + TAU * (1.0 - countdown), 90, _accent, 3, true)
 		_text(str(remaining) if elapsed < IGNITION_AT else "GO", ring + Vector2(0, 20), 55 if elapsed < IGNITION_AT else 39, Color("f4efda"), true, true)
-		_text("ENGINE CHECK" if elapsed < IGNITION_AT else "IGNITION", ring + Vector2(0, 94), 13, _accent, true, true)
+		_text("CREW: ALL ABOARD" if elapsed < IGNITION_AT else "IGNITION", ring + Vector2(0, 94), 13, _accent, true, true)
 	else:
 		var subtitle: float = smoothstep(LIFTOFF_AT, 2.9, elapsed) * fade
 		_text("LIFTOFF", Vector2(88, 361), 45, Color(_accent, subtitle), false, true)
-		_text("Big dreams. Tiny astronaut.", Vector2(90, 393), 16, Color(0.68, 0.80, 0.86, subtitle))
+		_text("Tiny potatoes. Enormous ambitions.", Vector2(90, 393), 16, Color(0.68, 0.80, 0.86, subtitle))
 	var bottom_alpha: float = 1.0 - smoothstep(5.2, 5.8, elapsed)
-	_text("FLIGHT  SPUD–01", Vector2(89, 722), 13, Color(0.62, 0.77, 0.83, bottom_alpha), false, true)
+	_text("SPUD EXPRESS  /  FULL HOUSE", Vector2(89, 722), 13, Color(0.62, 0.77, 0.83, bottom_alpha), false, true)
 	_text("T + %04.1f s" % maxf(0.0, elapsed - LIFTOFF_AT) if elapsed >= LIFTOFF_AT else "LAUNCH SEQUENCE", Vector2(1110, 722), 13, Color(_accent, bottom_alpha), true)
-	_art.draw_line(Vector2(264, 717), Vector2(999, 717), Color(0.48, 0.71, 0.80, bottom_alpha * 0.18), 2, true)
-	_art.draw_line(Vector2(264, 717), Vector2(264 + 735 * minf(1.0, elapsed / 5.8), 717), Color(_accent, bottom_alpha * 0.72), 2, true)
+	_art.draw_line(Vector2(370, 717), Vector2(999, 717), Color(0.48, 0.71, 0.80, bottom_alpha * 0.18), 2, true)
+	_art.draw_line(Vector2(370, 717), Vector2(370 + 629 * minf(1.0, elapsed / 5.8), 717), Color(_accent, bottom_alpha * 0.72), 2, true)
 
 func _draw_finale() -> void:
 	var progress: float = smoothstep(5.75, 6.3, elapsed)
@@ -342,21 +398,28 @@ func _draw_finale() -> void:
 		return
 	var star := Vector2(860, 136)
 	var burst: float = maxf(0.0, 1.0 - absf(elapsed - 6.06) / 0.38)
-	for ray in range(8):
-		var direction: Vector2 = Vector2.from_angle(float(ray) * TAU / 8.0)
-		_art.draw_line(star + direction * 6, star + direction * (12 + burst * 66), Color(_accent, burst * 0.7), 2, true)
+	for ray: int in range(10):
+		var direction: Vector2 = Vector2.from_angle(float(ray) * TAU / 10.0)
+		_art.draw_line(star + direction * 6, star + direction * (12 + burst * 66), Color(CELEBRATION_COLORS[ray % 5], burst * 0.85), 3, true)
 	_art.draw_circle(star, 3 + burst * 7, Color(1.0, 0.96, 0.75, 1.0 - smoothstep(6.3, 6.8, elapsed)))
-	var y: float = 342 + (1.0 - progress) * 18
-	_text("NEXT STOP", Vector2(640, y - 48), 18, Color(_accent, progress), true, true)
-	_text("THE MOON", Vector2(640, y + 20), 72, Color(0.97, 0.94, 0.84, progress), true, true)
-	_art.draw_line(Vector2(532, y + 46), Vector2(748, y + 46), Color(_accent, progress * 0.65), 2, true)
-	_text("STOCK BOOM INCOMING", Vector2(640, y + 87), 19, Color(_accent, progress), true, true)
-	_text("One small spud. One very big opportunity.", Vector2(640, y + 120), 16, Color(0.63, 0.76, 0.83, progress), true)
-	for index in range(20):
-		var angle: float = index * 2.399
-		var radial: float = 145 + index % 4 * 31 + (elapsed - 5.75) * 12
-		var point := Vector2(640, y + 5) + Vector2(cos(angle) * radial * 1.85, sin(angle) * radial)
-		_art.draw_circle(point, 1.0 + index % 2, Color(_accent, progress * 0.55))
+	var y: float = 334 + (1.0 - progress) * 18
+	# A quiet central field keeps the payoff readable inside the money orbit.
+	for ring: int in range(3):
+		_ellipse(Vector2(640, y + 56), Vector2(360 + ring * 18, 166 + ring * 14), Color(0.027, 0.043, 0.12, progress * (0.22 - ring * 0.05)))
+	_text("FULL CREW. FULL SEND.", Vector2(640, y - 66), 18, Color("ff94dc") * Color(1, 1, 1, progress), true, true)
+	_text("TO THE MOON", Vector2(640, y + 11), 69, Color("ffe34a") * Color(1, 1, 1, progress), true, true)
+	_text("10-SECOND STOCK BOOM INCOMING", Vector2(640, y + 67), 20, Color("86dfff") * Color(1, 1, 1, progress), true, true)
+	_text("Get ready to sell.", Vector2(640, y + 101), 17, Color(0.94, 0.95, 1.0, progress), true)
+	for crew: int in range(3):
+		_draw_potato(Vector2(582 + crew * 58, y + 163), 25 if crew == 1 else 21, crew + 2, progress)
+	for index: int in range(26):
+		var angle: float = index * TAU / 26.0 + (elapsed - 5.75) * 0.13
+		var point := Vector2(640, y + 32) + Vector2(cos(angle) * (440 + index % 2 * 27), sin(angle) * (222 + index % 3 * 17))
+		_draw_money_symbol(point, 12 + index % 4 * 3, index, progress * 0.94)
+		var star_point: Vector2 = point + Vector2(17, -25)
+		var color: Color = Color(CELEBRATION_COLORS[(index + 2) % 5], progress * 0.65)
+		_art.draw_line(star_point - Vector2(4, 0), star_point + Vector2(4, 0), color, 2, true)
+		_art.draw_line(star_point - Vector2(0, 4), star_point + Vector2(0, 4), color, 2, true)
 
 func _text(value: String, baseline: Vector2, font_size: int, color: Color, centered: bool = false, bold: bool = false) -> void:
 	var font: Font = _bold_font if bold else _font
@@ -374,7 +437,7 @@ func _poly(points: PackedVector2Array, color: Color, outline: Color = Color.TRAN
 
 func _ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
 	var points := PackedVector2Array()
-	for index in range(48):
-		var angle: float = float(index) / 48.0 * TAU
-		points.append(center + Vector2(cos(angle), sin(angle)) * radii)
+	points.resize(_ellipse_unit.size())
+	for index: int in range(_ellipse_unit.size()):
+		points[index] = center + _ellipse_unit[index] * radii
 	_art.draw_colored_polygon(points, color)

@@ -89,7 +89,7 @@ func run() -> void:
 		game.hud._purchase_box.hide()
 	# Every menu uses the same fixed canvas, but each can have its own minimum
 	# width. Check the actual content after container layout, not a mock panel.
-	for kind: String in ["inventory", "tools", "roll", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "help"]:
+	for kind: String in ["inventory", "tools", "roll", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help"]:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)

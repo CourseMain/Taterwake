@@ -9,6 +9,7 @@ const ActivitiesScript = preload("res://scripts/island_activities.gd")
 const PestAlert = preload("res://scripts/pest_alert.gd")
 const RewardFeedback = preload("res://scripts/reward_feedback.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
+const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
 const WALK_SPEED: float = 7.0
 const NO_TILES: Array[int] = []
 const CAMERA_ZOOM_MIN: float = 18.0
@@ -68,6 +69,7 @@ var stock_music_time: float = 0.0
 var stock_shake_clock: float = 0.0
 var debug_unlocked: bool = false
 var debug_time_multiplier: float = 1.0
+var graphics_quality: String = "balanced"
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -102,6 +104,7 @@ func _ready() -> void:
 	hud.name = "GameHUD"
 	add_child(hud)
 	hud.build_ui()
+	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
 	var cinema_layer := CanvasLayer.new()
 	cinema_layer.name = "StockRocketCinema"
 	cinema_layer.layer = 100
@@ -248,6 +251,20 @@ func _process(delta: float) -> void:
 		if surge_beat_clock <= 0.0 and tone_remaining < 0.1:
 			_play_tone(196.0 if state.current_island == 1 else (246.94 if state.current_island == 2 else 329.63), 0.065)
 			surge_beat_clock = 0.45 if surge_band == 1 else 0.30
+
+func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
+	if mode not in GraphicsPreferences.MODES:
+		return
+	graphics_quality = mode
+	world.set_graphics_quality(mode)
+	hud.set_graphics_quality(mode)
+	if OS.has_feature("web"):
+		var browser_graphics = JavaScriptBridge.get_interface("taterlandGraphics")
+		if browser_graphics != null:
+			browser_graphics.setQuality(mode)
+	if persist and not test_mode:
+		if GraphicsPreferences.save_mode(mode) != OK:
+			hud.show_toast("Graphics changed. This browser could not save the preference.")
 
 func _simulation_delta(delta: float) -> float:
 	if not is_finite(delta) or delta <= 0.0:
@@ -684,6 +701,12 @@ func _on_action(action: String) -> void:
 		return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
+		"graphics":
+			if parts.size() == 2:
+				_apply_graphics_quality(parts[1], true)
+			elif parts.size() == 1:
+				_cancel_walk()
+				hud.show_panel("graphics", state)
 		"menu", "tracked_prices", "market", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)

@@ -13,7 +13,7 @@ float hash21(vec2 p) {
 void fragment() {
 	vec2 uv = UV;
 	vec2 p = vec2((uv.x - 0.5) * aspect, uv.y);
-	vec3 sky = mix(vec3(0.016, 0.027, 0.090), vec3(0.044, 0.109, 0.180), pow(uv.y, 1.5));
+	vec3 sky = mix(vec3(0.034, 0.025, 0.120), vec3(0.028, 0.125, 0.240), pow(uv.y, 1.5));
 	float cloud = sin(p.x * 3.0 + uv.y * 4.0) * sin(p.x * 5.0 - uv.y * 3.2 + 1.0);
 	sky += vec3(0.028, 0.017, 0.058) * (cloud + 1.0) * 0.45;
 	for (int i = 0; i < 3; i++) {
@@ -40,8 +40,19 @@ void fragment() {
 		vec3 hue = mix(accent.rgb, vec3(0.43, 0.35, 0.95), f * 0.30);
 		sky += hue * ribbon * curtain * edge * (0.13 - f * 0.022);
 	}
+	// Wide chromatic trails build gradually; no full-screen flash or strobe.
+	float celebration = smoothstep(2.05, 3.8, clock_time) * (1.0 - smoothstep(5.65, 6.4, clock_time));
+	for (int i = 0; i < 5; i++) {
+		float f = float(i);
+		float side = mod(f, 2.0) < 0.5 ? -1.0 : 1.0;
+		float curve = side * (0.12 + (1.0 - uv.y) * (0.55 + f * 0.055));
+		curve += sin(uv.y * 5.0 - clock_time * 0.8 + f) * 0.025;
+		float trail = exp(-abs(p.x - curve) * 25.0) * (0.28 + 0.72 * pow(uv.y, 0.65));
+		vec3 hue = i == 0 ? vec3(1.0, 0.80, 0.13) : (i == 1 ? vec3(0.11, 0.58, 1.0) : (i == 2 ? vec3(1.0, 0.13, 0.25) : (i == 3 ? vec3(1.0, 0.40, 0.08) : vec3(1.0, 0.26, 0.78))));
+		sky += hue * trail * celebration * 0.17;
+	}
 	float launch_glow = exp(-length(vec2(p.x * 1.5, (uv.y - 0.80) * 1.0)) * 4.2);
-	sky += vec3(0.52, 0.18, 0.045) * launch_glow * ignition * 0.65;
+	sky += vec3(0.70, 0.23, 0.10) * launch_glow * ignition * 0.72;
 	float vignette = 1.0 - smoothstep(0.22, 1.06, length(vec2(p.x * 0.75, uv.y - 0.48)));
 	sky *= 0.76 + 0.24 * vignette;
 	COLOR = vec4(sky, 1.0);

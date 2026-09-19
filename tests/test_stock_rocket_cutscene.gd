@@ -47,24 +47,41 @@ func _run() -> void:
 	var began: int = Time.get_ticks_usec()
 	film = Rocket.new()
 	layer.add_child(film)
-	print("Rocket setup and original PCM synthesis: %.2f ms" % ((Time.get_ticks_usec() - began) / 1000.0))
+	print("Rocket setup with pre-baked audio: %.2f ms" % ((Time.get_ticks_usec() - began) / 1000.0))
 	film.finished.connect(func() -> void: completions += 1)
 	await process_frame
 	check(not film.active and not film.visible and not film.is_processing(), "mounting has no visible or processing side effects")
 	check(film.mouse_filter == Control.MOUSE_FILTER_STOP, "cinematic catches pointer input")
 	check(film.size.is_equal_approx(root.get_visible_rect().size), "cinematic fills the viewport")
+	check(film._sound == Rocket.LAUNCH_SOUND, "cinematic reuses the pre-baked audio resource without generating samples")
 	check(film._sound.stereo and is_equal_approx(film._sound.get_length(), Rocket.DURATION), "original stereo score spans the whole cinematic")
 	var pcm_data: PackedByteArray = film._sound.data
 	var peak: int = 0
 	var rms_sum: float = 0.0
+	var stage_energy: Array[float] = [0.0, 0.0, 0.0, 0.0]
+	var stage_samples: Array[int] = [0, 0, 0, 0]
+	var stereo_difference: float = 0.0
 	for i in range(0, pcm_data.size(), 2):
 		var value: int = int(pcm_data[i]) | (int(pcm_data[i + 1]) << 8)
 		if value >= 32768:
 			value -= 65536
 		peak = maxi(peak, absi(value))
 		rms_sum += float(value) * float(value)
+		var time: float = float(i / 4) / 22050.0
+		var stage: int = 0 if time < 2.05 else (1 if time < 3.2 else (2 if time < 5.75 else 3))
+		stage_energy[stage] += float(value) * float(value)
+		stage_samples[stage] += 1
+		if i % 4 == 0:
+			var right: int = int(pcm_data[i + 2]) | (int(pcm_data[i + 3]) << 8)
+			if right >= 32768:
+				right -= 65536
+			stereo_difference += absf(float(value - right))
 	check(peak > 12000 and peak < 32767, "launch score is audible without clipping")
 	check(sqrt(rms_sum / (pcm_data.size() / 2.0)) > 1500, "score has a sustained cinematic sound bed")
+	for stage: int in range(stage_energy.size()):
+		check(sqrt(stage_energy[stage] / stage_samples[stage]) > 1200.0, "countdown, ignition, coin ascent and jackpot stages each contain an audible score: %d" % stage)
+	check(stereo_difference / (pcm_data.size() / 4.0) > 100.0, "coin cascade and jackpot echoes have genuine stereo movement")
+
 	var child_count: int = film.get_child_count()
 	var button := Button.new()
 	button.text = "Underlying HUD action"

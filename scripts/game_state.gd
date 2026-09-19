@@ -21,6 +21,9 @@ const STARTER_MARKET_SECONDS: float = 3.0
 const SURGE_INTERVAL: float = 180.0
 const SURGE_DURATION: float = 10.0
 const NATURAL_STOCK_CHANCE: float = 0.015
+const BOOM_TAIL_SHAPE: float = 3.0
+const LUCKY_BOOM_TAIL_SHAPE: float = 2.5
+const MIN_BOOM_TAIL_SHAPE: float = 2.0
 const PEST_TICK_SECONDS: float = 5.0
 const ISLAND2_UNLOCK_COST: float = 1000000.0
 const ISLAND2_UNLOCK_HARVEST: int = 500
@@ -615,14 +618,20 @@ func natural_stock_chance() -> float:
 
 
 func _natural_boom_roll(low: float, high: float) -> float:
-	# Natural high quotes use the same low-end weighting at every luck level.
-	return lerpf(low, high, pow(rng.randf(), 2.7))
+	# Beta(1, 3): 87.5% in the bottom half; only 0.1% in the top tenth.
+	# Natural strength, like its trigger chance, never depends on luck.
+	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / BOOM_TAIL_SHAPE))
 
 
 func _boom_roll(low: float, high: float) -> float:
-	# Top-end quotes remain rare; useful luck improves the shape, never the cap.
-	var weight: float = lerpf(2.7, 1.5, (clampf(effective_luck(), 1.0, 10.0) - 1.0) / 9.0)
-	return lerpf(low, high, pow(rng.randf(), weight))
+	# Every higher equal-width band is less likely, even at maximum luck.
+	# Gear improves this smooth draw instead of clipping many rolls to the cap.
+	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / _boom_tail_shape()))
+
+
+func _boom_tail_shape() -> float:
+	var tail_shape: float = lerpf(BOOM_TAIL_SHAPE, LUCKY_BOOM_TAIL_SHAPE, (clampf(effective_luck(), 1.0, 10.0) - 1.0) / 9.0)
+	return maxf(MIN_BOOM_TAIL_SHAPE, tail_shape / sqrt(clampf(item_stock_factor(), 1.0, 2.0)))
 
 
 func _prepare_rocket() -> void:
@@ -1807,10 +1816,12 @@ func _refresh_market(record_history: bool = true) -> void:
 			sale_factor *= 8.0
 		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
 		if natural_remaining > 0.0 and id == natural_crop:
-			current = maxf(current, float(CROPS[id]["base"]) * minf(stock_cap(), natural_factor * item_stock_factor()))
+			# Explicit boom draws are final quotes. Stacked offers must not flatten
+			# their decreasing rarity curves into a pile-up at the ceiling.
+			current = float(CROPS[id]["base"]) * minf(stock_cap(), natural_factor)
 		if surge_remaining > 0.0 and id == surge_crop:
 			var ceiling: float = MAX_PRICE_MULTIPLIER if surge_kind == "rocket" and current_island >= 3 else stock_cap()
-			current = float(CROPS[id]["base"]) * minf(ceiling, surge_factor * item_stock_factor())
+			current = float(CROPS[id]["base"]) * minf(ceiling, surge_factor)
 		if tutorial_active:
 			current = float(CROPS[id]["base"])
 			seed_factor = 1.0

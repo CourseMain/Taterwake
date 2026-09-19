@@ -81,10 +81,13 @@ func _run() -> void:
 	state._refresh_market()
 	check(is_equal_approx(state.item_stock_factor(), 1.25), "only equipped stock gear applies, with no duplicate stacking")
 	state.surge_crop = "russet"
-	state.surge_remaining = 5.0
-	state.surge_factor = State.MAX_PRICE_MULTIPLIER
+	state.surge_remaining = State.SURGE_DURATION
+	state.surge_factor = state.stock_cap()
 	state._refresh_market()
-	check(is_equal_approx(state.market.russet.sell, quote * State.MAX_PRICE_MULTIPLIER) and is_equal_approx(state.surge_info().percent, 3000.0), "gear cannot exceed global +3000% stock ceiling")
+	check(is_equal_approx(state.market.russet.sell, quote * state.stock_cap()) and is_equal_approx(state.surge_info().percent, 2999.0), "gear preserves the early-island +2999 percent normal-boom ceiling")
+	state.surge_factor = 12.0
+	state._refresh_market()
+	check(is_equal_approx(state.market.russet.sell, quote * 12.0), "stock gear improves boom roll odds without multiplying an already selected quote")
 	state.surge_remaining = 0.0
 	state.surge_factor = 1.0
 	state._refresh_market()

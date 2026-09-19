@@ -148,10 +148,13 @@ func _run() -> void:
 	builds.select_build("investor")
 	check(is_equal_approx(state.item_stock_factor(), 1.525), "one strongest stock item per slot has a bounded combined bonus")
 	state.surge_crop = "russet"
-	state.surge_remaining = 5.0
-	state.surge_factor = State.MAX_PRICE_MULTIPLIER
+	state.surge_remaining = State.SURGE_DURATION
+	state.surge_factor = 12.0
 	state._refresh_market(false)
-	check(is_equal_approx(state.market.russet.change, 3000.0), "full stock outfit never breaks the+3000 percent market cap")
+	check(is_equal_approx(state.market.russet.sell, state.CROPS.russet.base * 12.0), "full stock outfit preserves a preselected boom quote instead of multiplying it afterward")
+	state.surge_factor = state.stock_cap()
+	state._refresh_market(false)
+	check(is_equal_approx(state.market.russet.change, 2999.0), "full stock outfit preserves the local +2999 percent normal-boom ceiling")
 	var held_loadout: Dictionary = state.equipment_loadout()
 	held_loadout.head = "aurora_crown"
 	check(state.equipment_loadout().head == "prospectors_hat", "loadout UI snapshot cannot mutate authoritative equipment")
