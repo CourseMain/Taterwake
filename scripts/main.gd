@@ -41,6 +41,7 @@ var ui_elapsed: float = 0.0
 var _hud_update_frame: int = -1
 var _updating_simulation: bool = false
 var _simulation_changed: bool = false
+var _working_plot: bool = false
 var save_elapsed: float = 0.0
 var test_mode: bool = false
 var sound_player: AudioStreamPlayer
@@ -520,8 +521,9 @@ func queue_plot(index: int) -> void:
 		return
 	if index < 0 or index >= state.plots.size():
 		return
+	hud.note_farm_action()
 	if not state.plots[index].unlocked:
-		hud.show_toast("Room to grow! Unlock the lower field at the tool shop for $1.8K.")
+		hud.show_farm_hint("Unlock more beds at Tools · $1.8K")
 		return
 	pending_ferry = false
 	pending_plot = index
@@ -542,7 +544,10 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	var before: Array[Dictionary] = []
 	for tile in indices:
 		before.append(state.plots[tile].duplicate(true))
+	hud.note_farm_action()
+	_working_plot = true
 	var result: String = state.interact_plot(index, tool)
+	_working_plot = false
 	var changed_indices: Array[int] = []
 	for step in range(indices.size()):
 		var tile: int = indices[step]
@@ -550,8 +555,11 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 			changed_indices.append(tile)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
-		else: hud.show_toast(result)
+		else: hud.show_farm_hint(result)
 	if not changed_indices.is_empty():
+		hud.clear_farm_hint()
+		if tool == "harvest" and state.storage_used() >= state.capacity:
+			hud.show_farm_hint("Barn full · Sell crops [F]")
 		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)))
 		var pitch: float = 440.0 + float(state.combo_multiplier) * 28.0 if action == "harvest" else float({"hoe": 220.0, "plant": 440.0, "water": 660.0, "pest": 880.0}.get(action, 330.0))
 		_play_tone(pitch, 0.16 if action == "harvest" else 0.10)
@@ -574,7 +582,7 @@ func _interact_nearby() -> void:
 		_cancel_walk()
 		perform_plot(nearest, selected_tool)
 	else:
-		hud.show_toast("Click a plot to walk over, or stand beside it and press E to use your tool.")
+		hud.show_farm_hint("Click a bed, or move closer to use E")
 
 func _preview_area(index: int, tool: String) -> void:
 	if index >= 0:
@@ -590,28 +598,28 @@ func _update_hover() -> void:
 		var plot: Dictionary = state.plots[hover_plot]
 		var action: String = selected_tool
 		if bool(plot.get("frozen", false)):
-			hud.set_context("FROZEN BED · Use the hoe to crack the ice · Finish Frostbreak before time runs out")
+			hud.set_context("Frozen bed · Press 1, then click to break ice")
 		elif bool(plot.get("pests", false)):
-			hud.set_context("PESTS! Yield %d/3 · Press 5, then click to spray them off" % maxi(0, 3 - int(plot.get("pest_ticks", 0))))
+			hud.set_context("Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0))))
 		elif not plot.unlocked:
-			hud.set_context("LOWER FIELD · 12 more plots · Unlock at Tools for $1.8K")
+			hud.set_context("12 more beds · Unlock at Tools for $1.8K")
 		elif int(plot.stage) == 3:
-			hud.set_context("RIPE %s · Click to %s · Store it or sell at the live price" % [str(plot.crop).to_upper(), action])
+			hud.set_context("%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action])
 		elif int(plot.stage) > 0 and bool(plot.watered):
 			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(0, str(plot.crop)))
-			hud.set_context("%s · %.0fs until ripe · Use this time to check the market" % [str(plot.crop).to_upper(), seconds])
+			hud.set_context("%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds])
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()
-			hud.set_context("%s · Click to work %d tile%s · Every action is yours" % [action.to_upper(), area, "" if area == 1 else "s"])
+			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
 	elif hit.has("station"):
-		var travel_hint: String = "FERRY · Click to walk over · E to board"
-		var descriptions: Dictionary = {"market": "MARKET · Watch prices · Buy seeds · Choose your moment to sell", "barn": "INVENTORY · Seeds, potatoes, crates, builds and keepsakes", "roll": "ROLL HOUSE · Risk earned game coins for rare rewards" if state.roll_available() else state.roll_lock_reason(), "island": travel_hint, "quests": "QUEST BOARD · Farming challenges and rewards", "forge": "WINTER WORKSHOP · Upgrade your manual farming tools", "builds": "WORKSHOP · Your build, abilities and batch processor"}
-		descriptions["activities"] = "DUCK PATROL · Train ducks to clear pests" if state.current_island == 1 else ("BUYER CONTRACTS · Supply harvests or valuable mutations" if state.current_island == 2 else "FROST FURNACE · Burn Icecaps for a growth and processing burst")
-		descriptions["duck_patrol"] = "DUCK PATROL · Train this island's ducks to clear pests"
-		descriptions["tools"] = "TOOL UPGRADES · Meet the toolsmith · Work more beds with each action"
+		var travel_hint: String = "Ferry · Click to board"
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "roll": "Roll House · Click to view odds" if state.roll_available() else "Rolls closed · Travel to your newest island", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities"}
+		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
+		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
+		descriptions["tools"] = "Tools · Click to upgrade"
 		hud.set_context(descriptions.get(str(hit.station), "TATERLAND"))
 	else:
-		hud.set_context("E · FERRY" if world.player.position.distance_to(world.ferry_position()) <= 2.0 and (not _tutorial_active() or tutorial.allows_action("island")) else "")
+		hud.set_context("Ferry · Press E to board" if world.player.position.distance_to(world.ferry_position()) <= 2.0 and (not _tutorial_active() or tutorial.allows_action("island")) else "")
 
 func _on_state_changed() -> void:
 	# Activity boundaries and market ticks can signal within the same update.
@@ -977,6 +985,9 @@ func _on_notification(message: String) -> void:
 	# Routine work, quotes and shipments are already visible in the field and HUD.
 	# Keep interruptions for problems and milestones that need the player's attention.
 	var lower: String = message.to_lower()
+	if _working_plot:
+		# Plot results use one quiet footer slot, never a second central toast.
+		return
 	for marker in ["quest complete", "shores unlocked", "frosthollow unlocked", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "all builds", "failed", "already collected", "emergency"]:
 		if lower.contains(marker):
 			hud.show_toast(message)
@@ -1095,8 +1106,9 @@ func _farm_help_action(action: String) -> void:
 		help.data.hidden = not bool(help.data.hidden) if help.data.enabled else false
 		help.enable()
 	elif action in ["act", "dismiss"]:
-		var tip: Dictionary = hud._farm_tip
+		var tip: Dictionary = hud._opened_farm_tip if hud._panel_kind == "farm_tip" else hud._farm_tip
 		if tip.is_empty(): return
+		if hud._panel_kind == "farm_tip": hud.close_panel()
 		if action == "dismiss" or tip.action == "dismiss":
 			help.dismiss(str(tip.id))
 			hud._help_cooldown = 12.0

@@ -2,6 +2,7 @@ class_name FarmWorld
 extends Node3D
 
 const FarmerAvatar = preload("res://scripts/farmer_avatar.gd")
+const Type = preload("res://scripts/ui_type.gd")
 const GeometryBatcher = preload("res://scripts/world_geometry_batcher.gd")
 
 signal plot_clicked(index: int)
@@ -43,6 +44,7 @@ var _sun: DirectionalLight3D
 var _moon: DirectionalLight3D
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _materials: Dictionary = {}
+var _shop_font: Font = Type.SIGN
 # Primitive resources are immutable and reused across crops and island rebuilds.
 var _box_meshes: Dictionary = {}
 var _cylinder_meshes: Dictionary = {}
@@ -123,9 +125,9 @@ const FERRY_ROUTES: Dictionary = {
 	3: [Vector3(12.8, 0, 14), Vector3(20.6, 0, 14), Vector3(20.6, 0, 10), Vector3(22, 0, 10)],
 }
 const TUTORIAL_STATION_NAMES: Dictionary = {
-	"barn": "THE BARN", "market": "SEED MARKET", "tools": "TOOLSMITH",
-	"roll": "ROLL HOUSE", "builds": "WASH & SORT", "duck_patrol": "DUCK PATROL",
-	"quests": "FARMING CHALLENGES", "island": "ISLAND FERRY", "activities": "ISLAND ACTIVITY",
+	"barn": "Barn", "market": "Seeds", "tools": "Tools",
+	"roll": "Roll House", "builds": "Builds", "duck_patrol": "Ducks",
+	"quests": "Quests", "island": "Ferry", "activities": "Activities",
 }
 
 func build_world(island: int = 1) -> void:
@@ -932,7 +934,7 @@ func _barn(pos: Vector3) -> void:
 	_box(root, Vector3(3.3, 0.43, 1.45), Vector3(0.95, 0.85, 1.22), Color("d2b266"))
 	_box(root, Vector3(3.3, 0.87, 1.45), Vector3(0.98, 0.07, 1.23), Color("ecd18a"))
 	_target(root, Vector3(0.0, 2.5, 0.0), Vector3(5.6, 5.0, 4.6), "station", "barn")
-	_label(root, "WINTER BARN" if current_island == 3 else ("BEACH BARN" if current_island == 2 else "THE BARN"), Vector3(0.0, 5.65, 0.0), 34, CREAM)
+	_shop_label(root, "Barn", Vector3(0.0, 5.65, 0.0))
 
 func _market(pos: Vector3) -> void:
 	var root := _root("MarketStall", pos)
@@ -955,7 +957,7 @@ func _market(pos: Vector3) -> void:
 	_crate(root, Vector3(3.0, 1.2, 0.8), false)
 	var vendor := _potato_person(root, Vector3(0.0, 0.25, -0.35), Color("d5a46b"), Color("818f69"), false)
 	_cylinder(vendor, Vector3(0.0, 1.55, 0.0), 0.46, 0.46, 0.12, Color("f0d58d"), 10)
-	_label(root, "FROST MARKET" if current_island == 3 else ("SHORES MARKET" if current_island == 2 else "FARMERS' MARKET"), Vector3(0.0, 4.45, 0.0), 34, CREAM)
+	_shop_label(root, "Seeds", Vector3(0.0, 4.45, 0.0))
 	_target(root, Vector3(0.0, 1.8, 0.0), Vector3(5.3, 3.6, 4.0), "station", "market")
 
 func _roll_house(pos: Vector3) -> void:
@@ -991,7 +993,7 @@ func _roll_house(pos: Vector3) -> void:
 	_rare_gem = _gem(root, Vector3(3.4, 1.65, 1.7), Color("ba8de8"), 0.43)
 	_die(root, Vector3(-3.1, 0.64, 2.0), 0.72, 0.3)
 	_die(root, Vector3(-2.9, 1.23, 2.0), 0.5, -0.2)
-	_roll_label = _label(root, "THE WARM ROLL HOUSE" if current_island == 3 else ("BEACH ROLL HOUSE" if current_island == 2 else "THE ROLL HOUSE"), Vector3(0.0, 6.50, 0.0), 34, CREAM)
+	_roll_label = _shop_label(root, "Roll House", Vector3(0.0, 6.50, 0.0))
 	_target(root, Vector3(0.55, 2.6, 0.4), Vector3(6.4, 5.2, 4.7), "station", "roll")
 	_roll_gate = Node3D.new()
 	root.add_child(_roll_gate)
@@ -1231,6 +1233,17 @@ func _bar(parent: Node3D, start: Vector3, end: Vector3, radius: float, color: Co
 	if absf(direction.dot(Vector3.UP)) < 0.999:
 		rod.quaternion = Quaternion(Vector3.UP, direction)
 	return rod
+
+func _shop_label(parent: Node3D, text: String, pos: Vector3, distant: bool = false) -> Label3D:
+	var ink := Color("183b30")
+	var label := _label(parent, text, pos, 38 if distant else 48, ink if current_island == 3 else CREAM)
+	label.font = _shop_font
+	label.pixel_size = 0.018
+	label.outline_modulate = CREAM if current_island == 3 else ink
+	label.outline_size = 3
+	label.set_meta("shop_label", true)
+	return label
+
 
 func _label(parent: Node3D, text: String, pos: Vector3, font_size: int, color: Color, billboard: bool = true) -> Label3D:
 	var label := Label3D.new()
@@ -1504,7 +1517,7 @@ func _golden_shores() -> void:
 			_sphere(root, pos + Vector3(-0.36 + float(j) * 0.36, 0.26, 0.0), Vector3(0.22, 0.19, 0.21), Color("f7c752"))
 	_sphere(root, Vector3(3.0, 0.41, 0.55), Vector3(0.9, 0.52, 0.8), Color("d4b578"))
 	_gem(root, Vector3(0.0, 1.1, -0.6), GOLD, 0.42)
-	_travel_label = _label(root, "GOLDEN SHORES  ·  LOCKED", Vector3(0.0, 4.8, 0.0), 32, Color("ffe5a4"))
+	_travel_label = _shop_label(root, "Golden Shores", Vector3(0.0, 4.8, 0.0), true)
 	_target(root, Vector3(0.0, 1.25, 0.0), Vector3(9.0, 3.8, 7.0), "station", "island")
 	# The boarding area stays reachable even before the next island unlocks.
 	var dock := _root("GoldenShoresDock", Vector3(11.5, 0.0, -14.0))
@@ -1518,7 +1531,7 @@ func _golden_shores() -> void:
 	_dock_gate.position.z = -3.7
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
-	_dock_label = _label(dock, "ISLAND 2  /  LOCKED", Vector3(0.0, 1.85, -0.4), 22, Color("ffe6aa"))
+	_dock_label = _shop_label(dock, "Ferry", Vector3(0.0, 1.85, -0.4))
 	_target(dock, Vector3(0.0, 0.75, -1.4), Vector3(2.6, 2.4, 4.4), "station", "island")
 
 
@@ -1650,7 +1663,7 @@ func _quest_board(pos: Vector3) -> void:
 		_sphere(board, Vector3(x, 1.82, 0.23), Vector3(0.045, 0.045, 0.02), Color("cd795b"))
 		_box(board, Vector3(x, 1.52, 0.23), Vector3(0.28, 0.055, 0.02), Color("90a280"))
 	_roof(board, 2.90, 0.83, 2.30, 0.39, Color("52968b") if current_island == 2 else TEAL)
-	_label(board, "FARMING CHALLENGES", Vector3(0.0, 3.18, 0.0), 24, CREAM)
+	_shop_label(board, "Quests", Vector3(0.0, 3.18, 0.0))
 	_target(board, Vector3(0.0, 1.35, 0.05), Vector3(2.9, 2.9, 1.05), "station", "quests")
 
 
@@ -1672,7 +1685,7 @@ func _return_valley() -> void:
 	for x in [-3.3, 3.0]:
 		_cylinder(valley, Vector3(x, 0.67, -2.0), 0.12, 0.08, 1.34, Color("876346"), 6)
 		_sphere(valley, Vector3(x, 1.78, -2.0), Vector3(0.84, 1.15, 0.8), Color("729b61"))
-	_travel_label = _label(valley, "SPUD VALLEY · RETURN", Vector3(0.0, 3.8, 0.0), 29, Color("f6e6b4"))
+	_travel_label = _shop_label(valley, "Spud Valley", Vector3(0.0, 3.8, 0.0), true)
 	_target(valley, Vector3(0.0, 1.0, 0.0), Vector3(9.5, 3.2, 7.2), "station", "island")
 
 
@@ -1693,7 +1706,7 @@ func _export_dock() -> void:
 	_crate(dock, Vector3(-0.67, 0.60, -0.70), true)
 	_crate(dock, Vector3(-0.64, 1.14, -0.70), true)
 	_cylinder(dock, Vector3(0.62, 0.49, -0.60), 0.31, 0.31, 0.32, Color("92816a"), 10)
-	_dock_label = _label(dock, "SPUD VALLEY · RETURN", Vector3(0.0, 2.8, 0.8), 26, Color("fff0bd"))
+	_dock_label = _shop_label(dock, "Ferry", Vector3(0.0, 2.8, 0.8))
 	_target(dock, Vector3(0.0, 0.85, 1.0), Vector3(3.6, 2.5, 6.4), "station", "island")
 	for z in [-1.6, 3.8]:
 		var flag_root := Node3D.new()
@@ -1714,23 +1727,23 @@ func _export_dock() -> void:
 	_crate(_export_boat, Vector3(0.0, 0.65, 0.56), true)
 	_cylinder(_export_boat, Vector3(0.0, 1.31, 0.10), 0.045, 0.045, 2.0, Color("ab8859"), 6)
 	_box(_export_boat, Vector3(0.39, 2.15, 0.1), Vector3(0.80, 0.43, 0.05), GOLD)
-	_export_label = _label(_export_boat, "EXPORT BUYER", Vector3(0.0, 3.1, 0.0), 27, Color("fff1b1"))
+	_export_label = _shop_label(_export_boat, "Export", Vector3(0.0, 3.1, 0.0))
 
 
 func set_island2_unlocked(value: bool) -> void:
 	_island2_unlocked = value
 	if current_island == 1:
 		if is_instance_valid(_travel_label):
-			_travel_label.text = "GOLDEN SHORES · TRAVEL" if value else "GOLDEN SHORES · LOCKED"
+			_travel_label.text = "Golden Shores"
 		if is_instance_valid(_dock_label):
-			_dock_label.text = "ISLAND 2 / TRAVEL" if value else "ISLAND 2 / LOCKED"
+			_dock_label.text = "Ferry"
 		if is_instance_valid(_dock_gate):
 			_dock_gate.visible = not value
 	elif current_island == 2:
 		if is_instance_valid(_travel_label):
-			_travel_label.text = "SPUD VALLEY · RETURN"
+			_travel_label.text = "Spud Valley"
 		if is_instance_valid(_dock_label):
-			_dock_label.text = "SPUD VALLEY · RETURN"
+			_dock_label.text = "Ferry"
 
 
 func set_export_state(active: bool, seconds: float) -> void:
@@ -1742,7 +1755,7 @@ func set_export_state(active: bool, seconds: float) -> void:
 			flag.visible = _export_active
 	if is_instance_valid(_export_label):
 		_export_label.visible = _export_active
-		_export_label.text = "EXPORT OPEN · %.1fs" % _export_seconds
+		_export_label.text = "Export · %.0fs" % _export_seconds
 	if was_active and not _export_active:
 		for i in range(_effect_particles.size() - 1, -1, -1):
 			if not bool(_effect_particles[i].get("export", false)):
@@ -1910,7 +1923,7 @@ func _winter_ferry() -> void:
 			_cylinder(ferry,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
 			_sphere(ferry,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
 	_crate(ferry,Vector3(1.1,0.66,-0.75),true)
-	_dock_label = _label(ferry,"FERRY · VALLEY / SHORES",Vector3(0.0,2.35,0.0),25,Color("f6edcd"))
+	_dock_label = _shop_label(ferry, "Ferry", Vector3(0.0,2.35,0.0))
 	_target(ferry,Vector3(0.1,0.95,0.0),Vector3(3.7,2.5,3.2),"station","island")
 	# Only the two already-playable destinations appear offshore.
 	for destination in [1,2]:
@@ -1930,7 +1943,7 @@ func _winter_ferry() -> void:
 		for i in range(3):
 			_box(miniature,Vector3(-0.8+float(i)*1.15,0.08,1.47),Vector3(0.90,0.15,0.78),SOIL)
 			_sphere(miniature,Vector3(-0.8+float(i)*1.15,0.33,1.47),Vector3(0.23,0.18,0.25),Color("96b86b") if destination == 1 else GOLD)
-		_label(miniature,"SPUD VALLEY · RETURN" if destination == 1 else "GOLDEN SHORES · RETURN",Vector3(0.0,3.1,0.0),25,Color("f6e6b5"))
+		_shop_label(miniature, "Spud Valley" if destination == 1 else "Golden Shores", Vector3(0.0,3.1,0.0), true)
 		_target(miniature,Vector3(0.0,1.0,0.0),Vector3(8.3,3.3,6.1),"station","island")
 
 
@@ -1974,7 +1987,7 @@ func _tool_upgrade_station(pos: Vector3) -> void:
 	_bar(shop, Vector3(-0.41, 1.20, 0.93), Vector3(-0.07, 1.20, 0.55), 0.045, Color("9e774e"))
 	_box(shop, Vector3(-0.04, 1.22, 0.50), Vector3(0.35, 0.14, 0.20), Color("bed0cd"))
 	_toolsmith(shop, Vector3(1.15, 0.11, 0.69))
-	_label(shop, "TOOL UPGRADES", Vector3(0, 3.95, 0), 28, CREAM)
+	_shop_label(shop, "Tools", Vector3(0, 3.95, 0))
 	_target(shop, Vector3(0, 1.5, 0), Vector3(4.8, 3.2, 3.15), "station", "tools")
 
 
@@ -1998,14 +2011,14 @@ func _ice_forge(pos: Vector3) -> void:
 	_frost_beacon = _gem(forge,Vector3(-1.30,3.12,1.5),Color("a8dff5"),0.29)
 	_frost_beacon.visible = false
 	_toolsmith(forge, Vector3(-1.1, 0.0, 2.1))
-	_frost_label = _label(forge,"TOOL UPGRADES",Vector3(0.0,4.75,0.0),28,Color("eaf5fa"))
+	_frost_label = _shop_label(forge, "Tools", Vector3(0.0,4.75,0.0))
 	_target(forge,Vector3(0.0,1.95,0.4),Vector3(4.6,4.0,4.5),"station","tools")
 
 
 func set_island3_unlocked(value: bool) -> void:
 	_island3_unlocked = value
 	if is_instance_valid(_dock_label) and current_island != 3 and value:
-		_dock_label.text = "FERRY · THREE ISLANDS"
+		_dock_label.text = "Ferry"
 
 
 func set_frost_state(active: bool, seconds: float, frozen_indices: Array = []) -> void:
@@ -2014,7 +2027,7 @@ func set_frost_state(active: bool, seconds: float, frozen_indices: Array = []) -
 	if current_island != 3:
 		return
 	if is_instance_valid(_frost_label):
-		_frost_label.text = "TOOL UPGRADES · FROSTBREAK %.1fs" % _frost_seconds if _frost_active else "TOOL UPGRADES"
+		_frost_label.text = "Frostbreak · %.0fs" % _frost_seconds if _frost_active else "Tools"
 	if is_instance_valid(_frost_beacon):
 		_frost_beacon.visible = _frost_active
 	if not _frost_active:
@@ -2080,7 +2093,7 @@ func _processing_station(pos: Vector3) -> void:
 		steam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_processing_steam.append(steam)
 	_crate(workshop,Vector3(1.67,0.39,1.11),false)
-	_processing_label = _label(workshop,"WASH & SORT",Vector3(0.0,3.44,0.0),25,Color("f1edce"))
+	_processing_label = _shop_label(workshop, "Builds", Vector3(0.0,3.44,0.0))
 	_target(workshop,Vector3(0.0,1.42,0.15),Vector3(4.8,3.0,3.6),"station","builds")
 
 
@@ -2088,7 +2101,7 @@ func set_processing(active: bool, progress: float) -> void:
 	_processing_active = active
 	_processing_progress = clampf(progress,0.0,1.0)
 	if is_instance_valid(_processing_label):
-		_processing_label.text = "WASH & SORT · %d%%" % int(_processing_progress*100.0) if active else "WASH & SORT"
+		_processing_label.text = "Builds · %d%%" % int(_processing_progress*100.0) if active else "Builds"
 	if is_instance_valid(_processing_light):
 		_processing_light.material_override = _mat(Color("bade87") if active else Color("80958b"))
 	for potato in _processing_potatoes:
@@ -2116,7 +2129,7 @@ func _animate_processing(delta: float) -> void:
 func set_roll_available(value: bool) -> void:
 	_roll_available = value
 	if is_instance_valid(_roll_label):
-		_roll_label.text = ("THE WARM ROLL HOUSE" if current_island == 3 else ("BEACH ROLL HOUSE" if current_island == 2 else "THE ROLL HOUSE")) if value else "ROLL HOUSE · CLOSED"
+		_roll_label.text = "Roll House" if value else "Rolls closed"
 	if is_instance_valid(_roll_gate):
 		_roll_gate.visible = not value
 	if is_instance_valid(_rare_gem):
@@ -2258,7 +2271,7 @@ func _duck_station() -> void:
 	_box(coop, Vector3(0, 0.44, 0.3), Vector3(0.6, 0.82, 0.04), Color("534f39"))
 	for x: float in [-0.75, 0.75]:
 		_box(coop, Vector3(x, 0.40, 0.30), Vector3(0.15, 0.8, 0.07), Color("f0d897"))
-	_duck_label = _label(coop, "DUCK PATROL", Vector3(0, 2.5, 0), 26, CREAM)
+	_duck_label = _shop_label(coop, "Ducks", Vector3(0, 2.5, 0))
 	_target(coop, Vector3(0, 0.8, 0.1), Vector3(3.3, 2.5, 3.5), "station", "duck_patrol")
 	for index in range(current_island):
 		var duck: Node3D = _root("PestPatrolDuck%d" % (index + 1), _duck_home + Vector3((index - (current_island - 1) * 0.5) * 1.0, 0.12, 1.6))
@@ -2295,7 +2308,7 @@ func _activity_station() -> void:
 		_roof(booth, 3.4, 1.55, 2.7, 0.5, Color("d19c54"))
 		_crate(booth, Vector3(-0.9, 0.35, 0.9), true)
 		_gem(booth, Vector3(0.85, 0.62, 1.0), Color("b4ddec"), 0.30)
-		_activity_label = _label(booth, "BUYER CONTRACTS", Vector3(0, 3.6, 0), 26, CREAM)
+		_activity_label = _shop_label(booth, "Contracts", Vector3(0, 3.6, 0))
 		_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "activities")
 	else:
 		var furnace: Node3D = _root("FrostFurnace", Vector3(17.8, 0, 10))
@@ -2313,13 +2326,13 @@ func _activity_station() -> void:
 		for index: int in range(5):
 			var steam: MeshInstance3D = _sphere(furnace, Vector3(0.74, 4.0, -0.45), Vector3.ONE * 0.2, Color("eaf7ef"))
 			_furnace_steam.append(steam)
-		_activity_label = _label(furnace, "FROST FURNACE", Vector3(0, 4.55, 0), 26, CREAM)
+		_activity_label = _shop_label(furnace, "Furnace", Vector3(0, 4.55, 0))
 		_target(furnace, Vector3(0, 1.8, 0), Vector3(3.4, 4.0, 3.3), "station", "activities")
 
 func set_activity_state(info: Dictionary) -> void:
 	_activity_info = info.duplicate(true)
 	if is_instance_valid(_duck_label):
-		_duck_label.text = "DUCK PATROL · %d / %d" % [int(info.get("duck_count", 0)), current_island]
+		_duck_label.text = "Ducks · %d/%d" % [int(info.get("duck_count", 0)), current_island]
 	if not is_instance_valid(_activity_label):
 		return
 	match current_island:
@@ -2327,10 +2340,10 @@ func set_activity_state(info: Dictionary) -> void:
 			pass
 		2:
 			var contract: Dictionary = info.get("contract", {})
-			_activity_label.text = "BUYER CONTRACTS" if contract.is_empty() else "CONTRACT · %d / %d" % [int(contract.get("delivered", 0)), int(contract.get("target", 1))]
+			_activity_label.text = "Contracts" if contract.is_empty() else "Order · %d/%d" % [int(contract.get("delivered", 0)), int(contract.get("target", 1))]
 		3:
 			var remaining: float = float(info.get("furnace_remaining", 0))
-			_activity_label.text = "FURNACE · %.0fs HEAT" % remaining if remaining > 0 else "FROST FURNACE"
+			_activity_label.text = "Furnace · %.0fs" % remaining if remaining > 0 else "Furnace"
 			_furnace_flame.visible = remaining > 0
 			for steam: Node3D in _furnace_steam: steam.visible = remaining > 0
 

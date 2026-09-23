@@ -89,6 +89,7 @@ const PURCHASE_SECONDS: float = 3.2
 
 var root: Control
 var _state: Node
+var _plain_font: FontVariation = Type.face(Type.BODY, 400.0)
 var _font: Font
 var _heading_font: Font
 var _top: Dictionary = {}
@@ -134,6 +135,10 @@ var _visual_island: int = 0
 var _panel_crops: Array[String] = []
 var _tool_caption: Label
 var _context_box: PanelContainer
+var _hover_context: String = ""
+var _farm_hint: String = ""
+var _farm_hint_remaining: float = 0.0
+var _farm_busy_remaining: float = 0.0
 var _quick_sell: Button
 var _modal_card: PanelContainer
 var _spinner: Control
@@ -172,9 +177,8 @@ var _trophy_signature: String = ""
 var _frozen_crown: bool = false
 var _farm_tip: Dictionary = {}
 var _farm_help_card: PanelContainer
-var _farm_help_title: Label
-var _farm_help_body: Label
 var _farm_help_action: Button
+var _opened_farm_tip: Dictionary = {}
 var _help_cooldown: float = 0.0
 var _tutorial: Dictionary = {}
 var _tutorial_card: PanelContainer
@@ -209,6 +213,9 @@ var _collapse_hidden: Array[CanvasItem] = []
 func _process(delta: float) -> void:
 	_hud_clock += delta
 	_help_cooldown = maxf(0.0, _help_cooldown - delta)
+	_farm_hint_remaining = maxf(0.0, _farm_hint_remaining - delta)
+	_farm_busy_remaining = maxf(0.0, _farm_busy_remaining - delta)
+	_update_context()
 	_update_farm_help()
 	if _purchase_remaining > 0.0:
 		_purchase_remaining = maxf(0.0, _purchase_remaining - delta)
@@ -245,8 +252,8 @@ func _refresh_seed_visibility() -> void:
 	if is_instance_valid(_tracked_box):
 		_tracked_box.visible = showing and not _tracked_ids().is_empty() and (_tutorial.is_empty() or "stock" in _tutorial.get("features", []))
 	if is_instance_valid(_context_box):
-		_context_box.offset_top = -300 if showing else -184
-		_context_box.offset_bottom = -258 if showing else -142
+		_context_box.offset_top = -274 if showing else -152
+		_context_box.offset_bottom = -244 if showing else -122
 
 
 func build_ui() -> void:
@@ -297,12 +304,9 @@ func _build_blind_card() -> void:
 	_place(_blind_card, Rect2(28, 196, 302, 0))
 	var column: VBoxContainer = _vbox(4)
 	_blind_card.add_child(column)
-	for entry: Array in [["title", 14, GOLD], ["balance", 19, CREAM], ["progress", 14, Color("71e7a1")], ["tax", 13, CREAM], ["projected", 13, CREAM], ["weather", 12, Color("d7b18e")], ["deadline", 12, Color("b4c7bf")], ["debt", 12, CHERRY]]:
-		var label: Label = _label("", int(entry[1]), entry[2], entry[0] in ["title", "balance", "progress"])
-		var compact := FontVariation.new()
-		compact.base_font = UI_FONT
-		compact.variation_opentype = (_heading_font if entry[0] in ["title", "balance", "progress"] else _font).variation_opentype
-		label.add_theme_font_override("font", compact)
+	for entry: Array in [["title", 13, GOLD], ["balance", 19, CREAM], ["debt", 12, CHERRY], ["weather", 12, Color("d7b18e")]]:
+		var label: Label = _label("", int(entry[1]), entry[2])
+		label.add_theme_font_override("font", _plain_font)
 		label.clip_text = true
 		column.add_child(label)
 		_blind_labels[entry[0]] = label
@@ -310,7 +314,7 @@ func _build_blind_card() -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			_act("taxes")
 	)
-	_blind_card.tooltip_text = "Taxes · click for rules and last payment"
+	_blind_card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 func _build_run_end() -> void:
 	_run_end = load("res://scripts/climate_collapse.gd").new()
@@ -326,26 +330,16 @@ func _update_blind_ui() -> void:
 	var climate: Dictionary = _state.call("climate_info")
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over)
-	_blind_labels.title.text = "%s · ISLAND %d" % [info.name, int(info.island)]
-	_blind_labels.balance.text = "%s / %s" % [_blind_money(info.current), _blind_money(info.target)]
-	_blind_labels.title.add_theme_color_override("font_color", GOLD if info.cleared else Color("ff7777"))
+	_blind_labels.title.text = "Tax in %ds · Sell now" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
+	_blind_labels.balance.text = "%s due  ›" % _blind_money(info.target)
+	_blind_labels.title.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else GOLD)
 	_blind_labels.balance.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff7777"))
-	_blind_labels.progress.text = str(_state.call("blind_progress_text", float(info.ratio))) + (" · " + str(info.rank) if float(info.ratio) < 2.0 else "")
-	_blind_labels.progress.add_theme_color_override("font_color", Color("71e7a1") if info.cleared else Color("ff7777"))
-	_blind_labels.tax.text = "Base %s · %s" % [_blind_money(info.base_tax), "+%.0f%% TAX BOOM" % ((float(info.tax_multiplier) - 1.0) * 100.0) if info.tax_boom else "+0%"]
-	_blind_labels.tax.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else CREAM)
-	_blind_labels.projected.text = "After tax  " + _blind_money(info.projected)
-	_blind_labels.projected.add_theme_color_override("font_color", Color("ff937c") if info.projected < 0.0 else CREAM)
-	_blind_labels.deadline.text = "COLLECTION IN %ds · SELL NOW" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major booms · View rules ›" % [int(info.booms), int(info.booms_required)]
-	_blind_labels.debt.visible = info.current < 0.0 or info.projected < 0.0
+	_blind_card.tooltip_text = "Cash %s · %s covered\nAfter tax %s · Bankruptcy below %s\nClick for forecast, rates and last payment" % [_blind_money(info.current), str(_state.call("blind_progress_text", float(info.ratio))), _blind_money(info.projected), _blind_money(info.bankruptcy)]
+	_blind_labels.debt.visible = info.current < 0.0
 	_blind_labels.debt.text = "Bankruptcy below " + _blind_money(info.bankruptcy)
 	_blind_labels.weather.visible = climate.phase != "calm" or float(climate.pressure) > 0.0
-	_blind_labels.weather.text = "%s · %s %ds" % [climate.name, str(climate.phase).to_upper(), ceili(climate.timer)] if climate.phase != "calm" else "RECOVERY COSTS +%.0f%%" % (float(climate.pressure) * 100.0)
-	_blind_labels.tax.hide()
-	_blind_labels.projected.visible = info.projected < 0.0
-	_blind_labels.deadline.hide()
-	_blind_labels.title.text = "TAX IN %ds" % ceili(info.due_in) if info.due_in > 0.0 else "TAX · %d STOCKS LEFT" % (int(info.booms_required) - int(info.booms))
-	_blind_labels.debt.visible = info.current < 0.0
+	var weather_name: String = "Storm" if climate.event == "storm" else str(climate.name).capitalize()
+	_blind_labels.weather.text = "%s %s%ds" % [weather_name, "in " if climate.phase == "warning" else ("recovery · " if climate.phase == "recovery" else "· "), ceili(climate.timer)] if climate.phase != "calm" else "Recovery costs +%.0f%%" % (float(climate.pressure) * 100.0)
 	_blind_modal_warning.visible = _tutorial.is_empty() and not bool(info.run_over) and (info.due_in > 0.0 or info.current < 0.0)
 	_blind_modal_warning.text = "%s · %s / %s%s" % ["TAX BOOM" if info.tax_boom else info.name, _blind_money(info.current), _blind_money(info.target), " · %ds left" % ceili(info.due_in) if info.due_in > 0.0 else " · %d/%d stocks" % [int(info.booms), int(info.booms_required)]]
 	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind == "roll" else (GREEN if info.cleared else Color("bb4334")))
@@ -812,6 +806,11 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action == "farm_help:details":
+		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _rolling and not _state.run_over:
+			_opened_farm_tip = _farm_tip.duplicate(true)
+			show_panel("farm_tip", _state)
+		return
 	if action.begins_with("dex_tab:") and _panel_kind == "dex":
 		var tab: String = action.get_slice(":", 1)
 		if tab in ["crops", "mutations"]:
@@ -1100,15 +1099,16 @@ func _build_footer() -> void:
 	_quick_sell = _button("Sell held [F]", "quick_sell", true)
 	_quick_sell.custom_minimum_size.y = 46
 	sell_box.add_child(_quick_sell)
-	_context_box = _card(Color(0.09, 0.20, 0.16, 0.93), 10)
+	_context_box = _card(Color(0.09, 0.20, 0.16, 0.93), 6)
 	root.add_child(_context_box)
 	_context_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_context_box.offset_left = -328
-	_context_box.offset_right = 328
-	_context_box.offset_top = -244
-	_context_box.offset_bottom = -202
+	_context_box.offset_left = -220
+	_context_box.offset_right = 220
+	_context_box.offset_top = -152
+	_context_box.offset_bottom = -122
 	_context_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_context = _wrap("Walk to a garden bed. Till, plant, water, and harvest.", 14, CREAM)
+	_context = _label("", 13, CREAM)
+	_context.add_theme_font_override("font", _plain_font)
 	_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_context_box.add_child(_context)
 	_context_box.hide()
@@ -1124,11 +1124,12 @@ func _icon(data: Dictionary, pixels: float = 62.0) -> Control:
 	return icon
 
 func _build_notices() -> void:
-	_toast_box = _card(INK, 14)
-	_place(_toast_box, Rect2(374, 170, 566, 52))
+	_toast_box = _card(INK, 10)
+	_place(_toast_box, Rect2(926, 104, 326, 0))
+	_toast_box.z_index = 20
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_toast_label = _wrap("", 15, CREAM)
-	_toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_toast_label = _wrap("", 13, CREAM)
+	_toast_label.add_theme_font_override("font", _plain_font)
 	_toast_box.add_child(_toast_label)
 	_toast_box.hide()
 	_toast_timer = _timer(2.5, func() -> void: _toast_box.hide())
@@ -1312,11 +1313,35 @@ func set_tool(tool: String) -> void:
 	_apply_tutorial_visibility()
 
 func set_context(text: String) -> void:
-	if is_instance_valid(_context):
-		_context.text = text
-		_context_box.visible = not text.is_empty() and not text.begins_with("WASD") and not text.begins_with("GOLDEN SHORES · 2") and not text.begins_with("SPUD VALLEY ·")
-		if not _tutorial.is_empty():
-			_context_box.hide()
+	_hover_context = text
+	_update_context()
+
+func note_farm_action() -> void:
+	_farm_busy_remaining = 3.0
+	if is_instance_valid(_farm_help_card): _farm_help_card.hide()
+
+func show_farm_hint(text: String) -> void:
+	if _rolling or not _tutorial.is_empty(): return
+	note_farm_action()
+	# Repeated input shares one slot and cannot keep extending the same notice.
+	if text == _farm_hint and _farm_hint_remaining > 0.0: return
+	_farm_hint = text
+	_farm_hint_remaining = 1.4
+	_update_context()
+
+func clear_farm_hint() -> void:
+	_farm_hint_remaining = 0.0
+	_update_context()
+
+func _update_context() -> void:
+	if not is_instance_valid(_context): return
+	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
+	_context.text = text
+	_context_box.visible = not text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
+	# Hug the single line instead of spanning the farm. Input passes through.
+	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
+	_context_box.offset_left = -width * 0.5
+	_context_box.offset_right = width * 0.5
 
 func show_toast(text: String) -> void:
 	if _rolling or not _tutorial.is_empty():
@@ -1324,9 +1349,9 @@ func show_toast(text: String) -> void:
 	if not is_instance_valid(root):
 		build_ui()
 	# Seed a real wrap width before rapid notifications can query minimum height.
-	_toast_label.size.x = 538.0
+	_toast_label.size.x = 306.0
 	_toast_label.text = text
-	_toast_box.size = Vector2(566.0, maxf(52.0, _toast_label.get_minimum_size().y + 28.0))
+	_toast_box.size = Vector2(326.0, _toast_label.get_minimum_size().y + 20.0)
 	_toast_box.show()
 	_toast_box.move_to_front()
 	_toast_timer.start()
@@ -1432,6 +1457,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	var scroll: ScrollContainer = _body.get_parent() as ScrollContainer
 	scroll.scroll_vertical = 0
 	match kind:
+		"farm_tip": _build_farm_tip()
 		"market": _build_market()
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
@@ -1451,6 +1477,8 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		_: _build_help()
 	_refresh_panel()
 	_modal.show()
+	_context_box.hide()
+	_farm_help_card.hide()
 	_blind_card.hide()
 	_refresh_seed_visibility()
 	_modal.move_to_front()
@@ -2156,7 +2184,6 @@ func _update_island_style() -> void:
 	_island_button.add_theme_stylebox_override("normal", _style(Color("486c90") if winter else (CORAL if shores else INK), 10, 10))
 	_island_button.add_theme_stylebox_override("hover", _style(Color("ab614b") if shores else GREEN, 10, 10))
 	_quest_button.add_theme_stylebox_override("normal", _style(Color("d7e6f1") if winter else (Color("f2d39b") if shores else PAPER), 10, 10))
-	_toast_box.position.y = 205
 
 func _update_quest_sidebar() -> void:
 	_quest_button.visible = true
@@ -2622,7 +2649,6 @@ func _update_surge_timer() -> void:
 	if rocket_soon and not _surge_active:
 		_export_bar.value = rocket_seconds
 	_export_bar.get_theme_stylebox("fill").bg_color = accent
-	_toast_box.position.y = 410
 	_market_impact.set_countdown(_island_id(), minf(float(info.get("timer", 180)), float(rocket_seconds) if _island_id() >= 3 else 180.0) if not _surge_active else 180.0)
 
 func _effective_luck() -> float:
@@ -3196,26 +3222,24 @@ func show_tutorial_feedback(message: String) -> void:
 		_tutorial_body.text = message
 
 func _build_farm_help() -> void:
-	_farm_help_card = _card(CREAM, 14)
+	_farm_help_card = _card(CREAM, 4)
 	_farm_help_card.name = "FarmHelp"
-	_farm_help_card.mouse_filter = Control.MOUSE_FILTER_STOP
-	_place(_farm_help_card, Rect2(28, 330, 302, 0))
-	var contents := _vbox(8)
-	_farm_help_card.add_child(contents)
-	contents.add_child(_label("FARM TIP · OPTIONAL", 11, MUTED, true))
-	_farm_help_title = _wrap("", 20, INK, true)
-	_farm_help_title.custom_minimum_size.x = 274
-	contents.add_child(_farm_help_title)
-	_farm_help_body = _wrap("", 14, INK)
-	_farm_help_body.custom_minimum_size.x = 274
-	contents.add_child(_farm_help_body)
-	_farm_help_action = _button("", "farm_help:act")
-	_farm_help_action.custom_minimum_size.y = 40
-	_farm_help_action.add_theme_font_size_override("font_size", 13)
-	contents.add_child(_farm_help_action)
-	var dismiss_button := _button("Dismiss tip", "farm_help:dismiss")
-	dismiss_button.add_theme_font_size_override("font_size", 12)
-	contents.add_child(dismiss_button)
+	_place(_farm_help_card, Rect2(28, 290, 302, 0))
+	var row := _hbox(4)
+	_farm_help_card.add_child(row)
+	_farm_help_action = _button("", "farm_help:details")
+	_farm_help_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_farm_help_action.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	row.add_child(_farm_help_action)
+	var dismiss_button := _button("×", "farm_help:dismiss")
+	dismiss_button.tooltip_text = "Dismiss this tip"
+	row.add_child(dismiss_button)
+	for button: Button in [_farm_help_action, dismiss_button]:
+		button.custom_minimum_size.y = 30
+		button.add_theme_font_override("font", _plain_font)
+		button.add_theme_font_size_override("font_size", 13)
+		button.add_theme_stylebox_override("normal", _style(CREAM, 6, 6))
+		button.add_theme_stylebox_override("hover", _style(PAPER, 6, 6))
 	_farm_help_card.hide()
 
 func _update_farm_help() -> void:
@@ -3224,13 +3248,20 @@ func _update_farm_help() -> void:
 	if not tip.is_empty() and _help_cooldown > 0.0 and tip.id not in ["pests", "taxes", "debt"]:
 		tip = {}
 	_farm_tip = tip
-	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _crop_row.visible
+	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _crop_row.visible and _farm_busy_remaining <= 0.0
 	if tip.is_empty(): return
-	_farm_help_title.text = str(tip.title)
-	_farm_help_body.text = str(tip.body)
-	_farm_help_action.text = str(tip.label)
-	_farm_help_card.position = Vector2(28, maxf(330.0, _blind_card.get_global_rect().end.y + 12.0))
+	var summaries: Dictionary = {"repeat": "Grow another crop · Help", "pests": "Pests · Press 5 to spray", "stocks": "Try a practice boom", "taxes": "Tax after 3 stocks · Help", "debt": "In debt · Recovery tips", "tools": "Upgrade your tools", "ducks": "Ducks can clear pests", "builds": "Explore your builds"}
+	_farm_help_action.text = str(tip.title) if tip.id == "stocks" and float(_state.farm_help.data.practice_remaining) > 0.0 else str(summaries[tip.id])
+	_farm_help_action.text += "  ›"
+	_farm_help_card.position = Vector2(28, _blind_card.get_global_rect().end.y + 10.0)
 	_farm_help_card.size = Vector2(302, 0)
+
+func _build_farm_tip() -> void:
+	if _opened_farm_tip.is_empty(): return
+	_heading(str(_opened_farm_tip.title), "Optional farm help")
+	_info("farm_tip_body", str(_opened_farm_tip.body), INK, 16)
+	_body.add_child(_button(str(_opened_farm_tip.label), "farm_help:act", true))
+	_body.add_child(_button("Dismiss this tip", "farm_help:dismiss"))
 
 func _luck_math() -> String:
 	if not is_instance_valid(_state): return ""

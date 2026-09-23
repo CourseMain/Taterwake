@@ -2,7 +2,7 @@ extends Node
 ## One real harvest. Further introductions belong to optional, contextual help.
 const STEPS: Array[Dictionary] = [
 	{"id": "welcome", "title": "Grow your first potato", "body": "One seed, one harvest, one sale.\nThen the farm is yours.\nClick to walk; WASD works too.", "next": true, "label": "Start farming →"},
-	{"id": "market", "title": "Buy a seed", "body": "Click the market building, then Buy 1 Russet. Or press B.", "focus": "market", "key": "B · MARKET"},
+	{"id": "market", "title": "Buy a seed", "body": "Click Seeds, then Buy 1 Russet. Or press B.", "focus": "market", "key": "B · SEEDS"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
@@ -16,10 +16,10 @@ const TOUR: Array[Dictionary] = [
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect crops, equipment and Build Crates. Clothing helps only while equipped."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "builds", "title": "Wash & Sort", "body": "Click Wash & Sort to inspect builds. Farmer starts unlocked; Build Crates unlock the others.", "focus": "builds"},
+	{"id": "builds", "title": "Builds", "body": "Click Builds to inspect your abilities. Farmer starts unlocked; Build Crates unlock the others.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
 	{"id": "roll", "title": "Roll House", "body": "Click the Roll House to inspect odds. Rolls spend earned coins and can return little. Keep seed money.", "focus": "roll"},
-	{"id": "ducks", "title": "Duck Patrol", "body": "Click Duck Patrol to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
+	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
 	{"id": "dock", "title": "The ferry", "body": "Click the ferry to walk to it, or press E nearby. Sailing needs the island unlock.", "focus": "island"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},
 ]

@@ -206,7 +206,7 @@ for local preview and is not a production hosting service.
 The ZIP has index.html at its root for static game-host upload forms.
 
 FONT LICENSES
-Nunito Sans, Fredoka, Oswald and Noto Sans Symbols 1/2 use the SIL Open
+Nunito Sans, Fredoka, Patrick Hand, Oswald and Noto Sans Symbols 1/2 use the SIL Open
 Font License. Their complete licenses are included in the
 LICENSE-*.txt files alongside this README.
 
@@ -299,6 +299,7 @@ def build(engine: Path) -> tuple[Path, Path]:
         font_licenses = {
             "OFL.txt": "LICENSE-NunitoSans.txt",
             "Fredoka-OFL.txt": "LICENSE-Fredoka.txt",
+            "PatrickHand-OFL.txt": "LICENSE-PatrickHand.txt",
             "Oswald-OFL.txt": "LICENSE-Oswald.txt",
             "OFL-NotoSymbols.txt": "LICENSE-NotoSansSymbols2.txt",
             "OFL-NotoSymbols1.txt": "LICENSE-NotoSansSymbols1.txt",

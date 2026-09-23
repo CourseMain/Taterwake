@@ -29,11 +29,11 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	check(game.hud._blind_card.visible and not game.hud._run_end.visible, "fresh run shows one tax forecast")
-	check(game.hud._blind_labels.balance.text == "$240 / $50K" and game.hud._blind_labels.tax.text.contains("$50K"), "fixed target and estimated tax visible before first boom")
+	check(game.hud._blind_labels.balance.text == "$50K due  ›" and game.hud._blind_card.tooltip_text.contains("$240"), "fixed target and estimated tax visible before first boom")
 	check(game.hud._blind_labels.balance.get_theme_color("font_color") == Color("ff7777") and game.hud._top.coins.get_theme_color("font_color") == Color("bb4334"), "positive balance below tax threshold turns red")
 	game.state.coins = 50000.0
 	game.hud.update_state(game.state)
-	check(game.hud._blind_labels.progress.text.contains("COVERED") and game.hud._blind_labels.balance.get_theme_color("font_color") != Color("ff7777"), "exactly funded bill removes shortfall red")
+	check(game.hud._blind_card.tooltip_text.contains("100% covered") and game.hud._blind_labels.balance.get_theme_color("font_color") != Color("ff7777"), "exactly funded bill removes shortfall red")
 	game.state.coins = 240.0
 	game.tutorial.start()
 	game.hud.update_state(game.state)
@@ -45,14 +45,14 @@ func run() -> void:
 	game.state.climate.acknowledge(game.state)
 	game.state.blind_cycle.kind = "big"
 	game.hud.update_state(game.state)
-	check(game.hud._blind_labels.balance.text == "$13.8B / $5B", "HUD compares cash to the amount owed, with no separate blind")
-	check(game.hud._blind_labels.tax.text.contains("$5B") and game.hud._blind_labels.projected.text.contains("$8.8B"), "tax forecast shows correct projected wallet")
+	check(game.hud._blind_labels.balance.text == "$5B due  ›" and game.hud._blind_card.tooltip_text.contains("$13.8B"), "HUD compares cash to the amount owed, with no separate blind")
+	check(game.hud._blind_card.tooltip_text.contains("After tax $8.8B"), "tax forecast shows correct projected wallet")
 	game.state.blind_cycle.tax_multiplier = 2.5
 	game.state.blind_cycle.tax_rolled = true
 	game.state._start_surge()
 	game.state.update(10.0)
 	game.hud.update_state(game.state)
-	check(game.hud._blind_labels.tax.text == "Base $5B · +150% TAX BOOM", "Tax Boom remains prominently warned on farm")
+	check(game.hud._blind_labels.balance.text == "$12.5B due  ›" and game.hud._blind_labels.title.get_theme_color("font_color") == Color("ffb85e"), "Tax Boom remains prominently warned on farm")
 	await shot("taxes-tax-boom")
 	game._on_action("taxes")
 	check(game.hud._panel_kind == "taxes" and not game.hud._blind_card.visible, "forecast opens rules with no duplicate clutter")

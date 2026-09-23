@@ -84,8 +84,8 @@ func _run() -> void:
 		for label in world.find_children("*", "Label3D", true, false):
 			for title in ["ICECAP FIELDS", "SUNBURST FIELDS", "THE POTATO PATCH"]:
 				forbidden_title = forbidden_title or title in label.text
-			has_barn = has_barn or "BARN" in label.text
-			has_navigation = has_navigation or "RETURN" in label.text or "LOCKED" in label.text
+			has_barn = has_barn or "Barn" in label.text
+			has_navigation = has_navigation or label.text == "Ferry"
 		check(not forbidden_title, "island %d removes floating decorative field titles" % island)
 		check(has_barn and has_navigation, "island %d retains functional station and travel labels" % island)
 		var plots: Array = []

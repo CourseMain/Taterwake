@@ -85,8 +85,9 @@ func run() -> void:
 	check(game.state.surge_timer == 180.0, "normal stock schedule starts fresh")
 	for tool: String in ["hoe", "plant", "water", "harvest", "pest"]:
 		check(button("tool:" + tool) != null, "full control includes " + tool)
+	game.hud._process(3.1)
 	await shot("free-farm")
-	press("farm_help:act")
+	press("farm_help:dismiss")
 	check(game.state.farm_help.data.dismissed.has("repeat"), "optional prompt dismisses in one click")
 	# Use ordinary controls on an unmarked bed. No controller lesson assists it.
 	game._on_action("market")
@@ -120,11 +121,14 @@ func run() -> void:
 	game.state._market_core.russet.sell = game.state.CROPS.russet.base
 	game.state._refresh_market(false)
 	game.hud._help_cooldown = 0.0
+	game.hud._process(3.1)
 	game.hud.update_state(game.state)
 	await shot("practice-offer")
+	press("farm_help:details")
 	press("farm_help:act")
 	check(game.state.farm_help.data.practice_remaining == 10.0 and game.state.blind_cycle.booms == 0, "practice starts ten-second quote without counting tax boom")
 	await shot("practice-boom")
+	press("farm_help:details")
 	press("farm_help:act")
 	check(game.state.storage.russet == 0 and game.state.farm_help.data.dismissed.has("stocks"), "real practice sale completes timing lesson")
 	game.state.surge_timer = 30.0

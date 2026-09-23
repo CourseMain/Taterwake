@@ -681,7 +681,12 @@ func blind_info() -> Dictionary:
 
 
 func blind_progress_text(ratio: float) -> String:
-	return format_number(ratio) + "× " + BlindRules.wealth_rank(ratio) if ratio >= 2.0 else format_number(ratio * 100.0) + "%"
+	if ratio >= 2.0:
+		return format_number(ratio) + "× " + BlindRules.wealth_rank(ratio)
+	if ratio < 0.0: return "Debt"
+	var percent: float = ratio * 100.0
+	if percent > 0.0 and percent < 0.01: return "<0.01%"
+	return String.num(percent, 2).trim_suffix("00").trim_suffix("0").trim_suffix(".") + "%"
 
 
 func stock_opportunity() -> Dictionary:
@@ -1365,12 +1370,12 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if index < 0 or index >= plots.size():
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
-		return _finish("Expand the field for $1.8K to use the back 12 patches.")
+		return _finish("Unlock more beds at Tools · $1.8K")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
 	if action == "plant" and not available_crops().has(selected_crop):
-		return _finish("Sunburst potatoes grow only on Golden Shores. Travel there to plant these seeds.")
+		return _finish("Choose a seed for this island [2]")
 	var affected: int = 0
 	var thawed: int = 0
 	var harvested: int = 0
@@ -1422,15 +1427,22 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				harvested += count
 	farm_help.refresh_pests(self)
 	if affected == 0:
+		var bed: Dictionary = plots[index]
+		if bool(bed.get("frozen", false)) and action != "pest":
+			return _finish("Break the ice first [1]")
 		if action == "pest":
-			return _finish("No pests in this spray area. Watch ripe crops: pests arrive if they are left for 25 seconds.")
+			return _finish("No pests here")
 		if action == "harvest":
-			return _finish("Barn full: sell stored crops or upgrade it. Only ripe plants can be harvested." if storage_used() >= capacity else "These potatoes are still growing. Water dry plants, then check the market while they grow.")
+			if storage_used() >= capacity: return _finish("Barn full · Sell crops [F]")
+			if int(bed.stage) == 0: return _finish("Nothing to harvest yet")
+			return _finish("Still growing" if bed.watered else "Water this crop first [3]")
 		if action == "plant":
-			return _finish("No %s seeds left. Buy some at the market." % CROPS[selected_crop]["name"] if int(seed_inventory[selected_crop]) == 0 else "Hoe empty patches before planting. Existing plants stay safe.")
+			if int(seed_inventory[selected_crop]) == 0: return _finish("No %s seeds · Buy at Seeds [B]" % selected_crop.capitalize())
+			return _finish("Already planted" if int(bed.stage) > 0 else "Till the soil first [1]")
 		if action == "water":
-			return _finish("Already watered, or no seed planted. Water once after planting; crops then grow in real time.")
-		return _finish("These patches are already tilled or occupied. Plant seeds in prepared soil.")
+			if int(bed.stage) == 0: return _finish("Plant a seed first [2]")
+			return _finish("Ready to harvest [4]" if int(bed.stage) == 3 else "Already watered")
+		return _finish("Already planted" if int(bed.stage) > 0 else "Soil ready · Plant a seed [2]")
 	if action == "pest":
 		return _finish("Cleared %d beds! Damage stopped. Harvest ripe crops soon." % affected)
 	if action == "harvest":

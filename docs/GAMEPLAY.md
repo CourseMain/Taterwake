@@ -10,6 +10,8 @@ The lesson selects each tool for you and points at the bed. Click the gold bed t
 
 Afterwards, optional farm tips appear when useful. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage. After independently planting, watering, harvesting and selling another crop, holding a fresh harvest can offer a **+100% practice boom for ten seconds**. Choose when to start, then sell while its quote lasts. Missing the window allows another attempt; a successful sale ends the practice. It never counts toward tax or replaces an actual boom.
 
+Tips appear as a small help button and hide while you work the beds. Click to read more, or use × to dismiss. Routine reminders such as “Already watered” appear briefly above the hotbar, without blocking clicks or stacking messages over the field.
+
 Tool and duck suggestions wait until you can afford them. Build help waits for a usable Farmer ability or an owned Build Crate. Tax help arrives before the first scheduled boom; debt help explains that a negative balance remains playable. Tips never pause or lock the farm. Dismiss individual tips, or use **H → Hide farm tips**. H also shows the controls whenever you need them.
 
 Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. Sailing requires the normal island unlocks.
@@ -26,6 +28,8 @@ The three-line menu opens the market, inventory, builds, quests, upgrades, Roll 
 Farming is manual. Select a tool, then click a bed to walk over and work it, or press E beside it. Tools never choose the next task automatically.
 
 Each island has a **Tool Upgrades** shop with a potato toolsmith. On Spud Valley and Golden Shores, look between the barn and market; Frosthollow's toolsmith works at the winter forge. Click the NPC, shop or sign to buy the same upgrades available through **U** or the menu. Rank 3 tools still require Frosthollow.
+
+Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Builds**, **Quests**, **Ducks**, **Roll House** and **Ferry**. The tax card shows the next bill and stocks remaining; click it for your full forecast and bankruptcy limit.
 
 Purchases show a short dark-and-gold confirmation card, matching the harvest-chain style. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 

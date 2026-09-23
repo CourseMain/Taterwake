@@ -109,7 +109,7 @@ After exporting an updated game, copy all `index.*` files and the license notice
 
 ## Third-party notices
 
-Fredoka, Oswald, Nunito Sans and Noto Sans Symbols are distributed under the SIL Open Font License; see the license files in `assets/fonts/`. Godot's engine license and third-party notices are in `assets/licenses/` and are included in browser packages. These notices describe their respective dependencies.
+Patrick Hand, Fredoka, Oswald, Nunito Sans and Noto Sans Symbols are distributed under the SIL Open Font License; see the license files in `assets/fonts/`. Godot's engine license and third-party notices are in `assets/licenses/` and are included in browser packages. These notices describe their respective dependencies.
 
 ### v1.0.2 presentation preview
 
@@ -140,3 +140,13 @@ Base crop times are 10/25/40/50/55/60 seconds for Russet/Golden/Giant/Radioactiv
 Authenticated `debug:island:2` / `debug:island:3` actions unlock island flags and fields without spending money, fabricating mastery or traveling. Winter also unlocks Shores. Tax promotion and the climate introduction still happen on arrival. `debug_islands_modified` persists and marks subsequent trophies DEBUG; a new farm clears it. Normal paid island unlocks remain unchanged.
 
 PotatoDex defaults to a two-column mutation gallery and offers a separate six-variety crop gallery. Both reuse crisp `item_icon.gd` artwork. Pictures are explicitly previews until discovered; cards refresh discovery/mastery data without claiming new discoveries. `test_qol_update.gd -- --integration-test` checks migration, growth caps, luck arithmetic, authenticated unlocks, persistence and gallery layout; a native `--capture` run writes `artifacts/qol-*.png`.
+
+### Quiet farming feedback and shop signs
+
+Shop signs use regular Patrick Hand with short names and a fine contrasting outline. Valley/Shores use cream lettering; winter uses dark lettering against snow. Labels remain clickable and retain tutorial visibility. Fredoka stays on UI headings, with Nunito Sans for compact status text. The new font and its OFL license ship in the local Web package.
+
+Normal field actions never create central toasts. No-op feedback (for example, “Already watered” or “Plant a seed first [2]”) shares one click-through footer slot with hover hints, expires after 1.4 seconds, and does not extend on rapid identical repeats. Successful work clears stale failure text. Plot notifications are handled through this path once; a full barn still gets a short actionable reminder. Other notifications appear in a smaller upper-right card.
+
+Optional help is one compact row below the tax card and hides for three seconds after field input. Its button explicitly opens the full explanation and action; the × dismisses without opening anything. The opened tip retains its own action if another tip becomes relevant while reading. The normal tax card shows the bill and stock countdown; coverage, projected balance and rules remain available on hover/click. Tiny positive coverage reads `<0.01%` rather than scientific notation. Save schema and gameplay are unchanged.
+
+`test_farm_clarity.gd -- --integration-test` checks rapid repeated actions, feedback expiry, duplicate suppression, full-barn feedback, help action stability, responsive layout, percentage formatting and all-island typography. A native `--capture` run writes `artifacts/clarity-watering.png`, `clarity-island-1.png` through `clarity-island-3.png`, and `clarity-winter-warning.png`.

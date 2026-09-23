@@ -180,7 +180,7 @@ func run() -> void:
 		check(hud._farm_help_card.visible and hud.root.get_global_rect().encloses(tip_rect), "optional tax tip fits " + str(size))
 		check(not tip_rect.intersects(hud._export_box.get_global_rect()) and not tip_rect.intersects(hud._blind_card.get_global_rect()), "help preserves stock and tax clocks " + str(size))
 		check(not tip_rect.intersects(hud._hotbar.get_global_rect()) and tip_rect.encloses(hud._farm_help_action.get_global_rect()), "help leaves farming controls accessible " + str(size))
-		check(hud._farm_help_body.get_minimum_size().y <= hud._farm_help_body.size.y + 0.5, "optional help text is not clipped " + str(size))
+		check(hud._farm_help_card.size.y <= 48.0, "optional help stays a single compact row " + str(size))
 	hud.set_tool("plant")
 	hud._process(0.0)
 	check(not hud._farm_help_card.visible, "seed tray takes priority over optional tips")

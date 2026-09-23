@@ -41,7 +41,7 @@ func _run() -> void:
 		check(smith.visible and smith.get_child_count() > 0, "island %d has a visible dressed potato toolsmith" % island)
 		var tool_labels: Array[Node] = []
 		for label: Label3D in shop.find_children("*", "Label3D", true, false):
-			if label.text.begins_with("TOOL UPGRADES"):
+			if label.text == "Tools":
 				tool_labels.append(label)
 		check(tool_labels.size() == 1, "island %d has one clear tool-upgrade sign" % island)
 		var default_zoom: float = world.camera.size
