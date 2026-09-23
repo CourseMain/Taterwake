@@ -132,7 +132,7 @@ func _run() -> void:
 	check(farm.plots[4].stage == 3 and farm.island_plots["2"][0].elapsed == 20.0, "both farms grow simultaneously in real time")
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
-	farm.update(25.0)
+	farm.update(float(farm.CROPS.sunburst.grow) - 20.0)
 	check(farm.plots[0].stage == 3 and farm.island_plots["1"][4].stage == 3, "both ripe crops await manual harvest")
 	farm.tools.hoe = 1
 	farm.tools.water = 1

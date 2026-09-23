@@ -55,7 +55,7 @@ Two-finger vertical scrolling, native pinch gestures and mouse wheels zoom smoot
 
 A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
 
-Watered crops grow in real time. Growth times are unchanged by the slower market clock: Russet 10s, Golden 30s, Giant 45s, Radioactive 90s, Sunburst 45s and Icecap 60s. Earned build bonuses can improve growth speed. Menus do not pause crops or quotes; closing the game adds no offline farming.
+Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Builds, clothing and furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
 
 Manual equipment upgrades increase the area of a single action. Fast harvests build ×1, ×2, ×4, ×8 and ×16 chains, with a 3.5-second grace period. A full barn leaves the uncollected part of a harvest on the bed without granting its combo twice.
 
@@ -155,6 +155,10 @@ The illustrated horizontal reel lands on the actual reward. Common, Rare and bui
 
 The Roll House's collapsible **Trophy cabinet** records your 16 rarest distinct Rare-or-better discoveries, including free Crown rolls. Each trophy shows its artwork, tier, repeat count, island, roll number and the actual chance of that tier on its recorded roll. These are tier odds, not the odds of a particular item. History starts with rolls made after this update; past results are not invented. Debug-assisted discoveries are marked **DEBUG** and recorded separately from normal discoveries.
 
+## PotatoDex
+
+Press **P** for an illustrated index. **Special mutations** shows Golden, Crystal, Rainbow and Radioactive mutation artwork, descriptions, value multipliers and discovery status. Undiscovered entries are labelled previews. **Crop varieties** shows all six potatoes with their base growth times, home islands and mastery progress. Mutation discoveries remain recorded after selling; a Golden mutation is distinct from the ordinary Golden potato crop.
+
 ## Graphics
 
 Open **☰ → Graphics**, or use **⚙** on the tutorial card. **Balanced** keeps a clear farm with gentle shadows. **Smooth** draws a lighter farm without shadows. **Crisp** gives the sharpest farm and smoother edges, using more graphics power. Text, menus, icons and the rocket film stay sharp in every mode. Your choice is saved on this device separately from the farm.
@@ -167,11 +171,11 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 Open **☰ → Debug: money, luck & time** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-Applying money multiplies your current purse **once** (×0–×1,000,000); the money control then returns to ×1. Decimals and scientific notation work: `0.1` keeps 10%, `0.01` keeps 1%, and `1e-20` turns a `$1e20` purse into `$1`. Explicit `0` clears your coins. The preview shows the resulting balance before applying; invalid input or a positive multiplier that would underflow to zero is rejected. Debug luck is a persistent ×1–×1,000 multiplier on normal effective luck, so it can deliberately exceed the normal 10× cap. The panel shows normal luck, debug luck and the resulting value separately. Money changes and debug luck are saved with the farm.
+Applying money multiplies your current purse **once** (×0–×1,000,000); the money control then returns to ×1. Decimals and scientific notation work: `0.1` keeps 10%, `0.01` keeps 1%, and `1e-20` turns a `$1e20` purse into `$1`. Explicit `0` clears your coins. The preview shows the resulting balance before applying; invalid input or a positive multiplier that would underflow to zero is rejected. Debug luck is a persistent ×1–×1,000 multiplier on normal effective luck, so it can deliberately exceed the normal 10× cap. The HUD shows the final luck multiplier and its percentage increase above 1×. **Luck calculation** in Debug or the Roll House shows base + earned + equipped luck, the normal 10× cap, then the debug multiplier and final total. For example, 2× earned-base luck + 0.25× equipped gives 2.25× (+125%); debug ×3 produces 6.75× (+575%). Wager and build roll-quality bonuses are shown separately from general luck. Money changes and debug luck are saved with the farm.
 
 Choose **1×, 2×, 5×, 10× or 30×** simulation speed to test crops, markets, pests, abilities and processing. Movement, interface animations, sounds, reward reels and the rocket film stay at normal speed. The simulation advances at most one second per rendered frame, so the highest setting depends on frame rate. Time speed starts at **1×** each session and is not saved.
 
-**Reset luck + time** returns both to ×1 and keeps your current coins. **Lock debug · restore 1× time** closes access and restores normal time while preserving money and luck. Changing money, including reducing it, marks subsequent trophies as DEBUG even after luck is reset. Debug settings do not unlock islands or remove stock price limits.
+**Reset luck + time** returns both to ×1 and keeps your current coins. **Lock debug · restore 1× time** closes access and restores normal time while preserving money and luck. Changing money, including reducing it, marks subsequent trophies as DEBUG even after luck is reset. The debug menu also unlocks **Golden Shores** or **Frosthollow + Shores** without charging coins or changing harvest totals. It opens their fields but leaves you on the current island; use the ferry to travel. Unlocks persist, and future trophies stay marked DEBUG. Stock price limits still apply.
 
 ### Stock Rocket
 

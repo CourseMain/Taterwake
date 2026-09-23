@@ -364,6 +364,10 @@ func _debug_action(parts: PackedStringArray) -> void:
 			state.apply_debug(float(parsed_money["value"]), float(parts[3]))
 			if not test_mode:
 				state.save_game()
+		"island":
+			if parts.size() != 3 or not parts[2].is_valid_int(): return
+			hud.show_toast(state.debug_unlock_island(int(parts[2])))
+			if not test_mode: state.save_game()
 		"reset":
 			debug_time_multiplier = 1.0
 			hud.set_debug_session(true, 1.0)
@@ -594,7 +598,7 @@ func _update_hover() -> void:
 		elif int(plot.stage) == 3:
 			hud.set_context("RIPE %s · Click to %s · Store it or sell at the live price" % [str(plot.crop).to_upper(), action])
 		elif int(plot.stage) > 0 and bool(plot.watered):
-			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed())
+			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(0, str(plot.crop)))
 			hud.set_context("%s · %.0fs until ripe · Use this time to check the market" % [str(plot.crop).to_upper(), seconds])
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()

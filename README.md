@@ -12,7 +12,7 @@ The local preview teaches one harvest and ends at your first sale. Then farm fre
 
 Small potatoes. Big possibilities.
 
-**v1.0.2 local preview — not published:** Climate disasters begin on **Island 2**, with central warnings, storm clouds, rain, wind and camera shake. New fonts and simpler menus keep the important choices clear. Prepare through **☰ → Climate action**. Taxes arrive after every third major stock, with a preview of recovery costs. Debt is allowed; crossing bankruptcy ends the run. This update is not yet published at the browser link above.
+**v1.0.2 local preview — not published:** Climate disasters begin on **Island 2**, with central warnings, storm clouds, rain, wind and camera shake. New fonts and simpler menus keep the important choices clear. Prepare through **☰ → Climate action**. Taxes arrive after every third major stock, with a preview of recovery costs. Debt is allowed; crossing bankruptcy ends the run. The local QoL update also adds 10–60s crop growth, explicit luck totals, debug island unlocks and an illustrated PotatoDex. This update is not yet published at the browser link above.
 
 A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.
 

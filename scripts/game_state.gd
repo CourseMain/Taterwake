@@ -19,7 +19,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 13
+const MECHANICS_REVISION: int = 14
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -45,12 +45,14 @@ const LEGACY_SAVE_PATH: String = "user://spud_valley_save.json"
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
 const CROPS: Dictionary = {
 	"russet": {"name": "Russet Potato", "seed": 12.0, "base": 38.0, "grow": 10.0, "yield": 3, "vol": 0.08, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 350.0, "base": 900.0, "grow": 30.0, "yield": 2, "vol": 0.18, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 90.0, "base": 180.0, "grow": 45.0, "yield": 8, "vol": 0.12, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 2500.0, "base": 6800.0, "grow": 90.0, "yield": 4, "vol": 0.35, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 3000.0, "base": 90000.0, "grow": 45.0, "yield": 3, "vol": 0.26, "color": "ffab42"},
+	"golden": {"name": "Golden Potato", "seed": 350.0, "base": 900.0, "grow": 25.0, "yield": 2, "vol": 0.18, "color": "efc74c"},
+	"giant": {"name": "Giant Potato", "seed": 90.0, "base": 180.0, "grow": 40.0, "yield": 8, "vol": 0.12, "color": "c7855d"},
+	"radioactive": {"name": "Radioactive Potato", "seed": 2500.0, "base": 6800.0, "grow": 50.0, "yield": 4, "vol": 0.35, "color": "b6f064"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 3000.0, "base": 90000.0, "grow": 55.0, "yield": 3, "vol": 0.26, "color": "ffab42"},
 	"icecap": {"name": "Icecap Potato", "seed": 3600000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "vol": 0.30, "color": "aeeaff"},
 }
+const OLD_GROW_TIMES: Dictionary = {"russet": 10.0, "golden": 30.0, "giant": 45.0, "radioactive": 90.0, "sunburst": 45.0, "icecap": 60.0}
+const MAX_GROW_SECONDS: float = 60.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 12000.0, 250000000000.0], "water": [450.0, 15000.0, 400000000000.0], "harvest": [600.0, 20000.0, 600000000000.0]}
 const MUTATION_IDS: Array[String] = ["golden", "crystal", "rainbow", "radioactive"]
 const MUTATION_MULTIPLIERS: Dictionary = {"golden": 25.0, "crystal": 75.0, "rainbow": 200.0, "radioactive": 500.0}
@@ -171,6 +173,7 @@ var combo_time: float = 0.0
 var luck: float = 1.0
 var debug_luck_multiplier: float = 1.0
 var debug_money_modified: bool = false
+var debug_islands_modified: bool = false
 var trophies: Array[Dictionary] = []
 var harvest_fraction: Dictionary = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 var mastery: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
@@ -297,7 +300,7 @@ func _build_bonus(method: String, fallback: float) -> float:
 
 
 func crop_grow_time(id: String) -> float:
-	return float(CROPS[id]["grow"]) / _growth_speed(current_island)
+	return float(CROPS[id]["grow"]) / crop_growth_speed(current_island, id)
 
 
 func _growth_speed(island: int) -> float:
@@ -307,8 +310,10 @@ func _growth_speed(island: int) -> float:
 	return factor * (1.0 if tutorial_active else climate.factor("growth", island))
 
 
-func crop_growth_speed(island: int = 0) -> float:
-	return _growth_speed(current_island if island == 0 else island)
+func crop_growth_speed(island: int = 0, crop: String = "") -> float:
+	var speed: float = _growth_speed(current_island if island == 0 else island)
+	var id: String = selected_crop if crop.is_empty() else crop
+	return maxf(speed, float(CROPS[id].grow) / MAX_GROW_SECONDS)
 
 
 func _empty_items() -> Dictionary:
@@ -334,9 +339,17 @@ func normal_luck() -> float:
 	return clampf(luck + equipment_bonus("luck"), 1.0, 10.0)
 
 
+func luck_breakdown() -> Dictionary:
+	var normal: float = normal_luck()
+	var total: float = effective_luck()
+	return {"base": 1.0, "earned": luck - 1.0, "gear": equipment_bonus("luck"),
+		"uncapped": luck + equipment_bonus("luck"), "normal": normal,
+		"normal_percent": (normal - 1.0) * 100.0, "multiplier": debug_luck_multiplier,
+		"total": total, "total_percent": (total - 1.0) * 100.0}
+
 func debug_info() -> Dictionary:
 	return {"luck_multiplier": debug_luck_multiplier, "normal_luck": normal_luck(), "effective_luck": effective_luck(),
-		"money_modified": debug_money_modified, "active": debug_luck_multiplier > 1.0 or debug_money_modified,
+		"money_modified": debug_money_modified, "islands_modified": debug_islands_modified, "active": debug_luck_multiplier > 1.0 or debug_money_modified or debug_islands_modified,
 		"money_min": 0.0, "money_limit": DEBUG_MONEY_LIMIT, "luck_min": 1.0, "luck_limit": DEBUG_LUCK_LIMIT,
 		"description": "Money changes once. Luck stays boosted until reset. Trophies are marked DEBUG."}
 
@@ -362,6 +375,24 @@ func apply_debug(money_multiplier: float, luck_multiplier: float) -> String:
 	debug_luck_multiplier = luck_multiplier
 	return _finish("DEBUG applied: purse %s; luck %.2fx (normal %.2fx x debug %.2fx). Money was multiplied once." % [money(coins), effective_luck(), normal_luck(), debug_luck_multiplier])
 
+
+
+func debug_unlock_island(id: int) -> String:
+	if run_over or _rolling_reward or rocket_pending:
+		return _finish("Finish the current event before unlocking islands.")
+	if id not in [2, 3]: return _finish("Choose Golden Shores or Frosthollow.")
+	if (id == 2 and island2_unlocked) or (id == 3 and island3_unlocked):
+		return _finish("That island is already unlocked.")
+	debug_islands_modified = true
+	if not island2_unlocked:
+		island2_unlocked = true
+		export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
+		for plot in island_plots["2"]: plot.unlocked = true
+	if id == 3:
+		island3_unlocked = true
+		frost_timer = rng.randf_range(120.0, 220.0)
+		for plot in island_plots["3"]: plot.unlocked = true
+	return _finish("DEBUG: %s unlocked. Travel by ferry when ready. Coins and harvest totals are unchanged." % ("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"))
 
 func reset_debug() -> String:
 	if _rolling_reward:
@@ -1098,8 +1129,9 @@ func update(delta: float) -> void:
 		pest_timer = maxf(0.0, pest_timer - step)
 		var ripe_infestation: bool = false
 		for field_id in island_plots:
-			var growth_speed: float = _growth_speed(int(field_id))
+			var island_growth: float = _growth_speed(int(field_id))
 			for plot in island_plots[field_id]:
+				var growth_speed: float = maxf(island_growth, float(CROPS[plot.crop].grow) / MAX_GROW_SECONDS)
 				var ripe_step: float = step if int(plot["stage"]) == 3 else 0.0
 				var was_infested: bool = bool(plot.get("pests", false))
 				if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"] and not bool(plot.get("frozen", false)):
@@ -2235,6 +2267,7 @@ func reset_game() -> void:
 	luck = 1.0
 	debug_luck_multiplier = 1.0
 	debug_money_modified = false
+	debug_islands_modified = false
 	trophies.clear()
 	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 	mastery = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
@@ -2285,7 +2318,7 @@ func _save_data() -> Dictionary:
 		"event_name": event_name, "event_remaining": event_remaining, "elapsed": elapsed,
 		"combo_count": combo_count, "combo_multiplier": combo_multiplier, "combo_time": combo_time,
 		"luck": luck, "mastery": mastery, "dex": dex, "permanent_yield": permanent_yield,
-		"debug_luck_multiplier": debug_luck_multiplier, "debug_money_modified": debug_money_modified,
+		"debug_luck_multiplier": debug_luck_multiplier, "debug_money_modified": debug_money_modified, "debug_islands_modified": debug_islands_modified,
 		"trophies": trophies.duplicate(true), "harvest_fraction": harvest_fraction.duplicate(), "last_roll_results": last_roll_results.duplicate(true), "last_roll_accounting": last_roll_accounting.duplicate(),
 		"roll_count": roll_count, "last_roll": last_roll, "expansion": expansion, "barn_level": barn_level,
 		"mutations": mutations, "current_event": current_event, "event_crop": event_crop,
@@ -2421,6 +2454,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 			inventory_items[item_id] = 0
 	debug_luck_multiplier = float(data.get("debug_luck_multiplier", 1.0))
 	debug_money_modified = bool(data.get("debug_money_modified", false))
+	debug_islands_modified = bool(data.get("debug_islands_modified", false))
 	trophies.clear()
 	for entry in data.get("trophies", []):
 		trophies.append(entry.duplicate(true))
@@ -2441,7 +2475,10 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	for id in ["1", "2", "3"]:
 		var field: Array[Dictionary] = []
 		for plot in data["island_plots"][id]:
-			field.append(plot.duplicate(true))
+			var restored: Dictionary = plot.duplicate(true)
+			if mechanics < 14:
+				restored.elapsed = float(restored.elapsed) / float(OLD_GROW_TIMES[restored.crop]) * float(CROPS[restored.crop].grow)
+			field.append(restored)
 		island_plots[id] = field
 	plots = island_plots[str(current_island)]
 	mutations.clear()
@@ -2881,6 +2918,8 @@ func _valid_save(raw: Variant) -> bool:
 		return false
 	var has_debug_data: bool = int(data.get("mechanics_revision", 0)) >= 7 or data.has("debug_luck_multiplier") or data.has("trophies")
 	if has_debug_data:
+		if data.has("debug_islands_modified") and not data.debug_islands_modified is bool:
+			return false
 		if not _number(data.get("debug_luck_multiplier"), 1.0, DEBUG_LUCK_LIMIT) or not data.get("debug_money_modified") is bool:
 			return false
 		if not _valid_trophies(data.get("trophies"), int(data["roll_count"])) or not _valid_roll_results(data.get("last_roll_results"), int(data["roll_count"])):
@@ -3151,7 +3190,8 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 			return false
 		if not plot.has("stage") or not _number(plot["stage"], 0.0, 3.0, true):
 			return false
-		if not plot.has("elapsed") or not _number(plot["elapsed"], 0.0, float(CROPS[plot["crop"]]["grow"])):
+		var saved_grow: float = float(OLD_GROW_TIMES[plot.crop]) if int(data.get("mechanics_revision", 0)) < 14 else float(CROPS[plot.crop].grow)
+		if not plot.has("elapsed") or not _number(plot["elapsed"], 0.0, saved_grow):
 			return false
 		if not plot.has("pending") or not _number(plot["pending"], 0.0, 1000000000.0, true):
 			return false
@@ -3196,7 +3236,7 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 			return false
 		if stage >= 2 and not plot["watered"]:
 			return false
-		if stage == 3 and float(plot["elapsed"]) != float(CROPS[plot["crop"]]["grow"]):
+		if stage == 3 and float(plot["elapsed"]) != saved_grow:
 			return false
 		if stage != 3 and int(plot["pending"]) > 0:
 			return false

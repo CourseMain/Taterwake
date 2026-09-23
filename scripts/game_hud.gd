@@ -82,7 +82,7 @@ const SHORES_PAPER: Color = Color("fff0d8")
 const CORAL: Color = Color("bf7058")
 const CROP_NAMES: Dictionary = {"russet": "Russet", "golden": "Golden", "giant": "Giant", "radioactive": "Radioactive", "sunburst": "Sunburst"}
 const CROP_COLORS: Dictionary = {"russet": Color("b48a52"), "golden": GOLD, "giant": Color("b16f50"), "radioactive": Color("71a557"), "sunburst": Color("da9334")}
-const GROW_TIMES: Dictionary = {"russet": 10, "golden": 30, "giant": 45, "radioactive": 90, "sunburst": 45}
+const GROW_TIMES: Dictionary = {"russet": 10, "golden": 25, "giant": 40, "radioactive": 50, "sunburst": 55, "icecap": 60}
 const TOOL_COSTS: Dictionary = {"hoe": [300, 12000], "water": [450, 15000], "harvest": [600, 20000]}
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
@@ -145,9 +145,12 @@ var _crop_defs: Dictionary = {}
 var _stake_kind: String = "normal"
 var _frozen_odds: Array = []
 var _frozen_luck: float = 1.0
+var _frozen_luck_math: String = ""
+var _frozen_build_quality: float = 1.0
 var _frozen_stake_bonus: float = 0.0
 var _inventory_sections: Dictionary = {}
 var _inventory_tab: String = "crops"
+var _dex_tab: String = "mutations"
 var _inventory_signature: String = ""
 var _market_impact: Control
 var _builds_button: Button
@@ -809,6 +812,12 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action.begins_with("dex_tab:") and _panel_kind == "dex":
+		var tab: String = action.get_slice(":", 1)
+		if tab in ["crops", "mutations"]:
+			_dex_tab = tab
+			show_panel("dex", _state)
+		return
 	if action.begins_with("toggle_details:"):
 		var key: String = action.get_slice(":", 1)
 		if _refs.has(key): _refs[key].visible = not _refs[key].visible
@@ -931,7 +940,8 @@ func _build_top() -> void:
 	_top["price"] = _label("$38  +0%", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	market_box.add_child(_top["price"])
-	_top["luck"] = _stat(row, "LUCK", "1.0×", GREEN)
+	_top["luck"] = _stat(row, "LUCK · +0%", "1.0×", GREEN)
+	_top["luck_percent"] = _top.luck.get_parent().get_child(0)
 	var stats_font: FontVariation = _compact_heading_font()
 	for label: Node in stats.find_children("*", "Label", true, false):
 		label.add_theme_font_override("font", stats_font)
@@ -1244,7 +1254,10 @@ func update_state(state: Node) -> void:
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
 	_top.price.text = "%s  %s" % [_money(float(quote.get("sell", 0))), _change_text(delta)]
 	_top.price.add_theme_color_override("font_color", GREEN if delta >= 0 else CHERRY)
-	_top.luck.text = "%.1f×" % (_frozen_luck if _rolling else _effective_luck())
+	var displayed_luck: float = _frozen_luck if _rolling else _effective_luck()
+	_top.luck.text = String.num(displayed_luck, 3) + "×"
+	_top.luck_percent.text = "LUCK · +%s%%" % _number((displayed_luck - 1.0) * 100.0)
+	_top.luck.tooltip_text = _frozen_luck_math if _rolling else _luck_math()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = float(storage.get(crop, 0))
 	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))
@@ -1684,6 +1697,9 @@ func _build_roll() -> void:
 	odds.add_theme_constant_override("h_separation", 18)
 	odds.add_theme_constant_override("v_separation", 4)
 	_body.add_child(odds)
+	_body.add_child(_button("Luck calculation", "toggle_details:roll_luck_math"))
+	_info("roll_luck_math", "", CASINO_LIGHT, 13)
+	_refs.roll_luck_math.hide()
 	var tiers: Array = _state.call("roll_odds", _stake_kind)
 	for entry: Dictionary in tiers:
 		var tier: String = str(entry.get("tier", "common"))
@@ -1699,13 +1715,66 @@ func _build_roll() -> void:
 	_refs["cancel_all_in"] = cancel
 
 func _build_dex() -> void:
-	_heading("The PotatoDex", "Strange mutations. Growing mastery. Every harvest counts.")
+	_heading("The PotatoDex", "An illustrated field guide to ordinary spuds and extraordinary finds.")
 	_panel_crops = _known_crops()
-	for crop: String in _panel_crops:
-		_info("mastery:" + crop, "", INK, 16)
-	_info("dex_bonus", "", GREEN, 14)
-	_info("dex_entries", "", MUTED, 15)
-	_info("dex_tip", "Mutation value = live crop price × rarity multiplier.", MUTED, 14)
+	var tabs := _hbox(10)
+	_body.add_child(tabs)
+	for tab: String in ["mutations", "crops"]:
+		var button := _button("Special mutations" if tab == "mutations" else "Crop varieties", "dex_tab:" + tab)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.disabled = _dex_tab == tab
+		tabs.add_child(button)
+	_info("dex_entries", "", GREEN, 14)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	_body.add_child(grid)
+	var ids: Array = _state.MUTATION_IDS if _dex_tab == "mutations" else _state.CROP_IDS
+	var crop_notes: Dictionary = {"russet": "A quick, dependable first harvest.", "golden": "Golden skin with a valuable little harvest.", "giant": "A hefty potato with a generous yield.", "radioactive": "Bright green, with wildly changing prices.", "sunburst": "A sun-loving specialty of Golden Shores.", "icecap": "A frosty blue potato grown in Frosthollow."}
+	var mutation_notes: Dictionary = {"golden": "A gleaming gold mutation. A different discovery from the ordinary Golden crop.", "crystal": "Translucent crystals turn this potato into a rare mineral treasure.", "rainbow": "Bands of colour make this a prized, many-hued harvest.", "radioactive": "An intense glow marks this mutation. Any potato variety can develop it."}
+	for index: int in range(ids.size()):
+		var id: String = str(ids[index])
+		var special: bool = _dex_tab == "mutations"
+		var card := _card(PAPER, 14)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(card)
+		var column := _vbox(6)
+		card.add_child(column)
+		var heading := _hbox(10)
+		column.add_child(heading)
+		var picture := _icon({"kind": "mutation", "id": "mutation:russet:" + id, "crop": "russet"} if special else {"kind": "crop", "crop": id}, 96)
+		picture.name = "DexPicture_" + id
+		heading.add_child(picture)
+		var title := _wrap("#%02d · %s" % [index + 1, id.capitalize() + " mutation" if special else _crop_name(id)], 18, INK, true)
+		title.custom_minimum_size.x = 180
+		heading.add_child(title)
+		var description := _wrap(str(mutation_notes[id] if special else crop_notes[id]), 14, MUTED)
+		description.custom_minimum_size.x = 290
+		column.add_child(description)
+		var status := _wrap("", 13, GREEN, true)
+		column.add_child(status)
+		_refs["dex_status:" + id] = status
+		var detail := _wrap("", 13, INK)
+		column.add_child(detail)
+		_refs["dex_detail:" + id] = detail
+	_info("dex_bonus", "", GREEN, 13)
+	_info("dex_tip", "Mutation value = the crop's live price × mutation multiplier. Pictures preview each type; discovery is permanent even after selling.", MUTED, 13)
+
+func _refresh_dex() -> void:
+	var found: Array = _state.dex
+	_refs.dex_entries.text = "%d / 4 mutation types discovered" % found.size() if _dex_tab == "mutations" else "6 varieties · Water once · Growth bonuses can make them faster"
+	var ids: Array = _state.MUTATION_IDS if _dex_tab == "mutations" else _state.CROP_IDS
+	for id: String in ids:
+		if _dex_tab == "mutations":
+			_refs["dex_status:" + id].text = "DISCOVERED" if id in found else "NOT DISCOVERED · Preview"
+			_refs["dex_status:" + id].add_theme_color_override("font_color", GREEN if id in found else MUTED)
+			_refs["dex_detail:" + id].text = "%s× live crop value · Found through harvests, experiments or rewards" % _number(_state.MUTATION_MULTIPLIERS[id])
+		else:
+			var home: String = "Golden Shores" if id == "sunburst" else ("Frosthollow" if id == "icecap" else "Spud Valley onward")
+			_refs["dex_status:" + id].text = "%ds base growth · %s" % [_crop_grow(id), home]
+			_refs["dex_detail:" + id].text = "Lv.%d · %s harvested · +%d%% mastery yield" % [int(_state.mastery_level(id)), _number(_state.mastery[id]), mini(1000, 2 * int(_state.mastery_level(id)))]
+	_refs.dex_bonus.text = "Permanent harvest bonus +%s%% · Total luck %s× (+%s%%)" % [_number(_state.permanent_yield * 100.0), String.num(_effective_luck(), 3), _number((_effective_luck() - 1.0) * 100.0)]
 
 func _build_island() -> void:
 	_heading("Set sail", "Your crops keep growing while you travel.")
@@ -1757,7 +1826,7 @@ func _build_help() -> void:
 	_body.add_child(intro)
 	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))
 	_help_step("01  Move & farm", "WASD to walk · Two-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
-	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 30s · Giant/Sunburst 45s · Icecap 60s · Radioactive 90s")
+	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 25s · Giant 40s · Radioactive 50s · Sunburst 55s · Icecap 60s")
 	_help_step("03  Buy low. Sell high.", "B: Market · I: Inventory · F: Sell held\nSurges last 10 seconds. Save crops for the right price.")
 	_help_step("04  Go bigger", "U: Upgrade tools\nChain harvests within 3.5s for up to ×16 bonuses.")
 	_help_step("05  Find your build", "R: Roll for gear and builds using game coins. Empty rolls happen.\nP: Discoveries · Q: Quests")
@@ -1951,19 +2020,14 @@ func _refresh_panel() -> void:
 			_refs.all_in_warning.visible = _all_in_pending
 			_refs.all_in_warning.text = "Risk every coin? Click CONFIRM ALL-IN to commit this stake."
 			_refs.cancel_all_in.visible = _all_in_pending and not _rolling
+			_refs.roll_luck_math.text = (_frozen_luck_math if _rolling else _luck_math()) + "\nRoll quality: wager +%.0f%% × build %.2f×. Exact chances are shown below." % [_frozen_stake_bonus if _rolling else float(_state.stake_luck_bonus(_stake_kind)), _frozen_build_quality if _rolling else float(_state._build_bonus("roll_quality_factor", 1.0))]
 			var odds: Array = _frozen_odds if _rolling else _state.call("roll_odds", _stake_kind)
 			_spinner.set_odds(odds)
 			for entry: Dictionary in odds:
 				var key: String = "odds:" + str(entry.get("tier", "common"))
 				if _refs.has(key):
 					_refs[key].text = "???  ??%" if bool(entry.get("hidden_chance", false)) else "%s  %.3f%%" % [str(entry.get("tier", "common")).capitalize(), float(entry.get("chance", 0))]
-		"dex":
-			var mastery: Dictionary = _state.get("mastery")
-			for crop: String in _panel_crops:
-				_refs["mastery:" + crop].text = "%s  ·  Lv.%d  ·  %s harvested  ·  +%d%% yield" % [_crop_name(crop), int(_state.call("mastery_level", crop)), _number(float(mastery.get(crop, 0))), mini(1000, 2 * int(_state.call("mastery_level", crop)))]
-			_refs.dex_bonus.text = "Permanent harvest bonus: +%s%% yield. Mutation luck: %.1f×." % [_number(float(_state.get("permanent_yield")) * 100.0), float(_state.get("luck"))]
-			var dex: Array = _state.get("dex")
-			_refs.dex_entries.text = "DISCOVERED MUTATIONS\n" + (", ".join(dex) if not dex.is_empty() else "No mutations discovered yet. Your next harvest could surprise you.")
+		"dex": _refresh_dex()
 
 		"island":
 			var unlocked: bool = bool(_state.get("island2_unlocked"))
@@ -2161,6 +2225,8 @@ func begin_roll(kind: String = "") -> bool:
 	_rolling = true
 	_frozen_odds = [] if _crate_reel else _state.call("roll_odds", _stake_kind)
 	_frozen_luck = _effective_luck()
+	_frozen_luck_math = _luck_math()
+	_frozen_build_quality = float(_state._build_bonus("roll_quality_factor", 1.0))
 	_frozen_crown = _wears_crown()
 	_frozen_stake_bonus = 0.0 if _crate_reel else float(_state.call("stake_luck_bonus", _stake_kind))
 	_frozen_coins = float(_state.get("coins"))
@@ -2890,7 +2956,7 @@ func _focus_debug_code() -> void:
 func _build_debug() -> void:
 	if not _debug_unlocked:
 		_heading("Debug access", "Enter the access code to unlock controls for this session.")
-		_info("debug_access_note", "Money, luck and time controls are locked.", MUTED, 16)
+		_info("debug_access_note", "Money, luck, time and island controls are locked.", MUTED, 16)
 		var code: LineEdit = LineEdit.new()
 		code.secret = true
 		code.max_length = 64
@@ -2910,7 +2976,7 @@ func _build_debug() -> void:
 		_refs["debug_unlock"] = unlock
 		call_deferred("_focus_debug_code")
 		return
-	_heading("Debug controls", "Money and luck save. Time speed resets each session.")
+	_heading("Debug controls", "Money, luck and island unlocks save. Time speed resets each session.")
 	var data: Dictionary = _debug_info()
 	_info("debug_balance", "", INK, 20)
 	_info("debug_luck_status", "", GREEN, 15)
@@ -2971,6 +3037,17 @@ func _build_debug() -> void:
 		time_row.add_child(choice)
 		_refs["debug_time_%d" % speed] = choice
 	_info("debug_time_note", "Crops, markets, pests and abilities follow game time.", MUTED, 13)
+	var islands := _hbox(8)
+	_body.add_child(islands)
+	for island: int in [2, 3]:
+		var unlock := _button("", "debug:island:%d" % island)
+		unlock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		islands.add_child(unlock)
+		_refs["debug_island_%d" % island] = unlock
+	_body.add_child(_button("Luck calculation", "toggle_details:debug_luck_math"))
+	_info("debug_luck_math", "", GREEN, 13)
+	_refs.debug_luck_math.hide()
+	_info("debug_island_note", "Unlock without paying or changing harvest totals. Frosthollow includes Golden Shores. Travel by ferry when ready; future trophies are marked DEBUG.", MUTED, 13)
 	_info("debug_preview", "", GREEN, 14)
 	var actions: HBoxContainer = _hbox(9)
 	_body.add_child(actions)
@@ -3002,7 +3079,8 @@ func _refresh_debug() -> void:
 	var data: Dictionary = _debug_info()
 	var coins: float = float(_state.get("coins"))
 	_refs.debug_balance.text = "CURRENT MONEY  " + _precise_money(coins)
-	_refs.debug_luck_status.text = "Normal luck %.2f×  ·  Debug multiplier %.2f×  ·  Effective luck %.2f×" % [float(data.get("normal_luck", 1)), float(data.get("luck_multiplier", 1)), float(data.get("effective_luck", 1))]
+	_refs.debug_luck_status.text = "Normal %.2f× (+%s%%) · Debug ×%.2f · Total %.2f×" % [float(data.normal_luck), _number((float(data.normal_luck) - 1.0) * 100.0), float(data.luck_multiplier), float(data.effective_luck)]
+	_refs.debug_luck_math.text = _luck_math()
 	var parsed: Dictionary = _debug_money_value()
 	_refs.debug_apply.disabled = parsed.has("error")
 	if parsed.has("error"):
@@ -3011,9 +3089,14 @@ func _refresh_debug() -> void:
 	else:
 		var multiplier: float = float(parsed.value)
 		var after: float = minf(1e300, coins * multiplier)
-		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s\nSet debug luck to %.2f×" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after), float(_refs.debug_luck.value)]
+		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s\nLuck %.2f× × %.2f = %.2f× (+%s%%)" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after), float(data.normal_luck), float(_refs.debug_luck.value), float(data.normal_luck) * float(_refs.debug_luck.value), _number((float(data.normal_luck) * float(_refs.debug_luck.value) - 1.0) * 100.0)]
 		_refs.debug_preview.add_theme_color_override("font_color", GREEN)
 	_refs.debug_reset.disabled = is_equal_approx(float(data.get("luck_multiplier", 1)), 1.0) and is_equal_approx(_debug_time_multiplier, 1.0)
+	for island: int in [2, 3]:
+		var unlocked: bool = _flag("island2_unlocked" if island == 2 else "island3_unlocked")
+		var label: String = "Golden Shores" if island == 2 else "Frosthollow + Shores"
+		_refs["debug_island_%d" % island].text = label + (" · Unlocked" if unlocked else " · Unlock")
+		_refs["debug_island_%d" % island].disabled = unlocked
 	_refs.debug_time_status.text = "GAME TIME · %d×" % int(_debug_time_multiplier)
 	for speed: int in [1, 2, 5, 10, 30]:
 		_refs["debug_time_%d" % speed].disabled = is_equal_approx(_debug_time_multiplier, float(speed))
@@ -3148,3 +3231,8 @@ func _update_farm_help() -> void:
 	_farm_help_action.text = str(tip.label)
 	_farm_help_card.position = Vector2(28, maxf(330.0, _blind_card.get_global_rect().end.y + 12.0))
 	_farm_help_card.size = Vector2(302, 0)
+
+func _luck_math() -> String:
+	if not is_instance_valid(_state): return ""
+	var info: Dictionary = _state.luck_breakdown()
+	return "1 base + %s earned + %s equipped = %s× (+%s%%)%s\n%s× normal × %s debug = %s× total (+%s%%)" % [String.num(info.earned, 3), String.num(info.gear, 3), String.num(info.normal, 3), _number(info.normal_percent), " · capped at 10×" if float(info.uncapped) > 10.0 else "", String.num(info.normal, 3), String.num(info.multiplier, 3), String.num(info.total, 3), _number(info.total_percent)]
