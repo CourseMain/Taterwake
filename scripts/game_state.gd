@@ -19,7 +19,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 12
+const MECHANICS_REVISION: int = 13
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -100,7 +100,9 @@ const MAX_INVENTORY: int = 1000000000000000
 var build_system: Node = null
 var activity_system: Node = null
 # Progress is saved; the scene controller decides when to resume the guided lesson.
-var tutorial_progress: Dictionary = {"version": 1, "step": 0, "completed": false, "plot": 5}
+const FarmHelp = preload("res://scripts/farm_help.gd")
+var farm_help = FarmHelp.new()
+var tutorial_progress: Dictionary = {"version": 2, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
 var blind_cycle: Dictionary = BlindRules.new_cycle()
 var climate = ClimateSystem.new()
@@ -825,6 +827,7 @@ func travel_to(id: int) -> String:
 		return _finish("You are already on %s." % island_name().capitalize())
 	island_plots[str(current_island)] = plots
 	current_island = id
+	farm_help.data.practice_remaining = 0.0
 	_promote_blind_island(id)
 	natural_remaining = 0.0
 	natural_factor = 1.0
@@ -1049,7 +1052,10 @@ func update(delta: float) -> void:
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
 	while remaining >= 0.000001:
+		farm_help.refresh_pests(self)
 		var step: float = minf(remaining, market_tick_seconds() - _market_clock)
+		if float(farm_help.data.practice_remaining) > 0.0:
+			step = minf(step, float(farm_help.data.practice_remaining))
 		var collecting: bool = float(blind_cycle.due_in) > 0.0
 		if climate.clock_running(self): step = minf(step, float(climate.data.timer))
 		if collecting:
@@ -1106,7 +1112,7 @@ func update(delta: float) -> void:
 						dirty = true
 				if int(plot["stage"]) == 3:
 					plot["ripe_age"] = minf(1000000000.0, float(plot.get("ripe_age", 0.0)) + ripe_step)
-					if float(plot["ripe_age"]) >= 25.0 and not bool(plot.get("pests", false)):
+					if float(plot["ripe_age"]) >= 25.0 and not bool(plot.get("pests", false)) and farm_help.can_infest():
 						plot["pests"] = true
 						plot["pest_elapsed"] = 0.0
 						ripe_infestation = true
@@ -1116,9 +1122,10 @@ func update(delta: float) -> void:
 					if float(plot["pest_elapsed"]) >= PEST_TICK_SECONDS - 0.000001:
 						_pest_damage_tick(plot)
 					dirty = true
+		farm_help.capture_pests(self)
 		if is_instance_valid(activity_system) and activity_system.has_method("update"):
 			dirty = bool(activity_system.update(step)) or dirty
-		if ripe_infestation:
+		if ripe_infestation and int(farm_help.data.pest_phase) != 1:
 			notified.emit("Ripe potatoes left 25 seconds attracted pests! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
 		if pest_timer < 0.000001:
 			_infest_random_plots()
@@ -1205,6 +1212,8 @@ func update(delta: float) -> void:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
+		if farm_help.tick(self, step):
+			dirty = true
 		if climate.update(self, step):
 			_refresh_market()
 			dirty = true
@@ -1228,7 +1237,8 @@ func update(delta: float) -> void:
 
 
 func _pest_damage_tick(plot: Dictionary) -> void:
-	if tutorial_active:
+	if tutorial_active or farm_help.protected_pest(self, plot):
+		plot["pest_elapsed"] = 0.0
 		return
 	plot["pest_elapsed"] = 0.0
 	plot["pest_ticks"] = mini(3, int(plot.get("pest_ticks", 0)) + 1)
@@ -1258,7 +1268,7 @@ func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
 
 
 func _infest_random_plots() -> int:
-	if tutorial_active:
+	if tutorial_active or not farm_help.can_infest():
 		return 0
 	var eligible: Array[int] = []
 	for index in range(plots.size()):
@@ -1270,7 +1280,8 @@ func _infest_random_plots() -> int:
 		plots[eligible[chosen]]["pests"] = true
 		plots[eligible[chosen]]["pest_elapsed"] = 0.0
 		eligible.remove_at(chosen)
-	if amount > 0:
+	farm_help.capture_pests(self)
+	if amount > 0 and int(farm_help.data.pest_phase) != 1:
 		notified.emit("Pests have reached %d crop patches! Walk over and use the Bug Sprayer to protect your harvest." % amount)
 	return amount
 
@@ -1364,16 +1375,20 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			plot["elapsed"] = 0.0
 			plot["watered"] = false
 			plot["pending"] = 0
+			farm_help.observe_plot(self, target, "plant")
 			affected += 1
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
 			plot["watered"] = true
 			plot["stage"] = 2
+			farm_help.observe_plot(self, target, "water")
 			affected += 1
 		elif action == "harvest" and int(plot["stage"]) == 3:
 			var count: int = _harvest_plot(plot)
 			if count > 0:
+				farm_help.observe_plot(self, target, "harvest", count)
 				affected += 1
 				harvested += count
+	farm_help.refresh_pests(self)
 	if affected == 0:
 		if action == "pest":
 			return _finish("No pests in this spray area. Watch ripe crops: pests arrive if they are left for 25 seconds.")
@@ -1485,11 +1500,13 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 	storage[id] = int(storage[id]) - amount
 	coins = minf(MAX_MONEY, coins + earnings)
 	_record_sales(earnings)
-	if current_island == 1 and float(market[id]["sell"]) >= float(CROPS[id]["base"]) * 2.0:
+	var sold_quote: float = float(market[id]["sell"])
+	farm_help.observe_sale(self, id)
+	if current_island == 1 and sold_quote >= float(CROPS[id]["base"]) * 2.0:
 		_progress_quest("starter_spike", float(amount))
 	if current_island == 2 and export_active and id in ["golden", "sunburst"]:
 		_record_export_sale(amount)
-	return _finish("Sold %s %s for %s at %s each." % [format_number(amount), CROPS[id]["name"], money(earnings), money(market[id]["sell"])])
+	return _finish("Sold %s %s for %s at %s each." % [format_number(amount), CROPS[id]["name"], money(earnings), money(sold_quote)])
 
 
 func sell_mutations() -> String:
@@ -1506,6 +1523,8 @@ func sell_mutations() -> String:
 			_record_export_sale(int(crate["count"]))
 	coins = minf(MAX_MONEY, coins + earnings)
 	_record_sales(earnings)
+	for crate in mutations:
+		farm_help.observe_sale(self, str(crate.crop))
 	mutations.clear()
 	return _finish("Sold %s rare mutation potatoes for %s. PotatoDex discoveries stay unlocked." % [format_number(quantity), money(earnings)])
 
@@ -1967,7 +1986,7 @@ func _market_tick() -> void:
 			movement = rng.randf_range(0.0, volatility * 0.8) if rng.randf() < 0.62 else rng.randf_range(-volatility, 0.0)
 		core["sell"] = base * clampf(exp(log_ratio * 0.82 + movement), 0.35, 3.0)
 		core["seed"] = float(core["sell"]) * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO
-	if surge_remaining <= 0.0 and natural_remaining <= 0.0 and rng.randf() < natural_stock_chance():
+	if surge_remaining <= 0.0 and natural_remaining <= 0.0 and float(farm_help.data.practice_remaining) <= 0.0 and rng.randf() < natural_stock_chance():
 		natural_crop = selected_crop
 		natural_factor = _natural_boom_roll(71.0 if current_island >= 3 else 21.0, stock_cap())
 		natural_remaining = SURGE_DURATION
@@ -1999,6 +2018,8 @@ func _refresh_market(record_history: bool = true) -> void:
 		if surge_remaining > 0.0 and id == surge_crop:
 			var ceiling: float = MAX_PRICE_MULTIPLIER if surge_kind == "rocket" and current_island >= 3 else stock_cap()
 			current = float(CROPS[id]["base"]) * minf(ceiling, surge_factor)
+		if float(farm_help.data.practice_remaining) > 0.0 and current_island == 1 and id == str(farm_help.data.practice_crop) and surge_remaining <= 0.0 and natural_remaining <= 0.0:
+			current = float(CROPS[id]["base"]) * 2.0
 		if tutorial_active:
 			current = float(CROPS[id]["base"])
 			seed_factor = 1.0
@@ -2154,7 +2175,8 @@ func reset_game() -> void:
 	blind_cycle = BlindRules.new_cycle()
 	climate.reset()
 	tutorial_active = false
-	tutorial_progress = {"version": 1, "step": 0, "completed": false, "plot": 5}
+	tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5}
+	farm_help.data = FarmHelp.fresh()
 	if is_instance_valid(build_system) and build_system.has_method("reset_builds"):
 		build_system.reset_builds()
 	if is_instance_valid(activity_system) and activity_system.has_method("reset"):
@@ -2244,6 +2266,7 @@ func _save_data() -> Dictionary:
 		"blind_cycle": blind_cycle.duplicate(true),
 		"climate": climate.data.duplicate(true),
 		"tutorial_progress": tutorial_progress.duplicate(true),
+		"farm_help": farm_help.data.duplicate(true),
 		"export_cycle_sold": export_cycle_sold, "export_qualified_cycles": export_qualified_cycles,
 		"export_factor": export_factor, "event_strength": event_strength,
 		"lifetime_sales": lifetime_sales, "island_sales": island_sales,
@@ -2361,6 +2384,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		blind_cycle.tax_rolled = false
 		blind_cycle.last_result = {}
 	tutorial_active = false
+	farm_help.data = data.get("farm_help", FarmHelp.fresh()).duplicate(true)
 	# An established farm gets its normal game back, without a surprise tutorial.
 	tutorial_progress = data.get("tutorial_progress", {"version": 1, "step": 0, "completed": true, "plot": 5}).duplicate(true)
 	for key in ["version", "step", "plot"]:
@@ -2767,8 +2791,10 @@ func _valid_save(raw: Variant) -> bool:
 	var data: Dictionary = raw
 	if data.has("tutorial_progress"):
 		var progress: Variant = data["tutorial_progress"]
-		if not progress is Dictionary or not _number(progress.get("version"), 1.0, 1.0, true) or not _number(progress.get("step"), 0.0, 100.0, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0.0, 23.0, true):
+		if not progress is Dictionary or not _number(progress.get("version"), 1.0, 2.0, true) or not _number(progress.get("step"), 0.0, 100.0, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0.0, 23.0, true):
 			return false
+	if data.has("farm_help") and not FarmHelp.valid(data.farm_help):
+		return false
 	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("valid_data") and not build_system.valid_data(data["builds"]):
 		return false
 	if data.has("activities") and is_instance_valid(activity_system) and activity_system.has_method("valid_data") and not activity_system.valid_data(data["activities"]):

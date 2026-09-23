@@ -53,7 +53,7 @@ func run() -> void:
 	await shot("exit-choice")
 	check(game.tutorial.current_id() == "welcome" and game.hud._tutorial_exit_box.visible, "first exit click leaves lesson intact")
 	press("tutorial:stay")
-	lesson(2)
+	lesson(1)
 	game.world.set_player_position(Vector3(-7, 0, 7))
 	await shot("market-trail")
 	check(game.world._tutorial_trail.size() == 6 and game.world._tutorial_trail[0].visible, "gold trail leads from farmer to destination")
@@ -62,7 +62,7 @@ func run() -> void:
 	check(game.hud._tutorial_pointer.target == game.hud._refs["buy:russet:1"], "shop arrow follows exact buy button")
 	press("buy:russet:1")
 	await shot("hoe")
-	check(game.hud._tutorial_pointer.target == game.hud._tool_buttons.hoe, "next arrow follows the newly introduced hoe")
+	check(game.hud._tutorial_pointer.target == null and game.world._tutorial_plot_outline.visible, "equipped hoe points only at the target bed")
 	game.tutorial.finish()
 	check(game.world._tutorial_trail.all(func(node: Node3D): return not node.visible), "finishing hides all trail markers")
 	game.state.coins = 1e16

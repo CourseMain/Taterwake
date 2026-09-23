@@ -4,13 +4,17 @@
 
 ## Your first farm
 
-New farms start a saved, step-by-step Valley tutorial: move around, buy one Russet seed, hoe a marked bed, plant, water, harvest and sell. Then meet the inventory, toolsmith, Wash & Sort workshop, challenge keeper, Roll House, Duck Patrol and dock. Tools and interface elements appear as they are introduced, with gentle sound cues. The guided tour leaves the rest of Island 1 for you to discover.
+New farms start with one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
-Follow the gold trail and highlighted buttons. Each lesson shows one short action, a tool icon and progress. The large gold button advances the tour when ready. The small **×** opens **Keep learning / End tutorial**, so one accidental click cannot skip the guide.
+The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. E interacts with nearby beds and the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
 
-Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. The Valley path goes around the Roll House and through an opening in the fence. You can visit the dock during the tutorial; sailing still requires the normal island unlocks.
+Afterwards, optional farm tips appear when useful. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage. After independently planting, watering, harvesting and selling another crop, holding a fresh harvest can offer a **+100% practice boom for ten seconds**. Choose when to start, then sell while its quote lasts. Missing the window allows another attempt; a successful sale ends the practice. It never counts toward tax or replaces an actual boom.
 
-Random pests and stock surges pause during the guide. One practice pest appears only after its introduction and cannot damage your crops. On completion or skip, normal hazards resume with fresh countdowns; the first scheduled stock surge is three minutes away. You can skip or resume the saved guide. Established farms can use **☰ → First island guided tour** in the Valley for an informational replay that pauses and preserves their existing farm.
+Tool and duck suggestions wait until you can afford them. Build help waits for a usable Farmer ability or an owned Build Crate. Tax help arrives before the first scheduled boom; debt help explains that a negative balance remains playable. Tips never pause or lock the farm. Dismiss individual tips, or use **H → Hide farm tips**. H also shows the controls whenever you need them.
+
+Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. Sailing requires the normal island unlocks.
+
+The first lesson pauses random pests, stocks, taxes and weather; finishing starts fresh countdowns. **H → Optional Valley tour** lets you meet the NPCs whenever you choose. You may skip any stop or leave at any time. This informational tour pauses and preserves your existing farm, including active stock windows and pests.
 
 
 Return to the [project README](../README.md) for downloads and setup. Spud Valley is the name of your first island.

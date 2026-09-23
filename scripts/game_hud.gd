@@ -167,6 +167,12 @@ var _batch_kind: String = "normal"
 var _trophies_open: bool = false
 var _trophy_signature: String = ""
 var _frozen_crown: bool = false
+var _farm_tip: Dictionary = {}
+var _farm_help_card: PanelContainer
+var _farm_help_title: Label
+var _farm_help_body: Label
+var _farm_help_action: Button
+var _help_cooldown: float = 0.0
 var _tutorial: Dictionary = {}
 var _tutorial_card: PanelContainer
 var _tutorial_title: Label
@@ -199,6 +205,8 @@ var _collapse_hidden: Array[CanvasItem] = []
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
+	_help_cooldown = maxf(0.0, _help_cooldown - delta)
+	_update_farm_help()
 	if _purchase_remaining > 0.0:
 		_purchase_remaining = maxf(0.0, _purchase_remaining - delta)
 		_purchase_bar.value = _purchase_remaining
@@ -274,6 +282,7 @@ func build_ui() -> void:
 	_build_blind_card()
 	_build_modal()
 	_build_tutorial()
+	_build_farm_help()
 	_climate_alert = load("res://scripts/climate_alert.gd").new()
 	root.add_child(_climate_alert)
 	_climate_alert.continue_requested.connect(func() -> void: _act("climate_continue"))
@@ -588,10 +597,10 @@ func set_tutorial(info: Dictionary) -> void:
 		set_context(_context.text)
 		_refresh_seed_visibility()
 	else:
-		_tutorial_progress.text = "FIRST FARM  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
+		_tutorial_progress.text = ("VALLEY TOUR" if info.get("tour_only", false) else "FIRST HARVEST") + "  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
 		_tutorial_title.text = str(info.get("title", "Your first farm"))
 		_tutorial_body.text = str(info.get("body", ""))
-		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Follow gold arrow ↓"
+		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Click the gold bed" if str(info.get("focus", "")).begins_with("plot:") else "Follow the gold marker"
 		_tutorial_next.disabled = not bool(info.get("continue", false))
 		if info.get("id") == "inventory" and not bool(info.get("continue", false)):
 			_tutorial_next.text = "Open bag [I] →"
@@ -645,6 +654,8 @@ func _restore_tutorial_buttons() -> void:
 		if node.has_meta("tutorial_disabled"):
 			node.disabled = bool(node.get_meta("tutorial_disabled"))
 			node.remove_meta("tutorial_disabled")
+			node.tooltip_text = str(node.get_meta("tutorial_tooltip", ""))
+			node.remove_meta("tutorial_tooltip")
 
 func _apply_tutorial_buttons() -> void:
 	if _tutorial.is_empty():
@@ -655,6 +666,8 @@ func _apply_tutorial_buttons() -> void:
 		if not _tutorial_allows(str(node.get_meta("hud_action"))):
 			if not node.has_meta("tutorial_disabled"):
 				node.set_meta("tutorial_disabled", node.disabled)
+				node.set_meta("tutorial_tooltip", node.tooltip_text)
+			node.tooltip_text = "Available after the first sale, or choose End tutorial to farm freely."
 			node.disabled = true
 
 func _apply_tutorial_visibility() -> void:
@@ -718,10 +731,7 @@ func _update_tutorial_pointer() -> void:
 			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
 				target = node
 				break
-	else:
-		var tool: String = str(_tutorial.get("tool", ""))
-		if _tool_buttons.has(tool):
-			target = _tool_buttons[tool]
+	# Farming tools are already equipped. The only cue belongs to the bed.
 	_tutorial_pointer.target = target
 
 func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
@@ -806,6 +816,7 @@ func _act(action: String) -> void:
 	if is_instance_valid(_state) and bool(_state.get("run_over")) and action != "reset":
 		return
 	if not _tutorial_allows(action):
+		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
 		return
 	if action in ["tutorial:exit", "tutorial:stay"]:
 		_tutorial_exit_pending = action == "tutorial:exit"
@@ -1256,6 +1267,7 @@ func update_state(state: Node) -> void:
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
 	_update_blind_ui()
+	_update_farm_help()
 	if is_panel_open():
 		if _panel_kind in ["activities", "duck_patrol", "menu", "pause"] and _panel_island != _island_id():
 			show_panel(_panel_kind, state)
@@ -1750,7 +1762,11 @@ func _build_help() -> void:
 	_help_step("04  Go bigger", "U: Upgrade tools\nChain harvests within 3.5s for up to ×16 bonuses.")
 	_help_step("05  Find your build", "R: Roll for gear and builds using game coins. Empty rolls happen.\nP: Discoveries · Q: Quests")
 	_help_step("06  Hire a crew", "Ducks clear pests: up to 1 / 2 / 3 per island.\nHire more or train them for speed.")
-	_help_step("07  Winter tricks", "Burn 25 Icecaps for faster growth.\nFrostbreak: hoe icy beds within 20s for a seed + stock bonus.")
+	_help_step("07  Shops & travel", "Click a shop building or its sign to open it. E works beside a bed or the ferry; it does not open shops.")
+	_help_step("08  Taxes & debt", "Tax is deducted after every third major boom and its full 10-second selling window. Natural spikes and practice do not count. Debt is playable; only going below your bankruptcy limit ends the run. Check the forecast in Taxes.")
+	_help_step("09  Winter tricks", "Burn 25 Icecaps for faster growth.\nFrostbreak: hoe icy beds within 20s for a seed + stock bonus.")
+	_body.add_child(_button("Optional Valley tour", "tutorial:restart"))
+	_body.add_child(_button("Show farm tips" if _state.farm_help.data.hidden or not _state.farm_help.data.enabled else "Hide farm tips", "farm_help:toggle"))
 	_body.add_child(_button("Let's get growing  →", "close", true))
 
 func _help_step(title: String, detail: String) -> void:
@@ -1810,7 +1826,7 @@ func _build_pause() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		utility.add_child(button)
 	if _tutorial.is_empty():
-		settings.add_child(_button("Replay the guided tour", "tutorial:restart"))
+		settings.add_child(_button("Optional Valley tour", "tutorial:restart"))
 	if _reset_pending:
 		settings.show()
 		settings.add_child(_wrap("Start over? This replaces your farm.", 14, CHERRY))
@@ -3091,3 +3107,44 @@ func _can_roll_stake(kind: String) -> bool:
 	if not bool(_state.call("roll_available")) or not is_finite(cost) or coins < cost:
 		return false
 	return cost > _minimum_roll_stake(kind) if kind == "all_in" else cost >= _minimum_roll_stake(kind)
+
+func show_tutorial_feedback(message: String) -> void:
+	if not _tutorial.is_empty():
+		_tutorial_body.text = message
+
+func _build_farm_help() -> void:
+	_farm_help_card = _card(CREAM, 14)
+	_farm_help_card.name = "FarmHelp"
+	_farm_help_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	_place(_farm_help_card, Rect2(28, 330, 302, 0))
+	var contents := _vbox(8)
+	_farm_help_card.add_child(contents)
+	contents.add_child(_label("FARM TIP · OPTIONAL", 11, MUTED, true))
+	_farm_help_title = _wrap("", 20, INK, true)
+	_farm_help_title.custom_minimum_size.x = 274
+	contents.add_child(_farm_help_title)
+	_farm_help_body = _wrap("", 14, INK)
+	_farm_help_body.custom_minimum_size.x = 274
+	contents.add_child(_farm_help_body)
+	_farm_help_action = _button("", "farm_help:act")
+	_farm_help_action.custom_minimum_size.y = 40
+	_farm_help_action.add_theme_font_size_override("font_size", 13)
+	contents.add_child(_farm_help_action)
+	var dismiss_button := _button("Dismiss tip", "farm_help:dismiss")
+	dismiss_button.add_theme_font_size_override("font_size", 12)
+	contents.add_child(dismiss_button)
+	_farm_help_card.hide()
+
+func _update_farm_help() -> void:
+	if not is_instance_valid(_farm_help_card) or not is_instance_valid(_state): return
+	var tip: Dictionary = _state.farm_help.tip(_state)
+	if not tip.is_empty() and _help_cooldown > 0.0 and tip.id not in ["pests", "taxes", "debt"]:
+		tip = {}
+	_farm_tip = tip
+	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _crop_row.visible
+	if tip.is_empty(): return
+	_farm_help_title.text = str(tip.title)
+	_farm_help_body.text = str(tip.body)
+	_farm_help_action.text = str(tip.label)
+	_farm_help_card.position = Vector2(28, maxf(330.0, _blind_card.get_global_rect().end.y + 12.0))
+	_farm_help_card.size = Vector2(302, 0)

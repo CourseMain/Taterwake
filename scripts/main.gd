@@ -479,6 +479,7 @@ func queue_ferry() -> void:
 	if state.run_over:
 		return
 	if _tutorial_active() and not tutorial.allows_action("island"):
+		tutorial.explain_block()
 		return
 	_cancel_walk()
 	if world.player.position.distance_to(world.ferry_position()) <= 2.0:
@@ -498,6 +499,7 @@ func _cancel_walk() -> void:
 
 func _select_tool(tool: String) -> void:
 	if _tutorial_active() and not tutorial.allows_tool(tool):
+		tutorial.explain_block()
 		return
 	if tool not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return
@@ -510,6 +512,7 @@ func queue_plot(index: int) -> void:
 	if state.run_over:
 		return
 	if _tutorial_active() and not tutorial.allows_plot(index, selected_tool):
+		tutorial.explain_block()
 		return
 	if index < 0 or index >= state.plots.size():
 		return
@@ -526,6 +529,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	if state.run_over:
 		return
 	if _tutorial_active() and not tutorial.allows_plot(index, tool):
+		tutorial.explain_block()
 		return
 	if index < 0 or index >= state.plots.size():
 		return
@@ -534,12 +538,15 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	var before: Array[Dictionary] = []
 	for tile in indices:
 		before.append(state.plots[tile].duplicate(true))
-	state.interact_plot(index, tool)
+	var result: String = state.interact_plot(index, tool)
 	var changed_indices: Array[int] = []
 	for step in range(indices.size()):
 		var tile: int = indices[step]
 		if before[step] != state.plots[tile]:
 			changed_indices.append(tile)
+	if changed_indices.is_empty():
+		if _tutorial_active(): hud.show_tutorial_feedback(result)
+		else: hud.show_toast(result)
 	if not changed_indices.is_empty():
 		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)))
 		var pitch: float = 440.0 + float(state.combo_multiplier) * 28.0 if action == "harvest" else float({"hoe": 220.0, "plant": 440.0, "water": 660.0, "pest": 880.0}.get(action, 330.0))
@@ -748,6 +755,9 @@ func _on_action(action: String) -> void:
 		return
 	if hud.is_roll_animating():
 		return
+	if action.begins_with("farm_help:"):
+		_farm_help_action(action.get_slice(":", 1))
+		return
 	if action.begins_with("tutorial:"):
 		match action.get_slice(":", 1):
 			"next": tutorial.next()
@@ -755,6 +765,7 @@ func _on_action(action: String) -> void:
 			"restart": tutorial.start(true)
 		return
 	if _tutorial_active() and not tutorial.allows_action(action):
+		tutorial.explain_block()
 		return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
@@ -1072,3 +1083,28 @@ func _pump_audio() -> void:
 			stock_music_time += 1.0 / 22050.0
 		sample = clampf(sample, -0.95, 0.95)
 		audio_playback.push_frame(Vector2(sample, sample))
+
+func _farm_help_action(action: String) -> void:
+	if _tutorial_active(): return
+	var help = state.farm_help
+	if action == "toggle":
+		help.data.hidden = not bool(help.data.hidden) if help.data.enabled else false
+		help.enable()
+	elif action in ["act", "dismiss"]:
+		var tip: Dictionary = hud._farm_tip
+		if tip.is_empty(): return
+		if action == "dismiss" or tip.action == "dismiss":
+			help.dismiss(str(tip.id))
+			hud._help_cooldown = 12.0
+		elif tip.action == "practice":
+			if not help.start_practice(state):
+				hud.show_toast("Keep some harvested crops ready. Practice is available between stock booms in the Valley.")
+		else:
+			# Browsing dismisses the suggestion; it never certifies understanding.
+			if tip.id not in ["pests", "stocks"]:
+				help.dismiss(str(tip.id))
+				hud._help_cooldown = 12.0
+			_on_action(str(tip.action))
+	hud.update_state(state)
+	if action == "toggle" and hud.is_panel_open(): hud.show_panel("help", state)
+	if not test_mode: state.save_game()

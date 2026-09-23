@@ -119,7 +119,9 @@ func run() -> void:
 	game.tutorial.start()
 	game.queue_ferry()
 	check(not game.walking and not game.hud.is_panel_open(), "early tutorial still blocks ferry actions")
-	game.state.tutorial_progress.step = 18
+	game.tutorial.finish()
+	game.tutorial.start(true)
+	game.state.tutorial_progress.step = 9
 	game.tutorial._enter_step()
 	game.world.set_player_position(Vector3(7, 0, -4.7))
 	game.world.animate(0.1, false)

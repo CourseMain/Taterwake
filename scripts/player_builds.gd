@@ -210,6 +210,8 @@ func sell_processed() -> String:
 	state.lifetime_sales = minf(1.0e300, float(state.lifetime_sales) + value)
 	var island: String = str(state.current_island)
 	state.island_sales[island] = minf(1.0e300, float(state.island_sales[island]) + value)
+	for crop: String in processed:
+		state.farm_help.observe_sale(state, crop)
 	processed.clear()
 	return state._finish("Sold processed batches for %s at the live crop prices." % state.money(value))
 

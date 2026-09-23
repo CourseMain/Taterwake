@@ -8,7 +8,7 @@ Open the link on a computer with a keyboard and mouse or trackpad. Allow the fir
 
 If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
 
-New farms begin with a guided first harvest. Pests and stock booms wait until their lessons; established players can replay the tour from **☰ → First island guided tour** in the Valley.
+The local preview teaches one harvest and ends at your first sale. Then farm freely, with optional help for your first pests, a practice stock boom, taxes and usable upgrades. **H → Optional Valley tour** keeps meeting the NPCs optional.
 
 Small potatoes. Big possibilities.
 
