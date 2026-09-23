@@ -48,6 +48,7 @@ func run() -> void:
 	game._on_action("gear:equip:straw_hat")
 	for island in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		for _duck in range(island):
 			game.activities.hire_duck()
 		game.state.pest_timer = 100.0

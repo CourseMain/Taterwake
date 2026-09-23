@@ -22,7 +22,7 @@ var _mist: ColorRect
 var _mist_material: ShaderMaterial
 
 static func tier_for_percent(percent: float) -> int:
-	if percent >= 15000.0:
+	if percent >= 35000.0:
 		return 4
 	if percent >= 3000.0:
 		return 3

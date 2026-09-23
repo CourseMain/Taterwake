@@ -12,13 +12,16 @@ New farms begin with a guided first harvest. Pests and stock booms wait until th
 
 Small potatoes. Big possibilities.
 
+**v1.0.2 local preview — not published:** Climate disasters begin on **Island 2**, with central warnings, storm clouds, rain, wind and camera shake. New fonts and simpler menus keep the important choices clear. Prepare through **☰ → Climate action**. Taxes arrive after every third major stock, with a preview of recovery costs. Debt is allowed; crossing bankruptcy ends the run. This update is not yet published at the browser link above.
+
 A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.
 
 - Work your fields with five manual tools; train ducks to chase pests.
-- Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+50,000% Stock Rocket**.
+- Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+35,000%–100,000% Stock Rocket**.
 - Choose from **five player builds** and collect clothing with farming, market and mutation bonuses.
 - Take buyer contracts, fire up a winter furnace, and discover rare rewards at the Roll House.
 - Farm through a **60-second day–night cycle** across three islands.
+- Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
 
 The Roll House uses coins earned in the game. There are no real-money purchases.
 

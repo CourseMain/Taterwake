@@ -49,6 +49,7 @@ func run() -> void:
 	game.state.island2_unlocked = true
 	game.state.island3_unlocked = true
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	game.state.surge_timer = 8.0
 	game.state.debug_luck_multiplier = 3000.0
 	game.hud.update_state(game.state)

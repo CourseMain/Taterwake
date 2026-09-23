@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Taterland"
 config/description="Hands-on farming. Wild potato markets. A questionable roll house."
-config/version="1.0.1.75"
+config/version="1.0.2"
 run/main_scene="res://scenes/main.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="Godot/app_userdata/Spud Valley"
@@ -39,5 +39,5 @@ window/size/min_height=600
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
-anti_aliasing/quality/msaa_3d.web=1
 environment/defaults/default_clear_color=Color(0.73, 0.84, 0.79, 1)
+anti_aliasing/quality/msaa_3d.web=1

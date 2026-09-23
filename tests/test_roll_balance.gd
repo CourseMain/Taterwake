@@ -25,6 +25,7 @@ func enter_island(state, island: int) -> void:
 		for plot in state.island_plots["3"]:
 			plot.unlocked = true
 	state.travel_to(island)
+	state.climate.acknowledge(state)
 
 func tail(odds: Array, first: int) -> float:
 	var total: float = 0.0
@@ -92,10 +93,10 @@ func _run() -> void:
 	check(not state.can_roll("all_in") and state.can_roll("normal") and state.roll_batch_cost("normal", 3) == state.coins, "winter60T funds a three-pack but is not enough for strictly-above60T all-in")
 	check(state.roll_batch("normal", 3).size() == 3, "strict all-in floor does not change winter batch pricing")
 	state.reset_game()
-	state.coins = INF
 	var invalid_rng: int = state.rng.state
-	state.roll("all_in")
-	check(not state.can_roll("all_in") and state.rng.state == invalid_rng and state.roll_count == 0, "nonfinite all-in cannot advance RNG or create rewards")
+	for invalid in [INF, -INF, NAN]:
+		state.coins = invalid
+	check(state.coins == 240.0 and state.rng.state == invalid_rng and state.roll_count == 0, "nonfinite balances are rejected before they can reach all-in or create rewards")
 	state.coins = 10000.0
 	check(not state.can_roll("missing") and state.roll_minimum_stake("missing") < 0.0, "unknown stakes never become affordable")
 	state.reset_game()

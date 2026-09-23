@@ -171,6 +171,23 @@ Choose **1×, 2×, 5×, 10× or 30×** simulation speed to test crops, markets, 
 
 ### Stock Rocket
 
-Every **30 minutes spent on Island 3**, a rocket packed with potato passengers blasts into the night sky, with yellow, blue, red, orange and pink money trails and an original rising jackpot score. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +15,000–50,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
+Every **30 minutes spent on Island 3**, a rocket packed with potato passengers blasts into the night sky, with yellow, blue, red, orange and pink money trails and an original rising jackpot score. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +35,000–100,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
 
-Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +15,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.
+Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +35,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.
+
+
+### Climate action and taxes (local source update)
+
+Climate disasters begin on **Island 2**. Read the arrival introduction, then open **☰ → Climate action** to fund rainwater reserves, drainage, a reinforced barn or living windbreaks. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods and storms damage crops and stored potatoes, raise seed costs, and weaken ordinary sale prices. Protection reduces losses and the recovery bill; stock booms retain their full sale quotes.
+
+**Taxes arrive after every third major stock**, about nine minutes, following its full ten-second selling window. Natural spikes do not count. Base tax is 5% of the next-island requirement; a random Tax Boom or disaster recovery can increase it by up to 150%. The combined bill never exceeds 12.5% of the baseline. Island 3 uses a virtual 5Qa baseline and has no fourth island: its bills range from **250T to 625T**.
+
+| Island | Base tax | Maximum tax | Bankruptcy below |
+| --- | --- | --- | --- |
+| 1 | $50K | $125K | −$50K |
+| 2 | $5B | $12.5B | −$5B |
+| 3 | $250T | $625T | −$250T |
+
+Cash below the bill turns red. Unpaid taxes become debt; **only crossing bankruptcy ends the run**. Having 2× the bill earns OVERKILL, then larger reserves reach ULTRA KILL, GODLIKE, OMNIPOTENT and RULER. **☰ → Taxes** shows your forecast, projected balance and latest receipt. Returning to an easier island keeps the highest tax tier you have visited.
+
+A collapse shows your losses, market conditions, build and a short agriculture-and-climate message. **View Run Summary** reveals the run totals; **Try Again** starts a fresh farm. Tutorials are protected from weather and tax pressure.

@@ -1,0 +1,240 @@
+extends RefCounted
+## Discrete warned disasters, temporary markets, persistent recovery costs.
+const Rules = preload("res://scripts/blind_rules.gd")
+const FIRST_ISLAND: int = 2
+const FIRST_WARNING: float = 90.0
+const WAIT_MIN: float = 210.0
+const WAIT_MAX: float = 330.0
+const WARNING_SECONDS: float = 45.0
+const ACTIVE_SECONDS: float = 30.0
+const RECOVERY_SECONDS: float = 75.0
+const EVENTS: Dictionary = {
+	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.65, "growth": 0.6, "tax": 0.8, "prepare": "Harvest early. Store rainwater. Seed costs will rise."},
+	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.65, "growth": 0.7, "tax": 1.1, "prepare": "Clear ripe beds. Improve drainage and protect your barn."},
+	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.7, "growth": 0.75, "tax": 1.5, "prepare": "Harvest exposed crops. Build windbreaks and reinforce storage."},
+}
+const PROJECTS: Dictionary = {
+	"rainwater": {"name": "Rainwater Reserve", "cost": 0.01, "event": "drought", "field": 0.3, "barn": 0.0, "tax": 0.20, "detail": "Drought: −30% crop losses and −20% recovery tax per level."},
+	"drainage": {"name": "Drainage Network", "cost": 0.015, "event": "flood", "field": 0.3, "barn": 0.10, "tax": 0.20, "detail": "Floods: −30% crop losses, −10% barn losses and −20% recovery tax per level."},
+	"barn": {"name": "Reinforced Barn", "cost": 0.02, "event": "all", "field": 0.0, "barn": 0.35, "tax": 0.15, "detail": "All disasters: −35% barn losses and −15% recovery tax per level."},
+	"windbreaks": {"name": "Living Windbreaks", "cost": 0.012, "event": "storm", "field": 0.3, "barn": 0.1, "tax": 0.2, "detail": "Storms: −30% crop losses, −10% barn losses and −20% recovery tax per level."},
+}
+const MAX_PROJECT_LEVEL: int = 2
+const MAX_PROTECTION: float = 0.8
+const EDUCATION: String = "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."
+const EDUCATION_SOURCE: String = "https://www.fao.org/publications/fao-flagship-publications/the-impact-of-disasters-on-agriculture-and-food-security/"
+var data: Dictionary = fresh_data()
+
+static func fresh_data() -> Dictionary:
+	return {"phase": "calm", "timer": FIRST_WARNING, "event": "", "island": 2,
+		"introduced": false, "intro_pending": false,
+		"severity": 0.0, "projects": {"1": {}, "2": {}, "3": {}}, "tax_events": [],
+		"last": {}, "history": [], "field_lost": 0, "barn_lost": 0, "tax_paid": 0.0, "collapse": {}}
+
+func reset() -> void:
+	data = fresh_data()
+
+func on_arrival(farm) -> void:
+	if farm.current_island < FIRST_ISLAND or farm.run_over or data.introduced: return
+	data.introduced = true
+	data.intro_pending = true
+	farm.climate_changed.emit("introduction")
+
+func acknowledge(farm) -> void:
+	if not data.intro_pending: return
+	data.intro_pending = false
+	farm.changed.emit()
+
+func clock_running(farm) -> bool:
+	return not data.intro_pending and (data.phase != "calm" or farm.current_island >= FIRST_ISLAND)
+
+func protection(event: String, island: int, kind: String) -> float:
+	var reduction: float = 0.0
+	for id in PROJECTS:
+		if PROJECTS[id].event in ["all", event]:
+			reduction += float(PROJECTS[id][kind]) * int(data.projects[str(island)].get(id, 0))
+	return minf(MAX_PROTECTION, reduction)
+
+func tax_pressure() -> float:
+	var pressure: float = 0.0
+	for entry in data.tax_events:
+		pressure += float(entry.pressure) * (1.0 - protection(str(entry.event), int(entry.island), "tax"))
+	return minf(Rules.TAX_BOOM_MAX - 1.0, pressure)
+
+func factor(kind: String, island: int) -> float:
+	if data.phase not in ["active", "recovery"] or data.island != island:
+		return 1.0
+	var weight: float = float(data.severity) * (float(data.timer) / RECOVERY_SECONDS if data.phase == "recovery" else 1.0)
+	if kind == "growth":
+		weight *= 1.0 - protection(str(data.event), island, "field")
+	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
+
+func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
+	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or farm.rocket_pending or data.phase != "calm":
+		return false
+	var ids: Array = EVENTS.keys()
+	if event.is_empty():
+		event = str(ids[farm.rng.randi_range(0, ids.size() - 1)])
+	if not EVENTS.has(event): return false
+	data.event = event
+	data.island = farm.current_island
+	data.severity = clampf(severity, 0.5, 1.0) if severity >= 0.0 else farm.rng.randf_range(0.5, 1.0)
+	data.phase = "warning"
+	data.timer = WARNING_SECONDS
+	farm.climate_changed.emit("warning")
+	return true
+
+func update(farm, delta: float) -> bool:
+	if farm.run_over or farm.tutorial_active or farm.rocket_pending or not clock_running(farm): return false
+	data.timer = maxf(0.0, float(data.timer) - delta)
+	if float(data.timer) > 0.000001: return false
+	match str(data.phase):
+		"calm": begin_warning(farm)
+		"warning": _impact(farm)
+		"active":
+			data.phase = "recovery"
+			data.timer = RECOVERY_SECONDS
+			farm.climate_changed.emit("recovery")
+		"recovery":
+			data.phase = "calm"
+			data.event = ""
+			data.severity = 0.0
+			data.timer = farm.rng.randf_range(WAIT_MIN, WAIT_MAX)
+			farm.climate_changed.emit("calm")
+	return true
+
+func _impact(farm) -> void:
+	data.phase = "active"
+	data.timer = ACTIVE_SECONDS
+	var event: String = data.event
+	var island: int = data.island
+	var eligible: Array[int] = []
+	var field: Array = farm.island_plots[str(island)]
+	for index in range(field.size()):
+		if int(field[index].stage) > 0: eligible.append(index)
+	var loss_rate: float = float(EVENTS[event].field) * float(data.severity) * (1.0 - protection(event, island, "field"))
+	var destroyed: int = lost_units(eligible.size(), loss_rate)
+	for _index in range(destroyed):
+		var pick: int = farm.rng.randi_range(0, eligible.size() - 1)
+		var plot: Dictionary = field[eligible[pick]]
+		farm._clear_crop(plot)
+		if event == "flood": plot.tilled = false
+		eligible.remove_at(pick)
+	var held: int = farm.storage_used()
+	var barn_rate: float = float(EVENTS[event].barn) * float(data.severity) * (1.0 - protection(event, island, "barn"))
+	for crop in farm.storage:
+		farm.storage[crop] = int(farm.storage[crop]) - lost_units(int(farm.storage[crop]), barn_rate)
+	for index in range(farm.mutations.size() - 1, -1, -1):
+		var crate: Dictionary = farm.mutations[index]
+		crate.count = int(crate.count) - lost_units(int(crate.count), barn_rate)
+		if int(crate.count) <= 0: farm.mutations.remove_at(index)
+	# Processing is still barn inventory: no hiding stock in a machine.
+	if is_instance_valid(farm.build_system):
+		for batch in farm.build_system.processed.values():
+			batch.count = int(batch.count) - lost_units(int(batch.count), barn_rate)
+		if not farm.build_system.processing.is_empty():
+			var batch: Dictionary = farm.build_system.processing
+			batch.quantity = int(batch.quantity) - lost_units(int(batch.quantity), barn_rate)
+	var barn_lost: int = held - farm.storage_used()
+	data.field_lost = mini(1000000000, int(data.field_lost) + destroyed)
+	data.barn_lost = mini(farm.MAX_INVENTORY, int(data.barn_lost) + barn_lost)
+	var record: Dictionary = {"event": event, "island": island, "field_lost": destroyed,
+		"field_total": eligible.size() + destroyed, "barn_lost": barn_lost, "barn_total": held,
+		"at": farm.elapsed, "severity": data.severity}
+	data.last = record
+	data.history.append(record.duplicate(true))
+	if data.history.size() > 8: data.history.pop_front()
+	data.tax_events.append({"event": event, "island": island, "pressure": float(EVENTS[event].tax) * float(data.severity)})
+	if data.tax_events.size() > 8: data.tax_events.pop_front()
+	farm.climate_changed.emit("impact")
+
+static func lost_units(quantity: int, rate: float) -> int:
+	# Avoid a floating-point 59.999999999 loss when the intended count is 60.
+	return mini(quantity, int(floor(float(quantity) * rate + 0.000001)))
+
+func fund(farm, id: String) -> String:
+	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or not PROJECTS.has(id): return "Climate action begins on Golden Shores."
+	var levels: Dictionary = data.projects[str(farm.current_island)]
+	var level: int = int(levels.get(id, 0))
+	if level >= MAX_PROJECT_LEVEL: return farm._finish("This initiative is fully funded.")
+	var cost: float = float(Rules.PROGRESSION_BASELINES[farm.current_island]) * float(PROJECTS[id].cost) * float(level + 1)
+	if farm.coins < cost: return farm._reject_purchase("Not enough money for this climate initiative.")
+	farm.coins -= cost
+	levels[id] = level + 1
+	return farm._complete_purchase({"kind": "climate", "id": id, "name": PROJECTS[id].name, "quantity": 1, "cost": cost}, "Climate protection improved.")
+
+func info(farm) -> Dictionary:
+	var result: Dictionary = data.duplicate(true)
+	result.available = farm.current_island >= FIRST_ISLAND
+	result.name = str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
+	result.pressure = tax_pressure()
+	result.seed_factor = factor("seed", farm.current_island)
+	result.sell_factor = factor("sell", farm.current_island)
+	result.prepare = str(EVENTS.get(data.event, {}).get("prepare", "Fund local protection before the next warning."))
+	result.warning_tax = 0.0
+	if data.phase == "warning":
+		var upcoming: float = float(EVENTS[data.event].tax) * float(data.severity) * (1.0 - protection(data.event, data.island, "tax"))
+		result.warning_tax = Rules.estimated_tax(farm.blind_cycle) + Rules.target(farm.blind_cycle) * Rules.TAX_RATE * (tax_pressure() + upcoming)
+		result.warning_tax = minf(result.warning_tax, Rules.target(farm.blind_cycle) * Rules.TAX_RATE * Rules.TAX_BOOM_MAX)
+	return result
+
+func capture_collapse(farm) -> void:
+	var info: Dictionary = farm.blind_info()
+	var last: Dictionary = data.last
+	var build: String = str(farm.build_system.active).capitalize() if is_instance_valid(farm.build_system) else "Farmer"
+	var receipt: Dictionary = farm.blind_cycle.last_result
+	var tax_caused: bool = not receipt.is_empty() and float(receipt.after) == farm.coins and float(receipt.tax) > 0.0
+	data.collapse = {"balance": farm.coins, "event": str(data.event),
+		"last_event": str(last.get("event", "")),
+		"phase": data.phase, "island": farm.current_island, "build": build,
+		"cause": "Recovery taxes exceeded the farm's reserves." if tax_caused and tax_pressure() > 0.0 else ("The tax bill pushed debt beyond bankruptcy." if tax_caused else "Debt exceeded the farm's bankruptcy limit."),
+		"field_lost": int(last.get("field_lost", 0)), "field_total": int(last.get("field_total", 0)),
+		"barn_lost": int(last.get("barn_lost", 0)), "barn_total": int(last.get("barn_total", 0)),
+		"tax": float(receipt.tax) if tax_caused else float(info.tax),
+		"seed_factor": factor("seed", farm.current_island), "sell_factor": factor("sell", farm.current_island),
+		"market_crop": farm.selected_crop, "market_change": float(farm.market.get(farm.selected_crop, {}).get("change", 0.0)),
+		"elapsed": farm.elapsed, "total_field_lost": data.field_lost, "total_barn_lost": data.barn_lost,
+		"tax_paid": data.tax_paid, "projects": data.projects.duplicate(true), "history": data.history.duplicate(true)}
+
+static func valid(raw: Variant, maximum: float) -> bool:
+	if not raw is Dictionary or raw.get("phase") not in ["calm", "warning", "active", "recovery"]: return false
+	if not raw.get("introduced") is bool or not raw.get("intro_pending") is bool: return false
+	if raw.intro_pending and not raw.introduced: return false
+	if not Rules.number(raw.get("timer"), 0.000001, WAIT_MAX) or not Rules.number(raw.get("island"), 1, 3, true): return false
+	if raw.get("event") not in ["", "drought", "flood", "storm"] or not Rules.number(raw.get("severity"), 0.0, 1.0): return false
+	if (raw.phase == "calm") != (raw.event == ""): return false
+	var timer_max: float = {"calm": WAIT_MAX, "warning": WARNING_SECONDS, "active": ACTIVE_SECONDS, "recovery": RECOVERY_SECONDS}[raw.phase]
+	if float(raw.timer) > timer_max or (raw.phase == "calm" and float(raw.severity) != 0.0) or (raw.phase != "calm" and float(raw.severity) < 0.5): return false
+	if not raw.get("projects") is Dictionary or raw.projects.size() != 3: return false
+	for island in ["1", "2", "3"]:
+		if not raw.projects.get(island) is Dictionary: return false
+		for id in raw.projects[island]:
+			if not PROJECTS.has(id) or not Rules.number(raw.projects[island][id], 0, MAX_PROJECT_LEVEL, true): return false
+	for key in ["history", "tax_events"]:
+		if not raw.get(key) is Array or raw[key].size() > 8: return false
+		for entry in raw[key]:
+			if not entry is Dictionary or entry.get("event") not in EVENTS or not Rules.number(entry.get("island"), 1, 3, true): return false
+			if key == "tax_events" and not Rules.number(entry.get("pressure"), 0, 1.5): return false
+			if key == "history" and not valid_loss(entry, maximum): return false
+	if not raw.get("last") is Dictionary or (not raw.last.is_empty() and not valid_loss(raw.last, maximum)): return false
+	for key in ["field_lost", "barn_lost", "tax_paid"]:
+		if not Rules.number(raw.get(key), 0, maximum): return false
+	if not raw.get("collapse") is Dictionary: return false
+	if not raw.collapse.is_empty():
+		for key in ["event", "phase", "build", "cause", "market_crop"]:
+			if not raw.collapse.get(key) is String or raw.collapse[key].length() > 256: return false
+		for key in ["balance", "market_change"]:
+			if not Rules.number(raw.collapse.get(key), -maximum, maximum): return false
+		for key in ["island", "field_lost", "field_total", "barn_lost", "barn_total", "tax", "seed_factor", "sell_factor", "elapsed", "total_field_lost", "total_barn_lost", "tax_paid"]:
+			if not Rules.number(raw.collapse.get(key), 0, maximum): return false
+		if not raw.collapse.get("history") is Array or not raw.collapse.get("projects") is Dictionary: return false
+	return true
+
+static func valid_loss(raw: Dictionary, maximum: float) -> bool:
+	if raw.get("event") not in EVENTS or not Rules.number(raw.get("island"), 1, 3, true): return false
+	for key in ["field_lost", "field_total", "barn_lost", "barn_total", "at", "severity"]:
+		if not Rules.number(raw.get(key), 0, maximum): return false
+	for key in ["field_lost", "field_total", "barn_lost", "barn_total"]:
+		if float(raw[key]) != floor(float(raw[key])): return false
+	if not Rules.number(raw.severity, 0.5, 1.0): return false
+	return float(raw.field_lost) <= float(raw.field_total) and float(raw.barn_lost) <= float(raw.barn_total)

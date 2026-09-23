@@ -28,6 +28,7 @@ func run() -> void:
 	var stations: Dictionary = {1: "DuckPatrolHouse", 2: "BuyerContracts", 3: "FrostFurnace"}
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		game._on_state_changed()
 		await process_frame
 		await physics_frame

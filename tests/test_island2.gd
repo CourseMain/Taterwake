@@ -20,6 +20,7 @@ func enter_shores() -> void:
 	farm.mastery.russet = State.ISLAND2_UNLOCK_HARVEST
 	farm.unlock_island2()
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 
 func ready_crop(index: int, crop: String = "russet") -> void:
 	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CROPS[crop].grow), "crop": crop, "tilled": true, "pending": 0, "pests": false, "pest_damage": 0.0, "pest_ticks": 0, "pest_elapsed": 0.0, "pest_destroyed": false, "ripe_age": 0.0, "yield_total": 0, "yield_taken": 0}, true)
@@ -70,6 +71,7 @@ func _run() -> void:
 	farm.update(100.0)
 	check(farm.export_timer == 120.0 and not farm.export_active, "locked islands cannot begin export countdown")
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 	check(farm.current_island == 1, "locked ferry cannot be bypassed")
 	farm.coins = 1000000.0
 	farm.mastery.russet = 499
@@ -86,11 +88,17 @@ func _run() -> void:
 	check(farm.coins == 100000.0, "repeated unlock does not charge twice")
 	check(farm.export_timer >= 75.0 and farm.export_timer <= 180.0, "first export delay is a randomized seventy-five to one-hundred-eighty seconds")
 	var old_market: Dictionary = farm.market.duplicate(true)
+	var old_core: Dictionary = farm._market_core.duplicate(true)
+	var old_rng: int = farm.rng.state
 	var old_field: Array = farm.plots.duplicate(true)
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 	check(farm.field_columns() == 8 and farm.field_rows() == 6 and farm.plots.size() == 48, "travel switches field geometry")
-	check(farm.market == old_market and farm.island_plots["1"] == old_field, "travel never rerolls quotes or discards the old farm")
+	var same_history: bool = true
+	for id in farm.CROP_IDS: same_history = same_history and farm.market[id].history == old_market[id].history
+	check(farm._market_core == old_core and farm.rng.state == old_rng and same_history and farm.island_plots["1"] == old_field, "travel never rerolls underlying quotes or discards the old farm; local temporary premiums may expire")
 	farm.travel_to(3)
+	farm.climate.acknowledge(farm)
 	check(farm.current_island == 2 and farm.plots[47].unlocked, "all Shores plots available and no third island")
 	farm.reset_game()
 	enter_shores()
@@ -107,6 +115,7 @@ func _run() -> void:
 	farm.interact_plot(0, "water")
 	farm.update(10.0)
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	check(farm.selected_crop == "russet", "return travel selects an available crop")
 	farm.seed_inventory.sunburst = 1
 	farm.buy_seeds("sunburst", 1)
@@ -122,6 +131,7 @@ func _run() -> void:
 	farm.update(10.0)
 	check(farm.plots[4].stage == 3 and farm.island_plots["2"][0].elapsed == 20.0, "both farms grow simultaneously in real time")
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 	farm.update(25.0)
 	check(farm.plots[0].stage == 3 and farm.island_plots["1"][4].stage == 3, "both ripe crops await manual harvest")
 	farm.tools.hoe = 1
@@ -146,6 +156,7 @@ func _run() -> void:
 	farm.interact_plot(1, "harvest")
 	check(farm.mutations[0].count == 1, "introductory mutation does not repeat each harvest")
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	check(farm.combo_count == 0 and farm.combo_time == 0.0, "travel breaks combo instead of carrying starter harvest into Shores quest")
 	var balance: float = farm.coins
 	farm.sell_crop("sunburst")
@@ -157,8 +168,10 @@ func _run() -> void:
 	farm.interact_plot(0, "harvest")
 	check(farm.plots[0].pending == 5 and farm.storage_used() == 200, "partial harvest preserves uncollected crop at barn capacity")
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	farm.sell_crop("russet")
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 	farm.interact_plot(0, "harvest")
 	check(farm.plots[0].pending == 0 and farm.combo_count == 0 and farm.mutations[0].count == 1 and farm.mastery.sunburst == 6, "partial harvest after travel cannot duplicate yield, mutation, or chain bonus")
 	farm.reset_game()
@@ -168,6 +181,7 @@ func _run() -> void:
 	farm.update(0.1)
 	check(warnings_seen == 1 and is_equal_approx(farm.export_timer, 15.0), "one actionable fifteen-second export warning")
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	check(is_equal_approx(farm.export_timer, 15.0), "travel cannot reset or delay incoming ship")
 	farm.update(15.0)
 	check(farm.export_active and farm.export_timer > 1.0 and farm.export_timer <= 5.0 and farm.export_factor >= 2.0 and farm.export_factor <= 6.0, "export is a short randomized two-to-six-times offer")
@@ -195,6 +209,10 @@ func _run() -> void:
 	check(farm.market.russet.sell == initial_quote, "starter quotes wait for their three-second tick")
 	farm.update(0.02)
 	check(farm.market.russet.sell != initial_quote, "starter quotes update every three seconds")
+	# This fixture isolates the ordinary seed/quote link. Climate intentionally
+	# raises seed costs independently; its complete market chain has its own suite.
+	farm.climate.data.timer = 601.0
+	farm.coins = 1e12
 	var linked_and_bounded: bool = true
 	for _index in range(600):
 		farm.update(1.0)
@@ -202,7 +220,7 @@ func _run() -> void:
 			var multiplier: float = farm.event_strength if farm.current_event in ["seed_fair", "seed_panic"] else 1.0
 			linked_and_bounded = linked_and_bounded and is_equal_approx(farm.market[id].seed, farm.market[id].sell * farm.CROPS[id].yield * 0.45 * multiplier)
 			linked_and_bounded = linked_and_bounded and farm._market_core[id].sell >= farm.CROPS[id].base * 0.35 - 0.001 and farm._market_core[id].sell <= farm.CROPS[id].base * 3.0 + 0.001
-	check(linked_and_bounded, "ten simulated minutes keep seed/crop prices linked and core quotes bounded")
+	check(linked_and_bounded and not farm.run_over and farm.elapsed > 603.0, "ten simulated calm minutes keep seed/crop prices linked and core quotes bounded")
 	farm.reset_game()
 	farm.rng.seed = 781
 	farm._market_core.sunburst.sell = 270000.0
@@ -348,6 +366,7 @@ func _run() -> void:
 	farm._grant_roll_reward("mythic", 20000.0)
 	check(farm.quest_progress.mutation == 0 and not farm.shores_first_mutation, "roll rewards never count as farming discoveries")
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	farm.interact_plot(4, "hoe")
 	ready_crop(0, "golden")
 	farm.interact_plot(0, "harvest")
@@ -407,6 +426,7 @@ func _run() -> void:
 	enter_shores()
 	check(farm.roll_cost("normal") == 2000000.0 and farm.roll_available(), "Shores Roll House uses progression-scaled million-coin stakes")
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	balance = farm.coins
 	var before_rolls: int = farm.roll_count
 	farm.roll("normal")

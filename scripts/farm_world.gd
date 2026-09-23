@@ -30,6 +30,9 @@ var _rare_gem: Node3D
 var _ripe_sparkles: Array[Node3D] = []
 var _rotor: Node3D
 var _clouds: Array[Node3D] = []
+const Climate = preload("res://scripts/climate_system.gd")
+var _weather_strength: float = 0.0
+var _weather_drought: bool = false
 var _villagers: Array[Node3D] = []
 var _toolsmiths: Array[Node3D] = []
 var _time: float = 0.0
@@ -424,6 +427,8 @@ func _clear_world() -> void:
 	_furrow_roots.clear()
 	_ripe_sparkles.clear()
 	_clouds.clear()
+	_weather_strength = 0.0
+	_weather_drought = false
 	_villagers.clear()
 	_toolsmiths.clear()
 	_effect_particles.clear()
@@ -542,6 +547,19 @@ func _apply_graphics_quality() -> void:
 	_sun.shadow_enabled = graphics_quality != "smooth"
 
 
+func set_climate(info: Dictionary) -> void:
+	var strength: float = 0.0
+	if current_island >= 2 and info.island == current_island:
+		if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
+		elif info.phase == "active": strength = float(info.severity)
+		elif info.phase == "recovery": strength = float(info.severity) * float(info.timer) / Climate.RECOVERY_SECONDS
+	var drought: bool = info.event == "drought"
+	if not is_equal_approx(strength, _weather_strength) or drought != _weather_drought:
+		_weather_strength = strength
+		_weather_drought = drought
+		_applied_day_time = -1.0
+		set_day_time(_day_elapsed)
+
 func set_day_time(elapsed: float) -> void:
 	# The farm's saved elapsed time owns this clock: travelling and loading a
 	# save preserve the same sky, and paused gameplay cannot advance it twice.
@@ -569,6 +587,11 @@ func set_day_time(elapsed: float) -> void:
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
 	_sun.light_energy = 0.65 * daylight
 	_moon.light_energy = 0.48 * (1.0 - daylight)
+	if _weather_strength > 0.0:
+		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), _weather_strength * 0.85)
+		_day_environment.ambient_light_color = _day_environment.ambient_light_color.lerp(Color("e9b36b") if _weather_drought else Color("8da5b9"), _weather_strength * 0.55)
+		_sun.light_energy *= 1.0 - _weather_strength * (0.10 if _weather_drought else 0.55)
+
 
 
 func day_cycle_info() -> Dictionary:
@@ -862,7 +885,8 @@ func animate(delta: float, moving: bool) -> void:
 	for toolsmith in _toolsmiths:
 		toolsmith.animate(delta, false)
 	for i in range(_clouds.size()):
-		_clouds[i].position.x += delta * 0.06
+		_clouds[i].position.x += delta * (0.06 + _weather_strength * 1.8)
+		_clouds[i].scale = Vector3.ONE * (1.0 + _weather_strength * 0.45)
 		if _clouds[i].position.x > 24.0:
 			_clouds[i].position.x = -24.0
 

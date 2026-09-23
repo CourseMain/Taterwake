@@ -46,6 +46,7 @@ func winter(state) -> void:
 		for plot in state.island_plots[id]:
 			plot.unlocked = true
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 
 func _run() -> void:
 	var state = State.new()
@@ -156,6 +157,7 @@ func _run() -> void:
 		same_items = same_items and int(state.inventory_items[id]) == int(expected_items[id])
 	check(state.coins == expected_coins and same_items and state.roll_count == 5, "multi-roll economy matches five individually purchased rolls exactly")
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	check(not state.roll_available() and state.roll_batch("normal", 3).is_empty(), "retired earlier roll houses cannot provide cheap batches")
 	state.reset_game()
 	state._grant_item("traders_visor")

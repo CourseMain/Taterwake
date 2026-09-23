@@ -16,12 +16,15 @@ func check(condition: bool, message: String) -> void:
 		push_error("FAIL: " + message)
 
 func winter(state) -> void:
+	# Keep these long clock/rocket fixtures solvent under the blind rules.
+	state.coins = maxf(state.coins, 1e24)
 	state.island2_unlocked = true
 	state.island3_unlocked = true
 	for island in ["2", "3"]:
 		for plot in state.island_plots[island]:
 			plot.unlocked = true
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	state.select_crop("icecap")
 
 func write_save(data: Dictionary) -> void:
@@ -98,16 +101,18 @@ func check_boundary_clocks(state) -> void:
 func _run() -> void:
 	var state = State.new()
 	root.add_child(state)
-	check(State.MECHANICS_REVISION == 8 and state.rocket_timer == 1800.0 and not state.rocket_pending, "revision eight starts with a fresh thirty-minute rocket clock")
+	check(State.MECHANICS_REVISION == 12 and state.rocket_timer == 1800.0 and not state.rocket_pending, "revision twelve starts with a fresh thirty-minute rocket clock")
 	state.update(60.0)
 	check(state.rocket_timer == 1800.0 and not state.rocket_pending, "starter-island time does not advance the rocket")
 	winter(state)
 	state.update(10.25)
 	check(is_equal_approx(state.rocket_timer, 1789.75), "winter advances eligible rocket time precisely")
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	state.update(60.0)
 	check(is_equal_approx(state.rocket_timer, 1789.75) and not state.rocket_pending, "island two pauses rather than resets eligible time")
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	state.tutorial_active = true
 	state.update(45.0)
 	check(is_equal_approx(state.rocket_timer, 1789.75) and not state.rocket_pending, "tutorial time cannot count toward the rocket")
@@ -129,7 +134,7 @@ func _run() -> void:
 	state.update(0.001)
 	check(state.rocket_pending and state.rocket_timer == 1800.0 and state.surge_remaining == 0.0, "thirty-minute boundary prepares the cinematic before activating any boost")
 	check(messages.size() == 9, "rocket preparation takes priority when three-minute and thirty-minute clocks coincide")
-	check(state.rocket_crop == "icecap" and state.rocket_factor >= 151.0 and state.rocket_factor <= 501.0, "rocket chooses the selected crop and a fifteen-thousand to fifty-thousand percent factor")
+	check(state.rocket_crop == "icecap" and state.rocket_factor >= 351.0 and state.rocket_factor <= 1001.0, "rocket chooses the selected crop and a thirty-five-thousand to one-hundred-thousand percent factor")
 	var prepared_factor: float = state.rocket_factor
 	var paused_at: float = state.elapsed
 	var market_clock: float = state._market_clock
@@ -137,6 +142,7 @@ func _run() -> void:
 	state.update(60.0)
 	check(state.elapsed == paused_at and state._market_clock == market_clock and state.rng.state == rng_state and state.surge_remaining == 0.0, "pending cinematic freezes simulation and does not consume or reroll the ten-second prize")
 	state.travel_to(1)
+	state.climate.acknowledge(state)
 	check(state.current_island == 3 and state.rocket_pending and state.rocket_factor == prepared_factor, "travel cannot escape or replace a pending rocket")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "a save made at the exact pending boundary remains loadable")
 	check(state.rocket_pending and is_equal_approx(state.rocket_factor, prepared_factor) and state.rocket_timer == 1800.0 and state.rocket_crop == "icecap", "pending save retains the predetermined crop, multiplier, and next clock")
@@ -147,9 +153,12 @@ func _run() -> void:
 	check(is_equal_approx(state.market.icecap.sell, state.CROPS.icecap.base * prepared_factor), "first sellable rocket quote reflects the saved multiplier")
 	state.complete_rocket_launch()
 	check(messages.size() == 10 and state.surge_remaining == 10.0 and is_equal_approx(state.surge_factor, prepared_factor), "duplicate completion cannot start a second rocket or change its factor")
-	state.surge_factor = 501.0
+	# Isolate base seed-link assertions from the separately tested weather surcharge.
+	state.climate.reset()
+	state.climate.data.introduced = true
+	state.surge_factor = 1001.0
 	state._refresh_market(false)
-	check(is_equal_approx(state.market.icecap.change, 50000.0) and is_equal_approx(state.surge_info().percent, 50000.0), "rocket selected quote and banner allow the exact fifty-thousand percent maximum")
+	check(is_equal_approx(state.market.icecap.change, 100000.0) and is_equal_approx(state.surge_info().percent, 100000.0), "rocket selected quote and banner allow the exact one-hundred-thousand percent maximum")
 	check(is_equal_approx(state.market.icecap.seed, state.market.icecap.sell * state.CROPS.icecap.yield * state.SEED_YIELD_RATIO), "rocket seeds follow the same final sale value")
 	state._start_event("shortage")
 	state.event_strength = 16.0
@@ -162,13 +171,13 @@ func _run() -> void:
 	for id in state.CROP_IDS:
 		if id != "icecap":
 			other_quotes_capped = other_quotes_capped and is_equal_approx(state.market[id].sell, state.CROPS[id].base * 101.0)
-	check(other_quotes_capped and is_equal_approx(state.market.icecap.change, 50000.0), "only the rocket crop receives the exceptional cap during stacked offers")
-	check(state.save_game(SAVE) and state.load_game(SAVE) and state.surge_kind == "rocket" and state.surge_factor == 501.0 and state.surge_remaining == 10.0, "an active maximum rocket survives a save/load round trip")
+	check(other_quotes_capped and is_equal_approx(state.market.icecap.change, 100000.0), "only the rocket crop receives the exceptional cap during stacked offers")
+	check(state.save_game(SAVE) and state.load_game(SAVE) and state.surge_kind == "rocket" and state.surge_factor == 1001.0 and state.surge_remaining == 10.0, "an active maximum rocket survives a save/load round trip")
 	var rocket_seed_price: float = state.market.icecap.seed
 	state.update(5.0)
-	check(is_equal_approx(state.surge_remaining, 5.0) and is_equal_approx(state.market.icecap.change, 50000.0), "rocket boom remains live after the former five-second cutoff")
+	check(is_equal_approx(state.surge_remaining, 5.0) and is_equal_approx(state.market.icecap.change, 100000.0), "rocket boom remains live after the former five-second cutoff")
 	state.update(4.999)
-	check(state.surge_remaining > 0.0 and is_equal_approx(state.market.icecap.change, 50000.0), "rocket sale window stays open until ten whole seconds elapse")
+	check(state.surge_remaining > 0.0 and is_equal_approx(state.market.icecap.change, 100000.0), "rocket sale window stays open until ten whole seconds elapse")
 	state.update(0.001)
 	check(state.surge_remaining == 0.0 and state.surge_factor == 1.0 and state.surge_kind == "normal" and is_equal_approx(state.surge_timer, 170.0), "rocket expiry removes the exception without delaying the next regular boom")
 	check(state.market.icecap.sell <= state.CROPS.icecap.base * 101.0 and is_equal_approx(state.rocket_timer, 1790.0), "after expiry the normal ceiling and eligible rocket countdown resume")
@@ -183,9 +192,11 @@ func _run() -> void:
 	state.update(1.25)
 	var carried_clock: float = state.rocket_timer
 	state.travel_to(1)
+	state.climate.acknowledge(state)
 	check(state.surge_remaining == 0.0 and state.surge_factor == 1.0 and state.surge_kind == "normal" and state.rocket_timer == carried_clock, "leaving winter cancels an active rocket while preserving earned clock progress")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "leaving a rocket cannot create an invalid off-island save")
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	state._start_surge()
 	state.surge_factor = 101.0
 	state.natural_crop = "icecap"
@@ -193,6 +204,7 @@ func _run() -> void:
 	state.natural_remaining = 3.75
 	state._refresh_market(false)
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	check(state.surge_remaining == 10.0 and state.surge_kind == "normal" and is_equal_approx(state.surge_factor, 30.99), "travel clamps an active normal winter surge to the earlier-island ceiling")
 	check(state.natural_remaining == 0.0 and state.natural_factor == 1.0 and state.rocket_timer == carried_clock, "travel clears a natural spike and keeps the independent rocket clock")
 	check(state.save_game(SAVE) and state.load_game(SAVE) and state.current_island == 2, "a clamped winter surge remains a valid earlier-island save")
@@ -231,7 +243,7 @@ func _run() -> void:
 		check(state.coins == 8.4e71 and state.storage.russet == 7 and state.mastery.russet == 19 and same_plots(state.plots, legacy.plots) and str(state.rng.state) == legacy.rng_state, "revision %d migration preserves the normal farm and its RNG" % revision)
 		check(is_equal_approx(state.surge_factor, 30.99) and state.surge_remaining == 2.25 and state.surge_timer == 177.25 and is_equal_approx(state.market.golden.change, 2999.0), "revision %d migration clamps the old early-island 31x quote without discarding its remaining duration" % revision)
 		check(state.rocket_timer == 1800.0 and not state.rocket_pending and state.rocket_factor == 1.0 and state.natural_remaining == 0.0 and state.natural_factor == 1.0 and state.surge_kind == "normal", "revision %d migration initializes new stock mechanics safely" % revision)
-		check(state.save_game(SAVE) and state.load_game(SAVE) and state._save_data().mechanics_revision == 8, "revision %d migration can be saved and loaded again as revision eight" % revision)
+		check(state.save_game(SAVE) and state.load_game(SAVE) and state._save_data().mechanics_revision == 12, "revision %d migration can be saved and loaded again as revision twelve" % revision)
 
 	# Revision-eight saves written before the duration increase keep their
 	# original remaining time; loading never restarts or lengthens a live boom.
@@ -255,7 +267,7 @@ func _run() -> void:
 			state._refresh_market(false)
 			var old_save: Dictionary = state._save_data().duplicate(true)
 			write_save(old_save)
-			check(state.load_game(SAVE) and state._save_data().mechanics_revision == 8, "old revision-eight %s with %.2f seconds remaining loads without a format bump" % [kind, old_remaining])
+			check(state.load_game(SAVE) and state._save_data().mechanics_revision == 12, "old revision-eight %s with %.2f seconds remaining loads without a format bump" % [kind, old_remaining])
 			var loaded_remaining: float = state.natural_remaining if kind == "natural" else state.surge_remaining
 			check(loaded_remaining == old_remaining and state.coins == 8.4e71 and state.storage.russet == 7 and str(state.rng.state) == old_save.rng_state, "old %s keeps its original remaining duration, wealth, inventory, and RNG" % kind)
 			state.update(old_remaining)
@@ -263,10 +275,10 @@ func _run() -> void:
 
 	state.reset_game()
 	var safe: Dictionary = state._save_data().duplicate(true)
-	reject_patch(state, safe, {"surge_remaining": 5.0, "surge_factor": 31.0}, "revision eight rejects a normal early-island factor above 30.99 without changing the farm")
+	reject_patch(state, safe, {"surge_remaining": 5.0, "surge_factor": 31.0}, "revision twelve rejects a normal early-island factor above 30.99 without changing the farm")
 	reject_patch(state, safe, {"surge_remaining": 10.01, "surge_factor": 25.0}, "normal surge duration cannot exceed ten seconds")
-	reject_patch(state, safe, {"rocket_pending": true, "rocket_factor": 151.0}, "pending rockets cannot be loaded on an ineligible island")
-	reject_patch(state, safe, {"rocket_factor": 151.0}, "a nonpending rocket cannot retain a hidden prepared factor")
+	reject_patch(state, safe, {"rocket_pending": true, "rocket_factor": 351.0}, "pending rockets cannot be loaded on an ineligible island")
+	reject_patch(state, safe, {"rocket_factor": 351.0}, "a nonpending rocket cannot retain a hidden prepared factor")
 	reject_patch(state, safe, {"rocket_timer": 0.0}, "a zero rocket timer is rejected instead of producing a stalled update loop")
 	reject_patch(state, safe, {"natural_factor": 25.0}, "an expired natural spike cannot retain a stale multiplier")
 	reject_patch(state, safe, {"natural_remaining": 10.01, "natural_factor": 25.0}, "natural spike duration cannot exceed ten seconds")
@@ -275,19 +287,19 @@ func _run() -> void:
 	state.update(0.1)
 	var pending: Dictionary = state._save_data().duplicate(true)
 	reject_patch(state, pending, {"rocket_factor": 150.99}, "a pending rocket factor below its promised band is rejected atomically")
-	reject_patch(state, pending, {"rocket_factor": 501.01}, "a pending rocket factor above its maximum is rejected atomically")
+	reject_patch(state, pending, {"rocket_factor": 1001.01}, "a pending rocket factor above its maximum is rejected atomically")
 	reject_patch(state, pending, {"rocket_timer": 1799.0}, "a pending rocket must retain the reset thirty-minute clock")
 	state.complete_rocket_launch()
-	state.surge_factor = 501.0
+	state.surge_factor = 1001.0
 	state._refresh_market(false)
 	var active: Dictionary = state._save_data().duplicate(true)
 	reject_patch(state, active, {"surge_remaining": 10.01}, "rocket duration cannot exceed ten seconds")
-	reject_patch(state, active, {"surge_factor": 501.01}, "an active rocket cannot exceed its exceptional cap")
+	reject_patch(state, active, {"surge_factor": 1001.01}, "an active rocket cannot exceed its exceptional cap")
 	var invalid_market: Dictionary = active.market.duplicate(true)
 	invalid_market.golden.sell = state.CROPS.golden.base * 101.01
 	reject_patch(state, active, {"market": invalid_market}, "a rocket save cannot grant its higher quote ceiling to another crop")
 	invalid_market = active.market.duplicate(true)
-	invalid_market.icecap.sell = state.CROPS.icecap.base * 501.01
+	invalid_market.icecap.sell = state.CROPS.icecap.base * 1001.01
 	reject_patch(state, active, {"market": invalid_market}, "the selected rocket quote itself remains bounded in save validation")
 	check_boundary_clocks(state)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

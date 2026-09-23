@@ -36,6 +36,7 @@ func run() -> void:
 			check(absf(float(size.x)/size.y - logical_size.x/logical_size.y) < 2.0/size.y, "letterboxing keeps the complete farm aspect ratio")
 			for island: int in [1, 2, 3]:
 				game.state.travel_to(island)
+				game.state.climate.acknowledge(game.state)
 				game.state.plots[4].unlocked = true
 				game._on_state_changed()
 				await physics_frame

@@ -60,10 +60,13 @@ const RollReel = preload("res://scripts/roll_spinner.gd")
 const MarketImpact = preload("res://scripts/market_impact.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
 const EquipmentPreview = preload("res://scripts/equipment_preview.gd")
+const Type = preload("res://scripts/ui_type.gd")
+const ClimateIcon = preload("res://scripts/climate_icon.gd")
 const UI_FONT = preload("res://assets/fonts/NunitoSans.ttf")
 const UI_SYMBOLS = preload("res://assets/fonts/NotoSansSymbols.ttf")
 const UI_SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
 const RewardFeedback = preload("res://scripts/reward_feedback.gd")
+const BlindRules = preload("res://scripts/blind_rules.gd")
 const CASINO: Color = Color("2b1d40")
 const CASINO_LIGHT: Color = Color("bca5da")
 const INK: Color = Color("17382d")
@@ -184,6 +187,15 @@ var _debug_unlocked: bool = false
 var _debug_time_multiplier: float = 1.0
 var _debug_access_error: String = ""
 var _graphics_quality: String = "balanced"
+var _blind_card: PanelContainer
+var _blind_labels: Dictionary = {}
+var _run_end: Control
+var _run_end_title: Label
+var _run_end_detail: Label
+var _blind_modal_warning: Label
+var _climate_alert: Control
+var _climate_effect: Control
+var _collapse_hidden: Array[CanvasItem] = []
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -237,9 +249,9 @@ func build_ui() -> void:
 	body_font.variation_opentype = {weight_axis: 400.0}
 	_font = body_font
 	var title_font: FontVariation = FontVariation.new()
-	title_font.base_font = UI_FONT
+	title_font.base_font = Type.DISPLAY
 	title_font.fallbacks = [UI_SYMBOLS, UI_SYMBOLS_2]
-	title_font.variation_opentype = {weight_axis: 700.0}
+	title_font.variation_opentype = {weight_axis: 600.0}
 	_heading_font = title_font
 	root = Control.new()
 	root.name = "TaterlandHUD"
@@ -252,13 +264,225 @@ func build_ui() -> void:
 	add_child(root)
 	_market_impact = MarketImpact.new()
 	root.add_child(_market_impact)
+	_climate_effect = load("res://scripts/climate_effect.gd").new()
+	root.add_child(_climate_effect)
 	_build_top()
 	_build_sidebar()
 	_build_footer()
 	_build_notices()
 	_build_export_strip()
+	_build_blind_card()
 	_build_modal()
 	_build_tutorial()
+	_climate_alert = load("res://scripts/climate_alert.gd").new()
+	root.add_child(_climate_alert)
+	_climate_alert.continue_requested.connect(func() -> void: _act("climate_continue"))
+	_build_run_end()
+
+func _build_blind_card() -> void:
+	_blind_card = _card(Color("172e2b"), 12)
+	_blind_card.name = "BlindForecast"
+	_place(_blind_card, Rect2(28, 196, 302, 0))
+	var column: VBoxContainer = _vbox(4)
+	_blind_card.add_child(column)
+	for entry: Array in [["title", 14, GOLD], ["balance", 19, CREAM], ["progress", 14, Color("71e7a1")], ["tax", 13, CREAM], ["projected", 13, CREAM], ["weather", 12, Color("d7b18e")], ["deadline", 12, Color("b4c7bf")], ["debt", 12, CHERRY]]:
+		var label: Label = _label("", int(entry[1]), entry[2], entry[0] in ["title", "balance", "progress"])
+		var compact := FontVariation.new()
+		compact.base_font = UI_FONT
+		compact.variation_opentype = (_heading_font if entry[0] in ["title", "balance", "progress"] else _font).variation_opentype
+		label.add_theme_font_override("font", compact)
+		label.clip_text = true
+		column.add_child(label)
+		_blind_labels[entry[0]] = label
+	_blind_card.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			_act("taxes")
+	)
+	_blind_card.tooltip_text = "Taxes · click for rules and last payment"
+
+func _build_run_end() -> void:
+	_run_end = load("res://scripts/climate_collapse.gd").new()
+	root.add_child(_run_end)
+	_run_end_title = _run_end.headline
+	_run_end_detail = _run_end.detail
+	_run_end.restart_requested.connect(func() -> void: _act("reset"))
+
+func _update_blind_ui() -> void:
+	if not is_instance_valid(_state) or not _state.has_method("blind_info"):
+		return
+	var info: Dictionary = _state.call("blind_info")
+	var climate: Dictionary = _state.call("climate_info")
+	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
+	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over)
+	_blind_labels.title.text = "%s · ISLAND %d" % [info.name, int(info.island)]
+	_blind_labels.balance.text = "%s / %s" % [_blind_money(info.current), _blind_money(info.target)]
+	_blind_labels.title.add_theme_color_override("font_color", GOLD if info.cleared else Color("ff7777"))
+	_blind_labels.balance.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff7777"))
+	_blind_labels.progress.text = str(_state.call("blind_progress_text", float(info.ratio))) + (" · " + str(info.rank) if float(info.ratio) < 2.0 else "")
+	_blind_labels.progress.add_theme_color_override("font_color", Color("71e7a1") if info.cleared else Color("ff7777"))
+	_blind_labels.tax.text = "Base %s · %s" % [_blind_money(info.base_tax), "+%.0f%% TAX BOOM" % ((float(info.tax_multiplier) - 1.0) * 100.0) if info.tax_boom else "+0%"]
+	_blind_labels.tax.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else CREAM)
+	_blind_labels.projected.text = "After tax  " + _blind_money(info.projected)
+	_blind_labels.projected.add_theme_color_override("font_color", Color("ff937c") if info.projected < 0.0 else CREAM)
+	_blind_labels.deadline.text = "COLLECTION IN %ds · SELL NOW" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major booms · View rules ›" % [int(info.booms), int(info.booms_required)]
+	_blind_labels.debt.visible = info.current < 0.0 or info.projected < 0.0
+	_blind_labels.debt.text = "Bankruptcy below " + _blind_money(info.bankruptcy)
+	_blind_labels.weather.visible = climate.phase != "calm" or float(climate.pressure) > 0.0
+	_blind_labels.weather.text = "%s · %s %ds" % [climate.name, str(climate.phase).to_upper(), ceili(climate.timer)] if climate.phase != "calm" else "RECOVERY COSTS +%.0f%%" % (float(climate.pressure) * 100.0)
+	_blind_labels.tax.hide()
+	_blind_labels.projected.visible = info.projected < 0.0
+	_blind_labels.deadline.hide()
+	_blind_labels.title.text = "TAX IN %ds" % ceili(info.due_in) if info.due_in > 0.0 else "TAX · %d STOCKS LEFT" % (int(info.booms_required) - int(info.booms))
+	_blind_labels.debt.visible = info.current < 0.0
+	_blind_modal_warning.visible = _tutorial.is_empty() and not bool(info.run_over) and (info.due_in > 0.0 or info.current < 0.0)
+	_blind_modal_warning.text = "%s · %s / %s%s" % ["TAX BOOM" if info.tax_boom else info.name, _blind_money(info.current), _blind_money(info.target), " · %ds left" % ceili(info.due_in) if info.due_in > 0.0 else " · %d/%d stocks" % [int(info.booms), int(info.booms_required)]]
+	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind == "roll" else (GREEN if info.cleared else Color("bb4334")))
+	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
+	if climate.intro_pending and not info.run_over:
+		if not _climate_alert.introduction: _climate_alert.present("introduction", climate, _state)
+	if info.run_over:
+		if not _run_end.visible:
+			cancel_roll()
+			close_panel()
+			_toast_box.hide()
+			_purchase_box.hide()
+			_combo_box.hide()
+		for child in root.get_children():
+			if child is CanvasItem and child != _run_end and child.visible:
+				if not _collapse_hidden.has(child): _collapse_hidden.append(child)
+				child.hide()
+		_run_end.show_report(_state)
+	elif _run_end.visible:
+		_run_end.hide()
+		for child in _collapse_hidden:
+			if is_instance_valid(child): child.show()
+		_collapse_hidden.clear()
+
+
+func _build_blinds() -> void:
+	_heading("Tax day", "Every 3 major stocks · About 9 minutes")
+	var hero := _card(INK, 22)
+	_body.add_child(hero)
+	var column := _vbox(7)
+	hero.add_child(column)
+	column.add_child(_label("YOUR NEXT BILL", 12, Color("d4bc8b")))
+	_refs.blind_live = _wrap("", 29, CREAM, true)
+	column.add_child(_refs.blind_live)
+	_refs.blind_due = _wrap("", 16, CREAM)
+	column.add_child(_refs.blind_due)
+	_info("blind_forecast", "", INK, 20)
+	_info("tax_advice", "Short on cash? Sell crops. Use the next stock boom.
+Unpaid tax becomes debt. Only bankruptcy ends the run.", MUTED, 16)
+	if _island_id() >= 2: _body.add_child(_button("Protect your farm →", "climate", true))
+	_body.add_child(_button("Rates, ranks & last payment", "toggle_details:tax_details"))
+	var details := _vbox(10)
+	_body.add_child(details)
+	_refs.tax_details = details
+	details.hide()
+	for island in BlindRules.PROGRESSION_BASELINES:
+		details.add_child(_wrap("Island %d · %s–%s tax · Bankruptcy below %s" % [island, _blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE), _blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE * BlindRules.TAX_BOOM_MAX), _blind_money(BlindRules.bankruptcy(island))], 15, MUTED))
+	details.add_child(_wrap("5% of progression. Tax Booms and weather add up to +150%. Returning to an earlier island keeps your tax tier.", 14, MUTED))
+	details.add_child(_wrap("2× Overkill · 5× Ultra Kill · 10× Godlike
+25× Omnipotent · 100× Ruler · 1,000× Cosmic Ruler", 15, GREEN))
+	_refs.blind_last = _wrap("", 15, INK)
+	details.add_child(_refs.blind_last)
+	_refresh_blinds()
+
+func _refresh_blinds() -> void:
+	var info: Dictionary = _state.call("blind_info")
+	_refs.blind_live.text = "%s · %s / %s · %s" % [info.name, _blind_money(info.current), _blind_money(info.target), str(_state.call("blind_progress_text", float(info.ratio)))]
+	_refs.blind_live.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff937c"))
+	_refs.blind_forecast.text = "Base %s · +%.0f%%%s\nAfter tax  %s   /   Bankruptcy below  %s" % [_blind_money(info.base_tax), (float(info.tax_multiplier) - 1.0) * 100.0, " TAX BOOM" if info.tax_boom else "", _blind_money(info.projected), _blind_money(info.bankruptcy)]
+	_refs.blind_forecast.add_theme_color_override("font_color", GREEN if info.cleared else Color("bb4334"))
+	_refs.blind_due.text = "Collection in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks" % [int(info.booms), int(info.booms_required)]
+	var last: Dictionary = info.last_result
+	_refs.blind_last.text = "" if last.is_empty() else "LAST TAX · %s\n%s / %s · %s\nCollected %s → Balance %s" % ["PAID" if last.cleared else "BORROWED", _blind_money(last.balance), _blind_money(last.tax), str(_state.call("blind_progress_text", float(last.ratio))), _blind_money(last.tax), _blind_money(last.after)]
+
+func _build_climate() -> void:
+	_heading("Weather the storm", "Protect your crops. Cut recovery costs.")
+	if _island_id() < 2:
+		_info("climate_locked", "Climate action begins on Golden Shores.", INK, 23)
+		_body.add_child(_button("Explore islands →", "island", true))
+		return
+	var hero := _card(Color("dce6e3"), 10)
+	_body.add_child(hero)
+	var row := _hbox(16)
+	hero.add_child(row)
+	var icon := ClimateIcon.new()
+	icon.custom_minimum_size = Vector2(64, 64)
+	row.add_child(icon)
+	_refs.climate_icon = icon
+	var status := _vbox(3)
+	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(status)
+	_refs.climate_status = _wrap("", 26, INK, true)
+	_refs.climate_market = _wrap("", 16, INK)
+	status.add_child(_refs.climate_status)
+	status.add_child(_refs.climate_market)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	_body.add_child(grid)
+	var captions: Dictionary = {"rainwater": "Save crops in droughts", "drainage": "Keep floodwater out", "barn": "Protect stored potatoes", "windbreaks": "Shelter crops from storms"}
+	for id in _state.ClimateSystem.PROJECTS:
+		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
+		var card := _card(PAPER, 10)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.tooltip_text = project.detail
+		grid.add_child(card)
+		var column := _vbox(3)
+		card.add_child(column)
+		var top := _hbox(8)
+		column.add_child(top)
+		var badge := ClimateIcon.new()
+		badge.kind = id
+		badge.custom_minimum_size = Vector2(32, 32)
+		top.add_child(badge)
+		top.add_child(_wrap(project.name, 19, INK, true))
+		column.add_child(_wrap(captions[id], 14, MUTED))
+		var button := _button("", "climate_fund:" + id, true)
+		button.add_theme_font_override("font", Type.face(Type.DISPLAY, 600))
+		column.add_child(button)
+		_refs["climate_fund:" + id] = button
+	var bottom := _hbox(12)
+	_body.add_child(bottom)
+	var tax := _button("Tax forecast →", "taxes")
+	tax.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(tax)
+	var more := _button("How protection works", "toggle_details:climate_details")
+	more.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom.add_child(more)
+	var details := _vbox(6)
+	_body.add_child(details)
+	_refs.climate_details = details
+	details.hide()
+	for project in _state.ClimateSystem.PROJECTS.values(): details.add_child(_wrap(project.name + " · " + project.detail, 14, MUTED))
+	_refs.climate_reference = _wrap("", 14, GREEN)
+	details.add_child(_refs.climate_reference)
+	_refresh_climate()
+
+func _refresh_climate() -> void:
+	if not _refs.has("climate_status"): return
+	var info: Dictionary = _state.call("climate_info")
+	_refs.climate_icon.kind = info.event if info.phase != "calm" else "calm"
+	_refs.climate_icon.queue_redraw()
+	_refs.climate_status.text = "Clear skies" if info.phase == "calm" else "%s · %ds" % [str(info.name).capitalize(), ceili(info.timer)]
+	if info.phase == "warning":
+		_refs.climate_market.text = "Harvest now. Recovery tax: about %s." % _blind_money(info.warning_tax)
+	elif info.phase in ["active", "recovery"]:
+		_refs.climate_market.text = "Seeds +%.0f%% · Sales %.0f%%
+Next tax %s" % [(float(info.seed_factor) - 1.0) * 100.0, (float(info.sell_factor) - 1.0) * 100.0, _blind_money(_state.call("blind_info").tax)]
+	else:
+		_refs.climate_market.text = "Prepare before the next warning." if info.pressure == 0.0 else "Weather passed. Recovery tax is still due."
+	var opportunity: Dictionary = _state.call("stock_opportunity")
+	_refs.climate_reference.text = "Stock haul reference: %s · %s potatoes at this quote." % [_blind_money(opportunity.reference), _number(opportunity.units)]
+	for id in _state.ClimateSystem.PROJECTS:
+		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
+		var level: int = int(info.projects[str(_island_id())].get(id, 0))
+		var cost: float = float(BlindRules.PROGRESSION_BASELINES[_island_id()]) * float(project.cost) * float(level + 1)
+		var maximum: int = _state.ClimateSystem.MAX_PROJECT_LEVEL
+		_set_button("climate_fund:" + id, "Fully protected" if level >= maximum else "%s · %s" % ["Build" if level == 0 else "Upgrade", _blind_money(cost)], level >= maximum or float(_state.coins) < cost)
 
 func _build_tutorial() -> void:
 	_tutorial_card = _card(Color("17382d"), 15)
@@ -575,6 +799,12 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action.begins_with("toggle_details:"):
+		var key: String = action.get_slice(":", 1)
+		if _refs.has(key): _refs[key].visible = not _refs[key].visible
+		return
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action != "reset":
+		return
 	if not _tutorial_allows(action):
 		return
 	if action in ["tutorial:exit", "tutorial:stay"]:
@@ -966,7 +1196,7 @@ func _build_modal() -> void:
 	var titles: VBoxContainer = _vbox(3)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
-	_modal_title = _wrap("Welcome to Taterland", 28, INK, true)
+	_modal_title = _wrap("Welcome to Taterland", 34, INK, true)
 	_modal_subtitle = _wrap("Good soil. Wild markets.", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
@@ -974,6 +1204,8 @@ func _build_modal() -> void:
 	close.custom_minimum_size.x = 40
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	header.add_child(close)
+	_blind_modal_warning = _wrap("", 13, CHERRY, true)
+	column.add_child(_blind_modal_warning)
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -997,6 +1229,7 @@ func update_state(state: Node) -> void:
 	var storage: Dictionary = state.get("storage")
 	var delta: float = float(quote.get("change", 0))
 	_top.coins.text = _money(_frozen_coins if _rolling else float(state.get("coins")))
+	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < float(state.call("blind_info").tax) else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
 	_top.price.text = "%s  %s" % [_money(float(quote.get("sell", 0))), _change_text(delta)]
 	_top.price.add_theme_color_override("font_color", GREEN if delta >= 0 else CHERRY)
@@ -1022,6 +1255,7 @@ func update_state(state: Node) -> void:
 	_combo_bar.value = combo_time
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
+	_update_blind_ui()
 	if is_panel_open():
 		if _panel_kind in ["activities", "duck_patrol", "menu", "pause"] and _panel_island != _island_id():
 			show_panel(_panel_kind, state)
@@ -1187,17 +1421,22 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
 		"graphics": _build_graphics()
+		"taxes", "blinds": _build_blinds()
+		"climate": _build_climate()
 		_: _build_help()
 	_refresh_panel()
 	_modal.show()
+	_blind_card.hide()
 	_refresh_seed_visibility()
 	_modal.move_to_front()
+	_update_blind_ui()
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
 
 func _heading(title: String, subtitle: String) -> void:
 	_modal_title.text = title
 	_modal_subtitle.text = subtitle
+	_modal_subtitle.visible = not subtitle.is_empty()
 
 func _info(key: String, text: String = "", color: Color = GREEN, size: int = 14) -> Label:
 	var label: Label = _wrap(text, size, color)
@@ -1226,8 +1465,8 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 
 func _build_market() -> void:
 	var first_seed: bool = _tutorial_seed_market()
-	_heading("Meet the seed seller" if first_seed else "The Spud Exchange", "Start small. One Russet seed is all you need." if first_seed else "Buy seeds low. Grow them yourself. Decide when to sell.")
-	_info("market_note", "Prices stay live. Changes are vs opening prices; graphs show recent sale prices.")
+	_heading("Meet the seed seller" if first_seed else "The Spud Exchange", "Start small. One Russet seed is all you need." if first_seed else "Buy low. Grow. Sell high.")
+	_info("market_note", "Live prices · Buy seeds or sell your harvest.")
 	_panel_crops = _market_crops()
 	for crop: String in _panel_crops:
 		var card: PanelContainer = _card(PAPER, 7 if _panel_crops.size() == 5 else 12)
@@ -1272,7 +1511,7 @@ func _build_market() -> void:
 		_refs["sell:" + crop + ":-1"] = sell_button
 
 func _build_barn() -> void:
-	_heading("Your inventory", "Your crops. Your gear. Your next big build.")
+	_heading("Your inventory", "Crops, gear and everything you own.")
 	_info("inventory_total", "")
 	_panel_crops = _known_crops()
 	_inventory_sections.clear()
@@ -1333,7 +1572,7 @@ func _build_barn() -> void:
 	_set_inventory_tab()
 
 func _build_tools() -> void:
-	_heading("Tools for bigger harvests", "More beds with every click.")
+	_heading("Tool shed", "More beds with every click.")
 	for tool: String in ["hoe", "water", "harvest"]:
 		var names: Dictionary = {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe"}
 		_offer(names[tool], "", "Upgrade", "upgrade:" + tool, true)
@@ -1457,9 +1696,9 @@ func _build_dex() -> void:
 	_info("dex_tip", "Mutation value = live crop price × rarity multiplier.", MUTED, 14)
 
 func _build_island() -> void:
-	_heading("New islands. Bigger harvests.", "Your crops keep growing while you travel.")
+	_heading("Set sail", "Your crops keep growing while you travel.")
 	_offer("SPUD VALLEY", "24 beds · 4 crops · Home sweet home", "Travel", "travel:1", true)
-	_offer("GOLDEN SHORES", "48 beds · 2× yield · 4× mutations\nFirst Sunburst harvest: guaranteed Golden mutation.", "Travel", "travel:2", true)
+	_offer("GOLDEN SHORES", "48 beds · 2× yield · Wild weather", "Travel", "travel:2", true)
 	_info("island_requirements", "", CORAL, 15)
 	_offer("A ticket to Golden Shores", "%s harvests + %s" % [_number(_catalog_number("ISLAND2_UNLOCK_HARVEST", 500)), _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000))], "Unlock · $1M", "island_unlock")
 	_refs["island_unlock_card"] = _body.get_child(_body.get_child_count() - 1)
@@ -1521,16 +1760,19 @@ func _help_step(title: String, detail: String) -> void:
 	box.add_child(_wrap(detail, 14, MUTED))
 
 func _build_pause() -> void:
-	_heading("Your farm", "%s · Your crops and the market keep moving." % str(_state.call("island_name")))
+	_heading("Your farm", "Choose your next move.")
 	var menu: GridContainer = GridContainer.new()
 	menu.columns = 3
 	menu.add_theme_constant_override("h_separation", 10)
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Market", "market", "B", "trader_token"], ["Debug: money, luck & time", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
+	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Market", "market", "B", "trader_token"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
+	if _tutorial.is_empty():
+		entries.append(["Taxes", "taxes", "", "investor"])
+		if _island_id() >= 2: entries.append(["Climate action", "climate", "", "almanac"])
 	for entry: Array in entries:
 		var tutorial_feature: String = str(entry[1])
 		if tutorial_feature == "activities":
@@ -1541,7 +1783,7 @@ func _build_pause() -> void:
 			continue
 		var button: Button = _button("", str(entry[1]))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 92
+		button.custom_minimum_size.y = 61
 		menu.add_child(button)
 		var row: HBoxContainer = _hbox(6)
 		button.add_child(row)
@@ -1552,27 +1794,34 @@ func _build_pause() -> void:
 		row.offset_top = 8
 		row.offset_bottom = -8
 		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("build" if str(entry[3]) in ["farmer", "gambler", "investor"] else ("tool" if entry[3] == "hoe" else ("build_crate" if entry[3] == "build_crate" else "relic")))
-		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 48))
-		var name_label: Label = _wrap(str(entry[0]) + ("\n[" + str(entry[2]) + "]" if not str(entry[2]).is_empty() else ""), 13, INK, true)
+		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 36))
+		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(name_label)
+	_body.add_child(_button("Settings, saves & help", "toggle_details:menu_settings"))
+	var settings := _vbox(8)
+	_body.add_child(settings)
+	_refs.menu_settings = settings
+	settings.hide()
 	var utility: HBoxContainer = _hbox(8)
-	_body.add_child(utility)
+	settings.add_child(utility)
 	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["How to play", "help"]]:
 		var button: Button = _button(entry[0], entry[1])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		utility.add_child(button)
 	if _tutorial.is_empty():
-		_body.add_child(_button("First island guided tour", "tutorial:restart"))
-	_body.add_child(_button("Back to the farm", "close", true))
+		settings.add_child(_button("Replay the guided tour", "tutorial:restart"))
 	if _reset_pending:
-		_info("reset_warning", "Replace this farm with a new one? This cannot be undone.", CHERRY, 14)
-		_body.add_child(_button("Keep my farm", "cancel_reset"))
-		_body.add_child(_button("Yes, start a new farm", "reset", true))
+		settings.show()
+		settings.add_child(_wrap("Start over? This replaces your farm.", 14, CHERRY))
+		settings.add_child(_button("Keep my farm", "cancel_reset"))
+		settings.add_child(_button("Yes, start a new farm", "reset", true))
 	else:
 		var reset_button: Button = _button("Start a new farm…", "request_reset")
 		reset_button.add_theme_font_size_override("font_size", 12)
-		_body.add_child(reset_button)
+		settings.add_child(reset_button)
+
+	_body.add_child(_button("Back to the farm", "close", true))
 
 func set_graphics_quality(mode: String) -> void:
 	_graphics_quality = mode
@@ -1599,6 +1848,12 @@ func _refresh_graphics() -> void:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
+	if _panel_kind == "climate":
+		_refresh_climate()
+		return
+	if _panel_kind in ["taxes", "blinds"]:
+		_refresh_blinds()
+		return
 	if not is_instance_valid(_state):
 		return
 	_restore_tutorial_buttons()
@@ -1764,6 +2019,9 @@ func _trend(change: float, history: Array = []) -> String:
 	if change <= -5:
 		return "FALLING"
 	return "STABLE"
+
+func _blind_money(value: float) -> String:
+	return str(_state.call("money", value, true))
 
 func _money(value: float) -> String:
 	return str(_state.call("money", value)) if is_instance_valid(_state) else "$%.0f" % value
@@ -2120,7 +2378,7 @@ func _update_builds_badge() -> void:
 	_builds_button.text = "Builds  [C]"
 
 func _build_builds() -> void:
-	_heading("Make the farm your own", "Five ways to play. Build Crates grant levels. Find crates in 5% of rolls.")
+	_heading("Find your build", "Open Build Crates to gain levels.")
 	_info("build_activity_title", "", INK, 18)
 	_info("build_activity_detail", "", MUTED, 14)
 	var actions: HBoxContainer = _hbox(10)
@@ -2178,7 +2436,8 @@ func _refresh_builds() -> void:
 		var unlocked: bool = bool(entry.get("unlocked", false))
 		var selected: bool = bool(entry.get("active", false))
 		var bonuses: String = str(entry.get("bonuses", ""))
-		_refs[key + ":detail"].text = str(entry.get("description", "")) + ("\n" + bonuses if not bonuses.is_empty() else "")
+		_refs[key + ":detail"].text = bonuses if not bonuses.is_empty() else str(entry.get("description", ""))
+		_refs[key + ":detail"].tooltip_text = str(entry.get("description", ""))
 		_set_button(key, "Active · Lv.%d" % int(entry.get("level", 1)) if selected else ("Select · Lv.%d" % int(entry.get("level", 1)) if unlocked else "Find in a crate"), selected or not unlocked)
 
 func _build_tracked_prices() -> void:
@@ -2266,20 +2525,22 @@ func _update_surge_timer() -> void:
 	_export_title.add_theme_color_override("font_color", Color.WHITE if _surge_active or _surge_urgent else CREAM)
 	_export_detail.text = "%s  +%.0f%%" % [_crop_name(str(info.get("crop", "russet"))).to_upper(), float(info.get("percent", 500))] if _surge_active else ("GET READY · " + span if _surge_urgent else span + " stock boom")
 	if rocket_soon and not _surge_active:
-		_export_detail.text = "+15,000–50,000% AFTER LIFTOFF"
+		_export_detail.text = "+35,000–100,000% AFTER LIFTOFF"
 	elif _island_id() >= 3 and not _surge_active and not _surge_urgent:
 		_export_detail.text = "3K–10K%% · ROCKET %d:%02d" % [rocket_seconds / 60, rocket_seconds % 60]
 	# Keep only actionable island activities as a single short secondary line.
 	if not _surge_active and not _surge_urgent:
 		if _island_id() == 2 and bool(_state.get("export_active")):
 			_export_detail.text = "Export · %.0fs · Golden / Sunburst" % float(_state.get("export_timer"))
+	var opportunity: Dictionary = _state.call("stock_opportunity")
+	_export_box.tooltip_text = "Haul reference: %s (8%% of progression)\n%s %s at this quote. Grow and sell to earn it." % [_blind_money(opportunity.reference), _number(opportunity.units), _crop_name(opportunity.crop)]
 	_export_detail.add_theme_color_override("font_color", accent)
 	_export_bar.max_value = 10.0 if _surge_active else (10.0 if _surge_urgent else 180.0)
 	_export_bar.value = float(info.get("timer", 180)) if _surge_active or _surge_urgent else 180.0 - float(info.get("timer", 180))
 	if rocket_soon and not _surge_active:
 		_export_bar.value = rocket_seconds
 	_export_bar.get_theme_stylebox("fill").bg_color = accent
-	_toast_box.position.y = 205
+	_toast_box.position.y = 410
 	_market_impact.set_countdown(_island_id(), minf(float(info.get("timer", 180)), float(rocket_seconds) if _island_id() >= 3 else 180.0) if not _surge_active else 180.0)
 
 func _effective_luck() -> float:

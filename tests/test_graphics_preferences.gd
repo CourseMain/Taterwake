@@ -55,6 +55,7 @@ func run() -> void:
 	game.state.island3_unlocked = true
 	for island: int in [2, 3, 1]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		check(game.world.graphics_quality == "smooth" and not game.world._sun.shadow_enabled, "Smooth stays active on island%d" % island)
 	game.hud._act("graphics")
 	await process_frame

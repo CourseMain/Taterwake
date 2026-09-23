@@ -76,7 +76,7 @@ func run() -> void:
 	game.state.surge_timer = 0.01
 	game._process(0.01)
 	check(game.state.surge_remaining > 0.0 and game.hud._surge_active and game.hud._top.surge.text.contains("SELL"), "countdown opens a real bounded market surge")
-	game.state.update(5.0)
+	game.state.update(10.0)
 	check(not game.hud._surge_active and not game.hud._surge_urgent, "expired surge returns to calm countdown")
 	game.state.select_crop("russet")
 	game.state.pest_timer = 100.0
@@ -100,9 +100,11 @@ func run() -> void:
 	game.state.mastery.russet = 25000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
 	game.state.unlock_island3()
 	for island in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		game.hud._toast_box.hide()
 		game.hud._reward_box.hide()
 		game.hud._context_box.hide()

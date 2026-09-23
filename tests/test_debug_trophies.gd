@@ -58,6 +58,7 @@ func winter(state) -> void:
 		for plot in state.island_plots[id]:
 			plot.unlocked = true
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 
 func ready_plot(state, index: int = 0) -> Dictionary:
 	var plot: Dictionary = state.plots[index]

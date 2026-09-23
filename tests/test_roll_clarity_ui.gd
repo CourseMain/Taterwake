@@ -33,7 +33,7 @@ func run() -> void:
 	game.set_process(false)
 	for glyph: String in ["→", "←", "↑", "↓", "✓", "▸", "▾", "★", "◆"]:
 		check(game.hud._font.has_char(glyph.unicode_at(0)), "bundled UI font covers " + glyph)
-	check(game.hud._font.variation_opentype.get(2003265652) == 400.0 and game.hud._heading_font.variation_opentype.get(2003265652) == 700.0, "bundled variable font uses readable body and heading weights")
+	check(game.hud._font.variation_opentype.get(2003265652) == 400.0 and game.hud._heading_font.variation_opentype.get(2003265652) == 600.0, "bundled variable font uses readable body and heading weights")
 	game._on_action("menu")
 	var menu: GridContainer = game.hud._body.get_child(0)
 	check(menu.get_child(2).get_meta("action", "") == "debug", "Debug is in the first menu row")
@@ -47,6 +47,7 @@ func run() -> void:
 	game.state.unlock_island2()
 	game.state.unlock_island3()
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	game.state.coins = 20e12
 	game._on_action("roll")
 	check(not game.hud._refs["roll:normal"].disabled, "winter ordinary roll still costs20T")

@@ -21,6 +21,7 @@ func winter(state) -> void:
 		for plot in state.island_plots[id]:
 			plot.unlocked = true
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 
 func draw_tier(draw: float, odds: Array) -> String:
 	var cumulative: float = 0.0

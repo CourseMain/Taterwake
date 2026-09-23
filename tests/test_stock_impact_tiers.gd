@@ -18,13 +18,13 @@ func run() -> void:
 	root.add_child(effect)
 	await process_frame
 	check(not effect.active and not effect.visible and not effect.is_processing(), "calm farm allocates no active FX loop")
-	var boundaries: Dictionary = {-100.0: 0, 300.0: 0, 300.01: 1, 499.99: 1, 500.0: 2, 2999.99: 2, 3000.0: 3, 10000.0: 3, 14999.99: 3, 15000.0: 4, 19900.0: 4}
+	var boundaries: Dictionary = {-100.0: 0, 300.0: 0, 300.01: 1, 499.99: 1, 500.0: 2, 2999.99: 2, 3000.0: 3, 10000.0: 3, 14999.99: 3, 15000.0: 3, 34999.99: 3, 35000.0: 4, 100000.0: 4}
 	for percent: float in boundaries:
 		effect.set_quote(1, percent)
 		check(Impact.tier_for_percent(percent) == boundaries[percent] and effect.tier == boundaries[percent], "exact tier boundary at %s percent" % percent)
 	effect._process(1.5)
 	var arrival_age: float = effect._tier_elapsed
-	effect.set_quote(1, 17500.0)
+	effect.set_quote(1, 37500.0)
 	check(effect._tier_elapsed == arrival_age and effect.tier == 4, "same-tier quote updates do not replay the arrival flash")
 	effect._process(40.0)
 	check(effect.active and effect.tier == 4 and effect._energy() > 0.0, "continuous stock lasts as long as its quote")
@@ -33,7 +33,7 @@ func run() -> void:
 	effect.set_quote(1, 300.0)
 	check(not effect.active and not effect.visible and not effect.is_processing() and effect.strength == 0.0, "return to ordinary stock clears the effect in the same update")
 	check(float(effect._mist_material.get_shader_parameter("energy")) == 0.0 and effect._energy() == 0.0, "quote drop also clears shader energy")
-	effect.set_quote(1, 16000.0)
+	effect.set_quote(1, 36000.0)
 	effect.reward(1)
 	effect.set_countdown(1, 1.0)
 	effect._process(0.5)
@@ -41,7 +41,7 @@ func run() -> void:
 	check(effect.tier == 1 and effect._elapsed == 0.0 and effect._tier_elapsed == 0.0, "changing islands restarts the appropriate tier")
 	check(effect._reward_remaining == 0.0 and effect._anticipation == 0.0 and effect.remaining == 0.0, "previous island cannot leak rewards, countdown or timed surges")
 	check(effect._color == Color("ffd537"), "island two is yellow")
-	effect.set_quote(3, 15000.0)
+	effect.set_quote(3, 35000.0)
 	check(effect._color == Color("35aaff"), "island three is blue")
 	effect.set_quote(1, 301.0)
 	check(effect._color == Color("19f889"), "island one is green")
@@ -59,7 +59,7 @@ func run() -> void:
 	check(effect.active and effect._visual_tier() == 2 and effect.tier == 0, "legacy timed surge remains supported without promoting the quote")
 	effect.set_quote(1, 0.0)
 	check(not effect.active and effect.remaining == 0.0, "a calm quote cancels a stale timed surge")
-	effect.set_quote(1, 16000.0)
+	effect.set_quote(1, 36000.0)
 	var node_count: int = effect.get_child_count()
 	for frame: int in range(600):
 		effect._process(1.0 / 60.0)
@@ -87,7 +87,7 @@ func capture_farm() -> void:
 	game.state.island3_unlocked = true
 	var effect = game.hud._market_impact
 	for level: int in range(1, 5):
-		effect.set_quote(1, [0.0, 400.0, 1500.0, 7000.0, 17000.0][level])
+		effect.set_quote(1, [0.0, 400.0, 1500.0, 7000.0, 37000.0][level])
 		effect._elapsed = 2.2
 		effect._tier_elapsed = 2.2
 		effect._process(0.0)
@@ -95,6 +95,7 @@ func capture_farm() -> void:
 		await shot("tier-" + str(level))
 	for island_id: int in [2, 3]:
 		game.state.travel_to(island_id)
+		game.state.climate.acknowledge(game.state)
 		game.hud._toast_box.hide()
 		effect.set_quote(island_id, 7000.0)
 		effect._elapsed = 2.2
@@ -103,7 +104,7 @@ func capture_farm() -> void:
 		effect.set_process(false)
 		await shot("island-" + str(island_id) + "-jackpot")
 	root.size = Vector2i(960, 600)
-	effect.set_quote(3, 17000.0)
+	effect.set_quote(3, 37000.0)
 	effect._elapsed = 2.2
 	effect._tier_elapsed = 2.2
 	effect._process(0.0)

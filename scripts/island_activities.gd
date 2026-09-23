@@ -111,6 +111,8 @@ func buy_duck() -> String:
 	return hire_duck() if duck_count() == 0 else train_ducks()
 
 func hire_duck() -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if duck_count() >= duck_capacity():
 		return state._reject_purchase("Flock full: %d / %d ducks." % [duck_count(), duck_capacity()])
 	var cost: float = duck_hire_cost()
@@ -123,6 +125,8 @@ func hire_duck() -> String:
 	return state._complete_purchase({"kind": "duck", "id": "duck_patrol", "name": "Patrol duck", "quantity": 1, "cost": cost, "total": duck_count(), "level": duck_level}, "Duck hired! %d / %d on patrol." % [duck_count(), duck_capacity()])
 
 func train_ducks() -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if duck_count() == 0:
 		return state._reject_purchase("Hire a duck first.")
 	if duck_speed() >= 2:
@@ -238,6 +242,8 @@ func contract_offer(kind: String) -> Dictionary:
 		"base_quote": float(state.market[crop].sell) * target * (1.5 if kind == "mutation" else 1.25)}
 
 func choose_contract(kind: String) -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if int(state.current_island) != 2 or not state.island2_unlocked:
 		return state._finish("Visit the Golden Shores buyer.")
 	if kind not in ["bulk", "mutation"]:
@@ -262,6 +268,8 @@ func _contract_held() -> int:
 	return count
 
 func deliver_contract() -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if int(state.current_island) != 2 or not state.island2_unlocked:
 		return state._finish("Visit the Golden Shores buyer to deliver a contract.")
 	if contract.is_empty():
@@ -303,6 +311,8 @@ func deliver_contract() -> String:
 	return state._finish("ORDER COMPLETE! +%s · Next buyer in 25s" % state.money(earnings))
 
 func charge_furnace(crop: String = "icecap") -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if int(state.current_island) != 3 or not state.island3_unlocked:
 		return state._finish("The potato furnace is in Frosthollow.")
 	if crop != "icecap":
@@ -338,6 +348,8 @@ func next_boundary() -> float:
 	return boundary
 
 func update(delta: float) -> bool:
+	if state.run_over:
+		return false
 	if not is_finite(delta) or delta <= 0.0:
 		return false
 	var was_burning: bool = furnace_remaining > 0.0

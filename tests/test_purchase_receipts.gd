@@ -125,6 +125,7 @@ func _test_seeds() -> void:
 		state.island2_unlocked = true
 		state.island3_unlocked = true
 		state.travel_to(island)
+		state.climate.acknowledge(state)
 		state.coins = 1.0e18
 		builds.active = "investor"
 		builds.levels.investor = 9
@@ -156,8 +157,10 @@ func _test_tools_and_space() -> void:
 	state.island2_unlocked = true
 	state.island3_unlocked = true
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	_failure(func(): return state.upgrade_tool("hoe"), "rank-three gate on island two")
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	for tool: String in ["hoe", "water", "harvest"]:
 		var receipt: Dictionary = _success(func(): return state.upgrade_tool(tool), "tool", tool, 1, State.TOOL_COSTS[tool][2], tool + " winter rank three")
 		check(state.tools[tool] == 3 and int(receipt.get("level", -1)) == 3, tool + " winter receipt reports final rank")
@@ -223,6 +226,7 @@ func _test_ducks_and_services() -> void:
 		state.island2_unlocked = island >= 2
 		state.island3_unlocked = island == 3
 		state.travel_to(island)
+		state.climate.acknowledge(state)
 		builds.active = "gambler"
 		builds.levels.gambler = 1
 		var cost: float = state.roll_cost("normal") * 0.5

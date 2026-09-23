@@ -25,6 +25,7 @@ func enter_island(state, island: int) -> void:
 		for plot in state.island_plots["3"]:
 			plot.unlocked = true
 	state.travel_to(island)
+	state.climate.acknowledge(state)
 
 func scheduled_sample(state, luck: float) -> Dictionary:
 	state.debug_luck_multiplier = luck
@@ -197,7 +198,7 @@ func _run() -> void:
 		var value: float = pow(10.0, 15 + index * 3)
 		check(state.money(value) == "$1.0" + suffixes[index] and state.money(value * 12.5) == "$12.5" + suffixes[index], "large money formats with " + suffixes[index])
 	check(state.money(1e36) == "$1e36" and state.money(8.4e71) == "$8.4e71", "balances beyond decillions retain scientific notation")
-	check(state.money(0.24) == "$0.24" and state.money(1e-20) == "$1e-20" and state.money(-9e19) == "$-90.0Qi", "extended suffixes preserve fractional, tiny, and signed balances")
+	check(state.money(0.24) == "$0.24" and state.money(1e-20) == "$1e-20" and state.money(-9e19) == "-$90.0Qi", "extended suffixes preserve fractional, tiny, and signed balances")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	state.free()
 	print("STOCK CEILINGS AND DISTRIBUTIONS: %d checks, %d failures" % [checks, failures])

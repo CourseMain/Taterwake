@@ -156,6 +156,7 @@ func _run() -> void:
 	state.unlock_island2()
 	state.unlock_island3()
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	state.selected_crop = "icecap"
 	state.seed_inventory.icecap = 1
 	state.storage.icecap = 50
@@ -206,10 +207,12 @@ func _test_flocks() -> void:
 			state._clear_crop(plot)
 	for island in [1, 2, 3]:
 		state.travel_to(island)
+		state.climate.acknowledge(state)
 		var data: Dictionary = activities.info()
 		check(data.duck_count == 0 and data.duck_capacity == island and data.ducks.size() == island, "island%d starts with empty patrol slots and the correct capacity" % island)
 		check(not data.ducks[0].trained, "untrained island%d flock is marked as idle for coop visuals" % island)
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	for index in [3, 8]:
 		_infest(index)
 	activities.update(8.0)
@@ -228,6 +231,7 @@ func _test_flocks() -> void:
 	check(flock[0].elapsed == 1 and flock[1].elapsed == 1, "each island2 duck owns an independent travel clock")
 	var shores: Array = activities.duck_patrols["2"].duplicate(true)
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	for index in [3, 5, 7]:
 		_infest(index)
 	activities.train_ducks()
@@ -250,6 +254,7 @@ func _test_flocks() -> void:
 	check(activities.duck_clears == 3 and activities.info().ducks[0].clears == 1 and activities.info().ducks[1].clears == 1 and activities.info().ducks[2].clears == 1, "each duck records exactly its own successful clear")
 	check(state.plots[3].pest_ticks == 1 and is_equal_approx(state.plots[3].pest_damage, 1.0 / 3.0), "multi-duck patrol never heals earlier damage")
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	check(activities.info().ducks[0].elapsed == 1 and activities.info().ducks[1].elapsed == 1, "returning to an island resumes each duck's saved route")
 	state.update(3.0)
 	check(not state.plots[3].pests and not state.plots[8].pests and activities.duck_clears == 5, "two shores ducks finish their individual interrupted chases")
@@ -258,10 +263,12 @@ func _test_flocks() -> void:
 	activities.update(1.0)
 	var previous_progress: float = activities.info().ducks[0].progress
 	state.travel_to(3)
+	state.climate.acknowledge(state)
 	state.coins = 1e16
 	activities.train_ducks()
 	check(activities.duck_speed() == 1 and activities.duck_interval() == 3.0 and activities.duck_count() == 3, "speed upgrade improves only winter speed without adding a duck")
 	state.travel_to(2)
+	state.climate.acknowledge(state)
 	check(activities.duck_interval() == 4.0 and is_equal_approx(activities.info().ducks[0].progress, previous_progress), "winter training leaves Shores speed and route progress untouched")
 	var snapshot: Dictionary = activities.save_data()
 	check(int(snapshot.version) == 3 and snapshot.duck_patrols.size() == 3 and activities.valid_data(snapshot), "version3 save contains ownership, speed and all patrol paths")

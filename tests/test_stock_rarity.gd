@@ -32,6 +32,7 @@ func configure(state, profile: int, island: int) -> void:
 			for plot in state.island_plots[id]:
 				plot.unlocked = true
 		state.travel_to(3)
+		state.climate.acknowledge(state)
 		state.select_crop("icecap")
 	if profile == 2:
 		state.build_system.active = "investor"
@@ -81,7 +82,7 @@ func verify_profile(result: Dictionary, expected_bands: Array[float], expected_q
 
 func check_live_outfit_quotes(state, rocket: bool) -> void:
 	configure(state, 2, 3)
-	var low: float = 151.0 if rocket else 31.0
+	var low: float = 351.0 if rocket else 31.0
 	var high: float = State.MAX_PRICE_MULTIPLIER if rocket else state.stock_cap()
 	var at_cap: int = 0
 	var exact: bool = true
@@ -120,9 +121,9 @@ func check_offer_stacks(state) -> void:
 		state._refresh_market(false)
 		check(is_equal_approx(state.market[crop].sell, state.CROPS[crop].base * 35.0), "scheduled draw takes priority over overlapping natural spikes and ordinary offer stacks")
 		state._prepare_rocket()
-		state.rocket_factor = 175.0
+		state.rocket_factor = 375.0
 		state.complete_rocket_launch()
-		check(is_equal_approx(state.market[crop].sell, state.CROPS[crop].base * 175.0) and state.surge_remaining == 10.0, "post-film rocket keeps its sampled quote and full duration despite every overlapping offer")
+		check(is_equal_approx(state.market[crop].sell, state.CROPS[crop].base * 375.0) and state.surge_remaining == 10.0, "post-film rocket keeps its sampled quote and full duration despite every overlapping offer")
 		check(is_equal_approx(state.market[crop].seed, state.market[crop].sell * state.CROPS[crop].yield * State.SEED_YIELD_RATIO * state.build_system.seed_factor()), "seed purchases follow the final unmultiplied boom quote and the ordinary Investor discount")
 
 func run() -> void:
@@ -132,7 +133,7 @@ func run() -> void:
 	root.add_child(builds)
 	builds.state = state
 	state.build_system = builds
-	for band in [{"low": 6.0, "high": 30.99, "kind": "scheduled", "island": 1}, {"low": 31.0, "high": 101.0, "kind": "scheduled", "island": 3}, {"low": 151.0, "high": 501.0, "kind": "rocket", "island": 3}]:
+	for band in [{"low": 6.0, "high": 30.99, "kind": "scheduled", "island": 1}, {"low": 31.0, "high": 101.0, "kind": "scheduled", "island": 3}, {"low": 351.0, "high": 1001.0, "kind": "rocket", "island": 3}]:
 		for profile in range(3):
 			configure(state, profile, band.island)
 			var result: Dictionary = sample(state, band.low, band.high, band.kind)

@@ -73,6 +73,7 @@ func run() -> void:
 	game.state.island3_unlocked = true
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		game.state.surge_remaining = 0.0
 		game.state.surge_timer = 180.0
 		game.state.export_active = false
@@ -87,7 +88,7 @@ func run() -> void:
 		game.hud._context_box.hide()
 		await process_frame
 		stock_fits("Island%d calm" % island)
-		check(game.hud._export_title.text.contains("3:00") and game.hud._export_detail.text.contains("3,000%"), "calm countdown shows actual new range on island%d" % island)
+		check(game.hud._export_title.text.contains("3:00") and game.hud._export_detail.text.contains("3K–10K%" if island == 3 else "+500–2,999%"), "calm countdown shows actual new range on island%d" % island)
 		await shot("island-" + str(island))
 		game.state.surge_timer = 10.0
 		game.hud.update_state(game.state)

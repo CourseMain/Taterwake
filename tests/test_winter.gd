@@ -55,11 +55,13 @@ func _run() -> void:
 	game.state.rng.seed = 79431
 	check(game.test_mode, "winter test never loads or overwrites the player farm")
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	check(game.state.current_island == 1, "winter farm is earned before travel")
 	game.state.coins = 151000000000.0
 	game.state.mastery.russet = 25000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
 	game._on_action("island")
 	press("island3_unlock")
 	check(game.state.island3_unlocked, "winter unlock is wired to real requirements")

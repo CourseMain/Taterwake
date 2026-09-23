@@ -71,6 +71,7 @@ func run() -> void:
 	game.state.unlock_island3()
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		game._on_action("duck_patrol")
 		check(game.hud._refs.has("activity:duck") and game.hud._refs.has("activity:duck:speed"), "two distinct duck controls on island %d" % island)
 		check(game.hud._refs["activity:duck:speed"].disabled, "empty flock cannot buy speed")
@@ -88,6 +89,7 @@ func run() -> void:
 		check(game.activities.duck_count() == island and game.activities.duck_interval() == 3.0, "speed changes time without adding ducks")
 		await shot("ducks-%d-trained" % island)
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
 	game.state.selected_crop = "sunburst"
 	game.state.market.sunburst.sell = 90000
 	game.state.storage.sunburst = 100
@@ -127,6 +129,7 @@ func run() -> void:
 	game._on_action("activities")
 	await shot("buyer-compact")
 	game.state.travel_to(1)
+	game.state.climate.acknowledge(game.state)
 	game.tutorial.start(true)
 	await shot("guide-compact")
 	game.tutorial.finish()

@@ -74,6 +74,7 @@ func run() -> void:
 	var shop_points: Array[Vector3] = [Vector3(-6.4, 1.5, -8.5), Vector3(-8, 1.5, -10.6), Vector3(18, 1.9, 2)]
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		await process_frame
 		await physics_frame
 		await physics_frame

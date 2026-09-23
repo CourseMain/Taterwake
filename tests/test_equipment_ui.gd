@@ -73,6 +73,7 @@ func run() -> void:
 	game.hud.close_panel()
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
 		game._on_action("duck_patrol")
 		check(game.hud._refs.has("activity:duck") and not game.hud._refs["activity:duck"].disabled, "island %d offers duck hiring" % island)
 		check(game.hud._refs["activity:duck:detail"].text.begins_with("0 / %d ducks" % island), "island %d shows correct flock size" % island)

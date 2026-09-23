@@ -63,6 +63,8 @@ func seed_factor() -> float:
 	return 1.0 - level() * 0.015 if active == "investor" else 1.0
 
 func select_build(id: String) -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if not levels.has(id) or int(levels[id]) < 1:
 		return state._finish("Open a Build Crate to unlock this build.")
 	if not processing.is_empty() and id != active:
@@ -125,6 +127,8 @@ func activity_info() -> Dictionary:
 		"processing": not processing.is_empty(), "progress": clampf(progress, 0, 1), "processed_value": processed_value(), "fertilizer": fertilizer}
 
 func use_ability() -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	if not bool(activity_info().can_use):
 		if active in ["gambler", "investor"]:
 			return state._reject_purchase("This ability needs more coins or time to recover.")
@@ -165,6 +169,8 @@ func use_ability() -> String:
 	return ""
 
 func update(delta: float, processing_step: float = -1.0) -> void:
+	if state.run_over:
+		return
 	if not is_finite(delta) or delta <= 0:
 		return
 	cooldown = maxf(0.0, cooldown - delta)
@@ -195,6 +201,8 @@ func processed_value() -> float:
 	return minf(1.0e300, total)
 
 func sell_processed() -> String:
+	if state.run_over:
+		return "Run over. Start a new farm."
 	var value: float = processed_value()
 	if value <= 0:
 		return state._finish("No processed batches to sell yet.")
@@ -236,6 +244,8 @@ func grant_roll_build(_tier: String) -> String:
 	return ""
 
 func open_crate() -> Dictionary:
+	if state.run_over:
+		return {}
 	# Ownership and the in-flight guard live in the simulation, not in the button.
 	# Rejecting a request must not advance RNG or mutate any build level.
 	if _crate_opening:

@@ -63,6 +63,7 @@ func run() -> void:
 	game.state.mastery.russet = 30000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
 	game._on_action("activities")
 	press("activity:contract:bulk")
 	check(str(game.activities.contract.get("kind", "")) == "bulk", "Shores supply choice reaches backend")
@@ -81,6 +82,7 @@ func run() -> void:
 	game.hud.close_panel()
 	game.state.unlock_island3()
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	game.state.select_crop("icecap")
 	game.state.storage.icecap = 125
 	game.builds.levels.industrialist = 1
@@ -113,6 +115,7 @@ func run() -> void:
 	await shot("batch-results")
 	game.hud.close_panel()
 	game.state.travel_to(1)
+	game.state.climate.acknowledge(game.state)
 	game._on_action("roll_batch:normal:3")
 	check(game.state.roll_count == count_before + 5 and not game.hud.is_roll_animating(), "batch requests on a retired island cannot roll or lock HUD")
 	if capture:

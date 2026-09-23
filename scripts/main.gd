@@ -72,6 +72,8 @@ var stock_shake_clock: float = 0.0
 var debug_unlocked: bool = false
 var debug_time_multiplier: float = 1.0
 var graphics_quality: String = "balanced"
+var climate_audio: Node
+var climate_shake: float = 0.0
 var farm_viewport: SubViewport
 
 func _ready() -> void:
@@ -128,16 +130,25 @@ func _ready() -> void:
 	state.harvest_chain.connect(_on_chain)
 	state.island_changed.connect(_on_island_changed)
 	state.export_changed.connect(_on_export_changed)
+	state.blind_resolved.connect(_on_blind_resolved)
+	state.tax_boom_started.connect(_on_tax_boom)
+	state.run_ended.connect(_on_run_ended)
+	state.climate_changed.connect(_on_climate_changed)
 	_setup_sound()
+	climate_audio = load("res://scripts/climate_audio.gd").new()
+	add_child(climate_audio)
 	tutorial = TutorialScript.new()
 	tutorial.name = "FirstIslandTutorial"
 	add_child(tutorial)
 	tutorial.setup(self)
+	state.climate.on_arrival(state)
 	_on_state_changed()
 	state.activate_roll_boost()
 	hud.set_tool(selected_tool)
 	if not test_mode:
-		if not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
+		if state.run_over:
+			_on_run_ended()
+		elif not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
 			tutorial.start()
 		elif returning:
 			hud.show_toast("Your farm is restored. The market is open!")
@@ -159,6 +170,12 @@ func _register_inputs() -> void:
 func _process(delta: float) -> void:
 	if world == null or hud == null:
 		return
+	if state.run_over:
+		_pump_audio()
+		return
+	if state.climate.data.intro_pending:
+		_pump_audio()
+		return
 	if state.rocket_pending:
 		_start_rocket_if_ready()
 		return
@@ -171,10 +188,15 @@ func _process(delta: float) -> void:
 	if _simulation_changed:
 		_simulation_changed = false
 		_on_state_changed()
+	if state.run_over:
+		return
 	if state.rocket_pending:
 		_start_rocket_if_ready()
 		return
+	var climate_info: Dictionary = state.climate_info()
+	world.set_climate(climate_info)
 	world.set_day_time(state.elapsed)
+	climate_audio.set_weather(climate_info, state.current_island, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
 	_update_stock_shake(delta)
 	var infested: int = 0
@@ -281,6 +303,8 @@ func _simulation_delta(delta: float) -> float:
 	return step
 
 func _advance_simulation(delta: float) -> void:
+	if state.run_over or state.climate.data.intro_pending:
+		return
 	if _tutorial_active():
 		state.update(delta)
 		return
@@ -291,8 +315,13 @@ func _advance_simulation(delta: float) -> void:
 		# at its own boundary, then consume the rest of this simulation interval.
 		if builds.fertilizer > 0.0:
 			step = minf(step, maxf(0.000001, float(builds.fertilizer)))
+		if float(state.blind_cycle.due_in) > 0.0:
+			step = minf(step, float(state.blind_cycle.due_in))
+		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
 		var processing_step: float = activities.processing_time(step)
 		state.update(step)
+		if state.run_over:
+			return
 		builds.update(step, processing_step)
 		remaining = maxf(0.0, remaining - step)
 		if state.rocket_pending:
@@ -343,7 +372,10 @@ func _debug_action(parts: PackedStringArray) -> void:
 				state.save_game()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if state.climate.data.intro_pending: return
 	if hud == null:
+		return
+	if state.run_over:
 		return
 	if state.rocket_pending:
 		return
@@ -444,6 +476,8 @@ func _start_walk(point: Vector3, follow_ferry: bool = false) -> void:
 	walking = true
 
 func queue_ferry() -> void:
+	if state.run_over:
+		return
 	if _tutorial_active() and not tutorial.allows_action("island"):
 		return
 	_cancel_walk()
@@ -473,6 +507,8 @@ func _select_tool(tool: String) -> void:
 		_update_hover()
 
 func queue_plot(index: int) -> void:
+	if state.run_over:
+		return
 	if _tutorial_active() and not tutorial.allows_plot(index, selected_tool):
 		return
 	if index < 0 or index >= state.plots.size():
@@ -487,6 +523,8 @@ func queue_plot(index: int) -> void:
 	_preview_area(index, pending_tool)
 
 func perform_plot(index: int, tool: String = "hoe") -> void:
+	if state.run_over:
+		return
 	if _tutorial_active() and not tutorial.allows_plot(index, tool):
 		return
 	if index < 0 or index >= state.plots.size():
@@ -602,7 +640,7 @@ func _on_state_changed() -> void:
 		_update_market_impact()
 
 func _update_market_impact() -> void:
-	if _tutorial_active() or state.rocket_pending:
+	if state.run_over or _tutorial_active() or state.rocket_pending:
 		hud.set_market_intensity(state.current_island, 0.0)
 		surge_live = false
 		surge_band = 0
@@ -655,6 +693,11 @@ func _update_stock_shake(delta: float) -> void:
 	var amplitude: float = 0.0
 	if surge_band >= 3 and not _tutorial_active():
 		amplitude = (0.075 if surge_band == 3 else 0.12) * (0.45 + 0.55 * exp(-fmod(stock_shake_clock, 0.5) * 7.0))
+	climate_shake = move_toward(climate_shake, 0.0, delta * 0.25)
+	var weather: Dictionary = state.climate_info()
+	if weather.phase == "active" and weather.event == "storm" and weather.island == state.current_island:
+		amplitude += float(weather.severity) * 0.075 * (0.2 + 0.8 * pow(maxf(0.0, sin(stock_shake_clock * 1.7)), 3.0))
+	amplitude = minf(0.26, amplitude + climate_shake)
 	world.camera.h_offset = sin(stock_shake_clock * 43.0) * amplitude
 	world.camera.v_offset = sin(stock_shake_clock * 57.0 + 0.8) * amplitude * 0.6
 
@@ -692,7 +735,16 @@ func _on_export_changed(active: bool) -> void:
 		sparkle_tone = true
 
 func _on_action(action: String) -> void:
-	if state.rocket_pending:
+	if state.climate.data.intro_pending and action not in ["reset", "climate_continue"]: return
+	if action == "climate_continue":
+		state.climate.acknowledge(state)
+		hud._climate_alert.dismiss()
+		hud.show_panel("climate", state)
+		_save_blind_checkpoint.call_deferred()
+		return
+	if state.run_over and action != "reset":
+		return
+	if state.rocket_pending and action != "reset":
 		return
 	if hud.is_roll_animating():
 		return
@@ -712,7 +764,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "tracked_prices", "market", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug":
+		"menu", "tracked_prices", "market", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -769,6 +821,10 @@ func _on_action(action: String) -> void:
 						activities.charge_furnace(parts[2])
 			if not test_mode:
 				state.save_game()
+		"climate_fund":
+			if parts.size() == 2:
+				state.climate.fund(state, parts[1])
+				_save_blind_checkpoint.call_deferred()
 		"gear":
 			if parts.size() != 3:
 				return
@@ -839,6 +895,8 @@ func _on_action(action: String) -> void:
 			_select_tool("hoe")
 			hud.close_panel()
 			tutorial.start()
+			if not test_mode:
+				state.save_game()
 	if _tutorial_active():
 		tutorial.observe_action(action)
 
@@ -847,6 +905,53 @@ func _on_purchase_completed(receipt: Dictionary) -> void:
 	_play_tone(740.0, 0.12)
 	if _tutorial_active():
 		tutorial.observe_purchase(receipt)
+
+func _on_tax_boom() -> void:
+	var info: Dictionary = state.blind_info()
+	hud.show_toast("TAX BOOM +%.0f%% · Bill %s\nTwo more major stocks to prepare." % [(float(info.tax_multiplier) - 1.0) * 100.0, state.money(info.tax, true)])
+	_play_tone(196.0, 0.45)
+
+func _on_climate_changed(phase: String) -> void:
+	var info: Dictionary = state.climate_info()
+	if phase in ["introduction", "warning", "impact", "recovery"]:
+		if phase == "introduction":
+			_cancel_walk()
+			hud.cancel_roll()
+			hud.close_panel()
+		hud._climate_alert.present(phase, info, state)
+		_play_tone(164.81 if phase == "impact" else 220.0, 0.6)
+	if is_instance_valid(climate_audio):
+		climate_audio.set_weather(info, state.current_island, state.run_over)
+		if phase == "impact": climate_audio.impact()
+	if phase == "impact" and info.island == state.current_island:
+		climate_shake = 0.22 if info.event != "drought" else 0.08
+	world.set_climate(info)
+	_save_blind_checkpoint.call_deferred()
+
+func _on_blind_resolved(result: Dictionary) -> void:
+	if not state.run_over:
+		hud.show_toast("TAX %s · %s\nCollected %s · Balance %s" % ["PAID" if result.cleared else "BORROWED", state.blind_progress_text(result.ratio), state.money(result.tax, true), state.money(result.after, true)])
+		_play_tone(1046.5, 0.35)
+	_save_blind_checkpoint.call_deferred()
+
+func _on_run_ended() -> void:
+	_cancel_walk()
+	hud.cancel_roll()
+	hud._climate_alert.dismiss()
+	climate_shake = 0.0
+	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), state.current_island, true)
+	builds.finish_crate_reveal()
+	pest_alert.update(0.0, 0)
+	surge_band = 0
+	fanfare_remaining = 0.0
+	world.camera.h_offset = 0.0
+	world.camera.v_offset = 0.0
+	_play_tone(130.81, 0.65)
+	_save_blind_checkpoint.call_deferred()
+
+func _save_blind_checkpoint() -> void:
+	if not test_mode:
+		state.save_game()
 
 func _on_purchase_rejected(message: String) -> void:
 	hud.show_toast(message)

@@ -32,12 +32,13 @@ func run() -> void:
 	game.state.island2_unlocked = true
 	game.state.island3_unlocked = true
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	game.state.select_crop("icecap")
 	game.state.coins = 1.23e24
 	game.state.storage.icecap = 4
 	game.state.rocket_timer = 9.0
 	game.hud.update_state(game.state)
-	check(game.hud._export_title.text.contains("ROCKET IN") and game.hud._export_detail.text.contains("50,000"), "HUD announces imminent rocket with correct range")
+	check(game.hud._export_title.text.contains("ROCKET IN") and game.hud._export_detail.text.contains("100,000"), "HUD announces imminent rocket with correct range")
 	await shot("stock-rocket-countdown-hud")
 	game.state.rocket_timer = 0.1
 	game.state.surge_timer = 0.1
@@ -92,6 +93,7 @@ func run() -> void:
 	game.hud._market_impact._process(1.1)
 	await shot("stock-winter-jackpot-hud")
 	game.state.travel_to(1)
+	game.state.climate.acknowledge(game.state)
 	game.state.surge_remaining = 10.0
 	game.state.surge_crop = "russet"
 	game.state.surge_factor = 18.0

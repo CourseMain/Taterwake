@@ -147,9 +147,11 @@ func run() -> void:
 	farm.unlock_island2()
 	var timer: float = farm.surge_timer
 	farm.travel_to(2)
+	farm.climate.acknowledge(farm)
 	check(farm.market_tick_seconds() == 5.0 and farm.surge_timer == timer, "later-island five-second quotes and traveling never reset the surge countdown")
 	farm.unlock_island3()
 	farm.travel_to(3)
+	farm.climate.acknowledge(farm)
 	farm.select_crop("icecap")
 	farm.surge_timer = 0.1
 	farm.update(0.1)
@@ -157,9 +159,11 @@ func run() -> void:
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "combined winter travel, settings and surge state remains a valid save")
 	farm.set_tracked_seed("icecap", true)
 	farm.travel_to(1)
+	farm.climate.acknowledge(farm)
 	check(not farm.tracked_seed_ids().has("icecap") and farm.tracked_seeds.has("icecap"), "travel hides unavailable tracked crops without deleting their preference")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "off-island tracking preference and active winter surge remain valid")
 	farm.travel_to(3)
+	farm.climate.acknowledge(farm)
 	check(farm.tracked_seed_ids().has("icecap"), "returning to winter restores the previously selected Icecap ticker")
 
 	clean_farm()
@@ -219,12 +223,14 @@ func run() -> void:
 	farm.notified.connect(func(message: String) -> void:
 		if message.begins_with("STOCK SURGE!"): surge_messages.append(message)
 	)
+	# Long market fixture funds its mandatory blind taxes.
+	farm.coins = 1e12
 	farm.update(3600.0)
 	check(surge_messages.size() == 20 and farm.surge_remaining == 10.0 and farm.surge_timer == 180.0, "one long update produces exactly one surge every three minutes with no overlapping starts")
 	var bounded: bool = true
 	for id in farm.CROP_IDS:
 		bounded = bounded and is_finite(farm.market[id].sell) and farm.market[id].sell > 0.0 and farm.market[id].sell <= farm.CROPS[id].base * farm.stock_cap()
-	check(bounded and farm.coins == 240.0 and farm.roll_count == 0, "an hour of overlapping market events keeps finite capped quotes and awards no money or rolls automatically")
+	check(bounded and farm.coins < 1e12 and farm.coins > 1e11 and farm.blind_cycle.clears == 6 and farm.roll_count == 0, "an hour of overlapping market events keeps finite capped quotes and collects six taxes without awarding money or rolls")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()
 	await process_frame

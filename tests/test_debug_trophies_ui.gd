@@ -69,6 +69,7 @@ func run() -> void:
 	game.state.apply_debug(1, 100)
 	game.state._grant_item("aurora_crown")
 	game.state.travel_to(3)
+	game.state.climate.acknowledge(game.state)
 	game.state.rng.seed = 19087
 	game._on_action("roll")
 	check(game.hud._refs.crown_offer.visible, "equipped Crown announces its free same-stake roll before purchase")
