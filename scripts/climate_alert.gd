@@ -82,19 +82,19 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	shade.visible = introduction
 	action.visible = introduction
 	mouse_filter = Control.MOUSE_FILTER_STOP if introduction else Control.MOUSE_FILTER_IGNORE
-	remaining = 0.0 if introduction else 5.0
+	remaining = 0.0 if introduction else (1.5 if kind == "impact" else 5.0)
 	panel.get_child(0).get_child(0).text = "ISLAND %d / A CHANGING CLIMATE" % (farm.current_island if introduction else int(info.island))
 	if introduction:
 		title.text = "THE WEATHER IS CHANGING"
 		message.text = "Storms can destroy your harvest and empty your barn.\nThe recovery bill comes next."
-		footer.text = "Watch the warnings. Harvest early. Fund protection."
+		footer.text = "Stock your reserves. Operate equipment. Rescue stressed crops."
 	elif kind == "warning":
 		title.text = "%s IN %ds" % [info.name, ceili(info.timer)]
 		message.text = {"drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
 		footer.text = "Recovery bill: about %s · Climate action in ☰" % farm.money(info.warning_tax, true)
 	elif kind == "impact":
 		title.text = {"drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
-		message.text = "%s beds lost     /     %s stored potatoes lost" % [farm.format_number(info.last.field_lost), farm.format_number(info.last.barn_lost)]
+		message.text = {"drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Screens reduce wind damage."}.get(info.event, "Protect your harvest.")
 		footer.text = "Next tax: %s · Sell what you can save." % farm.money(farm.blind_info().tax, true)
 	else:
 		title.text = "THE WEATHER IS EASING"

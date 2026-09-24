@@ -7,6 +7,7 @@ var target_strength: float = 0.0
 var clock: float = 0.0
 var phase: String = "calm"
 var flash: float = 0.0
+var strike_flash: float = 0.0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -15,6 +16,7 @@ func _ready() -> void:
 	set_process(false)
 
 func set_weather(info: Dictionary, island: int, paused: bool) -> void:
+	strike_flash = float(info.get("operations", {}).get("flash", 0.0))
 	event = str(info.event)
 	phase = str(info.phase)
 	target_strength = 0.0
@@ -31,7 +33,7 @@ func set_weather(info: Dictionary, island: int, paused: bool) -> void:
 func _process(delta: float) -> void:
 	clock += delta
 	strength = move_toward(strength, target_strength, delta * 1.1)
-	flash = maxf(0.0, 1.0 - fposmod(clock, 8.0) / 0.18) if event == "storm" and phase == "active" else 0.0
+	flash = clampf(strike_flash / 0.75, 0.0, 1.0) if event == "storm" and phase == "active" else 0.0
 	if strength <= 0.005 and target_strength == 0.0:
 		hide()
 		set_process(false)
@@ -50,9 +52,19 @@ func _draw() -> void:
 	var drought: bool = event == "drought"
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.83, 0.45, 0.10, 0.13 * strength) if drought else Color(0.10, 0.20, 0.30, 0.18 * strength))
 	if drought:
-		var sun := Vector2(size.x * 0.81, 115)
+		var sun := Vector2(size.x * 0.64, 125)
 		for layer in range(5, 0, -1):
 			draw_circle(sun, 38.0 + layer * 24.0, Color(1.0, 0.68, 0.25, 0.025 * strength))
+		for ray in range(12):
+			var angle: float = ray * TAU / 12.0 + clock * 0.035
+			var direction := Vector2.from_angle(angle)
+			draw_line(sun + direction * 46, sun + direction * (64 + sin(clock * 2 + ray) * 5), Color(1, 0.79, 0.34, strength * 0.7), 3, true)
+		draw_circle(sun, 34, Color(1, 0.88, 0.48, strength * 0.88))
+		draw_circle(sun + Vector2(-4, -4), 26, Color(1, 0.96, 0.72, strength * 0.85))
+		for band in range(5):
+			var heat := PackedVector2Array()
+			for j in range(40): heat.append(Vector2(size.x * j / 39.0, size.y * (0.4 + band * 0.08) + sin(j * 0.6 + clock * 2.0 + band) * 3.0))
+			draw_polyline(heat, Color(1, 0.85, 0.5, 0.055 * strength), 3, true)
 		var dust := PackedVector2Array()
 		for i in range(28):
 			var pos := Vector2(fposmod(i * 117.0 + clock * 80, size.x + 100.0) - 50, fposmod(i * 173.0, size.y))

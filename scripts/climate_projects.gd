@@ -6,6 +6,7 @@ static func build(world: Node3D, id: String, level: int) -> Node3D:
 	root.set_meta("project", id)
 	root.set_meta("level", level)
 	match id:
+		"irrigation": _irrigation(world, root, level)
 		"rainwater": _rainwater(world, root, level)
 		"drainage": _drainage(world, root, level)
 		"barn": _barn(world, root, level)
@@ -102,3 +103,13 @@ static func _windbreaks(w, root: Node3D, level: int) -> void:
 		if index > 0:
 			w._box(root, Vector3(x - 1.12, 0.75, 0.25), Vector3(2.25, 0.1, 0.1), Color("a68c65"))
 	w._target(root, Vector3((count - 1) * 1.125, 1.5, 0), Vector3(count * 2.25, 3, 1.8), "station", "climate")
+
+static func _irrigation(w, root: Node3D, level: int) -> void:
+	var columns: int = 10 if w.current_island == 3 else 8
+	for index in range(w.plot_positions.size()):
+		var pos: Vector3 = w.plot_positions[index]
+		if index % columns == 0:
+			w._bar(root, pos + Vector3(-0.95, 0.28, -0.9), pos + Vector3((columns - 1) * 2.3 + 0.9, 0.28, -0.9), 0.04, Color("387776"))
+		w._bar(root, pos + Vector3(-0.88, 0.28, -0.9), pos + Vector3(-0.88, 0.28, 0.85), 0.035, Color("387776"))
+		if level >= 2:
+			w._cylinder(root, pos + Vector3(-0.88, 0.36, 0), 0.12, 0.08, 0.15, Color("eac271"), 6)

@@ -365,6 +365,10 @@ func _debug_action(parts: PackedStringArray) -> void:
 			state.apply_debug(float(parsed_money["value"]), float(parts[3]))
 			if not test_mode:
 				state.save_game()
+		"weather":
+			if parts.size() == 3 and parts[2] in ["drought", "flood", "storm"]:
+				if state.climate.begin_warning(state, parts[2], 1.0): hud.close_panel()
+				else: state._finish("Travel to Island 2 or 3 and wait for calm weather first.")
 		"island":
 			if parts.size() != 3 or not parts[2].is_valid_int(): return
 			hud.show_toast(state.debug_unlock_island(int(parts[2])))
@@ -542,6 +546,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	var action: String = tool
 	var indices: Array[int] = state.affected_tiles(index, action)
 	var before: Array[Dictionary] = []
+	var danger_before: Dictionary = state.climate.data.operations.stress.duplicate()
 	for tile in indices:
 		before.append(state.plots[tile].duplicate(true))
 	hud.note_farm_action()
@@ -551,7 +556,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	var changed_indices: Array[int] = []
 	for step in range(indices.size()):
 		var tile: int = indices[step]
-		if before[step] != state.plots[tile]:
+		if before[step] != state.plots[tile] or float(danger_before.get(str(tile), 0.0)) != float(state.climate.data.operations.stress.get(str(tile), 0.0)):
 			changed_indices.append(tile)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
@@ -845,6 +850,10 @@ func _on_action(action: String) -> void:
 						activities.charge_furnace(parts[2])
 			if not test_mode:
 				state.save_game()
+		"climate_operate":
+			if parts.size() == 2:
+				state.ClimateSystem.Operations.operate(state, parts[1])
+				_save_blind_checkpoint.call_deferred()
 		"climate_fund":
 			if parts.size() == 2:
 				state.climate.fund(state, parts[1])
@@ -946,7 +955,7 @@ func _on_climate_changed(phase: String) -> void:
 		_play_tone(164.81 if phase == "impact" else 220.0, 0.6)
 	if is_instance_valid(climate_audio):
 		climate_audio.set_weather(info, state.current_island, state.run_over)
-		if phase == "impact": climate_audio.impact()
+		if phase in ["impact", "strike"]: climate_audio.impact()
 	if phase == "impact" and info.island == state.current_island:
 		climate_shake = 0.22 if info.event != "drought" else 0.08
 	world.set_climate(info)

@@ -129,7 +129,7 @@ func run() -> void:
 		check(state.climate.data.phase == "warning" and state.climate.data.field_lost == 0, "disaster never arrives before its complete warning")
 		save_load()
 		state.update(0.001)
-		check(state.climate.data.phase == "active" and state.climate.data.field_lost > 0 and state.climate.data.field_lost < before_field, "disaster hits once and loses real planted crops")
+		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
 		check(state.storage.russet < 1000 and state.climate.data.barn_lost == 1000 - state.storage.russet, "barn losses match removed potatoes")
 		check(state.blind_info().tax > 5e9 and state.blind_info().tax <= 12.5e9, "physical disaster leaves capped tax pressure")
 		state._market_core.russet.sell = state.CROPS.russet.base
@@ -138,11 +138,12 @@ func run() -> void:
 		state.event_remaining = 0.0
 		state._refresh_market(false)
 		check(state.market.russet.sell < state.CROPS.russet.base and state.market.russet.seed > state.CROPS.russet.base * 3.0 * State.SEED_YIELD_RATIO, "ordinary sell prices weaken while seeds become more expensive")
+		state.update(30.0)
+		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost
 		var unprotected_barn: int = state.climate.data.barn_lost
 		var unprotected_tax: float = state.blind_info().tax
 		save_load()
-		state.update(30.0)
 		check(state.climate.data.phase == "recovery", "weather transitions to economic recovery")
 		save_load()
 		state.update(75.0)
@@ -155,7 +156,7 @@ func run() -> void:
 			state.climate.fund(state, project)
 			state.climate.fund(state, project)
 		state.climate.begin_warning(state, event, 1.0)
-		state.update(45.0)
+		state.update(75.0)
 		check(state.climate.data.field_lost < unprotected_loss and state.climate.data.barn_lost < unprotected_barn, "climate initiatives reduce both crop and barn damage for " + event)
 		check(state.blind_info().tax < unprotected_tax, "initiatives reduce the resulting recovery tax")
 		save_load()

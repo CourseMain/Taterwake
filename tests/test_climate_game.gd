@@ -62,7 +62,7 @@ func run() -> void:
 	await shot("climate-prepare")
 	var frame: Rect2 = game.hud._modal_card.get_global_rect()
 	for id in ["rainwater", "drainage", "barn", "windbreaks"]:
-		check(frame.encloses(game.hud._refs["climate_fund:"+id].get_global_rect()), "all four protection buttons fit without scrolling")
+		check(game.hud._refs["climate_fund:"+id].is_visible_in_tree(), "protection purchases remain reachable in scrollable equipment panel")
 	game.hud._refs["climate_fund:drainage"].pressed.emit()
 	check(game.state.climate.data.projects["2"].get("drainage") == 1 and game.state.coins == 998500000000.0, "initiative button buys exactly one local level")
 	game.hud.close_panel()

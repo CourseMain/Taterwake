@@ -60,7 +60,7 @@ func run() -> void:
 	game.state.travel_to(1)
 	check(game.world._project_nodes.is_empty(), "projects do not leak to Island 1")
 	game.state.travel_to(2)
-	check(game.world._project_nodes.size() == 4 and game.world._project_nodes.rainwater.get_meta("level") == 2, "returning to island restores its projects")
+	check(game.world._project_nodes.size() == 5 and game.world._project_nodes.rainwater.get_meta("level") == 2, "returning to island restores its projects")
 	game.state.climate.reset()
 	game._on_state_changed()
 	check(game.world._project_nodes.is_empty(), "reset removes funded structures")

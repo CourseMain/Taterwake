@@ -205,3 +205,18 @@ Climate disasters begin on **Island 2**. Read the arrival introduction, then ope
 Cash below the bill turns red. Unpaid taxes become debt; **only crossing bankruptcy ends the run**. Having 2× the bill earns OVERKILL, then larger reserves reach ULTRA KILL, GODLIKE, OMNIPOTENT and RULER. **☰ → Taxes** shows your forecast, projected balance and latest receipt. Returning to an easier island keeps the highest tax tier you have visited.
 
 A collapse shows your losses, market conditions, build and a short agriculture-and-climate message. **View Run Summary** reveals the run totals; **Try Again** starts a fresh farm. Tutorials are protected from weather and tax pressure.
+
+
+### v1.0.2 hands-on climate preview
+
+Water and sprayer supplies are plentiful in ordinary weather. During an active disaster on your island, tools draw from a local reserve: **36 water and 18 spray charges** initially. Water and spray refill automatically during warnings, recovery and calm weather. Rainwater Reserve levels add 36 water capacity each; upgraded watering cans use less water per bed. The emergency well supplies four water, then needs eight seconds to recover.
+
+Field damage now builds over the 30-second disaster. Amber-to-red rings show danger, and a full ring means the crop is lost. Barn inventory still takes its one-time loss at onset; secure reinforced shutters during the warning to halve the remaining barn damage. Existing market and tax rules remain.
+
+- **Drought:** bright sun, warm lighting, heat ribbons and cracking soil. Use Water [3] on stressed beds. Build Zone Irrigation and choose Far, Middle or Near beds, then set flow to Ration or Burst. Burst protects more strongly but uses more stored water. Rainwater tanks can release eight water into the selected zone for an emergency rescue.
+- **Flood:** rippling, wobbling water spreads across and around the field, with ripples near the farmer. Open purchased drainage gates to lower water and danger. Use Hoe [1] to drain individual planted beds without removing their crops.
+- **Storm:** a gold line warns of the exact row 2.5 seconds before a lightning strike. Harvest valuable crops on that row; the bolt branches along it and leaves scorched ground. Windbreak screens can be routed to a zone to reduce wind stress. Trees and screens do not block lightning.
+
+The field console stays visible during disasters, with supply gauges and equipment controls. Far beds are nearest the shops; Near beds are nearest the front fence. **Menu → Climate action** provides equipment purchases, reserve totals, shutters and operating controls. Bought equipment retains some passive protection; operating it adds stronger, targeted benefits. Recovery reports the number of distinct beds tended while their danger was at least 35%, rather than claiming an unverifiable number of crops saved.
+
+For a disposable browser test, double-click **Play Climate Lab.command**. The lab builds locally, never reads/writes your farm save, and has Drought / Flood / Storm buttons that prepare temporary crops and skip the warning. The ordinary game's unlocked Debug panel also has weather-test buttons, which retain the full warning and require calm weather on Island 2 or 3. No fourth island or energy economy is included in this preview.

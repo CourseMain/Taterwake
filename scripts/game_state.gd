@@ -19,7 +19,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 15
+const MECHANICS_REVISION: int = 16
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -1130,7 +1130,7 @@ func update(delta: float) -> void:
 		if float(farm_help.data.practice_remaining) > 0.0:
 			step = minf(step, float(farm_help.data.practice_remaining))
 		var collecting: bool = float(blind_cycle.due_in) > 0.0
-		if climate.clock_running(self): step = minf(step, float(climate.data.timer))
+		if climate.clock_running(self): step = minf(step, minf(float(climate.data.timer), 0.25))
 		if collecting:
 			step = minf(step, float(blind_cycle.due_in))
 		step = minf(step, 15.0 - _relief_clock)
@@ -1205,7 +1205,7 @@ func update(delta: float) -> void:
 			notified.emit("An unattended ripe bed attracted pests! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
 		# Resolve weather first when a warning and stock timer share a boundary.
 		if climate.update(self, step):
-			_refresh_market()
+			_refresh_market(false)
 			dirty = true
 		surge_timer = maxf(0.0, surge_timer - step)
 		if natural_remaining > 0.0:
@@ -1411,8 +1411,12 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	var harvested: int = 0
 	for target in affected_tiles(index, action):
 		var plot: Dictionary = plots[target]
+		if ClimateSystem.Operations.tool(self, target, action):
+			affected += 1
+			continue
 		if action == "pest":
 			if bool(plot.get("pests", false)):
+				if not ClimateSystem.Operations.spend(self, "spray", 1.0): continue
 				plot["pests"] = false
 				plot["pest_elapsed"] = 0.0
 				plot["ripe_age"] = 0.0
@@ -1446,6 +1450,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			farm_help.observe_plot(self, target, "plant")
 			affected += 1
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
+			if not ClimateSystem.Operations.spend(self, "water", 1.0 / (1.0 + float(tools.water) * 0.3)): continue
 			plot["watered"] = true
 			plot["stage"] = 2
 			farm_help.observe_plot(self, target, "water")
@@ -1458,6 +1463,8 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				harvested += count
 	farm_help.refresh_pests(self)
 	if affected == 0:
+		if ClimateSystem.Operations.scarce(self) and action in ["water", "pest"] and float(ClimateSystem.Operations.local(self)["water" if action == "water" else "spray"]) < 1.0:
+			return _finish("Reserve running low. Open Climate action for supplies and emergency water.")
 		var bed: Dictionary = plots[index]
 		if bool(bed.get("frozen", false)) and action != "pest":
 			return _finish("Break the ice first [1]")
@@ -1483,6 +1490,8 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		if thaw_remaining > 0.0:
 			thaw_note = " +1 Icecap seed. Disaster prices still apply." if disaster_market_active() else " Thaw Auction: Icecap x8 for 5 seconds!"
 		return _finish("Cleared ice from %d beds. %d/%d cleared.%s" % [thawed, frost_cleared, frost_target_count, thaw_note])
+	if ClimateSystem.Operations.scarce(self) and action in ["hoe", "water"]:
+		return _finish("Tended %d beds · watch the danger rings. Reserves in Climate action." % affected)
 	if action == "hoe":
 		return _finish("Tilled %d patches. Plant your selected seeds next." % affected)
 	if action == "plant":
@@ -2454,6 +2463,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	_restoring_balance = true
 	var mechanics: int = int(data.get("mechanics_revision", 0))
 	climate.data = data.climate.duplicate(true) if mechanics >= 11 else ClimateSystem.fresh_data()
+	if not climate.data.has("operations"): climate.data.operations = ClimateSystem.Operations.fresh()
 	if mechanics == 11:
 		climate.data.introduced = false
 		climate.data.intro_pending = false
@@ -2933,6 +2943,7 @@ func _valid_save(raw: Variant) -> bool:
 			saved_climate = saved_climate.duplicate(true)
 			saved_climate.introduced = false
 			saved_climate.intro_pending = false
+		if int(data.mechanics_revision) >= 16 and (not saved_climate is Dictionary or not saved_climate.has("operations")): return false
 		if not ClimateSystem.valid(saved_climate, MAX_MONEY): return false
 	if not data.has("mechanics_revision") and (data.has("export_cycle_sold") or data.has("export_qualified_cycles")):
 		return false

@@ -33,6 +33,7 @@ var _rotor: Node3D
 var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
 const ClimateProjects = preload("res://scripts/climate_projects.gd")
+var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
 var _project_levels: Dictionary = {}
 var _weather_strength: float = 0.0
@@ -208,6 +209,9 @@ func build_world(island: int = 1) -> void:
 	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
 	_batch_world_geometry()
+	_climate_field = load("res://scripts/climate_field_visuals.gd").new()
+	add_child(_climate_field)
+	_climate_field.setup(self)
 	_prepare_tutorial_guidance()
 	set_tutorial_focus(_tutorial_focus, _tutorial_show_labels)
 
@@ -573,6 +577,7 @@ func set_climate_projects(projects: Dictionary) -> void:
 
 
 func set_climate(info: Dictionary) -> void:
+	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	set_climate_projects(info.get("projects", {}))
 	var strength: float = 0.0
 	if current_island >= 2 and info.island == current_island:
@@ -617,6 +622,9 @@ func set_day_time(elapsed: float) -> void:
 		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), _weather_strength * 0.85)
 		_day_environment.ambient_light_color = _day_environment.ambient_light_color.lerp(Color("e9b36b") if _weather_drought else Color("8da5b9"), _weather_strength * 0.55)
 		_sun.light_energy *= 1.0 - _weather_strength * (0.10 if _weather_drought else 0.55)
+		if _weather_drought:
+			_sun.light_energy = maxf(_sun.light_energy, 0.95 * _weather_strength)
+			_sun.light_color = Color("ffe0a0")
 
 
 
