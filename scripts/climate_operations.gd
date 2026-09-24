@@ -52,6 +52,43 @@ static func tool(farm, index: int, action: String) -> bool:
 		return true
 	return false
 
+static func water_cost(farm) -> float:
+	return 8.0 - 2.0 * int(farm.climate.data.projects[str(farm.current_island)].get("irrigation", 0))
+
+static func target(farm, index: int, action: String) -> String:
+	if index < 0 or index >= farm.plots.size(): return farm._finish("Choose beds on the farm.")
+	if farm.climate.Lesson.active(farm):
+		if action == "water" and farm.climate.data.lesson.stage == "area": return farm.climate.Lesson.area(farm, index)
+		return farm._finish("Water the glowing practice bed first [3].")
+	if farm.run_over or farm.current_island < 2 or farm.climate.data.island != farm.current_island:
+		return farm._finish("These controls are for the affected farm.")
+	var supply: Dictionary = local(farm)
+	var projects: Dictionary = farm.climate.data.projects[str(farm.current_island)]
+	var chosen: int = zone(index, farm.current_island)
+	if action == "shelter":
+		if int(projects.get("windbreaks", 0)) == 0: return farm._finish("Build living windbreaks first.")
+		supply.shelter = chosen
+	elif action == "water":
+		if not scarce(farm) or farm.climate.data.event != "drought" or int(projects.get("rainwater", 0)) == 0:
+			return farm._finish("Use the tank during a drought.")
+		var planted: bool = false
+		for i in range(farm.plots.size()):
+			if zone(i, farm.current_island) == chosen and int(farm.plots[i].stage) > 0: planted = true
+		if not planted: return farm._finish("Choose an area with growing crops; no water spent.")
+		if not spend(farm, "water", water_cost(farm)): return farm._finish("Not enough stored water. Draw emergency water first.")
+		supply.zone = chosen
+		supply.mode = 0
+		for i in range(farm.plots.size()):
+			if zone(i, farm.current_island) == chosen and int(farm.plots[i].stage) > 0:
+				relieve(farm, i, 0.8)
+				farm.climate.data.operations.wet[str(i)] = 6.0
+				if int(farm.plots[i].stage) == 1:
+					farm.plots[i].stage = 2
+					farm.plots[i].watered = true
+	else: return "Unknown field action."
+	farm.climate_changed.emit("controls")
+	return farm._finish("Area watered. Watch its danger rings fall." if action == "water" else "Screens moved. They reduce wind damage, not lightning.")
+
 static func operate(farm, action: String) -> String:
 	if farm.current_island < 2 or farm.run_over or farm.tutorial_active or farm.climate.data.intro_pending: return "Farm controls become available on Golden Shores."
 	var supply: Dictionary = local(farm)

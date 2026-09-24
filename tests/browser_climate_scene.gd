@@ -18,9 +18,7 @@ func _ready() -> void:
 	for id in game.state.ClimateSystem.PROJECTS: game.state.climate.fund(game.state, id)
 	game.hud.close_panel()
 	game.hud._climate_alert.dismiss()
-	game.state.climate.begin_warning(game.state, "flood", 1.0)
-	game._advance_simulation(45.0)
-	game.hud._climate_alert.dismiss()
+	game.state.climate.data.lesson = game.state.ClimateSystem.Lesson.fresh("offer")
 	game.state.pest_timer = 1000.0
 	game.state.surge_timer = 1000.0
 	for plot: Dictionary in game.state.plots:
@@ -53,12 +51,26 @@ func _ready() -> void:
 	menu.text = "Menu / text sharpness"
 	menu.pressed.connect(func(): game._on_action("menu"))
 	box.add_child(menu)
+	var practice := Button.new()
+	practice.text = "Island 2 practice"
+	practice.pressed.connect(func():
+		game._climate_action("lesson_skip")
+		game.state.climate.data.phase = "calm"
+		game.state.climate.data.event = ""
+		game.state.climate.data.severity = 0.0
+		game.state.climate.data.timer = 90.0
+		game.state.climate.data.lesson = game.state.ClimateSystem.Lesson.fresh("offer")
+		game.hud.close_panel()
+		game.hud._climate_alert.dismiss()
+		game._on_state_changed())
+	box.add_child(practice)
 	var weather_row := HBoxContainer.new()
 	box.add_child(weather_row)
 	for kind in ["drought", "flood", "storm"]:
 		var button := Button.new()
 		button.text = kind.capitalize()
 		button.pressed.connect(func():
+			game._climate_action("lesson_skip")
 			for plot in game.state.plots:
 				game.state._clear_crop(plot)
 				plot.merge({"unlocked": true, "tilled": true, "watered": true, "stage": 2, "crop": "sunburst"}, true)

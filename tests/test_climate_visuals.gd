@@ -56,7 +56,7 @@ func run() -> void:
 	if "--capture" in OS.get_cmdline_user_args():
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://artifacts/climate-controls-new.png")
-	check(game.hud._refs.has("climate_control:mode") and game.hud._refs.has("climate_fund:irrigation"), "equipment panel exposes irrigation and operational controls")
+	check(not game.hud._refs.has("climate_control:mode") and game.hud._refs.has("climate_fund:irrigation"), "equipment panel retains upgrades without a duplicate control grid")
 	game.queue_free()
 	await create_timer(0.25).timeout
 	await frames()

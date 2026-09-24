@@ -82,11 +82,11 @@ func run() -> void:
 	state.island2_unlocked = true
 	for plot in state.island_plots["2"]: plot.unlocked = true
 	state.travel_to(2)
-	check(state.climate.data.intro_pending and state.climate.data.introduced, "arrival starts the once-per-run introduction")
+	check(state.climate.data.lesson.stage == "offer" and state.climate.data.introduced, "arrival offers optional climate practice")
 	var paused_time: float = state.elapsed
 	save_load()
 	state.update(600.0)
-	check(state.elapsed == paused_time and state.climate.data.intro_pending, "saved pending introduction cannot spend preparation time")
+	check(state.elapsed > paused_time and state.climate.data.timer == Climate.FIRST_WARNING, "saved invitation permits farming without spending climate preparation time")
 	state.climate.acknowledge(state)
 	state.update(Climate.FIRST_WARNING)
 	check(state.climate.data.phase == "warning", "first warning follows a complete preparation period on Island 2")

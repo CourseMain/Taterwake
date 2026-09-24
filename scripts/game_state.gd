@@ -19,7 +19,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 16
+const MECHANICS_REVISION: int = 17
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -1113,6 +1113,7 @@ func _update_tutorial(delta: float) -> void:
 
 
 func update(delta: float) -> void:
+	if ClimateSystem.Lesson.active(self): return
 	if run_over or climate.data.intro_pending or not is_finite(delta) or delta <= 0.0:
 		return
 	if tutorial_active:
@@ -1395,6 +1396,7 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 
 
 func interact_plot(index: int, tool: String = "hoe") -> String:
+	if ClimateSystem.Lesson.active(self): return ClimateSystem.Lesson.water(self, index, tool)
 	if run_over:
 		return "Run over. Start a new farm."
 	if index < 0 or index >= plots.size():
@@ -2464,6 +2466,11 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	var mechanics: int = int(data.get("mechanics_revision", 0))
 	climate.data = data.climate.duplicate(true) if mechanics >= 11 else ClimateSystem.fresh_data()
 	if not climate.data.has("operations"): climate.data.operations = ClimateSystem.Operations.fresh()
+	if not climate.data.has("lesson"):
+		climate.data.lesson = ClimateSystem.Lesson.fresh("done" if climate.data.introduced else "off")
+		climate.data.intro_pending = false
+	if mechanics < 17:
+		for supply in climate.data.operations.islands.values(): supply.mode = 0
 	if mechanics == 11:
 		climate.data.introduced = false
 		climate.data.intro_pending = false
@@ -2944,6 +2951,7 @@ func _valid_save(raw: Variant) -> bool:
 			saved_climate.introduced = false
 			saved_climate.intro_pending = false
 		if int(data.mechanics_revision) >= 16 and (not saved_climate is Dictionary or not saved_climate.has("operations")): return false
+		if int(data.mechanics_revision) >= 17 and (not saved_climate is Dictionary or not saved_climate.has("lesson")): return false
 		if not ClimateSystem.valid(saved_climate, MAX_MONEY): return false
 	if not data.has("mechanics_revision") and (data.has("export_cycle_sold") or data.has("export_qualified_cycles")):
 		return false

@@ -1,5 +1,6 @@
 extends RefCounted
 ## Discrete warned disasters, temporary markets, persistent recovery costs.
+const Lesson = preload("res://scripts/climate_lesson.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
 const Rules = preload("res://scripts/blind_rules.gd")
 const FIRST_ISLAND: int = 2
@@ -11,14 +12,14 @@ const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
 	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.05, "growth": 0.6, "tax": 0.8, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
-	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.05, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Secure barn shutters before impact."},
+	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.05, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
 	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.05, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Move screens to shelter beds from wind; trees do not stop lightning."},
 }
 const PROJECTS: Dictionary = {
-	"irrigation": {"name": "Zone Irrigation", "cost": 0.01, "event": "drought", "field": 0.0, "barn": 0.0, "tax": 0.0, "detail": "Route stored water to one zone. Ration or burst; level 2 uses less water."},
+	"irrigation": {"name": "Zone Irrigation", "cost": 0.01, "event": "drought", "field": 0.0, "barn": 0.0, "tax": 0.0, "detail": "Water an area costs 6 water at level 1, or 4 at level 2, instead of 8. Choose beds directly on the farm."},
 	"rainwater": {"name": "Rainwater Reserve", "cost": 0.01, "event": "drought", "field": 0.3, "barn": 0.0, "tax": 0.20, "detail": "Adds 36 water capacity per level. Release water into your selected zone. −30% drought stress and −20% recovery tax per level."},
 	"drainage": {"name": "Drainage Network", "cost": 0.015, "event": "flood", "field": 0.3, "barn": 0.10, "tax": 0.20, "detail": "Open the gates to actively drain beds. −30% flood stress, −10% barn losses and −20% recovery tax per level."},
-	"barn": {"name": "Reinforced Barn", "cost": 0.02, "event": "all", "field": 0.0, "barn": 0.35, "tax": 0.15, "detail": "Secure shutters before impact to halve remaining barn damage. −35% barn losses and −15% recovery tax per level."},
+	"barn": {"name": "Reinforced Barn", "cost": 0.02, "event": "all", "field": 0.0, "barn": 0.35, "tax": 0.15, "detail": "Shutters close automatically before impact and halve remaining barn damage. −35% barn losses and −15% recovery tax per level."},
 	"windbreaks": {"name": "Living Windbreaks", "cost": 0.012, "event": "storm", "field": 0.3, "barn": 0.1, "tax": 0.2, "detail": "Deploy screens to shelter a zone from wind. −30% wind stress, −10% barn losses and −20% recovery tax per level. Trees do not block lightning."},
 }
 const MAX_PROJECT_LEVEL: int = 2
@@ -28,7 +29,7 @@ const EDUCATION_SOURCE: String = "https://www.fao.org/publications/fao-flagship-
 var data: Dictionary = fresh_data()
 
 static func fresh_data() -> Dictionary:
-	return {"operations": Operations.fresh(), "phase": "calm", "timer": FIRST_WARNING, "event": "", "island": 2,
+	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": FIRST_WARNING, "event": "", "island": 2,
 		"introduced": false, "intro_pending": false,
 		"severity": 0.0, "projects": {"1": {}, "2": {}, "3": {}}, "tax_events": [],
 		"last": {}, "history": [], "field_lost": 0, "barn_lost": 0, "tax_paid": 0.0, "collapse": {}}
@@ -39,16 +40,18 @@ func reset() -> void:
 func on_arrival(farm) -> void:
 	if farm.current_island < FIRST_ISLAND or farm.run_over or data.introduced: return
 	data.introduced = true
-	data.intro_pending = true
-	farm.climate_changed.emit("introduction")
+	data.intro_pending = false
+	if farm.current_island == 2:
+		data.lesson.stage = "offer"
+	else:
+		data.lesson.stage = "done"
+	farm.climate_changed.emit("lesson")
 
 func acknowledge(farm) -> void:
-	if not data.intro_pending: return
-	data.intro_pending = false
-	farm.changed.emit()
+	Lesson.finish(farm)
 
 func clock_running(farm) -> bool:
-	return not data.intro_pending and (data.phase != "calm" or farm.current_island >= FIRST_ISLAND)
+	return not data.intro_pending and not Lesson.active(farm) and (data.lesson.stage != "offer" or farm.current_island != 2) and (data.phase != "calm" or farm.current_island >= FIRST_ISLAND)
 
 func protection(event: String, island: int, kind: String) -> float:
 	var reduction: float = 0.0
@@ -72,12 +75,13 @@ func factor(kind: String, island: int) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or farm.rocket_pending or data.phase != "calm":
+	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or farm.rocket_pending or Lesson.active(farm) or data.phase != "calm":
 		return false
 	var ids: Array = EVENTS.keys()
 	if event.is_empty():
 		event = str(ids[farm.rng.randi_range(0, ids.size() - 1)])
 	if not EVENTS.has(event): return false
+	if data.lesson.stage == "offer": data.lesson.stage = "done"
 	Operations.begin(farm)
 	data.event = event
 	data.island = farm.current_island
@@ -119,7 +123,7 @@ func _impact(farm) -> void:
 	# Field damage accumulates during active weather; players can rescue beds.
 	var destroyed: int = 0
 	var held: int = farm.storage_used()
-	var shutter: float = 0.5 if data.operations.islands[str(island)].sealed and int(data.projects[str(island)].get("barn", 0)) > 0 else 1.0
+	var shutter: float = 0.5 if int(data.projects[str(island)].get("barn", 0)) > 0 else 1.0
 	var barn_rate: float = shutter * float(EVENTS[event].barn) * float(data.severity) * (1.0 - protection(event, island, "barn"))
 	for crop in farm.storage:
 		farm.storage[crop] = int(farm.storage[crop]) - lost_units(int(farm.storage[crop]), barn_rate)
@@ -178,6 +182,7 @@ func info(farm) -> Dictionary:
 		var upcoming: float = float(EVENTS[data.event].tax) * float(data.severity) * (1.0 - protection(data.event, data.island, "tax"))
 		result.warning_tax = Rules.estimated_tax(farm.blind_cycle) + Rules.target(farm.blind_cycle) * Rules.TAX_RATE * (tax_pressure() + upcoming)
 		result.warning_tax = minf(result.warning_tax, Rules.target(farm.blind_cycle) * Rules.TAX_RATE * Rules.TAX_BOOM_MAX)
+	Lesson.present(farm, result)
 	return result
 
 func capture_collapse(farm) -> void:
@@ -199,6 +204,7 @@ func capture_collapse(farm) -> void:
 		"tax_paid": data.tax_paid, "projects": data.projects.duplicate(true), "history": data.history.duplicate(true)}
 
 static func valid(raw: Variant, maximum: float) -> bool:
+	if raw is Dictionary and raw.has("lesson") and not Lesson.valid(raw.lesson): return false
 	if raw is Dictionary and raw.has("operations") and not Operations.valid(raw.operations): return false
 	if not raw is Dictionary or raw.get("phase") not in ["calm", "warning", "active", "recovery"]: return false
 	if not raw.get("introduced") is bool or not raw.get("intro_pending") is bool: return false
@@ -213,6 +219,7 @@ static func valid(raw: Variant, maximum: float) -> bool:
 		if not raw.projects.get(island) is Dictionary: return false
 		for id in raw.projects[island]:
 			if not PROJECTS.has(id) or not Rules.number(raw.projects[island][id], 0, MAX_PROJECT_LEVEL, true): return false
+	if raw.has("lesson") and raw.lesson.stage in ["water", "area", "success"] and raw.phase != "calm": return false
 	if raw.has("operations"):
 		var limit: int = 80 if int(raw.island) == 3 else 48
 		if int(raw.operations.strike_row) >= (8 if int(raw.island) == 3 else 6): return false

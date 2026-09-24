@@ -341,7 +341,7 @@ func _update_blind_ui() -> void:
 	var climate: Dictionary = _state.call("climate_info")
 	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending)
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
-	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over)
+	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
 	_blind_labels.title.text = "Tax in %ds · Sell now" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
 	_blind_labels.balance.text = "%s due  ›" % _blind_money(info.target)
 	_blind_labels.title.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else GOLD)
@@ -356,7 +356,7 @@ func _update_blind_ui() -> void:
 	_blind_modal_warning.text = "%s · %s / %s%s" % ["TAX BOOM" if info.tax_boom else info.name, _blind_money(info.current), _blind_money(info.target), " · %ds left" % ceili(info.due_in) if info.due_in > 0.0 else " · %d/%d stocks" % [int(info.booms), int(info.booms_required)]]
 	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind == "roll" else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
-	if climate.intro_pending and not info.run_over:
+	if climate.intro_pending and not info.run_over and climate.lesson.stage == "off":
 		if not _climate_alert.introduction: _climate_alert.present("introduction", climate, _state)
 	if info.run_over:
 		if not _run_end.visible:
@@ -475,7 +475,7 @@ func _build_climate() -> void:
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	_body.add_child(grid)
-	var captions: Dictionary = {"irrigation": "Choose a zone and control the flow", "rainwater": "Save crops in droughts", "drainage": "Keep floodwater out", "barn": "Protect stored potatoes", "windbreaks": "Shelter crops from storms"}
+	var captions: Dictionary = {"irrigation": "Water more efficiently: 6, then 4 per area", "rainwater": "Save crops in droughts", "drainage": "Keep floodwater out", "barn": "Protect stored potatoes", "windbreaks": "Shelter crops from storms"}
 	for id in _state.ClimateSystem.PROJECTS:
 		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
 		var card := _surface("upgrade", GREEN)
@@ -499,21 +499,8 @@ func _build_climate() -> void:
 		button.add_theme_font_override("font", _card_button_font)
 		column.add_child(button)
 		_refs["climate_fund:" + id] = button
-	var operations := _surface("upgrade", GREEN)
-	_body.add_child(operations)
-	_body.move_child(operations, hero.get_index() + 1)
-	var operation_column := _vbox(6)
-	operations.add_child(operation_column)
-	_refs.climate_reserves = _wrap("", 17, INK, true)
-	operation_column.add_child(_refs.climate_reserves)
-	var operation_grid := GridContainer.new()
-	operation_grid.columns = 3
-	operation_column.add_child(operation_grid)
-	for command in ["zone", "mode", "burst", "gates", "shelter", "sealed"]:
-		var control := _button("", "climate_operate:" + command)
-		operation_grid.add_child(control)
-		_refs["climate_control:" + command] = control
-	operation_column.add_child(_wrap("Supplies refill outside disasters. Water [3] rescues drought beds; Hoe [1] drains floodwater. Far / Middle / Near zones run from the shops toward the front fence.", 13, MUTED))
+	if _island_id() == 2:
+		_body.add_child(_button("Try the water lesson · safe practice", "climate_operate:lesson_start"))
 	var bottom := _hbox(12)
 	_body.add_child(bottom)
 	var tax := _button("Tax forecast →", "taxes")
@@ -546,6 +533,7 @@ func _refresh_climate() -> void:
 	_refs.climate_icon.kind = info.event if info.phase != "calm" else "calm"
 	_refs.climate_icon.queue_redraw()
 	_refs.climate_status.text = "Clear skies" if info.phase == "calm" else "%s · %ds" % [str(info.name).capitalize(), ceili(info.timer)]
+	if info.phase == "recovery": _refs.climate_status.text = "Weather clearing · %ds" % ceili(info.timer)
 	if info.phase == "warning":
 		_refs.climate_market.text = "Harvest now. Recovery tax: about %s." % _blind_money(info.warning_tax)
 	elif info.phase in ["active", "recovery"]:
@@ -553,13 +541,6 @@ func _refresh_climate() -> void:
 Next tax %s" % [(float(info.seed_factor) - 1.0) * 100.0, (float(info.sell_factor) - 1.0) * 100.0, _blind_money(_state.call("blind_info").tax)]
 	else:
 		_refs.climate_market.text = "Prepare before the next warning." if info.pressure == 0.0 else "Weather passed. Recovery tax is still due."
-	var supply: Dictionary = info.supply
-	_refs.climate_reserves.text = "Water %d / %d · Sprayer %d / 18 · %d beds tended in danger" % [floori(supply.water), int(info.water_capacity), floori(supply.spray), int(info.rescued)]
-	var labels: Dictionary = {"zone": "Zone: " + ["Far", "Middle", "Near"][int(supply.zone)], "mode": "Flow: " + ["Off", "Ration", "Burst"][int(supply.mode)], "burst": "Release · 8 water", "gates": "Gates: " + ("Open" if supply.gates else "Closed"), "shelter": "Shelter: " + ["Far", "Middle", "Near"][int(supply.shelter)], "sealed": "Shutters: " + ("Secured" if supply.sealed else "Open")}
-	var requirements: Dictionary = {"mode": "irrigation", "burst": "rainwater", "gates": "drainage", "shelter": "windbreaks", "sealed": "barn"}
-	for command: String in labels:
-		_refs["climate_control:" + command].text = labels[command]
-		_refs["climate_control:" + command].disabled = requirements.has(command) and int(info.projects[str(_island_id())].get(requirements[command], 0)) == 0
 	var opportunity: Dictionary = _state.call("stock_opportunity")
 	_refs.climate_reference.text = "Stock haul reference: %s · %s potatoes at this quote." % [_blind_money(opportunity.reference), _number(opportunity.units)]
 	for id in _state.ClimateSystem.PROJECTS:

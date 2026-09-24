@@ -32,12 +32,14 @@ func run() -> void:
 	game.state.island2_unlocked = true
 	for plot in game.state.island_plots["2"]: plot.unlocked = true
 	game.state.travel_to(2)
-	check(game.state.climate.data.intro_pending and game.hud._climate_alert.introduction, "first arrival presents the Island 2 climate introduction")
+	check(game.state.climate.data.lesson.stage == "offer" and game.hud._climate_console.visible, "first arrival offers nonblocking Island 2 practice")
+	game.hud._climate_console.primary.pressed.emit()
 	var intro_elapsed: float = game.state.elapsed
 	game._advance_simulation(120.0)
 	check(game.state.elapsed == intro_elapsed, "introduction pauses taxes, crops and weather")
 	await shot("climate-introduction")
-	game.hud._climate_alert.action.pressed.emit()
+	game._climate_action("lesson_skip")
+	game._on_action("climate")
 	check(not game.state.climate.data.intro_pending and game.hud._panel_kind == "climate", "one clear introduction button opens protection choices")
 	game.state.barn_level = 3
 	game.state._recompute_capacity()
@@ -91,7 +93,7 @@ func run() -> void:
 	check(not game.hud._blind_card.visible and not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
-	check(page._summary.is_visible_in_tree() and page._summary.text.contains("1 protection upgrades"), "view run summary reveals recorded projects and run totals")
+	check(page._summary.is_visible_in_tree() and page._summary.text.contains("2 protection upgrades"), "view run summary reveals recorded projects and run totals")
 	await shot("climate-summary")
 	for dimensions: Vector2i in [Vector2i(1024, 600), Vector2i(1280, 800), Vector2i(1920, 1080)]:
 		root.size = dimensions
