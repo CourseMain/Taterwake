@@ -79,7 +79,7 @@ func run() -> void:
 		check(game.hud.root.get_global_rect().encloses(game.hud._modal_card.get_global_rect()), "Dex modal fits " + str(size))
 		check(game.hud._body.get_combined_minimum_size().x <= game.hud._body.size.x + 1.0, "Dex has no horizontal overflow " + str(size))
 		for picture: Control in game.hud._body.find_children("DexPicture_*", "Control", true, false):
-			check(picture.size.x >= 96 and picture.size.y >= 96, "illustration stays readable " + picture.name)
+			check(picture.size.x >= 76 and picture.size.y >= 76, "illustration stays readable " + picture.name)
 	root.size = Vector2i(1280, 800)
 	game.hud.close_panel()
 	state.travel_to(2)

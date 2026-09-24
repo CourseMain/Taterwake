@@ -89,6 +89,7 @@ func run() -> void:
 	check(game.hud._spinner._odds == frozen, "reel odds stay frozen to purchase odds during animation")
 	var real_result: Dictionary = {"tier": "common", "title": "THE EMPTY SACK", "detail": "No reward", "bet": 20e12}
 	game.hud.spin_roll(real_result)
+	game.hud._refs.roll_luck_meter._process(5)
 	game.hud._spinner._process(5)
 	check(game.hud._revealed_roll == real_result and str(game.hud._spinner._cards[23].tier) == "common", "actual backend result stays authoritative even when previews favor rare tiers")
 	check(game.hud._spinner._flash == 0, "actual common result does not gain fake high-rarity effects")

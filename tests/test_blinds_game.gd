@@ -74,7 +74,7 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	check(not game.state.run_over and game.state.blind_cycle.last_result.cleared, "controller pays tax after third full selling window")
 	game._on_action("taxes")
-	check(game.hud._refs.blind_last.text.contains("LAST TAX · PAID") and game.hud._refs.blind_last.text.contains("3.60× OVERKILL"), "receipt compares the pre-tax wallet to the collected bill and keeps its rank")
+	check(game.hud._refs.blind_last.text.contains("Last payment · Paid") and game.hud._refs.blind_last.text.contains("3.60× OVERKILL") and game.hud._refs.blind_last.text.contains("Before collection $18B"), "receipt compares the pre-tax wallet to the collected bill and keeps its rank")
 	await shot("taxes-cleared")
 	game.hud.close_panel()
 	game.state.coins = 1e15
@@ -114,7 +114,7 @@ func run() -> void:
 	check(not game.state.run_over and not game.hud._run_end.visible and game.state.coins < 0.0, "unfunded third stock incurs playable debt rather than a failed-blind screen")
 	check(game.hud._blind_labels.balance.get_theme_color("font_color") == Color("ff7777"), "debt remains red on the farm")
 	game._on_action("taxes")
-	check(game.hud._refs.blind_live.get_theme_color("font_color") == Color("ff937c") and game.hud._blind_modal_warning.get_theme_color("font_color") == Color("bb4334"), "in-menu threshold text also stays red")
+	check(game.hud._refs.blind_live.get_theme_color("font_color") == Color("bb4334") and game.hud._blind_modal_warning.get_theme_color("font_color") == Color("bb4334"), "in-menu threshold text also stays red")
 	await shot("taxes-borrowed")
 	game.hud.close_panel()
 	game.state.blind_cycle.tax_rolled = true

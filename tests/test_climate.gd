@@ -180,8 +180,9 @@ func run() -> void:
 	state.selected_crop = "icecap"
 	state.blind_cycle.tax_rolled = true
 	state._start_surge()
-	var boom_price: float = state.CROPS.icecap.base * state.surge_factor
-	check(state.market.icecap.sell == boom_price, "disaster sale pressure preserves the full major stock opportunity")
+	check(is_equal_approx(state.market.icecap.change, -95.0) and state.blind_cycle.booms == 0, "disaster replaces the major opportunity with a crash without advancing tax")
+	state.update(105.0)
+	state._start_surge()
 	state.update(10.0)
 	state._start_surge()
 	state.update(10.0)
@@ -222,13 +223,16 @@ func run() -> void:
 	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.update(45.0)
+	# Crashes cannot create new tax-counting booms. Resume collection once
+	# recovery ends; the damage and accumulated recovery tax still remain.
+	state.update(105.0)
 	state.coins = 10000.0
 	state.blind_cycle.tax_rolled = true
 	collect()
 	check(state.run_over and state.blind_cycle.reason == "bankrupt", "climate recovery tax can bankrupt the run")
 	var report: Dictionary = state.climate.data.collapse
 	check(report.cause.contains("Recovery taxes") and report.tax == 12.5e9 and report.field_lost > 0 and report.barn_lost > 0, "collapse records actual cause, lost crops/storage and tax bill")
-	check(report.build == "Farmer" and report.phase == "recovery" and report.event == "storm", "collapse snapshots build and current climate phase")
+	check(report.build == "Farmer" and report.phase == "calm" and report.event == "" and report.last_event == "storm", "collapse snapshots build, current phase and the last damaging disaster")
 	save_load()
 	var dead: String = JSON.stringify(state._save_data())
 	state.update(3600.0)

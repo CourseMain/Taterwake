@@ -96,7 +96,7 @@ func _run() -> void:
 	check(not state.spawn_tutorial_pest(0), "demo infestation cannot be used in ordinary play")
 	state.update(24.0)
 	check(not state.plots[0].pests and state.surge_remaining == 0.0, "full ripe-crop grace period follows completion")
-	state.update(1.1)
+	state.update(maxf(40.0 - float(state.plots[0].plant_age), float(state.plots[0].pest_delay) - float(state.plots[0].ripe_age)) + 0.01)
 	check(state.plots[0].pests, "ordinary ripe-crop pests resume after their actual grace period")
 	state._start_surge()
 	check(state.surge_remaining == 10.0, "ordinary stock surges resume after lesson with the full ten-second window")

@@ -41,3 +41,4 @@ renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
 environment/defaults/default_clear_color=Color(0.73, 0.84, 0.79, 1)
 anti_aliasing/quality/msaa_3d.web=1
+ 

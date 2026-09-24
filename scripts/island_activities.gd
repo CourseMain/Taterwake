@@ -216,6 +216,7 @@ func _update_ducks(delta: float) -> bool:
 				plot["pests"] = false
 				plot["pest_elapsed"] = 0.0
 				plot["ripe_age"] = 0.0
+				plot["pest_delay"] = 0.0
 				duck_clears = mini(1000000000, duck_clears + 1)
 				duck.clears = mini(1000000000, int(duck.clears) + 1)
 				duck.peck = 0.65

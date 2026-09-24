@@ -613,7 +613,7 @@ func _update_hover() -> void:
 			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
 	elif hit.has("station"):
 		var travel_hint: String = "Ferry · Click to board"
-		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "roll": "Roll House · Click to view odds" if state.roll_available() else "Rolls closed · Travel to your newest island", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities"}
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "roll": "Roll House · Click to view odds" if state.roll_available() else "Rolls closed · Travel to your newest island", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
@@ -637,6 +637,7 @@ func _on_state_changed() -> void:
 		if world.current_island != state.current_island:
 			_on_island_changed(state.current_island)
 		world.update_plots(state.plots)
+		world.set_climate_projects(state.climate.data.projects)
 		world.set_island2_unlocked(state.island2_unlocked)
 		world.set_island3_unlocked(state.island3_unlocked)
 		world.set_export_state(state.export_active, state.export_timer)
@@ -747,7 +748,7 @@ func _on_island_changed(id: int) -> void:
 
 func _on_export_changed(active: bool) -> void:
 	world.set_export_state(active, state.export_timer)
-	if active:
+	if active and not state.disaster_market_active():
 		if state.current_island == 2:
 			world.play_reward("legendary")
 		_play_tone(1046.0, 0.7)

@@ -32,6 +32,9 @@ var _ripe_sparkles: Array[Node3D] = []
 var _rotor: Node3D
 var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
+const ClimateProjects = preload("res://scripts/climate_projects.gd")
+var _project_nodes: Dictionary = {}
+var _project_levels: Dictionary = {}
 var _weather_strength: float = 0.0
 var _weather_drought: bool = false
 var _villagers: Array[Node3D] = []
@@ -44,7 +47,7 @@ var _sun: DirectionalLight3D
 var _moon: DirectionalLight3D
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _materials: Dictionary = {}
-var _shop_font: Font = Type.SIGN
+var _shop_font: Font = Type.face(Type.SIGN, 600.0)
 # Primitive resources are immutable and reused across crops and island rebuilds.
 var _box_meshes: Dictionary = {}
 var _cylinder_meshes: Dictionary = {}
@@ -431,6 +434,8 @@ func _clear_world() -> void:
 	_clouds.clear()
 	_weather_strength = 0.0
 	_weather_drought = false
+	_project_nodes.clear()
+	_project_levels.clear()
 	_villagers.clear()
 	_toolsmiths.clear()
 	_effect_particles.clear()
@@ -549,7 +554,26 @@ func _apply_graphics_quality() -> void:
 	_sun.shadow_enabled = graphics_quality != "smooth"
 
 
+func set_climate_projects(projects: Dictionary) -> void:
+	var levels: Dictionary = projects.get(str(current_island), {}) if current_island >= 2 else {}
+	if levels == _project_levels: return
+	for id: String in Climate.PROJECTS:
+		var level: int = int(levels.get(id, 0))
+		if level == int(_project_levels.get(id, 0)): continue
+		if _project_nodes.has(id):
+			var old: Node3D = _project_nodes[id]
+			remove_child(old)
+			old.queue_free()
+			_project_nodes.erase(id)
+		if level > 0:
+			var project: Node3D = ClimateProjects.build(self, id, level)
+			_project_nodes[id] = project
+			_geometry_batcher.batch_tree(project, {})
+	_project_levels = levels.duplicate(true)
+
+
 func set_climate(info: Dictionary) -> void:
+	set_climate_projects(info.get("projects", {}))
 	var strength: float = 0.0
 	if current_island >= 2 and info.island == current_island:
 		if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
@@ -1236,11 +1260,11 @@ func _bar(parent: Node3D, start: Vector3, end: Vector3, radius: float, color: Co
 
 func _shop_label(parent: Node3D, text: String, pos: Vector3, distant: bool = false) -> Label3D:
 	var ink := Color("183b30")
-	var label := _label(parent, text, pos, 38 if distant else 48, ink if current_island == 3 else CREAM)
+	var label := _label(parent, text, pos, 28 if distant else 32, ink if current_island == 3 else CREAM)
 	label.font = _shop_font
-	label.pixel_size = 0.018
+	label.pixel_size = 0.019
 	label.outline_modulate = CREAM if current_island == 3 else ink
-	label.outline_size = 3
+	label.outline_size = 4
 	label.set_meta("shop_label", true)
 	return label
 

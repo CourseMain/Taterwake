@@ -1,6 +1,12 @@
 extends SceneTree
 ## The eligible-time clock, cinematic handoff, persistence, and safe travel.
 const State = preload("res://scripts/game_state.gd")
+class CalmClimate extends "res://scripts/climate_system.gd":
+	# Isolate the eligible clock from random disasters in these long fixtures.
+	# Disaster pause/resume and simultaneous impact are covered separately.
+	func begin_warning(_farm, _event: String = "", _severity: float = -1.0) -> bool:
+		data.timer = WAIT_MAX
+		return false
 const SAVE := "user://spud_stock_rocket_state_test_only.json"
 const NEW_FIELDS: Array[String] = ["surge_kind", "rocket_timer", "rocket_pending", "rocket_factor", "rocket_crop", "natural_remaining", "natural_factor", "natural_crop"]
 var checks: int = 0
@@ -100,8 +106,9 @@ func check_boundary_clocks(state) -> void:
 
 func _run() -> void:
 	var state = State.new()
+	state.climate = CalmClimate.new()
 	root.add_child(state)
-	check(State.MECHANICS_REVISION == 12 and state.rocket_timer == 1800.0 and not state.rocket_pending, "revision twelve starts with a fresh thirty-minute rocket clock")
+	check(state._save_data().mechanics_revision == State.MECHANICS_REVISION and state.rocket_timer == 1800.0 and not state.rocket_pending, "current revision starts with a fresh thirty-minute rocket clock")
 	state.update(60.0)
 	check(state.rocket_timer == 1800.0 and not state.rocket_pending, "starter-island time does not advance the rocket")
 	winter(state)
@@ -243,7 +250,7 @@ func _run() -> void:
 		check(state.coins == 8.4e71 and state.storage.russet == 7 and state.mastery.russet == 19 and same_plots(state.plots, legacy.plots) and str(state.rng.state) == legacy.rng_state, "revision %d migration preserves the normal farm and its RNG" % revision)
 		check(is_equal_approx(state.surge_factor, 30.99) and state.surge_remaining == 2.25 and state.surge_timer == 177.25 and is_equal_approx(state.market.golden.change, 2999.0), "revision %d migration clamps the old early-island 31x quote without discarding its remaining duration" % revision)
 		check(state.rocket_timer == 1800.0 and not state.rocket_pending and state.rocket_factor == 1.0 and state.natural_remaining == 0.0 and state.natural_factor == 1.0 and state.surge_kind == "normal", "revision %d migration initializes new stock mechanics safely" % revision)
-		check(state.save_game(SAVE) and state.load_game(SAVE) and state._save_data().mechanics_revision == 12, "revision %d migration can be saved and loaded again as revision twelve" % revision)
+		check(state.save_game(SAVE) and state.load_game(SAVE) and state._save_data().mechanics_revision == State.MECHANICS_REVISION, "revision %d migration can be saved and loaded again as the current revision" % revision)
 
 	# Revision-eight saves written before the duration increase keep their
 	# original remaining time; loading never restarts or lengthens a live boom.
@@ -266,8 +273,9 @@ func _run() -> void:
 			state._event_in = 11.0
 			state._refresh_market(false)
 			var old_save: Dictionary = state._save_data().duplicate(true)
+			old_save.mechanics_revision = 8
 			write_save(old_save)
-			check(state.load_game(SAVE) and state._save_data().mechanics_revision == 12, "old revision-eight %s with %.2f seconds remaining loads without a format bump" % [kind, old_remaining])
+			check(state.load_game(SAVE) and state._save_data().mechanics_revision == State.MECHANICS_REVISION, "old revision-eight %s with %.2f seconds remaining migrates to the current revision" % [kind, old_remaining])
 			var loaded_remaining: float = state.natural_remaining if kind == "natural" else state.surge_remaining
 			check(loaded_remaining == old_remaining and state.coins == 8.4e71 and state.storage.russet == 7 and str(state.rng.state) == old_save.rng_state, "old %s keeps its original remaining duration, wealth, inventory, and RNG" % kind)
 			state.update(old_remaining)

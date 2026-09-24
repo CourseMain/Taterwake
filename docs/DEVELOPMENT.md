@@ -29,7 +29,7 @@ Saves, private configuration, local recordings and generated builds do not belon
 | Golden Shores | $100B: Frosthollow unlock | $8B | $5B | $12.5B | −$5B |
 | Frosthollow | $5Qa: virtual late-game baseline | $400T | $250T | $625T | −$250T |
 
-There is no Island 4. The stock reference is a haul-value balancing reference, not an automatic payout or income cap: the stock tooltip and Climate action show how many potatoes at the current quote reach it. Actual earnings still depend on crops, quantity, mutations, processing and selling. Existing decreasing-rarity stock distributions stay intact, including the +35,000%–100,000% Rocket range. Severe weather weakens ordinary sale prices but preserves explicit major/Rocket/natural stock quotes so a boom can fund a comeback.
+There is no Island 4. The stock reference is a haul-value balancing reference, not an automatic payout or income cap: the stock tooltip and Climate action show how many potatoes at the current quote reach it. Actual earnings still depend on crops, quantity, mutations, processing and selling. Existing decreasing-rarity stock distributions stay intact, including the +35,000%–100,000% Rocket range. Active and recovering disasters apply a final sale-price clamp of 5%–100% of base value on the affected island. Severity and recovery time determine the crash, down to −95%. Scheduled and natural booms are suppressed; existing booms are cancelled and the Rocket clock pauses. Crashes do not count toward tax collection. Warning/stock timer ties resolve weather first; already-due tax collection remains scheduled.
 
 At the first actual major boom, a 20% chance rolls a Tax Boom with a uniform integer increase from 0% through 150%. Disaster recovery adds pressure; combined pressure cannot raise the bill above 2.5× base tax. The third actual scheduled or Rocket price boom starts a full ten-second selling window before collection. Natural spikes, ordinary offers and the Rocket cinematic do not count. With scheduled stocks every three minutes, collection is about every nine minutes. Tutorials pause taxes, weather and stock pressure.
 
@@ -143,10 +143,22 @@ PotatoDex defaults to a two-column mutation gallery and offers a separate six-va
 
 ### Quiet farming feedback and shop signs
 
-Shop signs use regular Patrick Hand with short names and a fine contrasting outline. Valley/Shores use cream lettering; winter uses dark lettering against snow. Labels remain clickable and retain tutorial visibility. Fredoka stays on UI headings, with Nunito Sans for compact status text. The new font and its OFL license ship in the local Web package.
+Shop signs use semibold Fredoka, matching the original rounded roll-button typography, with short names and a fine contrasting outline. Valley/Shores use cream lettering; winter uses dark lettering against snow. Labels remain clickable and retain tutorial visibility. Fredoka also supplies compact shop and menu headings and buttons; Nunito Sans remains on body copy and numeric status text.
 
 Normal field actions never create central toasts. No-op feedback (for example, “Already watered” or “Plant a seed first [2]”) shares one click-through footer slot with hover hints, expires after 1.4 seconds, and does not extend on rapid identical repeats. Successful work clears stale failure text. Plot notifications are handled through this path once; a full barn still gets a short actionable reminder. Other notifications appear in a smaller upper-right card.
 
 Optional help is one compact row below the tax card and hides for three seconds after field input. Its button explicitly opens the full explanation and action; the × dismisses without opening anything. The opened tip retains its own action if another tip becomes relevant while reading. The normal tax card shows the bill and stock countdown; coverage, projected balance and rules remain available on hover/click. Tiny positive coverage reads `<0.01%` rather than scientific notation. Save schema and gameplay are unchanged.
 
 `test_farm_clarity.gd -- --integration-test` checks rapid repeated actions, feedback expiry, duplicate suppression, full-barn feedback, help action stability, responsive layout, percentage formatting and all-island typography. A native `--capture` run writes `artifacts/clarity-watering.png`, `clarity-island-1.png` through `clarity-island-3.png`, and `clarity-winter-warning.png`.
+
+
+### Roll House layout and visible climate projects
+
+The Roll House uses a wider two-column layout: reel and stakes on the left, all eight live rarity percentages on the right (including Mystery). The fixed luck strip has three 0.65-second stages: roll quality, additive normal luck percentage, then the debug multiplier. The full weighting calculation remains expandable. Purchased luck and odds stay frozen throughout the animation; the backend result remains authoritative. Shop headers, buttons and signs use the bundled Fredoka font at restrained sizes.
+
+`climate_projects.gd` builds an island-local tank, perimeter drainage, braces on the existing barn, and a rear tree windbreak from the saved project levels. Second levels add visible infrastructure. `FarmWorld.set_climate_projects()` creates/batches geometry only when local levels change, and clears it on reset or island rebuild. The controller applies purchases immediately. Structures occupy gaps and field edges, keeping existing map dimensions and all crop targets accessible.
+
+Validation: `test_roll_luck_meter.gd` covers the three stages, frozen state, cancellation, exact visible odds, maximum luck, long rewards and four viewport sizes. `test_climate_projects.gd` checks every purchase level on both climate islands, travel, reset, geometry reuse and all 128 plot targets. Both support `-- --integration-test --capture` for native screenshots under `artifacts/`.
+
+
+High-luck weighting now multiplies each non-common weight by `max(1, effective_luck / 10) ^ (0.35 * steps_above_rare)`. Ordinary 1–10× luck keeps its prior probabilities; larger debug boosts increasingly favor top collectibles instead of retaining roughly 26% Rare at 1,000×. The calculation panel explains this factor, and the three-step strip distinguishes earned/gear additions from the active boost. `test_roll_balance.gd` reproduces the reported all-in configuration, checks cumulative rarity improvement, and samples 20,000 actual paid rolls each at 1×, 1,000× and 3,000× against the displayed probabilities using binomial sampling tolerance.

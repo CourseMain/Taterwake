@@ -74,6 +74,8 @@ func run() -> void:
 	game._on_action("climate")
 	check(game.hud._refs.climate_market.text.contains("Seeds +70%") and game.hud._refs.climate_market.text.contains("$9.4B"), "market disruption and protection-adjusted recovery costs appear together")
 	game.hud.close_panel()
+	# Crashes no longer advance tax collection; let the market recover first.
+	game._advance_simulation(105.0)
 	game.state.coins = 10000.0
 	game.state.blind_cycle.tax_rolled = true
 	for _i in range(3):

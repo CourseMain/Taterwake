@@ -57,8 +57,10 @@ class DebugMoneyInput extends LineEdit:
 
 const Sparkline = preload("res://scripts/price_sparkline.gd")
 const RollReel = preload("res://scripts/roll_spinner.gd")
+const RollLuckMeter = preload("res://scripts/roll_luck_meter.gd")
 const MarketImpact = preload("res://scripts/market_impact.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
+const Cozy = preload("res://scripts/cozy_ui.gd")
 const EquipmentPreview = preload("res://scripts/equipment_preview.gd")
 const Type = preload("res://scripts/ui_type.gd")
 const ClimateIcon = preload("res://scripts/climate_icon.gd")
@@ -90,6 +92,8 @@ const PURCHASE_SECONDS: float = 3.2
 var root: Control
 var _state: Node
 var _plain_font: FontVariation = Type.face(Type.BODY, 400.0)
+var _card_heading_font: FontVariation = Type.face(Type.SHOP, 600.0)
+var _card_button_font: FontVariation = Type.face(Type.DISPLAY, 600.0)
 var _font: Font
 var _heading_font: Font
 var _top: Dictionary = {}
@@ -119,6 +123,7 @@ var _modal: Control
 var _modal_title: Label
 var _modal_subtitle: Label
 var _body: VBoxContainer
+var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
 var _panel_island: int = 0
 var _refs: Dictionary = {}
@@ -151,6 +156,7 @@ var _stake_kind: String = "normal"
 var _frozen_odds: Array = []
 var _frozen_luck: float = 1.0
 var _frozen_luck_math: String = ""
+var _frozen_luck_breakdown: Dictionary = {}
 var _frozen_build_quality: float = 1.0
 var _frozen_stake_bonus: float = 0.0
 var _inventory_sections: Dictionary = {}
@@ -366,43 +372,76 @@ func _update_blind_ui() -> void:
 
 
 func _build_blinds() -> void:
-	_heading("Tax day", "Every 3 major stocks · About 9 minutes")
-	var hero := _card(INK, 22)
+	_heading("Tax day", "A clear forecast for your farm's next bill.")
+	var hero := _surface("island", GREEN, true)
 	_body.add_child(hero)
-	var column := _vbox(7)
+	var column := _vbox(8)
 	hero.add_child(column)
-	column.add_child(_label("YOUR NEXT BILL", 12, Color("d4bc8b")))
-	_refs.blind_live = _wrap("", 29, CREAM, true)
-	column.add_child(_refs.blind_live)
-	_refs.blind_due = _wrap("", 16, CREAM)
+	var top := _hbox(12)
+	column.add_child(top)
+	top.add_child(_icon({"kind": "metric", "id": "coin"}, 56))
+	var amount := _vbox(2)
+	amount.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(amount)
+	amount.add_child(_label("YOUR NEXT BILL", 11, MUTED, true))
+	_refs.blind_live = _wrap("", 32, INK, true)
+	amount.add_child(_refs.blind_live)
+	_refs.tax_status = _badge("")
+	top.add_child(_refs.tax_status)
+	_refs.blind_due = _wrap("", 14, GREEN, true)
 	column.add_child(_refs.blind_due)
-	_info("blind_forecast", "", INK, 20)
-	_info("tax_advice", "Short on cash? Sell crops. Use the next stock boom.
-Unpaid tax becomes debt. Only bankruptcy ends the run.", MUTED, 16)
+	_refs.tax_progress = _meter(GREEN)
+	column.add_child(_refs.tax_progress)
+	_refs.blind_forecast = _wrap("", 13, MUTED)
+	column.add_child(_refs.blind_forecast)
+	var summary := _surface("quest")
+	_body.add_child(summary)
+	var summary_body := _vbox(8)
+	summary.add_child(summary_body)
+	_section_title(summary_body, "After collection")
+	_refs.tax_balance = _wrap("", 20, GREEN, true)
+	summary_body.add_child(_refs.tax_balance)
+	_refs.tax_limit = _wrap("", 13, MUTED)
+	summary_body.add_child(_refs.tax_limit)
+	_info("tax_advice", "", MUTED, 13)
 	if _island_id() >= 2: _body.add_child(_button("Protect your farm →", "climate", true))
-	_body.add_child(_button("Rates, ranks & last payment", "toggle_details:tax_details"))
-	var details := _vbox(10)
-	_body.add_child(details)
-	_refs.tax_details = details
-	details.hide()
-	for island in BlindRules.PROGRESSION_BASELINES:
-		details.add_child(_wrap("Island %d · %s–%s tax · Bankruptcy below %s" % [island, _blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE), _blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE * BlindRules.TAX_BOOM_MAX), _blind_money(BlindRules.bankruptcy(island))], 15, MUTED))
-	details.add_child(_wrap("5% of progression. Tax Booms and weather add up to +150%. Returning to an earlier island keeps your tax tier.", 14, MUTED))
-	details.add_child(_wrap("2× Overkill · 5× Ultra Kill · 10× Godlike
-25× Omnipotent · 100× Ruler · 1,000× Cosmic Ruler", 15, GREEN))
-	_refs.blind_last = _wrap("", 15, INK)
+	var details := _details_section("tax_details", "rates, ranks & last payment")
+	_section_title(details, "Island tax guide")
+	for island: int in BlindRules.PROGRESSION_BASELINES:
+		var row := _hbox(12)
+		details.add_child(row)
+		row.add_child(_icon({"kind": "island", "island": island}, 56))
+		var labels := _vbox(3)
+		labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(labels)
+		labels.add_child(_label(["Spud Valley", "Golden Shores", "Frosthollow"][island - 1], 17, INK, true))
+		labels.add_child(_wrap("%s–%s tax · Bankruptcy below %s" % [_blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE), _blind_money(float(BlindRules.PROGRESSION_BASELINES[island]) * BlindRules.TAX_RATE * BlindRules.TAX_BOOM_MAX), _blind_money(BlindRules.bankruptcy(island))], 13, MUTED))
+	details.add_child(_wrap("Base tax is 5% of the island progression target. Tax Booms and weather can add up to +150%. Returning to an earlier island keeps your tax tier.", 13, MUTED))
+	_section_title(details, "Savings milestones", "Balance ÷ bill")
+	var ranks := HFlowContainer.new()
+	ranks.add_theme_constant_override("h_separation", 6)
+	ranks.add_theme_constant_override("v_separation", 6)
+	details.add_child(ranks)
+	for rank: Dictionary in BlindRules.WEALTH_RANKS:
+		ranks.add_child(_badge("%s× %s" % [_number(rank.ratio), str(rank.name).capitalize()], "active"))
+	_refs.blind_last = _wrap("", 13, INK)
 	details.add_child(_refs.blind_last)
 	_refresh_blinds()
 
 func _refresh_blinds() -> void:
 	var info: Dictionary = _state.call("blind_info")
-	_refs.blind_live.text = "%s · %s / %s · %s" % [info.name, _blind_money(info.current), _blind_money(info.target), str(_state.call("blind_progress_text", float(info.ratio)))]
-	_refs.blind_live.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff937c"))
-	_refs.blind_forecast.text = "Base %s · +%.0f%%%s\nAfter tax  %s   /   Bankruptcy below  %s" % [_blind_money(info.base_tax), (float(info.tax_multiplier) - 1.0) * 100.0, " TAX BOOM" if info.tax_boom else "", _blind_money(info.projected), _blind_money(info.bankruptcy)]
-	_refs.blind_forecast.add_theme_color_override("font_color", GREEN if info.cleared else Color("bb4334"))
-	_refs.blind_due.text = "Collection in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks" % [int(info.booms), int(info.booms_required)]
+	_refs.blind_live.text = _blind_money(info.tax)
+	_refs.blind_live.add_theme_color_override("font_color", INK if info.cleared else Color("bb4334"))
+	Cozy.badge(_refs.tax_status, "Covered" if info.cleared else "Shortfall", "active" if info.cleared else "warning")
+	_refs.blind_forecast.text = "Base %s · +%.0f%%%s" % [_blind_money(info.base_tax), (float(info.tax_multiplier) - 1.0) * 100.0, " TAX BOOM" if info.tax_boom else " recovery pressure"]
+	_refs.tax_balance.text = "%s remaining" % _blind_money(info.projected)
+	_refs.tax_balance.add_theme_color_override("font_color", GREEN if info.projected >= 0 else CHERRY)
+	_refs.tax_limit.text = "Current savings %s · Bankruptcy below %s" % [_blind_money(info.current), _blind_money(info.bankruptcy)]
+	_refs.blind_due.text = "Collection in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks until collection" % [int(info.booms), int(info.booms_required)]
+	_refs.tax_progress.value = float(info.booms) / maxf(1, float(info.booms_required)) * 100
+	_refs.tax_advice.text = "Disaster markets are down. Booms resume after recovery; crashes do not advance collection." if _state.disaster_market_active() else "Sell your harvest when prices suit you. Collection follows every third major stock and its full selling window. Unpaid tax becomes debt."
 	var last: Dictionary = info.last_result
-	_refs.blind_last.text = "" if last.is_empty() else "LAST TAX · %s\n%s / %s · %s\nCollected %s → Balance %s" % ["PAID" if last.cleared else "BORROWED", _blind_money(last.balance), _blind_money(last.tax), str(_state.call("blind_progress_text", float(last.ratio))), _blind_money(last.tax), _blind_money(last.after)]
+	_refs.blind_last.text = "No payments yet. Your latest receipt will appear here." if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
 
 func _build_climate() -> void:
 	_heading("Weather the storm", "Protect your crops. Cut recovery costs.")
@@ -410,7 +449,7 @@ func _build_climate() -> void:
 		_info("climate_locked", "Climate action begins on Golden Shores.", INK, 23)
 		_body.add_child(_button("Explore islands →", "island", true))
 		return
-	var hero := _card(Color("dce6e3"), 10)
+	var hero := _surface("island", GREEN, true)
 	_body.add_child(hero)
 	var row := _hbox(16)
 	hero.add_child(row)
@@ -433,7 +472,7 @@ func _build_climate() -> void:
 	var captions: Dictionary = {"rainwater": "Save crops in droughts", "drainage": "Keep floodwater out", "barn": "Protect stored potatoes", "windbreaks": "Shelter crops from storms"}
 	for id in _state.ClimateSystem.PROJECTS:
 		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
-		var card := _card(PAPER, 10)
+		var card := _surface("upgrade", GREEN)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		card.tooltip_text = project.detail
 		grid.add_child(card)
@@ -447,8 +486,11 @@ func _build_climate() -> void:
 		top.add_child(badge)
 		top.add_child(_wrap(project.name, 19, INK, true))
 		column.add_child(_wrap(captions[id], 14, MUTED))
+		var progress := _badge("")
+		column.add_child(progress)
+		_refs["climate_level:" + id] = progress
 		var button := _button("", "climate_fund:" + id, true)
-		button.add_theme_font_override("font", Type.face(Type.DISPLAY, 600))
+		button.add_theme_font_override("font", _card_button_font)
 		column.add_child(button)
 		_refs["climate_fund:" + id] = button
 	var bottom := _hbox(12)
@@ -456,14 +498,23 @@ func _build_climate() -> void:
 	var tax := _button("Tax forecast →", "taxes")
 	tax.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(tax)
-	var more := _button("How protection works", "toggle_details:climate_details")
-	more.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom.add_child(more)
-	var details := _vbox(6)
-	_body.add_child(details)
-	_refs.climate_details = details
-	details.hide()
-	for project in _state.ClimateSystem.PROJECTS.values(): details.add_child(_wrap(project.name + " · " + project.detail, 14, MUTED))
+	var details := _details_section("climate_details", "how protection works")
+	_section_title(details, "Three kinds of wild weather")
+	for event: String in ["drought", "flood", "storm"]:
+		var weather_row := _hbox(10)
+		details.add_child(weather_row)
+		var weather_icon := ClimateIcon.new()
+		weather_icon.kind = event
+		weather_icon.custom_minimum_size = Vector2(40, 40)
+		weather_row.add_child(weather_icon)
+		var weather_text := _vbox(3)
+		weather_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		weather_row.add_child(weather_text)
+		weather_text.add_child(_label(str(_state.ClimateSystem.EVENTS[event].name).capitalize(), 16, INK, true))
+		weather_text.add_child(_wrap(_state.ClimateSystem.EVENTS[event].prepare, 13, MUTED))
+	details.add_child(_wrap("45s warning → 30s disaster → 75s recovery. Sale prices can crash up to −95%. No positive stocks during the disaster or recovery; the Rocket waits for clear skies.", 13, CHERRY))
+	_section_title(details, "What each project protects")
+	for project in _state.ClimateSystem.PROJECTS.values(): details.add_child(_wrap(project.name + " · " + project.detail, 13, MUTED))
 	_refs.climate_reference = _wrap("", 14, GREEN)
 	details.add_child(_refs.climate_reference)
 	_refresh_climate()
@@ -488,6 +539,7 @@ Next tax %s" % [(float(info.seed_factor) - 1.0) * 100.0, (float(info.sell_factor
 		var level: int = int(info.projects[str(_island_id())].get(id, 0))
 		var cost: float = float(BlindRules.PROGRESSION_BASELINES[_island_id()]) * float(project.cost) * float(level + 1)
 		var maximum: int = _state.ClimateSystem.MAX_PROJECT_LEVEL
+		Cozy.badge(_refs["climate_level:" + id], "Level %d / %d · %s" % [level, maximum, "Complete" if level >= maximum else ("Affordable" if float(_state.coins) >= cost else "Save up")], "active" if level >= maximum or float(_state.coins) >= cost else "warning")
 		_set_button("climate_fund:" + id, "Fully protected" if level >= maximum else "%s · %s" % ["Build" if level == 0 else "Upgrade", _blind_money(cost)], level >= maximum or float(_state.coins) < cost)
 
 func _build_tutorial() -> void:
@@ -780,9 +832,61 @@ func _hbox(gap: int = 10) -> HBoxContainer:
 
 func _card(color: Color = CREAM, padding: int = 16) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(color, padding, 17))
+	panel.add_theme_stylebox_override("panel", _style(Color("fffdf4") if color == PAPER else color, padding, 17, Color("d9decd") if color == PAPER else Color.TRANSPARENT))
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	return panel
+
+func _surface(kind: String, accent: Color = GREEN, selected: bool = false) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", Cozy.surface(kind, accent, selected))
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	return panel
+
+func _badge(text: String, tone: String = "neutral") -> Label:
+	var label := _label(text, 11, INK, true)
+	label.add_theme_font_override("font", Type.face(Type.BODY, 700))
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	Cozy.badge(label, text, tone)
+	return label
+
+func _meter(accent: Color = GREEN, height: float = 8) -> ProgressBar:
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size.y = height
+	bar.show_percentage = false
+	bar.add_theme_stylebox_override("background", _style(Color("e1e5d5"), 0, 4))
+	bar.add_theme_stylebox_override("fill", _style(accent, 0, 4))
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return bar
+
+func _metric(icon_id: String, text: String, color: Color = INK) -> HBoxContainer:
+	var row := _hbox(5)
+	row.add_child(_icon({"kind": "metric", "id": icon_id}, 22))
+	row.add_child(_label(text, 13, color, true))
+	return row
+
+func _section_title(parent: Control, title: String, detail: String = "") -> void:
+	var row := _hbox(10)
+	parent.add_child(row)
+	var heading := _label(title, 17, INK, true)
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(heading)
+	if not detail.is_empty(): row.add_child(_label(detail, 12, MUTED))
+
+func _polish_card_typography(node: Node) -> void:
+	# Symbol fallback fonts have tall line metrics. These illustrated menus
+	# use drawn icons, so keep text on the compact body/display font faces.
+	if node is Label:
+		if node.get_theme_font("font") == _heading_font:
+			node.add_theme_font_override("font", _card_heading_font)
+		elif not node.has_theme_font_override("font"):
+			node.add_theme_font_override("font", _plain_font)
+	elif node is OptionButton:
+		_style_choice(node)
+	elif node is Button:
+		node.add_theme_font_override("font", _card_button_font)
+	for child: Node in node.get_children():
+		_polish_card_typography(child)
 
 func _button(text: String, action: String, primary: bool = false) -> Button:
 	var button: Button = Button.new()
@@ -796,11 +900,9 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	button.add_theme_color_override("font_color", CREAM if primary else INK)
 	button.add_theme_color_override("font_hover_color", CREAM if primary else INK)
 	button.add_theme_color_override("font_pressed_color", CREAM if primary else INK)
-	button.add_theme_color_override("font_disabled_color", Color("92998a"))
-	button.add_theme_stylebox_override("normal", _style(INK if primary else PAPER, 10, 10))
-	button.add_theme_stylebox_override("hover", _style(GREEN if primary else Color("e3e8d6"), 10, 10))
-	button.add_theme_stylebox_override("pressed", _style(GREEN if primary else Color("d5ddc5"), 10, 10))
-	button.add_theme_stylebox_override("disabled", _style(Color("e7e8dd"), 10, 10))
+	button.add_theme_color_override("font_disabled_color", Color("727d69"))
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		button.add_theme_stylebox_override(state, Cozy.button_style(state, primary))
 	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
 	button.pressed.connect(func() -> void: _act(action))
 	return button
@@ -819,7 +921,11 @@ func _act(action: String) -> void:
 		return
 	if action.begins_with("toggle_details:"):
 		var key: String = action.get_slice(":", 1)
-		if _refs.has(key): _refs[key].visible = not _refs[key].visible
+		if _refs.has(key):
+			_refs[key].visible = not _refs[key].visible
+			if _refs.has(key + ":toggle"):
+				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
+			if _refs[key].visible: _reveal_details(_refs[key])
 		return
 	if is_instance_valid(_state) and bool(_state.get("run_over")) and action != "reset":
 		return
@@ -848,6 +954,8 @@ func _act(action: String) -> void:
 	if action == "toggle_trophies":
 		_trophies_open = not _trophies_open
 		_refresh_trophies()
+		_polish_card_typography(_refs.trophy_gallery)
+		if _trophies_open: _reveal_details(_refs.trophy_gallery)
 		return
 	if action == "debug_unlock":
 		if _refs.has("debug_code"):
@@ -1228,9 +1336,17 @@ func _build_modal() -> void:
 	header.add_child(close)
 	_blind_modal_warning = _wrap("", 13, CHERRY, true)
 	column.add_child(_blind_modal_warning)
+	_modal_fixed = _vbox(6)
+	column.add_child(_modal_fixed)
+	_modal_fixed.hide()
 	var scroll: ScrollContainer = ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scrollbar: VScrollBar = scroll.get_v_scroll_bar()
+	scrollbar.custom_minimum_size.x = 8
+	scrollbar.add_theme_stylebox_override("scroll", _style(Color("e3e5d6"), 4, 4))
+	for state: String in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		scrollbar.add_theme_stylebox_override(state, _style(Color("8d9d7f") if state == "grabber" else GREEN, 4, 4))
 	column.add_child(scroll)
 	_body = _vbox(10)
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1447,10 +1563,21 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_crate_reel = kind == "roll" and crate_mode
 	if not _crate_reel and _stake_kind == "build_crate":
 		_stake_kind = "normal"
-	_modal_card.add_theme_stylebox_override("panel", _style(CASINO if kind == "roll" else CREAM, 24, 17))
-	_modal_title.add_theme_color_override("font_color", CREAM if kind == "roll" else INK)
-	_modal_subtitle.add_theme_color_override("font_color", CASINO_LIGHT if kind == "roll" else MUTED)
+	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
+	_modal_card.offset_left = -452 if kind == "roll" else -376
+	_modal_card.offset_right = 452 if kind == "roll" else 376
+	_modal_card.offset_top = -354 if kind == "roll" else -317
+	_modal_card.offset_bottom = 354 if kind == "roll" else 317
+	_modal_title.add_theme_color_override("font_color", INK)
+	_modal_title.add_theme_font_override("font", _card_heading_font)
+	_modal_title.add_theme_font_size_override("font_size", 28)
+	_modal_subtitle.add_theme_font_override("font", _plain_font)
+	_modal_subtitle.add_theme_color_override("font_color", MUTED)
 	_refs.clear()
+	for child: Node in _modal_fixed.get_children():
+		_modal_fixed.remove_child(child)
+		child.queue_free()
+	_modal_fixed.hide()
 	for child: Node in _body.get_children():
 		_body.remove_child(child)
 		child.queue_free()
@@ -1475,6 +1602,11 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"taxes", "blinds": _build_blinds()
 		"climate": _build_climate()
 		_: _build_help()
+	_polish_card_typography(_body)
+	var bottom_space := Control.new()
+	bottom_space.custom_minimum_size.y = 8
+	bottom_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.add_child(bottom_space)
 	_refresh_panel()
 	_modal.show()
 	_context_box.hide()
@@ -1491,6 +1623,27 @@ func _heading(title: String, subtitle: String) -> void:
 	_modal_subtitle.text = subtitle
 	_modal_subtitle.visible = not subtitle.is_empty()
 
+func _reveal_details(control: Control) -> void:
+	# Let the expanded contents settle before scrolling them into view.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not is_instance_valid(control) or not control.is_visible_in_tree(): return
+	var target: Control = control.get_child(0) if control.get_child_count() > 0 else control
+	(_body.get_parent() as ScrollContainer).ensure_control_visible(target)
+
+func _details_section(key: String, title: String) -> VBoxContainer:
+	var toggle := _button("Show " + title, "toggle_details:" + key)
+	toggle.set_meta("section_title", title)
+	_body.add_child(toggle)
+	_refs[key + ":toggle"] = toggle
+	var card := _surface("quest", GREEN)
+	_body.add_child(card)
+	_refs[key] = card
+	var contents := _vbox(9)
+	card.add_child(contents)
+	card.hide()
+	return contents
+
 func _info(key: String, text: String = "", color: Color = GREEN, size: int = 14) -> Label:
 	var label: Label = _wrap(text, size, color)
 	_body.add_child(label)
@@ -1498,11 +1651,14 @@ func _info(key: String, text: String = "", color: Color = GREEN, size: int = 14)
 	return label
 
 func _offer(title: String, detail: String, text: String, action: String, primary: bool = false, parent: VBoxContainer = null) -> void:
-	var card: PanelContainer = _card(PAPER, 13)
+	var card: PanelContainer = _surface("upgrade")
 	var target: VBoxContainer = _body if parent == null else parent
 	target.add_child(card)
+	_refs[action + ":card"] = card
 	var row: HBoxContainer = _hbox(12)
 	card.add_child(row)
+	var offer_icons: Dictionary = {"activity:duck": {"kind": "activity", "id": "duck"}, "activity:duck:speed": {"kind": "metric", "id": "speed"}, "upgrade:hoe": {"kind": "tool", "id": "hoe"}, "upgrade:water": {"kind": "tool", "id": "water"}, "upgrade:harvest": {"kind": "tool", "id": "harvest"}, "upgrade:expansion": {"kind": "metric", "id": "beds"}, "upgrade:barn": {"kind": "build", "id": "farmer"}}
+	if offer_icons.has(action): row.add_child(_icon(offer_icons[action], 48))
 	var description: VBoxContainer = _vbox(3)
 	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(description)
@@ -1510,6 +1666,13 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 	var detail_label: Label = _wrap(detail, 13, MUTED)
 	description.add_child(detail_label)
 	_refs[action + ":detail"] = detail_label
+	if action in ["activity:duck", "activity:duck:speed"]:
+		var value := _wrap("", 18, GREEN, true)
+		description.add_child(value)
+		_refs[action + ":value"] = value
+		var status := _badge("")
+		description.add_child(status)
+		_refs[action + ":status"] = status
 	var button: Button = _button(text, action, primary)
 	button.custom_minimum_size.x = 146
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1583,10 +1746,18 @@ func _build_barn() -> void:
 	_build_equipment_header(_inventory_sections.gear)
 	var entries: Array[Dictionary] = _inventory_data()
 	_inventory_signature = _inventory_id_string(entries)
+	var gear_grid := GridContainer.new()
+	gear_grid.columns = 2
+	gear_grid.add_theme_constant_override("h_separation", 10)
+	gear_grid.add_theme_constant_override("v_separation", 10)
+	_inventory_sections.gear.add_child(gear_grid)
 	for entry: Dictionary in entries:
 		var id: String = str(entry.get("id", ""))
 		var kind: String = str(entry.get("kind", "relic"))
-		var section: String = "gear" if kind == "gear" else ("crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build", "build_crate"] else "items"))
+		if kind == "gear":
+			_build_gear_card(gear_grid, entry)
+			continue
+		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build", "build_crate"] else "items")
 		var card: PanelContainer = _card(PAPER, 12)
 		_inventory_sections[section].add_child(card)
 		var row: HBoxContainer = _hbox(12)
@@ -1604,8 +1775,6 @@ func _build_barn() -> void:
 		var action: String = str(entry.get("action", ""))
 		if kind == "crop":
 			action = "sell:" + str(entry.get("crop", "russet")) + ":-1"
-		elif kind == "gear":
-			action = "gear:equip:" + id
 		elif kind == "processed" and action in ["", "sell"]:
 			action = "build:sell_processed"
 		if not action.is_empty():
@@ -1614,6 +1783,13 @@ func _build_barn() -> void:
 			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			row.add_child(button)
 			_refs["item:" + id + ":action"] = button
+	if gear_grid.get_child_count() == 0:
+		var empty := _surface("gear", GREEN)
+		_inventory_sections.gear.add_child(empty)
+		var empty_row := _hbox(14)
+		empty.add_child(empty_row)
+		empty_row.add_child(_icon({"kind": "slot", "id": "body"}, 62))
+		empty_row.add_child(_wrap("Your wardrobe starts here. Find clothing at the Roll House, then equip it for extra bonuses.", 14, MUTED))
 	for section: String in ["crops", "gear", "items", "builds"]:
 		if _inventory_sections[section].get_child_count() == 0:
 			_inventory_sections[section].add_child(_wrap("Empty for now. Keep farming!", 15, MUTED))
@@ -1623,6 +1799,45 @@ func _build_barn() -> void:
 	_inventory_sections.items.add_child(sell_rare)
 	_refs["sell_mutations"] = sell_rare
 	_set_inventory_tab()
+
+func _build_gear_card(parent: GridContainer, entry: Dictionary) -> void:
+	var id: String = str(entry.id)
+	var key: String = "item:" + id
+	var rarity: String = str(entry.get("rarity", "common"))
+	var accent: Color = Cozy.RARITY_COLORS.get(rarity, GREEN)
+	var card := _surface("gear", accent)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(card)
+	_refs[key + ":card"] = card
+	var body := _vbox(7)
+	card.add_child(body)
+	var top := _hbox(10)
+	body.add_child(top)
+	top.add_child(_icon(entry, 64))
+	var metadata := _vbox(5)
+	metadata.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(metadata)
+	var rarity_badge := _badge(rarity.capitalize())
+	rarity_badge.add_theme_stylebox_override("normal", _style(accent.lerp(CREAM, 0.86), 5, 7))
+	rarity_badge.add_theme_color_override("font_color", accent.darkened(0.12))
+	metadata.add_child(rarity_badge)
+	metadata.add_child(_label(str(entry.get("slot", "gear")).capitalize() + " slot", 12, MUTED))
+	var title := _wrap("", 18, INK, true)
+	body.add_child(title)
+	_refs[key + ":title"] = title
+	var detail := _wrap("", 13, GREEN)
+	detail.custom_minimum_size.y = 52
+	body.add_child(detail)
+	_refs[key + ":detail"] = detail
+	var footer := _hbox(8)
+	body.add_child(footer)
+	var status := _badge("Owned")
+	footer.add_child(status)
+	_refs[key + ":status"] = status
+	var button := _button("Equip", "gear:equip:" + id, true)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(button)
+	_refs[key + ":action"] = button
 
 func _build_tools() -> void:
 	_heading("Tool shed", "More beds with every click.")
@@ -1641,69 +1856,75 @@ func _build_tools() -> void:
 	_info("tool_tip", "Equip tools with keys 1–5 or the hotbar.", MUTED, 13)
 
 func _build_roll() -> void:
-	_heading("BUILD CRATE" if _crate_reel else "The Questionable Shack", "")
-	_refs["roll_purse"] = _modal_subtitle
-	var reel_card: PanelContainer = _card(Color("20152f"), 10)
-	reel_card.add_theme_stylebox_override("panel", _style(Color("20152f"), 10, 14, Color("6d518f")))
-	_body.add_child(reel_card)
+	_heading("Build crate" if _crate_reel else "The Questionable Shack", "")
+	_refs.roll_purse = _modal_subtitle
+	_modal_subtitle.visible = not _crate_reel
+	if not _crate_reel:
+		_modal_fixed.show()
+		var meter := RollLuckMeter.new()
+		_modal_fixed.add_child(meter)
+		_refs.roll_luck_meter = meter
+		meter.completed.connect(_start_pending_spin)
+		var quality := _label("", 12, GREEN)
+		quality.add_theme_font_override("font", _card_button_font)
+		_modal_fixed.add_child(quality)
+		_refs.roll_quality = quality
+		meter.explanation_changed.connect(func(text: String): quality.text = text)
+	var core := _hbox(18)
+	_body.add_child(core)
+	var play_column := _vbox(8)
+	play_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	core.add_child(play_column)
+	var odds_column := _vbox(10)
+	odds_column.custom_minimum_size.x = 234
+	odds_column.visible = not _crate_reel
+	core.add_child(odds_column)
+	var reel_card := _surface("island", Color("9375a7"))
+	reel_card.add_theme_stylebox_override("panel", _style(Color("eee7ed"), 7, 14, Color("c9b9ce")))
+	play_column.add_child(reel_card)
 	_spinner = RollReel.new()
 	_spinner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_spinner.custom_minimum_size.y = 180
 	reel_card.add_child(_spinner)
 	_spinner.finished.connect(_on_roll_finished)
 	_spinner.set_build_deck(_crate_reel)
-	var result_box: VBoxContainer = _vbox(3)
-	_body.add_child(result_box)
-	var result_title: Label = _wrap("PICK A STAKE. LET IT ROLL.", 18, GOLD, true)
+	var result_box := _vbox(4)
+	play_column.add_child(result_box)
+	var result_title := _wrap("Choose your stake", 17, INK, true)
 	result_box.add_child(result_title)
-	_refs["roll_result_title"] = result_title
-	var result_detail: Label = _wrap("Your prize lands in the centre.", 13, Color("dbcee9"))
+	_refs.roll_result_title = result_title
+	var result_detail := _wrap("Your prize lands in the centre.", 12, MUTED)
 	result_box.add_child(result_detail)
-	_refs["roll_result_detail"] = result_detail
-	var receipt: Label = _wrap("", 12, CASINO_LIGHT)
+	result_detail.hide()
+	_refs.roll_result_detail = result_detail
+	var receipt := _wrap("", 12, GREEN)
 	result_box.add_child(receipt)
 	receipt.hide()
-	_refs["roll_accounting"] = receipt
-	var batch_results: HBoxContainer = _hbox(7)
-	_body.add_child(batch_results)
-	batch_results.hide()
-	_refs["batch_results"] = batch_results
+	_refs.roll_accounting = receipt
 	if _crate_reel:
-		result_title.text = "ONE CRATE. ONE BUILD."
-		result_detail.text = "One crate → one build level."
-		var open_button: Button = _button("Open another Build Crate", "build:open_crate", true)
-		_body.add_child(open_button)
+		result_detail.show()
+		result_title.text = "One crate. One new build level."
+		result_detail.text = "Open your crate to discover a specialty."
+		var open_button := _button("Open another Build Crate", "build:open_crate", true)
+		play_column.add_child(open_button)
 		_refs["build:open_crate"] = open_button
 		return
-	var trophies: Button = _button("▸ Trophy cabinet · rarest drops", "toggle_trophies")
-	_body.add_child(trophies)
-	_refs["trophy_toggle"] = trophies
-	var gallery: VBoxContainer = _vbox(8)
-	_body.add_child(gallery)
-	_refs["trophy_gallery"] = gallery
-	_trophy_signature = ""
-	_refresh_trophies()
-	_info("crown_offer", "AURORA CROWN · One free same-stake roll with every purchase.", Color("98e3e8"), 12)
-	_info("roll_minimum", "", CASINO_LIGHT, 12)
-	var stakes: GridContainer = GridContainer.new()
+	var stakes := GridContainer.new()
 	stakes.columns = 2
 	stakes.add_theme_constant_override("h_separation", 10)
-	stakes.add_theme_constant_override("v_separation", 8)
-	_body.add_child(stakes)
+	stakes.add_theme_constant_override("v_separation", 7)
+	play_column.add_child(stakes)
 	for kind: String in ["normal", "big", "stupid", "all_in"]:
-		var button: Button = _button("Roll", "roll:" + kind)
-		button.custom_minimum_size.y = 42
+		var button := _button("Roll", "roll:" + kind, kind == "normal")
+		button.custom_minimum_size.y = 39
 		button.mouse_entered.connect(_preview_stake.bind(kind))
+		button.focus_entered.connect(_preview_stake.bind(kind))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.add_theme_stylebox_override("normal", _style(Color("e6c07b") if kind == "normal" else Color("eee4f4"), 10, 10))
-		button.add_theme_stylebox_override("hover", _style(Color("ffe0a1") if kind == "normal" else Color("d7c2ee"), 10, 10))
-		button.add_theme_color_override("font_color", CASINO)
 		stakes.add_child(button)
 		_refs["roll:" + kind] = button
 	if _island_id() == 3:
-		var batches: HBoxContainer = _hbox(8)
-		_body.add_child(batches)
-		var batch_stake: OptionButton = OptionButton.new()
+		var batches := _hbox(8)
+		play_column.add_child(batches)
+		var batch_stake := OptionButton.new()
 		for label: String in ["Normal stake", "Big stake", "Stupid stake"]:
 			batch_stake.add_item(label)
 		batch_stake.selected = ["normal", "big", "stupid"].find(_batch_kind)
@@ -1712,35 +1933,102 @@ func _build_roll() -> void:
 				_batch_kind = ["normal", "big", "stupid"][index]
 				_preview_stake(_batch_kind)
 				_refresh_panel())
+		_style_choice(batch_stake)
 		batches.add_child(batch_stake)
-		_refs["batch_stake"] = batch_stake
+		_refs.batch_stake = batch_stake
 		for count: int in [3, 5]:
-			var batch: Button = _button("Roll ×%d" % count, "batch:" + str(count))
+			var batch := _button("Roll ×%d" % count, "batch:" + str(count))
 			batch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			batches.add_child(batch)
 			_refs["batch:" + str(count)] = batch
-		_info("batch_note", "FROSTHOLLOW SPECIAL · Same odds per roll. Every prize is yours.", CASINO_LIGHT, 12)
-	var odds: GridContainer = GridContainer.new()
-	odds.columns = 3
-	odds.add_theme_constant_override("h_separation", 18)
+	_info("all_in_warning", "", CHERRY, 13)
+	var cancel := _button("Keep my coins · cancel all-in", "cancel_all_in")
+	play_column.add_child(cancel)
+	_refs.cancel_all_in = cancel
+	_info("crown_offer", "Aurora Crown · One free same-stake roll with every purchase.", GREEN, 12)
+	_info("roll_minimum", "", MUTED, 11)
+	for key: String in ["all_in_warning", "crown_offer", "roll_minimum"]:
+		_refs[key].reparent(play_column)
+	play_column.move_child(cancel, _refs.all_in_warning.get_index() + 1)
+	var batch_results := GridContainer.new()
+	batch_results.columns = 3
+	batch_results.add_theme_constant_override("h_separation", 8)
+	batch_results.add_theme_constant_override("v_separation", 8)
+	play_column.add_child(batch_results)
+	batch_results.hide()
+	_refs.batch_results = batch_results
+	var odds_card := _surface("quest", Color("9375a7"))
+	odds_column.add_child(odds_card)
+	var odds_body := _vbox(9)
+	odds_card.add_child(odds_body)
+	_section_title(odds_body, "Live odds")
+	odds_body.add_child(_wrap("Every rarity, for this stake.", 12, MUTED))
+	var odds := GridContainer.new()
+	odds.columns = 1
+	odds.add_theme_constant_override("h_separation", 10)
 	odds.add_theme_constant_override("v_separation", 4)
-	_body.add_child(odds)
-	_body.add_child(_button("Luck calculation", "toggle_details:roll_luck_math"))
-	_info("roll_luck_math", "", CASINO_LIGHT, 13)
-	_refs.roll_luck_math.hide()
-	var tiers: Array = _state.call("roll_odds", _stake_kind)
-	for entry: Dictionary in tiers:
+	odds_body.add_child(odds)
+	for entry: Dictionary in _state.call("roll_odds", _stake_kind):
 		var tier: String = str(entry.get("tier", "common"))
-		var label: Label = _label("", 12, CASINO_LIGHT)
+		var label := _label("", 13, INK)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.tooltip_text = str(entry.get("description", ""))
 		label.mouse_filter = Control.MOUSE_FILTER_PASS
+		var odds_style := _style(RollReel.COLORS.get(tier, GOLD).lerp(CREAM, 0.85), 8, 7)
+		odds_style.content_margin_top = 3
+		odds_style.content_margin_bottom = 3
+		label.add_theme_stylebox_override("normal", odds_style)
 		odds.add_child(label)
 		_refs["odds:" + tier] = label
-	_info("all_in_warning", "", Color("f0b995"), 13)
-	var cancel: Button = _button("Keep my coins · cancel all-in", "cancel_all_in")
-	_body.add_child(cancel)
-	_refs["cancel_all_in"] = cancel
+	_refs.roll_luck_total = _wrap("", 12, GREEN)
+	odds_column.add_child(_refs.roll_luck_total)
+	odds_column.add_child(_wrap("Odds include empty sacks.", 12, MUTED))
+	var math_body := _details_section("roll_math_section", "roll calculation")
+	_section_title(math_body, "How this roll is calculated")
+	var math := _wrap("", 14, INK)
+	math_body.add_child(math)
+	_refs.roll_luck_math = math
+	math_body.add_child(_wrap("Non-common weight = base weight × roll quality × luck weight raised to the tier’s rarity power. Above 10× luck, multiply again by (luck / 10) raised to 0.35 × rarity steps above Rare. Normalize to the displayed odds. Ordinary cash jackpots cap at 2.25%; excess moves to Relic and Mystery.", 12, MUTED))
+	var trophies := _button("Show trophy cabinet", "toggle_trophies")
+	_body.add_child(trophies)
+	_refs.trophy_toggle = trophies
+	var utilities := _hbox(10)
+	_body.add_child(utilities)
+	_refs["roll_math_section:toggle"].reparent(utilities)
+	trophies.reparent(utilities)
+	_body.move_child(utilities, _refs.roll_math_section.get_index())
+	for utility: Control in utilities.get_children(): utility.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var gallery := _vbox(8)
+	_body.add_child(gallery)
+	_refs.trophy_gallery = gallery
+	_trophy_signature = ""
+	_refresh_trophies()
+
+func _roll_chance(chance: float) -> String:
+	# Do not round a possible rare outcome down to an impossible-looking 0%.
+	if chance == 0.0 or chance >= 0.001: return "%.3f" % chance
+	var exponent: int = int(floor(log(chance) / log(10.0)))
+	if exponent >= -7: return String.num(chance, 2 - exponent)
+	return "%.3fe%d" % [chance / pow(10.0, exponent), exponent]
+
+func _style_choice(choice: OptionButton) -> void:
+	choice.custom_minimum_size.y = 39
+	choice.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	choice.add_theme_font_override("font", _card_button_font)
+	choice.add_theme_font_size_override("font_size", 13)
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		choice.add_theme_stylebox_override(state, Cozy.button_style(state, false))
+	for color: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		choice.add_theme_color_override(color, INK)
+	choice.add_theme_color_override("font_disabled_color", MUTED)
+	choice.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
+	var popup := choice.get_popup()
+	popup.add_theme_stylebox_override("panel", _style(CREAM, 8, 10, Color("b7c8af")))
+	popup.add_theme_stylebox_override("hover", _style(Color("dcebd7"), 6, 6))
+	popup.add_theme_font_override("font", _plain_font)
+	popup.add_theme_font_size_override("font_size", 14)
+	popup.add_theme_color_override("font_color", INK)
+	popup.add_theme_color_override("font_hover_color", INK)
 
 func _build_dex() -> void:
 	_heading("The PotatoDex", "An illustrated field guide to ordinary spuds and extraordinary finds.")
@@ -1764,30 +2052,36 @@ func _build_dex() -> void:
 	for index: int in range(ids.size()):
 		var id: String = str(ids[index])
 		var special: bool = _dex_tab == "mutations"
-		var card := _card(PAPER, 14)
+		var card := _surface("gear", Color("9676a9") if special else _crop_color(id))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(card)
 		var column := _vbox(6)
 		card.add_child(column)
 		var heading := _hbox(10)
 		column.add_child(heading)
-		var picture := _icon({"kind": "mutation", "id": "mutation:russet:" + id, "crop": "russet"} if special else {"kind": "crop", "crop": id}, 96)
+		var picture := _icon({"kind": "mutation", "id": "mutation:russet:" + id, "crop": "russet"} if special else {"kind": "crop", "crop": id}, 76)
 		picture.name = "DexPicture_" + id
 		heading.add_child(picture)
 		var title := _wrap("#%02d · %s" % [index + 1, id.capitalize() + " mutation" if special else _crop_name(id)], 18, INK, true)
-		title.custom_minimum_size.x = 180
+		title.custom_minimum_size.x = 155
 		heading.add_child(title)
 		var description := _wrap(str(mutation_notes[id] if special else crop_notes[id]), 14, MUTED)
-		description.custom_minimum_size.x = 290
+		description.custom_minimum_size.x = 250
 		column.add_child(description)
-		var status := _wrap("", 13, GREEN, true)
+		var status := _wrap("", 12, GREEN, true)
 		column.add_child(status)
 		_refs["dex_status:" + id] = status
-		var detail := _wrap("", 13, INK)
+		var detail := _wrap("", 15, GREEN, true)
 		column.add_child(detail)
 		_refs["dex_detail:" + id] = detail
-	_info("dex_bonus", "", GREEN, 13)
-	_info("dex_tip", "Mutation value = the crop's live price × mutation multiplier. Pictures preview each type; discovery is permanent even after selling.", MUTED, 13)
+	var footer := _surface("quest", GOLD)
+	_body.add_child(footer)
+	var footer_body := _vbox(6)
+	footer.add_child(footer_body)
+	_section_title(footer_body, "Every discovery stays with you")
+	_refs.dex_bonus = _wrap("", 14, GREEN, true)
+	footer_body.add_child(_refs.dex_bonus)
+	footer_body.add_child(_wrap("Mutation value = live crop price × its multiplier. Sell a find whenever you like; its discovery remains in your field guide.", 13, MUTED))
 
 func _refresh_dex() -> void:
 	var found: Array = _state.dex
@@ -1796,8 +2090,8 @@ func _refresh_dex() -> void:
 	for id: String in ids:
 		if _dex_tab == "mutations":
 			_refs["dex_status:" + id].text = "DISCOVERED" if id in found else "NOT DISCOVERED · Preview"
-			_refs["dex_status:" + id].add_theme_color_override("font_color", GREEN if id in found else MUTED)
-			_refs["dex_detail:" + id].text = "%s× live crop value · Found through harvests, experiments or rewards" % _number(_state.MUTATION_MULTIPLIERS[id])
+			Cozy.badge(_refs["dex_status:" + id], "DISCOVERED" if id in found else "NOT DISCOVERED · Preview", "active" if id in found else "neutral")
+			_refs["dex_detail:" + id].text = "%s× live crop value" % _number(_state.MUTATION_MULTIPLIERS[id])
 		else:
 			var home: String = "Golden Shores" if id == "sunburst" else ("Frosthollow" if id == "icecap" else "Spud Valley onward")
 			_refs["dex_status:" + id].text = "%ds base growth · %s" % [_crop_grow(id), home]
@@ -1805,48 +2099,148 @@ func _refresh_dex() -> void:
 	_refs.dex_bonus.text = "Permanent harvest bonus +%s%% · Total luck %s× (+%s%%)" % [_number(_state.permanent_yield * 100.0), String.num(_effective_luck(), 3), _number((_effective_luck() - 1.0) * 100.0)]
 
 func _build_island() -> void:
-	_heading("Set sail", "Your crops keep growing while you travel.")
-	_offer("SPUD VALLEY", "24 beds · 4 crops · Home sweet home", "Travel", "travel:1", true)
-	_offer("GOLDEN SHORES", "48 beds · 2× yield · Wild weather", "Travel", "travel:2", true)
-	_info("island_requirements", "", CORAL, 15)
-	_offer("A ticket to Golden Shores", "%s harvests + %s" % [_number(_catalog_number("ISLAND2_UNLOCK_HARVEST", 500)), _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000))], "Unlock · $1M", "island_unlock")
-	_refs["island_unlock_card"] = _body.get_child(_body.get_child_count() - 1)
-	_info("island_rush", "Buyer contracts · Five quests · Big stock surges", MUTED, 14)
-	if _island_id() >= 2 or _flag("island3_unlocked"):
-		_offer("FROST HOLLOW", "80 beds · 3× yield · Icecaps\nBreak frozen beds for a stock bonus.", "Travel", "travel:3", true)
-		_info("winter_requirements", "", Color("6594b8"), 14)
-		_offer("A passage through the ice", "%s + %s harvests" % [_money(_catalog_number("ISLAND3_UNLOCK_COST", 1e11)), _number(_catalog_number("ISLAND3_UNLOCK_HARVEST", 25000))], "Unlock · $100B", "island3_unlock")
-		_refs["winter_unlock_card"] = _body.get_child(_body.get_child_count() - 1)
-	var quests: Button = _button("Local quest board  [Q]", "quests")
-	_body.add_child(quests)
+	_heading("Set sail", "Three little worlds. Your crops keep growing while you explore.")
+	var destinations: Array[Dictionary] = [
+		{"id": 1, "name": "Spud Valley", "tagline": "Good soil. A place to call home.", "beds": "24 beds", "crops": "4 crops", "feature": "Home farm", "accent": GREEN},
+		{"id": 2, "name": "Golden Shores", "tagline": "Sunburst harvests and seaside fortunes.", "beds": "48 beds", "crops": "2× yield", "feature": "Wild weather", "accent": CORAL},
+		{"id": 3, "name": "Frosthollow", "tagline": "Rare Icecaps, Frostbreaks and northern lights.", "beds": "80 beds", "crops": "3× yield", "feature": "Frozen beds", "accent": Color("56899d")},
+	]
+	for destination: Dictionary in destinations:
+		var id: int = int(destination.id)
+		var key: String = "travel:" + str(id)
+		var accent: Color = destination.accent
+		var card := _surface("island", accent)
+		_body.add_child(card)
+		_refs[key + ":card"] = card
+		var body := _vbox(10)
+		card.add_child(body)
+		var row := _hbox(14)
+		body.add_child(row)
+		row.add_child(_icon({"kind": "island", "island": id}, 100))
+		var description := _vbox(7)
+		description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(description)
+		var title_row := _hbox(8)
+		description.add_child(title_row)
+		var title := _label(destination.name, 22, INK, true)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title_row.add_child(title)
+		var status := _badge("")
+		title_row.add_child(status)
+		_refs[key + ":status"] = status
+		description.add_child(_wrap(destination.tagline, 13, MUTED))
+		var features := HFlowContainer.new()
+		features.add_theme_constant_override("h_separation", 14)
+		description.add_child(features)
+		features.add_child(_metric("beds", destination.beds))
+		features.add_child(_metric("crops", destination.crops))
+		features.add_child(_metric("weather" if id > 1 else "yield", destination.feature))
+		var button := _button("Travel", key, true)
+		description.add_child(button)
+		_refs[key] = button
+		if id == 1: continue
+		var unlock_body := _vbox(6)
+		body.add_child(unlock_body)
+		_refs[key + ":unlock"] = unlock_body
+		_section_title(unlock_body, "Your next adventure" if id == 2 else "Beyond the golden coast")
+		for requirement: String in ["harvest", "coins"]:
+			var progress_row := _hbox(8)
+			unlock_body.add_child(progress_row)
+			progress_row.add_child(_icon({"kind": "metric", "id": "yield" if requirement == "harvest" else "coin"}, 22))
+			var label := _label("", 13, INK, true)
+			label.custom_minimum_size.x = 240
+			progress_row.add_child(label)
+			_refs[key + ":" + requirement + ":label"] = label
+			var bar := _meter(accent)
+			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			progress_row.add_child(bar)
+			_refs[key + ":" + requirement + ":bar"] = bar
+		var actions := _hbox(10)
+		unlock_body.add_child(actions)
+		var gate := _wrap("", 12, MUTED)
+		actions.add_child(gate)
+		_refs[key + ":gate"] = gate
+		var unlock_action: String = "island_unlock" if id == 2 else "island3_unlock"
+		var unlock_button := _button("Unlock", unlock_action, true)
+		actions.add_child(unlock_button)
+		_refs[unlock_action] = unlock_button
+	_body.add_child(_button("Local quest board  [Q]", "quests"))
+
+func _refresh_islands() -> void:
+	var coins: float = float(_state.coins)
+	var harvested: float = float(_state.call("total_mastery"))
+	for id: int in [1, 2, 3]:
+		var key: String = "travel:" + str(id)
+		var unlocked: bool = id == 1 or _flag("island%d_unlocked" % id)
+		var here: bool = _island_id() == id
+		Cozy.badge(_refs[key + ":status"], "You are here" if here else ("Unlocked" if unlocked else "Locked"), "active" if unlocked else "locked")
+		_set_button(key, "You are here" if here else ("Set sail →" if unlocked else "Destination locked"), here or not unlocked)
+		if id == 1: continue
+		_refs[key + ":unlock"].visible = not unlocked
+		var cost: float = _catalog_number("ISLAND%d_UNLOCK_COST" % id, 1e6 if id == 2 else 1e11)
+		var target: float = _catalog_number("ISLAND%d_UNLOCK_HARVEST" % id, 500 if id == 2 else 25000)
+		_refs[key + ":harvest:label"].text = "%s / %s harvested" % [_number(minf(harvested, target)), _number(target)]
+		_refs[key + ":coins:label"].text = "%s / %s saved" % [_money(coins), _money(cost)]
+		_refs[key + ":harvest:bar"].value = clampf(harvested / target * 100.0, 0, 100)
+		_refs[key + ":coins:bar"].value = clampf(coins / cost * 100.0, 0, 100)
+		var previous_unlocked: bool = id == 2 or _flag("island2_unlocked")
+		var ready: bool = coins >= cost and harvested >= target and previous_unlocked
+		_refs[key + ":gate"].text = "Unlock Golden Shores first" if not previous_unlocked else ("Ready for a new horizon!" if ready else "Keep harvesting and saving for passage.")
+		_set_button("island_unlock" if id == 2 else "island3_unlock", "Unlock · " + _money(cost), unlocked or not ready)
 
 func _build_quests() -> void:
-	_heading(str(_state.call("island_name")).capitalize() + " quests", "Grow it. Ship it. Claim it.")
-	_info("quest_note", "", CORAL, 14)
+	_heading(str(_state.call("island_name")).capitalize() + " quests", "A little purpose for every harvest.")
+	_info("quest_note", "", GREEN, 13)
+	var icons: Dictionary = {"starter_crash": {"kind": "seed", "crop": "golden"}, "starter_spike": {"kind": "build", "id": "investor"}, "starter_combo": {"kind": "tool", "id": "harvest"}, "ground": {"kind": "tool", "id": "hoe"}, "sunburst": {"kind": "crop", "crop": "sunburst"}, "combo": {"kind": "tool", "id": "harvest"}, "export": {"kind": "collectible", "id": "compass"}, "mutation": {"kind": "mutation", "id": "mutation:russet:golden"}, "winter_ground": {"kind": "tool", "id": "hoe"}, "winter_harvest": {"kind": "crop", "crop": "icecap"}, "winter_frost": {"kind": "crop", "crop": "icecap"}}
 	for quest: Dictionary in _quests():
 		var id: String = str(quest.get("id", ""))
-		var card: PanelContainer = _card(SHORES_PAPER, 12)
+		var key: String = "quest:" + id
+		var card := _surface("quest")
 		_body.add_child(card)
-		var body: VBoxContainer = _vbox(5)
+		_refs[key + ":card"] = card
+		var body := _vbox(8)
 		card.add_child(body)
-		body.add_child(_wrap(str(quest.get("title", "Farm challenge")), 17, INK, true))
-		body.add_child(_wrap(str(quest.get("description", "")), 13, MUTED))
-		var progress: ProgressBar = ProgressBar.new()
-		progress.custom_minimum_size.y = 7
-		progress.show_percentage = false
-		progress.add_theme_stylebox_override("background", _style(Color("e4d9c5"), 0, 3))
-		progress.add_theme_stylebox_override("fill", _style(GOLD, 0, 3))
-		body.add_child(progress)
-		_refs["quest:" + id + ":bar"] = progress
-		var row: HBoxContainer = _hbox(10)
-		body.add_child(row)
-		var detail: Label = _wrap("", 13, INK)
-		row.add_child(detail)
-		_refs["quest:" + id + ":detail"] = detail
-		var claim: Button = _button("Claim reward", "quest:" + id, true)
+		var header := _hbox(12)
+		body.add_child(header)
+		header.add_child(_icon(icons.get(id, {"kind": "tool", "id": "harvest"}), 52))
+		var titles := _vbox(3)
+		titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		header.add_child(titles)
+		titles.add_child(_wrap(str(quest.get("title", "Farm challenge")).capitalize(), 19, INK, true))
+		titles.add_child(_wrap(str(quest.get("description", "")), 13, MUTED))
+		var status := _badge("In progress")
+		header.add_child(status)
+		_refs[key + ":status"] = status
+		var progress_row := _hbox(12)
+		body.add_child(progress_row)
+		var progress := _meter(GREEN, 10)
+		progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		progress_row.add_child(progress)
+		_refs[key + ":bar"] = progress
+		var detail := _label("", 16, GREEN, true)
+		progress_row.add_child(detail)
+		_refs[key + ":detail"] = detail
+		var footer := _hbox(8)
+		body.add_child(footer)
+		var rewards := HFlowContainer.new()
+		rewards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rewards.add_theme_constant_override("h_separation", 12)
+		footer.add_child(rewards)
+		rewards.add_child(_metric("coin", _money(float(quest.get("coins", 0))), Color("896221")))
+		var reward_text: String = str(quest.get("reward_text", ""))
+		if " + " in reward_text:
+			var special: String = reward_text.get_slice(" + ", 1)
+			var reward_row := _hbox(5)
+			rewards.add_child(reward_row)
+			var seed_crop: String = "icecap" if "Icecap" in special else ("sunburst" if "Sunburst" in special else "golden")
+			reward_row.add_child(_icon({"kind": "seed", "crop": seed_crop} if "seeds" in special else {"kind": "gear", "id": "prospectors_hat"}, 26))
+			reward_row.add_child(_label(special, 13, INK, true))
+		var claim := _button("Claim reward", key, true)
 		claim.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(claim)
-		_refs["quest:" + id] = claim
+		footer.add_child(claim)
+		_refs[key] = claim
 
 func _build_help() -> void:
 	_heading("Welcome to Taterland", "A little manual farming. A very wild potato market.")
@@ -1867,8 +2261,10 @@ func _build_help() -> void:
 	_body.add_child(_button("Let's get growing  →", "close", true))
 
 func _help_step(title: String, detail: String) -> void:
+	var card := _surface("quest")
+	_body.add_child(card)
 	var box: VBoxContainer = _vbox(3)
-	_body.add_child(box)
+	card.add_child(box)
 	box.add_child(_label(title, 17, INK, true))
 	box.add_child(_wrap(detail, 14, MUTED))
 
@@ -1983,6 +2379,8 @@ func _refresh_panel() -> void:
 	match _panel_kind:
 		"market":
 			_refs.market_note.text = ("EXPORT ×%.1f · %.1fs left. " % [float(_state.get("export_factor")), float(_state.get("export_timer"))] if bool(_state.get("export_active")) else "") + "Changes vs opening prices; graphs show recent sale prices."
+			if _state.disaster_market_active():
+				_refs.market_note.text = "Disaster market · Up to −95%. Export and reward bonuses cannot create a positive boom during recovery."
 			if _tutorial_seed_market():
 				_refs.market_note.text = "Buy 1 Russet → head to the gold bed." if _tutorial_allows("buy:russet:1") else "Just browsing. Shop after the tour."
 			for crop: String in _panel_crops:
@@ -2028,15 +2426,16 @@ func _refresh_panel() -> void:
 			if not stall_open and not _rolling:
 				_refs.roll_result_title.text = "THIS TABLE IS CLOSED"
 				_refs.roll_result_detail.text = "Use the Roll House on your newest unlocked island."
-			_refs.roll_purse.text = "Purse %s  ·  Luck %.1f×  ·  %s stake bonus +%.0f%%" % [_money(_frozen_coins if _rolling else coins), _frozen_luck if _rolling else _effective_luck(), _stake_kind.replace("_", " ").capitalize(), _frozen_stake_bonus if _rolling else float(_state.call("stake_luck_bonus", _stake_kind))]
+				_refs.roll_result_detail.show()
+			_refs.roll_purse.text = "Purse %s  ·  %s stake +%.0f%% quality" % [_money(_frozen_coins if _rolling else coins), _stake_kind.replace("_", " ").capitalize(), _frozen_stake_bonus if _rolling else float(_state.call("stake_luck_bonus", _stake_kind))]
 			var all_in_floor: float = _minimum_roll_stake("all_in")
 			_refs.roll_minimum.text = "Single roll %s  ·  All-in requires more than %s" % [_money(float(_state.call("roll_cost", "normal"))), _money(all_in_floor)]
-			var labels: Dictionary = {"normal": "ROLL", "big": "BIG ROLL", "stupid": "STUPID ROLL", "all_in": "CONFIRM ALL-IN" if _all_in_pending else "ALL-IN"}
+			var labels: Dictionary = {"normal": "Roll", "big": "Big roll", "stupid": "Stupid roll", "all_in": "Confirm all-in" if _all_in_pending else "All-in"}
 			for kind: String in ["normal", "big", "stupid", "all_in"]:
 				var cost: float = _frozen_coins if kind == "all_in" and _rolling else float(_state.call("roll_cost", kind))
 				var caption: String = "%s · %s" % [labels[kind], _money(cost)]
 				if kind == "all_in" and coins <= all_in_floor and not _rolling:
-					caption = "ALL-IN · Need > " + _money(all_in_floor)
+					caption = "All-in · Need > " + _money(all_in_floor)
 				_set_button("roll:" + kind, caption, _rolling or not _can_roll_stake(kind))
 				_refs["roll:" + kind].tooltip_text = "Your entire purse must be greater than " + _money(all_in_floor) + "." if kind == "all_in" else "One roll costs " + _money(cost) + "."
 			for count: int in [3, 5]:
@@ -2048,41 +2447,41 @@ func _refresh_panel() -> void:
 			_refs.all_in_warning.visible = _all_in_pending
 			_refs.all_in_warning.text = "Risk every coin? Click CONFIRM ALL-IN to commit this stake."
 			_refs.cancel_all_in.visible = _all_in_pending and not _rolling
-			_refs.roll_luck_math.text = (_frozen_luck_math if _rolling else _luck_math()) + "\nRoll quality: wager +%.0f%% × build %.2f×. Exact chances are shown below." % [_frozen_stake_bonus if _rolling else float(_state.stake_luck_bonus(_stake_kind)), _frozen_build_quality if _rolling else float(_state._build_bonus("roll_quality_factor", 1.0))]
+			var stake_bonus: float = _frozen_stake_bonus if _rolling else float(_state.stake_luck_bonus(_stake_kind))
+			var build_quality: float = _frozen_build_quality if _rolling else float(_state._build_bonus("roll_quality_factor", 1.0))
+			var tally: Dictionary = (_frozen_luck_breakdown if _rolling else _state.luck_breakdown()).duplicate(true)
+			tally["stake_bonus"] = stake_bonus
+			tally["build_quality"] = build_quality
+			_refs.roll_luck_meter.set_values(tally)
+			var quality: float = (1.0 + stake_bonus / 100.0) * build_quality
+			var luck_quality: float = 1.0 + ((_frozen_luck if _rolling else _effective_luck()) - 1.0) * 0.12
+			_refs.roll_quality.text = "Roll quality %.2f×  ·  Luck +%s%%  ·  Final luck %s×" % [quality, RollLuckMeter.number(float(tally.total_percent)), RollLuckMeter.number(float(tally.total))]
+			_refs.roll_luck_total.text = "Earned +%s%% · Gear +%s%%\nNormal cap: +900%% (10×)\nLuck boost ×%s %s" % [RollLuckMeter.number(float(tally.earned) * 100.0), RollLuckMeter.number(float(tally.gear) * 100.0), RollLuckMeter.number(float(tally.multiplier)), "active" if float(tally.multiplier) > 1.0 else "(base)"]
+			if _refs.roll_luck_meter.playing: _refs.roll_quality.text = _refs.roll_luck_meter.description
+			_refs.roll_luck_math.text = (_frozen_luck_math if _rolling else _luck_math()) + "\n\nStake: 1 + %.0f%% = %.2f×\nBuild quality: %.2f×\nCombined roll quality: %.2f×\nLuck quality: 1 + (total luck − 1) × 0.12 = %.3f×\nHigh-luck rarity factor: max(1, total luck / 10) = %s×" % [stake_bonus, 1.0 + stake_bonus / 100.0, build_quality, quality, luck_quality, RollLuckMeter.number(maxf(1.0, float(tally.total) / 10.0))]
 			var odds: Array = _frozen_odds if _rolling else _state.call("roll_odds", _stake_kind)
 			_spinner.set_odds(odds)
 			for entry: Dictionary in odds:
 				var key: String = "odds:" + str(entry.get("tier", "common"))
 				if _refs.has(key):
-					_refs[key].text = "???  ??%" if bool(entry.get("hidden_chance", false)) else "%s  %.3f%%" % [str(entry.get("tier", "common")).capitalize(), float(entry.get("chance", 0))]
+					_refs[key].text = "%s   %s%%" % ["Mystery" if str(entry.tier) == "mystery" else str(entry.tier).capitalize(), _roll_chance(float(entry.get("chance", 0)))]
 		"dex": _refresh_dex()
 
 		"island":
-			var unlocked: bool = bool(_state.get("island2_unlocked"))
-			var harvested: int = int(_state.call("total_mastery"))
-			_set_button("travel:1", "You are here" if _island_id() == 1 else "Travel to Valley", _island_id() == 1)
-			_set_button("travel:2", "You are here" if _island_id() == 2 else ("Travel to Shores" if unlocked else "Unlock first"), _island_id() == 2 or not unlocked)
-			_refs.island_requirements.visible = not unlocked
-			_refs.island_requirements.text = "YOUR PROGRESS  ·  %s / %s harvested  ·  %s / %s" % [_number(harvested), _number(_catalog_number("ISLAND2_UNLOCK_HARVEST", 500)), _money(coins), _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000))]
-			_refs.island_unlock_card.visible = not unlocked
-			_set_button("island_unlock", "Unlock · " + _money(_catalog_number("ISLAND2_UNLOCK_COST", 1000000)), unlocked or coins < _catalog_number("ISLAND2_UNLOCK_COST", 1000000) or harvested < _catalog_number("ISLAND2_UNLOCK_HARVEST", 500))
-			if _refs.has("travel:3"):
-				var winter_unlocked: bool = _flag("island3_unlocked")
-				_set_button("travel:3", "You are here" if _island_id() == 3 else ("Travel to Frost" if winter_unlocked else "Unlock first"), _island_id() == 3 or not winter_unlocked)
-				_refs.winter_requirements.visible = not winter_unlocked
-				_refs.winter_requirements.text = "%s / %s harvested  ·  %s / %s" % [_number(harvested), _number(_catalog_number("ISLAND3_UNLOCK_HARVEST", 25000)), _money(coins), _money(_catalog_number("ISLAND3_UNLOCK_COST", 1e11))]
-				_refs.winter_unlock_card.visible = not winter_unlocked
-				_set_button("island3_unlock", "Unlock · " + _money(_catalog_number("ISLAND3_UNLOCK_COST", 1e11)), winter_unlocked or not unlocked or coins < _catalog_number("ISLAND3_UNLOCK_COST", 1e11) or harvested < _catalog_number("ISLAND3_UNLOCK_HARVEST", 25000))
+			_refresh_islands()
 		"builds":
 			_refresh_builds()
 		"activities":
 			_refresh_activities()
 		"duck_patrol":
 			_refresh_duck_patrol()
+		"tracked_prices":
+			_refresh_tracked_prices()
 		"debug":
 			_refresh_debug()
 		"quests":
-			_refs.quest_note.text = "Complete these goals on %s, then claim your rewards." % str(_state.call("island_name"))
+			var completed: int = 0
+			var ready: int = 0
 			for quest: Dictionary in _quests():
 				var id: String = str(quest.get("id", ""))
 				var progress: float = float(quest.get("progress", 0))
@@ -2094,11 +2493,16 @@ func _refresh_panel() -> void:
 					continue
 				bar.max_value = target
 				bar.value = minf(progress, target)
-				_refs["quest:" + id + ":detail"].text = "%s / %s  ·  %s%s" % [_number(minf(progress, target)), _number(target), str(quest.get("reward_text", "")), "  ·  CLAIMED ✓" if claimed else ""]
+				_refs["quest:" + id + ":detail"].text = "%s / %s" % [_number(minf(progress, target)), _number(target)]
+				Cozy.badge(_refs["quest:" + id + ":status"], "Claimed" if claimed else ("Claim ready" if complete else "In progress"), "active" if claimed else ("ready" if complete else "neutral"))
+				_refs["quest:" + id + ":card"].add_theme_stylebox_override("panel", Cozy.surface("quest", GREEN if claimed else GOLD, complete))
+				completed += 1 if claimed else 0
+				ready += 1 if complete and not claimed else 0
 				var claim: Button = _refs["quest:" + id]
 				claim.visible = complete and not claimed
 				claim.disabled = claimed or not complete
 				claim.text = "Claim reward"
+			_refs.quest_note.text = "%d / %d rewards collected%s" % [completed, _quests().size(), " · %d ready to claim!" % ready if ready > 0 else " · Keep growing!"]
 	_apply_tutorial_buttons()
 
 func _set_button(key: String, text: String, disabled: bool) -> void:
@@ -2253,6 +2657,7 @@ func begin_roll(kind: String = "") -> bool:
 	_frozen_odds = [] if _crate_reel else _state.call("roll_odds", _stake_kind)
 	_frozen_luck = _effective_luck()
 	_frozen_luck_math = _luck_math()
+	_frozen_luck_breakdown = _state.luck_breakdown().duplicate(true)
 	_frozen_build_quality = float(_state._build_bonus("roll_quality_factor", 1.0))
 	_frozen_crown = _wears_crown()
 	_frozen_stake_bonus = 0.0 if _crate_reel else float(_state.call("stake_luck_bonus", _stake_kind))
@@ -2264,13 +2669,24 @@ func begin_roll(kind: String = "") -> bool:
 		for child: Node in _refs.batch_results.get_children():
 			_refs.batch_results.remove_child(child)
 			child.queue_free()
-	_refs.roll_result_title.text = "LET IT ROLL…"
+	_refs.roll_result_title.text = "CALCULATING YOUR ROLL…" if not _crate_reel else "LET IT ROLL…"
 	_refs.roll_result_detail.text = "A little suspense. A lot of possibility."
+	_refs.roll_result_detail.hide()
 	_refs.roll_accounting.hide()
 	_toast_box.hide()
 	_reward_box.hide()
 	_refresh_panel()
+	(_body.get_parent() as ScrollContainer).scroll_vertical = 0
+	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.play()
 	return true
+
+var _pending_spin: Dictionary = {}
+
+func _start_pending_spin() -> void:
+	if not _rolling or _pending_spin.is_empty() or not is_instance_valid(_spinner): return
+	_spinner.spin_to(_pending_spin)
+	_pending_spin = {}
+	_refs.roll_result_title.text = "LET IT ROLL…"
 
 func spin_roll(result: Dictionary) -> void:
 	if not _rolling:
@@ -2278,9 +2694,13 @@ func spin_roll(result: Dictionary) -> void:
 	if result.is_empty() or not is_instance_valid(_spinner):
 		cancel_roll()
 		return
-	_spinner.spin_to(result.duplicate(true))
+	_pending_spin = result.duplicate(true)
+	if not _refs.has("roll_luck_meter") or not _refs.roll_luck_meter.playing:
+		_start_pending_spin()
 
 func cancel_roll() -> void:
+	_pending_spin = {}
+	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.finish()
 	_rolling = false
 	_batch_results.clear()
 	if is_instance_valid(_spinner):
@@ -2289,6 +2709,7 @@ func cancel_roll() -> void:
 	if _panel_kind == "roll":
 		_refs.roll_result_title.text = "PICK A STAKE. LET IT ROLL."
 		_refs.roll_result_detail.text = "Your coins are ready when you are."
+		_refs.roll_result_detail.hide()
 		_refs.roll_accounting.hide()
 		_refresh_panel()
 
@@ -2296,12 +2717,14 @@ func _on_roll_finished(result: Dictionary) -> void:
 	if not _rolling:
 		return
 	_rolling = false
+	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.finish()
 	_revealed_roll = result.duplicate(true)
 	var title: String = str(result.get("title", "Roll complete"))
 	var detail: String = str(result.get("detail", ""))
 	var tier: String = str(result.get("tier", "common"))
 	_refs.roll_result_title.text = "%s · %s" % [tier.to_upper(), title]
 	_refs.roll_result_detail.text = detail
+	_refs.roll_result_detail.show()
 	if not _batch_results.is_empty():
 		var bonus_count: int = _batch_bonus_count()
 		_refs.roll_result_title.text = "%d PAID + AURORA BONUS · %s" % [_batch_results.size() - bonus_count, title] if bonus_count > 0 else "%d ROLLS · %s" % [_batch_results.size(), title]
@@ -2430,9 +2853,13 @@ func _refresh_inventory() -> void:
 			"gear":
 				var equipped: bool = bool(entry.get("equipped", false))
 				var specialty: String = str(entry.get("role", "all"))
-				detail = "%s · %s slot%s\n%s" % ["EQUIPPED" if equipped else "STORED", str(entry.get("slot", "gear")).capitalize(), " · " + specialty.capitalize() + " style" if specialty not in ["", "all"] else "", detail]
+				_refs[key + ":title"].text = str(entry.get("name", "Gear"))
+				detail = detail.replace(" while equipped", "")
+				if specialty not in ["", "all"]: detail += "\n" + specialty.capitalize() + " specialty"
 				if float(entry.get("synergy", 1.0)) > 1.0:
-					detail += " · Matching build: bonuses +25%"
+					detail += " · Match +25%"
+				Cozy.badge(_refs[key + ":status"], "Equipped" if equipped else "Owned ×%d" % int(entry.get("count", 1)), "active" if equipped else "neutral")
+				_refs[key + ":card"].add_theme_stylebox_override("panel", Cozy.surface("gear", Cozy.RARITY_COLORS.get(str(entry.get("rarity", "common")), GREEN), equipped))
 				if is_instance_valid(button):
 					button.text = "Equipped ✓" if equipped else "Equip " + str(entry.get("slot", "gear"))
 					button.disabled = equipped
@@ -2487,36 +2914,63 @@ func _update_builds_badge() -> void:
 	_builds_button.text = "Builds  [C]"
 
 func _build_builds() -> void:
-	_heading("Find your build", "Open Build Crates to gain levels.")
-	_info("build_activity_title", "", INK, 18)
-	_info("build_activity_detail", "", MUTED, 14)
-	var actions: HBoxContainer = _hbox(10)
-	_body.add_child(actions)
-	var ability: Button = _button("Use ability", "build:ability", true)
-	ability.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(ability)
-	_refs["build:ability"] = ability
-	var processed: Button = _button("Sell processed", "build:sell_processed")
-	processed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(processed)
-	_refs["build:sell_processed"] = processed
-	var progress: ProgressBar = ProgressBar.new()
+	_heading("Find your build", "Five ways to farm. Grow your favourite with Build Crates.")
+	var active_card := _surface("build", GREEN, true)
+	_body.add_child(active_card)
+	var active_body := _vbox(6)
+	active_card.add_child(active_body)
+	var title := _wrap("", 19, INK, true)
+	active_body.add_child(title)
+	_refs.build_activity_title = title
+	var detail := _wrap("", 13, MUTED)
+	active_body.add_child(detail)
+	_refs.build_activity_detail = detail
+	var actions := _hbox(10)
+	active_body.add_child(actions)
+	for action: String in ["build:ability", "build:sell_processed"]:
+		var button := _button("Use ability" if action == "build:ability" else "Sell processed", action, action == "build:ability")
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		actions.add_child(button)
+		_refs[action] = button
+	var progress := _meter(GOLD)
 	progress.max_value = 1.0
-	progress.custom_minimum_size.y = 7
-	progress.show_percentage = false
-	progress.add_theme_stylebox_override("background", _style(PAPER, 0, 3))
-	progress.add_theme_stylebox_override("fill", _style(GOLD, 0, 3))
-	_body.add_child(progress)
-	_refs["build_progress"] = progress
+	active_body.add_child(progress)
+	_refs.build_progress = progress
+	_section_title(_body, "Choose your specialty", "One active build at a time")
 	for entry: Dictionary in _build_entries():
 		var id: String = str(entry.get("id", "farmer"))
-		_offer(str(entry.get("name", id.capitalize())), "", "Select", "build:select:" + id)
-		var build_card: Node = _body.get_child(_body.get_child_count() - 1)
-		var row: HBoxContainer = build_card.get_child(0) as HBoxContainer
-		if is_instance_valid(row):
-			var icon: Control = _icon({"kind": "build", "id": id})
-			row.add_child(icon)
-			row.move_child(icon, 0)
+		var key: String = "build:select:" + id
+		var accent: Color = Cozy.BUILD_COLORS.get(id, GREEN)
+		var card := _surface("build", accent, bool(entry.get("active", false)))
+		_body.add_child(card)
+		_refs[key + ":card"] = card
+		var row := _hbox(14)
+		card.add_child(row)
+		row.add_child(_icon({"kind": "build", "id": id, "backdrop": accent.lerp(CREAM, 0.83).to_html(false)}, 76))
+		var body := _vbox(5)
+		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(body)
+		var heading := _hbox(8)
+		body.add_child(heading)
+		var name_label := _label(str(entry.get("name", id.capitalize())), 20, INK, true)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		heading.add_child(name_label)
+		var badge := _badge("")
+		heading.add_child(badge)
+		_refs[key + ":status"] = badge
+		body.add_child(_wrap(str(entry.get("description", "")), 12, MUTED))
+		var stats := _hbox(5)
+		body.add_child(stats)
+		var stat_icons: Dictionary = {"farmer": "yield", "gambler": "luck", "investor": "stock", "scientist": "mutation", "industrialist": "coin"}
+		stats.add_child(_icon({"kind": "metric", "id": stat_icons.get(id, "yield")}, 22))
+		var bonus := _wrap("", 13, accent.darkened(0.12), true)
+		stats.add_child(bonus)
+		_refs[key + ":detail"] = bonus
+		var button := _button("Select", key, true)
+		button.custom_minimum_size.x = 132
+		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(button)
+		_refs[key] = button
 
 func _refresh_builds() -> void:
 	var system: Object = _build_system()
@@ -2545,25 +2999,74 @@ func _refresh_builds() -> void:
 		var unlocked: bool = bool(entry.get("unlocked", false))
 		var selected: bool = bool(entry.get("active", false))
 		var bonuses: String = str(entry.get("bonuses", ""))
+		if not unlocked:
+			var specialties: Dictionary = {"farmer": "Harvest yield · Faster growth", "gambler": "Reward quality · Mutation chance", "investor": "Seed discounts · Positive market events", "scientist": "Mutation chance · Crop research", "industrialist": "Crop processing · Larger batches"}
+			bonuses = str(specialties.get(id, bonuses))
 		_refs[key + ":detail"].text = bonuses if not bonuses.is_empty() else str(entry.get("description", ""))
 		_refs[key + ":detail"].tooltip_text = str(entry.get("description", ""))
-		_set_button(key, "Active · Lv.%d" % int(entry.get("level", 1)) if selected else ("Select · Lv.%d" % int(entry.get("level", 1)) if unlocked else "Find in a crate"), selected or not unlocked)
+		Cozy.badge(_refs[key + ":status"], "Active" if selected else ("Owned" if unlocked else "Locked"), "active" if selected else ("neutral" if unlocked else "locked"))
+		_refs[key + ":card"].add_theme_stylebox_override("panel", Cozy.surface("build", Cozy.BUILD_COLORS.get(id, GREEN), selected))
+		_set_button(key, "Active · Lv.%d" % int(entry.get("level", 1)) if selected else ("Equip · Lv.%d" % int(entry.get("level", 1)) if unlocked else "Find in crate"), selected or not unlocked)
 
 func _build_tracked_prices() -> void:
-	_heading("Tracked Seed Prices", "Choose prices for your Seeds tray [2]. Your choices are saved.")
+	_heading("Tracked Seed Prices", "Pin your favourite seeds to the Seeds tray [2]. Choices save automatically.")
+	var summary := _label("", 14, GREEN, true)
+	_body.add_child(summary)
+	_refs.tracked_summary = summary
+	var checked := Cozy.toggle_texture(true)
+	var unchecked := Cozy.toggle_texture(false)
 	for id: String in _market_crops():
-		var row: HBoxContainer = _hbox(12)
-		_body.add_child(row)
-		row.add_child(_icon({"kind": "seed", "crop": id}, 48))
-		var toggle: CheckButton = CheckButton.new()
-		toggle.text = _crop_name(id) + " seeds"
-		toggle.custom_minimum_size.y = 46
-		toggle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		toggle.button_pressed = id in _tracked_ids()
+		var card := _surface("tracked", _crop_color(id), id in _tracked_ids())
+		_body.add_child(card)
+		_refs["tracked:" + id + ":card"] = card
+		var row := _hbox(14)
+		card.add_child(row)
+		row.add_child(_icon({"kind": "seed", "crop": id, "backdrop": _crop_color(id).lerp(CREAM, 0.8).to_html(false)}, 64))
+		var body := _vbox(3)
+		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(body)
+		body.add_child(_label(_crop_name(id) + " seeds", 19, INK, true))
+		var quote := _wrap("", 14, GREEN, true)
+		body.add_child(quote)
+		_refs["tracked:" + id + ":quote"] = quote
+		body.add_child(_label("%ds to grow" % _crop_grow(id), 12, MUTED))
+		var toggle := CheckButton.new()
+		toggle.custom_minimum_size = Vector2(116, 44)
+		toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		toggle.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		toggle.add_theme_font_override("font", Type.face(Type.BODY, 700))
+		toggle.add_theme_font_size_override("font_size", 13)
+		for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
+			toggle.add_theme_color_override(color_name, INK)
+		for state: String in ["normal", "hover", "pressed", "hover_pressed"]:
+			toggle.add_theme_stylebox_override(state, Cozy.button_style("hover" if state == "hover_pressed" else state, false))
+		toggle.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
+		for icon_name: String in ["checked", "checked_disabled"]: toggle.add_theme_icon_override(icon_name, checked)
+		for icon_name: String in ["unchecked", "unchecked_disabled"]: toggle.add_theme_icon_override(icon_name, unchecked)
 		toggle.set_meta("tracked_seed", id)
-		toggle.toggled.connect(func(enabled: bool) -> void: action_requested.emit("tracked_seed:%s:%d" % [id, 1 if enabled else 0]))
+		toggle.tooltip_text = "Show " + _crop_name(id) + " seed prices in your Seeds tray."
+		toggle.toggled.connect(func(enabled: bool) -> void:
+			action_requested.emit("tracked_seed:%s:%d" % [id, 1 if enabled else 0])
+			_refresh_tracked_prices())
 		row.add_child(toggle)
+		_refs["tracked:" + id + ":toggle"] = toggle
 	_body.add_child(_button("Back to the farm", "close", true))
+	_refresh_tracked_prices()
+
+func _refresh_tracked_prices() -> void:
+	if not _refs.has("tracked_summary"): return
+	var tracked := _tracked_ids()
+	_refs.tracked_summary.text = "%d of %d seeds tracked" % [tracked.size(), _market_crops().size()] if not tracked.is_empty() else "No seeds tracked · choose a seed to pin its price"
+	for id: String in _market_crops():
+		var key: String = "tracked:" + id
+		if not _refs.has(key + ":toggle"): continue
+		var enabled: bool = id in tracked
+		var toggle: CheckButton = _refs[key + ":toggle"]
+		toggle.set_pressed_no_signal(enabled)
+		toggle.text = "Tracking" if enabled else "Track"
+		var quote: Dictionary = _state.market.get(id, {})
+		_refs[key + ":quote"].text = "%s / seed" % _money(float(quote.get("seed", 0)))
+		_refs[key + ":card"].add_theme_stylebox_override("panel", Cozy.surface("tracked", _crop_color(id), enabled))
 
 func _tracked_ids() -> Array[String]:
 	var ids: Array[String] = []
@@ -2618,6 +3121,20 @@ func _update_surge_timer() -> void:
 	if not _state.has_method("surge_info"):
 		return
 	var info: Dictionary = _state.call("surge_info")
+	if bool(info.get("crash", false)):
+		_surge_active = false
+		_surge_urgent = false
+		_export_title.text = "MARKET RECOVERING" if info.phase == "recovery" else "DISASTER CRASH"
+		_export_title.add_theme_font_size_override("font_size", 22)
+		_export_title.add_theme_color_override("font_color", Color("f4bd9e"))
+		_export_detail.text = "%s %.0f%% · Booms paused" % [_crop_name(str(info.crop)), float(info.percent)]
+		_export_detail.add_theme_color_override("font_color", Color("f4bd9e"))
+		_export_bar.max_value = 75.0 if info.phase == "recovery" else 30.0
+		_export_bar.value = float(info.timer)
+		_export_bar.get_theme_stylebox("fill").bg_color = CHERRY
+		_export_box.tooltip_text = "Disaster prices can fall up to 95%. Positive stocks and the Rocket wait until recovery ends."
+		_market_impact.set_countdown(_island_id(), 180.0)
+		return
 	var seconds: int = ceili(maxf(0.0, float(info.get("timer", 180))))
 	var rocket_seconds: int = ceili(float(info.get("rocket_timer", 1800)))
 	var rocket_soon: bool = _island_id() >= 3 and rocket_seconds <= 10
@@ -2673,15 +3190,14 @@ func spin_batch(results: Array) -> void:
 func _show_batch_results() -> void:
 	if not _refs.has("batch_results"):
 		return
-	var row: HBoxContainer = _refs.batch_results
+	var row: GridContainer = _refs.batch_results
 	row.show()
 	for result: Dictionary in _batch_results:
 		var tier: String = str(result.get("tier", "common"))
 		var accent: Color = RollReel.COLORS.get(tier, Color("b8a3ce"))
-		var card: PanelContainer = _card(Color("382747"), 7)
+		var card: PanelContainer = _surface("gear", accent)
 		card.set_meta("result", result.duplicate(true))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.add_theme_stylebox_override("panel", _style(Color("382747"), 7, 10, accent))
 		row.add_child(card)
 		var column: VBoxContainer = _vbox(3)
 		card.add_child(column)
@@ -2691,19 +3207,20 @@ func _show_batch_results() -> void:
 		var icon: Control = _icon({"kind": icon_kind, "id": item_id if not item_id.is_empty() else "trader_token"}, 44)
 		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		column.add_child(icon)
-		var title: Label = _wrap(str(result.get("title", "Reward")), 11, CREAM, true)
+		var title: Label = _wrap(str(result.get("title", "Reward")), 14, INK, true)
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		title.custom_minimum_size.x = 95
 		column.add_child(title)
-		var rarity: Label = _label(tier.to_upper(), 10, accent)
+		var rarity: Label = _badge(tier.capitalize())
 		rarity.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		column.add_child(rarity)
 		if _batch_bonus_count() > 0:
-			var bonus_label: Label = _label("AURORA BONUS" if bool(result.get("bonus_roll", false)) else "PAID ROLL", 9, Color("98e3e8") if bool(result.get("bonus_roll", false)) else CASINO_LIGHT)
+			var bonus_label: Label = _label("AURORA BONUS" if bool(result.get("bonus_roll", false)) else "PAID ROLL", 10, GREEN if bool(result.get("bonus_roll", false)) else MUTED)
 			bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			column.add_child(bonus_label)
 		card.tooltip_text = ("Aurora bonus roll · No extra stake\n" if bool(result.get("bonus_roll", false)) else "") + str(result.get("detail", ""))
 		card.mouse_filter = Control.MOUSE_FILTER_PASS
+	_polish_card_typography(row)
 
 func _activity_info() -> Dictionary:
 	if not is_instance_valid(_state):
@@ -2785,8 +3302,10 @@ func _build_activities() -> void:
 
 func _build_duck_patrol() -> void:
 	_heading("Duck patrol", "More ducks. Faster patrols. Fewer pests.")
+	var hero_card := _surface("island", GREEN, true)
+	_body.add_child(hero_card)
 	var hero: HBoxContainer = _hbox(15)
-	_body.add_child(hero)
+	hero_card.add_child(hero)
 	hero.add_child(_icon({"kind": "activity", "id": "duck"}, 92))
 	var description: VBoxContainer = _vbox(5)
 	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2797,6 +3316,7 @@ func _build_duck_patrol() -> void:
 	var detail: Label = _wrap("", 14, MUTED)
 	description.add_child(detail)
 	_refs["activity_detail"] = detail
+	_section_title(_body, "Train your feathered crew")
 	_offer("Flock size", "", "Hire a duck", "activity:duck", true)
 	_offer("Patrol speed", "", "Train ducks", "activity:duck:speed", true)
 	_info("duck_summary", "", MUTED, 12)
@@ -2810,10 +3330,19 @@ func _refresh_duck_patrol() -> void:
 	var count: int = int(data.get("duck_count", 0))
 	var capacity: int = int(data.get("duck_capacity", _island_id()))
 	var speed: int = int(data.get("duck_speed", 0))
+	var hire_cost: float = float(data.get("duck_cost", 1500))
+	var speed_cost: float = float(data.get("duck_speed_cost", 15000))
+	var coins: float = float(_state.coins)
 	_set_button("activity:duck", "Flock full" if count >= capacity else "Hire +1 · " + _money(float(data.get("duck_cost", 1500))), not bool(data.get("duck_can_buy", false)))
 	_refs["activity:duck:detail"].text = "%d / %d ducks · Each duck covers a different bed." % [count, capacity]
 	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else "Faster · " + _money(float(data.get("duck_speed_cost", 15000)))), not bool(data.get("duck_can_train", false)))
 	_refs["activity:duck:speed:detail"].text = "%.0fs → %.0fs per bed" % [float(data.get("duck_interval", 4)), maxf(2.0, float(data.get("duck_interval", 4)) - 1.0)] if speed < 2 else "2s per bed · Maximum speed"
+	if _refs.has("activity:duck:value"):
+		_refs["activity:duck:value"].text = "%d → %d ducks" % [count, count + 1] if count < capacity else "%d / %d ducks" % [count, capacity]
+		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
+		_refs["activity:duck:speed:detail"].text = "Less time between beds for your whole flock."
+		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else "Need " + _money(hire_cost - coins) + " more"), "active" if count >= capacity or coins >= hire_cost else "warning")
+		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else "Need " + _money(speed_cost - coins) + " more")), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
 	_refs.duck_summary.text = "Island limits: 1 / 2 / 3 ducks · %d pests cleared" % int(data.get("duck_clears", 0))
 	_refs.activity_status.text = "%d / %d DUCKS ON PATROL" % [count, capacity]
 	_refs.activity_detail.text = "%.0fs between beds" % float(data.get("duck_interval", 4)) if count > 0 else "Build your feathered crew."
@@ -2860,7 +3389,7 @@ func _refresh_activities() -> void:
 			_set_button("activity:furnace:icecap", "Burning…" if remaining > 0 else ("Cooling…" if cooldown > 0 else "Burn 25 Icecaps"), not bool(data.get("can_charge", false)))
 
 func _build_equipment_header(parent: VBoxContainer) -> void:
-	var card: PanelContainer = _card(Color("e3e8d8"), 12)
+	var card: PanelContainer = _surface("build", GREEN, true)
 	parent.add_child(card)
 	var layout: HBoxContainer = _hbox(14)
 	card.add_child(layout)
@@ -2875,6 +3404,10 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 	var hint: Label = _label("DRAG TO TURN YOUR FARMER", 10, MUTED, true)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	portrait_column.add_child(hint)
+	var matching := _wrap("", 13, GREEN, true)
+	matching.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	portrait_column.add_child(matching)
+	_refs.equipment_matching = matching
 	var right: VBoxContainer = _vbox(6)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.add_child(right)
@@ -2889,7 +3422,7 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 	right.add_child(slots)
 	for slot: String in ["head", "body", "legs", "feet", "hands", "charm"]:
 		var button: Button = _button("", "gear:unequip:" + slot)
-		button.custom_minimum_size = Vector2(150, 91)
+		button.custom_minimum_size = Vector2(150, 78)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slots.add_child(button)
 		var contents: HBoxContainer = _hbox(5)
@@ -2911,15 +3444,20 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 		labels.add_child(_label(slot.to_upper(), 10, MUTED, true))
 		var name_label: Label = _wrap("Empty", 11, INK, true)
 		labels.add_child(name_label)
+		var slot_status := _label("Find gear below", 10, MUTED)
+		labels.add_child(slot_status)
+		_refs["equipment:" + slot + ":status"] = slot_status
 		_refs["equipment:" + slot] = button
 		_refs["equipment:" + slot + ":icon"] = icon
 		_refs["equipment:" + slot + ":name"] = name_label
-	var rules: Label = _wrap("Equip for bonuses · No duplicate stacking · Matching build: +25%", 12, MUTED)
-	parent.add_child(rules)
-	var totals: Label = _wrap("", 12, GREEN, true)
-	parent.add_child(totals)
+	var totals: Label = _wrap("", 13, GREEN, true)
+	right.add_child(totals)
 	_refs["equipment_totals"] = totals
-	parent.add_child(_label("OWNED GEAR", 16, INK, true))
+	var build_bonus := _wrap("", 13, INK)
+	parent.add_child(build_bonus)
+	_refs.equipment_build_bonus = build_bonus
+	parent.add_child(_wrap("Matching pieces gain +25% to their gear bonuses. Extra copies do not stack.", 12, MUTED))
+	_section_title(parent, "Owned Gear", "Choose a piece to equip")
 
 func _refresh_equipment() -> void:
 	if not _refs.has("equipment_preview") or not _state.has_method("equipment_info"):
@@ -2930,6 +3468,17 @@ func _refresh_equipment() -> void:
 	var builds: Object = _build_system()
 	var active_build: String = str(builds.get("active")) if builds != null else "farmer"
 	_refs.equipment_build.text = "YOUR LOADOUT · " + active_build.to_upper()
+	var matching: int = 0
+	var worn: int = 0
+	for slot: String in loadout:
+		var gear_id: String = str(loadout[slot])
+		if gear_id.is_empty(): continue
+		worn += 1
+		if str(catalog.get(gear_id, {}).get("role", "")) == active_build: matching += 1
+	_refs.equipment_matching.text = "%d / 6 slots filled · %d matching" % [worn, matching]
+	for build: Dictionary in _build_entries():
+		if bool(build.get("active", false)):
+			_refs.equipment_build_bonus.text = "%s Lv.%d · %s" % [build.get("name", "Farmer"), int(build.get("level", 1)), str(build.get("bonuses", ""))]
 	var total_parts: Array[String] = []
 	for stat: String in ["yield", "growth", "stock", "luck", "mutation", "processing"]:
 		var value: float = float(_state.call("equipment_bonus", stat))
@@ -2940,7 +3489,7 @@ func _refresh_equipment() -> void:
 		total_parts.append("%s +%s%s" % [names[stat], number, "×" if stat == "luck" else "%"])
 	if _wears_crown():
 		total_parts.append("Bonus roll +1 / purchase")
-	_refs.equipment_totals.text = "EQUIPPED · " + " · ".join(total_parts) if not total_parts.is_empty() else "Equip gear below to activate its bonuses."
+	_refs.equipment_totals.text = "Gear total · " + " · ".join(total_parts) if not total_parts.is_empty() else "Equip gear below to activate its bonuses."
 	var entries: Array = _state.call("equipment_info")
 	for entry: Dictionary in entries:
 		var slot: String = str(entry.get("slot", ""))
@@ -2953,10 +3502,12 @@ func _refresh_equipment() -> void:
 		button.disabled = empty
 		button.tooltip_text = "Empty %s slot. Equip something from your owned gear below." % slot if empty else str(entry.get("name", "Gear")) + "\n" + str(entry.get("effect", "")) + "\nClick to remove."
 		_refs[key + ":name"].text = "Empty" if empty else str(entry.get("name", "Gear"))
+		_refs[key + ":status"].text = "Find gear below" if empty else ("Build match +25%" if float(entry.get("synergy", 1.0)) > 1.0 else "Equipped · Remove")
 		var icon: Control = _refs[key + ":icon"]
 		icon.item = {"kind": "slot", "id": slot} if empty else {"kind": "gear", "id": id, "slot": slot, "role": entry.get("role", "")}
 		icon.queue_redraw()
 		button.add_theme_stylebox_override("normal", _style(Color("d5e7cb") if not empty else PAPER, 8, 10, Color("91b184") if not empty else Color.TRANSPARENT))
+		button.add_theme_stylebox_override("disabled", _style(Color("f2f2e7"), 8, 10, Color("c6ccba")))
 
 func _debug_info() -> Dictionary:
 	return _state.call("debug_info") if is_instance_valid(_state) and _state.has_method("debug_info") else {"luck_multiplier": 1.0, "normal_luck": _effective_luck(), "effective_luck": _effective_luck(), "money_limit": 1e6, "luck_limit": 1000.0}
@@ -3150,7 +3701,7 @@ func _refresh_trophies() -> void:
 	if not _refs.has("trophy_gallery") or _rolling:
 		return
 	var trophies: Array = _state.call("trophy_info") if _state.has_method("trophy_info") else []
-	_refs.trophy_toggle.text = "%s Trophy cabinet · %d rare discoveries" % ["▾" if _trophies_open else "▸", trophies.size()]
+	_refs.trophy_toggle.text = "%s trophy cabinet · %d rare discoveries" % ["Hide" if _trophies_open else "Show", trophies.size()]
 	_refs.trophy_gallery.visible = _trophies_open
 	var signature: String = JSON.stringify(trophies)
 	if signature == _trophy_signature:
@@ -3160,9 +3711,11 @@ func _refresh_trophies() -> void:
 	for child: Node in gallery.get_children():
 		gallery.remove_child(child)
 		child.queue_free()
-	gallery.add_child(_wrap("Your rarest drops. Odds show that roll's rarity tier, not the specific item.", 12, CASINO_LIGHT))
+	gallery.add_child(_wrap("Your rarest drops. Odds show that roll's rarity tier, not the specific item.", 12, MUTED))
 	if trophies.is_empty():
-		gallery.add_child(_wrap("No trophies yet. Rare and better drops will appear here.", 14, CREAM))
+		var empty := _surface("quest", GOLD)
+		gallery.add_child(empty)
+		empty.add_child(_wrap("A shelf for future treasures. Rare and better finds will appear here as you roll.", 14, MUTED))
 		return
 	var grid: GridContainer = GridContainer.new()
 	grid.columns = 2
@@ -3172,10 +3725,9 @@ func _refresh_trophies() -> void:
 	for trophy: Dictionary in trophies:
 		var tier: String = str(trophy.get("tier", "rare"))
 		var accent: Color = RollReel.COLORS.get(tier, Color("c1a4df"))
-		var card: PanelContainer = _card(Color("382747"), 10)
+		var card: PanelContainer = _surface("gear", Cozy.RARITY_COLORS.get(tier, GREEN))
 		card.set_meta("trophy", trophy.duplicate(true))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.add_theme_stylebox_override("panel", _style(Color("382747"), 10, 12, accent))
 		grid.add_child(card)
 		var row: HBoxContainer = _hbox(8)
 		card.add_child(row)
@@ -3186,9 +3738,9 @@ func _refresh_trophies() -> void:
 		var labels: VBoxContainer = _vbox(3)
 		labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(labels)
-		labels.add_child(_wrap(title, 13, CREAM, true))
-		labels.add_child(_wrap("%s · ×%d%s" % [tier.to_upper(), int(trophy.get("count", 1)), " · DEBUG" if bool(trophy.get("debug", false)) else ""], 10, accent, true))
-		labels.add_child(_wrap("Tier odds %.4f%%\nIsland %d · roll #%d" % [float(trophy.get("best_probability", 0)), int(trophy.get("island", 1)), int(trophy.get("roll_number", 0))], 11, Color("ded4ea")))
+		labels.add_child(_wrap(title, 15, INK, true))
+		labels.add_child(_wrap("%s · ×%d%s" % [tier.to_upper(), int(trophy.get("count", 1)), " · DEBUG" if bool(trophy.get("debug", false)) else ""], 11, Cozy.RARITY_COLORS.get(tier, GREEN), true))
+		labels.add_child(_wrap("Tier odds %.4f%%\nIsland %d · roll #%d" % [float(trophy.get("best_probability", 0)), int(trophy.get("island", 1)), int(trophy.get("roll_number", 0))], 12, MUTED))
 		card.tooltip_text = "Recorded rarity-tier odds, including the luck and stake used on that roll."
 		card.mouse_filter = Control.MOUSE_FILTER_PASS
 

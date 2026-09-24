@@ -1,0 +1,82 @@
+extends RefCounted
+## Shared surfaces and interaction states for the farm's illustrated menus.
+const INK: Color = Color("17382d")
+const GREEN: Color = Color("377858")
+const CREAM: Color = Color("fffbed")
+const BUILD_COLORS: Dictionary = {"farmer": Color("578052"), "gambler": Color("86629d"), "investor": Color("43867d"), "scientist": Color("677bb0"), "industrialist": Color("ae7850")}
+const RARITY_COLORS: Dictionary = {"common": Color("687766"), "rare": Color("477e98"), "epic": Color("86629d"), "legendary": Color("996d25"), "mythic": Color("34877f"), "relic": Color("9b7440"), "mystery": Color("8364a2")}
+
+static func box(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(radius)
+	style.content_margin_left = padding
+	style.content_margin_right = padding
+	style.content_margin_top = padding
+	style.content_margin_bottom = padding
+	if border.a > 0:
+		style.set_border_width_all(1)
+		style.border_color = border
+	return style
+
+static func surface(kind: String, accent: Color = GREEN, selected: bool = false) -> StyleBoxFlat:
+	var style := box(Color("fffdf4").lerp(accent, 0.07 if selected else 0.015), 14, 14, accent.lerp(CREAM, 0.42 if selected else 0.76))
+	style.shadow_color = Color(0.12, 0.20, 0.14, 0.07)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(0, 2)
+	match kind:
+		"build", "upgrade": style.border_width_left = 4
+		"gear": style.border_width_top = 3
+		"quest": style.border_width_left = 4 if selected else 1
+		"tracked": style.border_width_left = 4 if selected else 1
+		"island": style.border_width_bottom = 3
+	return style
+
+static func modal(dark: bool = false) -> StyleBoxFlat:
+	var style := box(Color("2b1d40") if dark else Color("f3efdf"), 24, 22, Color("72558e") if dark else Color("d9dcc9"))
+	style.shadow_color = Color(0.04, 0.12, 0.08, 0.28)
+	style.shadow_size = 18
+	style.shadow_offset = Vector2(0, 8)
+	return style
+
+static func button_style(state: String, primary: bool) -> StyleBoxFlat:
+	var fill: Color = GREEN if primary else Color("f9f7e9")
+	var border: Color = Color("24563e") if primary else Color("bdc8b0")
+	match state:
+		"hover": fill = Color("3d805b") if primary else Color("e5eddc")
+		"pressed": fill = Color("254e39") if primary else Color("d4dfc9")
+		"disabled":
+			fill = Color("e7e7dc")
+			border = Color("d3d7c7")
+	var style := box(fill, 10, 10, border)
+	style.border_width_bottom = 1 if state in ["pressed", "disabled"] else 3
+	# Reserve the same space in every state to prevent layout movement.
+	style.content_margin_bottom = 11
+	style.content_margin_top = 9
+	if state == "pressed":
+		style.content_margin_bottom = 9
+		style.content_margin_top = 11
+	return style
+
+static func badge(label: Label, text: String, tone: String = "neutral") -> void:
+	var palettes: Dictionary = {
+		"active": [Color("dcebd7"), Color("285b38")],
+		"ready": [Color("f7e4aa"), Color("715017")],
+		"locked": [Color("e9e4da"), Color("72644e")],
+		"warning": [Color("f2dfd2"), Color("884b37")],
+		"neutral": [Color("e5e9dd"), Color("50634f")],
+	}
+	var colors: Array = palettes.get(tone, palettes.neutral)
+	label.text = text
+	label.add_theme_color_override("font_color", colors[1])
+	var style := box(colors[0], 7, 8)
+	style.content_margin_top = 3
+	style.content_margin_bottom = 3
+	label.add_theme_stylebox_override("normal", style)
+
+static func toggle_texture(enabled: bool) -> ImageTexture:
+	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="42" height="24"><rect x="1" y="1" width="40" height="22" rx="11" fill="%s" stroke="%s"/><circle cx="%d" cy="12" r="8" fill="#fffbed"/></svg>' % ["#377858" if enabled else "#929e89", "#24563e" if enabled else "#7b8873", 30 if enabled else 12]
+	var image := Image.new()
+	image.load_svg_from_string(svg, 2.0)
+	image.resize(42, 24, Image.INTERPOLATE_LANCZOS)
+	return ImageTexture.create_from_image(image)

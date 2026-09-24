@@ -58,7 +58,9 @@ func paid_sample(state, base_luck: float, debug_factor: float) -> Dictionary:
 	check(exact_odds and state.roll_count == SAMPLE_SIZE, "paid sampling uses precisely the displayed distribution at effective luck %.0fx" % (base_luck * debug_factor))
 	for entry in shown:
 		var observed: float = float(counts[entry.tier]) / SAMPLE_SIZE * 100.0
-		check(absf(observed - float(entry.chance)) < 0.8, "seeded observed frequency matches shown odds for %s at %.0fx" % [entry.tier, base_luck * debug_factor])
+		var probability: float = float(entry.chance) / 100.0
+		var tolerance: float = maxf(0.8, 4.0 * sqrt(probability * (1.0 - probability) / SAMPLE_SIZE) * 100.0)
+		check(absf(observed - float(entry.chance)) < tolerance, "seeded observed frequency matches shown odds for %s at %.0fx" % [entry.tier, base_luck * debug_factor])
 	print("ROLL DISTRIBUTION ", base_luck * debug_factor, "x / ", SAMPLE_SIZE, " paid pulls: ", counts)
 	return {"counts": counts, "odds": shown}
 
@@ -122,6 +124,21 @@ func _run() -> void:
 		check(is_equal_approx(tail(high, 0), 100.0) and high[5].chance <= 2.25, "ordinary luck remains normalized with bounded cash jackpots at " + kind)
 		for first in range(1, State.ROLL_TIERS.size()):
 			check(tail(high, first) >= tail(low, first) - 0.000001, "more ordinary luck improves cumulative %s-or-better odds at %s" % [State.ROLL_TIERS[first], kind])
+	# Reproduce the reported 1x earned luck / 1000x boost / enormous all-in.
+	state.luck = 1.0
+	state.coins = 2.4e29
+	var previous: Array[Dictionary] = []
+	for multiplier: float in [1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0]:
+		state.debug_luck_multiplier = multiplier
+		var boosted: Array[Dictionary] = state.roll_odds("all_in")
+		check(is_equal_approx(tail(boosted, 0), 100.0), "boosted all-in odds sum to 100 percent")
+		if not previous.is_empty():
+			for first: int in range(1, State.ROLL_TIERS.size()):
+				check(tail(boosted, first) >= tail(previous, first) - 0.000001, "raising boost improves cumulative rarity " + State.ROLL_TIERS[first])
+		previous = boosted
+	check(previous[1].chance < 1.0 and tail(previous, 6) > 80.0, "reported 1000x boost pushes actual all-in odds into Relic and Mystery")
+	var thousand_sample: Dictionary = paid_sample(state, 1.0, 1000.0)
+	check(int(thousand_sample.counts.relic) + int(thousand_sample.counts.mystery) > SAMPLE_SIZE * 0.8, "1000x paid outcomes strongly favor top collectibles")
 	state.luck = 3.0
 	state.apply_debug(1.0, 1000.0)
 	var debug_odds: Array[Dictionary] = state.roll_odds("normal")

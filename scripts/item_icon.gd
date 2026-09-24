@@ -20,8 +20,14 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 	var id: String = str(data.get("id", "russet"))
 	var kind: String = str(data.get("kind", "crop"))
 	var crop: String = str(data.get("crop", id.get_slice(":", 1) if ":" in id else "russet"))
-	c.draw_circle(Vector2(0, 6), 43, Color("e6dfcb"))
+	if kind == "island":
+		_island(c, int(data.get("island", 1)))
+		c.draw_set_transform(Vector2.ZERO)
+		return
+	if kind != "metric":
+		c.draw_circle(Vector2(0, 6), 43, Color(str(data.get("backdrop", "e6dfcb"))))
 	match kind:
+		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id)))
 		"build": _build(c, str(data.get("build_id", id.trim_prefix("build:"))))
 		"gear": _gear(c, id.trim_prefix("gear:"), data)
@@ -78,6 +84,66 @@ static func _box(color: Color, radius: int) -> StyleBoxFlat:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(radius)
 	return style
+
+static func _metric(c: CanvasItem, id: String) -> void:
+	match id:
+		"coin":
+			c.draw_circle(Vector2.ZERO, 34, Color("c59632"))
+			c.draw_circle(Vector2(-2, -3), 27, Color("edc663"))
+			c.draw_arc(Vector2(-2, -3), 20, 0, TAU, 32, Color("fff0ad"), 3, true)
+			c.draw_line(Vector2(-2, -16), Vector2(-2, 10), Color("916827"), 6, true)
+		"clock", "growth", "speed":
+			c.draw_circle(Vector2.ZERO, 32, Color("e0e9df"))
+			c.draw_arc(Vector2.ZERO, 32, 0, TAU, 32, Color("548374"), 6, true)
+			c.draw_polyline(PackedVector2Array([Vector2(0, -22), Vector2.ZERO, Vector2(18, 9)]), INK, 5, true)
+		"beds":
+			for x: int in [-24, 4]:
+				for y: int in [-25, 3]:
+					c.draw_style_box(_box(Color("b3895d"), 4), Rect2(x, y, 22, 22))
+		"weather":
+			c.draw_circle(Vector2(14, -16), 18, Color("e8bc55"))
+			for p: Vector2 in [Vector2(-20, 1), Vector2(-3, -5), Vector2(14, 3)]: c.draw_circle(p, 16, Color("83aab4"))
+			for x: int in [-16, 0, 16]: c.draw_line(Vector2(x, 22), Vector2(x - 5, 32), Color("548da0"), 5, true)
+		"stock", "price":
+			c.draw_polyline(PackedVector2Array([Vector2(-32, 23), Vector2(-12, 1), Vector2(5, 9), Vector2(30, -25)]), LEAF, 7, true)
+			_poly(c, [Vector2(13, -27), Vector2(32, -28), Vector2(32, -9)], LEAF)
+		"yield", "seed", "crops":
+			c.draw_line(Vector2(0, 31), Vector2(0, -16), LEAF, 6, true)
+			_poly(c, [Vector2(0, 0), Vector2(-31, -9), Vector2(-28, -28), Vector2(-5, -23)], LEAF)
+			_poly(c, [Vector2(0, 14), Vector2(29, 0), Vector2(28, -20), Vector2(7, -13)], Color("83a75b"))
+		"lock":
+			c.draw_arc(Vector2(0, -9), 20, PI, TAU, 24, Color("827a63"), 8, true)
+			c.draw_style_box(_box(Color("b2a789"), 7), Rect2(-28, -9, 56, 43))
+			c.draw_circle(Vector2(0, 9), 5, INK)
+			c.draw_line(Vector2(0, 9), Vector2(0, 22), INK, 4, true)
+		_: _spark(c, Vector2.ZERO, Color("c9a147"), 32)
+
+static func _island(c: CanvasItem, island: int) -> void:
+	var sky: Color = [Color("dce9d4"), Color("f4dfb4"), Color("d7e8ed")][clampi(island - 1, 0, 2)]
+	c.draw_style_box(_box(sky, 14), Rect2(-49, -47, 98, 94))
+	c.draw_circle(Vector2(27, -27), 10, Color("fff1bb"))
+	for y: int in [22, 31, 39]:
+		c.draw_line(Vector2(-39, y), Vector2(39, y), Color("96bbc0"), 3, true)
+	_poly(c, [Vector2(-41, 15), Vector2(-29, -1), Vector2(27, -6), Vector2(43, 16), Vector2(24, 26), Vector2(-25, 27)], Color("bca777"))
+	_poly(c, [Vector2(-41, 10), Vector2(-22, -15), Vector2(21, -17), Vector2(43, 11), Vector2(24, 20), Vector2(-24, 20)], Color("78a568") if island == 1 else (Color("e7c984") if island == 2 else Color("f0f6e9")))
+	if island == 1:
+		c.draw_rect(Rect2(-20, -17, 31, 30), Color("bd7051"))
+		_poly(c, [Vector2(-25, -15), Vector2(-5, -33), Vector2(17, -15)], Color("43644a"))
+		c.draw_rect(Rect2(-11, -3, 12, 16), Color("f5dfaa"))
+		for x: int in [22, 31]:
+			c.draw_line(Vector2(x, 13), Vector2(x, -10), LEAF, 3, true)
+			c.draw_circle(Vector2(x, -8), 5, Color("dabb52"))
+	elif island == 2:
+		c.draw_line(Vector2(12, 10), Vector2(9, -26), Color("977347"), 6, true)
+		for tip: Vector2 in [Vector2(-15, -23), Vector2(-4, -36), Vector2(23, -38), Vector2(34, -23)]:
+			_poly(c, [Vector2(9, -26), tip, tip + Vector2(4, 8)], LEAF)
+		_potato(c, "sunburst", Vector2(-20, 2), 0.32)
+	else:
+		_poly(c, [Vector2(-33, 8), Vector2(-11, -36), Vector2(12, 8)], Color("7698a3"))
+		_poly(c, [Vector2(-20, -18), Vector2(-11, -36), Vector2(-1, -17), Vector2(-10, -22)], Color("fffdf2"))
+		for x: int in [18, 31]:
+			c.draw_line(Vector2(x, 14), Vector2(x, -19), Color("5b7765"), 4, true)
+			_poly(c, [Vector2(x - 11, 2), Vector2(x, -26), Vector2(x + 11, 2)], Color("6f9d8b"))
 
 static func _poly(c: CanvasItem, points: Array[Vector2], color: Color) -> void:
 	c.draw_colored_polygon(PackedVector2Array(points), color)

@@ -9,9 +9,9 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.65, "growth": 0.6, "tax": 0.8, "prepare": "Harvest early. Store rainwater. Seed costs will rise."},
-	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.65, "growth": 0.7, "tax": 1.1, "prepare": "Clear ripe beds. Improve drainage and protect your barn."},
-	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.7, "growth": 0.75, "tax": 1.5, "prepare": "Harvest exposed crops. Build windbreaks and reinforce storage."},
+	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.05, "growth": 0.6, "tax": 0.8, "prepare": "Harvest early. Store rainwater. Seed costs will rise."},
+	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.05, "growth": 0.7, "tax": 1.1, "prepare": "Clear ripe beds. Improve drainage and protect your barn."},
+	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.05, "growth": 0.75, "tax": 1.5, "prepare": "Harvest exposed crops. Build windbreaks and reinforce storage."},
 }
 const PROJECTS: Dictionary = {
 	"rainwater": {"name": "Rainwater Reserve", "cost": 0.01, "event": "drought", "field": 0.3, "barn": 0.0, "tax": 0.20, "detail": "Drought: −30% crop losses and −20% recovery tax per level."},
