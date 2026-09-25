@@ -2,13 +2,14 @@ extends Node
 ## Persistent, selectable farming specializations. Processing needs a loaded batch.
 const IDS: Array[String] = ["farmer", "gambler", "investor", "scientist", "industrialist"]
 const DESCRIPTIONS: Dictionary = {
-	"farmer": "Grow more. Harvest bigger.",
-	"gambler": "Better rolls. Rarer spuds.",
-	"investor": "Cheaper seeds. Better deals.",
-	"scientist": "Turn harvests into experiments.",
-	"industrialist": "Process crops for extra profit."
+	"farmer": "Cultivate prize crops and overflowing harvests.",
+	"gambler": "Stake a chosen harvest for an extraordinary win.",
+	"investor": "Reserve a price. Prepare a major shipment.",
+	"scientist": "Breed named varieties you can grow again.",
+	"industrialist": "Turn harvests into F–SSS export batches."
 }
 var state
+var professions = preload("res://scripts/build_professions.gd").new(self)
 var active: String = "farmer"
 var levels: Dictionary = {"farmer": 1, "gambler": 0, "investor": 0, "scientist": 0, "industrialist": 0}
 var build_crates: int = 0
@@ -31,6 +32,7 @@ func reset_builds() -> void:
 	next_roll_charge = 0.0
 	processing = {}
 	processed = {}
+	professions.reset()
 
 func level() -> int:
 	return int(levels[active])
@@ -47,7 +49,7 @@ func area_bonus() -> int:
 func mutation_factor() -> float:
 	if active == "scientist":
 		return 1.0 + level() * 0.15 + minf(0.5, research * 0.005)
-	return 1.0 + level() * 0.08 if active == "gambler" else 1.0
+	return 1.0
 
 func roll_quality_factor() -> float:
 	return 1.0 + level() * 0.08 + next_roll_charge if active == "gambler" else 1.0
@@ -67,8 +69,6 @@ func select_build(id: String) -> String:
 		return "Run over. Start a new farm."
 	if not levels.has(id) or int(levels[id]) < 1:
 		return state._finish("Open a Build Crate to unlock this build.")
-	if not processing.is_empty() and id != active:
-		return state._finish("Finish the loaded batch before changing your build.")
 	active = id
 	state._refresh_market(false)
 	return state._finish("%s build equipped, level %d." % [active.capitalize(), level()])
@@ -80,119 +80,49 @@ func build_info() -> Array[Dictionary]:
 		var benefits: String = "Open a Build Crate to find a build card."
 		match id:
 			"farmer": benefits = "+%d%% yield · +%.1f%% growth speed%s" % [rank * 5, maxf(0, rank - 1) * 2.5, " · wider tools" if rank >= 3 else " · wider tools at level 3"]
-			"gambler": benefits = "+%d%% reward quality · +%d%% mutation chance" % [rank * 8, rank * 8]
+			"gambler": benefits = "+%d%% Roll House reward quality · a rechargeable harvest-stake charm" % [rank * 8]
 			"investor": benefits = "%.1f%% seed discount · +%.1f points positive-event chance" % [rank * 1.5, rank * 1.2]
 			"scientist": benefits = "+%d%% mutation chance · %d research completed" % [rank * 15 + mini(50, research / 2), research]
-			"industrialist": benefits = "Processed crops worth +%d%% · larger levels process faster" % [20 + rank * 5]
+			"industrialist": benefits = "Machine grade improves at levels 3, 10 and 20 · larger levels process faster"
 		entries.append({"id": id, "name": id.capitalize(), "level": rank, "unlocked": rank > 0, "active": active == id, "description": DESCRIPTIONS[id], "bonuses": benefits})
 	return entries
 
 func activity_info() -> Dictionary:
-	var crop: String = str(state.selected_crop)
-	var held: int = int(state.storage[crop])
-	var ready: bool = cooldown <= 0.0
-	var title: String = ""
-	var description: String = ""
-	var action_label: String = ""
-	match active:
-		"farmer":
-			title = "FIELD DRESSING"
-			description = "10 potatoes → 30s of bigger, faster crops."
-			action_label = "Dress the field · 10 potatoes"
-			ready = ready and held >= 10
-		"gambler":
-			title = "READ THE TABLE"
-			var cost: float = state.roll_cost("normal") * 0.5
-			description = "%s → +50%% quality on your next roll." % state.money(cost)
-			action_label = "Scout next roll · " + state.money(cost)
-			ready = ready and state.roll_available() and state.coins >= cost and next_roll_charge == 0.0
-		"investor":
-			title = "CALL A BUYER"
-			var cost: float = float(state.market[crop].seed) * 10.0
-			description = "%s → a 5-second buying offer. Have crops ready!" % state.money(cost)
-			action_label = "Call buyer · " + state.money(cost)
-			ready = ready and state.coins >= cost
-		"scientist":
-			title = "MUTATION EXPERIMENT"
-			description = "20 potatoes → %.1f%% mutation chance + research." % (experiment_chance() * 100.0)
-			action_label = "Experiment · 20 potatoes"
-			ready = ready and held >= 20
-		"industrialist":
-			title = "BATCH PROCESSOR"
-			description = "100 potatoes → a premium batch. Sell when ready."
-			action_label = "Load processor · 100 potatoes"
-			ready = ready and held >= 100 and processing.is_empty()
-	var progress: float = float(processing.get("elapsed", 0.0)) / float(processing.get("duration", 1.0))
-	return {"title": title, "description": description, "action_label": action_label, "can_use": ready, "cooldown": cooldown,
-		"processing": not processing.is_empty(), "progress": clampf(progress, 0, 1), "processed_value": processed_value(), "fertilizer": fertilizer}
+	var title: String = {"farmer": "PRIZE CROPS", "industrialist": "BATCH GRADING", "scientist": "SEED BANK", "investor": "RESERVED BUYER", "gambler": "HARVEST STAKES"}[active]
+	return {"title": title, "description": DESCRIPTIONS[active], "action_label": "Open " + active.capitalize(), "can_use": true, "cooldown": cooldown,
+		"processing": not processing.is_empty(), "progress": float(processing.get("elapsed", 0)) / float(processing.get("duration", 1)), "processed_value": processed_value(), "fertilizer": fertilizer}
 
 func use_ability() -> String:
-	if state.run_over:
-		return "Run over. Start a new farm."
-	if not bool(activity_info().can_use):
-		if active in ["gambler", "investor"]:
-			return state._reject_purchase("This ability needs more coins or time to recover.")
-		return state._finish("This ability needs more potatoes, coins, or time to recover.")
-	var crop: String = str(state.selected_crop)
+	if state.run_over: return "Run over. Start a new farm."
 	match active:
-		"farmer":
-			state.storage[crop] -= 10
-			fertilizer = 30.0
-			cooldown = 60.0
-			return state._finish("Field dressed! +25% harvest yield and faster growth for 30 seconds.")
-		"gambler":
-			var cost: float = state.roll_cost("normal") * 0.5
-			state.coins -= cost
-			next_roll_charge = 0.5
-			cooldown = 30.0
-			return state._complete_purchase({"kind": "service", "id": "scout", "name": "Roll scouting", "quantity": 1, "cost": cost}, "Table scouted. The next roll has +50% reward quality; its displayed odds update now.")
-		"investor":
-			var cost: float = float(state.market[crop].seed) * 10.0
-			state.coins -= cost
-			cooldown = 45.0
-			state._start_event("shortage")
-			return state._complete_purchase({"kind": "service", "id": "market_call", "name": "Market call", "quantity": 1, "cost": cost}, "The buyer answered. Your five-second trading window is open!")
-		"scientist":
-			state.storage[crop] -= 20
-			var chance: float = experiment_chance()
-			research = mini(10000, research + 1)
-			cooldown = 15.0
-			if state.rng.randf() < chance:
-				var kind: String = "crystal" if state.rng.randf() < 0.25 else "golden"
-				state._add_mutation(crop, 1, kind, false)
-				return state._finish("Experiment succeeded! A mutation is stored in your inventory.")
-			return state._finish("Research recorded. This experiment produced no mutation; your future mutation chance improved.")
-		"industrialist":
-			state.storage[crop] -= 100
-			processing = {"crop": crop, "quantity": 100, "elapsed": 0.0, "duration": 10.0 / (1.0 + maxf(0, level() - 1) * 0.08), "multiplier": 1.2 + level() * 0.05}
-			return state._finish("100 potatoes loaded. Your processor is running; crops in the field still need your tools.")
-	return ""
+		"industrialist": return professions.load_batch()
+		"scientist": return professions.breed()
+		"investor": return professions.reserve()
+		"gambler": return professions.stake_harvest()
+	return state._finish("Choose Prize crop in Builds, then click a growing bed to spread compost.")
 
 func update(delta: float, processing_step: float = -1.0) -> void:
-	if state.run_over:
-		return
-	if not is_finite(delta) or delta <= 0:
-		return
-	cooldown = maxf(0.0, cooldown - delta)
-	fertilizer = maxf(0.0, fertilizer - delta)
-	if processing.is_empty():
-		return
-	# Furnace heat speeds the loaded job, never ability cooldowns. The controller
-	# captures this work before the simulation consumes the heat timer.
-	var work: float = delta if processing_step < 0.0 or not is_finite(processing_step) else processing_step
-	if state.has_method("equipment_processing_factor"):
-		work *= state.equipment_processing_factor()
-	processing.elapsed = minf(float(processing.duration), float(processing.elapsed) + work)
-	if float(processing.elapsed) < float(processing.duration):
-		return
-	var crop: String = str(processing.crop)
-	var quantity: int = int(processing.quantity)
-	var old: Dictionary = processed.get(crop, {"count": 0, "multiplier": 1.0})
-	var total: int = int(old.count) + quantity
-	var factor: float = (float(old.count) * float(old.multiplier) + float(quantity) * float(processing.multiplier)) / float(total)
-	processed[crop] = {"count": total, "multiplier": factor}
-	processing = {}
-	state._finish("Processing complete. Your graded batch is stored until you choose to sell.")
+	if state.run_over or not is_finite(delta) or delta <= 0: return
+	cooldown = maxf(0, cooldown - delta)
+	fertilizer = maxf(0, fertilizer - delta)
+	professions.update(delta)
+	var work: float = delta if processing_step < 0 or not is_finite(processing_step) else processing_step
+	if state.has_method("equipment_processing_factor"): work *= state.equipment_processing_factor()
+	while work > 0 and not processing.is_empty():
+		var step: float = minf(work, float(processing.duration) - float(processing.elapsed))
+		processing.elapsed += step
+		work -= step
+		if float(processing.elapsed) + 0.000001 < float(processing.duration): break
+		var crop: String = processing.crop
+		var quantity: int = processing.quantity
+		var old: Dictionary = processed.get(crop, {"count": 0, "multiplier": 1.0})
+		var total: int = int(old.count) + quantity
+		var factor: float = (float(old.count) * float(old.multiplier) + quantity * float(processing.multiplier)) / total
+		processed[crop] = {"count": total, "multiplier": factor}
+		var grade: String = str(processing.get("grade", "A"))
+		professions.data.last_grade = grade
+		processing = {} if professions.data.queue.is_empty() else professions.data.queue.pop_front()
+		professions.emit_result("industrialist", grade + " · batch ready", "%s stamped · %d %s ready in the barn. Sell your graded shipment when the market suits you." % [grade, quantity, crop])
 
 func processed_value() -> float:
 	var total: float = 0.0
@@ -222,6 +152,9 @@ func saved_storage_count(data: Dictionary) -> int:
 	var total: int = int(data.get("processing", {}).get("quantity", 0))
 	for batch in data.get("processed", {}).values():
 		total += int(batch.get("count", 0))
+	var professional: Dictionary = data.get("professions", {})
+	for job in professional.get("queue", []): total += int(job.quantity)
+	total += int(professional.get("wager", {}).get("quantity", 0))
 	return total
 
 func inventory_info() -> Array[Dictionary]:
@@ -234,7 +167,13 @@ func inventory_info() -> Array[Dictionary]:
 	for crop in processed:
 		entries.append({"id": "processed:" + crop, "kind": "processed", "name": "Graded " + str(state.CROPS[crop].name), "count": int(processed[crop].count), "rarity": "processed", "description": "Processed crop batch, valued at the live market.", "effect": "x%.2f sale value" % float(processed[crop].multiplier), "active": true, "sell_value": float(processed[crop].count) * float(processed[crop].multiplier) * float(state.market[crop].sell), "action": "build:sell_processed"})
 	if not processing.is_empty():
-		entries.append({"id": "processing", "kind": "processed", "name": "Batch in the processor", "count": int(processing.quantity), "rarity": "processed", "description": "The loaded batch still occupies barn space.", "effect": "%.0f%% complete" % (float(processing.elapsed) / float(processing.duration) * 100.0), "active": true, "action": "builds"})
+		entries.append({"id": "processing", "kind": "processed", "name": "Batch in the processor", "count": int(processing.quantity), "rarity": "processed", "description": "The loaded batch still occupies barn space.", "effect": "%.0f%% complete" % (float(processing.elapsed) / float(processing.duration) * 100.0), "active": true, "action": "build:inspect:industrialist"})
+	for index in range(professions.data.queue.size()):
+		var job: Dictionary = professions.data.queue[index]
+		entries.append({"id": "queued:" + str(index), "kind": "processed", "name": "Queued " + job.crop, "count": job.quantity, "rarity": "processed", "description": "Loaded at the workshop. Still occupies barn space.", "effect": "Grade " + job.grade, "active": true, "action": "build:inspect:industrialist"})
+	if not professions.data.wager.is_empty():
+		var wager: Dictionary = professions.data.wager
+		entries.append({"id":"harvest_stake", "kind":"processed", "name":"Harvest stake at the Roll House", "count":wager.quantity, "rarity":"processed", "description":"Reserved until you claim the result in Gambler details.", "effect":"Claim " + state.money(wager.quantity * wager.quote * wager.factor), "active":true, "action":"build:inspect:gambler"})
 	return entries
 
 func grant_roll_build(_tier: String) -> String:
@@ -275,11 +214,12 @@ func finish_crate_reveal() -> void:
 	_crate_opening = false
 
 func save_data() -> Dictionary:
-	return {"version": 1, "build_crates": build_crates, "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "next_roll_charge": next_roll_charge, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
+	return {"version": 2, "professions": professions.data.duplicate(true), "build_crates": build_crates, "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "next_roll_charge": next_roll_charge, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
 
 func valid_data(data: Variant) -> bool:
-	if not data is Dictionary or data.get("version") != 1 or not data.get("active") in IDS:
+	if not data is Dictionary or not _number(data.get("version"), 1, 2, true) or not data.get("active") in IDS:
 		return false
+	if data.version == 2 and not professions.valid(data.get("professions")): return false
 	if not _number(data.get("build_crates", 0), 0, 1000000, true):
 		return false
 	if not data.get("levels") is Dictionary or data.levels.size() != IDS.size():
@@ -296,10 +236,9 @@ func valid_data(data: Variant) -> bool:
 		return false
 	if not data.processing.is_empty():
 		var job: Dictionary = data.processing
-		if not state.CROP_IDS.has(job.get("crop")) or not _number(job.get("quantity"), 100, 100, true) or not _number(job.get("duration"), 3, 10) or not _number(job.get("elapsed"), 0, float(job.get("duration", 0))) or not _number(job.get("multiplier"), 1.25, 2.7):
-			return false
+		if not valid_job(job, int(data.version) == 1): return false
 	for crop in data.processed:
-		if not state.CROP_IDS.has(crop) or not data.processed[crop] is Dictionary or not _number(data.processed[crop].get("count"), 1, 1.0e15, true) or not _number(data.processed[crop].get("multiplier"), 1.25, 2.7):
+		if not state.CROP_IDS.has(crop) or not data.processed[crop] is Dictionary or not _number(data.processed[crop].get("count"), 1, 1.0e15, true) or not _number(data.processed[crop].get("multiplier"), 1.05, 8.0):
 			return false
 	return true
 
@@ -316,7 +255,15 @@ func load_data(data: Dictionary) -> bool:
 	next_roll_charge = float(data.next_roll_charge)
 	processing = data.processing.duplicate(true)
 	processed = data.processed.duplicate(true)
+	professions.reset()
+	if int(data.version) == 2: professions.data = data.professions.duplicate(true)
 	return true
 
 func _number(value: Variant, minimum: float, maximum: float, integer_only: bool = false) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= minimum and float(value) <= maximum and (not integer_only or float(value) == floor(float(value)))
+
+func valid_job(job: Variant, legacy: bool = false) -> bool:
+	if not job is Dictionary: return false
+	if not state.CROP_IDS.has(job.get("crop")) or not _number(job.get("quantity"), 20, 100, true) or int(job.quantity) not in [20,100]: return false
+	if not _number(job.get("duration"), 3, 10) or not _number(job.get("elapsed"), 0, float(job.get("duration", 0))) or not _number(job.get("multiplier"), 1.05, 8): return false
+	return legacy or (job.get("grade", "A") in professions.GRADES)

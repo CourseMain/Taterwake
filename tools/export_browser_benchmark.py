@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--godot', required=True)
 parser.add_argument('--source', type=Path, default=root)
 parser.add_argument('--label', default='current')
-parser.add_argument('--fixture', choices=['performance', 'climate'], default='performance')
+parser.add_argument('--fixture', choices=['performance', 'climate', 'builds'], default='performance')
 args = parser.parse_args()
 assert re.fullmatch(r'[a-zA-Z0-9-]+', args.label)
 project = root / 'artifacts' / f'browser-benchmark-{args.label}'

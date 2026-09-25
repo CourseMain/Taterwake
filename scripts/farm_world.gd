@@ -34,6 +34,7 @@ var _rotor: Node3D
 var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
 const ClimateProjects = preload("res://scripts/climate_projects.gd")
+var profession_world: Node3D
 var coast: Node3D
 var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
@@ -182,6 +183,9 @@ func build_world(island: int = 1) -> void:
 	coast = preload("res://scripts/coastal_world.gd").new()
 	add_child(coast)
 	coast.setup(self)
+	profession_world = preload("res://scripts/profession_world.gd").new()
+	add_child(profession_world)
+	profession_world.setup(self)
 	player = Node3D.new()
 	player.name = "PotatoFarmer"
 	add_child(player)
@@ -508,6 +512,7 @@ func _clear_world() -> void:
 	_moon = null
 	_export_particle_clock = 0.0
 	coast = null
+	profession_world = null
 	camera = null
 	player = null
 	_player_body = null
@@ -814,11 +819,16 @@ func update_plots(plots: Array) -> void:
 				crop_color = Color("d8f1ff")
 				foliage_color = Color("759ba5")
 				crop_scale = 1.25
+		var variety: String = str(data.get("variety", ""))
+		if variety in ["hearty", "dry", "frost"]:
+			crop_color = Color({"hearty":"f3cb69", "dry":"a7cb78", "frost":"a6e6eb"}[variety])
+			foliage_color = crop_color.darkened(.24)
 		foliage_color = foliage_color.lerp(Color("988759"), float(damage_level) * 0.065)
 		crop_color = crop_color.lerp(Color("9e8969"), float(damage_level) * 0.035)
 		var elapsed: float = float(data.get("elapsed", 0.0))
 		_crop_roots[i].scale.y = 0.72 + minf(elapsed / 35.0, 1.0) * 0.28 if stage == 2 else 1.0
 		var key: String = "%s/%d/%s/%s/%s/%s/%d/%s" % [str(unlocked), stage, str(watered), str(tilled), crop_kind, str(infested), damage_level, str(data.get("pest_destroyed", false))]
+		key += "/" + variety + "/" + str(data.get("cultivated", false))
 		if key == _plot_states[i]:
 			continue
 		_plot_states[i] = key
@@ -853,8 +863,13 @@ func update_plots(plots: Array) -> void:
 					_sphere(root, remains + Vector3(0.10, -0.08, 0.16), Vector3(0.14, 0.055, 0.09), Color("ad8545"))
 			_geometry_batcher.batch_siblings(root)
 			continue
-		for crop in range(4):
+		if bool(data.get("cultivated", false)):
+			_sphere(root, Vector3(0, .5 if stage == 3 else .3, 0), Vector3(.85,.68,.8) * (1 if stage == 3 else .55), crop_color)
+			_box(root, Vector3(-.86,.65,.74), Vector3(.08,1.0,.08),Color("b89355"))
+			_gem(root,Vector3(-.86,1.18,.74),GOLD,.16)
+		for crop in range(1 if bool(data.get("cultivated", false)) else 4):
 			var pos := Vector3(-0.48 + float(crop % 2) * 0.96, 0.25, -0.48 + float(crop / 2) * 0.96)
+			if bool(data.get("cultivated", false)): pos = Vector3(0,.8 if stage == 3 else .4,0)
 			if stage == 1:
 				_sphere(root, pos, Vector3(0.24, 0.08, 0.18), Color("af865a"))
 				_leaf(root, pos + Vector3(-0.07, 0.14, 0.0), Vector3(0.17, 0.08, 0.11), Color("8eaf4f"), -0.4)
@@ -909,6 +924,7 @@ func set_player_position(pos: Vector3) -> void:
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
 	if is_instance_valid(coast): coast.animate(delta)
+	if is_instance_valid(profession_world): profession_world.animate(delta)
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
 		var destination: Vector3 = _tutorial_marker.position

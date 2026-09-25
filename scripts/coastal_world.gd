@@ -34,16 +34,16 @@ func _build_water() -> void:
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	water_material = ShaderMaterial.new()
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
-	var colors: Array = [Color("70bbae"), Color("377d90"), Color("e3efd5")]
-	if world.current_island == 2: colors = [Color("79d6c6"), Color("2f9ca3"), Color("eef6d8")]
-	if world.current_island == 3: colors = [Color("8bc6d7"), Color("355c80"), Color("e9f5f7")]
+	var colors: Array = [Color("91d8ca"), Color("5298a5"), Color("e3efd5")]
+	if world.current_island == 2: colors = [Color("9de6d4"), Color("49a5b1"), Color("eef6d8")]
+	if world.current_island == 3: colors = [Color("b2dfdf"), Color("5482a8"), Color("e9f5f7")]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water_material.set_shader_parameter("icy", 1.0 if world.current_island == 3 else 0.0)
 	water.material_override = water_material
 	add_child(water)
 	var mesh := SurfaceTool.new()
 	mesh.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var distances: Array[float] = [-0.35, 0.4, 1.4, 3.2, 6.0, 9.0, 13.0]
+	var distances: Array[float] = [-0.35, 0.4, 1.4, 3.2, 6.0, 12.0, 220.0]
 	for band in range(distances.size() - 1):
 		var inner: PackedVector3Array = _outline(distances[band])
 		var outer: PackedVector3Array = _outline(distances[band + 1])

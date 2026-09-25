@@ -62,32 +62,37 @@ func _run() -> void:
 	state.coins = 1000000.0
 	var before: float = state.coins
 	builds.use_ability()
-	check(state.coins < before and state.current_event == "shortage" and state.event_remaining <= 5.0, "Investor pays for a real temporary buying opportunity")
+	check(state.coins == before and not builds.professions.data.contract.is_empty(), "Investor reserves a real locked-price contract")
 	state._end_event()
 	builds.cooldown = 0.0
 	builds.select_build("gambler")
+	state.storage.russet = 30
 	var odds_before: Array[Dictionary] = state.roll_odds("normal")
 	builds.use_ability()
 	var odds_after: Array[Dictionary] = state.roll_odds("normal")
-	check(odds_after[0].chance < odds_before[0].chance, "Gambler scouting improves displayed and actual reward quality")
+	check(builds.professions.data.wager.quantity == 20 and state.storage.russet == 10, "Gambler stakes exactly the selected harvest")
+	builds.professions.claim()
+	builds.next_roll_charge = 0.5
 	state.roll("normal")
 	check(builds.next_roll_charge == 0.0, "scouted quality is consumed by exactly one paid roll")
 	builds.cooldown = 0.0
 	builds.select_build("scientist")
 	state.storage.russet = 40
+	state.storage.golden = 20
 	builds.use_ability()
-	check(builds.research == 1 and state.storage.russet == 20, "research consumes held crops and records actual progress")
+	check(builds.research == 1 and state.storage.russet == 30 and state.storage.golden == 10, "research consumes held crops and records actual progress")
 	builds.cooldown = 0.0
 	builds.select_build("industrialist")
 	state.upgrade_barn()
 	state.storage.russet = 200
+	builds.professions.action("batch", "100")
 	before = state.coins
 	var used_before: int = state.storage_used()
 	builds.use_ability()
 	check(builds.processing.quantity == 100 and state.storage.russet == 100, "processor accepts one manually loaded batch")
 	check(state.storage_used() == used_before, "loaded potatoes continue to occupy barn capacity")
 	builds.select_build("farmer")
-	check(builds.active == "industrialist", "loaded machinery finishes before changing specializations")
+	check(builds.active == "farmer", "loaded machinery keeps working after changing specializations")
 	builds.update(10.1)
 	check(builds.processing.is_empty() and int(builds.processed.russet.count) == 100, "loaded processing job finishes into held inventory")
 	check(state.coins == before and state.storage_used() == used_before, "finished processing never sells itself or frees occupied storage")
@@ -96,6 +101,7 @@ func _run() -> void:
 	builds.sell_processed()
 	check(is_equal_approx(state.coins, before + value) and builds.processed.is_empty(), "processed sale pays exactly once when requested")
 	# Save and reload an unfinished batch, build levels and an unopened crate.
+	builds.select_build("industrialist")
 	builds.use_ability()
 	builds.update(2.0)
 	var saved_processing_work: float = float(builds.processing.elapsed)

@@ -12,6 +12,8 @@ The local preview teaches one harvest and ends at your first sale. Then farm fre
 
 Small potatoes. Big possibilities.
 
+**New local build preview:** five illustrated profession pages now offer prize crops, F–SSS production batches, a permanent seed bank, reserved-price shipments and explicit harvest stakes. A tax collector visits the farm, and animated sea ribbons extend across the full view, with icy water around Frosthollow. Open **Play Builds Lab.command** to try each activity without touching your save. See [testing instructions and design notes](docs/BUILD_PROFESSIONS.md). These changes are local and unpublished.
+
 **v1.0.2 local preview — not published:** Climate disasters begin on **Island 2**, with central warnings, storm clouds, rain, wind and camera shake. New fonts and simpler menus keep the important choices clear. Start with a visible **rain → tank → can → crop** loop on Island 1. Island 2 adds connected sprinklers before its first dry spell; click equipment for its short illustrated action card. Islands now have 50% more land area, with **Shift-to-sprint** and smoother carried tools. Open **Play Climate Lab.command** for isolated scenarios that never load or save your real farm. See the [water-loop guide](docs/CLIMATE_WATER_LOOP.md). Taxes arrive after every third major stock, with a preview of recovery costs. Debt is allowed; crossing bankruptcy ends the run. The local QoL update also adds 10–60s crop growth, explicit luck totals, debug island unlocks and an illustrated PotatoDex. This update is not yet published at the browser link above.
 
 A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.

@@ -104,7 +104,7 @@ func tip(farm: Node) -> Dictionary:
 	if farm.coins < 0.0 and unseen("debt"):
 		return _tip("debt", "Debt is still playable", "You can keep farming below zero. This run ends only below %s. Sell held crops to recover." % farm.money(farm.bankruptcy_limit()), "View taxes", "taxes")
 	if unseen("taxes") and (farm.surge_timer <= 30.0 or int(farm.blind_cycle.booms) > 0):
-		return _tip("taxes", "Keep money for taxes", "After 3 major booms, the last 10-second selling window ends and tax is deducted. Forecast: %s. Debt is allowed down to %s." % [farm.money(farm.blind_info().tax), farm.money(farm.bankruptcy_limit())], "View forecast", "taxes")
+		return _tip("taxes", "Keep money for taxes", "After 3 major booms, a tax collector walks in. You have 10 seconds to sell before collection. Forecast: %s. Debt is allowed down to %s." % [farm.money(farm.blind_info().tax), farm.money(farm.bankruptcy_limit())], "View forecast", "taxes")
 	if int(data.independent) < 4:
 		if unseen("repeat"):
 			return _tip("repeat", "The farm is yours", "Try growing and selling another crop on your own. All tools and shops are open. H brings up help whenever you need it.", "Go farming", "dismiss")
@@ -121,8 +121,10 @@ func tip(farm: Node) -> Dictionary:
 	if unseen("builds") and is_instance_valid(farm.build_system):
 		if farm.build_system.build_crates > 0:
 			return _tip("builds", "You found a Build Crate", "Open it from Inventory for a build card. Then compare your unlocked builds with C. Opening a shop does not spend coins.", "Open inventory [I]", "inventory")
-		if farm.build_system.active == "farmer" and farm.build_system.cooldown <= 0.0 and int(farm.storage[farm.selected_crop]) >= 10:
-			return _tip("builds", "Use your Farmer ability", "In Builds [C], trade 10 held potatoes for 30 seconds of better harvests and growth. Compare that benefit with selling them.", "Inspect Farmer [C]", "builds")
+		if farm.build_system.active == "farmer" and farm.build_system.professions.data.compost > 0:
+			for plot in farm.plots:
+				if plot.unlocked and int(plot.stage) in [1, 2] and not plot.get("cultivated", false):
+					return _tip("builds", "Grow a prize crop", "In Builds [C], choose Farmer and spread compost on a growing bed. Water and harvest normally for a giant harvest; fresh harvests make more compost.", "Inspect Farmer [C]", "builds")
 	return {}
 
 func _tip(id: String, title: String, body: String, label: String, action: String) -> Dictionary:

@@ -15,14 +15,19 @@ void vertex() {
 }
 void fragment() {
 	float shore = UV.x;
-	float swell = sin(shore * 3.6 - water_clock * (1.3 - icy * 0.4) + sin(UV.y * 0.40) * 0.45);
-	float breaks = smoothstep(-0.45, 0.55, sin(UV.y * 0.75 + water_clock * 0.22));
-	float foam = smoothstep(0.88, 0.99, swell) * breaks * (1.0 - smoothstep(0.6, 4.1, shore));
-	float ripple = sin(sea_pos.x * 1.55 + sea_pos.y * 0.80 + water_clock * 0.65);
-	float glint = smoothstep(0.96, 1.0, ripple) * smoothstep(0.45, 0.95, sin(sea_pos.y * 2.1 - water_clock * 0.38));
-	vec3 water = mix(shallow_color, deep_color, smoothstep(0.0, 7.0, shore));
-	water = mix(water, foam_color, foam * 0.66 + glint * 0.12);
-	water *= mix(0.50, 1.0, daylight);
-	// Fade the opaque geometry into the diorama background at the far edge.
-	ALBEDO = mix(water, horizon_color, smoothstep(8.0, 13.0, shore));
+	// Broad curling ribbons and smaller crossing ripples. Six trigonometric
+	// evaluations, one opaque pass, no reflections or screen/depth reads.
+	float bend = sin(sea_pos.y * 0.30 + water_clock * 0.18) + cos(sea_pos.x * 0.22 - sea_pos.y * 0.10) * 0.45;
+	float ribbon = sin(sea_pos.x * 0.46 + sea_pos.y * 0.25 + bend * 2.2 - water_clock * 0.55);
+	float chop = sin(sea_pos.y * 0.9 - sea_pos.x * 0.3 + water_clock * 0.48);
+	float breaker = sin(shore * 3.0 - water_clock * (1.2 - icy * 0.35) + bend);
+	float breaks = smoothstep(-0.3, 0.7, sin(UV.y * 0.65 + water_clock * 0.15));
+	float foam = smoothstep(0.86, 0.99, breaker) * breaks * (1.0 - smoothstep(0.8, 4.2, shore));
+	float crest = smoothstep(0.975, 0.996, ribbon) * smoothstep(-0.15, 0.6, chop);
+	vec3 water = mix(shallow_color, deep_color, smoothstep(0.0, 9.0, shore));
+	water += (ribbon * 0.014 + chop * 0.008);
+	water = mix(water, foam_color, foam * 0.65 + crest * 0.36);
+	// Ocean covers the complete camera view, including the far distance.
+	// A subtle sky tint follows dusk without dissolving the sea into a void.
+	ALBEDO = mix(water * mix(0.45, 1.0, daylight), horizon_color, 0.09);
 }

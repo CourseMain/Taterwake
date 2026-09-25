@@ -107,13 +107,17 @@ You begin as **Farmer**. Opening owned Build Crates can unlock and develop five 
 
 | Build | Focus and active ability |
 | --- | --- |
-| Farmer | Yield, faster growth and wider manual tool areas. Spend held crops on temporary field dressing. |
-| Gambler | Reward quality and mutations. Pay to scout the next roll's odds. |
-| Investor | Seed discounts and positive-market opportunities. Pay to call a temporary crop buyer. |
-| Scientist | Mutation chances and research. Experiment using 20 held potatoes. |
-| Industrialist | Load 100 potatoes into a batch processor. The machine grades that batch while you farm; sell the finished goods when you choose. |
+| Farmer | Choose a growing bed and spend compost to grow one giant prize crop. Harvests replenish compost. |
+| Gambler | Stake 5, 20 or 100 held crops at printed odds. Claim the result or spend a rechargeable charm to replace it. |
+| Investor | Reserve a buyer's price for three minutes, then deliver the requested cargo. Repeat deliveries build reputation. |
+| Scientist | Cross two crops into Honeyheart, Sundew or Frostgold. Keep discovered seed traits for every build. |
+| Industrialist | Load 20 or 100 crops, match their process and stamp F–SSS export batches. Larger machines unlock queue slots. |
 
-Processing jobs and finished batches still occupy storage. Machines never plant, water or harvest the field for you.
+Click **Explore** for a short illustrated explanation and the build's controls. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
+
+Prize crops, seed-bank jars, machine additions, shipment carts and the lucky charm appear on the farm. After every third major stock, the tax collector walks from the ferry along the island path during the familiar ten-second selling window, collects automatically, then leaves with a receipt. Clicking the visitor opens your tax information.
+
+For disposable scenarios, open **Play Builds Lab.command**. See the [build activities and testing guide](BUILD_PROFESSIONS.md) for recipes, grades, save compatibility and test steps.
 
 Every paid roll also has an independent **5% chance of a Build Crate**. Open it from Inventory for a separate, build-only illustrated reward reel. Ownership is checked by the game simulation before RNG runs. The crate is consumed before its single reward is granted, overlapping requests are blocked, and its result is saved immediately. Requests without a crate show “You need a Build Crate.” Fully developed builds preserve unused crates.
 

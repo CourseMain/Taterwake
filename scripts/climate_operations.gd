@@ -191,6 +191,7 @@ static func _tick(farm, dt: float) -> void:
 		op.wet[key] = wet
 		var exposure: float = 0.75 + float((index * 7) % 11) / 20.0
 		var protection: float = 1.0 - c.protection(event, island, "field")
+		if event == "drought" and str(field[index].get("variety", "")) == "dry": protection *= 0.5
 		if event == "drought":
 			if wet <= 0.0: stress += dt * 0.052 * strength * exposure * protection
 		elif event == "flood":

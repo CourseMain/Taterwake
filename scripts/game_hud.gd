@@ -125,6 +125,8 @@ var _modal_subtitle: Label
 var _body: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
+var _build_selection: String = ""
+const BuildPages = preload("res://scripts/build_pages.gd")
 var _panel_island: int = 0
 var _refs: Dictionary = {}
 var _reset_pending: bool = false
@@ -346,7 +348,7 @@ func _update_blind_ui() -> void:
 	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending)
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
-	_blind_labels.title.text = "Tax in %ds · Sell now" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
+	_blind_labels.title.text = "Collector arriving · %ds" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
 	_blind_labels.balance.text = "%s due  ›" % _blind_money(info.target)
 	_blind_labels.title.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else GOLD)
 	_blind_labels.balance.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff7777"))
@@ -447,7 +449,7 @@ func _refresh_blinds() -> void:
 	_refs.tax_balance.text = "%s remaining" % _blind_money(info.projected)
 	_refs.tax_balance.add_theme_color_override("font_color", GREEN if info.projected >= 0 else CHERRY)
 	_refs.tax_limit.text = "Current savings %s · Bankruptcy below %s" % [_blind_money(info.current), _blind_money(info.bankruptcy)]
-	_refs.blind_due.text = "Collection in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks until collection" % [int(info.booms), int(info.booms_required)]
+	_refs.blind_due.text = "Collector arrives in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks until collection" % [int(info.booms), int(info.booms_required)]
 	_refs.tax_progress.value = float(info.booms) / maxf(1, float(info.booms_required)) * 100
 	_refs.tax_advice.text = "Disaster markets are down. Booms resume after recovery; crashes do not advance collection." if _state.disaster_market_active() else "Sell your harvest when prices suit you. Collection follows every third major stock and its full selling window. Unpaid tax becomes debt."
 	var last: Dictionary = info.last_result
@@ -928,6 +930,10 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action.begins_with("build:inspect:"):
+		_build_selection = action.get_slice(":", 2)
+		show_panel("builds", _state)
+		return
 	if action == "farm_help:details":
 		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _rolling and not _state.run_over:
 			_opened_farm_tip = _farm_tip.duplicate(true)
@@ -2868,6 +2874,12 @@ func _refresh_inventory() -> void:
 					detail = str(entry.get("effect", "Processing")) + " · loaded batch"
 					if is_instance_valid(button):
 						button.text = "View processor"
+				elif kind == "processed" and id.begins_with("queued:"):
+					detail = str(entry.get("effect", "")) + " · waiting in the production queue"
+					if is_instance_valid(button): button.text = "View queue"
+				elif kind == "processed" and id == "harvest_stake":
+					detail = str(entry.get("effect", "")) + " · reserved harvest stake"
+					if is_instance_valid(button): button.text = "View stake result"
 				elif kind == "processed" and is_instance_valid(button):
 					button.text = "Sell all batches"
 			"build":
@@ -2950,99 +2962,10 @@ func _update_builds_badge() -> void:
 	_builds_button.text = "Builds  [C]"
 
 func _build_builds() -> void:
-	_heading("Find your build", "Five ways to farm. Grow your favourite with Build Crates.")
-	var active_card := _surface("build", GREEN, true)
-	_body.add_child(active_card)
-	var active_body := _vbox(6)
-	active_card.add_child(active_body)
-	var title := _wrap("", 19, INK, true)
-	active_body.add_child(title)
-	_refs.build_activity_title = title
-	var detail := _wrap("", 13, MUTED)
-	active_body.add_child(detail)
-	_refs.build_activity_detail = detail
-	var actions := _hbox(10)
-	active_body.add_child(actions)
-	for action: String in ["build:ability", "build:sell_processed"]:
-		var button := _button("Use ability" if action == "build:ability" else "Sell processed", action, action == "build:ability")
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		actions.add_child(button)
-		_refs[action] = button
-	var progress := _meter(GOLD)
-	progress.max_value = 1.0
-	active_body.add_child(progress)
-	_refs.build_progress = progress
-	_section_title(_body, "Choose your specialty", "One active build at a time")
-	for entry: Dictionary in _build_entries():
-		var id: String = str(entry.get("id", "farmer"))
-		var key: String = "build:select:" + id
-		var accent: Color = Cozy.BUILD_COLORS.get(id, GREEN)
-		var card := _surface("build", accent, bool(entry.get("active", false)))
-		_body.add_child(card)
-		_refs[key + ":card"] = card
-		var row := _hbox(14)
-		card.add_child(row)
-		row.add_child(_icon({"kind": "build", "id": id, "backdrop": accent.lerp(CREAM, 0.83).to_html(false)}, 76))
-		var body := _vbox(5)
-		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(body)
-		var heading := _hbox(8)
-		body.add_child(heading)
-		var name_label := _label(str(entry.get("name", id.capitalize())), 20, INK, true)
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		heading.add_child(name_label)
-		var badge := _badge("")
-		heading.add_child(badge)
-		_refs[key + ":status"] = badge
-		body.add_child(_wrap(str(entry.get("description", "")), 12, MUTED))
-		var stats := _hbox(5)
-		body.add_child(stats)
-		var stat_icons: Dictionary = {"farmer": "yield", "gambler": "luck", "investor": "stock", "scientist": "mutation", "industrialist": "coin"}
-		stats.add_child(_icon({"kind": "metric", "id": stat_icons.get(id, "yield")}, 22))
-		var bonus := _wrap("", 13, accent.darkened(0.12), true)
-		stats.add_child(bonus)
-		_refs[key + ":detail"] = bonus
-		var button := _button("Select", key, true)
-		button.custom_minimum_size.x = 132
-		button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(button)
-		_refs[key] = button
+	BuildPages.create(self)
 
 func _refresh_builds() -> void:
-	var system: Object = _build_system()
-	if system == null or not system.has_method("activity_info"):
-		_refs.build_activity_title.text = "Choose your next way to farm."
-		_refs.build_activity_detail.text = "Find a Build Crate at the Roll House, then open it from Inventory."
-		_set_button("build:ability", "No active ability", true)
-		_refs["build:sell_processed"].hide()
-		_refs.build_progress.hide()
-		return
-	var activity: Dictionary = system.call("activity_info")
-	_refs.build_activity_title.text = str(activity.get("title", "Your build"))
-	var cooldown: float = float(activity.get("cooldown", 0))
-	_refs.build_activity_detail.text = str(activity.get("description", "")) + (" Ready in %.1fs." % cooldown if cooldown > 0 else "")
-	_set_button("build:ability", str(activity.get("action_label", "Use ability")), not bool(activity.get("can_use", false)))
-	var value: float = float(activity.get("processed_value", 0))
-	_refs["build:sell_processed"].visible = value > 0
-	_set_button("build:sell_processed", "Sell processed · " + _money(value), value <= 0)
-	_refs.build_progress.visible = bool(activity.get("processing", false))
-	_refs.build_progress.value = clampf(float(activity.get("progress", 0)), 0, 1)
-	for entry: Dictionary in _build_entries():
-		var id: String = str(entry.get("id", "farmer"))
-		var key: String = "build:select:" + id
-		if not _refs.has(key):
-			continue
-		var unlocked: bool = bool(entry.get("unlocked", false))
-		var selected: bool = bool(entry.get("active", false))
-		var bonuses: String = str(entry.get("bonuses", ""))
-		if not unlocked:
-			var specialties: Dictionary = {"farmer": "Harvest yield · Faster growth", "gambler": "Reward quality · Mutation chance", "investor": "Seed discounts · Positive market events", "scientist": "Mutation chance · Crop research", "industrialist": "Crop processing · Larger batches"}
-			bonuses = str(specialties.get(id, bonuses))
-		_refs[key + ":detail"].text = bonuses if not bonuses.is_empty() else str(entry.get("description", ""))
-		_refs[key + ":detail"].tooltip_text = str(entry.get("description", ""))
-		Cozy.badge(_refs[key + ":status"], "Active" if selected else ("Owned" if unlocked else "Locked"), "active" if selected else ("neutral" if unlocked else "locked"))
-		_refs[key + ":card"].add_theme_stylebox_override("panel", Cozy.surface("build", Cozy.BUILD_COLORS.get(id, GREEN), selected))
-		_set_button(key, "Active · Lv.%d" % int(entry.get("level", 1)) if selected else ("Equip · Lv.%d" % int(entry.get("level", 1)) if unlocked else "Find in crate"), selected or not unlocked)
+	BuildPages.refresh(self)
 
 func _build_tracked_prices() -> void:
 	_heading("Tracked Seed Prices", "Pin your favourite seeds to the Seeds tray [2]. Choices save automatically.")

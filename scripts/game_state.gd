@@ -269,12 +269,19 @@ func _start_frost() -> void:
 	for index in range(80):
 		island_plots["3"][index]["frozen"] = false
 		remaining.append(index)
+	frost_target_count = 12
 	for _index in range(frost_target_count):
 		var pick: int = rng.randi_range(0, remaining.size() - 1)
-		island_plots["3"][remaining[pick]]["frozen"] = true
+		if str(island_plots["3"][remaining[pick]].get("variety", "")) == "frost": frost_cleared += 1
+		else: island_plots["3"][remaining[pick]]["frozen"] = true
 		remaining.remove_at(pick)
-	news = "FROSTBREAK! Hoe all 12 icy beds in 20 seconds. Clear the field to earn an Icecap x8 auction and a seed!"
-	if disaster_market_active(): news = "FROSTBREAK! Hoe all 12 icy beds in 20 seconds to earn an Icecap seed. Disaster prices still apply."
+	if frost_cleared >= frost_target_count:
+		_end_frost(true)
+		return
+	var icy_beds: int = frost_target_count - frost_cleared
+	news = "FROSTBREAK! Hoe %d icy beds in 20 seconds. Clear the field to earn an Icecap x8 auction and a seed!" % icy_beds
+	if disaster_market_active(): news = "FROSTBREAK! Hoe %d icy beds in 20 seconds to earn an Icecap seed. Disaster prices still apply." % icy_beds
+	if frost_cleared > 0: news += " Frostgold sheltered %d beds." % frost_cleared
 	notified.emit(news)
 	changed.emit()
 
@@ -1335,6 +1342,8 @@ func _pest_damage_tick(plot: Dictionary) -> void:
 
 
 func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
+	plot.erase("cultivated")
+	plot.erase("variety")
 	plot["stage"] = 0
 	plot["watered"] = false
 	plot["elapsed"] = 0.0
@@ -1456,6 +1465,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			plot["elapsed"] = 0.0
 			plot["watered"] = false
 			plot["pending"] = 0
+			if is_instance_valid(build_system): build_system.professions.planted(plot)
 			farm_help.observe_plot(self, target, "plant")
 			affected += 1
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
@@ -1523,6 +1533,8 @@ func _harvest_plot(plot: Dictionary) -> int:
 		var yield_bonus: float = (1.0 + permanent_yield + item_yield_bonus() + _build_bonus("yield_bonus", 0.0) + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
 		# Keep fractional potatoes between harvests so a modest yield item really
 		# earns more crops instead of being floored away on every small plant.
+		if bool(plot.get("cultivated", false)): yield_bonus *= 3.0
+		if str(plot.get("variety", "")) == "hearty": yield_bonus *= 1.5
 		var precise_yield: float = float(CROPS[id]["yield"]) * yield_bonus * combo_multiplier + float(harvest_fraction[id])
 		var whole_yield: float = floor(precise_yield + 0.000000001)
 		plot["yield_total"] = maxi(1, int(whole_yield))
@@ -1540,6 +1552,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 		return 0
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	storage[id] = int(storage[id]) + quantity
+	if is_instance_valid(build_system): build_system.professions.harvested(id, first_cut, quantity)
 	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + int(ceil(quantity * (1.0 + item_mastery_bonus()))))
 	plot["pending"] = int(plot["pending"]) - quantity
 	if current_island == 3:
@@ -3284,6 +3297,8 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 		if not raw[index] is Dictionary:
 			return false
 		var plot: Dictionary = raw[index]
+		if plot.has("cultivated") and not plot.cultivated is bool: return false
+		if plot.has("variety") and plot.variety not in ["hearty", "dry", "frost"]: return false
 		for key in ["unlocked", "watered", "tilled"]:
 			if not plot.has(key) or not plot[key] is bool:
 				return false
