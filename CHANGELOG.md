@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.0.2
+
+### Touch controls and fullscreen
+
+- Added a movement stick with sprint at the outer edge, a nearby action button, quick selling and compact tool/seed drawers. All activities, builds, inventory, upgrades, quests, travel, saves and settings remain available through Menu.
+- Added two-finger pinch zoom on the farm. Pinches never plant, harvest or walk by accident. Small +/− zoom buttons live inside Tools.
+- Added large touch targets, scrolling menus, portrait/landscape layouts and scrollable equipment cards for phones and iPads. Controls clear while menus, climate introductions and the rocket film are open; losing focus clears held movement.
+- Added browser/native fullscreen buttons and F11. Unsupported mobile browsers explain the Home Screen option. Browser layout follows rotation, fullscreen changes and screen safe areas.
+
+### Five farming professions
+
+- Farmer cultivates a planted crop with compost, then waters and harvests a giant potato with 3× yield. Targeting persists until used or cancelled.
+- Industrialist loads production batches, matches processing methods and sells F–SSS graded harvests.
+- Scientist crosses harvested crops into a permanent seed bank; Investor reserves a buyer's price and delivers shipments; Gambler stakes harvested crops with explicit costs and possible losses.
+- Illustrated profession pages show readiness, costs, equipment and ongoing jobs. Optional drawers explain bonuses without crowding the main action.
+
+### Climate, water and taxes
+
+- Island 1 introduces the visible rain → tank → watering can → crop loop. Island 2 introduces connected sprinklers and optional safe water practice.
+- Drought, flood and storms start on Island 2. Central warnings, animated clouds, rain, wind, original weather audio and bounded camera shake make the danger visible.
+- Operate tanks, sprinklers and drainage; rescue stressed beds and fund reserves, reinforced barns and windbreaks. Disasters can damage crops and stored harvests, raise seed costs and crash sale prices during recovery.
+- A tax collector visits after every third major stock and its full selling window. Forecasts show weather recovery pressure, the next bill and the bankruptcy boundary. Debt remains playable until that boundary is crossed.
+
+### Quality of life
+
+- A shorter first-harvest tutorial ends at the first sale; NPC tours and later farming help are optional.
+- Islands have 50% more land area, connected ferry paths, continuous animated seas and icy Frosthollow water. Shift and touch sprint speed up travel; carried tools move more smoothly.
+- Crop growth spans 10–60 seconds. Added clearer luck totals, an illustrated PotatoDex, debug island unlocks and explicit debt recovery tools.
+- Simpler menus, clearer shop signs, quiet farming feedback and stable profession buttons improve readability. Fixed the tutorial guide overlapping the wider Roll House panel.
+- Retains existing farm saves and the independent 3D graphics settings introduced in v1.0.1.75.
+
 ## 1.0.1.75
 
 - Decoupled the 3D farm from the Retina-resolution UI. Smooth no longer blurs menu text or icons.

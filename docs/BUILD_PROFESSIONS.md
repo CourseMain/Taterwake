@@ -1,6 +1,6 @@
 # Build activities, visiting taxes and open sea
 
-This is a local, unpublished source update. Open Builds with **C**, or click its equipment in the world. Each of the five detail pages connects the required resources, a short illustrated explanation, the action and its result. Buttons use the simulation's readiness rules and explain missing crops, compost, equipment or waiting time. Exact passive bonuses remain expandable. Switching builds is free; discoveries, growing giant potatoes, loaded jobs and pending payouts stay with the farm.
+Released in v1.0.2. Open Builds with **C**, or click its equipment in the world. Each of the five detail pages connects the required resources, a short illustrated explanation, the action and its result. Buttons use the simulation's readiness rules and explain missing crops, compost, equipment or waiting time. Exact passive bonuses remain expandable. Switching builds is free; discoveries, growing giant potatoes, loaded jobs and pending payouts stay with the farm.
 
 ## Try it without touching your farm
 

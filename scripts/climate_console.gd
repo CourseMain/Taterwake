@@ -16,6 +16,7 @@ var primary_action: String = ""
 var secondary_action: String = ""
 var targeting: String = ""
 var tool: String = "hoe"
+var compact_layout: bool = false
 var _show_secondary: bool = false
 var _layout_signature: String = ""
 
@@ -130,7 +131,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	meter.hide()
 	var s: Dictionary = info.supply
 	var p: Dictionary = info.projects[str(island)]
-	story.visible = not equipment.is_empty() or teaching
+	story.visible = not compact_layout and (not equipment.is_empty() or teaching)
 	if not equipment.is_empty():
 		story.concept = equipment
 		more.hide()

@@ -84,6 +84,7 @@ var equipment_island: int = 0
 var equipment_prompt_time: float = 0.0
 var climate_shake: float = 0.0
 var farm_viewport: SubViewport
+var touch_controls
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -121,6 +122,9 @@ func _ready() -> void:
 	hud.name = "GameHUD"
 	add_child(hud)
 	hud.build_ui()
+	touch_controls = preload("res://scripts/touch_controls.gd").new()
+	touch_controls.game = self
+	add_child(touch_controls)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
 	var cinema_layer := CanvasLayer.new()
 	cinema_layer.name = "StockRocketCinema"
@@ -225,10 +229,12 @@ func _process(delta: float) -> void:
 			infested += 1
 	pest_alert.update(delta, infested if not _tutorial_active() else 0)
 	var moving: bool = false
-	sprint_blend = lerpf(sprint_blend, 1.0 if Input.is_action_pressed("sprint") and not hud.is_panel_open() else 0.0, 1.0 - exp(-delta * 10.0))
+	sprint_blend = lerpf(sprint_blend, 1.0 if (Input.is_action_pressed("sprint") or touch_controls.sprinting) and not hud.is_panel_open() else 0.0, 1.0 - exp(-delta * 10.0))
 	var pace: float = lerpf(1.0, SPRINT_MULTIPLIER, sprint_blend)
 	if not hud.is_panel_open():
 		var input_vector: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+		if touch_controls.movement.length() > 0.05:
+			input_vector = touch_controls.movement
 		if input_vector.length() > 0.05:
 			if prize_target and walking:
 				hud.set_plot_action("Click a glowing crop · 1 compost · grows a giant potato with 3× yield.")
@@ -434,6 +440,11 @@ func _debug_action(parts: PackedStringArray) -> void:
 				state.save_game()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
+		touch_controls.toggle_fullscreen()
+		return
+	if touch_controls.enabled and event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
 	if state.climate.data.intro_pending: return
 	if hud == null:
 		return
@@ -483,25 +494,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			var hit: Dictionary = world.pick(farm_viewport.to_farm_position(event.position))
-			if hit.has("plot_index"):
-				queue_plot(int(hit.plot_index))
-			elif hit.has("station"):
-				if str(hit.station).begins_with("equipment:"):
-					_select_equipment(str(hit.station).trim_prefix("equipment:"))
-					if str(hit.station) == "equipment:tank": _queue_refill()
-				elif str(hit.station).begins_with("profession:"):
-					hud._build_selection = str(hit.station).get_slice(":", 1)
-					_on_action("builds")
-				elif str(hit.station) == "island":
-					queue_ferry()
-				else:
-					_on_action(str(hit.station))
-			elif hit.has("ground"):
-				_cancel_prize_target()
-				_close_equipment()
-				_cancel_walk()
-				_start_walk(hit.ground)
+			_tap_world(event.position)
+	if touch_controls.enabled:
+		touch_controls.world_input(event)
+
+func _tap_world(point: Vector2) -> void:
+	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(point))
+	if hit.has("plot_index"):
+		queue_plot(int(hit.plot_index))
+	elif hit.has("station"):
+		if str(hit.station).begins_with("equipment:"):
+			_select_equipment(str(hit.station).trim_prefix("equipment:"))
+			if str(hit.station) == "equipment:tank": _queue_refill()
+		elif str(hit.station).begins_with("profession:"):
+			hud._build_selection = str(hit.station).get_slice(":", 1)
+			_on_action("builds")
+		elif str(hit.station) == "island":
+			queue_ferry()
+		else:
+			_on_action(str(hit.station))
+	elif hit.has("ground"):
+		_cancel_prize_target()
+		_close_equipment()
+		_cancel_walk()
+		_start_walk(hit.ground)
 
 func _camera_zoom_max() -> float:
 	return (74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 56.0)) * world.LAND_SPACING
@@ -1442,6 +1458,7 @@ func _update_equipment_card(delta: float = 0.0) -> void:
 		empty_can_prompted = true
 		_select_equipment("tank", true)
 		hud.show_farm_hint("Can empty · Click the glowing tank to refill.")
+	if touch_controls.enabled: return # Touch equipment lives in a scrollable drawer.
 	if not card.equipment.is_empty():
 		var point: Vector3 = world._climate_field.loop.equipment_position(card.equipment) + Vector3(0, 2.5, 0)
 		var screen: Vector2 = world.camera.unproject_position(point) * get_viewport().get_visible_rect().size / Vector2(farm_viewport.size)

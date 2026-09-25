@@ -129,6 +129,10 @@ static func create(h) -> void:
 	h._refs["build_details:toggle"].pressed.connect(func(): _fit_height(h, id))
 
 static func _fit_height(h, id: String) -> void:
+	var touch = h.get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled:
+		touch.fit_modal()
+		return
 	# Measure once after layout, and when the optional drawer changes. Live
 	# resource refreshes must not move a button under the pointer.
 	await h.get_tree().process_frame

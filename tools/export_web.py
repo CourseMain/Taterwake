@@ -193,6 +193,10 @@ CONTROLS
 Click to walk and use the selected tool. Keys 1–5 select farm tools.
 I opens inventory, B market, C builds, R rolling, and Esc the menu.
 The three-line menu contains the remaining panels and activities.
+Touch: drag the stick to move (outer edge sprints), tap the farm to interact,
+and pinch with two fingers to zoom. Tools holds tools, seeds and zoom +/-.
+Swipe menus to scroll. Full screen or F11 expands the game; unsupported
+mobile browsers explain the Add to Home Screen option.
 
 SAVES
 Browser saves belong to this browser and address. Use the same localhost

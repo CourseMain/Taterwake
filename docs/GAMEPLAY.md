@@ -198,7 +198,7 @@ Every **30 minutes spent on Island 3**, a rocket packed with potato passengers b
 Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +35,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.
 
 
-### Climate action and taxes (local source update)
+### Climate action and taxes (v1.0.2)
 
 Climate disasters begin on **Island 2**. Try or skip the optional watering practice, then open **☰ → Climate action** to fund rainwater reserves, drainage, a reinforced barn or living windbreaks. Purchases appear on that island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods and severe storms damage crops and stored potatoes, raise seed costs, and crash sale prices by up to **95%**. Prices stay positive. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** as the crash eases. On the affected island, positive stocks, natural spikes, offers and exports cannot override the crash. Existing booms end; the Rocket countdown pauses until recovery ends. Crashes do not advance the three-stock tax counter, but an already-due bill is still collected. Protection reduces crop losses and the recovery bill.
 

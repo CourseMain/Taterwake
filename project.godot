@@ -31,8 +31,8 @@ window/size/viewport_height=800
 window/size/window_width_override=1280
 window/size/window_height_override=800
 window/stretch/mode="canvas_items"
-window/size/min_width=960
-window/size/min_height=600
+window/size/min_width=320
+window/size/min_height=320
 
 [rendering]
 

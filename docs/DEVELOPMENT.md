@@ -19,7 +19,7 @@ Saves, private configuration, local recordings and generated builds do not belon
 
 ## Checks
 
-### Climate economy and taxes (local source update)
+### Climate economy and taxes (v1.0.2)
 
 `scripts/blind_rules.gd` owns progression baselines, the 8% major-stock reference, 5% base tax, 5% bankruptcy allowance, three major stocks per collection, Tax Boom probability and the +150% shared pressure ceiling. Tax targets never follow the player's wealth or build. There are no separate Small/Big Blind objectives or target-miss deaths; the retained `blind_cycle` names only maintain save compatibility.
 
@@ -113,7 +113,7 @@ Patrick Hand, Fredoka, Oswald, Nunito Sans and Noto Sans Symbols are distributed
 
 ### v1.0.2 presentation preview
 
-This revision is local and unpublished. Normal UI headings use Fredoka; disaster announcements and the collapse page use Oswald, with Nunito Sans for body copy. Both new fonts come from the Google Fonts repository under the bundled SIL Open Font Licenses. The four climate initiatives use original code-drawn icons in a two-column grid. Tax rate tables, wealth-rank definitions and detailed run statistics are tucked behind explicit detail buttons. Main-menu tiles and descriptions are shorter. The collapse page preserves its serious educational message alongside the final balance and three loss figures.
+This presentation revision ships in v1.0.2. Normal UI headings use Fredoka; disaster announcements and the collapse page use Oswald, with Nunito Sans for body copy. Both new fonts come from the Google Fonts repository under the bundled SIL Open Font Licenses. The four climate initiatives use original code-drawn icons in a two-column grid. Tax rate tables, wealth-rank definitions and detailed run statistics are tucked behind explicit detail buttons. Main-menu tiles and descriptions are shorter. The collapse page preserves its serious educational message alongside the final balance and three loss figures.
 
 `climate_alert.gd` shows a blocking first-arrival introduction and five-second nonblocking event announcements. Intro flags and pending acknowledgments survive saves; revision-11 saves get safe defaults, and old Island-1 weather is cleared. `climate_audio.gd` uses original, locally synthesized wind and thunder WAV assets. Public Pages files in `docs/index.*` have not been replaced.
 
@@ -205,7 +205,7 @@ The climate console keeps active button visibility stable across resource/timer 
 Hold Shift for an eased 1.65× sprint on WASD/arrows or click routes. Avatar running stride responds to sprint blend. The persistent can follows the carrying hand, performs the pour itself, and interpolates to/from the tap; temporary tools use a soft pickup/stroke/put-away envelope. All animations remain code-native and use existing batched world effects. The isolated Climate Lab adds the winter scenario and movement hints. Local Web exports only; no public files or remote branches are updated.
 
 
-### Build and playability audit (local, unpublished)
+### Build and playability audit (v1.0.2)
 
 Profession pages now expose one concrete action, required ingredients, readiness and result. Illustrations retain their proportions. Farmer targeting highlights only eligible planted growing crops, persists until used/cancelled, and works through click-to-walk or E. Invalid clicks do not spend compost; tools, travel, equipment and other menus cancel the mode. Equipment cards avoid expanded tax forecasts; optional tips yield to equipment/targeting, and notifications dock clear of modal controls.
 
@@ -220,3 +220,16 @@ Final automated passes also cover the ordinary simulation, ferry access/zoom, al
 Safari verification exercised the complete Farmer compost/water/harvest flow, SSS batch loading and bankruptcy→explicit Debug recovery in the disposable export. Browser QA also caught missing text-arrow glyphs (replaced with plain wording) and an old world celebration replayed after travel (new islands now adopt the event counter quietly). Industrialist reserves its job-footer height before loading, keeping its button and bonuses drawer stable.
 
 Performance observation on the Apple M4 with the user's separate native editor preview still rendering: Arctic with 80 ripe beds, Balanced at 1920×1199, eight seconds after warmup: current build 40.8 FPS (median 24.2 ms, p95 26.5 ms); previous commit 27e015a under the same running-editor setup 39.4 FPS (median 25.0 ms, p95 28.4 ms). Current Smooth at 1600×999 measured 42.0 FPS. No 60 FPS claim is made for this concurrent-load session; the comparison does not indicate a new slowdown. Earlier 60 FPS observations above came from a different session. The local labs expose measurements for repeatable checking on the player's device.
+
+
+### Touch and fullscreen verification (v1.0.2)
+
+`TouchControls` owns finger IDs separately from keyboard actions. The stick supports simultaneous actions, an outer sprint ring and focus/resize cancellation. Farm taps commit on release; a second finger or drag cancels tapping until the gesture ends. Pinch distance changes the same bounded camera zoom used by the wheel. Tools provides a small zoom-button fallback.
+
+Touch uses at least 600 and at most 900 logical units on the short screen edge, with at least 68-unit buttons (44 CSS pixels on a 390px phone). Flexible menu rows stack when needed; scroll containers keep all activities, profession choices and equipment reachable. The browser shell owns fullscreen requests in a trusted DOM gesture and fits its canvas inside safe-area insets. Browser fullscreen and F11 work independently of game menus. The fallback explains Home Screen installation when the browser rejects or lacks fullscreen.
+
+Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It checks phone portrait/landscape, iPad portrait/landscape and laptop sizes, all menus, all five profession pages, multitouch movement and pinch cancellation. `tools/export_browser_benchmark.py --fixture mobile --label mobile --godot PATH` creates a disposable browser test build with a QA bridge; the bridge and test scene are excluded from the public export. Browser input checks use actual touch events, screenshots and enter/exit fullscreen at 390×844, 844×390, 768×1024, 1024×768 and 1366×768. These are emulated viewport checks, not claims of physical iPhone/iPad performance testing.
+
+The release check also corrected outdated fixtures: revision-3 saves must contain their historical crop growth durations, and the collapse screen now displays the concrete tax/debt calculation. The UI-polish check now follows profession detail pages instead of removed build-card references. The optional desktop tutorial's Roll House overlap was fixed by stacking the guide heading in its narrow margin.
+
+`tests/test_mobile_browser.cjs` automates the browser matrix with Playwright. Set `TATER_QA_URL` to the disposable mobile fixture URL and provide Playwright through `NODE_PATH` or a local installation. Captures and logs go to ignored `artifacts/mobile-qa/`.

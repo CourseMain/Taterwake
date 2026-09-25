@@ -153,7 +153,7 @@ var _spinner: Control
 var _rolling: bool = false
 var _frozen_coins: float = 0.0
 var _revealed_roll: Dictionary = {}
-var _crop_row: HBoxContainer
+var _crop_row: BoxContainer
 var _crop_defs: Dictionary = {}
 var _stake_kind: String = "normal"
 var _frozen_odds: Array = []
@@ -168,7 +168,7 @@ var _dex_tab: String = "mutations"
 var _inventory_signature: String = ""
 var _market_impact: Control
 var _builds_button: Button
-var _tracked_row: HBoxContainer
+var _tracked_row: BoxContainer
 var _tracked_labels: Dictionary = {}
 var _tracked_prices: Dictionary = {}
 var _price_moves: Dictionary = {}
@@ -582,7 +582,7 @@ func _build_tutorial() -> void:
 	_tutorial_card.z_index = 30
 	var contents: VBoxContainer = _vbox(10)
 	_tutorial_card.add_child(contents)
-	var top_row: HBoxContainer = _hbox(2)
+	var top_row: BoxContainer = _hbox(2)
 	contents.add_child(top_row)
 	_tutorial_progress = _label("YOUR FIRST FARM", 11, GOLD, true)
 	_tutorial_progress.add_theme_font_override("font", _compact_heading_font())
@@ -785,10 +785,19 @@ func _apply_tutorial_visibility() -> void:
 	_export_box.hide()
 	_market_impact.hide()
 	_refresh_seed_visibility()
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled:
+		_tutorial_next.visible = not _tutorial_exit_pending
+		_tutorial_exit_box.visible = _tutorial_exit_pending
+		_tutorial_card.move_to_front()
+		return
 	# Logical game size is preserved by the viewport. Measure the modal's
 	# clear margin too, keeping this guide outside every shop's controls.
 	var available_width: float = _modal_card.position.x - 44.0 if is_panel_open() else 219.0
-	var card_width: float = minf(219.0, maxf(180.0, available_width))
+	var card_width: float = minf(219.0, maxf(138.0, available_width))
+	# Roll House is wider than other shops. Stack its guide heading so the
+	# progress label and exit controls cannot force a 214px overlap.
+	(_tutorial_progress.get_parent() as BoxContainer).vertical = card_width < 210
 	_tutorial_card.position = Vector2(28.0, 108.0)
 	_tutorial_title.custom_minimum_size.x = card_width - 30.0
 	_tutorial_body.custom_minimum_size.x = card_width - 30.0
@@ -857,8 +866,8 @@ func _vbox(gap: int = 8) -> VBoxContainer:
 	box.add_theme_constant_override("separation", gap)
 	return box
 
-func _hbox(gap: int = 10) -> HBoxContainer:
-	var box: HBoxContainer = HBoxContainer.new()
+func _hbox(gap: int = 10) -> BoxContainer:
+	var box: BoxContainer = BoxContainer.new()
 	box.add_theme_constant_override("separation", gap)
 	return box
 
@@ -891,7 +900,7 @@ func _meter(accent: Color = GREEN, height: float = 8) -> ProgressBar:
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return bar
 
-func _metric(icon_id: String, text: String, color: Color = INK) -> HBoxContainer:
+func _metric(icon_id: String, text: String, color: Color = INK) -> BoxContainer:
 	var row := _hbox(5)
 	row.add_child(_icon({"kind": "metric", "id": icon_id}, 22))
 	row.add_child(_label(text, 13, color, true))
@@ -1074,7 +1083,7 @@ func _build_top() -> void:
 	var brand: VBoxContainer = _vbox(0)
 	_place(brand, Rect2(28, 20, 350, 70))
 	brand.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var wordmark: HBoxContainer = _hbox(8)
+	var wordmark: BoxContainer = _hbox(8)
 	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	brand.add_child(wordmark)
 	wordmark.add_child(_label("TATER", 32, INK, true))
@@ -1085,7 +1094,7 @@ func _build_top() -> void:
 	_stats_card = stats
 	_place(stats, Rect2(387, 21, 524, 72))
 	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var row: HBoxContainer = _hbox(20)
+	var row: BoxContainer = _hbox(20)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stats.add_child(row)
 	_top["coins"] = _stat(row, "COINS", "$240", GOLD)
@@ -1141,7 +1150,7 @@ func _build_top() -> void:
 	tracked.offset_top = -245
 	tracked.offset_bottom = -195
 	tracked.hide()
-	var tracked_contents: HBoxContainer = _hbox(10)
+	var tracked_contents: BoxContainer = _hbox(10)
 	tracked.add_child(tracked_contents)
 	var chooser: Button = _button("Track seeds ▾", "tracked_prices")
 	chooser.custom_minimum_size = Vector2(134, 38)
@@ -1151,7 +1160,7 @@ func _build_top() -> void:
 	_tracked_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tracked_contents.add_child(_tracked_row)
 
-func _stat(parent: HBoxContainer, title: String, value: String, color: Color) -> Label:
+func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> Label:
 	var box: VBoxContainer = _vbox(0)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1195,7 +1204,7 @@ func _build_footer() -> void:
 	hotbar.offset_right = 254
 	hotbar.offset_top = -114
 	hotbar.offset_bottom = -20
-	var slots: HBoxContainer = _hbox(6)
+	var slots: BoxContainer = _hbox(6)
 	hotbar.add_child(slots)
 	var tools: Array[String] = ["hoe", "plant", "water", "harvest", "pest"]
 	var tool_names: Array[String] = ["Hoe", "Seeds", "Water", "Harvest", "Sprayer"]
@@ -1383,7 +1392,7 @@ func _build_modal() -> void:
 	panel.offset_bottom = 317
 	var column: VBoxContainer = _vbox(14)
 	panel.add_child(column)
-	var header: HBoxContainer = _hbox(10)
+	var header: BoxContainer = _hbox(10)
 	column.add_child(header)
 	var titles: VBoxContainer = _vbox(3)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1662,6 +1671,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		child.queue_free()
 	_modal_fixed.hide()
 	for child: Node in _body.get_children():
+		if child == _modal_fixed: continue
 		_body.remove_child(child)
 		child.queue_free()
 	var scroll: ScrollContainer = _body.get_parent() as ScrollContainer
@@ -1700,6 +1710,8 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_update_blind_ui()
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
+	if is_instance_valid(get_parent().get("touch_controls")):
+		get_parent().touch_controls.fit_modal()
 
 func _heading(title: String, subtitle: String) -> void:
 	_modal_title.text = title
@@ -1738,7 +1750,7 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 	var target: VBoxContainer = _body if parent == null else parent
 	target.add_child(card)
 	_refs[action + ":card"] = card
-	var row: HBoxContainer = _hbox(12)
+	var row: BoxContainer = _hbox(12)
 	card.add_child(row)
 	var offer_icons: Dictionary = {"activity:duck": {"kind": "activity", "id": "duck"}, "activity:duck:speed": {"kind": "metric", "id": "speed"}, "upgrade:hoe": {"kind": "tool", "id": "hoe"}, "upgrade:water": {"kind": "tool", "id": "water"}, "upgrade:harvest": {"kind": "tool", "id": "harvest"}, "upgrade:expansion": {"kind": "metric", "id": "beds"}, "upgrade:barn": {"kind": "build", "id": "farmer"}}
 	if offer_icons.has(action): row.add_child(_icon(offer_icons[action], 48))
@@ -1772,7 +1784,7 @@ func _build_market() -> void:
 		_body.add_child(card)
 		var column: VBoxContainer = _vbox(4 if _panel_crops.size() == 5 else 6)
 		card.add_child(column)
-		var header: HBoxContainer = _hbox(12)
+		var header: BoxContainer = _hbox(12)
 		column.add_child(header)
 		var name_label: Label = _label(str(_crop_name(crop)).to_upper(), 14, _crop_color(crop), true)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1785,7 +1797,7 @@ func _build_market() -> void:
 		change.visible = not first_seed
 		_refs[crop + ":price"] = sell
 		_refs[crop + ":change"] = change
-		var row: HBoxContainer = _hbox(10)
+		var row: BoxContainer = _hbox(10)
 		column.add_child(row)
 		var graph: Control = Sparkline.new()
 		graph.custom_minimum_size = Vector2(118, 36)
@@ -1814,7 +1826,7 @@ func _build_barn() -> void:
 	_info("inventory_total", "")
 	_panel_crops = _known_crops()
 	_inventory_sections.clear()
-	var tabs: HBoxContainer = _hbox(8)
+	var tabs: BoxContainer = _hbox(8)
 	_body.add_child(tabs)
 	for section: String in ["crops", "gear", "items", "builds"]:
 		var names: Dictionary = {"crops": "Crops & seeds", "gear": "Gear", "items": "Items & mutations", "builds": "Builds & crates"}
@@ -1843,7 +1855,7 @@ func _build_barn() -> void:
 		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build", "build_crate"] else "items")
 		var card: PanelContainer = _card(PAPER, 12)
 		_inventory_sections[section].add_child(card)
-		var row: HBoxContainer = _hbox(12)
+		var row: BoxContainer = _hbox(12)
 		card.add_child(row)
 		row.add_child(_icon(entry))
 		var description: VBoxContainer = _vbox(4)
@@ -1928,7 +1940,7 @@ func _build_tools() -> void:
 		var names: Dictionary = {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe"}
 		_offer(names[tool], "", "Upgrade", "upgrade:" + tool, true)
 	_offer("More room to grow", "Unlock all 24 beds.", "$1.8K", "upgrade:expansion")
-	var row: HBoxContainer = _hbox(10)
+	var row: BoxContainer = _hbox(10)
 	_body.add_child(row)
 	var dex_button: Button = _button("PotatoDex  [P]", "dex")
 	dex_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2330,6 +2342,7 @@ func _build_help() -> void:
 	var intro: PanelContainer = _card(INK, 18)
 	_body.add_child(intro)
 	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))
+	_help_step("Touch screens", "Drag the stick to move; push to its edge to sprint. Tap beds, buildings and equipment to interact. Pinch the farm with two fingers to zoom. Tools contains tools, seeds, zoom +/− and Cancel task. Swipe menus to scroll. Use works beside beds, the tank and ferry; Menu opens every activity.")
 	_help_step("01  Move & farm", "WASD / arrows to walk · Hold Shift to sprint\nTwo-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
 	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 25s · Giant 40s · Radioactive 50s · Sunburst 55s · Icecap 60s")
 	_help_step("03  Buy low. Sell high.", "B: Market · I: Inventory · F: Sell held\nSurges last 10 seconds. Save crops for the right price.")
@@ -2377,7 +2390,7 @@ func _build_pause() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size.y = 61
 		menu.add_child(button)
-		var row: HBoxContainer = _hbox(6)
+		var row: BoxContainer = _hbox(6)
 		button.add_child(row)
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -2395,7 +2408,7 @@ func _build_pause() -> void:
 	_body.add_child(settings)
 	_refs.menu_settings = settings
 	settings.hide()
-	var utility: HBoxContainer = _hbox(8)
+	var utility: BoxContainer = _hbox(8)
 	settings.add_child(utility)
 	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["How to play", "help"]]:
 		var button: Button = _button(entry[0], entry[1])
@@ -3239,7 +3252,7 @@ func _build_activities() -> void:
 		return
 	var data: Dictionary = _activity_info()
 	_heading(str(data.get("title", "Island activities")), str(data.get("description", "A different way to work your farm on each island.")))
-	var hero: HBoxContainer = _hbox(15)
+	var hero: BoxContainer = _hbox(15)
 	_body.add_child(hero)
 	hero.add_child(_icon({"kind": "activity", "id": "contract" if _island_id() == 2 else "furnace"}, 64))
 	var description: VBoxContainer = _vbox(5)
@@ -3253,7 +3266,7 @@ func _build_activities() -> void:
 	_refs["activity_detail"] = detail
 	match _island_id():
 		2:
-			var crop_row: HBoxContainer = _hbox(12)
+			var crop_row: BoxContainer = _hbox(12)
 			_body.add_child(crop_row)
 			crop_row.add_child(_label("Crop to supply", 14, INK, true))
 			var crop_choice: OptionButton = OptionButton.new()
@@ -3269,7 +3282,7 @@ func _build_activities() -> void:
 			crop_choice.item_selected.connect(func(index: int) -> void: _act("crop:" + str(crop_choice.get_item_metadata(index))))
 			crop_row.add_child(crop_choice)
 			_refs["contract_crop_choice"] = crop_choice
-			var choices: HBoxContainer = _hbox(12)
+			var choices: BoxContainer = _hbox(12)
 			_body.add_child(choices)
 			_refs["contract_choices"] = choices
 			for kind: String in ["bulk", "mutation"]:
@@ -3309,7 +3322,7 @@ func _build_duck_patrol() -> void:
 	_heading("Duck patrol", "More ducks. Faster patrols. Fewer pests.")
 	var hero_card := _surface("island", GREEN, true)
 	_body.add_child(hero_card)
-	var hero: HBoxContainer = _hbox(15)
+	var hero: BoxContainer = _hbox(15)
 	hero_card.add_child(hero)
 	hero.add_child(_icon({"kind": "activity", "id": "duck"}, 92))
 	var description: VBoxContainer = _vbox(5)
@@ -3396,7 +3409,7 @@ func _refresh_activities() -> void:
 func _build_equipment_header(parent: VBoxContainer) -> void:
 	var card: PanelContainer = _surface("build", GREEN, true)
 	parent.add_child(card)
-	var layout: HBoxContainer = _hbox(14)
+	var layout: BoxContainer = _hbox(14)
 	card.add_child(layout)
 	var portrait_column: VBoxContainer = _vbox(4)
 	portrait_column.custom_minimum_size.x = 228
@@ -3430,7 +3443,7 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 		button.custom_minimum_size = Vector2(150, 78)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		slots.add_child(button)
-		var contents: HBoxContainer = _hbox(5)
+		var contents: BoxContainer = _hbox(5)
 		contents.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		button.add_child(contents)
 		contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -3813,7 +3826,7 @@ func _refresh_trophies() -> void:
 		card.set_meta("trophy", trophy.duplicate(true))
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(card)
-		var row: HBoxContainer = _hbox(8)
+		var row: BoxContainer = _hbox(8)
 		card.add_child(row)
 		var item_id: String = str(trophy.get("item_id", ""))
 		var title: String = str(trophy.get("title", "Rare drop"))

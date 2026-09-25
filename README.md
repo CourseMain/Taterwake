@@ -2,19 +2,23 @@
 
 **[Play Taterland in your browser — no download needed](https://coursemain.github.io/Taterwake/)**
 
-Open the link on a computer with a keyboard and mouse or trackpad. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
+Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.1.75:** Sharper browser text and menus, fewer farm draw calls, and independent 3D quality. Open **☰ → Graphics**: choose **Crisp** for the sharpest farm, **Balanced** for everyday play, or **Smooth** for lighter rendering. All three keep sharp menus and the full rocket show.
+**v1.0.2:** Touch movement, pinch zoom, accessible menus and a **Full screen** button join five expanded professions, playable climate disasters, connected water equipment and a simpler first harvest. See [all changes](CHANGELOG.md#102).
+
+On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Pinch the farm with two fingers to zoom. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
+
+Choose **Full screen** to enter or leave browser fullscreen, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
 
 If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
 
-The local preview teaches one harvest and ends at your first sale. Then farm freely, with optional help for your first pests, a practice stock boom, taxes and usable upgrades. **H → Optional Valley tour** keeps meeting the NPCs optional.
+The opening tutorial teaches one harvest and ends at your first sale. Then farm freely, with optional help for your first pests, a practice stock boom, taxes and usable upgrades. **H → Optional Valley tour** keeps meeting the NPCs optional.
 
 Small potatoes. Big possibilities.
 
-**New local build preview:** five illustrated profession pages offer giant potatoes, F–SSS production batches, a permanent seed bank, reserved-price shipments and explicit harvest stakes. Farmer now shows the complete planted crop → 1 compost → normal watering and harvest flow, with persistent targeting and a cancel button. Every build explains its costs and readiness; bonuses stay in an optional drawer. A tax collector visits the farm, and animated sea ribbons extend across the full view, with icy water around Frosthollow. Open **Play Builds Lab.command** to try every build, tax debt and Debug recovery without touching your save. See [testing instructions and design notes](docs/BUILD_PROFESSIONS.md). These changes are local and unpublished.
+Five illustrated profession pages offer giant potatoes, F–SSS production batches, a permanent seed bank, reserved-price shipments and explicit harvest stakes. Each explains its cost and readiness, with optional bonus details. The Farmer guides planted crop → compost → water → giant harvest. See [profession details](docs/BUILD_PROFESSIONS.md).
 
-**v1.0.2 local preview — not published:** Climate disasters begin on **Island 2**, with central warnings, storm clouds, rain, wind and camera shake. New fonts and simpler menus keep the important choices clear. Start with a visible **rain → tank → can → crop** loop on Island 1. Island 2 adds connected sprinklers before its first dry spell; click equipment for its short illustrated action card. Islands now have 50% more land area, with **Shift-to-sprint** and smoother carried tools. Open **Play Climate Lab.command** for isolated scenarios that never load or save your real farm. See the [water-loop guide](docs/CLIMATE_WATER_LOOP.md). Taxes arrive after every third major stock, with a preview of recovery costs. Debt is allowed; crossing bankruptcy ends the run. The local QoL update also adds 10–60s crop growth, explicit luck totals, debug island unlocks and an illustrated PotatoDex. This update is not yet published at the browser link above.
+Climate disasters begin on **Island 2**, with warnings, rain, wind, storm clouds and camera shake. Learn the visible **rain → tank → can → crop** loop on Island 1, then connect sprinklers, open drainage and protect harvests on later islands. A visiting tax collector arrives after every third major stock; the forecast shows bills and recovery costs. Debt is playable until the bankruptcy limit. See the [water-loop guide](docs/CLIMATE_WATER_LOOP.md).
 
 A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.
 
@@ -35,7 +39,7 @@ You can also run `python3 serve.py --open` from the extracted folder. Open the p
 
 Browser saves belong to your browser and the address you use. Return through the same localhost port to continue your farm. Browser saves are separate from desktop saves.
 
-The complete game view scales to fit the window while keeping its proportions. Depending on your screen shape, borders may appear around the game. A keyboard and mouse or trackpad are required.
+Touch screens get a compact interface with large controls and scrolling menus. Desktop keeps keyboard, mouse and trackpad controls. Both support map zoom and fullscreen.
 
 ## Run the source
 
@@ -51,14 +55,16 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 
 | Control | Action |
 | --- | --- |
-| WASD / arrow keys | Move |
+| Touch stick / WASD / arrow keys | Move (outer stick edge sprints) |
 | Hold Shift | Sprint while moving or following a clicked destination |
 | Click a bed | Walk over and use the selected tool |
 | Click a tank | Walk over and refill the watering can |
 | Click a sprinkler / drain / trees | See connected beds and equipment actions |
 | 1 / 2 / 3 / 4 / 5 | Hoe / seeds / water / harvest / pest sprayer |
 | E / Space | Use the selected tool nearby / board the ferry |
-| Trackpad scroll / pinch / mouse wheel | Zoom the map |
+| Two-finger pinch / trackpad scroll / mouse wheel | Zoom the map |
+| Full screen button / F11 | Toggle fullscreen |
+| Touch Tools drawer | Select tools and seeds, zoom +/−, cancel a task |
 | I | Inventory and clothing |
 | B / U / R | Market / tool upgrades / Roll House |
 | F | Sell the selected crop |

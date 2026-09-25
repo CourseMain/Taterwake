@@ -190,6 +190,9 @@ func run() -> void:
 		old_state.erase(key)
 	for field in old_state.island_plots.values():
 		for plot in field:
+			# Revision 3 used the original growth durations. A current ripe Giant
+			# at 40s is not a valid ripe crop in that old 45s save format.
+			if int(plot.stage) == 3: plot.elapsed = float(farm.OLD_GROW_TIMES[plot.crop])
 			for key in ["pest_ticks", "pest_elapsed", "pest_destroyed", "yield_total", "yield_taken"]:
 				plot.erase(key)
 	old_state.island_plots["1"][0].merge({"pests": true, "pest_damage": 0.5, "ripe_age": 11.0, "pending": 6}, true)

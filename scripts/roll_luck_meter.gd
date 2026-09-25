@@ -1,4 +1,4 @@
-extends HBoxContainer
+extends BoxContainer
 ## Three presentation steps; the backend's frozen odds still choose the prize.
 const Type = preload("res://scripts/ui_type.gd")
 const COLORS: Array[Color] = [Color("52778b"), Color("66835c"), Color("977447")]
@@ -23,7 +23,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	for index: int in range(3):
 		if index > 0:
-			var operator := _label("→", 17, _body_font)
+			var operator := _label("›", 17, _body_font)
 			operator.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			add_child(operator)
 			operators.append(operator)
@@ -105,7 +105,7 @@ func _paint() -> void:
 	numbers[1].text = "+" + number(bonus) + "%"
 	numbers[2].text = "×" + number(float(values.multiplier))
 	details[0].text = "%s× stake · %s× build" % [number(stake), number(build)]
-	details[1].text = "100%% base → %s%%" % number(float(values.normal) * 100.0)
+	details[1].text = "100%% base / %s%%" % number(float(values.normal) * 100.0)
 	details[2].text = "+%s%% final bonus" % number((float(values.total) - 1.0) * 100.0)
 	var stage: int = mini(2, int(elapsed / STEP_SECONDS))
 	var explanations: Array[String] = [

@@ -1,6 +1,6 @@
-# Connected water and weather — local preview
+# Connected water and weather — v1.0.2
 
-This build is local and unpublished. Double-click **Play Climate Lab.command** in the repository to build and open a disposable browser farm. The lab never reads or saves your real farm. Its **Climate Lab · scenarios** button switches between seven fresh scenarios; selecting a scenario closes the lab controls so you can see the farm.
+Released in v1.0.2. The lab below remains an isolated developer preview. Double-click **Play Climate Lab.command** in the repository to build and open a disposable browser farm. The lab never reads or saves your real farm. Its **Climate Lab · scenarios** button switches between seven fresh scenarios; selecting a scenario closes the lab controls so you can see the farm.
 
 ## Try it
 
