@@ -19,7 +19,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 17
+const MECHANICS_REVISION: int = 18
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -892,6 +892,8 @@ func travel_to(id: int) -> String:
 	if id == current_island:
 		return _finish("You are already on %s." % island_name().capitalize())
 	island_plots[str(current_island)] = plots
+	# The carried can travels with the farmer; island tanks stay independent.
+	climate.data.operations.islands[str(id)].can = ClimateSystem.Operations.local(self).can
 	current_island = id
 	farm_help.data.practice_remaining = 0.0
 	_promote_blind_island(id)
@@ -1117,6 +1119,11 @@ func update(delta: float) -> void:
 	if run_over or climate.data.intro_pending or not is_finite(delta) or delta <= 0.0:
 		return
 	if tutorial_active:
+		if current_island == 1 and not bool(tutorial_progress.get("tour_only", false)):
+			var supply: Dictionary = ClimateSystem.Operations.local(self)
+			var before: float = float(supply.water)
+			supply.water = minf(ClimateSystem.Operations.capacity(self, 1), before + delta * 6.0)
+			if before != float(supply.water): changed.emit()
 		_update_tutorial(delta)
 		return
 	if rocket_pending:
@@ -1452,7 +1459,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			farm_help.observe_plot(self, target, "plant")
 			affected += 1
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
-			if not ClimateSystem.Operations.spend(self, "water", 1.0 / (1.0 + float(tools.water) * 0.3)): continue
+			if not ClimateSystem.Operations.pour(self): continue
 			plot["watered"] = true
 			plot["stage"] = 2
 			farm_help.observe_plot(self, target, "water")
@@ -1465,8 +1472,10 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				harvested += count
 	farm_help.refresh_pests(self)
 	if affected == 0:
-		if ClimateSystem.Operations.scarce(self) and action in ["water", "pest"] and float(ClimateSystem.Operations.local(self)["water" if action == "water" else "spray"]) < 1.0:
-			return _finish("Reserve running low. Open Climate action for supplies and emergency water.")
+		if action == "water" and float(ClimateSystem.Operations.local(self).can) < 1.0:
+			return _finish("Can empty · Click the tank to walk over and refill.")
+		if ClimateSystem.Operations.scarce(self) and action == "pest" and float(ClimateSystem.Operations.local(self).spray) < 1.0:
+			return _finish("Sprayer empty · Supplies replenish after the disaster.")
 		var bed: Dictionary = plots[index]
 		if bool(bed.get("frozen", false)) and action != "pest":
 			return _finish("Break the ice first [1]")
@@ -1669,6 +1678,8 @@ func upgrade_tool(key: String) -> String:
 		return _reject_purchase("This upgrade costs %s. Farm and sell crops to fund it." % money(cost))
 	coins = maxf(0.0, coins - cost)
 	tools[key] = rank + 1
+	if key == "water":
+		return _complete_purchase({"kind": "tool", "id": key, "name": "Bigger watering can", "quantity": 1, "cost": cost, "level": rank + 1}, "Can now carries %d water. Click the tank to fill the extra space." % int(ClimateSystem.Operations.can_capacity(self)))
 	var names: Dictionary = {"hoe": "Hoe", "water": "Watering can", "harvest": "Harvest scythe"}
 	return _complete_purchase({"kind": "tool", "id": key, "name": names[key], "quantity": 1, "cost": cost, "level": rank + 1}, "%s upgraded to rank %d. Your manual actions now cover a bigger area!" % [key.capitalize(), rank + 1])
 
@@ -2466,11 +2477,18 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	var mechanics: int = int(data.get("mechanics_revision", 0))
 	climate.data = data.climate.duplicate(true) if mechanics >= 11 else ClimateSystem.fresh_data()
 	if not climate.data.has("operations"): climate.data.operations = ClimateSystem.Operations.fresh()
+	for supply in climate.data.operations.islands.values():
+		if mechanics < 18 or not supply.has("can"): supply.can = 16.0 + 16.0 * int(data.tools.water)
+		if not supply.has("refilled"): supply.refilled = false
+		supply.shelter = 0
 	if not climate.data.has("lesson"):
-		climate.data.lesson = ClimateSystem.Lesson.fresh("done" if climate.data.introduced else "off")
+		climate.data.lesson = ClimateSystem.Lesson.fresh("done" if climate.data.get("introduced", false) else "off")
 		climate.data.intro_pending = false
-	if mechanics < 17:
+	if mechanics < 18:
 		for supply in climate.data.operations.islands.values(): supply.mode = 0
+		for id in ["2", "3"]:
+			if int(climate.data.projects[id].get("rainwater", 0)) > 0 or (id == "2" and climate.data.get("introduced", false)):
+				climate.data.projects[id].irrigation = maxi(1, int(climate.data.projects[id].get("irrigation", 0)))
 	if mechanics == 11:
 		climate.data.introduced = false
 		climate.data.intro_pending = false
@@ -2953,6 +2971,9 @@ func _valid_save(raw: Variant) -> bool:
 		if int(data.mechanics_revision) >= 16 and (not saved_climate is Dictionary or not saved_climate.has("operations")): return false
 		if int(data.mechanics_revision) >= 17 and (not saved_climate is Dictionary or not saved_climate.has("lesson")): return false
 		if not ClimateSystem.valid(saved_climate, MAX_MONEY): return false
+		if int(data.mechanics_revision) >= 18:
+			for supply in saved_climate.operations.islands.values():
+				if not supply.has("can") or not supply.has("refilled"): return false
 	if not data.has("mechanics_revision") and (data.has("export_cycle_sold") or data.has("export_qualified_cycles")):
 		return false
 	var save_crops: Array[String] = ["russet", "golden", "giant", "radioactive"]
@@ -3065,6 +3086,9 @@ func _valid_save(raw: Variant) -> bool:
 	for key in TOOL_COSTS:
 		if not data["tools"].has(key) or not _number(data["tools"][key], 0.0, 3.0 if newest else 2.0, true):
 			return false
+	if int(data.get("mechanics_revision", 0)) >= 18:
+		for supply in data.climate.operations.islands.values():
+			if float(supply.can) > 16.0 + 16.0 * int(data.tools.water): return false
 	for key in ["market", "market_core"]:
 		if not data.has(key) or not data[key] is Dictionary or data[key].size() != save_crops.size():
 			return false

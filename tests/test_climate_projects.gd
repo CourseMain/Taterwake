@@ -33,14 +33,14 @@ func run() -> void:
 		game.hud._climate_alert.dismiss()
 		game.state.coins = 0
 		game._on_action("climate_fund:rainwater")
-		check(game.world._project_nodes.is_empty(), "unfunded projects have no scenery")
+		check(game.world._project_nodes.has("rainwater") and not game.world._project_nodes.has("drainage"), "starter tank exists before purchases")
 		game.state.coins = 1e18
 		for level: int in [1, 2]:
 			for id: String in game.state.ClimateSystem.PROJECTS:
 				game._on_action("climate_fund:" + id)
 				check(game.world._project_nodes.has(id), "purchase immediately builds " + id)
 				var project: Node3D = game.world._project_nodes[id]
-				check(project.get_meta("level") == level, "scenery follows local upgrade level")
+				check(project.get_meta("level") == int(game.state.climate.data.projects[str(island)].get(id, 0)) + (1 if id == "rainwater" else 0), "scenery follows local upgrade level")
 				var instance: int = project.get_instance_id()
 				game._on_state_changed()
 				check(game.world._project_nodes[id].get_instance_id() == instance, "ordinary refresh reuses project geometry")
@@ -58,12 +58,12 @@ func run() -> void:
 		await shot("shop-%d" % island)
 		game.hud.close_panel()
 	game.state.travel_to(1)
-	check(game.world._project_nodes.is_empty(), "projects do not leak to Island 1")
+	check(game.world._project_nodes.size() == 1 and game.world._project_nodes.has("rainwater"), "Island 1 keeps only its starter tank")
 	game.state.travel_to(2)
-	check(game.world._project_nodes.size() == 5 and game.world._project_nodes.rainwater.get_meta("level") == 2, "returning to island restores its projects")
+	check(game.world._project_nodes.size() == 5 and game.world._project_nodes.rainwater.get_meta("level") == 3, "returning to island restores its projects")
 	game.state.climate.reset()
 	game._on_state_changed()
-	check(game.world._project_nodes.is_empty(), "reset removes funded structures")
+	check(game.world._project_nodes.size() == 1 and game.world._project_nodes.rainwater.get_meta("level") == 1, "reset removes purchases and retains starter tank")
 	game.queue_free()
 	await settle()
 	print("CLIMATE PROJECTS: %d checks, %d failures" % [checks, failures])

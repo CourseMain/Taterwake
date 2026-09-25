@@ -559,7 +559,8 @@ func _apply_graphics_quality() -> void:
 
 
 func set_climate_projects(projects: Dictionary) -> void:
-	var levels: Dictionary = projects.get(str(current_island), {}) if current_island >= 2 else {}
+	var levels: Dictionary = projects.get(str(current_island), {}).duplicate()
+	levels.rainwater = int(levels.get("rainwater", 0)) + 1
 	if levels == _project_levels: return
 	for id: String in Climate.PROJECTS:
 		var level: int = int(levels.get(id, 0))
@@ -577,8 +578,8 @@ func set_climate_projects(projects: Dictionary) -> void:
 
 
 func set_climate(info: Dictionary) -> void:
-	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	set_climate_projects(info.get("projects", {}))
+	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	var strength: float = 0.0
 	if current_island >= 2 and info.island == current_island:
 		if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)

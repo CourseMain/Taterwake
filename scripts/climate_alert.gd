@@ -76,13 +76,30 @@ func text(value: String, size: int, color: Color, display: bool = false) -> Labe
 	return label
 
 func present(kind: String, info: Dictionary, farm) -> void:
+	# The field card already explains recovery; keep the player's view on the farm.
+	if kind == "recovery":
+		dismiss()
+		return
 	introduction = kind == "introduction"
-	panel.offset_top = -165 if introduction else -120
-	panel.offset_bottom = 165 if introduction else 120
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER if introduction else Control.PRESET_CENTER_TOP)
+	panel.offset_left = -350 if introduction else -220
+	panel.offset_right = 350 if introduction else 220
+	panel.offset_top = -165 if introduction else 108
+	panel.offset_bottom = 165 if introduction else 190
+	var style: StyleBoxFlat = panel.get_theme_stylebox("panel")
+	style.content_margin_top = 24 if introduction else 10
+	style.content_margin_bottom = 24 if introduction else 10
+	style.content_margin_left = 32 if introduction else 16
+	style.content_margin_right = 32 if introduction else 16
+	panel.get_child(0).add_theme_constant_override("separation", 13 if introduction else 4)
+	panel.get_child(0).get_child(0).visible = introduction
+	title.add_theme_font_size_override("font_size", 48 if introduction else 25)
+	message.add_theme_font_size_override("font_size", 21 if introduction else 14)
+	footer.visible = introduction
 	shade.visible = introduction
 	action.visible = introduction
 	mouse_filter = Control.MOUSE_FILTER_STOP if introduction else Control.MOUSE_FILTER_IGNORE
-	remaining = 0.0 if introduction else (1.5 if kind == "impact" else 5.0)
+	remaining = 0.0 if introduction else (1.5 if kind == "impact" else 2.8)
 	panel.get_child(0).get_child(0).text = "ISLAND %d / A CHANGING CLIMATE" % (farm.current_island if introduction else int(info.island))
 	if introduction:
 		title.text = "THE WEATHER IS CHANGING"
@@ -94,7 +111,7 @@ func present(kind: String, info: Dictionary, farm) -> void:
 		footer.text = "Recovery bill: about %s · Climate action in ☰" % farm.money(info.warning_tax, true)
 	elif kind == "impact":
 		title.text = {"drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
-		message.text = {"drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Screens reduce wind damage."}.get(info.event, "Protect your harvest.")
+		message.text = {"drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Trees shelter the far beds from wind."}.get(info.event, "Protect your harvest.")
 		footer.text = "Next tax: %s · Sell what you can save." % farm.money(farm.blind_info().tax, true)
 	else:
 		title.text = "THE WEATHER IS EASING"

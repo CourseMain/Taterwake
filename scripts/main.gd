@@ -75,6 +75,10 @@ var debug_time_multiplier: float = 1.0
 var graphics_quality: String = "balanced"
 var climate_audio: Node
 var climate_target: String = ""
+var pending_refill: bool = false
+var empty_can_prompted: bool = false
+var equipment_island: int = 0
+var equipment_prompt_time: float = 0.0
 var climate_shake: float = 0.0
 var farm_viewport: SubViewport
 
@@ -199,6 +203,7 @@ func _process(delta: float) -> void:
 	if state.rocket_pending:
 		_start_rocket_if_ready()
 		return
+	_update_equipment_card(delta)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
 	world.set_day_time(state.elapsed)
@@ -216,6 +221,7 @@ func _process(delta: float) -> void:
 		if input_vector.length() > 0.05:
 			walking = false
 			pending_plot = -1
+			pending_refill = false
 			pending_ferry = false
 			walk_waypoints.clear()
 			var right: Vector3 = world.camera.global_basis.x
@@ -240,6 +246,14 @@ func _process(delta: float) -> void:
 				if not walking and pending_ferry:
 					pending_ferry = false
 					_on_action("island")
+				elif not walking and pending_refill:
+					pending_refill = false
+					var before_water: float = float(state.ClimateSystem.Operations.local(state).can)
+					hud.show_farm_hint(state.ClimateSystem.Operations.refill(state))
+					if float(state.ClimateSystem.Operations.local(state).can) > before_water:
+						world._climate_field.loop.refill_time = 1.6
+						_close_equipment()
+					_save_blind_checkpoint.call_deferred()
 				elif not walking and pending_plot >= 0:
 					perform_plot(pending_plot, pending_tool)
 					pending_plot = -1
@@ -398,7 +412,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE:
-				if not climate_target.is_empty():
+				if not climate_target.is_empty() or not hud._climate_console.equipment.is_empty():
 					_climate_action("cancel")
 					return
 				if hud.is_panel_open():
@@ -436,11 +450,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			if hit.has("plot_index"):
 				queue_plot(int(hit.plot_index))
 			elif hit.has("station"):
-				if str(hit.station) == "island":
+				if str(hit.station).begins_with("equipment:"):
+					_select_equipment(str(hit.station).trim_prefix("equipment:"))
+					if str(hit.station) == "equipment:tank": _queue_refill()
+				elif str(hit.station) == "island":
 					queue_ferry()
 				else:
 					_on_action(str(hit.station))
 			elif hit.has("ground"):
+				_close_equipment()
 				_cancel_walk()
 				_start_walk(hit.ground)
 
@@ -506,6 +524,7 @@ func queue_ferry() -> void:
 	_start_walk(world.ferry_position(), true)
 
 func _cancel_walk() -> void:
+	pending_refill = false
 	walking = false
 	pending_plot = -1
 	pending_ferry = false
@@ -515,6 +534,7 @@ func _cancel_walk() -> void:
 		world.highlight_tiles(NO_TILES)
 
 func _select_tool(tool: String) -> void:
+	world.set_meta("water_tool", tool == "water")
 	climate_target = ""
 	hud._climate_console.targeting = ""
 	hud._climate_console.tool = tool
@@ -529,6 +549,8 @@ func _select_tool(tool: String) -> void:
 		_update_hover()
 
 func queue_plot(index: int) -> void:
+	_close_equipment()
+	pending_refill = false
 	if state.run_over: return
 	if not climate_target.is_empty():
 		_climate_choose(index)
@@ -587,6 +609,10 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		tutorial.update(0.0)
 
 func _interact_nearby() -> void:
+	if world.player.position.distance_to(world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2.0:
+		_select_equipment("tank")
+		_queue_refill()
+		return
 	if world.player.position.distance_to(world.ferry_position()) <= 2.0:
 		_cancel_walk()
 		_on_action("island")
@@ -606,6 +632,15 @@ func _interact_nearby() -> void:
 		hud.show_farm_hint("Click a bed, or move closer to use E")
 
 func _preview_area(index: int, tool: String) -> void:
+	if not hud._climate_console.equipment.is_empty():
+		var id: String = hud._climate_console.equipment
+		var tiles: Array[int] = []
+		if id.begins_with("sprinkler") or id == "trees":
+			var patch: int = 0 if id == "trees" else int(id.trim_prefix("sprinkler"))
+			for i in range(state.plots.size()):
+				if state.ClimateSystem.Operations.zone(i, state.current_island) == patch: tiles.append(i)
+		world.highlight_tiles(tiles)
+		return
 	if not climate_target.is_empty():
 		var target_index: int = 35 if state.ClimateSystem.Lesson.active(state) or index < 0 else index
 		var chosen: int = state.ClimateSystem.Operations.zone(target_index, state.current_island)
@@ -632,7 +667,7 @@ func _update_hover() -> void:
 		hud.set_context("Click the highlighted beds · Esc cancels")
 		return
 	if state.ClimateSystem.Lesson.active(state):
-		hud.set_context("Water the glowing practice bed [3]" if state.climate.data.lesson.stage == "water" else "Choose Water an area in the practice panel")
+		hud.set_context("Water the glowing practice bed [3]" if state.climate.data.lesson.stage == "water" else "Click the near sprinkler to water its connected beds")
 		return
 	if hover_plot >= 0:
 		var plot: Dictionary = state.plots[hover_plot]
@@ -654,6 +689,10 @@ func _update_hover() -> void:
 			var area: int = state.affected_tiles(hover_plot, action).size()
 			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
 	elif hit.has("station"):
+		if str(hit.station).begins_with("equipment:"):
+			var id: String = str(hit.station).trim_prefix("equipment:")
+			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
+			return
 		var travel_hint: String = "Ferry · Click to board"
 		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "roll": "Roll House · Click to view odds" if state.roll_available() else "Rolls closed · Travel to your newest island", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
@@ -679,7 +718,7 @@ func _on_state_changed() -> void:
 		if world.current_island != state.current_island:
 			_on_island_changed(state.current_island)
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
-		world.set_climate_projects(state.climate.data.projects)
+		world.set_climate(state.climate_info())
 		world.set_island2_unlocked(state.island2_unlocked)
 		world.set_island3_unlocked(state.island3_unlocked)
 		world.set_export_state(state.export_active, state.export_timer)
@@ -817,20 +856,42 @@ func _climate_choose(index: int) -> void:
 
 func _climate_action(action: String) -> void:
 	match action:
+		"refill": _queue_refill()
+		"close_equipment": _close_equipment()
+		"show_sprinkler": _select_equipment("sprinkler2")
+		"show_trees": _select_equipment("trees")
+		"show_drain": _select_equipment("drain")
+		"use_sprinkler":
+			var patch: int = int(hud._climate_console.equipment.trim_prefix("sprinkler"))
+			for i in range(state.plots.size()):
+				if state.ClimateSystem.Operations.zone(i, state.current_island) != patch: continue
+				var before: float = float(state.ClimateSystem.Operations.local(state).water)
+				hud.show_farm_hint(state.ClimateSystem.Operations.target(state, i, "water"))
+				if float(state.ClimateSystem.Operations.local(state).water) < before:
+					world._climate_field.loop.flow_patch = patch
+					world._climate_field.loop.flow_time = 2.5
+					_close_equipment()
+				break
 		"lesson_start":
+			_close_equipment()
 			_cancel_walk()
 			state.ClimateSystem.Lesson.start(state)
 			_select_tool("water")
 			hud.close_panel()
 		"lesson_skip":
+			_close_equipment()
 			state.ClimateSystem.Lesson.finish(state)
 			climate_target = ""
 		"target_water", "target_shelter":
 			climate_target = "water" if action == "target_water" else "shelter"
 			_cancel_walk()
 			hud.close_panel()
-		"cancel": climate_target = ""
-		_: state.ClimateSystem.Operations.operate(state, action)
+		"cancel":
+			climate_target = ""
+			_close_equipment()
+		_:
+			state.ClimateSystem.Operations.operate(state, action)
+			if action == "gates": _close_equipment()
 	hud._climate_console.targeting = climate_target
 	world.set_climate(state.climate_info())
 	_preview_area(-1, selected_tool)
@@ -842,6 +903,7 @@ func _on_action(action: String) -> void:
 		state.ClimateSystem.Lesson.finish(state)
 		climate_target = ""
 	if not action.begins_with("climate_operate:"):
+		_close_equipment()
 		climate_target = ""
 		hud._climate_console.targeting = ""
 	if state.climate.data.intro_pending and action not in ["reset", "climate_continue"]: return
@@ -1018,6 +1080,9 @@ func _on_action(action: String) -> void:
 		tutorial.observe_action(action)
 
 func _on_purchase_completed(receipt: Dictionary) -> void:
+	if receipt.get("kind") == "climate" or (receipt.get("kind") == "tool" and receipt.get("id") == "water"):
+		var id: String = {"rainwater": "tank", "irrigation": "sprinkler0", "drainage": "drain", "windbreaks": "trees", "water": "tank"}.get(str(receipt.id), "barn")
+		_select_equipment.call_deferred(id, true)
 	hud.show_purchase(receipt)
 	_play_tone(740.0, 0.12)
 	if _tutorial_active():
@@ -1221,3 +1286,50 @@ func _farm_help_action(action: String) -> void:
 	hud.update_state(state)
 	if action == "toggle" and hud.is_panel_open(): hud.show_panel("help", state)
 	if not test_mode: state.save_game()
+
+func _close_equipment() -> void:
+	equipment_prompt_time = 0.0
+	hud._climate_console.equipment = ""
+	if is_instance_valid(world._climate_field): world._climate_field.loop.selected = ""
+
+func _select_equipment(id: String, brief: bool = false) -> void:
+	equipment_prompt_time = 10.0 if brief else 0.0
+	_cancel_walk()
+	hud.close_panel()
+	hud._climate_console.equipment = id
+	equipment_island = state.current_island
+	world._climate_field.loop.selected = id
+	hud.update_state(state)
+	_preview_area(-1, selected_tool)
+
+func _queue_refill() -> void:
+	_cancel_walk()
+	pending_refill = true
+	_start_walk(world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3))
+
+func _update_equipment_card(delta: float = 0.0) -> void:
+	if equipment_prompt_time > 0:
+		equipment_prompt_time = maxf(0, equipment_prompt_time - delta)
+		if equipment_prompt_time == 0 and not pending_refill: _close_equipment()
+	var card = hud._climate_console
+	if equipment_island != state.current_island: _close_equipment()
+	var supply: Dictionary = state.ClimateSystem.Operations.local(state)
+	if float(supply.can) < 1 and not supply.refilled and not empty_can_prompted and not hud.is_panel_open():
+		empty_can_prompted = true
+		_select_equipment("tank", true)
+		hud.show_farm_hint("Can empty · Click the glowing tank to refill.")
+	if not card.equipment.is_empty():
+		var point: Vector3 = world._climate_field.loop.equipment_position(card.equipment) + Vector3(0, 2.5, 0)
+		var screen: Vector2 = world.camera.unproject_position(point) * get_viewport().get_visible_rect().size / Vector2(farm_viewport.size)
+		var view: Vector2 = get_viewport().get_visible_rect().size
+		var field_left: float = view.x
+		for point_on_field in world.plot_positions:
+			field_left = minf(field_left, world.camera.unproject_position(point_on_field).x * view.x / float(farm_viewport.size.x))
+		# Keep the connected beds visible: card occupies the margin beside the farm.
+		var left: float = clampf(minf(screen.x - card.size.x - 24, field_left - card.size.x - 18), 12, view.x - card.size.x - 12)
+		var top: float = clampf(screen.y - 45, minf(290, view.y - card.size.y - 100), view.y - card.size.y - 100)
+		card.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		card.position = Vector2(left, top)
+	else:
+		card.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		card.position = Vector2(get_viewport().get_visible_rect().size.x - card.size.x - 22, 112)

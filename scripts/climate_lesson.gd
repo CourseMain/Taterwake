@@ -12,8 +12,9 @@ static func start(farm) -> String:
 		return farm._finish("Try the water lesson when the farm is calm.")
 	farm.climate.data.introduced = true
 	farm.climate.data.intro_pending = false
-	farm.climate.data.projects["2"].rainwater = maxi(1, int(farm.climate.data.projects["2"].get("rainwater", 0)))
+	farm.climate.data.projects["2"].irrigation = maxi(1, int(farm.climate.data.projects["2"].get("irrigation", 0)))
 	farm.climate.data.operations.islands["2"].water = farm.climate.Operations.capacity(farm, 2)
+	farm.climate.data.operations.islands["2"].can = farm.climate.Operations.can_capacity(farm)
 	farm.climate.data.lesson = fresh("water")
 	farm.climate_changed.emit("lesson")
 	return farm._finish("Practice is safe: your crops, markets and bills are paused.")
@@ -24,17 +25,18 @@ static func finish(farm) -> void:
 	farm.climate_changed.emit("lesson")
 	farm.changed.emit()
 static func water(farm, index: int, tool: String) -> String:
-	if farm.climate.data.lesson.stage != "water": return farm._finish("Choose Water an area to try the tank.")
+	if farm.climate.data.lesson.stage != "water": return farm._finish("Click the near sprinkler to water its connected beds.")
 	if tool != "water" or index != BEDS[0]:
 		return farm._finish("Select Water [3], then click the glowing practice bed.")
+	if not farm.climate.Operations.pour(farm): return farm._finish("Can empty · Click the tank to refill.")
 	farm.climate.data.lesson.stage = "area"
 	farm.climate_changed.emit("lesson")
-	return farm._finish("One bed rescued. Now try the tank on several beds.")
+	return farm._finish("One bed rescued · 1 can water used. Now click the near sprinkler.")
 static func area(farm, index: int) -> String:
 	if farm.climate.Operations.zone(index, 2) != farm.climate.Operations.zone(BEDS[1], 2):
 		return farm._finish("Choose the highlighted practice beds near the front fence.")
 	var cost: float = farm.climate.Operations.water_cost(farm)
-	farm.climate.data.operations.islands["2"].water -= cost
+	if not farm.climate.Operations.spend(farm, "water", cost): return farm._finish("Not enough tank water for these beds.")
 	farm.climate.data.lesson = {"stage": "success", "remaining": 3.0}
 	farm.climate_changed.emit("lesson")
 	return farm._finish("Area rescued · %d water used" % int(cost))
@@ -42,7 +44,8 @@ static func preview(farm) -> Array:
 	var plots: Array = farm.plots.duplicate(true)
 	if not active(farm): return plots
 	for index: int in BEDS:
-		plots[index].merge({"unlocked": true, "stage": 2, "watered": true, "tilled": true, "crop": "sunburst", "pests": false, "frozen": false}, true)
+		var hydrated: bool = farm.climate.data.lesson.stage == "success" or (index == BEDS[0] and farm.climate.data.lesson.stage == "area")
+		plots[index].merge({"unlocked": true, "stage": 2, "watered": hydrated, "tilled": true, "crop": "sunburst", "pests": false, "frozen": false}, true)
 	return plots
 static func present(farm, info: Dictionary) -> void:
 	info.lesson = farm.climate.data.lesson.duplicate()

@@ -13,14 +13,14 @@ const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
 	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.05, "growth": 0.6, "tax": 0.8, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
 	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.05, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
-	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.05, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Move screens to shelter beds from wind; trees do not stop lightning."},
+	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.05, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Trees shelter the far beds from wind; trees do not stop lightning."},
 }
 const PROJECTS: Dictionary = {
-	"irrigation": {"name": "Zone Irrigation", "cost": 0.01, "event": "drought", "field": 0.0, "barn": 0.0, "tax": 0.0, "detail": "Water an area costs 6 water at level 1, or 4 at level 2, instead of 8. Choose beds directly on the farm."},
-	"rainwater": {"name": "Rainwater Reserve", "cost": 0.01, "event": "drought", "field": 0.3, "barn": 0.0, "tax": 0.20, "detail": "Adds 36 water capacity per level. Release water into your selected zone. −30% drought stress and −20% recovery tax per level."},
+	"irrigation": {"name": "Zone Irrigation", "cost": 0.01, "event": "drought", "field": 0.0, "barn": 0.0, "tax": 0.0, "detail": "The same fixed patch costs 6 water at level 1, or 4 at level 2. Click a sprinkler to water its fixed patch in any weather."},
+	"rainwater": {"name": "Rainwater Reserve", "cost": 0.01, "event": "drought", "field": 0.3, "barn": 0.0, "tax": 0.20, "detail": "Adds 36 water capacity per level. The can and sprinklers share this reserve. −30% drought stress and −20% recovery tax per level."},
 	"drainage": {"name": "Drainage Network", "cost": 0.015, "event": "flood", "field": 0.3, "barn": 0.10, "tax": 0.20, "detail": "Open the gates to actively drain beds. −30% flood stress, −10% barn losses and −20% recovery tax per level."},
 	"barn": {"name": "Reinforced Barn", "cost": 0.02, "event": "all", "field": 0.0, "barn": 0.35, "tax": 0.15, "detail": "Shutters close automatically before impact and halve remaining barn damage. −35% barn losses and −15% recovery tax per level."},
-	"windbreaks": {"name": "Living Windbreaks", "cost": 0.012, "event": "storm", "field": 0.3, "barn": 0.1, "tax": 0.2, "detail": "Deploy screens to shelter a zone from wind. −30% wind stress, −10% barn losses and −20% recovery tax per level. Trees do not block lightning."},
+	"windbreaks": {"name": "Living Windbreaks", "cost": 0.012, "event": "storm", "field": 0.3, "barn": 0.1, "tax": 0.2, "detail": "Trees automatically shelter the fixed far patch from wind. −30% wind stress, −10% barn losses and −20% recovery tax per level. Trees do not block lightning."},
 }
 const MAX_PROJECT_LEVEL: int = 2
 const MAX_PROTECTION: float = 0.8
@@ -43,6 +43,7 @@ func on_arrival(farm) -> void:
 	data.intro_pending = false
 	if farm.current_island == 2:
 		data.lesson.stage = "offer"
+		data.projects["2"].irrigation = maxi(1, int(data.projects["2"].get("irrigation", 0)))
 	else:
 		data.lesson.stage = "done"
 	farm.climate_changed.emit("lesson")
@@ -56,6 +57,7 @@ func clock_running(farm) -> bool:
 func protection(event: String, island: int, kind: String) -> float:
 	var reduction: float = 0.0
 	for id in PROJECTS:
+		if id == "windbreaks" and kind == "field": continue
 		if PROJECTS[id].event in ["all", event]:
 			reduction += float(PROJECTS[id][kind]) * int(data.projects[str(island)].get(id, 0))
 	return minf(MAX_PROTECTION, reduction)
@@ -79,7 +81,7 @@ func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
 		return false
 	var ids: Array = EVENTS.keys()
 	if event.is_empty():
-		event = str(ids[farm.rng.randi_range(0, ids.size() - 1)])
+		event = "drought" if data.history.is_empty() else str(ids[farm.rng.randi_range(0, ids.size() - 1)])
 	if not EVENTS.has(event): return false
 	if data.lesson.stage == "offer": data.lesson.stage = "done"
 	Operations.begin(farm)
@@ -92,8 +94,9 @@ func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
 	return true
 
 func update(farm, delta: float) -> bool:
-	if farm.run_over or farm.tutorial_active or farm.rocket_pending or not clock_running(farm): return false
+	if farm.run_over or farm.rocket_pending or Lesson.active(farm): return false
 	var operated: bool = Operations.update(farm, delta)
+	if farm.tutorial_active or not clock_running(farm): return operated
 	data.timer = maxf(0.0, float(data.timer) - delta)
 	if float(data.timer) > 0.000001: return operated
 	match str(data.phase):
@@ -169,6 +172,7 @@ func fund(farm, id: String) -> String:
 func info(farm) -> Dictionary:
 	var result: Dictionary = data.duplicate(true)
 	result.supply = Operations.local(farm).duplicate(true)
+	result.can_capacity = Operations.can_capacity(farm)
 	result.water_capacity = Operations.capacity(farm, farm.current_island)
 	result.rescued = data.operations.rescued.size()
 	result.available = farm.current_island >= FIRST_ISLAND

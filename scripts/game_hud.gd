@@ -339,6 +339,10 @@ func _update_blind_ui() -> void:
 		return
 	var info: Dictionary = _state.call("blind_info")
 	var climate: Dictionary = _state.call("climate_info")
+	var water_count: Label = _tool_buttons.water.get_meta("water_count")
+	water_count.text = "%d/%d" % [floori(climate.supply.can), int(climate.can_capacity)]
+	water_count.add_theme_color_override("font_color", Color("ffd39f") if float(climate.supply.can) < 1.0 else CREAM)
+	_tool_buttons.water.tooltip_text = "Watering can: %d / %d water. Each watered bed uses 1. Click the tank to refill." % [floori(climate.supply.can), int(climate.can_capacity)]
 	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending)
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
@@ -450,7 +454,7 @@ func _refresh_blinds() -> void:
 	_refs.blind_last.text = "No payments yet. Your latest receipt will appear here." if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
 
 func _build_climate() -> void:
-	_heading("Weather the storm", "Store supplies. Route water. Rescue your harvest.")
+	_heading("Farm protection", "Follow the water. See what your equipment protects.")
 	if _island_id() < 2:
 		_info("climate_locked", "Climate action begins on Golden Shores.", INK, 23)
 		_body.add_child(_button("Explore islands →", "island", true))
@@ -475,7 +479,8 @@ func _build_climate() -> void:
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	_body.add_child(grid)
-	var captions: Dictionary = {"irrigation": "Water more efficiently: 6, then 4 per area", "rainwater": "Save crops in droughts", "drainage": "Keep floodwater out", "barn": "Protect stored potatoes", "windbreaks": "Shelter crops from storms"}
+	var captions: Dictionary = {"irrigation": "Same tank. Same patch. Less water.", "rainwater": "More stored water for your can and sprinklers.", "drainage": "Open the gate to send floodwater to the sea.", "barn": "Automatic shutters protect your stored harvest.", "windbreaks": "Fixed trees calm the wind over the far beds."}
+	var equipment_names: Dictionary = {"irrigation": "Connected sprinklers", "rainwater": "Bigger rainwater tank", "drainage": "Drain channels", "barn": "Reinforced barn", "windbreaks": "Shelter trees"}
 	for id in _state.ClimateSystem.PROJECTS:
 		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
 		var card := _surface("upgrade", GREEN)
@@ -486,12 +491,14 @@ func _build_climate() -> void:
 		card.add_child(column)
 		var top := _hbox(8)
 		column.add_child(top)
-		var badge := ClimateIcon.new()
-		badge.kind = id
-		badge.custom_minimum_size = Vector2(32, 32)
-		top.add_child(badge)
-		top.add_child(_wrap(project.name, 19, INK, true))
-		column.add_child(_wrap(captions[id], 14, MUTED))
+		top.add_child(_wrap(equipment_names[id], 19, INK, true))
+		var story := preload("res://scripts/water_story.gd").new()
+		story.concept = {"rainwater": "tank", "drainage": "drain", "windbreaks": "trees"}.get(id, id)
+		column.add_child(story)
+		var effect := _wrap(captions[id], 14, MUTED)
+		effect.custom_minimum_size.y = 42
+		column.add_child(effect)
+		_refs["climate_effect:" + id] = effect
 		var progress := _badge("")
 		column.add_child(progress)
 		_refs["climate_level:" + id] = progress
@@ -506,7 +513,7 @@ func _build_climate() -> void:
 	var tax := _button("Tax forecast →", "taxes")
 	tax.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bottom.add_child(tax)
-	var details := _details_section("climate_details", "how protection works")
+	var details := _details_section("climate_details", "weather & protection details")
 	_section_title(details, "Three kinds of wild weather")
 	for event: String in ["drought", "flood", "storm"]:
 		var weather_row := _hbox(10)
@@ -548,8 +555,12 @@ Next tax %s" % [(float(info.seed_factor) - 1.0) * 100.0, (float(info.sell_factor
 		var level: int = int(info.projects[str(_island_id())].get(id, 0))
 		var cost: float = float(BlindRules.PROGRESSION_BASELINES[_island_id()]) * float(project.cost) * float(level + 1)
 		var maximum: int = _state.ClimateSystem.MAX_PROJECT_LEVEL
+		if id == "rainwater":
+			_refs["climate_effect:" + id].text = "%d stored water · shared by can and sprinklers." % int(info.water_capacity) if level >= maximum else "%d → %d stored water for your can and sprinklers." % [int(info.water_capacity), int(info.water_capacity) + 36]
+		elif id == "irrigation":
+			_refs["climate_effect:" + id].text = "4 water per patch · your most efficient pipes." if level >= maximum else ("6 → 4 water for the same fixed patch." if level == 1 else "Connect three fixed patches · 6 tank water each.")
 		Cozy.badge(_refs["climate_level:" + id], "Level %d / %d · %s" % [level, maximum, "Complete" if level >= maximum else ("Affordable" if float(_state.coins) >= cost else "Save up")], "active" if level >= maximum or float(_state.coins) >= cost else "warning")
-		_set_button("climate_fund:" + id, "Fully upgraded" if level >= maximum else "%s · %s" % ["Build" if level == 0 else "Upgrade", _blind_money(cost)], level >= maximum or float(_state.coins) < cost)
+		_set_button("climate_fund:" + id, "Fully upgraded" if level >= maximum else "%s · %s" % ["Build" if level == 0 and id != "rainwater" else "Upgrade", _blind_money(cost)], level >= maximum or float(_state.coins) < cost)
 
 func _build_tutorial() -> void:
 	_tutorial_card = _card(Color("17382d"), 15)
@@ -1179,6 +1190,17 @@ func _build_footer() -> void:
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		content.add_child(caption)
 		button.set_meta("caption", caption)
+		if tool == "water":
+			var count := _label("16/16", 11, CREAM, true)
+			count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			count.add_theme_stylebox_override("normal", _style(INK, 2, 5))
+			button.add_child(count)
+			count.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+			count.offset_left = -44
+			count.offset_right = -4
+			count.offset_top = 5
+			button.set_meta("water_count", count)
 		_tool_buttons[tool] = button
 	_tool_caption = _label("Hoe equipped · Click / E to use", 12, INK, true)
 	_tool_caption.add_theme_font_override("font", _compact_heading_font())
@@ -1849,7 +1871,7 @@ func _build_gear_card(parent: GridContainer, entry: Dictionary) -> void:
 	_refs[key + ":action"] = button
 
 func _build_tools() -> void:
-	_heading("Tool shed", "More beds with every click.")
+	_heading("Tool shed", "Better tools. More beds. Fewer trips.")
 	for tool: String in ["hoe", "water", "harvest"]:
 		var names: Dictionary = {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe"}
 		_offer(names[tool], "", "Upgrade", "upgrade:" + tool, true)
@@ -2422,6 +2444,11 @@ func _refresh_panel() -> void:
 				var maximum: bool = level >= costs.size()
 				var winter_gate: bool = level >= 2 and _island_id() != 3 and not maximum
 				_refs["upgrade:" + tool + ":detail"].text = "Now: %s per action.%s" % [areas[mini(level, areas.size() - 1)], " Fully upgraded." if maximum else " Next: " + str(areas[mini(level + 1, areas.size() - 1)]) + (" · Frost Hollow only." if winter_gate else ".")]
+				if tool == "water":
+					var carried: int = 16 + 16 * level
+					_refs["upgrade:water:detail"].text = "Carries %d water · %s per action." % [carried, areas[mini(level, areas.size() - 1)]]
+					if not maximum:
+						_refs["upgrade:water:detail"].text += "\nNext: %d water · %s%s" % [carried + 16, areas[mini(level + 1, areas.size() - 1)], " · Frost Hollow only." if winter_gate else "."]
 				var cost: float = float(costs[level]) if not maximum else 0.0
 				_set_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _money(cost)), maximum or winter_gate or coins < cost)
 			var expanded: bool = bool(_state.get("expansion")) or _island_id() >= 2
