@@ -70,13 +70,22 @@ func _ready() -> void:
 		game.hud.close_panel()
 		game._on_state_changed()
 		fold())
+	button("Reproduce tax debt · 5 seconds",func():
+		game.state.coins = -game.state.blind_info().tax
+		game.state.blind_cycle.booms = 3
+		game.state.blind_cycle.due_in = 5.0
+		game.hud.close_panel()
+		game._on_state_changed()
+		fold())
+	button("Debug workshop · isolated farm",func():
+		game._set_debug_session(true)
+		game._on_action("debug")
+		fold())
 	button("Prepare an SSS batch",func():
 		game.builds.select_build("industrialist")
 		var d: Dictionary = game.builds.professions.data
 		d.seedbank = ["hearty","dry"]
-		d.fresh_crop = game.state.selected_crop
-		d.fresh_count = 500
-		d.fresh_left = 45.0
+		game.builds.professions.mark_fresh(game.state.selected_crop, 500)
 		d.method = "polish" if game.state.selected_crop in ["golden","icecap","radioactive"] else "cure"
 		game.hud._build_selection = "industrialist"
 		game._on_action("builds")

@@ -124,7 +124,7 @@ func tip(farm: Node) -> Dictionary:
 		if farm.build_system.active == "farmer" and farm.build_system.professions.data.compost > 0:
 			for plot in farm.plots:
 				if plot.unlocked and int(plot.stage) in [1, 2] and not plot.get("cultivated", false):
-					return _tip("builds", "Grow a prize crop", "In Builds [C], choose Farmer and spread compost on a growing bed. Water and harvest normally for a giant harvest; fresh harvests make more compost.", "Inspect Farmer [C]", "builds")
+					return _tip("builds", "Grow a giant potato", "Plant a crop, then open Farmer in Builds [C]. Spend 1 compost on a glowing planted patch for 3× its harvest. Water and harvest normally; each harvested patch earns 1 compost.", "Inspect Farmer [C]", "builds")
 	return {}
 
 func _tip(id: String, title: String, body: String, label: String, action: String) -> Dictionary:

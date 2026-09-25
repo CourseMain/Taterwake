@@ -60,9 +60,7 @@ func run() -> void:
 	game.state.storage.russet = 100
 	var profession: Dictionary = game.builds.professions.data
 	profession.seedbank = ["hearty", "dry"]
-	profession.fresh_crop = "russet"
-	profession.fresh_count = 100
-	profession.fresh_left = 45.0
+	game.builds.professions.mark_fresh("russet", 100)
 	profession.method = "cure"
 	game.builds.professions.load_batch()
 	game.builds.update(10)
@@ -121,6 +119,14 @@ func run() -> void:
 	game.world.profession_world.animate(6)
 	game.world.profession_world.animate(.01)
 	check(not game.world.profession_world.visitor.visible, "collector leaves without lingering collider")
+	game.state.debug_unlock_island(2)
+	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
+	await frames()
+	check(not game.world.profession_world.result_sign.visible, "travelling cannot replay an old profession result over the new farm")
+	game.state.plots[0].stage = 1
+	game.builds.professions.cultivate(0)
+	check(game.world.profession_world.result_sign.visible, "a fresh action on the new island still gets its world feedback")
 	game.queue_free()
 	await frames()
 	print("BUILD PROFESSIONS GAME: %d checks, %d failures" % [checks,failures])

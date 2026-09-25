@@ -92,5 +92,8 @@ func run() -> void:
 		check(root.get_visible_rect().encloses(game.hud._climate_console.get_global_rect()), "equipment card fits viewport " + str(dimensions))
 	game.queue_free()
 	await settle()
+	# The audio mixer uses wall time; headless frames can finish before queued
+	# playback stops are drained. Give the mixer its shutdown interval.
+	await create_timer(0.25).timeout
 	print("WATER LOOP GAME: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

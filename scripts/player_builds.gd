@@ -2,7 +2,7 @@ extends Node
 ## Persistent, selectable farming specializations. Processing needs a loaded batch.
 const IDS: Array[String] = ["farmer", "gambler", "investor", "scientist", "industrialist"]
 const DESCRIPTIONS: Dictionary = {
-	"farmer": "Cultivate prize crops and overflowing harvests.",
+	"farmer": "Grow a giant potato with compost, then harvest three times as much.",
 	"gambler": "Stake a chosen harvest for an extraordinary win.",
 	"investor": "Reserve a price. Prepare a major shipment.",
 	"scientist": "Breed named varieties you can grow again.",
@@ -88,7 +88,7 @@ func build_info() -> Array[Dictionary]:
 	return entries
 
 func activity_info() -> Dictionary:
-	var title: String = {"farmer": "PRIZE CROPS", "industrialist": "BATCH GRADING", "scientist": "SEED BANK", "investor": "RESERVED BUYER", "gambler": "HARVEST STAKES"}[active]
+	var title: String = {"farmer": "GIANT POTATOES", "industrialist": "BATCH GRADING", "scientist": "SEED BANK", "investor": "RESERVED BUYER", "gambler": "HARVEST STAKES"}[active]
 	return {"title": title, "description": DESCRIPTIONS[active], "action_label": "Open " + active.capitalize(), "can_use": true, "cooldown": cooldown,
 		"processing": not processing.is_empty(), "progress": float(processing.get("elapsed", 0)) / float(processing.get("duration", 1)), "processed_value": processed_value(), "fertilizer": fertilizer}
 
@@ -99,7 +99,7 @@ func use_ability() -> String:
 		"scientist": return professions.breed()
 		"investor": return professions.reserve()
 		"gambler": return professions.stake_harvest()
-	return state._finish("Choose Prize crop in Builds, then click a growing bed to spread compost.")
+	return state._finish("Choose Grow a giant potato in Builds, then spend 1 compost on a planted, still-growing crop patch.")
 
 func update(delta: float, processing_step: float = -1.0) -> void:
 	if state.run_over or not is_finite(delta) or delta <= 0: return
@@ -146,7 +146,10 @@ func sell_processed() -> String:
 	return state._finish("Sold processed batches for %s at the live crop prices." % state.money(value))
 
 func stored_count() -> int:
-	return saved_storage_count(save_data())
+	var total: int = int(processing.get("quantity", 0)) + int(professions.data.wager.get("quantity", 0))
+	for batch in processed.values(): total += int(batch.count)
+	for job in professions.data.queue: total += int(job.quantity)
+	return total
 
 func saved_storage_count(data: Dictionary) -> int:
 	var total: int = int(data.get("processing", {}).get("quantity", 0))
@@ -214,12 +217,12 @@ func finish_crate_reveal() -> void:
 	_crate_opening = false
 
 func save_data() -> Dictionary:
-	return {"version": 2, "professions": professions.data.duplicate(true), "build_crates": build_crates, "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "next_roll_charge": next_roll_charge, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
+	return {"version": 3, "professions": professions.data.duplicate(true), "build_crates": build_crates, "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "next_roll_charge": next_roll_charge, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
 
 func valid_data(data: Variant) -> bool:
-	if not data is Dictionary or not _number(data.get("version"), 1, 2, true) or not data.get("active") in IDS:
+	if not data is Dictionary or not _number(data.get("version"), 1, 3, true) or not data.get("active") is String or not data.active in IDS:
 		return false
-	if data.version == 2 and not professions.valid(data.get("professions")): return false
+	if int(data.version) >= 2 and not professions.valid(data.get("professions"), int(data.version)): return false
 	if not _number(data.get("build_crates", 0), 0, 1000000, true):
 		return false
 	if not data.get("levels") is Dictionary or data.levels.size() != IDS.size():
@@ -234,11 +237,15 @@ func valid_data(data: Variant) -> bool:
 			return false
 	if not data.get("processing") is Dictionary or not data.get("processed") is Dictionary or data.processed.size() > state.CROP_IDS.size():
 		return false
+	if int(data.version) >= 2:
+		var jobs: int = data.professions.queue.size() + (0 if data.processing.is_empty() else 1)
+		if jobs > 1 + mini(2, int(data.levels.industrialist) / 10): return false
+		if not data.professions.queue.is_empty() and data.processing.is_empty(): return false
 	if not data.processing.is_empty():
 		var job: Dictionary = data.processing
 		if not valid_job(job, int(data.version) == 1): return false
 	for crop in data.processed:
-		if not state.CROP_IDS.has(crop) or not data.processed[crop] is Dictionary or not _number(data.processed[crop].get("count"), 1, 1.0e15, true) or not _number(data.processed[crop].get("multiplier"), 1.05, 8.0):
+		if not is_crop(crop) or not data.processed[crop] is Dictionary or not _number(data.processed[crop].get("count"), 1, 1.0e15, true) or not _number(data.processed[crop].get("multiplier"), 1.05, 8.0):
 			return false
 	return true
 
@@ -256,14 +263,19 @@ func load_data(data: Dictionary) -> bool:
 	processing = data.processing.duplicate(true)
 	processed = data.processed.duplicate(true)
 	professions.reset()
-	if int(data.version) == 2: professions.data = data.professions.duplicate(true)
+	if int(data.version) >= 2: professions.restore(data.professions, int(data.version))
 	return true
 
 func _number(value: Variant, minimum: float, maximum: float, integer_only: bool = false) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= minimum and float(value) <= maximum and (not integer_only or float(value) == floor(float(value)))
 
+func is_crop(value: Variant) -> bool:
+	return value is String and state.CROP_IDS.has(value)
+
 func valid_job(job: Variant, legacy: bool = false) -> bool:
 	if not job is Dictionary: return false
-	if not state.CROP_IDS.has(job.get("crop")) or not _number(job.get("quantity"), 20, 100, true) or int(job.quantity) not in [20,100]: return false
+	# A storm can damage a loaded batch before it finishes. The remaining
+	# potatoes and locked grade are legitimate saved progress.
+	if not is_crop(job.get("crop")) or not _number(job.get("quantity"), 1, 100, true): return false
 	if not _number(job.get("duration"), 3, 10) or not _number(job.get("elapsed"), 0, float(job.get("duration", 0))) or not _number(job.get("multiplier"), 1.05, 8): return false
 	return legacy or (job.get("grade", "A") in professions.GRADES)

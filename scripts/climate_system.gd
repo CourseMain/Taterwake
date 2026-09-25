@@ -129,18 +129,28 @@ func _impact(farm) -> void:
 	var shutter: float = 0.5 if int(data.projects[str(island)].get("barn", 0)) > 0 else 1.0
 	var barn_rate: float = shutter * float(EVENTS[event].barn) * float(data.severity) * (1.0 - protection(event, island, "barn"))
 	for crop in farm.storage:
-		farm.storage[crop] = int(farm.storage[crop]) - lost_units(int(farm.storage[crop]), barn_rate)
+		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
+		farm.storage[crop] = int(farm.storage[crop]) - lost
+		if is_instance_valid(farm.build_system): farm.build_system.professions.consumed(crop, lost)
 	for index in range(farm.mutations.size() - 1, -1, -1):
 		var crate: Dictionary = farm.mutations[index]
 		crate.count = int(crate.count) - lost_units(int(crate.count), barn_rate)
 		if int(crate.count) <= 0: farm.mutations.remove_at(index)
 	# Processing is still barn inventory: no hiding stock in a machine.
 	if is_instance_valid(farm.build_system):
-		for batch in farm.build_system.processed.values():
+		for crop in farm.build_system.processed.keys():
+			var batch: Dictionary = farm.build_system.processed[crop]
 			batch.count = int(batch.count) - lost_units(int(batch.count), barn_rate)
+			if batch.count <= 0: farm.build_system.processed.erase(crop)
 		if not farm.build_system.processing.is_empty():
 			var batch: Dictionary = farm.build_system.processing
 			batch.quantity = int(batch.quantity) - lost_units(int(batch.quantity), barn_rate)
+			if batch.quantity <= 0: farm.build_system.processing = {}
+		var queue: Array = farm.build_system.professions.data.queue
+		for index in range(queue.size()-1, -1, -1):
+			queue[index].quantity = int(queue[index].quantity) - lost_units(int(queue[index].quantity), barn_rate)
+			if queue[index].quantity <= 0: queue.remove_at(index)
+		if farm.build_system.processing.is_empty() and not queue.is_empty(): farm.build_system.processing = queue.pop_front()
 	var barn_lost: int = held - farm.storage_used()
 	data.field_lost = mini(1000000000, int(data.field_lost) + destroyed)
 	data.barn_lost = mini(farm.MAX_INVENTORY, int(data.barn_lost) + barn_lost)

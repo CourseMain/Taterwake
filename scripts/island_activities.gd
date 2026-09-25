@@ -283,6 +283,7 @@ func deliver_contract() -> String:
 	var crop: String = str(contract.crop)
 	if str(contract.kind) == "bulk":
 		state.storage[crop] -= amount
+		if is_instance_valid(state.build_system): state.build_system.professions.consumed(crop, amount)
 		value = float(amount) * float(state.market[crop].sell)
 	else:
 		var left: int = amount
@@ -323,6 +324,7 @@ func charge_furnace(crop: String = "icecap") -> String:
 	if int(state.storage.icecap) < FURNACE_FUEL:
 		return state._finish("Hold 25 spare Icecap potatoes to fuel the furnace.")
 	state.storage.icecap -= FURNACE_FUEL
+	if is_instance_valid(state.build_system): state.build_system.professions.consumed("icecap", FURNACE_FUEL)
 	furnace_burned = mini(1000000000, furnace_burned + FURNACE_FUEL)
 	furnace_remaining = FURNACE_DURATION
 	furnace_cooldown = FURNACE_COOLDOWN

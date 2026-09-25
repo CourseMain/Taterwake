@@ -49,8 +49,11 @@ func _run() -> void:
 	var price: float = farm.market.russet.sell
 	farm.sell_crop("russet")
 	check(is_equal_approx(farm.coins, coins + held * price) and farm.storage.russet == 0, "selling uses the live quote")
-	coins = farm.coins
 	price = farm.market.russet.seed
+	# Isolate quote accounting from affordability: a live price spike can exceed
+	# the starter purse. Insufficient funds are covered in the next transaction.
+	farm.coins = maxf(farm.coins, 5 * price + 100.0)
+	coins = farm.coins
 	var seeds: int = farm.seed_inventory.russet
 	farm.buy_seeds("russet", 5)
 	check(is_equal_approx(farm.coins, coins - 5 * price) and farm.seed_inventory.russet == seeds + 5, "seed bundle charges dynamic seed cost")

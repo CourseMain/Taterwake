@@ -49,7 +49,7 @@ func run() -> void:
 	p.cultivate(0)
 	var compost: int = p.data.compost
 	p.cultivate(0)
-	check(farm.plots[0].cultivated and p.data.compost == compost, "prize bed spends compost once")
+	check(farm.plots[0].cultivated and p.data.compost == compost, "giant-potato patch spends compost once")
 	farm.plots[0].stage = 3
 	var harvested: int = farm._harvest_plot(farm.plots[0])
 	check(harvested >= 9 and not farm.plots[0].has("cultivated"), "giant yields more and clears after harvest")
@@ -122,7 +122,7 @@ func run() -> void:
 	const SAVE = "user://professions_isolated_test.json"
 	check(farm.save_game(SAVE), "complete farm with inherited traits saves")
 	farm.reset_game()
-	check(farm.load_game(SAVE) and farm.plots[0].get("variety","") == "hearty" and farm.plots[0].get("cultivated",false), "complete farm restores prize bed and seed trait")
+	check(farm.load_game(SAVE) and farm.plots[0].get("variety","") == "hearty" and farm.plots[0].get("cultivated",false), "complete farm restores giant-potato patch and seed trait")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	# The preview covers every named rank across real input choices and ranks.
 	var attainable: Array = []
@@ -131,9 +131,9 @@ func run() -> void:
 		for method in ["polish","cure"]:
 			p.data.method = method
 			for fresh in [false,true]:
-				p.data.fresh_crop = "russet"
-				p.data.fresh_left = 45 if fresh else 0
-				p.data.fresh_count = 100
+				p.data.fresh_lots.clear()
+				farm.storage.russet = 100
+				if fresh: p.mark_fresh("russet", 100)
 				for bank in [[], ["hearty","dry"]]:
 					p.data.seedbank = bank
 					var g: String = p.grade_preview().grade

@@ -1,0 +1,106 @@
+extends SceneTree
+## Real input and layout checks for ambiguous Farmer targeting and overlapping help.
+var game
+var checks := 0
+var failures := 0
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool, why: String) -> void:
+	checks += 1
+	if not ok:
+		failures += 1
+		push_error(why)
+func settle() -> void:
+	for i in range(5): await process_frame
+func shot(name: String) -> void:
+	await settle()
+	if "--capture" not in OS.get_cmdline_user_args(): return
+	RenderingServer.force_draw()
+	root.get_texture().get_image().save_png("res://artifacts/audit-" + name + ".png")
+func run() -> void:
+	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
+	game = load("res://scenes/main.tscn").instantiate()
+	root.add_child(game)
+	await settle()
+	game.set_process(false)
+	game.set_process_unhandled_input(false)
+	for plot in game.state.plots: game.state._clear_crop(plot)
+	game.state.surge_timer = 1000
+	game._on_action("profession:giant")
+	check(not game.prize_target, "empty field never enters an unusable targeting mode")
+	game.state.plots[0].stage = 1
+	game.state.plots[1].stage = 2
+	game.state.plots[2].stage = 3
+	game.state.plots[3].stage = 1
+	game.state.plots[3].frozen = true
+	game._on_state_changed()
+	game.hud._build_selection = "farmer"
+	game._on_action("builds")
+	game.hud.show_toast("Plant a crop first. Use compost on one growing patch, then water and harvest normally.")
+	await settle()
+	check(not game.hud._toast_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), "notifications stay clear of modal content and its close button")
+	check(game.hud.root.get_global_rect().encloses(game.hud._toast_box.get_global_rect()), "docked notification remains within the game view")
+	await shot("farmer-ready")
+	game._on_action("profession:giant")
+	check(game.prize_target and game.world._area_key == str([0, 1]), "only eligible planted crop patches glow before any hover")
+	game.hud._process(3)
+	check(game.hud._plot_action_box.visible and "1 compost" in game.hud._plot_action_label.text, "action instruction persists beyond the old 1.4-second hint")
+	check(not game.hud._farm_help_card.visible and not game.hud._crop_row.visible, "target instruction suppresses unrelated guidance and seed tray")
+	var compost: int = game.builds.professions.data.compost
+	game.queue_plot(2)
+	check(game.prize_target and not game.walking and "ripe" in game.hud._plot_action_label.text and game.builds.professions.data.compost == compost, "invalid ripe click explains itself without walking, spending or losing selection")
+	await shot("farmer-target")
+	game.queue_plot(0)
+	game._on_action("profession:cancel")
+	check(not game.walking and not game.prize_target and not game.hud._plot_action_box.visible and game.builds.professions.data.compost == compost, "visible Cancel button path cancels the queued action without spending")
+	game._on_action("profession:giant")
+	game.world.set_player_position(game.world.plot_positions[0])
+	game._interact_nearby()
+	check(game.state.plots[0].get("cultivated",false) and game.builds.professions.data.compost == compost - 1, "E feeds a nearby eligible crop while targeting rather than using the ordinary tool")
+	check(not game.prize_target and not game.hud._plot_action_box.visible, "successful compost use ends selection and clears guidance")
+	game._on_action("profession:giant")
+	game._select_equipment("tank")
+	check(not game.prize_target, "selecting equipment cancels Farmer targeting")
+	game._close_equipment()
+	game._on_action("profession:giant")
+	game._on_action("inventory")
+	check(not game.prize_target, "opening another activity cancels hidden Farmer targeting")
+	game.hud.close_panel()
+	# Reproduce the supplied screenshot: Island2, debt, pest tip, selected tank.
+	game.state.debug_unlock_island(2)
+	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
+	game.state.coins = -game.state.blind_info().tax
+	game.state.blind_cycle.booms = 3
+	game.state.blind_cycle.due_in = 5.0
+	game.state.farm_help.enable()
+	game.state.farm_help.data.pest_phase = 1
+	game.state.farm_help.data.dismissed.clear()
+	game._select_equipment("tank")
+	game.hud.update_state(game.state)
+	await settle()
+	game._update_equipment_card()
+	check(not game.hud._farm_help_card.visible, "pest tip cannot cover an equipment card")
+	check(not game.hud._climate_console.get_global_rect().intersects(game.hud._blind_card.get_global_rect()), "tank card avoids expanded debt/tax forecast")
+	check(not game.hud._climate_console.get_global_rect().intersects(game.hud.root.get_node("ToolHotbar").get_global_rect()), "tank card clears the farming hotbar")
+	game.hud.show_toast("Tank selected. Your watering can is full.")
+	await settle()
+	check(game.hud._toast_label.get_visible_line_count() > 0 and game.hud._toast_label.size.y >= 16, "world notifications retain visible text after leaving a compact modal")
+	await shot("tank-debt")
+	game._close_equipment()
+	game.hud._build_selection = "farmer"
+	game._on_action("builds")
+	check("Tax" in game.hud._blind_modal_warning.text and "Cash" in game.hud._blind_modal_warning.text and " / " not in game.hud._blind_modal_warning.text, "imminent tax warning distinguishes cash from the coming bill")
+	game.state.blind_cycle.due_in = 0
+	game.state.blind_cycle.booms = 2
+	game.hud.update_state(game.state)
+	check("Debt" in game.hud._blind_modal_warning.text and "after 1 more stock" in game.hud._blind_modal_warning.text, "debt warning names the balance and next collection separately")
+	await shot("farmer-debt")
+	game._on_action("roll")
+	game.hud.show_toast("A long test notification that should fit below the taller roll window without covering any of its controls.")
+	await settle()
+	check(not game.hud._toast_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), "notification clears the taller roll panel")
+	check(game.hud.root.get_global_rect().encloses(game.hud._toast_box.get_global_rect()), "single-line notification fits below the taller roll panel")
+	game.queue_free()
+	await settle()
+	print("PLAYABILITY AUDIT: %d checks, %d failures" % [checks, failures])
+	quit(1 if failures else 0)

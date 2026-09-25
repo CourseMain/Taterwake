@@ -45,6 +45,7 @@ func run() -> void:
 	check(game.hud._panel_kind == "debug", "menu Debug card opens the actual controls")
 	game.hud._refs.debug_code.text = "ORIGINALLYSPUDREPUBLIC"
 	game.hud._refs.debug_unlock.pressed.emit()
+	game.hud._act("toggle_details:debug_advanced")
 	find_button("debug_money:10").pressed.emit()
 	find_button("debug_luck:100").pressed.emit()
 	check(game.hud._refs.debug_money.value == 10 and game.hud._refs.debug_luck.value == 100, "money and luck presets change their numeric controls")
@@ -52,7 +53,7 @@ func run() -> void:
 	game.hud._refs.debug_apply.pressed.emit()
 	check(game.state.coins == 10000 and game.state.debug_luck_multiplier == 100, "Apply multiplies current money once and activates debug luck")
 	check(game.hud._refs.debug_money.value == 1, "applied money multiplier resets to neutral to avoid accidental repeated multiplication")
-	check(game.hud._refs.debug_luck_status.text.contains("Normal luck 1.00") and game.hud._refs.debug_luck_status.text.contains("Effective luck 100.00"), "normal and debug-effective luck are shown separately")
+	check(game.hud._refs.debug_luck_status.text.contains("Normal 1.00") and game.hud._refs.debug_luck_status.text.contains("Total 100.00"), "normal and debug-effective luck are shown separately")
 	game.hud._refs.debug_reset.pressed.emit()
 	check(game.state.coins == 10000 and game.state.debug_luck_multiplier == 1, "reset restores normal luck without rewinding money")
 	check(game.hud._refs.debug_luck.value == 1 and game.hud._refs.debug_reset.disabled, "reset immediately synchronizes controls")
@@ -60,7 +61,7 @@ func run() -> void:
 	game._on_action("roll")
 	check(not game.hud._refs.trophy_gallery.visible, "trophy collection starts collapsed")
 	game.hud._refs.trophy_toggle.pressed.emit()
-	check(game.state.trophy_info().is_empty() and game.hud._refs.trophy_gallery.find_children("*", "PanelContainer", true, false).is_empty(), "fresh farm has no fabricated historic trophies")
+	check(game.state.trophy_info().is_empty() and game.hud._refs.trophy_gallery.find_children("*", "PanelContainer", true, false).filter(func(node): return node.has_meta("trophy")).is_empty(), "fresh farm has no fabricated historic trophies")
 	game.hud._refs.trophy_toggle.pressed.emit()
 	game.hud.close_panel()
 	game.state.island2_unlocked = true
@@ -77,11 +78,13 @@ func run() -> void:
 	game.hud._act("roll:normal")
 	check(game.state.roll_count == before + 2 and game.hud._batch_results.size() == 2, "single purchase presents both authoritative Crown results")
 	check(game.hud._refs.trophy_toggle.disabled, "new trophy outcomes stay hidden during the reel")
+	game.hud._refs.roll_luck_meter._process(5)
 	game.hud._spinner._process(5)
 	check(game.hud._refs.batch_results.get_child_count() == 2 and game.hud._refs.roll_result_title.text.contains("1 PAID + AURORA BONUS"), "single Crown reveal shows one paid and one free card")
 	check(game.hud._batch_bonus_count() == 1, "Crown reveal marks exactly one bonus outcome")
 	await shot("crown-single")
 	game.hud._act("roll_batch:normal:5")
+	game.hud._refs.roll_luck_meter._process(5)
 	game.hud._spinner._process(5)
 	check(game.hud._refs.batch_results.get_child_count() == 6 and game.hud._refs.roll_result_title.text.contains("5 PAID + AURORA BONUS"), "five-roll purchase shows all six real results")
 	var bonus_cards: int = 0
@@ -92,7 +95,7 @@ func run() -> void:
 	await shot("crown-batch")
 	game.hud._refs.trophy_toggle.pressed.emit()
 	var recorded: Array = game.state.trophy_info()
-	var cards: Array[Node] = game.hud._refs.trophy_gallery.find_children("*", "PanelContainer", true, false)
+	var cards: Array[Node] = game.hud._refs.trophy_gallery.find_children("*", "PanelContainer", true, false).filter(func(node): return node.has_meta("trophy"))
 	check(not recorded.is_empty() and cards.size() == recorded.size(), "cabinet displays real persistent trophy entries only")
 	for index: int in range(cards.size()):
 		var entry: Dictionary = cards[index].get_meta("trophy", {})

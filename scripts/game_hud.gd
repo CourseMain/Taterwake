@@ -114,6 +114,7 @@ var _purchase_receipt: Dictionary = {}
 var _toast_box: PanelContainer
 var _toast_label: Label
 var _toast_timer: Timer
+var _toast_layout_key: String = ""
 var _reward_box: PanelContainer
 var _reward_title: Label
 var _reward_detail: Label
@@ -218,6 +219,9 @@ var _climate_console: PanelContainer
 var _climate_alert: Control
 var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
+var _plot_action_box: PanelContainer
+var _plot_action_label: Label
+var _plot_action_text: String = ""
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -250,7 +254,7 @@ func _island_accent() -> Color:
 	return Color("32ff8c") if _island_id() == 1 else (Color("ffd22b") if _island_id() == 2 else Color("39bcff"))
 
 func _refresh_seed_visibility() -> void:
-	var showing: bool = _selected_tool == "plant" and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
+	var showing: bool = _selected_tool == "plant" and _plot_action_text.is_empty() and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
 	if is_instance_valid(_crop_row):
 		_crop_row.visible = showing
 		var first_seed: bool = not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
@@ -306,6 +310,7 @@ func build_ui() -> void:
 	_climate_console.opened.connect(func() -> void: _act("climate"))
 	_build_tutorial()
 	_build_farm_help()
+	_build_plot_action()
 	_climate_alert = load("res://scripts/climate_alert.gd").new()
 	root.add_child(_climate_alert)
 	_climate_alert.continue_requested.connect(func() -> void: _act("climate_continue"))
@@ -335,6 +340,7 @@ func _build_run_end() -> void:
 	_run_end_title = _run_end.headline
 	_run_end_detail = _run_end.detail
 	_run_end.restart_requested.connect(func() -> void: _act("reset"))
+	_run_end.debug_requested.connect(func() -> void: _act("debug"))
 
 func _update_blind_ui() -> void:
 	if not is_instance_valid(_state) or not _state.has_method("blind_info"):
@@ -345,7 +351,7 @@ func _update_blind_ui() -> void:
 	water_count.text = "%d/%d" % [floori(climate.supply.can), int(climate.can_capacity)]
 	water_count.add_theme_color_override("font_color", Color("ffd39f") if float(climate.supply.can) < 1.0 else CREAM)
 	_tool_buttons.water.tooltip_text = "Watering can: %d / %d water. Each watered bed uses 1. Click the tank to refill." % [floori(climate.supply.can), int(climate.can_capacity)]
-	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending)
+	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending or not _plot_action_text.is_empty())
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
 	_blind_labels.title.text = "Collector arriving · %ds" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
@@ -359,24 +365,28 @@ func _update_blind_ui() -> void:
 	var weather_name: String = "Storm" if climate.event == "storm" else str(climate.name).capitalize()
 	_blind_labels.weather.text = "%s %s%ds" % [weather_name, "in " if climate.phase == "warning" else ("recovery · " if climate.phase == "recovery" else "· "), ceili(climate.timer)] if climate.phase != "calm" else "Recovery costs +%.0f%%" % (float(climate.pressure) * 100.0)
 	_blind_modal_warning.visible = _tutorial.is_empty() and not bool(info.run_over) and (info.due_in > 0.0 or info.current < 0.0)
-	_blind_modal_warning.text = "%s · %s / %s%s" % ["TAX BOOM" if info.tax_boom else info.name, _blind_money(info.current), _blind_money(info.target), " · %ds left" % ceili(info.due_in) if info.due_in > 0.0 else " · %d/%d stocks" % [int(info.booms), int(info.booms_required)]]
+	var stocks_left: int = int(info.booms_required) - int(info.booms)
+	_blind_modal_warning.text = "Tax %s in %ds · Cash %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
 	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind == "roll" else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over and climate.lesson.stage == "off":
 		if not _climate_alert.introduction: _climate_alert.present("introduction", climate, _state)
 	if info.run_over:
-		if not _run_end.visible:
+		var debug_open: bool = is_panel_open() and _panel_kind == "debug"
+		_modal.z_index = 210 if debug_open else 0
+		if not _run_end.visible and not debug_open:
 			cancel_roll()
 			close_panel()
 			_toast_box.hide()
 			_purchase_box.hide()
 			_combo_box.hide()
 		for child in root.get_children():
-			if child is CanvasItem and child != _run_end and child.visible:
+			if child is CanvasItem and child != _run_end and not (debug_open and child == _modal) and child.visible:
 				if not _collapse_hidden.has(child): _collapse_hidden.append(child)
 				child.hide()
 		_run_end.show_report(_state)
 	elif _run_end.visible:
+		_modal.z_index = 0
 		_run_end.hide()
 		for child in _collapse_hidden:
 			if is_instance_valid(child): child.show()
@@ -953,7 +963,7 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action != "reset":
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in ["reset", "debug", "close"] and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
@@ -990,6 +1000,20 @@ func _act(action: String) -> void:
 			action_requested.emit("debug:unlock:" + code)
 		return
 	if (action.begins_with("debug:") or action.begins_with("debug_")) and not _debug_unlocked:
+		return
+	if action.begins_with("debug_balance_preset:"):
+		if _refs.has("debug_balance_input"):
+			_refs.debug_balance_input.text = action.get_slice(":", 1)
+			_refresh_debug()
+		return
+	if action in ["debug_set_balance", "debug_recover"]:
+		if not _refs.has("debug_balance_input"): return
+		var balance: Dictionary = _refs.debug_balance_input.read_number()
+		if balance.has("error") or (action == "debug_recover" and float(balance.value) <= 0):
+			_refresh_debug()
+			return
+		action_requested.emit("debug:%s:%s" % ["recover" if action == "debug_recover" else "set_balance", str(balance.canonical)])
+		_refresh_debug()
 		return
 	if action.begins_with("debug_money:") or action.begins_with("debug_luck:"):
 		var field: String = "debug_money" if action.begins_with("debug_money:") else "debug_luck"
@@ -1253,6 +1277,7 @@ func _build_footer() -> void:
 	_context_box.offset_bottom = -122
 	_context_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_context = _label("", 13, CREAM)
+	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_context.add_theme_font_override("font", _plain_font)
 	_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_context_box.add_child(_context)
@@ -1488,9 +1513,12 @@ func clear_farm_hint() -> void:
 
 func _update_context() -> void:
 	if not is_instance_valid(_context): return
+	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
+	if is_instance_valid(_plot_action_box):
+		_plot_action_box.visible = not _plot_action_text.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
 	_context.text = text
-	_context_box.visible = not text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
+	_context_box.visible = not text.is_empty() and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
 	# Hug the single line instead of spanning the farm. Input passes through.
 	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
 	_context_box.offset_left = -width * 0.5
@@ -1501,13 +1529,31 @@ func show_toast(text: String) -> void:
 		return
 	if not is_instance_valid(root):
 		build_ui()
-	# Seed a real wrap width before rapid notifications can query minimum height.
-	_toast_label.size.x = 306.0
 	_toast_label.text = text
-	_toast_box.size = Vector2(326.0, _toast_label.get_minimum_size().y + 20.0)
+	_toast_layout_key = ""
+	_layout_toast()
 	_toast_box.show()
 	_toast_box.move_to_front()
 	_toast_timer.start()
+
+func _layout_toast() -> void:
+	var in_menu: bool = is_panel_open()
+	var compact: bool = in_menu and root.size.y - _modal_card.get_global_rect().end.y < 60
+	var weather_on_right: bool = is_instance_valid(_climate_console) and _climate_console.visible and _climate_console.position.x > root.size.x * 0.5
+	var key: String = str([in_menu, compact, weather_on_right, _toast_label.text, _blind_card.get_global_rect().end.y])
+	if key == _toast_layout_key: return
+	_toast_layout_key = key
+	var width: float = 700 if in_menu else (302 if weather_on_right else 326)
+	_toast_label.max_lines_visible = (1 if compact else 2) if in_menu else 3
+	_toast_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_toast_label.size.x = width - 20
+	# Ellipsis labels may report zero minimum height after their parent shrinks.
+	# Reserve the actual wrapped lines so switching from a menu never blanks a toast.
+	var lines: int = clampi(_toast_label.get_line_count(), 1, _toast_label.max_lines_visible)
+	_toast_label.custom_minimum_size.y = lines * _toast_label.get_theme_font("font").get_height(_toast_label.get_theme_font_size("font_size"))
+	_toast_box.size = Vector2(width, 0)
+	_toast_box.position = Vector2((root.size.x-width)*.5, root.size.y-(42 if compact else 70)) if in_menu else (Vector2(28, _blind_card.get_global_rect().end.y+12) if weather_on_right else Vector2(root.size.x-width-28,104))
+	_toast_label.tooltip_text = _toast_label.text
 
 func show_purchase(receipt: Dictionary) -> void:
 	# Only committed purchases reach this method; failed affordability checks
@@ -3492,7 +3538,7 @@ func _focus_debug_code() -> void:
 func _build_debug() -> void:
 	if not _debug_unlocked:
 		_heading("Debug access", "Enter the access code to unlock controls for this session.")
-		_info("debug_access_note", "Money, luck, time and island controls are locked.", MUTED, 16)
+		_info("debug_access_note", "Test funding and recovery change this saved farm. Ordinary gameplay stays paused after bankruptcy.", MUTED, 15)
 		var code: LineEdit = LineEdit.new()
 		code.secret = true
 		code.max_length = 64
@@ -3512,18 +3558,97 @@ func _build_debug() -> void:
 		_refs["debug_unlock"] = unlock
 		call_deferred("_focus_debug_code")
 		return
-	_heading("Debug controls", "Money, luck and island unlocks save. Time speed resets each session.")
+	_heading("Debug workshop", "Changes save to this farm. Future trophies stay marked DEBUG.")
 	var data: Dictionary = _debug_info()
 	_info("debug_balance", "", INK, 20)
-	_info("debug_luck_status", "", GREEN, 15)
+	var funding := _card(PAPER, 14)
+	_body.add_child(funding)
+	var funds := _vbox(8)
+	funding.add_child(funds)
+	funds.add_child(_label("TEST FUNDS · EXACT BALANCE", 15, INK, true))
+	var amount := DebugMoneyInput.new()
+	amount.max_value = 1e300
+	amount.value = float(_state.call("blind_info").base_tax) * 3.0 if _flag("run_over") else maxf(0, float(_state.get("coins")))
+	amount.placeholder_text = "15000000000 or 15e9"
+	amount.custom_minimum_size = Vector2(0, 42)
+	amount.add_theme_font_size_override("font_size", 18)
+	amount.add_theme_color_override("font_color", INK)
+	amount.add_theme_stylebox_override("normal", _style(CREAM, 10, 10, Color("b9cbb4")))
+	amount.add_theme_stylebox_override("focus", _style(CREAM, 10, 10, GREEN))
+	amount.text_changed.connect(func(_text: String) -> void: _refresh_debug())
+	funds.add_child(amount)
+	_refs.debug_balance_input = amount
+	var presets := HFlowContainer.new()
+	presets.add_theme_constant_override("h_separation", 7)
+	presets.add_theme_constant_override("v_separation", 7)
+	funds.add_child(presets)
+	for item: Array in [["Valley · $150K", "150000"], ["Shores · $15B", "15e9"], ["Winter · $750T", "750e12"]]:
+		var preset := _button(item[0], "debug_balance_preset:" + item[1])
+		preset.tooltip_text = "Fill the input with three base tax bills. Nothing changes until you apply."
+		presets.add_child(preset)
+	_refs.debug_balance_preview = _wrap("", 14, GREEN)
+	funds.add_child(_refs.debug_balance_preview)
+	var fund_actions := HFlowContainer.new()
+	fund_actions.add_theme_constant_override("h_separation", 8)
+	fund_actions.add_theme_constant_override("v_separation", 8)
+	funds.add_child(fund_actions)
+	_refs.debug_set_balance = _button("Set balance", "debug_set_balance", true)
+	fund_actions.add_child(_refs.debug_set_balance)
+	_refs.debug_recover = _button("Recover test farm", "debug_recover", true)
+	fund_actions.add_child(_refs.debug_recover)
+	funds.add_child(_wrap("Sets money directly, including from debt or $0. Recovery keeps your farm and restarts the tax countdown at normal speed.", 13, MUTED))
+
+	var time_card: PanelContainer = _card(PAPER, 14)
+	_body.add_child(time_card)
+	var time_column: VBoxContainer = _vbox(8)
+	time_card.add_child(time_column)
+	_refs["debug_time_status"] = _label("GAME TIME", 15, INK, true)
+	time_column.add_child(_refs.debug_time_status)
+	var time_row := HFlowContainer.new()
+	time_row.add_theme_constant_override("h_separation", 8)
+	time_column.add_child(time_row)
+	for speed: int in [1, 2, 5, 10, 30]:
+		var choice: Button = _button("%d×" % speed, "debug:time:%d" % speed)
+		choice.custom_minimum_size.x = 74
+		time_row.add_child(choice)
+		_refs["debug_time_%d" % speed] = choice
+	time_column.add_child(_wrap("Debug pauses game time while open. Outside this panel, 30× also speeds up taxes and weather.", 13, MUTED))
+
+	var access := _card(PAPER, 14)
+	_body.add_child(access)
+	var access_body := _vbox(9)
+	access.add_child(access_body)
+	access_body.add_child(_label("ISLANDS & WEATHER", 15, INK, true))
+	var islands := HFlowContainer.new()
+	islands.add_theme_constant_override("h_separation", 8)
+	islands.add_theme_constant_override("v_separation", 8)
+	access_body.add_child(islands)
+	for island: int in [2, 3]:
+		var unlock := _button("", "debug:island:%d" % island)
+		islands.add_child(unlock)
+		_refs["debug_island_%d" % island] = unlock
+	_refs.debug_island_note = _wrap("Unlocking gives access, not money. Visiting Shores raises base tax to $5B; Winter to $250T. That tier stays when you return. Set test funds before travelling.", 13, MUTED)
+	access_body.add_child(_refs.debug_island_note)
+	var weather_tests := HFlowContainer.new()
+	weather_tests.add_theme_constant_override("h_separation", 8)
+	weather_tests.add_theme_constant_override("v_separation", 8)
+	access_body.add_child(weather_tests)
+	for weather: String in ["drought", "flood", "storm"]:
+		var test := _button("Test " + weather, "debug:weather:" + weather)
+		weather_tests.add_child(test)
+		_refs["debug_weather_" + weather] = test
+	_refs.debug_weather_note = _wrap("", 13, MUTED)
+	access_body.add_child(_refs.debug_weather_note)
+
+	var advanced: VBoxContainer = _details_section("debug_advanced", "money multiplier & luck")
+	_refs.debug_luck_status = _wrap("", 15, GREEN)
+	advanced.add_child(_refs.debug_luck_status)
 	for field: String in ["money", "luck"]:
 		var card: PanelContainer = _card(PAPER, 14)
-		_body.add_child(card)
+		advanced.add_child(card)
 		var column: VBoxContainer = _vbox(8)
 		card.add_child(column)
-		column.add_child(_label("MONEY · ONE-TIME MULTIPLIER" if field == "money" else "LUCK · STAYS ACTIVE UNTIL RESET", 15, INK, true))
-		var row: HBoxContainer = _hbox(8)
-		column.add_child(row)
+		column.add_child(_label("MONEY · MULTIPLY ONCE" if field == "money" else "LUCK · STAYS UNTIL RESET", 15, INK, true))
 		var number: Control
 		var input: LineEdit
 		if field == "money":
@@ -3531,7 +3656,7 @@ func _build_debug() -> void:
 			money_input.max_value = float(data.get("money_limit", 1e6))
 			money_input.value = 1.0
 			money_input.placeholder_text = "0.1 or 1e-20"
-			money_input.tooltip_text = "Multiply current money by this amount. Decimals and scientific notation work; 0 clears the purse."
+			money_input.tooltip_text = "Multiply current money once. Set balance above can fund a zero or negative purse."
 			money_input.text_changed.connect(func(_text: String) -> void: _refresh_debug())
 			number = money_input
 			input = money_input
@@ -3545,64 +3670,39 @@ func _build_debug() -> void:
 			luck_input.value_changed.connect(func(_value: float) -> void: _refresh_debug())
 			number = luck_input
 			input = luck_input.get_line_edit()
-		number.custom_minimum_size = Vector2(155, 40)
-		number.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(number)
+		number.custom_minimum_size = Vector2(0, 40)
+		column.add_child(number)
 		input.add_theme_color_override("font_color", INK)
 		input.add_theme_font_size_override("font_size", 16)
 		input.add_theme_stylebox_override("normal", _style(CREAM, 10, 8, Color("c6d3bd")))
 		input.add_theme_stylebox_override("focus", _style(CREAM, 10, 8, GREEN))
 		_refs["debug_" + field] = number
-		var presets: Array = ["0.01", "0.1", "1", "10", "100", "1000"] if field == "money" else ["1", "10", "100", "1000"]
-		for amount: String in presets:
-			var preset: Button = _button("×" + amount, "debug_%s:%s" % [field, amount])
+		var choices := HFlowContainer.new()
+		choices.add_theme_constant_override("h_separation", 6)
+		choices.add_theme_constant_override("v_separation", 6)
+		column.add_child(choices)
+		var multipliers: Array = ["0.01", "0.1", "1", "10", "100", "1000"] if field == "money" else ["1", "10", "100", "1000"]
+		for value: String in multipliers:
+			var preset: Button = _button("×" + value, "debug_%s:%s" % [field, value])
 			preset.add_theme_stylebox_override("normal", _style(CREAM, 10, 8, Color("c6d3bd")))
-			preset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(preset)
-	var time_card: PanelContainer = _card(PAPER, 14)
-	_body.add_child(time_card)
-	var time_column: VBoxContainer = _vbox(8)
-	time_card.add_child(time_column)
-	_refs["debug_time_status"] = _label("GAME TIME", 15, INK, true)
-	time_column.add_child(_refs.debug_time_status)
-	var time_row: HBoxContainer = _hbox(8)
-	time_column.add_child(time_row)
-	for speed: int in [1, 2, 5, 10, 30]:
-		var choice: Button = _button("%d×" % speed, "debug:time:%d" % speed)
-		choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		time_row.add_child(choice)
-		_refs["debug_time_%d" % speed] = choice
-	_info("debug_time_note", "Crops, markets, pests and abilities follow game time.", MUTED, 13)
-	var islands := _hbox(8)
-	_body.add_child(islands)
-	for island: int in [2, 3]:
-		var unlock := _button("", "debug:island:%d" % island)
-		unlock.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		islands.add_child(unlock)
-		_refs["debug_island_%d" % island] = unlock
-	var weather_tests := _hbox(8)
-	_body.add_child(weather_tests)
-	for weather: String in ["drought", "flood", "storm"]:
-		weather_tests.add_child(_button("Test " + weather, "debug:weather:" + weather))
-	_body.add_child(_button("Luck calculation", "toggle_details:debug_luck_math"))
-	_info("debug_luck_math", "", GREEN, 13)
+			choices.add_child(preset)
+	advanced.add_child(_button("Luck calculation", "toggle_details:debug_luck_math"))
+	_refs.debug_luck_math = _wrap("", 13, GREEN)
+	advanced.add_child(_refs.debug_luck_math)
 	_refs.debug_luck_math.hide()
-	_info("debug_island_note", "Unlock without paying or changing harvest totals. Frosthollow includes Golden Shores. Travel by ferry when ready; future trophies are marked DEBUG.", MUTED, 13)
-	_info("debug_preview", "", GREEN, 14)
-	var actions: HBoxContainer = _hbox(9)
-	_body.add_child(actions)
-	var apply: Button = _button("Apply money once + set luck", "debug_apply", true)
-	apply.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(apply)
-	_refs["debug_apply"] = apply
-	var reset: Button = _button("Reset luck + time", "debug:reset")
-	reset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(reset)
-	_refs["debug_reset"] = reset
-	_info("debug_note", "Money: 0.1 = 10% · 0 = empty purse\nReset keeps coins. Debug trophies stay marked.", MUTED, 13)
+	_refs.debug_preview = _wrap("", 14, GREEN)
+	advanced.add_child(_refs.debug_preview)
+	var actions := HFlowContainer.new()
+	actions.add_theme_constant_override("h_separation", 9)
+	actions.add_theme_constant_override("v_separation", 9)
+	advanced.add_child(actions)
+	_refs.debug_apply = _button("Apply money once + set luck", "debug_apply", true)
+	actions.add_child(_refs.debug_apply)
+	_refs.debug_reset = _button("Reset luck + time", "debug:reset")
+	actions.add_child(_refs.debug_reset)
+	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps coins and all Debug history.", 13, MUTED))
 	_body.add_child(_button("Lock debug · restore 1× time", "debug:lock"))
 	_refresh_debug()
-
 func _debug_money_value() -> Dictionary:
 	var parsed: Dictionary = _refs.debug_money.read_number()
 	if parsed.has("error"):
@@ -3618,11 +3718,26 @@ func _refresh_debug() -> void:
 		return
 	var data: Dictionary = _debug_info()
 	var coins: float = float(_state.get("coins"))
-	_refs.debug_balance.text = "CURRENT MONEY  " + _precise_money(coins)
+	var ended: bool = _flag("run_over")
+	if _refs.has("debug_balance_input"):
+		var balance: Dictionary = _refs.debug_balance_input.read_number()
+		var valid: bool = not balance.has("error")
+		_refs.debug_set_balance.visible = not ended
+		_refs.debug_set_balance.disabled = not valid or ended
+		_refs.debug_recover.visible = ended
+		_refs.debug_recover.disabled = not valid or (valid and float(balance.value) <= 0.0)
+		if not valid:
+			_refs.debug_balance_preview.text = "Enter a balance from 0 to 1e300, such as 15e9."
+		else:
+			_refs.debug_balance_preview.text = "%s to %s%s" % [_blind_money(coins), _blind_money(float(balance.value)), " · resume with progress kept" if ended else " · exact new balance"]
+			if ended and float(balance.value) <= 0: _refs.debug_balance_preview.text = "Enter positive test funds to recover this farm."
+		_refs.debug_balance_preview.add_theme_color_override("font_color", CHERRY if not valid or (ended and float(balance.get("value", 0)) <= 0) else GREEN)
+	_refs.debug_balance.text = "CURRENT MONEY  " + _blind_money(coins)
+	_refs.debug_balance.tooltip_text = _precise_money(coins)
 	_refs.debug_luck_status.text = "Normal %.2f× (+%s%%) · Debug ×%.2f · Total %.2f×" % [float(data.normal_luck), _number((float(data.normal_luck) - 1.0) * 100.0), float(data.luck_multiplier), float(data.effective_luck)]
 	_refs.debug_luck_math.text = _luck_math()
 	var parsed: Dictionary = _debug_money_value()
-	_refs.debug_apply.disabled = parsed.has("error")
+	_refs.debug_apply.disabled = parsed.has("error") or ended
 	if parsed.has("error"):
 		_refs.debug_preview.text = str(parsed.error)
 		_refs.debug_preview.add_theme_color_override("font_color", CHERRY)
@@ -3630,16 +3745,22 @@ func _refresh_debug() -> void:
 		var multiplier: float = float(parsed.value)
 		var after: float = minf(1e300, coins * multiplier)
 		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s\nLuck %.2f× × %.2f = %.2f× (+%s%%)" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after), float(data.normal_luck), float(_refs.debug_luck.value), float(data.normal_luck) * float(_refs.debug_luck.value), _number((float(data.normal_luck) * float(_refs.debug_luck.value) - 1.0) * 100.0)]
-		_refs.debug_preview.add_theme_color_override("font_color", GREEN)
+		_refs.debug_preview.add_theme_color_override("font_color", CHERRY if after < float(_state.call("bankruptcy_limit")) else GREEN)
+		if after < float(_state.call("bankruptcy_limit")): _refs.debug_preview.text += "\nThis crosses bankruptcy. Use exact test funds above to clear debt."
 	_refs.debug_reset.disabled = is_equal_approx(float(data.get("luck_multiplier", 1)), 1.0) and is_equal_approx(_debug_time_multiplier, 1.0)
 	for island: int in [2, 3]:
 		var unlocked: bool = _flag("island2_unlocked" if island == 2 else "island3_unlocked")
 		var label: String = "Golden Shores" if island == 2 else "Frosthollow + Shores"
 		_refs["debug_island_%d" % island].text = label + (" · Unlocked" if unlocked else " · Unlock")
-		_refs["debug_island_%d" % island].disabled = unlocked
+		_refs["debug_island_%d" % island].disabled = unlocked or ended
 	_refs.debug_time_status.text = "GAME TIME · %d×" % int(_debug_time_multiplier)
 	for speed: int in [1, 2, 5, 10, 30]:
-		_refs["debug_time_%d" % speed].disabled = is_equal_approx(_debug_time_multiplier, float(speed))
+		_refs["debug_time_%d" % speed].disabled = ended or is_equal_approx(_debug_time_multiplier, float(speed))
+	var climate: Dictionary = _state.call("climate_info")
+	var can_weather: bool = not ended and _island_id() >= 2 and climate.phase == "calm" and not climate.intro_pending and not _state.ClimateSystem.Lesson.active(_state)
+	for weather: String in ["drought", "flood", "storm"]:
+		_refs["debug_weather_" + weather].disabled = not can_weather
+	_refs.debug_weather_note.text = "Starts a full 45-second warning; crops and stores can be lost." if can_weather else ("Recover this test farm first." if ended else ("Travel to Shores or Winter first." if _island_id() < 2 else "Finish the current weather or lesson before starting a test."))
 
 func _precise_money(amount: float) -> String:
 	return "$" + String.num_scientific(amount)
@@ -3763,13 +3884,39 @@ func _update_farm_help() -> void:
 	if not tip.is_empty() and _help_cooldown > 0.0 and tip.id not in ["pests", "taxes", "debt"]:
 		tip = {}
 	_farm_tip = tip
-	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _crop_row.visible and _farm_busy_remaining <= 0.0
+	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _state.run_over and not _crop_row.visible and not _toast_box.visible and _farm_busy_remaining <= 0.0 and _plot_action_text.is_empty() and _climate_console.equipment.is_empty() and not _state.ClimateSystem.Lesson.active(_state)
 	if tip.is_empty(): return
 	var summaries: Dictionary = {"repeat": "Grow another crop · Help", "pests": "Pests · Press 5 to spray", "stocks": "Try a practice boom", "taxes": "Tax after 3 stocks · Help", "debt": "In debt · Recovery tips", "tools": "Upgrade your tools", "ducks": "Ducks can clear pests", "builds": "Explore your builds"}
 	_farm_help_action.text = str(tip.title) if tip.id == "stocks" and float(_state.farm_help.data.practice_remaining) > 0.0 else str(summaries[tip.id])
 	_farm_help_action.text += "  ›"
 	_farm_help_card.position = Vector2(28, _blind_card.get_global_rect().end.y + 10.0)
 	_farm_help_card.size = Vector2(302, 0)
+
+func _build_plot_action() -> void:
+	_plot_action_box = _card(Color("193c33"), 10)
+	_plot_action_box.name = "CropActionPrompt"
+	root.add_child(_plot_action_box)
+	_plot_action_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_plot_action_box.offset_left = -270
+	_plot_action_box.offset_right = 270
+	_plot_action_box.offset_top = -205
+	_plot_action_box.offset_bottom = -145
+	var row := _hbox(12)
+	_plot_action_box.add_child(row)
+	row.add_child(_icon({"kind": "build", "id": "farmer"}, 38))
+	_plot_action_label = _wrap("", 14, CREAM)
+	_plot_action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_plot_action_label)
+	row.add_child(_button("Cancel · Esc", "profession:cancel"))
+	_plot_action_box.hide()
+
+func set_plot_action(text: String) -> void:
+	_plot_action_text = text
+	_plot_action_label.text = text
+	if not text.is_empty(): _climate_console.hide()
+	_refresh_seed_visibility()
+	_update_context()
+	_update_farm_help()
 
 func _build_farm_tip() -> void:
 	if _opened_farm_tip.is_empty(): return

@@ -1,6 +1,7 @@
 extends Control
-## A quiet editorial spread. Essential losses first; the full ledger is optional.
+## An honest final receipt; details scroll while recovery/new-run actions stay reachable.
 signal restart_requested
+signal debug_requested
 const Climate = preload("res://scripts/climate_system.gd")
 const Type = preload("res://scripts/ui_type.gd")
 const CREAM := Color("eee7d9")
@@ -10,6 +11,8 @@ var headline: Label
 var detail: Label
 var _balance: Label
 var _event: Label
+var _threshold: Label
+var _calculation: Label
 var _metrics: Dictionary = {}
 var _context: Label
 var _summary: Label
@@ -19,6 +22,7 @@ var _font: Font = Type.face(Type.BODY, 500)
 var _display: Font = Type.face(Type.EDITORIAL, 650)
 var _ledger: VBoxContainer
 var _tween: Tween
+var _scroll: ScrollContainer
 
 func _init() -> void:
 	name = "ClimateCollapse"
@@ -37,74 +41,86 @@ func _init() -> void:
 	var margin := MarginContainer.new()
 	add_child(margin)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 62)
-	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 38)
+	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 36)
+	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 26)
 	var page := VBoxContainer.new()
-	page.add_theme_constant_override("separation", 20)
+	page.add_theme_constant_override("separation", 14)
 	margin.add_child(page)
 	_event = label("", 14, MUTED)
 	page.add_child(_event)
-	var spread := HBoxContainer.new()
-	spread.add_theme_constant_override("separation", 65)
-	spread.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	page.add_child(spread)
-	var left := VBoxContainer.new()
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.05
-	left.add_theme_constant_override("separation", 9)
-	spread.add_child(left)
-	headline = label("BANKRUPT", 96, CREAM, true)
-	left.add_child(headline)
-	left.add_child(label("FINAL BALANCE", 12, MUTED))
-	_balance = label("", 43, DEBT, true)
-	left.add_child(_balance)
-	detail = label("", 21, CREAM)
+	_scroll = ScrollContainer.new()
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	page.add_child(_scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 12)
+	_scroll.add_child(content)
+	headline = label("BANKRUPT", 80, CREAM, true)
+	content.add_child(headline)
+	var amount_row := HFlowContainer.new()
+	amount_row.add_theme_constant_override("h_separation", 28)
+	amount_row.add_theme_constant_override("v_separation", 8)
+	content.add_child(amount_row)
+	var balance_box := VBoxContainer.new()
+	amount_row.add_child(balance_box)
+	balance_box.add_child(label("FINAL BALANCE", 12, MUTED))
+	_balance = label("", 40, DEBT, true)
+	balance_box.add_child(_balance)
+	var reason := VBoxContainer.new()
+	reason.custom_minimum_size.x = 265
+	amount_row.add_child(reason)
+	detail = label("", 19, CREAM)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	left.add_child(detail)
+	reason.add_child(detail)
+	_threshold = label("", 15, Color("e0b27d"))
+	_threshold.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	reason.add_child(_threshold)
+	_calculation = label("", 18, CREAM)
+	_calculation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(_calculation)
+	content.add_child(rule())
+	var metrics := HFlowContainer.new()
+	metrics.add_theme_constant_override("h_separation", 28)
+	metrics.add_theme_constant_override("v_separation", 18)
+	content.add_child(metrics)
+	for id in ["FIELD LOST", "BARN LOST", "TAX BILL"]:
+		var box := VBoxContainer.new()
+		box.custom_minimum_size.x = 200
+		metrics.add_child(box)
+		var caption := label(id, 12, MUTED)
+		box.add_child(caption)
+		var value: Label = label("", 34, Color("c6a986") if id != "TAX BILL" else CREAM, true)
+		box.add_child(value)
+		var note: Label = label("", 13, MUTED)
+		box.add_child(note)
+		_metrics[id] = {"value": value, "note": note, "caption": caption}
 	_ledger = VBoxContainer.new()
-	_ledger.add_theme_constant_override("separation", 10)
-	left.add_child(_ledger)
+	_ledger.add_theme_constant_override("separation", 12)
+	content.add_child(_ledger)
 	_context = label("", 15, MUTED)
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ledger.add_child(_context)
 	_summary = label("", 15, CREAM)
 	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ledger.add_child(_summary)
-	_ledger.hide()
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	right.add_theme_constant_override("separation", 20)
-	spread.add_child(right)
-	right.add_child(label("BEYOND THIS FARM", 14, Color("cbab78")))
-	var education := label(Climate.EDUCATION, 25, CREAM)
+	_ledger.add_child(rule())
+	_ledger.add_child(label("BEYOND THIS FARM", 12, Color("cbab78")))
+	var education := label(Climate.EDUCATION, 18, CREAM)
 	education.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right.add_child(education)
+	_ledger.add_child(education)
 	var source := label("FAO · Disasters, agriculture & food security", 12, MUTED)
 	source.tooltip_text = Climate.EDUCATION_SOURCE
-	right.add_child(source)
+	_ledger.add_child(source)
+	_ledger.hide()
 	page.add_child(rule())
-	var metrics := HBoxContainer.new()
-	metrics.add_theme_constant_override("separation", 30)
-	page.add_child(metrics)
-	for id in ["FIELD LOST", "BARN LOST", "TAX BILL"]:
-		var box := VBoxContainer.new()
-		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		metrics.add_child(box)
-		var caption := label(id, 13, MUTED)
-		box.add_child(caption)
-		var value: Label = label("", 40, Color("c6a986") if id != "TAX BILL" else CREAM, true)
-		box.add_child(value)
-		var note: Label = label("", 13, MUTED)
-		box.add_child(note)
-		note.hide()
-		_metrics[id] = {"value": value, "note": note}
-	page.add_child(rule())
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 16)
+	var actions := HFlowContainer.new()
+	actions.add_theme_constant_override("h_separation", 10)
+	actions.add_theme_constant_override("v_separation", 9)
 	page.add_child(actions)
 	var again: Button = button("TRY AGAIN", true)
 	again.name = "TryAgain"
+	again.tooltip_text = "Start a new farm. The ended farm's progress is replaced."
 	actions.add_child(again)
 	again.pressed.connect(func() -> void: restart_requested.emit())
 	_summary_button = button("VIEW RUN SUMMARY")
@@ -112,6 +128,15 @@ func _init() -> void:
 	_summary_button.pressed.connect(func() -> void:
 		_ledger.visible = not _ledger.visible
 		_summary_button.text = "HIDE RUN SUMMARY" if _ledger.visible else "VIEW RUN SUMMARY"
+		if _ledger.visible: _scroll.ensure_control_visible.call_deferred(_ledger)
+	)
+	var debug: Button = button("DEBUG ACCESS")
+	debug.name = "DebugAccess"
+	debug.tooltip_text = "Access code required. Recover a test farm without resetting its progress."
+	actions.add_child(debug)
+	debug.pressed.connect(func() -> void: debug_requested.emit())
+	resized.connect(func() -> void:
+		headline.add_theme_font_size_override("font_size", clampi(int(size.x * 0.068), 36, 80))
 	)
 	hide()
 
@@ -133,9 +158,9 @@ func rule() -> ColorRect:
 func button(text: String, primary: bool = false) -> Button:
 	var result := Button.new()
 	result.text = text
-	result.custom_minimum_size = Vector2(215, 47)
+	result.custom_minimum_size = Vector2(190, 45)
 	result.add_theme_font_override("font", _display)
-	result.add_theme_font_size_override("font_size", 18)
+	result.add_theme_font_size_override("font_size", 16)
 	for key in ["normal", "hover", "pressed"]:
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("e1c495") if primary else (Color("423a30") if key != "normal" else Color.TRANSPARENT)
@@ -157,18 +182,25 @@ func show_report(farm) -> void:
 	var event: String = str(Climate.EVENTS.get(report.event, {}).get("name", ""))
 	if event.is_empty() and str(report.cause).contains("Recovery"):
 		event = "AFTER THE " + str(Climate.EVENTS.get(report.get("last_event", ""), {}).get("name", "DISASTER"))
-	_event.text = "ISLAND %d   /   %s" % [int(report.island), event if not event.is_empty() else "A FARM LOST"]
-	detail.text = "Recovery costs pushed your farm into debt." if str(report.cause).contains("Recovery") else "Your debt crossed the bankruptcy limit."
+	_event.text = "ISLAND %d   /   %s" % [int(report.island), event if not event.is_empty() else "FINAL RECEIPT"]
+	var receipt: Dictionary = farm.blind_cycle.last_result
+	var tax_caused: bool = str(report.cause).to_lower().contains("tax") and not receipt.is_empty() and float(receipt.after) == float(report.balance) and float(receipt.tax) > 0.0
+	detail.text = "This tax bill crossed the debt limit." if tax_caused else "Your debt crossed the bankruptcy limit."
+	_threshold.text = "Bankruptcy below " + farm.money(farm.bankruptcy_limit(), true)
+	_calculation.text = "%s before − %s tax = %s after" % [farm.money(receipt.balance, true), farm.money(receipt.tax, true), farm.money(receipt.after, true)] if tax_caused else "No tax was collected at this moment."
 	for pair in [["FIELD LOST", "field"], ["BARN LOST", "barn"]]:
 		var lost: float = float(report[pair[1] + "_lost"])
 		var total: float = float(report[pair[1] + "_total"])
 		_metrics[pair[0]].value.text = "%.0f%%" % (lost / total * 100.0) if total > 0.0 else "None"
 		_metrics[pair[0]].note.text = "%s / %s" % [farm.format_number(lost), farm.format_number(total)]
-	_metrics["TAX BILL"].value.text = farm.money(report.tax, true)
-	_metrics["TAX BILL"].note.text = "Bankruptcy below " + farm.money(farm.bankruptcy_limit(), true)
+		_metrics[pair[0]].note.visible = total > 0.0
+	_metrics["TAX BILL"].caption.text = "TAX COLLECTED" if tax_caused else "NEXT BASE TAX"
+	_metrics["TAX BILL"].value.text = farm.money(receipt.tax if tax_caused else farm.blind_info().base_tax, true)
+	_metrics["TAX BILL"].note.text = "Island %d tax tier" % int(farm.blind_cycle.island)
 	_context.text = "%s build · %s market %+.0f%%\nSeeds +%.0f%% · Weather sale prices %.0f%%" % [report.build, str(report.market_crop).capitalize(), float(report.market_change), (float(report.seed_factor) - 1.0) * 100.0, (float(report.sell_factor) - 1.0) * 100.0]
 	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%s tax collected\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), farm.money(report.tax_paid, true), project_count(report.projects)]
 	_ledger.hide()
+	_scroll.scroll_vertical = 0
 	_summary_button.text = "VIEW RUN SUMMARY"
 	show()
 	modulate.a = 0.0

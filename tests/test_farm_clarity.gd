@@ -118,7 +118,7 @@ func run() -> void:
 		for label: Label3D in game.world.find_children("*", "Label3D", true, false):
 			if not label.get_meta("shop_label", false): continue
 			signs += 1
-			check(label.font == preload("res://assets/fonts/Ranchers.ttf") and label.font_size <= 48 and label.outline_size <= 3, "compact Ranchers sign: " + label.text)
+			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size <= 4, "compact shared shop typography: " + label.text)
 		check(signs >= 8, "island %d retains discoverable shop signs" % island)
 		await shot("island-%d" % island)
 	state.coins = 215e6

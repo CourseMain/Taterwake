@@ -25,6 +25,8 @@ func shot(label: String) -> void:
 	check(root.get_texture().get_image().save_png("res://artifacts/debug-access-" + label + ".png") == OK, "capture " + label)
 
 func click_button(button: Button) -> void:
+	var scroller: ScrollContainer = game.hud._body.get_parent()
+	scroller.ensure_control_visible(button)
 	await process_frame
 	await process_frame
 	var point: Vector2 = button.get_global_rect().get_center()
@@ -86,8 +88,14 @@ func run() -> void:
 		await click_button(game.hud._refs["debug_time_%d" % speed])
 		check(game.debug_time_multiplier == speed and game.hud._refs["debug_time_%d" % speed].disabled, "%dx selected speed is shown by the active button" % speed)
 		var elapsed: float = game.state.elapsed
+		var taxes: Dictionary = game.state.blind_cycle.duplicate(true)
+		var cooldown: float = game.builds.cooldown
+		game._process(1.0)
+		check(game.state.elapsed == elapsed and game.state.blind_cycle == taxes and game.builds.cooldown == cooldown, "%dx Debug pauses crops, taxes and builds while editing" % speed)
+		game.hud.close_panel()
 		game._process(0.02)
-		check(is_equal_approx(game.state.elapsed - elapsed, 0.02 * speed), "%dx advances simulation by the selected multiplier" % speed)
+		check(is_equal_approx(game.state.elapsed - elapsed, 0.02 * speed), "%dx advances simulation after closing Debug" % speed)
+		game._on_action("debug")
 	for invalid: String in ["0", "-1", "3", "31", "inf", "nan", "bad"]:
 		game._on_action("debug:time:" + invalid)
 		check(game.debug_time_multiplier == 1.0, "unsupported speed rejected: " + invalid)
@@ -96,6 +104,7 @@ func run() -> void:
 	(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = 450
 	await shot("unlocked-actions")
 	check(game.state.save_game(SAVE), "debug effects can save without storing the session gate")
+	game.hud.close_panel()
 	game.state.surge_timer = 0.05
 	game.state.surge_remaining = 0.0
 	var before: float = game.state.elapsed
@@ -137,7 +146,7 @@ func run() -> void:
 	plot.frozen = false
 	plot.elapsed = 0.0
 	game._process(0.01)
-	check(is_equal_approx(game.state.pest_timer, 99.7) and is_equal_approx(game.state.frost_timer, 99.7) and is_equal_approx(game.state.export_timer, 99.7), "pest, winter and export clocks use the same scaled interval")
+	check(is_equal_approx(float(plot.plant_age), 0.3) and is_equal_approx(game.state.frost_timer, 99.7) and is_equal_approx(game.state.export_timer, 99.7), "crop pest age, winter and export clocks use the same scaled interval")
 	check(is_equal_approx(game.activities.furnace_cooldown, 49.7) and is_equal_approx(game.builds.cooldown, 49.7) and is_equal_approx(game.builds.fertilizer, 49.7), "activities and build abilities share simulation time")
 	check(is_equal_approx(float(game.builds.processing.elapsed), 0.6), "processing integrates furnace heat before the scaled interval consumes it")
 	check(float(plot.elapsed) > 0.3, "crop growth uses scaled time and its active furnace bonus")

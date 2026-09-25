@@ -15,7 +15,7 @@ var visitor_label: Label3D
 var tax_due: float = 0.0
 var tax_exit: float = 0.0
 var result_left: float = 0.0
-var seen_event: int = 0
+var seen_event: int = -1
 var clock: float = 0.0
 var ship_left: float = 0.0
 var tax_route: Array[Vector3] = []
@@ -136,6 +136,9 @@ func refresh(builds, state) -> void:
 	if tax_due > 0:
 		visitor.show()
 		visitor_label.text = "Tax collector · " + state.money(state.blind_info().tax)
+	# Rebuilding an island adopts the latest result without replaying an old
+	# harvest or discovery over unrelated equipment on the new island.
+	if seen_event < 0: seen_event = builds.professions.event_serial
 	if seen_event != builds.professions.event_serial:
 		seen_event = builds.professions.event_serial
 		var event: Dictionary = builds.professions.event

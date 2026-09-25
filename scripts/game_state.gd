@@ -379,11 +379,52 @@ func apply_debug(money_multiplier: float, luck_multiplier: float) -> String:
 			return _finish("That positive multiplier is too small to keep a nonzero balance. Use x0 explicitly if you want to clear your purse.")
 		return _finish("Debug ranges: money x0 to x1M, luck x1 to x1000. Decimals such as 0.1 and 1e-3 work; x0 clears your purse.")
 	var previous: float = coins
-	coins = minf(MAX_MONEY, coins * money_multiplier)
+	var after: float = minf(MAX_MONEY, coins * money_multiplier)
+	var receipt: Dictionary = blind_cycle.last_result
+	var debug_collapse: bool = after < bankruptcy_limit()
+	# A Debug edit can match an old receipt exactly. Keep that history, but do
+	# not let the synchronous collapse snapshot treat it as a new collection.
+	if debug_collapse: blind_cycle.last_result = {}
+	coins = after
+	if debug_collapse: blind_cycle.last_result = receipt
 	debug_money_modified = debug_money_modified or coins != previous
 	debug_luck_multiplier = luck_multiplier
 	return _finish("DEBUG applied: purse %s; luck %.2fx (normal %.2fx x debug %.2fx). Money was multiplied once." % [money(coins), effective_luck(), normal_luck(), debug_luck_multiplier])
 
+
+func debug_set_balance(amount: float) -> String:
+	if run_over:
+		return _finish("Use Recover test farm to resume this ended run.")
+	if _rolling_reward or rocket_pending:
+		return _finish("Finish the current event before changing the test balance.")
+	if not is_finite(amount) or amount < 0.0 or amount > MAX_MONEY:
+		return _finish("Enter a test balance from 0 to 1e300.")
+	debug_money_modified = debug_money_modified or coins != amount
+	coins = amount
+	return _finish("DEBUG: balance set to %s. Progress kept; taxes still apply." % money(coins, true))
+
+
+func debug_recover(amount: float) -> String:
+	# The scene controller authenticates this explicit test-only action. Ordinary
+	# rewards and purchases still cannot change an ended run's balance.
+	if not run_over:
+		return _finish("This farm is still running. Use Set balance for test funds.")
+	if _rolling_reward or not is_finite(amount) or amount <= 0.0 or amount > MAX_MONEY:
+		return _finish("Recovery needs a positive test balance up to 1e300.")
+	var previous: Dictionary = blind_cycle.duplicate(true)
+	blind_cycle = BlindRules.new_cycle(int(previous.island))
+	blind_cycle.clears = int(previous.clears)
+	blind_cycle.last_result = previous.last_result.duplicate(true)
+	debug_money_modified = true
+	coins = amount
+	climate.data.collapse.clear()
+	climate.data.tax_events.clear()
+	surge_timer = SURGE_INTERVAL
+	surge_remaining = 0.0
+	surge_factor = 1.0
+	surge_kind = "normal"
+	_refresh_market(false)
+	return _finish("DEBUG: farm recovered with %s. Progress kept; three fresh stocks before tax. Future trophies remain DEBUG." % money(coins, true))
 
 
 func debug_unlock_island(id: int) -> String:
@@ -401,7 +442,7 @@ func debug_unlock_island(id: int) -> String:
 		island3_unlocked = true
 		frost_timer = rng.randf_range(120.0, 220.0)
 		for plot in island_plots["3"]: plot.unlocked = true
-	return _finish("DEBUG: %s unlocked. Travel by ferry when ready. Coins and harvest totals are unchanged." % ("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"))
+	return _finish("DEBUG: %s unlocked; cash unchanged. Visiting raises base tax to %s, even after returning. Set test funds before travelling." % [("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"), money(float(BlindRules.PROGRESSION_BASELINES[id]) * BlindRules.TAX_RATE, true)])
 
 func reset_debug() -> String:
 	if _rolling_reward:
@@ -1609,6 +1650,7 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
 	storage[id] = int(storage[id]) - amount
+	if is_instance_valid(build_system): build_system.professions.consumed(id, amount)
 	coins = minf(MAX_MONEY, coins + earnings)
 	_record_sales(earnings)
 	var sold_quote: float = float(market[id]["sell"])
