@@ -10,6 +10,7 @@ var calls: float = 0.0
 var warmup: float = 2.0
 var elapsed: float = 0.0
 var scenario: String = "valley"
+var coast_toggle: CheckButton
 
 func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
@@ -62,6 +63,28 @@ func _ready() -> void:
 		game._on_action("tools" if game.state.current_island == 1 else "climate")
 		_fold())
 	controls.add_child(upgrades)
+	var ferry := Button.new()
+	ferry.text = "Walk the path to the ferry"
+	ferry.pressed.connect(func():
+		game.queue_ferry()
+		_fold())
+	controls.add_child(ferry)
+	coast_toggle = CheckButton.new()
+	coast_toggle.text = "Coastal water & ice"
+	coast_toggle.tooltip_text = "Compare frame times with the coastal water and ice visible or hidden."
+	coast_toggle.button_pressed = true
+	coast_toggle.toggled.connect(func(enabled: bool):
+		game.world.coast.set_effects_enabled(enabled)
+		_measure())
+	controls.add_child(coast_toggle)
+	var mature := Button.new()
+	mature.text = "Mature farm · performance test"
+	mature.pressed.connect(func():
+		for plot in game.state.plots:
+			plot.merge({"stage": 3, "watered": true, "frozen": false, "ripe_age": 0.0}, true)
+		game._on_state_changed()
+		_measure())
+	controls.add_child(mature)
 	var row := HBoxContainer.new()
 	controls.add_child(row)
 	for mode in ["balanced", "smooth", "crisp"]:
@@ -93,6 +116,7 @@ func _measure() -> void:
 
 func _scenario(kind: String) -> void:
 	scenario = kind
+	coast_toggle.set_pressed_no_signal(true)
 	game._cancel_walk()
 	game._close_equipment()
 	game.state.reset_game()
@@ -140,5 +164,5 @@ func _process(delta: float) -> void:
 	elapsed += delta
 	if elapsed >= 8:
 		frames.sort()
-		report.text = "%s · %s\nUI %s · Farm %s\n%.1f FPS · median %.1f ms · p95 %.1f ms\n%.0f draw calls · %d frames / 8s" % [scenario.capitalize(), game.graphics_quality, get_tree().root.size, game.farm_viewport.size, frames.size() / elapsed, frames[frames.size() / 2], frames[int(frames.size() * 0.95)], calls / frames.size(), frames.size()]
+		report.text = "%s · %s · coast %s\nUI %s · Farm %s\n%.1f FPS · median %.1f ms · p95 %.1f ms\n%.0f draw calls · %d frames / 8s" % [scenario.capitalize(), game.graphics_quality, "on" if game.world.coast.water_enabled else "off", get_tree().root.size, game.farm_viewport.size, frames.size() / elapsed, frames[frames.size() / 2], frames[int(frames.size() * 0.95)], calls / frames.size(), frames.size()]
 		print("BROWSER_PERFORMANCE " + report.text.replace("\n", " | "))

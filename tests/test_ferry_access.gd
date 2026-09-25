@@ -29,7 +29,8 @@ func screenshot(filename: String) -> void:
 		return
 	await process_frame
 	await process_frame
-	await RenderingServer.frame_post_draw
+	# Captures must also finish while the test window is occluded by Safari.
+	RenderingServer.force_draw()
 	check(root.get_texture().get_image().save_png("res://artifacts/" + filename + ".png") == OK, "capture " + filename)
 
 func run() -> void:
@@ -42,14 +43,32 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	for island: int in [1, 2, 3]:
-		game.state.current_island = island
-		game.state.island2_unlocked = island > 1
-		game.state.island3_unlocked = island > 2
-		game._on_island_changed(island)
+		# Use real travel so the scene and the island's plot array stay in sync.
+		if island > 1: game.state.debug_unlock_island(island)
+		game.state.travel_to(island)
+		game.state.climate.acknowledge(game.state)
+		game.hud.close_panel()
 		await physics_frame
 		await physics_frame
 		var spawn: Vector3 = game.world.player.position
 		var boarding: Vector3 = game.world.ferry_position()
+		check(game.world.has_node("Coast/MooredFerry"), "island %d has a visible ship at its pier" % island)
+		for removed: String in ["GoldenShoresLocked", "SpudValleyReturn", "ValleyReturn", "ShoresReturn"]:
+			check(not game.world.has_node(removed), "removed offshore miniature " + removed)
+		var coast = game.world.coast
+		var water_mesh: Mesh = coast.water.mesh
+		check(water_mesh.get_surface_count() == 1 and water_mesh.surface_get_array_len(0) <= 3600, "coastal water stays within one small surface")
+		check(is_instance_valid(coast.ice) == (island == 3), "drifting sea ice belongs only to the Arctic")
+		if island == 3:
+			check(coast.ice.multimesh.instance_count == 36, "Arctic floes use one bounded instance batch")
+		var nodes_before: int = coast.get_child_count()
+		for frame in range(180): coast.animate(1.0 / 60.0)
+		check(coast.water.mesh == water_mesh and coast.get_child_count() == nodes_before, "coastal animation reuses geometry")
+		coast.set_effects_enabled(false)
+		check(not coast.water.visible and (island != 3 or not coast.ice.visible), "lab comparison hides both coastal effects")
+		coast.set_effects_enabled(true)
+		var ship_screen: Vector2 = game.world.camera.unproject_position(coast.ferry.global_position + Vector3(0, 1.2, 0))
+		check(game.world.pick(ship_screen).get("station", "") == "island", "visible ship itself can be clicked")
 		check(game.world.has_node("FerryPath"), "island %d has a visible ferry path" % island)
 		check(game._clamp_destination(boarding).is_equal_approx(boarding), "island %d boarding area is walkable" % island)
 		check(game.world.station_position("island").is_equal_approx(boarding), "island %d guide points to its dock, not an offshore island" % island)
@@ -65,6 +84,7 @@ func run() -> void:
 		check(game.hud.is_panel_open() and game.world.player.position.distance_to(boarding) < 0.4, "arrival opens travel at the boarding area")
 		game.hud.close_panel()
 		game.world.set_day_time(0.0)
+		check(coast.water_material.get_shader_parameter("horizon_color") == game.world._day_environment.background_color, "coastal horizon matches abrupt sky changes")
 		game.hud.update_state(game.state)
 		await screenshot("ferry-island-%d" % island)
 		var interact := InputEventKey.new()
@@ -111,10 +131,11 @@ func run() -> void:
 			game._on_action("travel:2")
 			check(game.state.current_island == 1 and not game.state.island2_unlocked, "reaching dock cannot bypass island unlock")
 		game.hud.close_panel()
-	game.state.current_island = 1
-	game._on_island_changed(1)
+	game.state.travel_to(1)
+	game.state.climate.acknowledge(game.state)
+	game.hud.close_panel()
 	check(game._clamp_destination(game.world.layout_point(Vector3(-12, 0, -20))).z >= -5 * game.world.LAND_SPACING - 0.001, "northern sea remains out of bounds away from path")
-	check(game._clamp_destination(game.world.layout_point(Vector3(11.5, 0, -50))).z >= -16.2 * game.world.LAND_SPACING, "cannot walk off the end of the boarding area")
+	check(game._clamp_destination(game.world.layout_point(Vector3(11.5, 0, -50))).z >= game.world.ferry_position().z - 0.651, "cannot walk off the end of the boarding area")
 	check(game._clamp_destination(game.world.layout_point(Vector3(10, 0, -8))).distance_to(game.world.layout_point(Vector3(10, 0, -8))) > 2, "path extension does not open a route through Roll House")
 	game.tutorial.start()
 	game.queue_ferry()

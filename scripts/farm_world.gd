@@ -34,6 +34,7 @@ var _rotor: Node3D
 var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
 const ClimateProjects = preload("res://scripts/climate_projects.gd")
+var coast: Node3D
 var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
 var _project_levels: Dictionary = {}
@@ -80,7 +81,6 @@ var _processing_potatoes: Array[Node3D] = []
 var _processing_steam: Array[Node3D] = []
 var _processing_label: Label3D
 var _processing_light: MeshInstance3D
-var _travel_label: Label3D
 var _dock_label: Label3D
 var _dock_gate: Node3D
 var _export_boat: Node3D
@@ -128,9 +128,9 @@ const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
 const DAY_CYCLE_SECONDS: float = 60.0
 const FERRY_ROUTES: Dictionary = {
-	1: [Vector3(7, 0, 7.7), Vector3(7, 0, -4.7), Vector3(15, 0, -4.7), Vector3(15, 0, -12), Vector3(11.5, 0, -12), Vector3(11.5, 0, -15.5)],
-	2: [Vector3(10.2, 0, 10.6), Vector3(16, 0, 10.6), Vector3(16, 0, 9.6)],
-	3: [Vector3(12.8, 0, 14), Vector3(20.6, 0, 14), Vector3(20.6, 0, 10), Vector3(22, 0, 10)],
+	1: [Vector3(7, 0, 7.7), Vector3(7, 0, -4.7), Vector3(15, 0, -4.7), Vector3(15, 0, -12), Vector3(11.5, 0, -12), Vector3(11.5, 0, -17.2)],
+	2: [Vector3(10.2, 0, 10.6), Vector3(16, 0, 10.6), Vector3(16, 0, 8.65), Vector3(23.5, 0, 8.65)],
+	3: [Vector3(12.8, 0, 14), Vector3(20.6, 0, 14), Vector3(20.6, 0, 10), Vector3(28.0, 0, 10)],
 }
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
@@ -152,7 +152,7 @@ func build_world(island: int = 1) -> void:
 		_roll_house(Vector3(10.0, 0.0, -8.0))
 		_windmill(Vector3(-13.2, 0.0, 4.0))
 		_scenery()
-		_golden_shores()
+		_valley_dock()
 		_quest_board(Vector3(-12.0, 0.0, 8.1))
 	elif current_island == 2:
 		_build_land(_tropical_island)
@@ -162,7 +162,6 @@ func build_world(island: int = 1) -> void:
 		_tool_upgrade_station(Vector3(-8.0, 0.0, -10.6))
 		_roll_house(Vector3(13.0, 0.0, -10.0))
 		_tropical_scenery()
-		_return_valley()
 		_quest_board(Vector3(-12.0, 0.0, 11.0))
 		_export_dock()
 	else:
@@ -180,6 +179,9 @@ func build_world(island: int = 1) -> void:
 	_expand_village()
 	_garden()
 	_ferry_path()
+	coast = preload("res://scripts/coastal_world.gd").new()
+	add_child(coast)
+	coast.setup(self)
 	player = Node3D.new()
 	player.name = "PotatoFarmer"
 	add_child(player)
@@ -238,6 +240,11 @@ func _expand_village() -> void:
 		if not node is Node3D or node is Camera3D or node is Light3D or node is WorldEnvironment or node.has_meta("land_layout"):
 			continue
 		node.position = layout_point(node.position)
+		var building_scale: float = {"MarketStall": 1.16, "ToolUpgradeWorkshop": 1.14, "RollHouse": 1.12, "Windmill": 1.12, "IceForge": 1.16, "WashAndSortWorkshop": 1.10}.get(str(node.name), 1.0)
+		node.scale *= building_scale
+		# Keep the toolsmith at the same human scale as the player.
+		for smith: Node3D in _toolsmiths:
+			if smith.get_parent() == node: smith.scale /= building_scale
 		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowFerry"] or node.has_meta("layout_stretch"):
 			node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
 	_duck_home = layout_point(_duck_home)
@@ -311,8 +318,7 @@ func _prepare_tutorial_guidance() -> void:
 func station_position(station: String) -> Vector3:
 	if station == "island":
 		return ferry_position()
-	# The last target for a station is its main entrance (the ferry dock rather
-	# than the distant island miniature, and the workshop rather than its NPC).
+	# The last target for a station is its main entrance rather than its NPC.
 	var station_roots: Array = _tutorial_station_roots.get(station, [])
 	return (station_roots.back() as Node3D).position if not station_roots.is_empty() else Vector3.ZERO
 
@@ -330,18 +336,16 @@ func clamp_walk_position(point: Vector3) -> Vector3:
 	point.y = 0.0
 	var bounds: Rect2 = farm_bounds()
 	var closest := Vector3(clampf(point.x, bounds.position.x, bounds.end.x), 0, clampf(point.z, bounds.position.y, bounds.end.y))
-	# Extend the first island only along its new path and pier, not into the sea
-	# or through the row of shops. The other two boarding areas are on land.
-	if current_island == 1:
-		var route: Array[Vector3] = ferry_route()
-		for index: int in range(2, route.size() - 1):
-			var a: Vector3 = route[index]
-			var b: Vector3 = route[index + 1]
-			var margin: float = 0.65
-			var candidate := Vector3(clampf(point.x, minf(a.x, b.x) - margin, maxf(a.x, b.x) + margin), 0,
-				clampf(point.z, minf(a.z, b.z) - margin, maxf(a.z, b.z) + margin))
-			if point.distance_squared_to(candidate) < point.distance_squared_to(closest):
-				closest = candidate
+	# Only narrow road/pier corridors extend the land bounds into the sea.
+	var route: Array[Vector3] = ferry_route()
+	for index: int in range(2 if current_island == 1 else 1, route.size() - 1):
+		var a: Vector3 = route[index]
+		var b: Vector3 = route[index + 1]
+		var margin: float = 0.65
+		var candidate := Vector3(clampf(point.x, minf(a.x, b.x) - margin, maxf(a.x, b.x) + margin), 0,
+			clampf(point.z, minf(a.z, b.z) - margin, maxf(a.z, b.z) + margin))
+		if point.distance_squared_to(candidate) < point.distance_squared_to(closest):
+			closest = candidate
 	return closest
 
 
@@ -363,7 +367,8 @@ func _route_anchor(point: Vector3) -> Dictionary:
 func walk_route(from: Vector3, to: Vector3, follow_ferry: bool = false) -> Array[Vector3]:
 	from.y = 0.0
 	to = clamp_walk_position(to)
-	if not follow_ferry and not (current_island == 1 and (from.z < -5.0 * LAND_SPACING or to.z < -5.0 * LAND_SPACING)):
+	var outside_land: bool = not farm_bounds().has_point(Vector2(from.x, from.z)) or not farm_bounds().has_point(Vector2(to.x, to.z))
+	if not follow_ferry and not outside_land:
 		return [to]
 	var start: Dictionary = _route_anchor(from)
 	var finish: Dictionary = _route_anchor(to)
@@ -392,6 +397,7 @@ func _ferry_path() -> void:
 	for index: int in range(first, route.size() - 1):
 		var a: Vector3 = route[index]
 		var b: Vector3 = route[index + 1]
+		if current_island != 1 and index == route.size() - 2: b.x = (16.6 if current_island == 2 else 21.0) * LAND_SPACING
 		if current_island == 1 and index == route.size() - 2:
 			b.z = -14.0 * LAND_SPACING
 		var length: float = a.distance_to(b)
@@ -501,6 +507,7 @@ func _clear_world() -> void:
 	_sun = null
 	_moon = null
 	_export_particle_clock = 0.0
+	coast = null
 	camera = null
 	player = null
 	_player_body = null
@@ -509,7 +516,6 @@ func _clear_world() -> void:
 	_area_selection = null
 	_rare_gem = null
 	_rotor = null
-	_travel_label = null
 	_dock_label = null
 	_dock_gate = null
 	_export_boat = null
@@ -660,6 +666,7 @@ func set_day_time(elapsed: float) -> void:
 		if _weather_drought:
 			_sun.light_energy = maxf(_sun.light_energy, 0.95 * _weather_strength)
 			_sun.light_color = Color("ffe0a0")
+	if is_instance_valid(coast): coast.sync_light()
 
 
 
@@ -901,6 +908,7 @@ func set_player_position(pos: Vector3) -> void:
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
+	if is_instance_valid(coast): coast.animate(delta)
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
 		var destination: Vector3 = _tutorial_marker.position
@@ -1577,29 +1585,7 @@ func _die(parent: Node3D, pos: Vector3, size: float, angle: float) -> void:
 			_sphere(die, Vector3(x * size, size * 0.505, z * size), Vector3(0.065, 0.018, 0.065) * size, Color("73607d"))
 	_sphere(die, Vector3(size * 0.505, 0.0, 0.0), Vector3(0.018, 0.085, 0.085) * size, Color("73607d"))
 
-func _golden_shores() -> void:
-	var root := _root("GoldenShoresLocked", Vector3(7.0, -1.1, -25.0))
-	var water := _cylinder(root, Vector3(0.0, -0.98, 0.0), 6.2, 6.2, 0.045, Color("aacfc6"), 24)
-	water.scale.z = 0.75
-	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_prism(root, Vector3(0.0, -0.6, 0.0), 9.0, 6.8, 0.8, Color("b7975e"))
-	_prism(root, Vector3(0.0, -0.12, 0.0), 9.2, 7.0, 0.25, Color("eed89a"))
-	for tree_pos in [Vector3(-2.7, 0.0, -1.6), Vector3(2.5, 0.0, -1.7)]:
-		_cylinder(root, tree_pos + Vector3(0.0, 1.32, 0.0), 0.17, 0.11, 2.65, Color("a18454"), 7)
-		for leaf_index in range(6):
-			var angle: float = float(leaf_index) * TAU / 6.0
-			var leaf := _sphere(root, tree_pos + Vector3(cos(angle) * 0.58, 2.56, sin(angle) * 0.58), Vector3(1.08, 0.17, 0.38), Color("c8b659") if leaf_index % 2 == 0 else Color("e3ca65"))
-			leaf.rotation.y = -angle
-			leaf.rotation.z = 0.23
-		_sphere(root, tree_pos + Vector3(0.0, 2.40, 0.16), Vector3(0.24, 0.23, 0.22), Color("b99154"))
-	for pos in [Vector3(-1.9, 0.0, 1.1), Vector3(-0.25, 0.0, 1.1), Vector3(1.4, 0.0, 1.1)]:
-		_box(root, pos + Vector3(0.0, 0.08, 0.0), Vector3(1.25, 0.16, 1.15), Color("b6975f"))
-		for j in range(3):
-			_sphere(root, pos + Vector3(-0.36 + float(j) * 0.36, 0.26, 0.0), Vector3(0.22, 0.19, 0.21), Color("f7c752"))
-	_sphere(root, Vector3(3.0, 0.41, 0.55), Vector3(0.9, 0.52, 0.8), Color("d4b578"))
-	_gem(root, Vector3(0.0, 1.1, -0.6), GOLD, 0.42)
-	_travel_label = _shop_label(root, "Golden Shores", Vector3(0.0, 4.8, 0.0), true)
-	_target(root, Vector3(0.0, 1.25, 0.0), Vector3(9.0, 3.8, 7.0), "station", "island")
+func _valley_dock() -> void:
 	# The boarding area stays reachable even before the next island unlocks.
 	var dock := _root("GoldenShoresDock", Vector3(11.5, 0.0, -14.0))
 	for i in range(10):
@@ -1612,15 +1598,11 @@ func _golden_shores() -> void:
 	_dock_gate.position.z = -3.7
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
-	_dock_label = _shop_label(dock, "Ferry", Vector3(0.0, 1.85, -0.4))
+	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 1.85, -0.4))
 	_target(dock, Vector3(0.0, 0.75, -1.4), Vector3(2.6, 2.4, 4.4), "station", "island")
 
 
 func _tropical_island() -> void:
-	var ocean := _cylinder(self, Vector3(0.0, -1.35, 0.0), 33.0, 33.0, 0.12, Color("67bdb5"), 40)
-	ocean.scale.z = 0.79
-	ocean.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_prism(self, Vector3(0.0, -0.68, 0.0), 49.2, 39.0, 0.12, Color("a1ded0"))
 	_prism(self, Vector3(0.0, -1.35, 0.0), 45.7, 35.5, 1.6, Color("b99563"))
 	_prism(self, Vector3(0.0, -0.58, 0.0), 46.0, 36.0, 0.55, Color("d6b97d"))
 	_prism(self, Vector3(0.0, -0.17, 0.0), 46.3, 36.3, 0.30, Color("efdaa0"))
@@ -1634,11 +1616,6 @@ func _tropical_island() -> void:
 	collision.shape = shape
 	collision.position.y = -0.08
 	ground.add_child(collision)
-	for i in range(18):
-		var x: float = -20.0 + float(i) * 2.35
-		_box(self, Vector3(x, -0.54, 18.7 + sin(float(i) * 1.6) * 0.18), Vector3(1.2, 0.035, 0.14), Color("d8f0d8"))
-	for i in range(13):
-		_box(self, Vector3(-23.8, -0.54, -15.0 + float(i) * 2.5), Vector3(0.14, 0.035, 1.45), Color("dbefdb"))
 
 
 func _tropical_paths() -> void:
@@ -1748,28 +1725,6 @@ func _quest_board(pos: Vector3) -> void:
 	_target(board, Vector3(0.0, 1.35, 0.05), Vector3(2.9, 2.9, 1.05), "station", "quests")
 
 
-func _return_valley() -> void:
-	var valley := _root("SpudValleyReturn", Vector3(5.0, -1.3, -29.5))
-	_prism(valley, Vector3(0.0, -0.55, 0.0), 9.4, 7.2, 0.8, Color("98734e"))
-	_prism(valley, Vector3(0.0, -0.08, 0.0), 9.6, 7.4, 0.22, GRASS)
-	_box(valley, Vector3(-1.9, 0.75, -0.65), Vector3(2.3, 1.5, 1.7), Color("b95647"))
-	var barn_roof := Node3D.new()
-	valley.add_child(barn_roof)
-	barn_roof.position = Vector3(-1.9, 0.0, -0.65)
-	_roof(barn_roof, 2.7, 2.1, 1.48, 0.65, TEAL)
-	_box(valley, Vector3(-1.9, 0.48, 0.22), Vector3(0.75, 0.95, 0.06), CREAM)
-	for row in range(2):
-		for column in range(3):
-			var pos := Vector3(0.1 + float(column) * 1.03, 0.08, 0.35 + float(row) * 1.01)
-			_box(valley, pos, Vector3(0.83, 0.16, 0.80), SOIL)
-			_sphere(valley, pos + Vector3(0.0, 0.22, 0.0), Vector3(0.29, 0.21, 0.29), Color("80a05c"))
-	for x in [-3.3, 3.0]:
-		_cylinder(valley, Vector3(x, 0.67, -2.0), 0.12, 0.08, 1.34, Color("876346"), 6)
-		_sphere(valley, Vector3(x, 1.78, -2.0), Vector3(0.84, 1.15, 0.8), Color("729b61"))
-	_travel_label = _shop_label(valley, "Spud Valley", Vector3(0.0, 3.8, 0.0), true)
-	_target(valley, Vector3(0.0, 1.0, 0.0), Vector3(9.5, 3.2, 7.2), "station", "island")
-
-
 func _export_dock() -> void:
 	var dock := _root("GoldenShoresHarbor", Vector3(16.0, 0.0, 7.0))
 	for i in range(14):
@@ -1787,8 +1742,9 @@ func _export_dock() -> void:
 	_crate(dock, Vector3(-0.67, 0.60, -0.70), true)
 	_crate(dock, Vector3(-0.64, 1.14, -0.70), true)
 	_cylinder(dock, Vector3(0.62, 0.49, -0.60), 0.31, 0.31, 0.32, Color("92816a"), 10)
-	_dock_label = _shop_label(dock, "Ferry", Vector3(0.0, 2.8, 0.8))
+	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 2.8, 0.8))
 	_target(dock, Vector3(0.0, 0.85, 1.0), Vector3(3.6, 2.5, 6.4), "station", "island")
+	_target(dock, Vector3(4.3, 0.65, 1.65), Vector3(8.6, 1.7, 1.8), "station", "island")
 	for z in [-1.6, 3.8]:
 		var flag_root := Node3D.new()
 		dock.add_child(flag_root)
@@ -1814,17 +1770,13 @@ func _export_dock() -> void:
 func set_island2_unlocked(value: bool) -> void:
 	_island2_unlocked = value
 	if current_island == 1:
-		if is_instance_valid(_travel_label):
-			_travel_label.text = "Golden Shores"
 		if is_instance_valid(_dock_label):
-			_dock_label.text = "Ferry"
+			_dock_label.text = "Pier"
 		if is_instance_valid(_dock_gate):
 			_dock_gate.visible = not value
 	elif current_island == 2:
-		if is_instance_valid(_travel_label):
-			_travel_label.text = "Spud Valley"
 		if is_instance_valid(_dock_label):
-			_dock_label.text = "Ferry"
+			_dock_label.text = "Pier"
 
 
 func set_export_state(active: bool, seconds: float) -> void:
@@ -1876,10 +1828,6 @@ func set_golden_hat(value: bool) -> void:
 
 
 func _winter_island() -> void:
-	var sea := _cylinder(self, Vector3(0.0, -1.42, 0.0), 39.0, 39.0, 0.13, Color("8db7cc"), 40)
-	sea.scale.z = 0.79
-	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_prism(self, Vector3(0.0, -0.62, 0.0), 58.1, 46.0, 0.16, Color("c1dce7"))
 	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
 	_prism(self, Vector3(0.0, -0.59, 0.0), 55.8, 43.8, 0.57, Color("b4c4ca"))
 	_prism(self, Vector3(0.0, -0.15, 0.0), 56.2, 44.2, 0.34, Color("e6eef0"))
@@ -2004,28 +1952,8 @@ func _winter_ferry() -> void:
 			_cylinder(ferry,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
 			_sphere(ferry,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
 	_crate(ferry,Vector3(1.1,0.66,-0.75),true)
-	_dock_label = _shop_label(ferry, "Ferry", Vector3(0.0,2.35,0.0))
-	_target(ferry,Vector3(0.1,0.95,0.0),Vector3(3.7,2.5,3.2),"station","island")
-	# Only the two already-playable destinations appear offshore.
-	for destination in [1,2]:
-		var miniature := _root("ValleyReturn" if destination == 1 else "ShoresReturn",Vector3(-2.5 if destination == 1 else 11.0,-1.1,-33.0))
-		_prism(miniature,Vector3(0.0,-0.55,0.0),8.2,6.0,0.75,Color("937859"))
-		_prism(miniature,Vector3(0.0,-0.08,0.0),8.4,6.2,0.22,GRASS if destination == 1 else Color("eed89a"))
-		_box(miniature,Vector3(-1.2,0.67,-0.4),Vector3(2.2,1.35,1.7),Color("b95647") if destination == 1 else Color("f2d69e"))
-		var rooftop := Node3D.new()
-		miniature.add_child(rooftop)
-		rooftop.position = Vector3(-1.2,0.0,-0.4)
-		_roof(rooftop,2.55,2.1,1.3,0.65,TEAL if destination == 1 else Color("db8066"))
-		if destination == 2:
-			_palm(miniature,Vector3(2.6,0.0,-1.0),0.57)
-		else:
-			_cylinder(miniature,Vector3(2.6,0.65,-1.0),0.14,0.08,1.3,Color("8a6a49"),6)
-			_sphere(miniature,Vector3(2.6,1.7,-1.0),Vector3(0.86,1.15,0.82),Color("729b61"))
-		for i in range(3):
-			_box(miniature,Vector3(-0.8+float(i)*1.15,0.08,1.47),Vector3(0.90,0.15,0.78),SOIL)
-			_sphere(miniature,Vector3(-0.8+float(i)*1.15,0.33,1.47),Vector3(0.23,0.18,0.25),Color("96b86b") if destination == 1 else GOLD)
-		_shop_label(miniature, "Spud Valley" if destination == 1 else "Golden Shores", Vector3(0.0,3.1,0.0), true)
-		_target(miniature,Vector3(0.0,1.0,0.0),Vector3(8.3,3.3,6.1),"station","island")
+	_dock_label = _shop_label(ferry, "Pier", Vector3(0.0,2.35,0.0))
+	_target(ferry,Vector3(2.9,0.95,0.0),Vector3(8.0,2.5,3.2),"station","island")
 
 
 func _toolsmith(parent: Node3D, pos: Vector3) -> void:
@@ -2099,7 +2027,7 @@ func _ice_forge(pos: Vector3) -> void:
 func set_island3_unlocked(value: bool) -> void:
 	_island3_unlocked = value
 	if is_instance_valid(_dock_label) and current_island != 3 and value:
-		_dock_label.text = "Ferry"
+		_dock_label.text = "Pier"
 
 
 func set_frost_state(active: bool, seconds: float, frozen_indices: Array = []) -> void:

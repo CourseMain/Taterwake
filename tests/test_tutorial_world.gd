@@ -40,7 +40,7 @@ func _run() -> void:
 		check(world._tutorial_marker.visible and world._tutorial_marker.text.length() > 1, "%s gets one named destination marker" % station)
 		var point: Vector3 = world.station_position(station)
 		check(is_equal_approx(point.x, world._tutorial_marker.position.x) and is_equal_approx(point.z, world._tutorial_marker.position.z), "%s marker points at its station" % station)
-	check(world.station_position("island").is_equal_approx(world.layout_point(Vector3(11.5, 0.0, -15.5))), "ferry guidance points to reachable boarding area, not offshore miniature")
+	check(world.station_position("island").is_equal_approx(world.layout_point(Vector3(11.5, 0.0, -17.2))), "ferry guidance points to reachable boarding area, not offshore miniature")
 	world.set_tutorial_focus("market")
 	var marker_y: float = world._tutorial_marker.position.y
 	world.animate(0.3, false)

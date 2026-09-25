@@ -4,7 +4,7 @@ This build is local and unpublished. Double-click **Play Climate Lab.command** i
 
 ## Try it
 
-Hold **Shift** while using WASD/arrows or click-to-walk to sprint (1.65× speed, no stamina meter). Scroll/pinch still zooms. Every island now has **1.5× the land area**: width and depth each grow by about 22.5%, while buildings, equipment and crop beds retain their size. This creates space around the farm without stretching the models or changing saved plots.
+Hold **Shift** while using WASD/arrows or click-to-walk to sprint (1.65× speed, no stamina meter). Scroll/pinch still zooms. Every island now has **1.5× the land area**: width and depth each grow by about 22.5%, while equipment and crop beds retain their size. Selected shops and workshops are now 10–16% larger for more natural proportions. This creates space around the farm without stretching the models or changing saved plots.
 
 1. **Island 1 · tank, can, crops:** select Water [3] and click beds. The starter can carries 16 water, one per bed. The Water button and farmer show the remaining count. After 16 beds, click the highlighted tank. The farmer walks to its tap, the can fills, and the prompt disappears. Watch roof rain replenish the tank. **Empty can · test first refill** skips straight to this check.
 2. **Island 2 · ordinary sprinklers:** click one of the three gold sprinkler heads along the field's left edge. Follow its highlighted source, pipe and fixed patch; click **Water these beds · 6 water**. Soil darkens and crops grow. The tank supplies the sprinkler directly; the carried can stays unchanged. Repeating the action on hydrated beds spends nothing.
@@ -69,3 +69,23 @@ No new save migration is necessary: crop coordinates, resources, equipment ranks
 Additional checks passed for mouse input, sprint/animation continuity, ferry access, camera zoom, tutorial scene/world, winter farming, equipment and responsive layouts. An older `test_tutorial_hud.gd` assertion about the Roll House panel overlapping the first-island guide also fails with the unchanged pretest HUD; it is separate from the fixed climate console input. Previous baseline issues listed above remain outside this change.
 
 Expanded Island 1 browser sample during pretest QA: Chrome, Balanced, 1920×1200 farm render, 114.8 FPS (8.3 ms median, 10.0 ms p95). This is one local sample, not a controlled comparison. Browser window automation became unavailable after the full practice click-through, so final destination-pointer and scenery touch-ups were checked with native captures and release-export validation; no new flood/storm browser timing sample was obtained.
+
+
+## Connected harbours and animated coasts
+
+Every island now has a moored, clickable ferry, a short gangway and a continuous path to the boarding point. Click the ship or pier to walk over before opening travel; WASD and E work too. The little offshore destination islands are removed. The regular travel menu and unlock requirements are unchanged. On Golden Shores the small export boat remains separate from the passenger ferry.
+
+Selected shops, the windmill and workshops are 10–16% larger. Their targets follow their size, while shopkeepers retain their human scale. Barns retain their size so the physical roof-gutter-tank connection remains aligned. Saved crop coordinates and progression are unchanged; this scenery change needs no save migration.
+
+Water has moving shoreline foam, soft ripples and small glints. Each island has its own palette; Frosthollow has slower blue Arctic water and 36 softly bobbing ice floes, with a clear channel beside the ferry. Moored ferries rock gently. The water uses one opaque surface (1,152 triangles) and ice uses one instanced draw. There are no reflection passes, screen/depth texture reads, water physics, per-wave nodes or animation-time geometry rebuilds. This keeps the effect modest in WebGL/Safari.
+
+### Test the local preview
+
+1. Double-click **Play Climate Lab.command**. Choose each island in **Climate Lab · scenarios**.
+2. Click the ship, or choose **Walk the path to the ferry**. Follow the farmer to the pier, close travel and walk back. Shift still sprints. Try E at the boarding point.
+3. Inspect Island 3's ice and the clear ferry channel; watch the foam, glints and gentle boat motion on all three islands.
+4. Choose **Mature farm · performance test**, then measure eight seconds in Balanced or Smooth. Toggle **Coastal water & ice** to compare the same scene. For a meaningful 60 FPS check, use Safari in the foreground with other GPU-heavy apps idle. This comparison never changes your saved farm.
+
+Ferry regression checks cover clickable boats/piers, keyboard and click routes, return walks, unlock gating, tutorial guidance and the bounded/reused water geometry. The final native capture run passed 103 checks, including rendered frames and immediate sky/coast color synchronization. Climate lesson, farming input, climate equipment, tutorial world and winter farming regressions passed during this pass. Both the regular Web export and isolated lab remain local; no GitHub Pages files were published.
+
+Safari on this M4 rendered all three coasts and completed Arctic ferry travel. Under concurrent GPU-heavy app load, observed eight-second samples were 48.9 FPS for Balanced Valley with coast on and 51.7 with coast off; Smooth mature Valley reached 55.1 FPS and Smooth Arctic reached 53.0 FPS. Scene time and background load varied, so these are **not** a controlled comparison. A sustained 60 FPS result is not verified under that load; the lab now provides the direct comparison for a quieter-machine check. Existing quality options are preserved rather than silently lowering everyone's graphics.
