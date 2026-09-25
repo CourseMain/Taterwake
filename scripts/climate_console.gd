@@ -16,6 +16,8 @@ var primary_action: String = ""
 var secondary_action: String = ""
 var targeting: String = ""
 var tool: String = "hoe"
+var _show_secondary: bool = false
+var _layout_signature: String = ""
 
 func _ready() -> void:
 	name = "ClimateFieldConsole"
@@ -117,8 +119,9 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	var teaching: bool = island == 2 and lesson in ["offer", "water", "area", "success"]
 	visible = not blocked and (not equipment.is_empty() or teaching or (island >= 2 and info.island == island and info.phase != "calm"))
 	if not visible: return
-	primary.hide()
-	secondary.hide()
+	# Do not hide live buttons during refresh: doing so cancels a held mouse press.
+	primary_action = ""
+	_show_secondary = false
 	primary.disabled = false
 	secondary.disabled = false
 	more.visible = not teaching
@@ -167,7 +170,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 		else:
 			title.text = "Reinforced barn"
 			hint.text = "Automatic protection: shutters close at the weather warning to protect stored harvests."
-		size.y = 0
+		_finish_refresh()
 		return
 	more.text = "Farm protection  ›"
 	if teaching:
@@ -177,7 +180,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 		hint.text = {"offer": "Your familiar tank now feeds sprinklers: try both ways to water in a short, safe practice.", "water": "Choose Water [3] and click the glowing bed; your real crops and bills are paused.", "area": "Click the near sprinkler, then Water these beds to spend %d tank water." % practice_cost, "success": "%d tank water rescued the whole patch; follow the pipes to use it on your own crops." % practice_cost}[lesson]
 		if lesson == "offer": _primary("Try it · about 30 seconds", "lesson_start")
 		elif lesson == "area": _primary("Show the near sprinkler", "show_sprinkler")
-		secondary.visible = lesson != "success"
+		_show_secondary = lesson != "success"
 		secondary.text = "Not now" if lesson == "offer" else "Skip practice"
 		secondary_action = "lesson_skip"
 		if lesson != "offer": _water(s, info.water_capacity)
@@ -210,11 +213,18 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	if not targeting.is_empty():
 		hint.text = "Click the highlighted patch; its sprinkler draws water from the tank."
 		_primary("Cancel selection · Esc", "cancel")
-	# PanelContainer otherwise retains the size of its longer previous lesson.
-	size.y = 0
+	_finish_refresh()
+
+func _finish_refresh() -> void:
+	primary.visible = not primary_action.is_empty()
+	secondary.visible = _show_secondary
+	# Shrink only when the content changes, keeping hit targets stable between ticks.
+	var signature := str([title.text, hint.text, primary.text, primary.visible, secondary.visible, more.visible, story.visible, reserves.visible, meter.visible])
+	if signature != _layout_signature:
+		_layout_signature = signature
+		reset_size()
 
 func _primary(text: String, action: String) -> void:
-	primary.show()
 	primary.text = text
 	primary_action = action
 

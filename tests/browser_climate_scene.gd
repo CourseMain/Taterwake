@@ -40,10 +40,10 @@ func _ready() -> void:
 	controls = VBoxContainer.new()
 	box.add_child(controls)
 	var note := Label.new()
-	note.text = "Isolated preview · your saved farm is untouched"
+	note.text = "Isolated preview · your saved farm is untouched\nWASD / arrows · Hold Shift to sprint\nScroll / pinch to zoom · 50% more land"
 	note.add_theme_font_size_override("font_size", 12)
 	controls.add_child(note)
-	for entry in [["valley", "Island 1 · tank, can, crops"], ["shores", "Island 2 · ordinary sprinklers"], ["practice", "Island 2 · optional practice"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · trees and automatic shutters"]]:
+	for entry in [["valley", "Island 1 · tank, can, crops"], ["shores", "Island 2 · ordinary sprinklers"], ["practice", "Island 2 · optional practice"], ["winter", "Island 3 · expanded snowy farm"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · trees and automatic shutters"]]:
 		var button := Button.new()
 		button.text = entry[1]
 		button.pressed.connect(func(): _scenario(entry[0]))
@@ -99,7 +99,7 @@ func _scenario(kind: String) -> void:
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
 	game.state.debug_unlock_island(3)
-	game.state.travel_to(1 if kind == "valley" else 2)
+	game.state.travel_to(1 if kind == "valley" else (3 if kind == "winter" else 2))
 	game.state.climate.acknowledge(game.state)
 	game.state.coins = 1e18
 	game.state.pest_timer = 1000.0
@@ -108,7 +108,7 @@ func _scenario(kind: String) -> void:
 	game.empty_can_prompted = false
 	game.state.expansion = 1
 	for plot in game.state.plots:
-		plot.merge({"unlocked": true, "tilled": true, "watered": false, "stage": 1, "crop": "russet" if kind == "valley" else "sunburst", "ripe_age": 0.0}, true)
+		plot.merge({"unlocked": true, "tilled": true, "watered": false, "stage": 1, "crop": "russet" if kind == "valley" else ("icecap" if kind == "winter" else "sunburst"), "ripe_age": 0.0}, true)
 	if kind == "practice": game.state.climate.data.lesson = game.state.ClimateSystem.Lesson.fresh("offer")
 	if kind in ["drought", "flood", "storm"]:
 		for plot in game.state.plots:

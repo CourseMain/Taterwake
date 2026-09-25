@@ -12,6 +12,7 @@ const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
 const FarmViewport = preload("res://scripts/farm_viewport.gd")
 const WALK_SPEED: float = 7.0
+const SPRINT_MULTIPLIER: float = 1.65
 const NO_TILES: Array[int] = []
 const CAMERA_ZOOM_MIN: float = 18.0
 const CAMERA_ZOOM_RESPONSE: float = 14.0
@@ -31,6 +32,7 @@ var activities
 var selected_tool: String = "hoe"
 var destination: Vector3 = Vector3.ZERO
 var walking: bool = false
+var sprint_blend: float = 0.0
 var pending_plot: int = -1
 var pending_ferry: bool = false
 var walk_waypoints: Array[Vector3] = []
@@ -163,7 +165,8 @@ func _ready() -> void:
 func _register_inputs() -> void:
 	var bindings: Dictionary = {
 		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
-		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT]
+		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
+		"sprint": [KEY_SHIFT]
 	}
 	for action in bindings:
 		if not InputMap.has_action(action):
@@ -216,6 +219,8 @@ func _process(delta: float) -> void:
 			infested += 1
 	pest_alert.update(delta, infested if not _tutorial_active() else 0)
 	var moving: bool = false
+	sprint_blend = lerpf(sprint_blend, 1.0 if Input.is_action_pressed("sprint") and not hud.is_panel_open() else 0.0, 1.0 - exp(-delta * 10.0))
+	var pace: float = lerpf(1.0, SPRINT_MULTIPLIER, sprint_blend)
 	if not hud.is_panel_open():
 		var input_vector: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if input_vector.length() > 0.05:
@@ -229,7 +234,7 @@ func _process(delta: float) -> void:
 			right.y = 0.0
 			forward.y = 0.0
 			var direction: Vector3 = (right.normalized() * input_vector.x + forward.normalized() * input_vector.y).normalized()
-			var next_position: Vector3 = world.player.position + direction * WALK_SPEED * delta
+			var next_position: Vector3 = world.player.position + direction * WALK_SPEED * pace * delta
 			world.set_player_position(_clamp_destination(next_position))
 			moving = true
 		elif walking:
@@ -258,14 +263,14 @@ func _process(delta: float) -> void:
 					perform_plot(pending_plot, pending_tool)
 					pending_plot = -1
 			else:
-				var move_speed: float = WALK_SPEED + float(state.tools.get("harvest", 0)) * 0.8
+				var move_speed: float = (WALK_SPEED + float(state.tools.get("harvest", 0)) * 0.8) * pace
 				world.set_player_position(current.move_toward(target, move_speed * delta))
 				moving = true
 		hover_elapsed += delta
 		if hover_elapsed > 0.08:
 			hover_elapsed = 0.0
 			_update_hover()
-	world.animate(delta, moving)
+	world.animate(delta, moving, sprint_blend if moving else 0.0)
 	if _tutorial_active():
 		tutorial.update(delta)
 	ui_elapsed += delta
@@ -463,7 +468,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_start_walk(hit.ground)
 
 func _camera_zoom_max() -> float:
-	return 74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 56.0)
+	return (74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 56.0)) * world.LAND_SPACING
 
 func _reset_camera_zoom() -> void:
 	_zoom_target_size = clampf(world.camera.size, CAMERA_ZOOM_MIN, _camera_zoom_max())
@@ -524,6 +529,7 @@ func queue_ferry() -> void:
 	_start_walk(world.ferry_position(), true)
 
 func _cancel_walk() -> void:
+	sprint_blend = 0.0
 	pending_refill = false
 	walking = false
 	pending_plot = -1

@@ -23,6 +23,7 @@ var _tool: Node3D
 var _tool_time: float = 0.0
 var _tool_duration: float = 0.5
 var _tool_action: String = ""
+var _tool_grade_scale: float = 1.0
 var _effect_particles: Array[Dictionary] = []
 var _area_selection: Node3D
 var _area_key: String = ""
@@ -116,6 +117,9 @@ var _tutorial_plot_outline: Node3D
 var _tutorial_marker_height: float = 0.0
 var _tutorial_trail: Array[Node3D] = []
 
+## 50% more land area; props and saved crop coordinates retain their size.
+const LAND_SPACING: float = 1.2247448714
+
 const GRASS := Color("8ebd78")
 const SOIL := Color("705037")
 const LEAF := Color("517e43")
@@ -140,43 +144,42 @@ func build_world(island: int = 1) -> void:
 	_rng.seed = 8105 if current_island == 1 else (20482 if current_island == 2 else 31803)
 	_lighting()
 	if current_island == 1:
-		_island()
-		_paths()
+		_build_land(_island)
+		_build_land(_paths)
 		_barn(Vector3(-12.0, 0.0, -8.0))
 		_market(Vector3(0.0, 0.0, -9.0))
 		_tool_upgrade_station(Vector3(-6.4, 0.0, -8.5))
 		_roll_house(Vector3(10.0, 0.0, -8.0))
 		_windmill(Vector3(-13.2, 0.0, 4.0))
-		_garden()
 		_scenery()
 		_golden_shores()
 		_quest_board(Vector3(-12.0, 0.0, 8.1))
 	elif current_island == 2:
-		_tropical_island()
-		_tropical_paths()
+		_build_land(_tropical_island)
+		_build_land(_tropical_paths)
 		_barn(Vector3(-15.0, 0.0, -10.0))
 		_market(Vector3(-1.0, 0.0, -11.0))
 		_tool_upgrade_station(Vector3(-8.0, 0.0, -10.6))
 		_roll_house(Vector3(13.0, 0.0, -10.0))
-		_garden()
 		_tropical_scenery()
 		_return_valley()
 		_quest_board(Vector3(-12.0, 0.0, 11.0))
 		_export_dock()
 	else:
-		_winter_island()
-		_winter_paths()
+		_build_land(_winter_island)
+		_build_land(_winter_paths)
 		_barn(Vector3(-18.0, 0.0, -12.0))
 		_market(Vector3(-3.0, 0.0, -14.0))
 		_roll_house(Vector3(15.0, 0.0, -12.0))
-		_garden()
 		_winter_scenery()
 		_quest_board(Vector3(-15.0, 0.0, 14.0))
 		_winter_ferry()
 		_ice_forge(Vector3(18.0, 0.0, 2.0))
-	_ferry_path()
 	_processing_station(Vector3(-18.0, 0.0, 3.5) if current_island == 3 else (Vector3(-15.0, 0.0, -1.0) if current_island == 2 else Vector3(-12.0, 0.0, -1.0)))
 	_activity_station()
+	_expand_village()
+	_garden()
+	_ferry_path()
 	player = Node3D.new()
 	player.name = "PotatoFarmer"
 	add_child(player)
@@ -214,6 +217,37 @@ func build_world(island: int = 1) -> void:
 	_climate_field.setup(self)
 	_prepare_tutorial_guidance()
 	set_tutorial_focus(_tutorial_focus, _tutorial_show_labels)
+
+
+static func layout_point(point: Vector3) -> Vector3:
+	return Vector3(point.x * LAND_SPACING, point.y, point.z * LAND_SPACING)
+
+func _build_land(builder: Callable) -> void:
+	var first: int = get_child_count()
+	builder.call()
+	for i in range(first, get_child_count()):
+		var node := get_child(i) as Node3D
+		node.position = layout_point(node.position)
+		node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
+		node.set_meta("land_layout", true)
+
+func _expand_village() -> void:
+	# Run once before the garden, player and climate equipment are added.
+	# Moving roots also moves labels/colliders, without stretching their models.
+	for node in get_children():
+		if not node is Node3D or node is Camera3D or node is Light3D or node is WorldEnvironment or node.has_meta("land_layout"):
+			continue
+		node.position = layout_point(node.position)
+		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowFerry"] or node.has_meta("layout_stretch"):
+			node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
+	_duck_home = layout_point(_duck_home)
+	_boat_dock = layout_point(Vector3(24.5, -0.25, 8.5))
+	_boat_away = layout_point(Vector3(27, -0.1, 1))
+
+func ferry_route() -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	for point: Vector3 in FERRY_ROUTES[current_island]: result.append(layout_point(point))
+	return result
 
 
 func _batch_world_geometry() -> void:
@@ -284,11 +318,12 @@ func station_position(station: String) -> Vector3:
 
 
 func ferry_position() -> Vector3:
-	return FERRY_ROUTES[current_island].back()
+	return ferry_route().back()
 
 
 func farm_bounds() -> Rect2:
-	return Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-17, -5, 35, 17))
+	var bounds := Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-17, -5, 35, 17))
+	return Rect2(bounds.position * LAND_SPACING, bounds.size * LAND_SPACING)
 
 
 func clamp_walk_position(point: Vector3) -> Vector3:
@@ -298,7 +333,7 @@ func clamp_walk_position(point: Vector3) -> Vector3:
 	# Extend the first island only along its new path and pier, not into the sea
 	# or through the row of shops. The other two boarding areas are on land.
 	if current_island == 1:
-		var route: Array = FERRY_ROUTES[1]
+		var route: Array[Vector3] = ferry_route()
 		for index: int in range(2, route.size() - 1):
 			var a: Vector3 = route[index]
 			var b: Vector3 = route[index + 1]
@@ -311,7 +346,7 @@ func clamp_walk_position(point: Vector3) -> Vector3:
 
 
 func _route_anchor(point: Vector3) -> Dictionary:
-	var route: Array = FERRY_ROUTES[current_island]
+	var route: Array[Vector3] = ferry_route()
 	var best: Dictionary = {"point": route[0], "distance": INF, "along": 0.0}
 	var along: float = 0.0
 	for index: int in range(route.size() - 1):
@@ -328,11 +363,11 @@ func _route_anchor(point: Vector3) -> Dictionary:
 func walk_route(from: Vector3, to: Vector3, follow_ferry: bool = false) -> Array[Vector3]:
 	from.y = 0.0
 	to = clamp_walk_position(to)
-	if not follow_ferry and not (current_island == 1 and (from.z < -5.0 or to.z < -5.0)):
+	if not follow_ferry and not (current_island == 1 and (from.z < -5.0 * LAND_SPACING or to.z < -5.0 * LAND_SPACING)):
 		return [to]
 	var start: Dictionary = _route_anchor(from)
 	var finish: Dictionary = _route_anchor(to)
-	var route: Array = FERRY_ROUTES[current_island]
+	var route: Array[Vector3] = ferry_route()
 	var result: Array[Vector3] = [start.point]
 	var bends: Array[Vector3] = []
 	var along: float = 0.0
@@ -350,7 +385,7 @@ func walk_route(from: Vector3, to: Vector3, follow_ferry: bool = false) -> Array
 
 func _ferry_path() -> void:
 	var path := _root("FerryPath", Vector3.ZERO)
-	var route: Array = FERRY_ROUTES[current_island]
+	var route: Array[Vector3] = ferry_route()
 	var color := Color("d4bc82") if current_island == 1 else (Color("e2c78e") if current_island == 2 else Color("a9bbc6"))
 	# Existing village roads lead to these spurs; leave the wooden pier exposed.
 	var first: int = 1 if current_island == 1 else 0
@@ -358,7 +393,7 @@ func _ferry_path() -> void:
 		var a: Vector3 = route[index]
 		var b: Vector3 = route[index + 1]
 		if current_island == 1 and index == route.size() - 2:
-			b.z = -14.0
+			b.z = -14.0 * LAND_SPACING
 		var length: float = a.distance_to(b)
 		var strip := _box(path, (a + b) * 0.5 + Vector3(0, 0.045, 0), Vector3(2.2, 0.08, length + 0.25), color)
 		strip.rotation.y = atan2(b.x - a.x, b.z - a.z)
@@ -524,14 +559,13 @@ func _lighting() -> void:
 	camera = Camera3D.new()
 	camera.name = "DioramaCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 49.0 if current_island == 3 else (43.0 if current_island == 2 else 38.0)
-	camera.position = Vector3(23.0, 31.0, 33.0)
+	camera.size = (49.0 if current_island == 3 else (43.0 if current_island == 2 else 38.0)) * LAND_SPACING
+	camera.position = Vector3(23.0, 31.0, 33.0) * LAND_SPACING
 	add_child(camera)
 	camera.look_at(Vector3(0.0, 0.3, 0.5) if current_island == 3 else (Vector3(0.0, 0.3, -1.0) if current_island == 2 else Vector3(-0.3, 0.3, -1.2)))
 	camera.current = true
-	# All three islands, offshore previews and the ocean fit within 90 units
-	# of camera depth. A tight far plane improves orthographic shadow precision.
-	camera.far = 110.0
+	# Include the expanded shore and offshore previews in the camera depth.
+	camera.far = 140.0
 
 
 func set_graphics_quality(mode: String) -> void:
@@ -545,7 +579,7 @@ func _apply_graphics_quality() -> void:
 	# One map suits this orthographic diorama; four perspective shadow splits
 	# waste detail and introduce visible boundaries across the flat island.
 	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	_sun.directional_shadow_max_distance = 110.0
+	_sun.directional_shadow_max_distance = 140.0
 	_sun.directional_shadow_fade_start = 1.0
 	# Large unsubdivided terrain near a shadow frustum can produce triangular
 	# pancake artifacts. Keep the full geometry inside the shadow projection.
@@ -865,7 +899,7 @@ func set_player_position(pos: Vector3) -> void:
 		_player_heading = atan2(direction.x, direction.z)
 	player.position = Vector3(pos.x, 0.0, pos.z)
 
-func animate(delta: float, moving: bool) -> void:
+func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
@@ -896,7 +930,9 @@ func animate(delta: float, moving: bool) -> void:
 	if is_instance_valid(player):
 		player.rotation.y = lerp_angle(player.rotation.y, _player_heading, 1.0 - exp(-12.0 * delta))
 	if is_instance_valid(_player_body):
-		_player_body.animate(delta, moving)
+		_player_body.carry_weight = 1.0
+		_player_body.pour_pose = pow(sin((1.0 - _tool_time / _tool_duration) * PI), 2) if _tool_time > 0 and _tool_action == "water" else 0.0
+		_player_body.animate(delta, moving, sprint)
 	if is_instance_valid(_rotor):
 		_rotor.rotation.z += delta * 0.38
 	_animate_effects(delta)
@@ -922,8 +958,8 @@ func animate(delta: float, moving: bool) -> void:
 	for i in range(_clouds.size()):
 		_clouds[i].position.x += delta * (0.06 + _weather_strength * 1.8)
 		_clouds[i].scale = Vector3.ONE * (1.0 + _weather_strength * 0.45)
-		if _clouds[i].position.x > 24.0:
-			_clouds[i].position.x = -24.0
+		if _clouds[i].position.x > 24.0 * LAND_SPACING:
+			_clouds[i].position.x = -24.0 * LAND_SPACING
 
 func pick(screen_pos: Vector2) -> Dictionary:
 	if camera == null or not is_inside_tree():
@@ -1110,8 +1146,9 @@ func _scenery() -> void:
 	wheel.rotation.z = PI * 0.5
 	for x in [-0.28, 0.28]:
 		_bar(barrow, Vector3(x, 0.55, 0.1), Vector3(x, 0.78, 1.0), 0.05, Color("6a5640"))
-	_cylinder(self, Vector3(5.3, 0.33, 5.1), 0.29, 0.29, 0.55, Color("7cabb1"), 8)
-	_bar(self, Vector3(5.5, 0.4, 5.1), Vector3(5.97, 0.64, 5.1), 0.09, Color("7cabb1"))
+	var spare_can := _root("SpareWateringCan", Vector3(5.3, 0, 5.1))
+	_cylinder(spare_can, Vector3(0, 0.33, 0), 0.29, 0.29, 0.55, Color("7cabb1"), 8)
+	_bar(spare_can, Vector3(0.2, 0.4, 0), Vector3(0.67, 0.64, 0), 0.09, Color("7cabb1"))
 
 func _tree(pos: Vector3, size: float) -> void:
 	var root := _root("OrchardTree", pos)
@@ -1153,14 +1190,19 @@ func _potato_person(parent: Node3D, pos: Vector3, skin: Color, clothes: Color, f
 	return body
 
 func _fence(start: Vector3, end: Vector3, segments: int) -> void:
+	var fence := _root("Fence", Vector3.ZERO)
+	fence.set_meta("layout_stretch", true)
 	for i in range(segments + 1):
 		var pos: Vector3 = start.lerp(end, float(i) / float(segments))
-		_box(self, pos + Vector3(0.0, 0.48, 0.0), Vector3(0.16, 0.96, 0.16), Color("e3d4a8"))
-		_cylinder(self, pos + Vector3(0.0, 1.01, 0.0), 0.135, 0.0, 0.16, Color("f1dfb6"), 4)
+		_box(fence, pos + Vector3(0.0, 0.48, 0.0), Vector3(0.16, 0.96, 0.16), Color("e3d4a8"))
+		_cylinder(fence, pos + Vector3(0.0, 1.01, 0.0), 0.135, 0.0, 0.16, Color("f1dfb6"), 4)
 	for y in [0.35, 0.71]:
-		_bar(self, start + Vector3(0, y, 0), end + Vector3(0, y, 0), 0.065, Color("e1d2a7"))
+		_bar(fence, start + Vector3(0, y, 0), end + Vector3(0, y, 0), 0.065, Color("e1d2a7"))
 
 func _crate(parent: Node3D, pos: Vector3, full: bool) -> void:
+	if parent == self:
+		parent = _root("VillageCrate", pos)
+		pos = Vector3.ZERO
 	_box(parent, pos, Vector3(1.2, 0.5, 0.9), Color("a6794b"))
 	for z in [-0.45, 0.45]:
 		for y in [-0.18, 0.17]:
@@ -1358,14 +1400,14 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 	_tool_action = action
 	_tool_duration = 0.5 / (1.0 + float(grade) * 0.35)
 	_tool_time = _tool_duration
-	_tool.scale = Vector3.ONE * (1.0 + float(grade) * 0.2)
-	_tool.visible = true
+	_tool_grade_scale = 1.0 + float(grade) * 0.2
+	_tool.scale = Vector3.ONE * 0.001
+	_tool.visible = action != "water"
 	for child in _tool.get_children():
 		_tool.remove_child(child)
 		child.queue_free()
 	if action == "water":
-		_cylinder(_tool, Vector3.ZERO, 0.22, 0.22, 0.37, Color("73bac8"), 8)
-		_bar(_tool, Vector3(0.1, 0.0, 0.0), Vector3(0.38, 0.15, 0.0), 0.06, Color("73bac8"))
+		pass # The persistent carried can performs the pour; no duplicate model.
 	elif action == "pest":
 		_cylinder(_tool, Vector3(0.0, 0.07, 0.0), 0.22, 0.26, 0.55, Color("66d5b6"), 12)
 		_box(_tool, Vector3(0.0, 0.37, 0.0), Vector3(0.32, 0.13, 0.24), Color("263c44"))
@@ -1471,9 +1513,15 @@ func _animate_effects(delta: float) -> void:
 	if _tool_time > 0.0:
 		_tool_time = maxf(0.0, _tool_time - delta)
 		var progress: float = 1.0 - _tool_time / _tool_duration
-		_tool.rotation.z = sin(progress * PI) * (-0.85 if _tool_action == "water" else 1.15)
-		_player_body.rotation.x = sin(progress * PI) * -0.14
-		_tool.visible = _tool_time > 0.0
+		var stroke: float = pow(sin(progress * PI), 2)
+		_tool.rotation.z = stroke * 1.15
+		var hand: Vector3 = player.to_local(_player_body.hand_transform().origin)
+		_tool.position = hand + Vector3(0.05, 0.10, 0.12)
+		# Brief eased pickup/put-away avoids a full-size tool popping into existence.
+		var envelope: float = smoothstep(0, 0.18, progress) * (1.0 - smoothstep(0.76, 1.0, progress))
+		_tool.scale = Vector3.ONE * maxf(0.001, envelope) * _tool_grade_scale
+		_player_body.rotation.x = stroke * -0.14
+		_tool.visible = _tool_time > 0.0 and _tool_action != "water"
 		if _tool_time == 0.0:
 			_player_body.rotation.x = 0.0
 	for i in range(_effect_particles.size() - 1, -1, -1):
@@ -1749,7 +1797,7 @@ func _export_dock() -> void:
 		_box(flag_root, Vector3(0.43, 2.7, 0.0), Vector3(0.86, 0.53, 0.055), GOLD)
 		_sphere(flag_root, Vector3(0.44, 2.71, 0.05), Vector3(0.13, 0.16, 0.035), Color("fff2bc"))
 		_export_flags.append(flag_root)
-	_export_boat = _root("GoldenExportBoat", _boat_away)
+	_export_boat = _root("GoldenExportBoat", Vector3(27, -0.1, 1))
 	_sphere(_export_boat, Vector3(0.0, 0.05, 0.0), Vector3(1.10, 0.52, 2.17), Color("79614a"))
 	_box(_export_boat, Vector3(0.0, 0.34, 0.0), Vector3(1.85, 0.16, 3.20), Color("d6b47e"))
 	for x in [-0.89, 0.89]:

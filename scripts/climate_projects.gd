@@ -3,20 +3,20 @@ extends RefCounted
 const Ops = preload("res://scripts/climate_operations.gd")
 
 static func tank_position(w) -> Vector3:
-	return Vector3(-19.5, 0, -4.5) if w.current_island == 3 else (Vector3(-16.2, 0, -4.8) if w.current_island == 2 else Vector3(-15.8, 0, -4.5))
+	return w.layout_point(Vector3(-19.5, 0, -4.5) if w.current_island == 3 else (Vector3(-16.2, 0, -4.8) if w.current_island == 2 else Vector3(-15.8, 0, -4.5)))
 
 static func tank_scale(level: int) -> Vector3:
 	# Capacity upgrades widen the barrel without lifting its inlet above the gutter.
 	return Vector3(1.0 + 0.14 * (level - 1), 1, 1.0 + 0.14 * (level - 1))
 
 static func barn_position(w) -> Vector3:
-	return Vector3(-18, 0, -12) if w.current_island == 3 else (Vector3(-15, 0, -10) if w.current_island == 2 else Vector3(-12, 0, -8))
+	return w.layout_point(Vector3(-18, 0, -12) if w.current_island == 3 else (Vector3(-15, 0, -10) if w.current_island == 2 else Vector3(-12, 0, -8)))
 
 static func drain_position(w) -> Vector3:
 	return Vector3(-12.6, 0, 12.4) if w.current_island == 3 else Vector3(-10.2, 0, 9.5)
 
 static func outlet_position(w) -> Vector3:
-	return Vector3(drain_position(w).x, 0.13, 22.45 if w.current_island == 3 else 18.5)
+	return Vector3(drain_position(w).x, 0.13, (22.45 if w.current_island == 3 else 18.5) * w.LAND_SPACING)
 
 static func trees_position(w) -> Vector3:
 	return Vector3((w.plot_positions[0].x + w.plot_positions[-1].x) * 0.5, 0, w.plot_positions[0].z - 1.65)

@@ -55,6 +55,7 @@ func run() -> void:
 	game.state.debug_unlock_island(3)
 	game.state.travel_to(2)
 	game._climate_action("lesson_start")
+	await shot("practice-target")
 	game.perform_plot(34, "water")
 	game._climate_action("show_sprinkler")
 	check(game.hud._climate_console.equipment == "sprinkler2", "practice uses ordinary equipment selection")

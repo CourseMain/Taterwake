@@ -194,3 +194,12 @@ Manual watering now spends the can in all weather. Refill is a walk-to-tank acti
 The isolated browser lab now has clean per-scenario resets, ordinary farming on both islands, optional practice, weather presets, an empty-can shortcut and upgrade access. Its collapsed toolbar avoids covering the equipment cards. Export still forces the copied controller into integration mode; real farms are neither read nor written. Published `docs/index.*` files remain unchanged.
 
 Weather warning/impact announcements are now brief, nonblocking strips above the farm; recovery uses the existing field status card instead of a second large announcement.
+
+
+### Pretest polish: stable buttons, spacious islands, sprint and carried tools
+
+The climate console keeps active button visibility stable across resource/timer updates; previously `hide()` cancelled a held press before its release. `test_farm_interaction.gd` reproduces that failure with real viewport mouse input, then covers both invitation choices, sprinkler practice, sprint speed/arrival/menu blocking and can pose continuity. The field practice now has a brief destination label and arrow to remain readable at the expanded overview.
+
+`FarmWorld.LAND_SPACING` is sqrt(1.5), giving each island 50% more land area. Terrain, roads, pier geometry, route anchors and peripheral prop positions expand together. Crop-grid geometry/indices and building dimensions stay intact; rain gutters, tank pipes and shoreline outlets use the new locations. Village crates/fences remain assembled rather than separating component meshes. Camera framing/limits and walking bounds expand too. Layout-only changes need no additional save migration.
+
+Hold Shift for an eased 1.65× sprint on WASD/arrows or click routes. Avatar running stride responds to sprint blend. The persistent can follows the carrying hand, performs the pour itself, and interpolates to/from the tap; temporary tools use a soft pickup/stroke/put-away envelope. All animations remain code-native and use existing batched world effects. The isolated Climate Lab adds the winter scenario and movement hints. Local Web exports only; no public files or remote branches are updated.

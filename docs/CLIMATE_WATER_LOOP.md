@@ -1,15 +1,19 @@
 # Connected water and weather — local preview
 
-This build is local and unpublished. Double-click **Play Climate Lab.command** in the repository to build and open a disposable browser farm. The lab never reads or saves your real farm. Its **Climate Lab · scenarios** button switches between six fresh scenarios; selecting a scenario closes the lab controls so you can see the farm.
+This build is local and unpublished. Double-click **Play Climate Lab.command** in the repository to build and open a disposable browser farm. The lab never reads or saves your real farm. Its **Climate Lab · scenarios** button switches between seven fresh scenarios; selecting a scenario closes the lab controls so you can see the farm.
 
 ## Try it
 
+Hold **Shift** while using WASD/arrows or click-to-walk to sprint (1.65× speed, no stamina meter). Scroll/pinch still zooms. Every island now has **1.5× the land area**: width and depth each grow by about 22.5%, while buildings, equipment and crop beds retain their size. This creates space around the farm without stretching the models or changing saved plots.
+
 1. **Island 1 · tank, can, crops:** select Water [3] and click beds. The starter can carries 16 water, one per bed. The Water button and farmer show the remaining count. After 16 beds, click the highlighted tank. The farmer walks to its tap, the can fills, and the prompt disappears. Watch roof rain replenish the tank. **Empty can · test first refill** skips straight to this check.
 2. **Island 2 · ordinary sprinklers:** click one of the three gold sprinkler heads along the field's left edge. Follow its highlighted source, pipe and fixed patch; click **Water these beds · 6 water**. Soil darkens and crops grow. The tank supplies the sprinkler directly; the carried can stays unchanged. Repeating the action on hydrated beds spends nothing.
-3. **Island 2 · optional practice:** accept the short invitation, water the glowing bed, then click the near sprinkler and use its action. Real crops, bills and market clocks pause. Skip at any time; the first natural disaster is a dry spell after preparation time.
+3. **Island 2 · optional practice:** accept the short invitation, water the bed marked **Water this bed [3]**, then click the near sprinkler and use its action. Real crops, bills and market clocks pause. Skip at any time; the first natural disaster is a dry spell after preparation time.
 4. **Dry spell:** use the familiar can and sprinklers on drooping crops. Water lowers danger rings. The tank stops replenishing during the 30-second drought, so harvest ripe crops and choose which patches to rescue. Rain returns afterward.
 5. **Flood:** click the gate at the front-left field corner, or **Show drain gate**. **Open drain** raises the gate, lowers flood danger and sends water through the channel to the sea. Hoe [1] still drains individual planted beds.
 6. **Storm:** trees automatically shelter the far patch immediately behind them. Click trees to see the shelter area; protected crops sway less. Reinforced barn shutters slide closed automatically. The gold lightning row remains vulnerable: harvest it before the strike.
+
+7. **Island 3 · expanded snowy farm:** inspect the larger shore, visit the forge/ferry, and try sprinting along the wider paths. Existing frost and crop rules apply.
 
 **Open upgrades · plenty of lab coins** lets you test purchases. A purchase changes the equipment and briefly opens its illustrated use card. Successful use closes the prompt; × or Escape dismisses it. The lab's controls also include quality choices and an eight-second frame timing sample.
 
@@ -39,6 +43,8 @@ Mechanics revision **18** preserves crops, coins, islands, equipment, tutorial p
 Targeted checks cover state conservation, migration/corruption, tool upgrades, partial area watering, travel, drought/flood/storm interactions, actual walk-to-refill, practice/save-resume, equipment geometry reuse and every crop ray target. Run with your Godot executable:
 
 ```sh
+godot --headless --path . --script tests/test_farm_interaction.gd -- --integration-test
+godot --headless --path . --script tests/test_ferry_access.gd -- --integration-test
 godot --headless --path . --script tests/test_water_loop_state.gd
 godot --headless --path . --script tests/test_water_loop_game.gd -- --integration-test
 godot --headless --path . --script tests/test_climate_lesson.gd -- --integration-test
@@ -51,3 +57,15 @@ For native screenshots, run `test_water_loop_game.gd` without `--headless`, with
 The regular local Web ZIP and the isolated lab use single-threaded WebGL Compatibility. Native and browser visuals were inspected. On this Apple M4, Balanced mode: Safari's ordinary Island 1 sample measured 59.9 FPS at a 1919×1200 farm render size; Chrome's Island 2 ordinary/drought/flood samples measured 94.8 / 95.4 / 91.6 FPS at 1920×1200. These are different scenes and browsers, not a controlled before/after benchmark or a performance guarantee.
 
 Broader regression runs also identified existing failures in old font, pest-timing, QoL migration-fixture and simulation seed-budget assertions. They were reproduced on the unchanged `a5dd41c` baseline; they are separate from the passing connected-water and climate suites.
+
+## Pretest fixes: guide input, space and movement
+
+The field console previously hid and re-showed its buttons on every refresh. A press spanning a refresh lost its release, explaining the intermittent invitation and sprinkler controls. It now updates visibility only to the final state and resizes only when its contents change. The new interaction regression sends actual mouse press/release events through the viewport, deliberately refreshing the HUD repeatedly while held; it fails on the prior implementation and passes with this fix. Chrome mouse QA also completed both invitation choices and the full practice.
+
+Sprint eases between walking and running, works with keyboard and click routes, and preserves exact arrivals and menu input blocking. The persistent can follows the farmer's carrying hand, tilts for watering, and eases under the tank tap and back. Other tools ease into/out of their work stroke. Water fill animates during the transfer; upgrades keep their existing capacities. The practice destination gets a small world label and arrow only during its relevant step.
+
+No new save migration is necessary: crop coordinates, resources, equipment ranks and progression are unchanged from revision 18. Village geometry, targets, camera limits, paths, shoreline drain outlets and ferry destinations use the expanded layout consistently. The lab includes all three islands and still forces isolated test mode.
+
+Additional checks passed for mouse input, sprint/animation continuity, ferry access, camera zoom, tutorial scene/world, winter farming, equipment and responsive layouts. An older `test_tutorial_hud.gd` assertion about the Roll House panel overlapping the first-island guide also fails with the unchanged pretest HUD; it is separate from the fixed climate console input. Previous baseline issues listed above remain outside this change.
+
+Expanded Island 1 browser sample during pretest QA: Chrome, Balanced, 1920×1200 farm render, 114.8 FPS (8.3 ms median, 10.0 ms p95). This is one local sample, not a controlled comparison. Browser window automation became unavailable after the full practice click-through, so final destination-pointer and scenery touch-ups were checked with native captures and release-export validation; no new flood/storm browser timing sample was obtained.

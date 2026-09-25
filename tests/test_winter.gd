@@ -77,7 +77,7 @@ func _run() -> void:
 		check(int(hit.get("plot_index", -1)) == index, "snowy plot target: %d" % index)
 	var stations: Dictionary = {"barn": Vector3(-18, 2, -12), "market": Vector3(-3, 1.8, -14), "roll": Vector3(15, 2, -12), "quests": Vector3(-15, 1.5, 14), "island": Vector3(22, 1.2, 10), "tools": Vector3(18, 1.5, 2)}
 	for station in stations:
-		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(stations[station]))
+		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(stations[station])))
 		check(hit.get("station", "") == station, "winter station target: " + station)
 	await shot("frosthollow-arrival")
 	for index in range(80):

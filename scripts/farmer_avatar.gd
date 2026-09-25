@@ -23,6 +23,9 @@ var _aurora_materials: Array[StandardMaterial3D] = []
 var _time: float = 0.0
 var _stride: float = 0.0
 var _walk_blend: float = 0.0
+var carry_weight: float = 0.0
+var pour_pose: float = 0.0
+var _run_blend: float = 0.0
 var _built: bool = false
 var _golden_hat: bool = false
 var _catalog: Dictionary = {}
@@ -276,21 +279,26 @@ func set_golden_hat(enabled: bool) -> void:
 	_golden_hat = enabled
 	set_equipment(loadout, _catalog)
 
-func animate(delta: float, moving: bool = false) -> void:
+func animate(delta: float, moving: bool = false, sprint: float = 0.0) -> void:
 	if not _built or not is_finite(delta) or delta <= 0.0:
 		return
 	_time += delta
 	_walk_blend = lerpf(_walk_blend, 1.0 if moving else 0.0, 1.0 - exp(-delta * 9.0))
-	_stride += delta * lerpf(2.0, 8.2, _walk_blend)
+	_run_blend = lerpf(_run_blend, sprint if moving else 0.0, 1.0 - exp(-delta * 10))
+	_stride += delta * lerpf(2.0, lerpf(8.2, 12.0, _run_blend), _walk_blend)
 	var breath: float = sin(_time * 2.05)
-	_rig.position.y = breath * 0.015 * (1.0 - _walk_blend) + (1.0 - cos(_stride * 2.0)) * 0.026 * _walk_blend
+	_rig.position.y = breath * 0.015 * (1.0 - _walk_blend) + (1.0 - cos(_stride * 2.0)) * lerpf(0.026, 0.045, _run_blend) * _walk_blend
 	_rig.rotation.z = sin(_stride) * 0.051 * _walk_blend
+	_rig.rotation.x = -0.10 * _run_blend
 	_rig.scale = Vector3(1.0 + breath * 0.004, 1.0 - breath * 0.003, 1.0 + breath * 0.003)
 	for index in range(_legs.size()):
 		var step: float = sin(_stride + index * PI)
-		_legs[index].rotation.x = step * 0.29 * _walk_blend
+		_legs[index].rotation.x = step * lerpf(0.29, 0.48, _run_blend) * _walk_blend
 		_arms[index].rotation.x = -step * 0.23 * _walk_blend
 		_arms[index].rotation.z = (-1.0 if index == 0 else 1.0) * (0.16 + absf(step) * 0.045 * _walk_blend)
+	# Left hand carries the can; its reduced swing keeps the handle in the palm.
+	_arms[0].rotation.x = lerpf(_arms[0].rotation.x, -0.75 - pour_pose * 0.4 + sin(_stride) * 0.07 * _walk_blend, carry_weight)
+	_arms[0].rotation.z = lerpf(_arms[0].rotation.z, -0.24 - pour_pose * 0.25, carry_weight)
 	var blink_phase: float = fmod(_time + 0.9, 4.7)
 	var openness: float = 1.0
 	if blink_phase > 4.50:
@@ -300,6 +308,9 @@ func animate(delta: float, moving: bool = false) -> void:
 	for material in _aurora_materials:
 		material.emission_energy_multiplier = 0.65 + (sin(_time * 2.2) + 1.0) * 0.22
 	_update_followers()
+
+func hand_transform(left: bool = false) -> Transform3D:
+	return _arms[0 if left else 1].global_transform.translated_local(Vector3(0, -0.34, 0.06))
 
 func _update_followers() -> void:
 	for attachment in _followers:

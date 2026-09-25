@@ -17,12 +17,16 @@ var can: Node3D
 var can_water: MeshInstance3D
 var tank_label: Label3D
 var can_label: Label3D
+var practice_label: Label3D
 var barn_label: Label3D
 var shutters: Array[Node3D] = []
 var info: Dictionary = {}
 var displayed_can: float = -1.0
 var displayed_water: float = -1.0
 var gate_open: float = 0.0
+var carry_offset := Vector3(-0.80, 0.46, 0.28)
+var refill_blend: float = 0.0
+var pour_blend: float = 0.0
 var gutter_start: Vector3
 var gutter_end: Vector3
 var inlet: Vector3
@@ -95,6 +99,11 @@ func setup(w) -> void:
 	can_water = world._box(can, Vector3(0, -0.015, 0.347), Vector3(0.18, 0.37, 0.016), AQUA)
 	can_water.material_override = world._bright_material(AQUA)
 	can_label = _label(self, Vector3.ZERO, 25)
+	practice_label = _label(self, Vector3.ZERO, 26)
+	practice_label.name = "PracticeDestination"
+	practice_label.no_depth_test = true
+	practice_label.modulate = Color("fff0a3")
+	practice_label.hide()
 	# Merge decorative can/gutter/shutter details; keep the two liquid gauges mutable.
 	world._geometry_batcher.batch_tree(can, {can_water.get_instance_id(): true})
 	for shutter: Node3D in shutters: world._geometry_batcher.batch_tree(shutter, {})
@@ -113,7 +122,8 @@ func animate(data: Dictionary, delta: float) -> void:
 	if displayed_can < 0: displayed_can = float(info.supply.can)
 	# Easing makes the transferred quantity visible instead of changing instantly.
 	displayed_water = move_toward(displayed_water, float(info.supply.water), delta * 24)
-	displayed_can = move_toward(displayed_can, float(info.supply.can), delta * (18 if refill_time > 0 else 12))
+	if refill_time <= 1.35:
+		displayed_can = move_toward(displayed_can, float(info.supply.can), delta * (float(info.can_capacity) / 0.95 if refill_time > 0 else 12))
 	var ratio: float = clampf(displayed_water / float(info.water_capacity), 0, 1)
 	gauge.position = tank_position() + Vector3(0.65, 0.86 + ratio, 1.54) * scale_tank
 	gauge.scale = Vector3(scale_tank.x, maxf(0.002, ratio), scale_tank.z)
@@ -121,19 +131,35 @@ func animate(data: Dictionary, delta: float) -> void:
 	gauge_surface.scale = scale_tank
 	tank_label.text = "Tank  %d / %d" % [floori(info.supply.water), int(info.water_capacity)]
 	tank_label.modulate = Color("ffe18a") if selected == "tank" else Color("fff0cc")
-	can.position = world.player.position + Vector3(0.70, 0.80, 0.28)
-	if refill_time > 0:
-		can.position = tank_position() + Vector3(-0.4, 0.48, 1.95) * scale_tank + Vector3(0, 0, 0.24)
-	can.visible = not (world._tool_time > 0 and world._tool_action == "water")
-	can.scale = Vector3.ONE * (1.0 + (float(info.can_capacity) - 16) / 128.0)
+	var pouring: bool = world._tool_time > 0 and world._tool_action == "water"
+	var pour_target: float = pow(sin((1.0 - world._tool_time / world._tool_duration) * PI), 2) if pouring else 0.0
+	pour_blend = lerpf(pour_blend, pour_target, 1.0 - exp(-delta * 22))
+	var size_can: float = 0.85 + (float(info.can_capacity) - 16) / 192.0
+	can.scale = Vector3.ONE * size_can
+	var hand: Vector3 = world._player_body.hand_transform(true).origin
+	var held: Vector3 = world.player.to_local(hand) + Vector3(-0.02, -0.43 * size_can, 0.02)
+	carry_offset = carry_offset.lerp(held, 1.0 - exp(-delta * 18))
+	var carry: Vector3 = world.player.to_global(carry_offset)
+	var under_tap: Vector3 = tank_position() + Vector3(-0.4, 0.48, 1.95) * scale_tank
+	# Ease into the tap and back to the hand, including if the player walks away.
+	var near_tank: bool = world.player.position.distance_to(under_tap) < 3.2
+	var refill_target: float = smoothstep(0, 0.32, refill_time) if near_tank else 0.0
+	refill_blend = lerpf(refill_blend, refill_target, 1.0 - exp(-delta * 12))
+	can.position = carry.lerp(under_tap, refill_blend)
+	can.rotation = Vector3(0, world.player.rotation.y + PI, -pour_blend * 0.85).lerp(Vector3.ZERO, refill_blend)
 	var fill: float = clampf(displayed_can / float(info.can_capacity), 0.001, 1)
 	can_water.scale.y = fill
 	can_water.position.y = -0.20 + 0.185 * fill
-	can.rotation.z = sin(clock * 8) * 0.04 if refill_time > 0 else 0
 	can_label.position = world.player.position + Vector3(0, 2.95, 0)
 	can_label.text = "%d / %d water" % [floori(info.supply.can), int(info.can_capacity)]
 	can_label.visible = selected == "tank" or refill_time > 0 or world.get_meta("water_tool", false)
 	can_label.modulate = Color("ffe18a") if float(info.supply.can) < 1 else Color("fff0cc")
+	var lesson: String = str(info.lesson.stage)
+	practice_label.visible = world.current_island == 2 and lesson in ["water", "area"] and selected.is_empty()
+	if practice_label.visible:
+		var target: Vector3 = world.plot_positions[34] if lesson == "water" else equipment_position("sprinkler2")
+		practice_label.position = target + Vector3(0, 2.2 + sin(clock * 2.8) * 0.12, 0)
+		practice_label.text = "Water this bed [3]" if lesson == "water" else "Click this sprinkler"
 	gate.visible = int(p.get("drainage", 0)) > 0
 	gate_open = move_toward(gate_open, 1.0 if info.supply.gates else 0.0, delta * 1.4)
 	gate.position.y = 0.59 + gate_open * 0.9
@@ -197,6 +223,12 @@ func draw_connections(v) -> void:
 	var choosing_patch: bool = selected.begins_with("sprinkler")
 	if selected == "tank" or choosing_patch:
 		_ring(v, tank_position() + Vector3(0, 0.35, 0), 1.95 * scale_tank.x, Color("e8df9b"))
+	if practice_label.visible:
+		var target: Vector3 = world.plot_positions[34] if info.lesson.stage == "water" else equipment_position("sprinkler2")
+		_ring(v, target + Vector3(0, 0.32, 0), 0.95, Color("ffe899"))
+		var tip: Vector3 = target + Vector3(0, 1.15 + sin(clock * 2.8) * 0.12, 0)
+		v._line(tip + Vector3(-0.23, 0.3, 0), tip, 0.075, CREAM, true)
+		v._line(tip + Vector3(0.23, 0.3, 0), tip, 0.075, CREAM, true)
 	if int(projects.get("irrigation", 0)) > 0:
 		var relevant: bool = selected == "tank" or choosing_patch or flow_time > 0
 		if relevant:
@@ -236,7 +268,12 @@ func draw_connections(v) -> void:
 			v._line(p, p + Vector3(0.06, 0.05, 0.65), 0.045, Color(0.92, 0.95, 0.79, 0.7), true)
 			var calm: Vector3 = Vector3(x, 0.92, trees.z + 1.05 + advance * 0.45)
 			v._line(calm, calm + Vector3(0, 0.025, 0.22), 0.035, Color(0.73, 0.88, 0.73, 0.5), true)
-	if refill_time > 0:
+	if pour_blend > 0.18:
+		var spout: Vector3 = can.to_global(Vector3(0.63, 0.32, 0))
+		var landing: Vector3 = spout + can.global_basis.x * 0.36
+		landing.y = 0.30
+		_flow(v, spout, landing, false, 0.065 * pour_blend)
+	if refill_time > 0.30 and refill_blend > 0.80:
 		var tap: Vector3 = tank_position() + Vector3(-0.4, 1.05, 1.95) * scale_tank
 		_flow(v, tap, can.position + Vector3(0, 0.30 * can.scale.y, 0), false, 0.10)
 	# Rain falls onto the roof, then travels along the same visible gutter to storage.

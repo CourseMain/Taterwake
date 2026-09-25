@@ -113,9 +113,9 @@ func run() -> void:
 		game.hud.close_panel()
 	game.state.current_island = 1
 	game._on_island_changed(1)
-	check(game._clamp_destination(Vector3(-12, 0, -20)).z >= -5, "northern sea remains out of bounds away from path")
-	check(game._clamp_destination(Vector3(11.5, 0, -50)).z >= -16.2, "cannot walk off the end of the boarding area")
-	check(game._clamp_destination(Vector3(10, 0, -8)).distance_to(Vector3(10, 0, -8)) > 2, "path extension does not open a route through Roll House")
+	check(game._clamp_destination(game.world.layout_point(Vector3(-12, 0, -20))).z >= -5 * game.world.LAND_SPACING - 0.001, "northern sea remains out of bounds away from path")
+	check(game._clamp_destination(game.world.layout_point(Vector3(11.5, 0, -50))).z >= -16.2 * game.world.LAND_SPACING, "cannot walk off the end of the boarding area")
+	check(game._clamp_destination(game.world.layout_point(Vector3(10, 0, -8))).distance_to(game.world.layout_point(Vector3(10, 0, -8))) > 2, "path extension does not open a route through Roll House")
 	game.tutorial.start()
 	game.queue_ferry()
 	check(not game.walking and not game.hud.is_panel_open(), "early tutorial still blocks ferry actions")

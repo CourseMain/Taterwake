@@ -2278,7 +2278,7 @@ func _build_help() -> void:
 	var intro: PanelContainer = _card(INK, 18)
 	_body.add_child(intro)
 	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))
-	_help_step("01  Move & farm", "WASD to walk · Two-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
+	_help_step("01  Move & farm", "WASD / arrows to walk · Hold Shift to sprint\nTwo-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
 	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 25s · Giant 40s · Radioactive 50s · Sunburst 55s · Icecap 60s")
 	_help_step("03  Buy low. Sell high.", "B: Market · I: Inventory · F: Sell held\nSurges last 10 seconds. Save crops for the right price.")
 	_help_step("04  Go bigger", "U: Upgrade tools\nChain harvests within 3.5s for up to ×16 bonuses.")
