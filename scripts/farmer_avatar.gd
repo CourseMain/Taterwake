@@ -4,6 +4,8 @@ const SLOTS: Array[String] = ["head", "body", "legs", "feet", "hands", "charm"]
 const SKIN: Color = Color("dca86d")
 const BODY_CENTER: float = 0.99
 const BODY_RADII: Vector3 = Vector3(0.61, 0.78, 0.49)
+var skin_color: Color = SKIN
+var _mouth: Node3D
 var loadout: Dictionary = {}
 var hat: Node3D
 var gear_parts: Dictionary = {}
@@ -36,7 +38,7 @@ func setup() -> void:
 	_built = true
 	name = "FarmerAvatar"
 	_rig = _group(self, "PotatoBodyRig")
-	_torso = _sphere(_rig, Vector3(0, BODY_CENTER, 0), BODY_RADII, SKIN)
+	_torso = _sphere(_rig, Vector3(0, BODY_CENTER, 0), BODY_RADII, skin_color)
 	_torso.name = "RoundPotatoBody"
 	_head = _group(_rig, "PotatoFace")
 	for side: float in [-1.0, 1.0]:
@@ -48,19 +50,20 @@ func setup() -> void:
 		_eyes.append(eye)
 		_sphere(_head, Vector3(side * 0.34, 1.205, 0.390), Vector3(0.098, 0.048, 0.020), Color("e99b82"))
 		for offset in range(2):
-			_sphere(_head, Vector3(side * (0.315 + offset * 0.055), 1.49 - offset * 0.05, 0.279), Vector3(0.020, 0.022, 0.012), SKIN.darkened(0.17))
-	_sphere(_head, Vector3(0, 1.245, 0.49), Vector3(0.072, 0.056, 0.053), SKIN.lightened(0.16))
+			_sphere(_head, Vector3(side * (0.315 + offset * 0.055), 1.49 - offset * 0.05, 0.279), Vector3(0.020, 0.022, 0.012), skin_color.darkened(0.17))
+	_sphere(_head, Vector3(0, 1.245, 0.49), Vector3(0.072, 0.056, 0.053), skin_color.lightened(0.16))
+	_mouth = _group(_head, "Smile")
 	for index in range(8):
 		var a: float = PI + index * PI / 8.0
 		var b: float = PI + (index + 1) * PI / 8.0
-		_bar(_head, Vector3(cos(a) * 0.087, 1.16 + sin(a) * 0.037, 0.49), Vector3(cos(b) * 0.087, 1.16 + sin(b) * 0.037, 0.49), 0.010, Color("81553d"))
+		_bar(_mouth, Vector3(cos(a) * 0.087, 1.16 + sin(a) * 0.037, 0.49), Vector3(cos(b) * 0.087, 1.16 + sin(b) * 0.037, 0.49), 0.010, Color("81553d"))
 	for side: float in [-1.0, 1.0]:
 		var arm: Node3D = _group(_rig, "ArmLeft" if side < 0 else "ArmRight")
 		arm.position = Vector3(side * 0.575, 1.015, 0)
 		arm.rotation.z = side * 0.16
 		_arms.append(arm)
-		_sphere(arm, Vector3(0, -0.17, 0.025), Vector3(0.137, 0.265, 0.157), SKIN)
-		_sphere(arm, Vector3(0, -0.36, 0.047), Vector3(0.140, 0.14, 0.16), SKIN.lightened(0.025))
+		_sphere(arm, Vector3(0, -0.17, 0.025), Vector3(0.137, 0.265, 0.157), skin_color)
+		_sphere(arm, Vector3(0, -0.36, 0.047), Vector3(0.140, 0.14, 0.16), skin_color.lightened(0.025))
 		var leg: Node3D = _group(_rig, "LegLeft" if side < 0 else "LegRight")
 		leg.position = Vector3(side * 0.25, 0.35, 0)
 		_legs.append(leg)

@@ -58,7 +58,7 @@ func run() -> void:
 		await shot("shop-%d" % island)
 		game.hud.close_panel()
 	game.state.travel_to(1)
-	check(game.world._project_nodes.size() == 1 and game.world._project_nodes.has("rainwater"), "Island 1 keeps only its starter tank")
+	check(game.world._project_nodes.size() == 2 and game.world._project_nodes.has("irrigation"), "Island 1 retains purchased shared irrigation beside its tank")
 	game.state.travel_to(2)
 	check(game.world._project_nodes.size() == 5 and game.world._project_nodes.rainwater.get_meta("level") == 3, "returning to island restores its projects")
 	game.state.climate.reset()

@@ -15,11 +15,12 @@ signal tax_boom_started
 signal run_ended
 signal climate_changed(phase: String)
 
+const NpcRoster = preload("res://scripts/npc_roster.gd")
 const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 18
+const MECHANICS_REVISION: int = 19
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -104,6 +105,7 @@ var activity_system: Node = null
 # Progress is saved; the scene controller decides when to resume the guided lesson.
 const FarmHelp = preload("res://scripts/farm_help.gd")
 var farm_help = FarmHelp.new()
+var npc_history: Dictionary = {}
 var tutorial_progress: Dictionary = {"version": 2, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
 var blind_cycle: Dictionary = BlindRules.new_cycle()
@@ -1212,7 +1214,7 @@ func update(delta: float) -> void:
 			step = minf(step, export_timer)
 			if not export_active and export_timer > 15.0:
 				step = minf(step, export_timer - 15.0)
-		if current_island == 3 and island3_unlocked:
+		if current_island == 3 and island3_unlocked and climate.data.phase == "calm":
 			step = minf(step, frost_timer)
 		if thaw_remaining > 0.0:
 			step = minf(step, thaw_remaining)
@@ -1228,7 +1230,9 @@ func update(delta: float) -> void:
 		var ripe_infestation: bool = false
 		for field_id in island_plots:
 			var island_growth: float = _growth_speed(int(field_id))
-			for plot in island_plots[field_id]:
+			for plot_index in range(island_plots[field_id].size()):
+				var plot: Dictionary = island_plots[field_id][plot_index]
+				if ClimateSystem.Operations.frozen(self, plot_index, int(field_id)): continue
 				var growth_speed: float = maxf(island_growth, float(CROPS[plot.crop].grow) / MAX_GROW_SECONDS)
 				var ripe_step: float = step if int(plot["stage"]) == 3 else 0.0
 				if int(plot.stage) > 0: plot["plant_age"] = minf(1e9, float(plot.get("plant_age", 0)) + step)
@@ -1305,7 +1309,7 @@ func update(delta: float) -> void:
 				_refresh_market()
 				notified.emit("The Thaw Auction has ended. Icecap prices return to the ordinary market.")
 				dirty = true
-		if current_island == 3 and island3_unlocked:
+		if current_island == 3 and island3_unlocked and climate.data.phase == "calm":
 			frost_timer = maxf(0.0, frost_timer - step)
 			if frost_timer < 0.000001:
 				if frost_active:
@@ -1465,13 +1469,20 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
 	if action == "plant" and not available_crops().has(selected_crop):
 		return _finish("Choose a seed for this island [2]")
+	var climate_thawed: int = 0
+	var ice_blocked: bool = false
 	var affected: int = 0
 	var thawed: int = 0
 	var harvested: int = 0
 	for target in affected_tiles(index, action):
 		var plot: Dictionary = plots[target]
+		var iced: bool = ClimateSystem.Operations.frozen(self, target)
 		if ClimateSystem.Operations.tool(self, target, action):
+			if iced: climate_thawed += 1
 			affected += 1
+			continue
+		if iced:
+			ice_blocked = true
 			continue
 		if action == "pest":
 			if bool(plot.get("pests", false)):
@@ -1522,6 +1533,11 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				affected += 1
 				harvested += count
 	farm_help.refresh_pests(self)
+	if climate_thawed > 0:
+		return _finish("Melted ice from %d crops · %ds of hoe heat left." % [climate_thawed, ceili(ClimateSystem.Operations.local(self).heat)])
+	if ice_blocked and affected == 0:
+		return _finish("Frozen crops · Visit the furnace, heat your hoe, then use Hoe [1] on the ice.")
+
 	if affected == 0:
 		if action == "water" and float(ClimateSystem.Operations.local(self).can) < 1.0:
 			return _finish("Can empty · Click the tank to walk over and refill.")
@@ -2339,6 +2355,7 @@ func _reject_purchase(message: String) -> String:
 
 
 func reset_game() -> void:
+	npc_history.clear()
 	blind_cycle = BlindRules.new_cycle()
 	climate.reset()
 	tutorial_active = false
@@ -2434,6 +2451,7 @@ func _save_data() -> Dictionary:
 		"blind_cycle": blind_cycle.duplicate(true),
 		"climate": climate.data.duplicate(true),
 		"tutorial_progress": tutorial_progress.duplicate(true),
+		"npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true),
 		"export_cycle_sold": export_cycle_sold, "export_qualified_cycles": export_qualified_cycles,
 		"export_factor": export_factor, "event_strength": event_strength,
@@ -2532,7 +2550,9 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	var mechanics: int = int(data.get("mechanics_revision", 0))
 	climate.data = data.climate.duplicate(true) if mechanics >= 11 else ClimateSystem.fresh_data()
 	if not climate.data.has("operations"): climate.data.operations = ClimateSystem.Operations.fresh()
+	if not climate.data.operations.has("ice"): climate.data.operations.ice = {}
 	for supply in climate.data.operations.islands.values():
+		if not supply.has("heat"): supply.heat = 0.0
 		if mechanics < 18 or not supply.has("can"): supply.can = 16.0 + 16.0 * int(data.tools.water)
 		if not supply.has("refilled"): supply.refilled = false
 		supply.shelter = 0
@@ -2544,6 +2564,12 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		for id in ["2", "3"]:
 			if int(climate.data.projects[id].get("rainwater", 0)) > 0 or (id == "2" and climate.data.get("introduced", false)):
 				climate.data.projects[id].irrigation = maxi(1, int(climate.data.projects[id].get("irrigation", 0)))
+	if mechanics < 19:
+		var owned_irrigation: int = 0
+		for project in climate.data.projects.values(): owned_irrigation = maxi(owned_irrigation, int(project.get("irrigation", 0)))
+		if owned_irrigation > 0:
+			for project in climate.data.projects.values(): project.irrigation = owned_irrigation
+
 	if mechanics == 11:
 		climate.data.introduced = false
 		climate.data.intro_pending = false
@@ -2567,6 +2593,8 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	tutorial_active = false
 	farm_help.data = data.get("farm_help", FarmHelp.fresh()).duplicate(true)
 	# An established farm gets its normal game back, without a surprise tutorial.
+	npc_history = data.get("npc_history", {}).duplicate(true)
+	for person in npc_history: npc_history[person].visits = int(npc_history[person].visits)
 	tutorial_progress = data.get("tutorial_progress", {"version": 1, "step": 0, "completed": true, "plot": 5}).duplicate(true)
 	for key in ["version", "step", "plot"]:
 		tutorial_progress[key] = int(tutorial_progress[key])
@@ -2980,6 +3008,7 @@ func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary:
 		return false
 	var data: Dictionary = raw
+	if data.has("npc_history") and not NpcRoster.valid_history(data.npc_history): return false
 	if data.has("tutorial_progress"):
 		var progress: Variant = data["tutorial_progress"]
 		if not progress is Dictionary or not _number(progress.get("version"), 1.0, 2.0, true) or not _number(progress.get("step"), 0.0, 100.0, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0.0, 23.0, true):

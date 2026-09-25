@@ -6,7 +6,7 @@
 
 New farms start with one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
-The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. E interacts with nearby beds and the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
+The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. E also works at the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
 
 Afterwards, optional farm tips appear when useful. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage. After independently planting, watering, harvesting and selling another crop, holding a fresh harvest can offer a **+100% practice boom for ten seconds**. Choose when to start, then sell while its quote lasts. Missing the window allows another attempt; a successful sale ends the practice. It never counts toward tax or replaces an actual boom.
 
@@ -41,7 +41,7 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | 3 | Water |
 | 4 | Harvest |
 | 5 | Bug sprayer |
-| E / Space | Use selected tool on nearby bed / board nearby ferry |
+| E / Space | Interact with nearby NPC/shop, use selected tool beside a bed, or board the ferry |
 | B | Market |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
@@ -200,7 +200,7 @@ Stock feedback has four levels: small mist above +300%; stronger pulses from +50
 
 ### Climate action and taxes (v1.0.2)
 
-Climate disasters begin on **Island 2**. Try or skip the optional watering practice, then open **☰ → Climate action** to fund rainwater reserves, drainage, a reinforced barn or living windbreaks. Purchases appear on that island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods and severe storms damage crops and stored potatoes, raise seed costs, and crash sale prices by up to **95%**. Prices stay positive. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** as the crash eases. On the affected island, positive stocks, natural spikes, offers and exports cannot override the crash. Existing booms end; the Rocket countdown pauses until recovery ends. Crashes do not advance the three-stock tax counter, but an already-due bill is still collected. Protection reduces crop losses and the recovery bill.
+Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes, raise seed costs, and crash sale prices by up to **95%**. Prices stay positive. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** as the crash eases. On the affected island, positive stocks, natural spikes, offers and exports cannot override the crash. Existing booms end; the Rocket countdown pauses until recovery ends. Crashes do not advance the three-stock tax counter, but an already-due bill is still collected. Protection reduces crop losses and the recovery bill.
 
 **Taxes arrive after every third major stock**, about nine minutes, following its full ten-second selling window. Natural spikes do not count. Base tax is 5% of the next-island requirement; a random Tax Boom or disaster recovery can increase it by up to 150%. The combined bill never exceeds 12.5% of the baseline. Island 3 uses a virtual 5Qa baseline and has no fourth island: its bills range from **250T to 625T**.
 
@@ -219,7 +219,9 @@ A collapse shows the cause, debt limit, losses and exact tax subtraction when ta
 
 The water loop is **rain → tank → can or pipes → crops**. A starter can waters 16 beds; can upgrades carry more between trips. Click the tank, then **Refill watering can** to walk over and transfer water. Island 1 refills its reserve quickly and has no disasters. The tank and sprinklers share the same reserve. On Island 2, sprinklers water a fixed connected patch in ordinary weather; drought stops the tank replenishing. Select equipment to see its source, pipes and affected beds. See [the water-loop guide](CLIMATE_WATER_LOOP.md) for exact capacities and costs.
 
-First arrival at Island 2 offers optional practice with the familiar can followed by a sprinkler. The practice pauses the real farm and uses temporary crops. Both invitation choices and all equipment actions remain clickable while live resource values update. Skip any time or replay from Climate action during calm weather.
+First arrival at Island 2 plays a 12-second changing-sky cutscene with subtitles; skip it at any time. After purchasing irrigation, optional water practice is available at the weather station. Practice pauses the real farm and uses temporary crops. It never grants free sprinklers.
+
+On Island 3, **Deep Freeze** stops affected crops from growing, being watered or harvested. Open the furnace, choose **Heat thawing hoe**, then use **Hoe [1]** to melt crop ice. The bellows provide 60 seconds of heat without needing potatoes as fuel. Frostgold crops resist ice. Rescuing frozen crops prevents cold-stress losses; remaining ice melts after recovery. The separate Frostbreak challenge pauses during disasters.
 
 - **Drought:** water dry crops; the shared tank reserve now matters.
 - **Flood:** open purchased drains to send water through channels toward the sea; Hoe [1] drains individual planted beds.
@@ -228,3 +230,11 @@ First arrival at Island 2 offers optional practice with the familiar can followe
 Each build has one compact action page, with bonuses and progression behind a drawer. Farmer uses **1 compost on a planted, growing crop**. Click its action, then a glowing crop; water, grow and harvest normally for three times its usual yield. Ripe and frozen crops explain what to do instead. Escape or the visible Cancel button exits selection without spending compost. See [the profession guide](BUILD_PROFESSIONS.md) for the other four builds and their tradeoffs.
 
 Double-click **Play Builds Lab.command** for a disposable farm with all five builds, supplied crops, an SSS batch preset, all three oceans, a tax collector scenario, a debt/bankruptcy scenario and an already-authenticated Debug workshop. Reload resets the lab. Double-click **Play Climate Lab.command** for water practice, ordinary farming, upgrades and weather scenarios. Neither lab reads or writes your saved farm. Hold **Shift** to sprint; use the lab's Balanced/Smooth controls and eight-second measurement for browser performance checks.
+
+## NPC conversations
+
+Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Ada, Rook, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
+
+Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current island and event.
+
+Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, tax, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.

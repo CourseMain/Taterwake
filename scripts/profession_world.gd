@@ -34,12 +34,12 @@ func group(id: String, at: Vector3) -> Node3D:
 func setup(w) -> void:
 	world = w
 	name = "Professions"
-	var compost := group("farmer", Vector3(-14.0 if world.current_island == 3 else -10.2,0,6.2))
+	var compost := group("farmer", Vector3(-16.0,0,9.0) if world.current_island == 3 else Vector3(-14.1 if world.current_island == 2 else -12.0,0,6.2))
 	world._crate(compost, Vector3.ZERO, true)
 	world._sphere(compost, Vector3(0,.66,0), Vector3(.65,.18,.5), Color("645440"))
 	world._shop_label(compost,"Compost",Vector3(0,1.7,0))
 	world._target(compost,Vector3(0,.7,0),Vector3(1.7,1.7,1.6),"station","profession:farmer")
-	var bench := group("scientist", Vector3(-16.0 if world.current_island == 3 else -11.8,0,2.6))
+	var bench := group("scientist", Vector3(-17.0 if world.current_island == 3 else -14.8,0,2.4))
 	world._box(bench,Vector3(0,.85,0),Vector3(2.6,.20,1.3),Color("bd9b71"))
 	for x in [-1.1,1.1]: world._box(bench,Vector3(x,.42,0),Vector3(.16,.85,1.1),Color("806343"))
 	for i in range(3):
@@ -51,7 +51,7 @@ func setup(w) -> void:
 		jars.append(jar)
 	world._shop_label(bench,"Seed bank",Vector3(0,2.3,0))
 	world._target(bench,Vector3(0,1,0),Vector3(2.8,2.3,1.8),"station","profession:scientist")
-	var investor := group("investor", world.layout_point(Vector3(11.1,0,5)))
+	var investor := group("investor", world.layout_point(Vector3(14.4,0,-5 if world.current_island == 3 else -1)))
 	world._box(investor,Vector3(0,1.1,0),Vector3(.18,2.2,.18),Color("947649"))
 	world._box(investor,Vector3(0,1.55,0),Vector3(1.6,1.1,.15),Color("c3a16f"))
 	world._box(investor,Vector3(0,1.55,.1),Vector3(1.25,.8,.04),Color("f0e3b8"))
@@ -64,7 +64,7 @@ func setup(w) -> void:
 	for x in [-.65,.65]: world._sphere(cargo,Vector3(x,.06,0),Vector3(.16,.20,.28),Color("3e514e"))
 	world._crate(cargo,Vector3.ZERO,true)
 	world._crate(cargo,Vector3(0,.8,0),true)
-	var table := group("gambler", world.layout_point(Vector3(10,0,-8) if world.current_island == 1 else (Vector3(13,0,-10) if world.current_island == 2 else Vector3(17,0,-12))) + Vector3(-2.7,0,3))
+	var table := group("gambler", world.layout_point(Vector3(10,0,-8) if world.current_island == 1 else (Vector3(13,0,-10) if world.current_island == 2 else Vector3(17,0,-12))) + Vector3(-4.8,0,4.0))
 	world._cylinder(table,Vector3(0,.8,0),.9,.9,.16,Color("79618a"),12)
 	world._box(table,Vector3(0,.35,0),Vector3(.4,.7,.4),Color("806343"))
 	world._die(table,Vector3(-.23,1.05,0),.35,.3)
@@ -98,10 +98,9 @@ func setup(w) -> void:
 	visitor = Node3D.new()
 	visitor.name = "TaxCollector"
 	add_child(visitor)
-	visitor_avatar = world.FarmerAvatar.new()
+	visitor_avatar = world.NpcAvatar.new()
 	visitor.add_child(visitor_avatar)
-	visitor_avatar.setup()
-	visitor_avatar.set_equipment({"head":"traders_visor", "body":"scientist_coat", "feet":"industrialist_boots"}, {})
+	visitor_avatar.configure("edwin")
 	world._box(visitor,Vector3(.8,.75,.15),Vector3(.5,.7,.16),Color("a78153"))
 	world._box(visitor,Vector3(.8,.78,.25),Vector3(.4,.52,.025),Color("f3e5bd"))
 	visitor_label = world._shop_label(visitor,"Tax collector",Vector3(0,2.7,0))

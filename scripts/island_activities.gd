@@ -396,7 +396,7 @@ func info() -> Dictionary:
 		"contract": job, "contract_completed": contract_completed, "contract_cooldown": contract_cooldown,
 		"contract_crop": _contract_crop(), "contract_crop_name": str(state.CROPS[_contract_crop()].name),
 		"bulk_offer": contract_offer("bulk"), "mutation_offer": contract_offer("mutation"),
-		"furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown,
+		"thaw_heat": float(state.climate.data.operations.islands["3"].get("heat", 0)) if island == 3 else 0.0, "furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown,
 		"furnace_fuel": FURNACE_FUEL, "furnace_crop": "icecap", "furnace_held": int(state.storage.icecap),
 		"can_charge": island == 3 and state.island3_unlocked and furnace_cooldown <= 0.0 and int(state.storage.icecap) >= FURNACE_FUEL,
 		"furnace_growth": 2.5, "furnace_processing": 3.0}

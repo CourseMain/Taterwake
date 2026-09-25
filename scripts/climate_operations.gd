@@ -5,8 +5,8 @@ const ZONES: Array[String] = ["Far beds", "Middle beds", "Near beds"]
 static func fresh() -> Dictionary:
 	var islands: Dictionary = {}
 	for id in ["1", "2", "3"]:
-		islands[id] = {"can": 16.0, "refilled": false, "water": 36.0, "spray": 18.0, "zone": 0, "mode": 0, "gates": false, "shelter": 0, "sealed": false}
-	return {"islands": islands, "tick": 0.0, "stress": {}, "wet": {}, "scars": {}, "rescued": {}, "strike_row": -1, "strike_in": 5.0, "flash": 0.0, "pulse": 0.0}
+		islands[id] = {"heat": 0.0, "can": 16.0, "refilled": false, "water": 36.0, "spray": 18.0, "zone": 0, "mode": 0, "gates": false, "shelter": 0, "sealed": false}
+	return {"islands": islands, "tick": 0.0, "ice": {}, "stress": {}, "wet": {}, "scars": {}, "rescued": {}, "strike_row": -1, "strike_in": 5.0, "flash": 0.0, "pulse": 0.0}
 
 static func local(farm) -> Dictionary:
 	return farm.climate.data.operations.islands[str(farm.current_island)]
@@ -15,7 +15,7 @@ static func capacity(farm, island: int) -> float:
 	return 36.0 + 36.0 * int(farm.climate.data.projects[str(island)].get("rainwater", 0))
 
 static func zone(index: int, island: int) -> int:
-	return mini(2, int(float(index / (10 if island == 3 else 8)) * 3.0 / (8.0 if island == 3 else 6.0)))
+	return mini(2, int(float(index / (10 if island == 3 else (8 if island == 2 else 6))) * 3.0 / (8.0 if island == 3 else (6.0 if island == 2 else 4.0))))
 
 static func scarce(farm) -> bool:
 	return not farm.tutorial_active and farm.climate.data.phase == "active" and farm.climate.data.island == farm.current_island
@@ -53,7 +53,17 @@ static func relieve(farm, index: int, amount: float) -> void:
 	if before >= 0.35: op.rescued[key] = true
 	op.stress[key] = maxf(0.0, before - amount)
 
+static func frozen(farm, index: int, island: int = -1) -> bool:
+	return int(farm.climate.data.island) == (farm.current_island if island < 0 else island) and farm.climate.data.operations.get("ice", {}).has(str(index))
+
 static func tool(farm, index: int, action: String) -> bool:
+	if frozen(farm, index):
+		if action != "hoe" or float(local(farm).heat) <= 0.0: return false
+		farm.climate.data.operations.ice.erase(str(index))
+		farm.climate.data.operations.rescued[str(index)] = true
+		relieve(farm, index, 1.0)
+		farm.climate.data.operations.pulse = 1.0
+		return true
 	if not scarce(farm) or int(farm.plots[index].stage) == 0 or bool(farm.plots[index].get("frozen", false)): return false
 	var op: Dictionary = farm.climate.data.operations
 	var event: String = farm.climate.data.event
@@ -76,7 +86,7 @@ static func water_cost(farm) -> float:
 
 static func needs_water(farm, index: int) -> bool:
 	var plot: Dictionary = farm.plots[index]
-	if not plot.unlocked or int(plot.stage) == 0 or bool(plot.get("frozen", false)): return false
+	if not plot.unlocked or int(plot.stage) == 0 or bool(plot.get("frozen", false)) or frozen(farm, index): return false
 	if int(plot.stage) == 1 or not plot.watered: return true
 	return scarce(farm) and farm.climate.data.event == "drought" and (float(farm.climate.data.operations.stress.get(str(index), 0)) > 0.02 or float(farm.climate.data.operations.wet.get(str(index), 0)) < 1)
 
@@ -85,7 +95,7 @@ static func target(farm, index: int, action: String) -> String:
 	if farm.climate.Lesson.active(farm):
 		if action == "water" and farm.climate.data.lesson.stage == "area": return farm.climate.Lesson.area(farm, index)
 		return farm._finish("Water the glowing practice bed first [3].")
-	if farm.run_over or farm.current_island < 2:
+	if farm.run_over:
 		return farm._finish("These controls are for the affected farm.")
 	var supply: Dictionary = local(farm)
 	var projects: Dictionary = farm.climate.data.projects[str(farm.current_island)]
@@ -120,6 +130,11 @@ static func operate(farm, action: String) -> String:
 	if farm.current_island < 2 or farm.run_over or farm.tutorial_active or farm.climate.data.intro_pending: return "Farm controls become available on Golden Shores."
 	var supply: Dictionary = local(farm)
 	var projects: Dictionary = farm.climate.data.projects[str(farm.current_island)]
+	if action == "heat_hoe":
+		if farm.current_island != 3: return farm._finish("The thawing forge is in Frosthollow.")
+		supply.heat = 60.0
+		farm.climate_changed.emit("controls")
+		return farm._finish("Furnace lit · Hoe [1] melts frozen crops for 60 seconds. Reheat here any time; no crop fuel needed.")
 	if action == "gates":
 		if int(projects.get("drainage", 0)) == 0: return farm._finish("Build drainage first. Hoe [1] can drain individual beds.")
 		supply.gates = true
@@ -152,6 +167,7 @@ static func _tick(farm, dt: float) -> void:
 	op.flash = maxf(0.0, float(op.flash) - dt)
 	op.pulse = maxf(0.0, float(op.pulse) - dt)
 	for id: String in op.islands:
+		op.islands[id].heat = maxf(0, float(op.islands[id].get("heat", 0)) - dt)
 		if c.data.phase != "active" or c.data.event != "drought" or int(id) != int(c.data.island):
 			op.islands[id].water = minf(capacity(farm, int(id)), float(op.islands[id].water) + dt * 6.0)
 		if c.data.phase != "active" or int(id) != int(c.data.island):
@@ -183,6 +199,7 @@ static func _tick(farm, dt: float) -> void:
 	for index in range(field.size()):
 		var key: String = str(index)
 		if int(field[index].stage) == 0:
+			op.ice.erase(key)
 			op.stress.erase(key)
 			op.wet.erase(key)
 			continue
@@ -194,6 +211,8 @@ static func _tick(farm, dt: float) -> void:
 		if event == "drought" and str(field[index].get("variety", "")) == "dry": protection *= 0.5
 		if event == "drought":
 			if wet <= 0.0: stress += dt * 0.052 * strength * exposure * protection
+		elif event == "freeze":
+			if op.ice.has(key): stress += dt * 0.037 * strength * exposure * protection
 		elif event == "flood":
 			stress += dt * 0.055 * strength * exposure * protection
 			if supply.gates and int(projects.get("drainage", 0)) > 0:
@@ -204,6 +223,7 @@ static func _tick(farm, dt: float) -> void:
 			stress += dt * wind_rate * strength * protection
 		op.stress[key] = minf(1.0, stress)
 		if stress >= 1.0:
+			op.ice.erase(key)
 			farm._clear_crop(field[index])
 			if event == "flood": field[index].tilled = false
 			op.scars[key] = true
@@ -218,6 +238,7 @@ static func valid(raw: Variant) -> bool:
 	for id in ["1", "2", "3"]:
 		var s: Variant = raw.islands.get(id)
 		if not s is Dictionary: return false
+		if s.has("heat") and not _number(s.heat, 0, 60): return false
 		if s.has("can") and not _number(s.can, 0, 64): return false
 		if s.has("refilled") and not s.refilled is bool: return false
 		for key in ["water", "spray", "zone", "mode", "shelter"]:
@@ -226,6 +247,10 @@ static func valid(raw: Variant) -> bool:
 			if key in ["zone", "mode", "shelter"] and float(s[key]) != floor(float(s[key])): return false
 		for key in ["gates", "sealed"]:
 			if not s.get(key) is bool: return false
+	if raw.has("ice"):
+		if not raw.ice is Dictionary or raw.ice.size() > 80: return false
+		for index in raw.ice:
+			if not str(index).is_valid_int() or int(index) < 0 or int(index) >= 80 or raw.ice[index] != true: return false
 	for key in ["tick", "strike_in", "flash", "pulse"]:
 		if not _number(raw.get(key), 0.0, 0.25 if key == "tick" else 8.0): return false
 	if not _number(raw.get("strike_row"), -1, 7) or float(raw.strike_row) != floor(float(raw.strike_row)): return false

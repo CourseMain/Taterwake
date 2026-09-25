@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.2.5
+
+- Added eleven named NPCs with distinct 3D appearances, animated close-up conversations, optional dialogue choices and contextual weather advice. Friendly replies and introductions persist in saves.
+- Staffed shops now begin with a conversation, followed by a choice to access their service. Stallholders stand at their shops, with a shallow seed awning that keeps Mara visible. White, black-outlined E keycaps sit above nearby characters; dialogue uses outlined speech bubbles, coloured name tags and golden service choices.
+- Conversations pause farm clocks, hide touch movement controls and suspend background farm rendering. Portraits and choices adapt to phone, tablet and laptop screens. Browser fullscreen restores keyboard focus to the game, and rotating a phone keeps the canvas correctly proportioned.
+
+- Added a first-arrival Island 2 sky cinematic with subtitles and skip controls; farm clocks pause during it.
+- Added animated weather stations on Islands 2 and 3, with forecasts, visible protection stats and equipment purchases outside the tax menu.
+- Sprinklers and irrigation now require a purchase and carry across all islands. Existing saves retain their highest owned level; water practice no longer grants free equipment.
+- Added an Island 3 Deep Freeze disaster: crops freeze, stop growing and build cold stress. Heat the hoe at the furnace, then thaw them with Hoe [1]. Emergency bellows need no crop fuel; Frostgold resists freezing.
+- Separated compost from sprinklers, the tank from the workshop, and the buyer board from ducks. Cleared station sightlines and reduced desktop HUD obstruction with a compact tax row and a bottom stock countdown.
+
+- Added a small, tappable E badge for the nearest NPC or shop, with keyboard interaction across all islands. Crop beds keep their existing tool actions.
+- Moved barn upgrades above the inventory tabs, with a beginner tip, added-space preview and a clear maximum-level state.
+- Moved fullscreen to a compact × in the top-left corner and adjusted nearby HUD elements to leave it clear.
+
 ## 1.0.2
 
 ### Touch controls and fullscreen

@@ -107,11 +107,11 @@ func present(kind: String, info: Dictionary, farm) -> void:
 		footer.text = "Stock your reserves. Operate equipment. Rescue stressed crops."
 	elif kind == "warning":
 		title.text = "%s IN %ds" % [info.name, ceili(info.timer)]
-		message.text = {"drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
+		message.text = {"freeze": "Visit the furnace. Heat your hoe before the crops freeze.", "drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
 		footer.text = "Recovery bill: about %s · Climate action in ☰" % farm.money(info.warning_tax, true)
 	elif kind == "impact":
-		title.text = {"drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
-		message.text = {"drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Trees shelter the far beds from wind."}.get(info.event, "Protect your harvest.")
+		title.text = {"freeze": "THE CROPS ARE FREEZING", "drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
+		message.text = {"freeze": "Heat the hoe at the furnace, then Hoe [1] melts the ice. Frozen crops stop growing.", "drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Trees shelter the far beds from wind."}.get(info.event, "Protect your harvest.")
 		footer.text = "Next tax: %s · Sell what you can save." % farm.money(farm.blind_info().tax, true)
 	else:
 		title.text = "THE WEATHER IS EASING"

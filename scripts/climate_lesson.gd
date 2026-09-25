@@ -10,9 +10,10 @@ static func start(farm) -> String:
 	if farm.current_island != 2: return farm._finish("Try the water lesson on Golden Shores.")
 	if farm.climate.data.phase != "calm" or farm.run_over or farm.rocket_pending or farm.tutorial_active:
 		return farm._finish("Try the water lesson when the farm is calm.")
+	if int(farm.climate.data.projects["2"].get("irrigation", 0)) == 0: return farm._finish("Buy Sprinklers & Irrigation at the weather station before sprinkler practice.")
 	farm.climate.data.introduced = true
 	farm.climate.data.intro_pending = false
-	farm.climate.data.projects["2"].irrigation = maxi(1, int(farm.climate.data.projects["2"].get("irrigation", 0)))
+
 	farm.climate.data.operations.islands["2"].water = farm.climate.Operations.capacity(farm, 2)
 	farm.climate.data.operations.islands["2"].can = farm.climate.Operations.can_capacity(farm)
 	farm.climate.data.lesson = fresh("water")

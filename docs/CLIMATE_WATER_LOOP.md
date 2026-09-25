@@ -1,3 +1,11 @@
+# Weather stations and the connected water loop
+
+Island 2 begins with a skippable 12-second sky cinematic. It pauses simulation and introduces changing weather before opening the weather station. The scanning dishes on Islands 2 and 3 open forecasts, current protection percentages and equipment purchases; the desktop Weather & protection shortcut and Menu reach the same page.
+
+Buy Sprinklers & Irrigation to install three fixed patches. The purchase and level-2 efficiency upgrade apply to all islands, including the Valley. Arrival and water practice never grant equipment. Revision-18 saves retain their highest owned irrigation level across all islands. Other protection projects remain local.
+
+Deep Freeze is exclusive to Island 3. Its 45-second warning leads to a 30-second freeze and 75-second recovery. Frozen crops cannot grow, be watered or harvested; cold stress can destroy unrescued crops during impact. Frostgold crops resist ice. Open the furnace and use **Heat thawing hoe** for 60 seconds of rescue heat, then use **Hoe [1]** on frozen beds. Bellows are free to prevent a fuel shortage from blocking rescue. The separate 25-Icecap growth boost remains optional. Ice and heat persist in saves; ice clears when recovery ends. The older Frostbreak challenge pauses during disasters.
+
 # Connected water and weather — v1.0.2
 
 Released in v1.0.2. The lab below remains an isolated developer preview. Double-click **Play Climate Lab.command** in the repository to build and open a disposable browser farm. The lab never reads or saves your real farm. Its **Climate Lab · scenarios** button switches between seven fresh scenarios; selecting a scenario closes the lab controls so you can see the farm.
@@ -8,7 +16,7 @@ Hold **Shift** while using WASD/arrows or click-to-walk to sprint (1.65× speed,
 
 1. **Island 1 · tank, can, crops:** select Water [3] and click beds. The starter can carries 16 water, one per bed. The Water button and farmer show the remaining count. After 16 beds, click the highlighted tank. The farmer walks to its tap, the can fills, and the prompt disappears. Watch roof rain replenish the tank. **Empty can · test first refill** skips straight to this check.
 2. **Island 2 · ordinary sprinklers:** click one of the three gold sprinkler heads along the field's left edge. Follow its highlighted source, pipe and fixed patch; click **Water these beds · 6 water**. Soil darkens and crops grow. The tank supplies the sprinkler directly; the carried can stays unchanged. Repeating the action on hydrated beds spends nothing.
-3. **Island 2 · optional practice:** accept the short invitation, water the bed marked **Water this bed [3]**, then click the near sprinkler and use its action. Real crops, bills and market clocks pause. Skip at any time; the first natural disaster is a dry spell after preparation time.
+3. **Island 2 · optional practice:** after buying sprinklers, choose safe practice at the weather station, water the bed marked **Water this bed [3]**, then click the near sprinkler and use its action. Real crops, bills and market clocks pause. Skip at any time; the first natural disaster is a dry spell after preparation time.
 4. **Dry spell:** use the familiar can and sprinklers on drooping crops. Water lowers danger rings. The tank stops replenishing during the 30-second drought, so harvest ripe crops and choose which patches to rescue. Rain returns afterward.
 5. **Flood:** click the gate at the front-left field corner, or **Show drain gate**. **Open drain** raises the gate, lowers flood danger and sends water through the channel to the sea. Hoe [1] still drains individual planted beds.
 6. **Storm:** trees automatically shelter the far patch immediately behind them. Click trees to see the shelter area; protected crops sway less. Reinforced barn shutters slide closed automatically. The gold lightning row remains vulnerable: harvest it before the strike.
@@ -34,11 +42,11 @@ Existing wider tool areas remain as upgrade benefits. Larger can capacity means 
 
 Irrigation uses three fixed patches instead of freely moving a zone. The permanent pipes make reach and cost predictable. Trees likewise shelter a fixed patch, with no movable screens. Hidden automatic irrigation modes and the invisible emergency well are retired.
 
-Purchased tanks retain their existing passive drought and recovery-tax benefits so established purchases keep value. Barn and tree tax/storage benefits also remain. Exact reductions and market rules are available in the shop's optional details; ordinary action cards show just the relevant resource and result.
+Purchased tanks retain their existing passive drought and recovery-tax benefits so established purchases keep value. Barn and tree tax/storage benefits also remain. Current reductions are visible near the top of the weather station. Its optional details explain market rules; ordinary action cards show the relevant resource and result.
 
 ## Saves and verification
 
-Mechanics revision **18** preserves crops, coins, islands, equipment, tutorial progress and existing reserves. Older saves receive a full can at their saved tool rank. Existing tank owners receive a basic connected sprinkler if needed to preserve their previous area-watering ability. Legacy automatic flow is disabled and movable shelter becomes fixed. Invalid can capacities and malformed resource structures are rejected before changing the farm.
+The earlier mechanics revision **18** preserved crops, coins, islands, equipment, tutorial progress and existing reserves. Older saves receive a full can at their saved tool rank. Existing tank owners receive a basic connected sprinkler if needed to preserve their previous area-watering ability. Legacy automatic flow is disabled and movable shelter becomes fixed. Invalid can capacities and malformed resource structures are rejected before changing the farm.
 
 Targeted checks cover state conservation, migration/corruption, tool upgrades, partial area watering, travel, drought/flood/storm interactions, actual walk-to-refill, practice/save-resume, equipment geometry reuse and every crop ray target. Run with your Godot executable:
 
@@ -64,7 +72,7 @@ The field console previously hid and re-showed its buttons on every refresh. A p
 
 Sprint eases between walking and running, works with keyboard and click routes, and preserves exact arrivals and menu input blocking. The persistent can follows the farmer's carrying hand, tilts for watering, and eases under the tank tap and back. Other tools ease into/out of their work stroke. Water fill animates during the transfer; upgrades keep their existing capacities. The practice destination gets a small world label and arrow only during its relevant step.
 
-No new save migration is necessary: crop coordinates, resources, equipment ranks and progression are unchanged from revision 18. Village geometry, targets, camera limits, paths, shoreline drain outlets and ferry destinations use the expanded layout consistently. The lab includes all three islands and still forces isolated test mode.
+The earlier village expansion preserved crop coordinates, resources, equipment ranks and progression. Revision 19 now migrates shared irrigation and adds saved freeze/hoe-heat state. Village geometry, targets, camera limits, paths, shoreline drain outlets and ferry destinations use the expanded layout consistently. The lab includes all three islands and still forces isolated test mode.
 
 Additional checks passed for mouse input, sprint/animation continuity, ferry access, camera zoom, tutorial scene/world, winter farming, equipment and responsive layouts. An older `test_tutorial_hud.gd` assertion about the Roll House panel overlapping the first-island guide also fails with the unchanged pretest HUD; it is separate from the fixed climate console input. Previous baseline issues listed above remain outside this change.
 

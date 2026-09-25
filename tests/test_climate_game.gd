@@ -32,13 +32,13 @@ func run() -> void:
 	game.state.island2_unlocked = true
 	for plot in game.state.island_plots["2"]: plot.unlocked = true
 	game.state.travel_to(2)
-	check(game.state.climate.data.lesson.stage == "offer" and game.hud._climate_console.visible, "first arrival offers nonblocking Island 2 practice")
-	game.hud._climate_console.primary.pressed.emit()
+	check(game.state.climate.data.intro_pending and game.hud._climate_intro.visible, "first arrival plays paused Island 2 cinematic")
+
 	var intro_elapsed: float = game.state.elapsed
 	game._advance_simulation(120.0)
 	check(game.state.elapsed == intro_elapsed, "introduction pauses taxes, crops and weather")
 	await shot("climate-introduction")
-	game._climate_action("lesson_skip")
+	game.hud._climate_intro.skip.pressed.emit()
 	game._on_action("climate")
 	check(not game.state.climate.data.intro_pending and game.hud._panel_kind == "climate", "one clear introduction button opens protection choices")
 	game.state.barn_level = 3
@@ -71,7 +71,7 @@ func run() -> void:
 	game._advance_simulation(45.0)
 	game.hud.update_state(game.state)
 	check(game.hud._climate_effect.visible and game.hud._climate_effect.event == "flood", "flood produces a lightweight weather overlay")
-	check(game.hud._blind_labels.weather.visible and game.hud._blind_labels.weather.text.to_upper().contains("FLOOD"), "existing tax card carries the current weather warning")
+	check(game.hud._weather_button.visible and game.hud._weather_button.text.to_upper().contains("FLOOD"), "dedicated weather shortcut carries the warning")
 	await shot("climate-flood")
 	game._on_action("climate")
 	check(game.hud._refs.climate_market.text.contains("Seeds +70%") and game.hud._refs.climate_market.text.contains("$9.4B"), "market disruption and protection-adjusted recovery costs appear together")
@@ -93,7 +93,7 @@ func run() -> void:
 	check(not game.hud._blind_card.visible and not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
-	check(page._summary.is_visible_in_tree() and page._summary.text.contains("2 protection upgrades"), "view run summary reveals recorded projects and run totals")
+	check(page._summary.is_visible_in_tree() and page._summary.text.contains("1 protection upgrades"), "view run summary reveals recorded projects and run totals")
 	await shot("climate-summary")
 	for dimensions: Vector2i in [Vector2i(1024, 600), Vector2i(1280, 800), Vector2i(1920, 1080)]:
 		root.size = dimensions

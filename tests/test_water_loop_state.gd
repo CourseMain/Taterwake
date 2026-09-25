@@ -40,6 +40,7 @@ func fresh(island: int = 1) -> void:
 		farm.debug_unlock_island(island)
 		farm.travel_to(island)
 		farm.climate.acknowledge(farm)
+		farm.climate.fund(farm,"irrigation")
 	for plot in farm.plots: farm._clear_crop(plot)
 
 func planted(index: int, watered: bool = false) -> void:
@@ -135,7 +136,7 @@ func test_upgrades_and_irrigation() -> void:
 		check(watered_count == 5 and supply.can == 0 and supply.water == tank, "rank %d area watering stops exactly at the carried reserve, preserving legacy area coverage" % rank)
 	fresh(2)
 	supply = Ops.local(farm)
-	check(int(farm.climate.data.projects["2"].get("irrigation", 0)) >= 1, "arrival supplies a sprinkler before the first dry spell")
+	check(int(farm.climate.data.projects["2"].get("irrigation", 0)) >= 1, "purchased sprinkler is available before the first dry spell")
 	capacity = Ops.capacity(farm, 2)
 	tank = supply.water
 	farm.climate.fund(farm, "rainwater")

@@ -244,7 +244,7 @@ func draw_connections(v) -> void:
 				if Ops.zone(i, world.current_island) != patch: continue
 				if not highlighted and not active and selected != "tank": continue
 				var pos: Vector3 = world.plot_positions[i]
-				var columns: int = 10 if world.current_island == 3 else 8
+				var columns: int = 10 if world.current_island == 3 else (8 if world.current_island == 2 else 6)
 				if i % columns == 0:
 					_flow(v, point + Vector3(0, 0.39, 0), Vector3(left, 0.39, pos.z - 0.9), highlighted)
 					_flow(v, Vector3(left, 0.39, pos.z - 0.9), pos + Vector3((columns - 1) * 2.3 + 0.8, 0.39, -0.9), highlighted)

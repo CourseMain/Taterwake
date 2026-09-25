@@ -3,7 +3,7 @@ extends RefCounted
 const Ops = preload("res://scripts/climate_operations.gd")
 
 static func tank_position(w) -> Vector3:
-	return w.layout_point(Vector3(-19.5, 0, -4.5) if w.current_island == 3 else (Vector3(-16.2, 0, -4.8) if w.current_island == 2 else Vector3(-15.8, 0, -4.5)))
+	return barn_position(w) + Vector3(-5.0, 0, 3.0)
 
 static func tank_scale(level: int) -> Vector3:
 	# Capacity upgrades widen the barrel without lifting its inlet above the gutter.
@@ -135,7 +135,7 @@ static func _windbreaks(w, root: Node3D, level: int) -> void:
 	w._target(root, Vector3(0, 1.6, 0), Vector3(width + 1.0, 3.1, 1.1), "station", "equipment:trees")
 
 static func _irrigation(w, root: Node3D, level: int) -> void:
-	var columns: int = 10 if w.current_island == 3 else 8
+	var columns: int = 10 if w.current_island == 3 else (8 if w.current_island == 2 else 6)
 	var source: Vector3 = tank_position(w) + Vector3(0, 0.28, 0)
 	var left: float = w.plot_positions[0].x - 1.5
 	var end_z: float = w.plot_positions[-1].z

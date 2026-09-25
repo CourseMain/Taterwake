@@ -35,18 +35,19 @@ func run() -> void:
 	game.hud.close_panel()
 	var farm = game.state
 	var console = game.hud._climate_console
-	check(farm.climate.data.lesson.stage == "offer" and not farm.climate.data.intro_pending, "arrival offers optional practice without modal lock")
-	check(farm.climate.data.projects["2"].irrigation == 1, "Island 2 supplies connected sprinklers before its first drought")
-	check(not game.hud._climate_alert.visible and console.visible and console.primary.text.begins_with("Try it"), "one contextual invitation instead of blocking introduction")
+	check(farm.climate.data.intro_pending and game.hud._climate_intro.visible, "arrival introduces changing skies")
+	check(not farm.climate.data.projects["2"].has("irrigation"), "sprinklers must be purchased")
 	await shot("arrival")
 	var clock: float = farm.elapsed
 	game._advance_simulation(1.0)
-	check(farm.elapsed > clock and farm.climate.data.timer == 90, "invitation permits normal farming while reserving first weather lesson")
-	game._climate_action("lesson_skip")
+	check(farm.elapsed == clock, "cinematic pauses farming and weather")
+	game.hud._climate_intro.skip.pressed.emit()
+	game.hud.close_panel()
 	farm.travel_to(1)
 	farm.travel_to(2)
 	check(farm.climate.data.lesson.stage == "done" and not console.visible, "dismissal persists on return")
 	farm.coins = 1e18
+	farm.climate.fund(farm,"irrigation")
 	var crops: Array = farm.plots.duplicate(true)
 	game._climate_action("lesson_start")
 	check(farm.climate.Lesson.active(farm) and game.selected_tool == "water", "practice starts with useful tool equipped")

@@ -22,6 +22,7 @@ var status: Label
 var drawer: PanelContainer
 var drawer_body: VBoxContainer
 var drawer_kind: String = ""
+var interaction_prompt: Button
 var fullscreen: Button
 var guide_button: Button
 var guide_open: bool = false
@@ -54,7 +55,29 @@ func _ready() -> void:
 	tools_button = button("Tools", func(): open_drawer("tools"))
 	menu_button = button("Menu", func(): game.hud._act("menu"))
 	sell_button = button("Sell", func(): game.hud._act("quick_sell"))
-	fullscreen = button("Full screen", toggle_fullscreen)
+	fullscreen = button("×", toggle_fullscreen)
+	fullscreen.custom_minimum_size = Vector2(44, 44)
+	fullscreen.tooltip_text = "Toggle fullscreen (F11)"
+	interaction_prompt = button("E", func(): game._interact_nearby())
+	interaction_prompt.custom_minimum_size = Vector2(68, 68) if enabled else Vector2(34, 34)
+	var key_font = preload("res://scripts/ui_type.gd").face(preload("res://assets/fonts/Fredoka.ttf"),600)
+	key_font.fallbacks = []
+	interaction_prompt.add_theme_font_override("font",key_font)
+	interaction_prompt.add_theme_font_size_override("font_size", 22)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var badge := skin(Color("e9e5da") if state == "pressed" else Color("ffffff"), 8)
+		badge.set_content_margin_all(0)
+		badge.border_color = Color("161916")
+		badge.set_border_width_all(2)
+		badge.shadow_color = Color(0,0,0,.45)
+		badge.shadow_size = 1
+		badge.shadow_offset = Vector2(0,1 if state == "pressed" else 3)
+		if enabled: badge.set_expand_margin_all(-17)
+		interaction_prompt.add_theme_stylebox_override(state, badge)
+	for color in ["font_color","font_hover_color","font_pressed_color","font_disabled_color"]:
+		interaction_prompt.add_theme_color_override(color,Color("111511"))
+	interaction_prompt.size = interaction_prompt.custom_minimum_size
+	interaction_prompt.hide()
 	guide_button = button("Show guide", func(): guide_open = not guide_open)
 	guide_button.hide()
 	status = Label.new()
@@ -89,7 +112,10 @@ func _ready() -> void:
 		game.hud._tutorial_card.reparent(guide_sheet)
 		game.hud._tutorial_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		guide_sheet.hide()
-	get_tree().root.size_changed.connect(resize)
+	# Changing the logical size inside Window's resize notification leaves
+	# Godot's letterbox rectangle using the previous orientation. Wait until
+	# that notification finishes before choosing the new touch resolution.
+	get_tree().root.size_changed.connect(resize, CONNECT_DEFERRED)
 	resize()
 	if not enabled:
 		for item in [stick, use_button, tools_button, menu_button, sell_button, status]: item.hide()
@@ -129,7 +155,8 @@ func resize() -> void:
 			short_edge = float(JavaScriptBridge.eval("Math.min(document.getElementById('canvas').clientWidth, document.getElementById('canvas').clientHeight)", true))
 		# Phones get 44px targets; tablets keep more farm visible with 68px targets.
 		var logical := physical * (clampf(short_edge, 600, 900) / minf(physical.x, physical.y))
-		get_tree().root.content_scale_size = Vector2i(logical)
+		if get_tree().root.content_scale_size != Vector2i(logical):
+			get_tree().root.content_scale_size = Vector2i(logical)
 	last_size = get_viewport().get_visible_rect().size
 	var w := last_size.x
 	var h := last_size.y
@@ -140,11 +167,12 @@ func resize() -> void:
 	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
 	place(menu_button, Rect2(w - 134, 16, 112, 68))
 	place(sell_button, Rect2(w - 134, 94, 112, 68))
-	place(status, Rect2(18, 16, minf(w - 172, 500), 72))
-	place(fullscreen, Rect2(w - 280, 16, 136, 44 if not enabled else 68))
-	place(guide_button, Rect2(18, 16, 204, 68))
+	place(status, Rect2(96, 16, minf(w - 250, 500), 72))
+	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
+	place(guide_button, Rect2(96, 16, 204, 68))
 	place(drawer, Rect2(maxf(16, w - 430), 92, minf(w - 32, 408), maxf(180, h - 280)))
 	if enabled: fit_modal()
+	game.farm_viewport.sync_resolution.call_deferred()
 
 func place(control: Control, rect: Rect2) -> void:
 	control.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
@@ -156,6 +184,10 @@ func fit_modal() -> void:
 	var hud = game.hud
 	var view := get_viewport().get_visible_rect().size
 	var width := minf(940, view.x - 24)
+	# Filters and stake choices must also scroll on a short landscape phone.
+	if hud._modal_fixed.get_parent() != hud._body:
+		hud._modal_fixed.reparent(hud._body)
+		hud._body.move_child(hud._modal_fixed, 0)
 	# Existing game actions and transaction checks are shared with desktop.
 	adapt(hud._body, width - 64, true)
 	adapt(hud._modal_fixed, width - 64, true)
@@ -163,10 +195,6 @@ func fit_modal() -> void:
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
 	place(hud._modal_card, Rect2((view.x - width) / 2, 100, width, view.y - 112))
-	# Filters and stake choices must also scroll on a short landscape phone.
-	if hud._modal_fixed.get_parent() != hud._body:
-		hud._modal_fixed.reparent(hud._body)
-		hud._body.move_child(hud._modal_fixed, 0)
 
 func adapt(node: Node, available: float, stack: bool) -> void:
 	if node is Control:
@@ -202,7 +230,34 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 				row_width += child.get_combined_minimum_size().x + node.get_theme_constant("separation")
 		node.vertical = available < 650 or row_width > available
 
+func update_interaction_prompt() -> void:
+	if game.hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or game.hud.is_roll_animating() or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
+		interaction_prompt.hide()
+		return
+	var target: Dictionary = game.world.nearby_station()
+	if target.is_empty():
+		interaction_prompt.hide()
+		return
+	var camera: Camera3D = game.world.camera
+	if camera.is_position_behind(target.point):
+		interaction_prompt.hide()
+		return
+	var point: Vector2 = camera.unproject_position(target.point) * last_size / Vector2(game.farm_viewport.size)
+	var rect := Rect2(point - interaction_prompt.size / 2, interaction_prompt.size)
+	if not Rect2(Vector2.ZERO, last_size).encloses(rect):
+		interaction_prompt.hide()
+		return
+	# Never cover the movement pad, status, or other touch controls.
+	for control in [stick, tools_button, use_button, menu_button, sell_button, status, fullscreen, guide_button]:
+		if control.visible and control.get_global_rect().intersects(rect):
+			interaction_prompt.hide()
+			return
+	interaction_prompt.position = rect.position
+	interaction_prompt.tooltip_text = "Interact · E / tap"
+	interaction_prompt.show()
+
 func _process(delta: float) -> void:
+	update_interaction_prompt()
 	if not enabled: return
 	_clock += delta
 	var hud = game.hud
@@ -220,7 +275,7 @@ func _process(delta: float) -> void:
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._tracked_box, hud._context_box, hud._blind_card, hud._export_box, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._tracked_box, hud._context_box, hud._blind_card, hud._export_box, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
 	if _clock >= 0.2:
 		_clock = 0
 		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), hud._export_title.text if not game._tutorial_active() else "Drag to move · pinch to zoom"]
@@ -231,6 +286,7 @@ func _process(delta: float) -> void:
 		if game.prize_target: use_button.text = "Grow giant"
 		elif game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
 		elif game.world.player.position.distance_to(game.world.ferry_position()) <= 2: use_button.text = "Travel"
+		elif not game.world.nearby_station().is_empty() and game.climate_target.is_empty(): use_button.text = "Interact"
 		sell_button.disabled = hud._quick_sell.disabled
 		if hud.is_panel_open(): fit_modal()
 		fit_auxiliary()
@@ -267,7 +323,7 @@ func fit_auxiliary() -> void:
 		place(panel, Rect2((view.x - width) / 2, 100, width, 0))
 	for notice in [hud._toast_box, hud._purchase_box, hud._reward_box, hud._plot_action_box]:
 		if notice.visible:
-			place(notice, Rect2(18, 10 if hud.is_panel_open() else view.y - 290, minf(440, view.x - (220 if hud.is_panel_open() else 36)), 0))
+			place(notice, Rect2(96 if hud.is_panel_open() else 18, 10 if hud.is_panel_open() else view.y - 290, minf(440, view.x - (298 if hud.is_panel_open() else 36)), 0))
 	if game.state.run_over: adapt(hud._run_end, view.x - 72, true)
 
 func open_drawer(kind: String) -> void:
@@ -308,7 +364,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		if drawer.visible and drawer.get_global_rect().has_point(event.position): return
 		# Overlay actions are dispatched by finger ID, allowing stick + action.
-		for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button]:
+		for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button, interaction_prompt]:
 			if item.is_visible_in_tree() and item.get_global_rect().has_point(event.position):
 				get_viewport().set_input_as_handled()
 				return
@@ -324,7 +380,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.pressed:
 			if drawer.visible and drawer.get_global_rect().has_point(event.position): return
-			for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button]:
+			for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button, interaction_prompt]:
 				if item.is_visible_in_tree() and not item.disabled and item.get_global_rect().has_point(event.position):
 					button_fingers[event.index] = item
 					get_viewport().set_input_as_handled()
@@ -393,4 +449,4 @@ func toggle_fullscreen() -> void:
 	else:
 		var window := get_tree().root
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
-		fullscreen.text = "Exit full" if window.mode == Window.MODE_FULLSCREEN else "Full screen"
+		fullscreen.tooltip_text = "Exit fullscreen (F11)" if window.mode == Window.MODE_FULLSCREEN else "Enter fullscreen (F11)"

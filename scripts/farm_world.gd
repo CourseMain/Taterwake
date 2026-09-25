@@ -1,6 +1,7 @@
 class_name FarmWorld
 extends Node3D
 
+const NpcAvatar = preload("res://scripts/npc_avatar.gd")
 const FarmerAvatar = preload("res://scripts/farmer_avatar.gd")
 const Type = preload("res://scripts/ui_type.gd")
 const GeometryBatcher = preload("res://scripts/world_geometry_batcher.gd")
@@ -34,13 +35,17 @@ var _rotor: Node3D
 var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
 const ClimateProjects = preload("res://scripts/climate_projects.gd")
+var weather_station: Node3D
 var profession_world: Node3D
 var coast: Node3D
 var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
+var _climate_ice: Dictionary = {}
 var _project_levels: Dictionary = {}
 var _weather_strength: float = 0.0
 var _weather_drought: bool = false
+var _npc_actors: Dictionary = {}
+var _staff_by_station: Dictionary = {}
 var _villagers: Array[Node3D] = []
 var _toolsmiths: Array[Node3D] = []
 var _time: float = 0.0
@@ -112,6 +117,7 @@ var _gear_catalog: Dictionary = {}
 var _tutorial_focus: String = ""
 var _tutorial_show_labels: bool = true
 var _tutorial_station_roots: Dictionary = {}
+var _interaction_targets: Array[StaticBody3D] = []
 var _tutorial_label_layers: Array[Node3D] = []
 var _tutorial_marker: Label3D
 var _tutorial_plot_outline: Node3D
@@ -177,6 +183,7 @@ func build_world(island: int = 1) -> void:
 		_ice_forge(Vector3(18.0, 0.0, 2.0))
 	_processing_station(Vector3(-18.0, 0.0, 3.5) if current_island == 3 else (Vector3(-15.0, 0.0, -1.0) if current_island == 2 else Vector3(-12.0, 0.0, -1.0)))
 	_activity_station()
+	_staff_stalls()
 	_expand_village()
 	_garden()
 	_ferry_path()
@@ -186,6 +193,10 @@ func build_world(island: int = 1) -> void:
 	profession_world = preload("res://scripts/profession_world.gd").new()
 	add_child(profession_world)
 	profession_world.setup(self)
+	if current_island >= 2:
+		weather_station = preload("res://scripts/weather_station.gd").new()
+		add_child(weather_station)
+		weather_station.setup(self)
 	player = Node3D.new()
 	player.name = "PotatoFarmer"
 	add_child(player)
@@ -251,6 +262,9 @@ func _expand_village() -> void:
 			if smith.get_parent() == node: smith.scale /= building_scale
 		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowFerry"] or node.has_meta("layout_stretch"):
 			node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
+		for actor in _npc_actors.values():
+			if actor.get_parent() == node:
+				actor.scale = NpcAvatar.Roster.PEOPLE[actor.npc_id].shape / node.scale
 	_duck_home = layout_point(_duck_home)
 	_boat_dock = layout_point(Vector3(24.5, -0.25, 8.5))
 	_boat_away = layout_point(Vector3(27, -0.1, 1))
@@ -483,8 +497,12 @@ func _clear_world() -> void:
 	_clouds.clear()
 	_weather_strength = 0.0
 	_weather_drought = false
+	weather_station = null
 	_project_nodes.clear()
+	_climate_ice.clear()
 	_project_levels.clear()
+	_npc_actors.clear()
+	_staff_by_station.clear()
 	_villagers.clear()
 	_toolsmiths.clear()
 	_effect_particles.clear()
@@ -540,6 +558,7 @@ func _clear_world() -> void:
 	_furnace_flame = null
 	_gear_hat = null
 	_tutorial_station_roots.clear()
+	_interaction_targets.clear()
 	_tutorial_label_layers.clear()
 	_tutorial_marker = null
 	_tutorial_plot_outline = null
@@ -623,6 +642,10 @@ func set_climate_projects(projects: Dictionary) -> void:
 
 
 func set_climate(info: Dictionary) -> void:
+	_climate_ice = info.get("operations", {}).get("ice", {}) if int(info.island) == current_island else {}
+	if current_island == 3:
+		for i in range(_ice_roots.size()):
+			if _climate_ice.has(str(i)): _ice_roots[i].visible = true
 	set_climate_projects(info.get("projects", {}))
 	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	var strength: float = 0.0
@@ -787,7 +810,7 @@ func update_plots(plots: Array) -> void:
 	for i in range(mini(plots.size(), _crop_roots.size())):
 		var data: Dictionary = plots[i]
 		if i < _ice_roots.size():
-			_ice_roots[i].visible = current_island == 3 and bool(data.get("frozen", false))
+			_ice_roots[i].visible = current_island == 3 and (bool(data.get("frozen", false)) or _climate_ice.has(str(i)))
 		var unlocked: bool = bool(data.get("unlocked", true))
 		var stage: int = int(data.get("stage", 0))
 		var infested: bool = unlocked and stage > 0 and bool(data.get("pests", false))
@@ -975,8 +998,8 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 			_ripe_sparkles[i].rotation.y += delta * 1.5
 			_ripe_sparkles[i].scale = Vector3.ONE * (0.9 + sin(_time * 3.0 + float(i)) * 0.16)
 
-	for i in range(_villagers.size()):
-		_villagers[i].position.y = sin(_time * 1.5 + float(i)) * 0.035
+	for villager in _villagers:
+		if villager.has_method("animate"): villager.animate(delta, false)
 	for toolsmith in _toolsmiths:
 		toolsmith.animate(delta, false)
 	for i in range(_clouds.size()):
@@ -1033,23 +1056,23 @@ func _market(pos: Vector3) -> void:
 	var root := _root("MarketStall", pos)
 	_box(root, Vector3(0.0, 0.15, 0.0), Vector3(5.3, 0.3, 3.6), Color("b49d74"))
 	for x in [-2.2, 2.2]:
-		for z in [-1.2, 1.2]:
+		for z in [-1.45, 0.15]:
 			_box(root, Vector3(x, 1.75, z), Vector3(0.18, 3.3, 0.18), Color("765940"))
-	_box(root, Vector3(0.0, 1.0, 0.8), Vector3(4.7, 1.0, 0.9), Color("aa7950"))
-	_box(root, Vector3(0.0, 1.56, 0.8), Vector3(4.9, 0.16, 1.15), CREAM)
+	_box(root, Vector3(0.0, 0.55, 1.6), Vector3(4.7, 0.7, 0.65), Color("aa7950"))
+	_box(root, Vector3(0.0, 0.95, 1.6), Vector3(4.9, 0.12, 0.85), CREAM)
 	for i in range(8):
 		var x: float = -2.45 + float(i) * 0.7
 		var stripe_color: Color = (Color("638b9d") if current_island == 3 else (Color("46b8a8") if current_island == 2 else Color("e4a257"))) if i % 2 == 0 else (Color("e6f0ee") if current_island == 3 else Color("f7e7ba"))
-		var awning := _box(root, Vector3(x, 3.23, 0.0), Vector3(0.71, 0.15, 3.9), stripe_color)
+		var awning := _box(root, Vector3(x, 3.23, -0.75), Vector3(0.71, 0.15, 1.8), stripe_color)
 		awning.rotation.x = -0.12
-		_box(root, Vector3(x, 2.90, 1.90), Vector3(0.71, 0.43, 0.14), stripe_color)
-	for i in range(3):
-		var crate_pos := Vector3(-1.55 + float(i) * 1.55, 1.72, 0.8)
+		_box(root, Vector3(x, 3.0, 0.15), Vector3(0.71, 0.43, 0.14), stripe_color)
+	for i in range(2):
+		var crate_pos := Vector3(-1.65 + float(i) * 3.3, 1.08, 1.6)
 		_crate(root, crate_pos, true)
 	_crate(root, Vector3(2.9, 0.42, 0.8), true)
 	_crate(root, Vector3(3.0, 1.2, 0.8), false)
-	var vendor := _potato_person(root, Vector3(0.0, 0.25, -0.35), Color("d5a46b"), Color("818f69"), false)
-	_cylinder(vendor, Vector3(0.0, 1.55, 0.0), 0.46, 0.46, 0.12, Color("f0d58d"), 10)
+	var vendor := _npc_person(root, Vector3(0.0, 0.18, 0.65), "mara")
+	_villagers.append(vendor)
 	_shop_label(root, "Seeds", Vector3(0.0, 4.45, 0.0))
 	_target(root, Vector3(0.0, 1.8, 0.0), Vector3(5.3, 3.6, 4.0), "station", "market")
 
@@ -1153,7 +1176,8 @@ func _scenery() -> void:
 		_box(bench, Vector3(x, 0.29, 0.0), Vector3(0.14, 0.59, 0.55), Color("486f62"))
 	_box(bench, Vector3(0.0, 1.04, -0.35), Vector3(2.4, 0.44, 0.12), Color("b58a5b"))
 	for data in [[Vector3(5.9, 0, -4.5), Color("b88355"), Color("a07885")], [Vector3(9.2, 0, 1.2), Color("d8ab74"), Color("dba464")], [Vector3(-4.8, 0, -5.0), Color("bd8e60"), Color("68928a")]]:
-		var villager := _potato_person(self, data[0], data[1], data[2], false)
+		var id: String = "rook" if is_equal_approx(data[0].x, 5.9) else "pip" if is_equal_approx(data[0].x, 9.2) else "nell"
+		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		villager.rotation.y = _rng.randf_range(-0.5, 0.7)
 		_villagers.append(villager)
 	for i in range(4):
@@ -1183,6 +1207,47 @@ func _tree(pos: Vector3, size: float) -> void:
 	_sphere(root, Vector3(0.68, 2.5, 0.1), Vector3(0.85, 1.2, 0.87), Color("8eae6b"))
 	for i in range(3):
 		_sphere(root, Vector3(-0.65 + float(i) * 0.58, 2.45 + float(i % 2) * 0.65, 1.03), Vector3(0.15, 0.16, 0.15), Color("d5a660"))
+
+func _staff_stalls() -> void:
+	_place_stallholder("mara", "market", "MarketStall", Vector3(0,.18,.65))
+	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.6,.05,3.0))
+	_place_stallholder("rook", "roll", "RollHouse", Vector3(.7,.25,3.3))
+	_place_stallholder("ada", "builds", "WashAndSortWorkshop", Vector3(1.65,0,4.8 if current_island == 2 else 2.2))
+	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.0,0,.3))
+	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.7,0,.8))
+	var dock: String = "GoldenShoresDock" if current_island == 1 else "GoldenShoresHarbor" if current_island == 2 else "FrosthollowFerry"
+	_place_stallholder("hollis", "island", dock, Vector3(-.5,.28,1.2))
+	if current_island == 3: _place_stallholder("oren", "activities", "FrostFurnace", Vector3(-1.45,0,2.1))
+	elif current_island == 2:
+		_place_stallholder("tess", "activities", "BuyerContracts", Vector3(.2,0,1.5))
+		_staff_by_station.erase("quests")
+		for target: StaticBody3D in _interaction_targets:
+			if target.get_parent() == _npc_actors.tess: target.set_meta("station","activities")
+
+func _place_stallholder(id: String, station: String, stall_name: String, at: Vector3) -> void:
+	var stall: Node3D = get_node(stall_name)
+	var actor: Node3D = _npc_actors.get(id)
+	if actor == null:
+		actor = _npc_person(stall, at, id, station)
+		_villagers.append(actor)
+	elif actor.get_parent() != stall:
+		actor.reparent(stall, false)
+	actor.position = at
+	actor.rotation.y = .15
+	_staff_by_station[station] = actor
+
+func _npc_person(parent: Node3D, pos: Vector3, id: String, station: String = "") -> Node3D:
+	var person := NpcAvatar.new()
+	parent.add_child(person)
+	person.configure(id)
+	_npc_actors[id] = person
+	person.position = pos
+	if not station.is_empty():
+		# Preserve the shop entrance used by the tour and ferry pathfinding.
+		var entrances: Array = _tutorial_station_roots.get(station, []).duplicate()
+		_target(person, Vector3(0,1,0), Vector3(1.4,2,1.15), "station", station)
+		_tutorial_station_roots[station] = entrances
+	return person
 
 func _potato_person(parent: Node3D, pos: Vector3, skin: Color, clothes: Color, farmer: bool) -> Node3D:
 	var body := Node3D.new()
@@ -1260,6 +1325,33 @@ func _target(parent: Node3D, pos: Vector3, size: Vector3, key: String, value: Va
 	shape.size = size
 	collider.shape = shape
 	body.add_child(collider)
+	if key == "station": _interaction_targets.append(body)
+
+func nearby_station() -> Dictionary:
+	# Choose the closest interaction; standing on a bed always keeps crop work.
+	var closest: Dictionary = {}
+	var reach: float = 2.0
+	for point: Vector3 in plot_positions:
+		reach = minf(reach, player.position.distance_to(point))
+	for body: StaticBody3D in _interaction_targets:
+		if not is_instance_valid(body) or not body.is_visible_in_tree(): continue
+		var station: String = str(body.get_meta("station"))
+		if station.begins_with("equipment:"): continue
+		var shape: BoxShape3D = body.get_child(0).shape
+		var local: Vector3 = body.to_local(player.global_position)
+		var edge := Vector3(clampf(local.x, -shape.size.x / 2, shape.size.x / 2), local.y, clampf(local.z, -shape.size.z / 2, shape.size.z / 2))
+		var distance: float = player.global_position.distance_to(body.to_global(edge))
+		# Resolve overlapping shop/NPC hit boxes by their horizontal centers.
+		distance += Vector2(local.x, local.z).length() * 0.001
+		if station == "island": distance = player.position.distance_to(ferry_position())
+		if distance < reach:
+			reach = distance
+			closest = {"station": station, "point": body.to_global(Vector3(0, shape.size.y / 2 + 0.4, 0))}
+	if not closest.is_empty():
+		var actor: Node3D = _staff_by_station.get(str(closest.station))
+		if is_instance_valid(actor) and actor.is_visible_in_tree():
+			closest.point = actor.global_position + Vector3(0,2.6,0)
+	return closest
 
 func _root(title: String, pos: Vector3) -> Node3D:
 	var root := Node3D.new()
@@ -1334,12 +1426,12 @@ func _bar(parent: Node3D, start: Vector3, end: Vector3, radius: float, color: Co
 	return rod
 
 func _shop_label(parent: Node3D, text: String, pos: Vector3, distant: bool = false) -> Label3D:
-	var ink := Color("183b30")
-	var label := _label(parent, text, pos, 28 if distant else 32, ink if current_island == 3 else CREAM)
+	var ink := Color("171c19")
+	var label := _label(parent, text, pos, 28 if distant else 32, Color("ffffff"))
 	label.font = _shop_font
 	label.pixel_size = 0.019
-	label.outline_modulate = CREAM if current_island == 3 else ink
-	label.outline_size = 4
+	label.outline_modulate = ink
+	label.outline_size = 7
 	label.set_meta("shop_label", true)
 	return label
 
@@ -1646,7 +1738,7 @@ func _tropical_paths() -> void:
 
 
 func _tropical_scenery() -> void:
-	for point in [Vector3(-21.0, 0.0, -12.5), Vector3(-20.0, 0.0, -3.0), Vector3(-20.3, 0.0, 9.5), Vector3(-16.2, 0.0, 14.7), Vector3(20.1, 0.0, -12.5), Vector3(20.4, 0.0, -1.3), Vector3(20.0, 0.0, 14.6), Vector3(10.9, 0.0, 15.7)]:
+	for point in [Vector3(-21.0, 0.0, -12.5), Vector3(-20.0, 0.0, -3.0), Vector3(-20.3, 0.0, 9.5), Vector3(-16.2, 0.0, 14.7), Vector3(20.1, 0.0, -12.5), Vector3(21.2, 0.0, 3.5), Vector3(20.0, 0.0, 14.6), Vector3(10.9, 0.0, 15.7)]:
 		_palm(self, point, _rng.randf_range(0.9, 1.25))
 	for i in range(24):
 		var point := Vector3(_rng.randf_range(-20.0, 20.0), 0.1, _rng.randf_range(13.0, 16.6))
@@ -1660,9 +1752,9 @@ func _tropical_scenery() -> void:
 			leaf.rotation = Vector3(0.0, -angle, 0.6)
 		_sphere(self, point + Vector3(0.0, 0.53, 0.0), Vector3(0.17, 0.15, 0.17), Color("f0a269"))
 	for data in [[Vector3(-12.0, 0.0, -6.4), Color("d3a268"), Color("4baca3")], [Vector3(8.8, 0.0, -6.6), Color("c29161"), Color("e99a7c")], [Vector3(13.5, 0.0, 4.0), Color("dca76e"), Color("88b194")], [Vector3(-14.0, 0.0, 9.0), Color("bd8f61"), Color("63a9b9")]]:
-		var villager := _potato_person(self, data[0], data[1], data[2], false)
+		var id: String = "nell" if data[0].x == -12 else "rook" if is_equal_approx(data[0].x, 8.8) else "hollis" if data[0].x == 13.5 else "tess"
+		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		villager.rotation.y = _rng.randf_range(-0.8, 0.7)
-		_tropical_hat(villager)
 		_villagers.append(villager)
 	# A beach umbrella and chairs sit clear of the harvest rows.
 	var umbrella := _root("BeachUmbrella", Vector3(-16.2, 0.0, 3.2))
@@ -1888,7 +1980,7 @@ func _snow_roof(parent: Node3D, width: float, depth: float, base: float, rise: f
 
 
 func _winter_scenery() -> void:
-	for point in [Vector3(-25,0,-17), Vector3(-25,0,-7), Vector3(-24,0,4), Vector3(-25,0,15), Vector3(-19,0,19), Vector3(25,0,-17), Vector3(25,0,-7), Vector3(25,0,1), Vector3(25,0,17), Vector3(17,0,19)]:
+	for point in [Vector3(-25,0,-17), Vector3(-25,0,-7), Vector3(-24,0,4), Vector3(-25,0,15), Vector3(-19,0,19), Vector3(25,0,-17), Vector3(25,0,-11), Vector3(25,0,1), Vector3(25,0,17), Vector3(17,0,19)]:
 		_snow_pine(point, _rng.randf_range(0.9, 1.2))
 	for point in [Vector3(-23.5,0,9), Vector3(-23,0,-19), Vector3(4,0,-19), Vector3(24,0,-2), Vector3(12,0,19), Vector3(-10,0,19)]:
 		for i in range(3):
@@ -1904,8 +1996,8 @@ func _winter_scenery() -> void:
 	for i in range(7):
 		_box(self, Vector3(15.3 + float(i) * 0.40, 0.19, -3.3), Vector3(0.34, 0.16, 1.3), Color("9f8e7a"))
 	for data in [[Vector3(-14,0,-8.2),Color("c89b6c"),Color("926d78")],[Vector3(9,0,-8.3),Color("d9b47b"),Color("73929e")],[Vector3(15,0,11.8),Color("c5976d"),Color("9e8868")],[Vector3(-17,0,11.5),Color("d2a574"),Color("728a91")]]:
-		var resident := _potato_person(self, data[0], data[1], data[2], false)
-		_winter_hat(resident, data[2])
+		var id: String = "nell" if data[0].x == -14 else "rook" if data[0].x == 9 else "hollis" if data[0].x == 15 else "tess"
+		var resident := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		resident.rotation.y = _rng.randf_range(-0.6, 0.65)
 		_villagers.append(resident)
 	for point in [Vector3(-13.8,0.33,-12.2),Vector3(-13.8,0.89,-12.2),Vector3(1.1,0.3,-12.8),Vector3(2.4,0.3,-12.8)]:
@@ -1973,13 +2065,14 @@ func _winter_ferry() -> void:
 
 
 func _toolsmith(parent: Node3D, pos: Vector3) -> void:
-	var smith := FarmerAvatar.new()
+	var smith := NpcAvatar.new()
 	parent.add_child(smith)
-	smith.setup()
+	smith.configure("bram")
+	_npc_actors["bram"] = smith
+	_staff_by_station["tools"] = smith
 	smith.name = "PotatoToolsmith"
 	smith.position = pos
 	smith.rotation.y = 0.30
-	smith.set_equipment({"head": "prospectors_hat", "body": "industrialist_overalls", "feet": "industrialist_boots", "hands": "harvest_gloves"}, {})
 	_toolsmiths.append(smith)
 	# The NPC has its own compact hit box: clicking their face or boots opens
 	# upgrades, as does clicking the bench. It never extends over crop beds.
@@ -2056,11 +2149,11 @@ func set_frost_state(active: bool, seconds: float, frozen_indices: Array = []) -
 	if is_instance_valid(_frost_beacon):
 		_frost_beacon.visible = _frost_active
 	if not _frost_active:
-		for ice in _ice_roots:
-			ice.visible = false
+		for i in range(_ice_roots.size()):
+			_ice_roots[i].visible = _climate_ice.has(str(i))
 	elif not frozen_indices.is_empty():
 		for i in range(_ice_roots.size()):
-			_ice_roots[i].visible = frozen_indices.has(i)
+			_ice_roots[i].visible = frozen_indices.has(i) or _climate_ice.has(str(i))
 
 
 func _animate_winter(delta: float) -> void:
@@ -2367,7 +2460,7 @@ func set_activity_state(info: Dictionary) -> void:
 			var contract: Dictionary = info.get("contract", {})
 			_activity_label.text = "Contracts" if contract.is_empty() else "Order · %d/%d" % [int(contract.get("delivered", 0)), int(contract.get("target", 1))]
 		3:
-			var remaining: float = float(info.get("furnace_remaining", 0))
+			var remaining: float = maxf(float(info.get("furnace_remaining", 0)), float(info.get("thaw_heat", 0)))
 			_activity_label.text = "Furnace · %.0fs" % remaining if remaining > 0 else "Furnace"
 			_furnace_flame.visible = remaining > 0
 			for steam: Node3D in _furnace_steam: steam.visible = remaining > 0

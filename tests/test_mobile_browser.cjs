@@ -15,6 +15,9 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  await page.waitForFunction(()=>!!window.mobileQA,null,{timeout:60000});
  const command=async a=>{await page.evaluate(a=>window.mobileQA(a),a);await page.waitForTimeout(300);return page.evaluate(()=>{window.mobileQA('status');return window.mobileReport})};
  const state=await command('status');assert.equal(state.touch,touch);
+ const fullRect=await page.locator('#fullscreen-button').boundingBox();
+ assert.ok(fullRect.x<20 && fullRect.y<20 && fullRect.width===44, 'compact fullscreen at top left');
+ assert.equal(await page.locator('#fullscreen-button').textContent(),'×');
  const shot=async suffix=>page.screenshot({path:`artifacts/mobile-qa/${name}-${suffix}.png`});
  const tapButton=async text=>{
   const s=await command('status'); const b=s.buttons.find(b=>b.text===text);assert.ok(b,`${name} button ${text}`);
@@ -23,6 +26,11 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
   await page.waitForTimeout(300);
  };
  await shot('farm');
+ await command('near_market');
+ await shot('npc-prompt');
+ await tapButton('E');
+ assert.equal((await command('status')).panel,'market','NPC badge opens market');
+ await tapButton('×');
  await page.locator('#fullscreen-button').click();
  assert.ok(await page.evaluate(()=>!!document.fullscreenElement),`${name} fullscreen entered`);
  await page.locator('#fullscreen-button').click();

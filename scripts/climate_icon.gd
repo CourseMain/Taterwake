@@ -10,6 +10,11 @@ func _draw() -> void:
 	var gold := Color("e6b15e")
 	draw_circle(Vector2(40, 40), 36, Color("d0dfd7"))
 	match kind:
+		"freeze":
+			for i in range(6):
+				var ray := Vector2.from_angle(i*TAU/6)
+				draw_line(Vector2(40,40),Vector2(40,40)+ray*26,blue,4,true)
+				draw_circle(Vector2(40,40)+ray*24,4,Color("edf8ff"))
 		"rainwater", "irrigation":
 			draw_style_box(_box(Color("588eaa")), Rect2(22, 27, 37, 36))
 			draw_line(Vector2(20, 27), Vector2(61, 27), ink, 5, true)

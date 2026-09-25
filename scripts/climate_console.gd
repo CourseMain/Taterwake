@@ -125,7 +125,8 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	_show_secondary = false
 	primary.disabled = false
 	secondary.disabled = false
-	more.visible = not teaching
+	# Weather & protection has a dedicated HUD/menu entry and a world station.
+	more.hide()
 	close.visible = not equipment.is_empty()
 	reserves.hide()
 	meter.hide()
@@ -192,21 +193,29 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	elif info.phase == "recovery":
 		title.text = "WEATHER CLEARING"
 		hint.text = "Rain replenishes your tank; markets recover in %ds." % ceili(info.timer)
+		if info.event == "freeze" and int(info.get("frozen_crops", 0)) > 0:
+			hint.text = "Hoe [1] thaws ice while hot."
+			_primary("Open furnace", "open_furnace")
 		more.hide()
 	else:
 		title.text = "%s %s%ds" % [info.name, "IN " if info.phase == "warning" else "· ", ceili(info.timer)]
 		match str(info.event):
+			"freeze":
+				hint.text = "Heat hoe → Hoe [1] melts ice."
+				reserves.show()
+				reserves.text = "%d frozen crops · %ds hoe heat" % [int(info.get("frozen_crops", 0)), ceili(float(s.get("heat", 0)))]
+				_primary("Open furnace", "open_furnace")
 			"drought":
 				_water(s, info.water_capacity)
-				hint.text = "Fill your can before rain stops; the can and sprinklers will share the tank reserve." if info.phase == "warning" else "Water [3] restores drooping crops and lowers their danger rings."
+				hint.text = "Fill your can before rain stops." if info.phase == "warning" else "Water [3] rescues thirsty crops."
 				if int(p.get("irrigation", 0)) > 0: _primary("Show sprinklers", "show_sprinkler")
 			"flood":
-				hint.text = "Hoe [1] clears water from a planted bed without removing its crop."
+				hint.text = "Hoe [1] drains flooded beds."
 				if int(p.get("drainage", 0)) > 0:
-					if s.gates: hint.text = "Drains are open; water flows to the sea while puddles shrink."
+					if s.gates: hint.text = "Drains are open; water flows to sea."
 					else: _primary("Show drain gate", "show_drain")
 			"storm":
-				hint.text = "Harvest the gold warning row before lightning; trees automatically shelter the far beds from wind."
+				hint.text = "Harvest gold rows before lightning."
 				if int(p.get("windbreaks", 0)) > 0: _primary("Show sheltered beds", "show_trees")
 		if tool == "pest":
 			reserves.show()

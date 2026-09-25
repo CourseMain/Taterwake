@@ -54,6 +54,8 @@ func run() -> void:
 	check(ops.can_capacity(game.state) == 32 and game.hud._climate_console.equipment == "tank", "can upgrade teaches filling expanded capacity")
 	game.state.debug_unlock_island(3)
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
+	game.state.climate.fund(game.state,"irrigation")
 	game._climate_action("lesson_start")
 	await shot("practice-target")
 	game.perform_plot(34, "water")

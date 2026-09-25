@@ -4,11 +4,11 @@
 
 Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.2:** Touch movement, pinch zoom, accessible menus and a **Full screen** button join five expanded professions, playable climate disasters, connected water equipment and a simpler first harvest. See [all changes](CHANGELOG.md#102).
+**v1.0.2.5:** Meet eleven distinct NPCs in animated conversations before opening their shops. Explore new weather stations, purchased irrigation that carries between islands, an Island 2 climate introduction, and frozen crops on Island 3. Clearer layouts, white outlined interaction prompts, barn tips and mobile refinements round out the update. See [all changes](CHANGELOG.md#1025).
 
 On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Pinch the farm with two fingers to zoom. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
 
-Choose **Full screen** to enter or leave browser fullscreen, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
+Choose the **× in the top-left corner** to enter or leave browser fullscreen, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
 
 If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
 
@@ -61,9 +61,9 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Click a tank | Walk over and refill the watering can |
 | Click a sprinkler / drain / trees | See connected beds and equipment actions |
 | 1 / 2 / 3 / 4 / 5 | Hoe / seeds / water / harvest / pest sprayer |
-| E / Space | Use the selected tool nearby / board the ferry |
+| E / Space | Interact with the nearby NPC/shop, use a tool beside a bed, or board the ferry |
 | Two-finger pinch / trackpad scroll / mouse wheel | Zoom the map |
-| Full screen button / F11 | Toggle fullscreen |
+| Top-left × / F11 | Toggle fullscreen |
 | Touch Tools drawer | Select tools and seeds, zoom +/−, cancel a task |
 | I | Inventory and clothing |
 | B / U / R | Market / tool upgrades / Roll House |

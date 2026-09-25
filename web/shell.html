@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name="game-version" content="1.0.2">
+		<meta name="game-version" content="1.0.2.5">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<title>$GODOT_PROJECT_NAME</title>
@@ -43,21 +43,18 @@ body {
 
 #fullscreen-button {
 	position: fixed;
-	bottom: max(8px, env(safe-area-inset-bottom));
+	top: max(8px, env(safe-area-inset-top));
 	left: max(8px, env(safe-area-inset-left));
 	z-index: 20;
 	min-height: 44px;
-	padding: 8px 14px;
+	width: 44px;
+	padding: 0;
 	border: 1px solid #87a68b;
 	border-radius: 10px;
 	background: #193c33;
 	color: #fff3cf;
-	font: 600 14px system-ui, sans-serif;
+	font: 500 26px system-ui, sans-serif;
 	cursor: pointer;
-}
-@media (pointer: coarse) {
-	#fullscreen-button { left: 50%; transform: translateX(-50%); width: 108px; padding: 6px; font-size: 12px; }
-	.menu-open #fullscreen-button { top: max(8px, env(safe-area-inset-top)); bottom: auto; left: auto; right: max(8px, env(safe-area-inset-right)); transform: none; }
 }
 #fullscreen-hint {
 	position: fixed; z-index: 21; left: 10%; right: 10%; bottom: 70px;
@@ -135,7 +132,7 @@ body {
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
-		<button id="fullscreen-button" type="button" aria-label="Enter fullscreen">Full screen</button>
+		<button id="fullscreen-button" type="button" aria-label="Enter fullscreen" title="Enter fullscreen (F11)">×</button>
 		<div id="fullscreen-hint" role="status" hidden></div>
 
 		<noscript>
@@ -187,13 +184,18 @@ function getGameCanvasSize(width, height, deviceScale) {
 			fullHint.hidden = false;
 			clearTimeout(hintTimer);
 			hintTimer = setTimeout(() => { fullHint.hidden = true; }, 9000);
+		} finally {
+			canvas.focus?.({ preventScroll: true });
 		}
 	};
 	fullButton.addEventListener('click', window.taterFullscreen);
 	function updateFullButton() {
 		const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
-		fullButton.textContent = active ? 'Exit full screen' : 'Full screen';
-		fullButton.setAttribute('aria-label', fullButton.textContent);
+		fullButton.textContent = '×';
+		const label = active ? 'Exit fullscreen' : 'Enter fullscreen';
+		fullButton.setAttribute('aria-label', label);
+		fullButton.title = label + ' (F11)';
+		canvas.focus?.({ preventScroll: true });
 		queueCanvasResize();
 	}
 	document.addEventListener('fullscreenchange', updateFullButton);

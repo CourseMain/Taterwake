@@ -24,8 +24,8 @@ func shot(name: String) -> void:
 
 func stock_fits(description: String) -> void:
 	var box: Rect2 = game.hud._export_box.get_global_rect()
-	check(box.position.x == 28 and box.end.x <= 340 and box.size.y <= 100, description + ": compact left stock card stays under the brand")
-	check(not box.intersects(Rect2(350, 100, 560, 140)), description + ": stock card clears the centre above the barn")
+	check(box.position.x == 28 and box.end.x <= 340 and box.size.y <= 100 and box.position.y >= 650, description + ": compact stock card stays below the farm")
+	check(not box.intersects(Rect2(350, 100, 560, 140)), description + ": stock card leaves the barn visible")
 	check(game.hud._export_title.get_minimum_size().x <= 278 and game.hud._export_detail.get_minimum_size().x <= 278, description + ": timer and details fit without clipped text")
 
 func noninteractive(node: Node) -> bool:
