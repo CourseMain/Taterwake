@@ -95,7 +95,10 @@ func run() -> void:
 	check(hud._tutorial_pointer.target == hud._refs["buy:russet:1"], "pointer targets the real enabled Russet buy button")
 	check(hud._tutorial_next.visible and hud._tutorial_next.disabled and hud._tutorial_skip.get_global_rect().end.y < hud._tutorial_next.get_global_rect().position.y, "exit is above the lesson and cannot replace the disabled action prompt")
 	check(not hud._refs["buy:russet:1"].disabled and hud._refs["buy:russet:5"].disabled and not hud._refs.has("buy:golden:1"), "first purchase explicitly allows one Russet seed only")
-	check(hud._panel_crops == ["russet"] and not hud._refs["buy:russet:5"].visible and not hud._refs["sell:russet:-1"].visible and not hud._refs["russet:graph"].visible, "first market removes other crops, bulk buys, sell buttons, and price graphs")
+	var market_page: Control = hud._refs.market_page
+	check(hud._panel_crops == ["russet"] and market_page.crops == ["russet"] and not hud._refs["buy:russet:5"].visible, "first market keeps only Russet and hides bulk purchases")
+	check(not market_page.selling and market_page.chart == null and market_page.sell_button == null and not hud._modal_trade_footer.visible, "guided buying has no sell controls or price chart")
+	check(button_for("sell_potatoes") != null and button_for("sell_potatoes").disabled, "selling page waits for its tutorial introduction")
 	check(hud._known_crops().size() >= 4, "simplified seed market leaves full inventory crop catalog intact")
 	check(hud._refs["buy:russet:1"].text == "Buy 1 Russet", "guided purchase names the exact seed to buy")
 	hud._act("buy:russet:5")
@@ -123,16 +126,32 @@ func run() -> void:
 		await settle()
 		var guide_rect: Rect2 = hud._tutorial_card.get_global_rect()
 		check(hud.root.get_global_rect().grow(0.5).encloses(guide_rect), "guide fits %s canvas" % size)
-		check(not guide_rect.intersects(hud._modal_card.get_global_rect()), "guide leaves shop unobscured at %s" % size)
+		check(not guide_rect.intersects(hud._modal_card.get_global_rect()), "guide leaves shop unobscured at %s (guide %s, shop %s)" % [size, guide_rect, hud._modal_card.get_global_rect()])
 		check(guide_rect.grow(0.5).encloses(hud._tutorial_skip.get_global_rect()) and guide_rect.grow(0.5).encloses(hud._tutorial_next.get_global_rect()), "both guide actions fit at %s" % size)
 		check(hud._tutorial_body.get_minimum_size().y <= hud._tutorial_body.size.y + 0.5, "guide text wraps without vertical clipping at %s" % size)
+	# The guided first sale now lives on the separate selling page/footer.
+	var sale_guide: Dictionary = guide(["hoe", "plant", "water", "harvest"], ["coins", "market"], ["sell:russet:", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer", "close"])
+	sale_guide["id"] = "sell"
+	sale_guide["continue"] = false
+	state.storage.russet = 3
+	hud.set_tutorial(sale_guide)
+	hud.show_panel("sell_potatoes", state)
+	await settle()
+	hud._update_tutorial_pointer()
+	var sale_page: Control = hud._refs.market_page
+	check(sale_page.selling and sale_page.selected == "russet" and not sale_page.sell_button.disabled, "guided selling opens the available Russet stock")
+	check(hud._tutorial_pointer.target == sale_page.sell_button, "first-sale pointer targets the actual footer Sell button")
+	actions.clear()
+	sale_page.quantity.value = 2
+	sale_page._sell()
+	check(actions == ["sell:russet:2"], "guided sale dispatches the selected quantity through the existing whitelist")
 	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "builds", "quests", "roll", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
 	state.coins = 1e9
 	for panel: String in ["barn", "inventory", "tools", "builds", "quests", "roll", "duck_patrol", "island", "pause"]:
 		hud.show_panel(panel, state)
 		hud.update_state(state)
 		await settle()
-		check(not hud._tutorial_card.get_global_rect().intersects(hud._modal_card.get_global_rect()), "%s panel keeps guide in clear left margin" % panel)
+		check(not hud._tutorial_card.get_global_rect().intersects(hud._modal_card.get_global_rect()), "%s panel keeps guide in clear left margin (guide %s, panel %s)" % [panel, hud._tutorial_card.get_global_rect(), hud._modal_card.get_global_rect()])
 		check(hud._tutorial_card.is_visible_in_tree() and not hud._tutorial_skip.disabled, "%s panel leaves skip available" % panel)
 		if panel == "tools":
 			check(hud._refs["upgrade:hoe"].disabled, "affordable tool upgrades stay disabled on guided inspection")
@@ -153,7 +172,7 @@ func run() -> void:
 	check(button_for("tutorial:restart") != null and not button_for("tutorial:restart").disabled, "normal menu offers repeatable guided introduction")
 	hud.set_tutorial(guide(["hoe"], [], []))
 	hud.show_panel("market", state)
-	state.coins = 0.0
+	state.coins = state.bankruptcy_limit()
 	hud.update_state(state)
 	hud.set_tutorial({})
 	check(hud._refs["buy:russet:1"].disabled, "ending tutorial never enables an unaffordable purchase")
@@ -176,11 +195,7 @@ func run() -> void:
 		await settle()
 		hud._process(0.0)
 		await settle()
-		var tip_rect: Rect2 = hud._farm_help_card.get_global_rect()
-		check(hud._farm_help_card.visible and hud.root.get_global_rect().encloses(tip_rect), "optional tax tip fits " + str(size))
-		check(not tip_rect.intersects(hud._export_box.get_global_rect()) and not tip_rect.intersects(hud._blind_card.get_global_rect()), "help preserves stock and tax clocks " + str(size))
-		check(not tip_rect.intersects(hud._hotbar.get_global_rect()) and tip_rect.encloses(hud._farm_help_action.get_global_rect()), "help leaves farming controls accessible " + str(size))
-		check(hud._farm_help_card.size.y <= 48.0, "optional help stays a single compact row " + str(size))
+		check(not hud._farm_help_card.visible, "no automatic advice banner after tutorial at " + str(size))
 	hud.set_tool("plant")
 	hud._process(0.0)
 	check(not hud._farm_help_card.visible, "seed tray takes priority over optional tips")

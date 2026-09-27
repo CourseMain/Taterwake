@@ -116,8 +116,8 @@ func hire_duck() -> String:
 	if duck_count() >= duck_capacity():
 		return state._reject_purchase("Flock full: %d / %d ducks." % [duck_count(), duck_capacity()])
 	var cost: float = duck_hire_cost()
-	if float(state.coins) < cost:
-		return state._reject_purchase("Hire a duck · %s" % state.money(cost))
+	if not state.can_purchase(cost):
+		return state._reject_purchase(state.credit_refusal())
 	state.coins -= cost
 	duck_counts[str(_island())] = duck_count() + 1
 	_ensure_patrols()
@@ -132,8 +132,8 @@ func train_ducks() -> String:
 	if duck_speed() >= 2:
 		return state._reject_purchase("Top speed reached · 2s per bed.")
 	var cost: float = duck_speed_cost()
-	if float(state.coins) < cost:
-		return state._reject_purchase("Faster ducks · %s" % state.money(cost))
+	if not state.can_purchase(cost):
+		return state._reject_purchase(state.credit_refusal())
 	var previous_interval: float = duck_interval()
 	state.coins -= cost
 	duck_speeds[str(_island())] = duck_speed() + 1
@@ -390,8 +390,8 @@ func info() -> Dictionary:
 		job["ship_amount"] = mini(int(job.held), int(job.target) - int(job.delivered))
 	return {"island": island, "title": title, "description": description,
 		"duck_level": duck_level, "duck_cost": duck_hire_cost(), "duck_capacity": duck_capacity(),
-		"duck_count": duck_count(), "ducks": ducks, "duck_interval": duck_interval(), "duck_can_buy": duck_count() < duck_capacity() and float(state.coins) >= duck_hire_cost(),
-		"duck_speed": duck_speed(), "duck_speed_cost": duck_speed_cost(), "duck_can_train": duck_count() > 0 and duck_speed() < 2 and float(state.coins) >= duck_speed_cost(),
+		"duck_count": duck_count(), "ducks": ducks, "duck_interval": duck_interval(), "duck_can_buy": duck_count() < duck_capacity() and state.can_purchase(duck_hire_cost()),
+		"duck_speed": duck_speed(), "duck_speed_cost": duck_speed_cost(), "duck_can_train": duck_count() > 0 and duck_speed() < 2 and state.can_purchase(duck_speed_cost()),
 		"duck_from": duck_from, "duck_target": duck_target, "duck_progress": clampf(duck_elapsed / duck_interval(), 0.0, 1.0), "duck_clears": duck_clears, "duck_peck": duck_peck,
 		"contract": job, "contract_completed": contract_completed, "contract_cooldown": contract_cooldown,
 		"contract_crop": _contract_crop(), "contract_crop_name": str(state.CROPS[_contract_crop()].name),

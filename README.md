@@ -4,17 +4,17 @@
 
 Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.2.5:** Meet eleven distinct NPCs in animated conversations before opening their shops. Explore new weather stations, purchased irrigation that carries between islands, an Island 2 climate introduction, and frozen crops on Island 3. Clearer layouts, white outlined interaction prompts, barn tips and mobile refinements round out the update. See [all changes](CHANGELOG.md#1025).
+**v1.0.2.75:** Drag to explore the farm, visit the warm potato furnace and redesigned shops, grow giant potatoes with new harvest sounds, and discover island-specific artifacts and quest rewards. Includes the weather layout fix, farm credit and debt recovery, snowy and sandy terrain, and slimmer fullscreen controls. See [all changes](CHANGELOG.md#10275).
 
-On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Pinch the farm with two fingers to zoom. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
+On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Drag the farm with two fingers to pan; pinch to zoom. Use **Tools → Recenter** to return to the original view. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
 
-Choose the **× in the top-left corner** to enter or leave browser fullscreen, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
+Choose the small **expand icon in the top-left corner** to enter fullscreen; it becomes a transparent **×** to leave, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
 
 If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
 
 The opening tutorial teaches one harvest and ends at your first sale. Then farm freely, with optional help for your first pests, a practice stock boom, taxes and usable upgrades. **H → Optional Valley tour** keeps meeting the NPCs optional.
 
-Small potatoes. Big possibilities.
+Mara patches the seed sacks. Bram patches your tools. The produce exchange makes no promises.
 
 Five illustrated profession pages offer giant potatoes, F–SSS production batches, a permanent seed bank, reserved-price shipments and explicit harvest stakes. Each explains its cost and readiness, with optional bonus details. The Farmer guides planted crop → compost → water → giant harvest. See [profession details](docs/BUILD_PROFESSIONS.md).
 
@@ -39,7 +39,7 @@ You can also run `python3 serve.py --open` from the extracted folder. Open the p
 
 Browser saves belong to your browser and the address you use. Return through the same localhost port to continue your farm. Browser saves are separate from desktop saves.
 
-Touch screens get a compact interface with large controls and scrolling menus. Desktop keeps keyboard, mouse and trackpad controls. Both support map zoom and fullscreen.
+Touch screens get a compact interface with large controls and scrolling menus. Desktop keeps keyboard, mouse and trackpad controls. Both support map pan, zoom and fullscreen. The angled 3D view stays fixed for readable farming.
 
 ## Run the source
 
@@ -62,9 +62,12 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Click a sprinkler / drain / trees | See connected beds and equipment actions |
 | 1 / 2 / 3 / 4 / 5 | Hoe / seeds / water / harvest / pest sprayer |
 | E / Space | Interact with the nearby NPC/shop, use a tool beside a bed, or board the ferry |
-| Two-finger pinch / trackpad scroll / mouse wheel | Zoom the map |
-| Top-left × / F11 | Toggle fullscreen |
-| Touch Tools drawer | Select tools and seeds, zoom +/−, cancel a task |
+| Mouse drag / two-finger trackpad scroll | Pan the map |
+| One- or two-finger touch drag | Pan the map |
+| Pinch / mouse wheel | Zoom the map |
+| Home / Touch Tools → Recenter | Restore the camera |
+| Top-left expand/× icon / F11 | Toggle fullscreen |
+| Touch Tools drawer | Select tools and seeds, zoom +/−, recenter, cancel a task |
 | I | Inventory and clothing |
 | B / U / R | Market / tool upgrades / Roll House |
 | F | Sell the selected crop |

@@ -139,6 +139,9 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if _font == null:
 		return
+	draw_rect(Rect2(Vector2.ZERO, size), Color("092d25"))
+	draw_line(Vector2(0, 2), Vector2(size.x, 2), Color("d9af57"), 2)
+	draw_line(Vector2(0, size.y - 2), Vector2(size.x, size.y - 2), Color("d9af57"), 2)
 	var center_x: float = size.x * 0.5
 	for index: int in range(_cards.size()):
 		var x: float = center_x + STEP * index - _offset - CARD_WIDTH * 0.5

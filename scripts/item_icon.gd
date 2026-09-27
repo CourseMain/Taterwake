@@ -1,9 +1,9 @@
 extends Control
 ## Shared, hand-drawn item illustrations. Geometry remains crisp at every HUD scale.
 var item: Dictionary = {}
-const INK: Color = Color("274138")
-const LEAF: Color = Color("43845a")
-const CROP: Dictionary = {"russet": Color("bd8b51"), "golden": Color("edbd47"), "giant": Color("c87655"), "radioactive": Color("7ddb54"), "sunburst": Color("f9a52d"), "icecap": Color("82cce8")}
+const INK: Color = Color("30463a")
+const LEAF: Color = Color("5e7b50")
+const CROP: Dictionary = {"russet": Color("dfb36f"), "golden": Color("f5cc38"), "giant": Color("d7a37b"), "radioactive": Color("afff48"), "sunburst": Color("ffa629"), "icecap": Color("d8f1ff")}
 const GEAR_CATALOG: Dictionary = preload("res://scripts/game_state.gd").ITEM_CATALOG
 
 func _ready() -> void:
@@ -25,7 +25,19 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 		c.draw_set_transform(Vector2.ZERO)
 		return
 	if kind != "metric":
-		c.draw_circle(Vector2(0, 6), 43, Color(str(data.get("backdrop", "e6dfcb"))))
+		var wash: Color = Color(str(data.get("backdrop", "e5dec6")))
+		var paper := PackedVector2Array()
+		for i in range(28):
+			var angle: float = i * TAU / 28.0
+			paper.append(Vector2(0, 5) + Vector2.from_angle(angle) * (42.0 + sin(angle * 5.0) * 1.4))
+		c.draw_colored_polygon(paper, wash)
+		# Fixed paper grain and a short cast shadow keep every item in the same light.
+		for mark: Vector2 in [Vector2(-30, 26), Vector2(29, 23), Vector2(-22, 36), Vector2(22, 35)]:
+			c.draw_line(mark, mark + Vector2(4, -2), INK.lerp(wash, 0.8), 1, true)
+		if kind in ["crop", "seed", "processed", "build", "tool"]:
+			c.draw_set_transform(rect.get_center() + Vector2(5, 35) * scale_value, 0, Vector2(scale_value, scale_value * 0.2))
+			c.draw_circle(Vector2.ZERO, 27, Color("30463a", 0.13))
+			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
 		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id)))
@@ -38,11 +50,13 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_style_box(_box(Color("766a59"), 8), Rect2(-23, -31, 46, 16))
 			c.draw_arc(Vector2(0, 15), 9, PI, TAU, 16, Color("766a59"), 3, true)
 		"seed":
-			c.draw_style_box(_box(Color("f3d28e"), 5), Rect2(-28, -38, 56, 78))
+			c.draw_style_box(_box(Color("cfac72"), 5), Rect2(-28, -38, 56, 78))
 			c.draw_rect(Rect2(-28, -38, 56, 13), LEAF)
 			c.draw_rect(Rect2(-23, -18, 46, 42), Color("fff9e8"))
 			_potato(c, crop, Vector2(0, 3), 0.56)
-			for x: int in [-13, 0, 13]: c.draw_circle(Vector2(x, 31), 2, INK)
+			for x: int in [-21, -13, -5, 3, 11, 19]: c.draw_line(Vector2(x, 32), Vector2(x + 3, 35), INK, 1.5, true)
+			c.draw_rect(Rect2(15, 18, 15, 12), Color("788167"))
+			for y: int in [20, 26]: c.draw_line(Vector2(13, y), Vector2(18, y + 2), Color("f4e6bd"), 1.5, true)
 		"crop": _potato(c, crop, Vector2.ZERO, 1.0)
 		"mutation":
 			_potato(c, crop, Vector2.ZERO, 0.8)
@@ -80,7 +94,7 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 static func _box(color: Color, radius: int) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
-	style.border_color = color.darkened(0.24)
+	style.border_color = INK.lerp(color, 0.27)
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(radius)
 	return style
@@ -151,18 +165,32 @@ static func _poly(c: CanvasItem, points: Array[Vector2], color: Color) -> void:
 static func _spark(c: CanvasItem, p: Vector2, color: Color, radius: float) -> void:
 	_poly(c, [p + Vector2(0, -radius), p + Vector2(radius * 0.3, -radius * 0.3), p + Vector2(radius, 0), p + Vector2(radius * 0.3, radius * 0.3), p + Vector2(0, radius), p + Vector2(-radius * 0.3, radius * 0.3), p + Vector2(-radius, 0), p + Vector2(-radius * 0.3, -radius * 0.3)], color)
 
-static func _potato(c: CanvasItem, crop: String, p: Vector2, factor: float) -> void:
-	var color: Color = CROP.get(crop, CROP.russet)
+static func _potato(c: CanvasItem, crop: String, p: Vector2, factor: float, tint: Color = Color.TRANSPARENT) -> void:
+	var color: Color = CROP.get(crop, CROP.russet) if tint.a == 0 else tint
 	var radius: float = 27.0 * factor
 	if crop == "giant": radius *= 1.22
 	if crop == "sunburst":
 		for index: int in range(10):
 			var direction: Vector2 = Vector2.from_angle(index * TAU / 10.0)
 			c.draw_line(p + direction * radius, p + direction * radius * 1.48, color, 4 * factor, true)
-	c.draw_circle(p + Vector2(0, 7) * factor, radius, color.darkened(0.12))
-	c.draw_circle(p + Vector2(-5, -7) * factor, radius * 0.87, color)
-	c.draw_circle(p + Vector2(-13, -15) * factor, 6 * factor, color.lightened(0.26))
-	for dot: Vector2 in [Vector2(-13, 10), Vector2(14, 13), Vector2(15, -11)]: c.draw_circle(p + dot * factor, 2.4 * factor, color.darkened(0.32))
+	var outline := PackedVector2Array()
+	var lit_side := PackedVector2Array()
+	for index in range(28):
+		var angle: float = index * TAU / 28.0
+		var lump: float = 1.0 + 0.065 * sin(angle * 3.0) + 0.035 * cos(angle * 5.0)
+		var edge: Vector2 = Vector2(cos(angle) * 0.9, sin(angle) * 1.1) * radius * lump
+		outline.append(p + edge + Vector2(0, 2) * factor)
+		lit_side.append(p + edge * 0.86 + Vector2(-2.5, -3) * factor)
+	c.draw_colored_polygon(outline, color.darkened(0.17))
+	c.draw_colored_polygon(lit_side, color)
+	outline.append(outline[0])
+	c.draw_polyline(outline, INK.lerp(color, 0.16), maxf(0.8, 2.2 * factor), true)
+	c.draw_arc(p + Vector2(-4, -6) * factor, radius * 0.58, -2.7, -1.5, 10, color.lightened(0.3), 2.8 * factor, true)
+	for dot: Vector2 in [Vector2(-13, 10), Vector2(14, 13), Vector2(15, -11)]:
+		c.draw_circle(p + dot * factor, 2 * factor, color.darkened(0.38))
+		c.draw_line(p + (dot + Vector2(-2, 3)) * factor, p + (dot + Vector2(1, 3)) * factor, color.lightened(0.2), factor, true)
+	for scratch: Vector2 in [Vector2(-9, 21), Vector2(9, 23), Vector2(20, 5)]:
+		c.draw_line(p + scratch * factor, p + (scratch + Vector2(3, -2)) * factor, color.darkened(0.27), factor, true)
 	_poly(c, [p + Vector2(-3, -28) * factor, p + Vector2(-18, -39) * factor, p + Vector2(1, -36) * factor], LEAF)
 	_poly(c, [p + Vector2(-1, -28) * factor, p + Vector2(5, -41) * factor, p + Vector2(18, -35) * factor], LEAF.lightened(0.17))
 	if crop == "golden": _spark(c, p + Vector2(20, -24) * factor, Color("fff8c1"), 10 * factor)

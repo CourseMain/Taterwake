@@ -1,0 +1,26 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ const page=await browser.newPage({viewport:{width:1280,height:800}});
+ const errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
+ page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ await page.goto(process.env.TATER_RELEASE_URL || 'http://127.0.0.1:8767/index.html');
+ assert.equal(await page.locator('meta[name="game-version"]').getAttribute('content'),'1.0.2.75');
+ await page.locator('#status').waitFor({state:'hidden',timeout:90000});
+ await page.waitForTimeout(5000);
+ assert.equal(await page.evaluate(()=>typeof window.mobileQA),'undefined','test bridge excluded from public build');
+ assert.equal(await page.evaluate(()=>typeof window.mobileReport),'undefined');
+ assert.ok(await page.locator('#canvas').isVisible());
+ await page.locator('#fullscreen-button').click();
+ assert.equal(await page.evaluate(()=>!!document.fullscreenElement),true);
+ await page.locator('#fullscreen-button').click();
+ assert.equal(await page.evaluate(()=>!!document.fullscreenElement),false);
+ fs.mkdirSync('artifacts/update-browser',{recursive:true});
+ await page.screenshot({path:`artifacts/update-browser/${process.env.TATER_RELEASE_URL?'github':'release'}-live.png`});
+ assert.deepEqual(errors,[]);
+ console.log('RELEASE BROWSER: v1.0.2.75 loaded, fullscreen passed, no QA bridge or console errors');
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

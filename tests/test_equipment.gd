@@ -78,7 +78,7 @@ func _run() -> void:
 	check(is_equal_approx(mutation_with_coat / state.mutation_chance("russet"), 1.25), "unequipping removes the actual mutation modifier")
 	state._grant_item("sunstone")
 	state._grant_item("lens")
-	check(is_equal_approx(state.item_yield_bonus(), 0.02) and is_equal_approx(state.item_mutation_factor(), 1.10), "original keepsakes stay passive without using equipment slots")
+	check(is_equal_approx(state.item_yield_bonus(), 0.10) and is_equal_approx(state.item_mutation_factor(), 1.35), "original keepsakes stay passive without using equipment slots")
 	state.equip_gear("scientist_coat")
 	builds.levels.scientist = 1
 	builds.select_build("scientist")
@@ -146,7 +146,7 @@ func _run() -> void:
 		state._grant_item(id)
 	builds.levels.investor = 1
 	builds.select_build("investor")
-	check(is_equal_approx(state.item_stock_factor(), 1.525), "one strongest stock item per slot has a bounded combined bonus")
+	check(is_equal_approx(state.item_stock_factor(), 1.675), "one strongest stock item per slot has a bounded combined bonus")
 	state.surge_crop = "russet"
 	state.surge_remaining = State.SURGE_DURATION
 	state.surge_factor = 12.0
@@ -164,7 +164,7 @@ func _run() -> void:
 			equipped_count += 1
 			check(entry.equipped and str(entry.action).begins_with("gear:unequip:"), "equipped inventory row exposes unequip action")
 	check(equipped_count == 6, "one active item occupies each of six body slots")
-	check(state.save_game(SAVE) and state.load_game(SAVE) and state.equipment_loadout().body == "investor_shirt" and is_equal_approx(state.item_stock_factor(), 1.525), "chosen loadout and active build synergy survive save/load")
+	check(state.save_game(SAVE) and state.load_game(SAVE) and state.equipment_loadout().body == "investor_shirt" and is_equal_approx(state.item_stock_factor(), 1.675), "chosen loadout and active build synergy survive save/load")
 	var saved: Dictionary = state._save_data().duplicate(true)
 	for error_kind in ["missing_slot", "extra_slot", "wrong_slot", "unowned", "duplicate", "unknown", "missing_equipment"]:
 		var malformed: Dictionary = saved.duplicate(true)

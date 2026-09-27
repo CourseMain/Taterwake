@@ -124,7 +124,7 @@ func check_offer_stacks(state) -> void:
 		state.rocket_factor = 375.0
 		state.complete_rocket_launch()
 		check(is_equal_approx(state.market[crop].sell, state.CROPS[crop].base * 375.0) and state.surge_remaining == 10.0, "post-film rocket keeps its sampled quote and full duration despite every overlapping offer")
-		check(is_equal_approx(state.market[crop].seed, state.market[crop].sell * state.CROPS[crop].yield * State.SEED_YIELD_RATIO * state.build_system.seed_factor()), "seed purchases follow the final unmultiplied boom quote and the ordinary Investor discount")
+		check(is_equal_approx(state.market[crop].seed, State.seed_price_for(state.market[crop].sell)), "seed purchases follow the final unmultiplied boom quote at the fixed 75% rate")
 
 func run() -> void:
 	var state = State.new()

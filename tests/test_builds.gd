@@ -58,7 +58,7 @@ func _run() -> void:
 	check(scientific_chance > state.mutation_chance("russet"), "Scientist increases actual mutation chances")
 	var regular_seed: float = state.market.russet.seed
 	builds.select_build("investor")
-	check(state.market.russet.seed < regular_seed, "Investor discount changes the real seed quote")
+	check(state.market.russet.seed == regular_seed, "Investor preserves the fixed 75% seed rate")
 	state.coins = 1000000.0
 	var before: float = state.coins
 	builds.use_ability()

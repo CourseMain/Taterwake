@@ -97,7 +97,7 @@ func run() -> void:
 	check(state.farm_help.tip(state).id == "stocks", "held harvest offers practical stock lesson")
 	var before: float = state.coins
 	check(state.farm_help.start_practice(state), "opt-in practice starts")
-	check(state.market.russet.change == 100.0 and state.market.russet.seed == state.market.russet.sell * State.CROPS.russet.yield * State.SEED_YIELD_RATIO, "practice has fixed +100% quote and matching seed cost")
+	check(state.market.russet.change == 100.0 and state.market.russet.seed == State.seed_price_for(state.market.russet.sell), "practice has fixed +100% quote and matching seed cost")
 	check(state.blind_cycle.booms == 0 and state.surge_timer == 180.0, "practice neither counts a major boom nor resets its schedule")
 	state.update(4.25)
 	check(is_equal_approx(state.farm_help.data.practice_remaining, 5.75) and state.market.russet.change == 100.0, "price holds while ordinary market ticks continue")

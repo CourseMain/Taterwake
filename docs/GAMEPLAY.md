@@ -6,13 +6,15 @@
 
 New farms start with one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
+Mara adds one of your three starter compost to that first planted Russet. Water it and watch a giant potato push out of the soil, then pull it up for the Farmer's real **3× harvest**. This uses the ordinary compost ability; reloading the lesson never spends it twice. Later giants use **Builds → Farmer → Grow a giant potato**. Harvests now tug, pop and scatter soil; giants land with a heavier thump.
+
+Mara's seed counter has patched sacks and mismatched crates. Sell Potatoes uses the exchange's chalk buying board, with live quotes and a separate readable price chart. Builds opens the village field guide; Help is Nell's pinned barn notes. Loaded workshop batches appear in crates beside Ada, and reserved buyers walk in from the ferry and leave after delivery or expiry.
+
 The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. E also works at the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
 
-Afterwards, optional farm tips appear when useful. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage. After independently planting, watering, harvesting and selling another crop, holding a fresh harvest can offer a **+100% practice boom for ten seconds**. Choose when to start, then sell while its quote lasts. Missing the window allows another attempt; a successful sale ends the practice. It never counts toward tax or replaces an actual boom.
+Afterwards, help stays in **H → Help** instead of floating over the farm. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage. After independently planting, watering, harvesting and selling another crop, holding a fresh harvest makes a **+100% practice boom for ten seconds** available through **Help → Current farm help**. Choose when to start, then sell while its quote lasts. Missing the window allows another attempt; a successful sale ends the practice. It never counts toward tax or replaces an actual boom.
 
-Tips appear as a small help button and hide while you work the beds. Click to read more, or use × to dismiss. Routine reminders such as “Already watered” appear briefly above the hotbar, without blocking clicks or stacking messages over the field.
-
-Tool and duck suggestions wait until you can afford them. Build help waits for a usable Farmer ability or an owned Build Crate. Tax help arrives before the first scheduled boom; debt help explains that a negative balance remains playable. Tips never pause or lock the farm. Dismiss individual tips, or use **H → Hide farm tips**. H also shows the controls whenever you need them.
+Automatic reminders to upgrade tools, hire ducks or recover debt no longer appear over the field. Open **H** for controls, farming instructions and current task help. Recovery orders remain available through **Repay debt** in shops and the Taxes page. Brief action feedback and red warnings still explain blocked actions, full storage or unavailable supplies.
 
 Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. Sailing requires the normal island unlocks.
 
@@ -42,7 +44,7 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | 4 | Harvest |
 | 5 | Bug sprayer |
 | E / Space | Interact with nearby NPC/shop, use selected tool beside a bed, or board the ferry |
-| B | Market |
+| B | Buy Seeds |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
 | R | Roll House |
@@ -51,11 +53,14 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | P | PotatoDex |
 | F | Sell held raw potatoes of the selected crop |
 | H / F1 | Guide |
-| Two-finger scroll / trackpad pinch / mouse wheel | Smooth map zoom |
+| Mouse drag / two-finger trackpad scroll | Pan the map |
+| One- or two-finger touch drag | Pan the map |
+| Pinch / mouse wheel | Smooth map zoom |
+| Home / Touch Tools → Recenter | Restore the camera |
 | Escape | Close panel / open main menu |
 | F5 / F9 | Save / load |
 
-Two-finger vertical scrolling, native pinch gestures and mouse wheels zoom smoothly. Fine trackpad scroll amounts are preserved, and a wider zoom range exposes the surrounding buildings. Scrolling inside a menu stays within that menu.
+The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
 A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
 
@@ -73,7 +78,13 @@ Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500�
 
 Press **2** or click the Seeds hotbar slot to show crop choices and tracked seed quotes. Selecting another tool hides both strips. Use **Tracked Seed Prices** in the menu to choose which seed quotes appear in this tray. Your choices are saved; price changes show old → new values with green/up or red/down feedback.
 
-Seeds normally cost **45% of the live crop quote × base plant yield**, before discounts or seed premiums. A huge crop quote therefore also makes its seeds expensive. Combos, mastery, mutations and build choices reward actual farming.
+**Buy Seeds** uses illustrated cards with the seed price, live selling price per potato, and owned quantities. Seeds cost **75% of one potato’s live selling price**, rounded to the nearest cent. This final rate takes precedence over older seed-only weather premiums, seed events, token discounts and Investor discounts. A huge crop quote also makes seeds expensive. Harvest yields, combos, mastery and mutations are unchanged.
+
+**Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Inventory sales and the existing **F** shortcut still work. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
+
+Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Radioactive → Sunburst → Icecap**. Buy Seeds retains each island’s available seeds; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
+
+The sell chart labels every visible price-change point relative to that variety’s fixed base: `((price / base) - 1) × 100`, rounded to whole percentages. Smooth curves pass through the recorded prices without adding peaks. Teal gains and berry losses also have signed labels. A dashed line marks base / 0%; actual currency prices appear only on the right axis. **Older / Newer** browses the retained 40 quotes, with fewer visible points on narrow screens to keep labels readable. Missing history does not prevent selling at the current quote.
 
 The selected crop at the top of the screen controls the market feedback. Mist begins above **+300%**, bigger rhythmic effects at **+500%**, and a musical jackpot at **+3,000%**. Green belongs to Spud Valley, gold to Golden Shores, and icy blue to Frosthollow. The center stays readable for farming and trading.
 
@@ -113,7 +124,7 @@ You begin as **Farmer**. Opening owned Build Crates can unlock and develop five 
 | Scientist | Cross two crops into Honeyheart, Sundew or Frostgold. Keep discovered seed traits for every build. |
 | Industrialist | Load 20 or 100 crops, match their process and stamp F–SSS export batches. Larger machines unlock queue slots. |
 
-Click **Explore** for a short illustrated explanation and the build's controls. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
+Builds opens an illustrated overview of all five paths, with your current build marked **Selected** and real locks shown. Click **Explore** to preview its appearance, controls, benefits and tradeoffs; browsing never changes your saved build. **Select build · Free** explicitly changes the active build. The introduction's **Meet the five builds** guide explains each path, unlocking and switching. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
 
 Prize crops, seed-bank jars, machine additions, shipment carts and the lucky charm appear on the farm. After every third major stock, the tax collector walks from the ferry along the island path during the familiar ten-second selling window, collects automatically, then leaves with a receipt. Clicking the visitor opens your tax information.
 
@@ -138,6 +149,11 @@ After the reveal, a receipt shows **Spent, Returned and Balance**, including con
 Luck shifts probability toward higher rarity tiers, rather than increasing every non-common tier equally. The displayed odds, actual reward selection and reel previews use the same current tier probabilities. Decorative cards do not grant rewards: the reel lands on the actual single result, or the best result in a batch whose full results appear below. Ordinary cash-jackpot odds stay capped at 2.25%, with excess probability going to rare collectibles; explicit debug luck can bypass that cap. Above the normal 10× cap, boosted luck applies an additional increasing weight for each rarity step above Rare. For example, 1,000× effective luck gives approximately **84.5% combined Relic/Mystery** odds at a normal stake; 3,000× gives about **95.7%**. High luck makes rare results more likely, not guaranteed.
 
 Eight reward tiers include collectible gear, tools, farming bonuses, mutations, jackpots, **Relic items with a 0.1% starting chance**, and a mysterious rarer tier. **Gacha never awards seeds**, including when a collection is full. Starter supplies, emergency help and quest seed rewards still work.
+
+Relic and Mystery pools match the island: Valley farming keepsakes, Shores trading and mutation artifacts, and Frosthollow storage, Aurora and luck artifacts. Collectibles are permanently active across islands; wearable charms must be equipped. Unfinished local collections are preferred. A full Relic collection trades a duplicate for **2× your stake**; Mystery pays **5×**. The Trader Token raises crop quotes by 5% per copy, and seed quotes stay at 75% of sale prices.
+
+Quest rewards scale with the island economy: Valley pays $5K–$30K, Shores $200M–$5B, and Frosthollow $10T–$250T. The Valley combo quest adds an Almanac, the Shores mutation quest adds a Tideglass Lens, and Frostbreaker adds an Aurora Heart. Rewards can be claimed once, including after loading an older save.
+
 
 Inventory [I] has a **Gear** tab with a draggable 3D preview of the same round potato farmer you see in the field. The farmer has a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Clothing fits that body and follows its moving limbs. Wear **one item in each of six slots: hat, shirt, pants, shoes, gloves and charm**. Equip another item to swap that slot, or click an occupied slot to remove it. Removed gear stays in your collection. Only equipped clothing provides its bonuses, and extra copies do not stack. A first drop equips itself if that slot is empty. Existing saves retain their collected gear and start with their highest-rarity owned item in each slot equipped if they have not used the wardrobe before.
 
@@ -200,7 +216,7 @@ Stock feedback has four levels: small mist above +300%; stronger pulses from +50
 
 ### Climate action and taxes (v1.0.2)
 
-Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes, raise seed costs, and crash sale prices by up to **95%**. Prices stay positive. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** as the crash eases. On the affected island, positive stocks, natural spikes, offers and exports cannot override the crash. Existing booms end; the Rocket countdown pauses until recovery ends. Crashes do not advance the three-stock tax counter, but an already-due bill is still collected. Protection reduces crop losses and the recovery bill.
+Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes and crash sale prices by up to **95%**. Prices stay positive. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** as the crash eases. On the affected island, positive stocks, natural spikes, offers and exports cannot override the crash. Existing booms end; the Rocket countdown pauses until recovery ends. Crashes do not advance the three-stock tax counter, but an already-due bill is still collected. Protection reduces crop losses and the recovery bill.
 
 **Taxes arrive after every third major stock**, about nine minutes, following its full ten-second selling window. Natural spikes do not count. Base tax is 5% of the next-island requirement; a random Tax Boom or disaster recovery can increase it by up to 150%. The combined bill never exceeds 12.5% of the baseline. Island 3 uses a virtual 5Qa baseline and has no fourth island: its bills range from **250T to 625T**.
 
@@ -209,6 +225,12 @@ Climate disasters begin on **Island 2**, introduced by a skippable changing-sky 
 | 1 | $50K | $125K | −$50K |
 | 2 | $5B | $12.5B | −$5B |
 | 3 | $250T | $625T | −$250T |
+
+Seeds, tools, barn space, extra beds, ducks and weather equipment can be bought on **credit**, even with a negative balance. Buttons mark borrowed purchases with **Credit**. Purchases cannot cross the current bankruptcy limit; Roll House bets and new-island passage still require cash.
+
+Use **Repay debt** in a shop, or **Taxes → Recovery orders**, to exchange ordinary potatoes for debt repayment. Each potato repays 1% of your current debt limit, so 100 clear a fully used credit line. Deliveries start with Russets, keep surplus potatoes, and stop at zero debt. Market sales also repay debt normally. If you have no seeds, ordinary stored crops or growing crops, collect three free recovery seeds from the order page. Taxes and bankruptcy still apply.
+
+The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels, sale prices, recovery tax and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
 
 Cash below the bill turns red. Unpaid taxes become debt; **only crossing bankruptcy ends the run**. Having 2× the bill earns OVERKILL, then larger reserves reach ULTRA KILL, GODLIKE, OMNIPOTENT and RULER. **☰ → Taxes** shows your forecast, projected balance and latest receipt. Returning to an easier island keeps the highest tax tier you have visited.
 

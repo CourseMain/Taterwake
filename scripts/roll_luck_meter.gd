@@ -1,7 +1,7 @@
 extends BoxContainer
 ## Three presentation steps; the backend's frozen odds still choose the prize.
 const Type = preload("res://scripts/ui_type.gd")
-const COLORS: Array[Color] = [Color("52778b"), Color("66835c"), Color("977447")]
+const COLORS: Array[Color] = [Color("8f293b"), Color("20553e"), Color("6b4d20")]
 signal explanation_changed(text: String)
 signal completed
 const STEP_SECONDS: float = 0.65
@@ -15,9 +15,10 @@ var captions: Array[Label] = []
 var numbers: Array[Label] = []
 var details: Array[Label] = []
 var tiles: Array[PanelContainer] = []
-var _body_font: Font = Type.face(Type.BODY, 600.0)
+var _body_font: FontVariation = Type.face(Type.BODY, 600.0)
 
 func _ready() -> void:
+	_body_font.fallbacks = []
 	add_theme_constant_override("separation", 8)
 	custom_minimum_size.y = 76
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -30,8 +31,8 @@ func _ready() -> void:
 		var tile := PanelContainer.new()
 		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var style := StyleBoxFlat.new()
-		style.bg_color = COLORS[index].lerp(Color("fffbed"), 0.92)
-		style.border_color = COLORS[index].lerp(Color("fffbed"), 0.65)
+		style.bg_color = COLORS[index]
+		style.border_color = Color("ba9650")
 		style.set_border_width_all(1)
 		style.set_corner_radius_all(10)
 		style.content_margin_left = 10
@@ -45,8 +46,11 @@ func _ready() -> void:
 		column.add_theme_constant_override("separation", 0)
 		column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tile.add_child(column)
-		var caption := _label(["1 · Roll", "2 · Add earned + gear", "3 · Multiply luck"][index], 11, _body_font)
-		var number_label := _label("", 22, Type.face(Type.BODY, 750))
+		var caption := _label(["Roll quality", "Earned + gear", "Luck multiplier"][index], 11, _body_font)
+		var number_font := Type.face(Type.BODY, 750)
+		number_font.fallbacks = []
+		var number_label := _label("", 22, number_font)
+		number_label.add_theme_color_override("font_color", Color("ffe49a"))
 		var detail := _label("", 10, _body_font)
 		column.add_child(caption)
 		column.add_child(number_label)
@@ -62,7 +66,7 @@ func _label(text: String, pixels: int, font: Font) -> Label:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_override("font", font)
 	label.add_theme_font_size_override("font_size", pixels)
-	label.add_theme_color_override("font_color", Color("17382d"))
+	label.add_theme_color_override("font_color", Color("f5ead0"))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
@@ -105,21 +109,23 @@ func _paint() -> void:
 	numbers[1].text = "+" + number(bonus) + "%"
 	numbers[2].text = "×" + number(float(values.multiplier))
 	details[0].text = "%s× stake · %s× build" % [number(stake), number(build)]
-	details[1].text = "100%% base / %s%%" % number(float(values.normal) * 100.0)
+	details[1].text = "%s%% total luck" % number(float(values.normal) * 100.0)
 	details[2].text = "+%s%% final bonus" % number((float(values.total) - 1.0) * 100.0)
 	var stage: int = mini(2, int(elapsed / STEP_SECONDS))
 	var explanations: Array[String] = [
-		"1 / 3 · Roll with %s× quality from your stake and build." % number(quality),
-		"2 / 3 · Add earned + equipped luck: +%s%% after the normal cap." % number(bonus),
-		"3 / 3 · Multiply luck: %s%% × %s = %s%% (%s× base luck)." % [number(float(values.normal) * 100), number(float(values.multiplier)), number(float(values.total) * 100), number(float(values.total))],
+		"Roll quality · %s×" % number(quality),
+		"Earned + gear luck · +%s%%" % number(bonus),
+		"Final luck · %s%% × %s = %s%%" % [number(float(values.normal) * 100), number(float(values.multiplier)), number(float(values.total) * 100)],
 	]
 	description = explanations[stage]
 	if playing: explanation_changed.emit(description)
 	for index: int in range(tiles.size()):
 		var active: bool = playing and stage == index
 		var style: StyleBoxFlat = tiles[index].get_theme_stylebox("panel")
-		style.bg_color = COLORS[index].lerp(Color("fffbed"), 0.78 if active else 0.94)
-		style.border_color = COLORS[index].lerp(Color("fffbed"), 0.1 if active else 0.65)
+		style.bg_color = COLORS[index].lightened(.12) if active else COLORS[index]
+		style.border_color = Color("fff0a8") if active else Color("ba9650")
+		style.shadow_color = Color(1, .7, .2, .25 if active else 0)
+		style.shadow_size = 6 if active else 0
 
 static func number(value: float) -> String:
 	var text: String = String.num(value, 3)

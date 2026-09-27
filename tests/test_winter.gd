@@ -79,6 +79,10 @@ func _run() -> void:
 	for station in stations:
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(stations[station])))
 		check(hit.get("station", "") == station, "winter station target: " + station)
+	game.state.coins = 1e18
+	# This fixture isolates Frostbreak from separate climate cinematics.
+	game.state.climate.acknowledge(game.state)
+	game.state.climate.data.timer = game.state.ClimateSystem.WAIT_MAX
 	await shot("frosthollow-arrival")
 	for index in range(80):
 		game.perform_plot(index, "hoe")

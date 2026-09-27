@@ -31,7 +31,9 @@ func run() -> void:
 			if station == "activities" and island == 1: continue
 			var body: StaticBody3D
 			for target in game.world._interaction_targets:
-				if target.get_meta("station") == station: body = target
+				# Pooled visitors have targets too, but only live shopkeepers and
+				# open stations can be approached in this fixture.
+				if target.get_meta("station") == station and target.is_visible_in_tree() and target.collision_layer != 0: body = target
 			check(is_instance_valid(body), "target exists: %s island %d" % [station, island])
 			if not is_instance_valid(body): continue
 			game.world.player.global_position = body.global_position
@@ -78,13 +80,14 @@ func run() -> void:
 	check(is_equal_approx(badge.size.x,badge.size.y),"E remains square")
 	game.state.barn_level = 0
 	game.hud.show_panel("barn", game.state)
-	check(game.hud._refs.barn_tip.visible, "beginner tip visible before first upgrade")
-	check(game.hud._refs["upgrade:barn:card"].get_parent() == game.hud._body, "upgrade above inventory tabs")
+	check(not game.hud._refs.has("barn_tip"), "barn shelves omit the retired filler message")
+	var expansion_card: Control = game.hud._refs["upgrade:barn:card"]
+	check(game.hud._body.is_ancestor_of(expansion_card) and expansion_card.is_visible_in_tree(), "barn expansion is available inside the inventory page")
 	var capacity: int = game.state.capacity
 	game.hud._act("upgrade:barn")
 	game.hud.update_state(game.state)
 	check(game.state.capacity > capacity, "barn upgrade increases capacity")
-	check(not game.hud._refs.barn_tip.visible, "tip retires after upgrade")
+	check(not game.hud._refs.has("barn_tip"), "upgrading does not restore the retired message")
 	game.state.barn_level = 20
 	game.hud.update_state(game.state)
 	check(game.hud._refs["upgrade:barn"].disabled, "maximum barn cannot be upgraded")

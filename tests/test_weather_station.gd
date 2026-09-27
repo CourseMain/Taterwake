@@ -38,6 +38,8 @@ func run() -> void:
 	check(game.hud._climate_intro.subtitle.text.contains("climate is changing"),"cinematic has requested subtitle")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.climate.data.intro_pending,"arrival cinema survives reload without advancing the farm")
 	game.hud._climate_intro.skip.pressed.emit()
+	check(game.conversation.visible and game.conversation.npc_id == "iris", "arrival introduces Iris before station")
+	game.conversation.choose(0)
 	check(not farm.climate.data.intro_pending and game.hud._panel_kind == "climate","skip opens weather station safely")
 	check(game.hud._refs.protection_summary.visible,"protection stats are immediately visible")
 	check(not game.world._project_nodes.has("irrigation"),"no unbought sprinkler geometry")

@@ -57,12 +57,12 @@ func _run() -> void:
 	var seeds: int = farm.seed_inventory.russet
 	farm.buy_seeds("russet", 5)
 	check(is_equal_approx(farm.coins, coins - 5 * price) and farm.seed_inventory.russet == seeds + 5, "seed bundle charges dynamic seed cost")
-	farm.coins = 0.0
+	farm.coins = farm.bankruptcy_limit()
 	seeds = farm.seed_inventory.golden
 	farm.buy_seeds("golden", 5)
 	farm.upgrade_tool("water")
 	farm.roll("all_in")
-	check(farm.coins == 0.0 and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "insufficient balances cannot buy, upgrade or roll")
+	check(farm.coins == farm.bankruptcy_limit() and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "exhausted credit cannot buy, upgrade or roll")
 	farm.reset_game()
 	farm.coins = 50000.0
 	farm.expand_field()
@@ -115,10 +115,10 @@ func _run() -> void:
 	farm.reset_game()
 	price = farm.market.russet.seed
 	farm._start_event("crash")
-	check(is_equal_approx(farm.market.russet.seed, price * farm.event_strength) and is_equal_approx(farm.market.russet.sell, 38.0 * farm.event_strength), "crash discounts linked seeds as well as crops")
+	check(is_equal_approx(farm.market.russet.seed, State.seed_price_for(farm.market.russet.sell)) and is_equal_approx(farm.market.russet.sell, 38.0 * farm.event_strength), "crash discounts linked seeds as well as crops")
 	farm._end_event()
 	farm._start_event("seed_panic")
-	check(is_equal_approx(farm.market.russet.seed, price * farm.event_strength) and farm.market.russet.sell == 38.0, "seed panic briefly adds a seed-only premium")
+	check(is_equal_approx(farm.market.russet.seed, State.seed_price_for(farm.market.russet.sell)) and farm.market.russet.sell == 38.0, "seed panic preserves the fixed per-potato ratio")
 	farm._end_event()
 	farm._start_event("golden_craze")
 	check(is_equal_approx(farm.market.golden.sell, 900.0 * farm.event_strength) and is_equal_approx(farm.market.russet.sell, 38.0), "Golden craze targets only Golden crops")

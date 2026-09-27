@@ -27,6 +27,7 @@ var _stride: float = 0.0
 var _walk_blend: float = 0.0
 var carry_weight: float = 0.0
 var pour_pose: float = 0.0
+var harvest_pose: float = 0.0
 var _run_blend: float = 0.0
 var _built: bool = false
 var _golden_hat: bool = false
@@ -302,6 +303,10 @@ func animate(delta: float, moving: bool = false, sprint: float = 0.0) -> void:
 	# Left hand carries the can; its reduced swing keeps the handle in the palm.
 	_arms[0].rotation.x = lerpf(_arms[0].rotation.x, -0.75 - pour_pose * 0.4 + sin(_stride) * 0.07 * _walk_blend, carry_weight)
 	_arms[0].rotation.z = lerpf(_arms[0].rotation.z, -0.24 - pour_pose * 0.25, carry_weight)
+	if harvest_pose > 0:
+		_rig.rotation.x += harvest_pose * .26
+		_rig.position.y -= harvest_pose * .10
+		for arm in _arms: arm.rotation.x = lerpf(arm.rotation.x, -1.25, harvest_pose)
 	var blink_phase: float = fmod(_time + 0.9, 4.7)
 	var openness: float = 1.0
 	if blink_phase > 4.50:

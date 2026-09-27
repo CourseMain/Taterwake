@@ -95,7 +95,7 @@ func _run() -> void:
 		state.surge_factor = cap
 		state._refresh_market(false)
 		check(is_equal_approx(state.market[crop].change, percent) and is_equal_approx(state.surge_info().percent, percent), "island %d quote and banner report the exact maximum" % island)
-		check(is_equal_approx(state.market[crop].seed, state.market[crop].sell * state.CROPS[crop].yield * state.SEED_YIELD_RATIO), "island %d seed price follows the final capped sell quote" % island)
+		check(is_equal_approx(state.market[crop].seed, State.seed_price_for(state.market[crop].sell)), "island %d seed price follows the final capped sell quote" % island)
 		check(state.save_game(SAVE) and state.load_game(SAVE) and is_equal_approx(state.surge_factor, cap), "island %d normal maximum survives save/load" % island)
 		var regular_spikes: Dictionary = natural_sample(state, 1.0)
 		var lucky_spikes: Dictionary = natural_sample(state, 10.0)
@@ -138,7 +138,7 @@ func _run() -> void:
 	state.update(0.001)
 	check(state.surge_remaining == 0.0 and state.surge_factor == 1.0 and is_equal_approx(state.surge_timer, 170.0), "scheduled expiry preserves the next three-minute boundary")
 	check(is_equal_approx(state.market.golden.sell, state._market_core.golden.sell), "scheduled expiry removes the temporary quote")
-	check(state.market.golden.seed < scheduled_seed_price and is_equal_approx(state.market.golden.seed, state.market.golden.sell * state.CROPS.golden.yield * State.SEED_YIELD_RATIO), "scheduled expiry lowers the actual purchase price with its sale quote")
+	check(state.market.golden.seed < scheduled_seed_price and is_equal_approx(state.market.golden.seed, State.seed_price_for(state.market.golden.sell)), "scheduled expiry lowers the actual purchase price with its sale quote")
 	state.reset_game()
 	state.select_crop("golden")
 	state.natural_crop = "golden"
@@ -160,7 +160,7 @@ func _run() -> void:
 	check(state.natural_remaining > 0.0 and is_equal_approx(state.market.golden.change, 2700.0), "natural stock quote also lasts the complete ten seconds")
 	state.update(0.001)
 	check(state.natural_remaining == 0.0 and state.natural_factor == 1.0 and is_equal_approx(state.market.golden.sell, state._market_core.golden.sell), "natural expiry restores its underlying quote")
-	check(state.market.golden.seed < natural_seed_price and is_equal_approx(state.market.golden.seed, state.market.golden.sell * state.CROPS.golden.yield * State.SEED_YIELD_RATIO), "natural expiry lowers the actual seed purchase price with its sale quote")
+	check(state.market.golden.seed < natural_seed_price and is_equal_approx(state.market.golden.seed, State.seed_price_for(state.market.golden.sell)), "natural expiry lowers the actual seed purchase price with its sale quote")
 	for island in [1, 3]:
 		state.reset_game()
 		enter_island(state, island)
@@ -179,9 +179,9 @@ func _run() -> void:
 		var linked: bool = true
 		for id in state.CROP_IDS:
 			capped = capped and is_equal_approx(state.market[id].sell, state.CROPS[id].base * state.stock_cap())
-			linked = linked and is_equal_approx(state.market[id].seed, state.market[id].sell * state.CROPS[id].yield * 0.45 * 0.98)
+			linked = linked and is_equal_approx(state.market[id].seed, State.seed_price_for(state.market[id].sell))
 		check(capped and state.item_stock_factor() > 1.0, "island %d ordinary event, gear, and offer stacks respect the local ceiling" % island)
-		check(linked, "island %d seed-token discount applies to capped final quotes" % island)
+		check(linked, "island %d seed ratio stays fixed with tokens and capped final quotes" % island)
 		var quote: float = state.market.golden.sell
 		for _index in range(20):
 			state._refresh_market(false)

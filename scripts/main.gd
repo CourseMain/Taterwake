@@ -16,7 +16,9 @@ const SPRINT_MULTIPLIER: float = 1.65
 const NO_TILES: Array[int] = []
 const CAMERA_ZOOM_MIN: float = 18.0
 const CAMERA_ZOOM_RESPONSE: float = 14.0
+const CAMERA_PAN_RESPONSE: float = 24.0
 const CAMERA_SCROLL_STEP: float = 0.035
+const CAMERA_TRACKPAD_PAN: float = 24.0
 # Local convenience gate only; no session access or speed is written to saves.
 const DEBUG_ACCESS_CODE: String = "ORIGINALLYSPUDREPUBLIC"
 const DEBUG_TIME_SPEEDS: Array[float] = [1.0, 2.0, 5.0, 10.0, 30.0]
@@ -67,6 +69,15 @@ var fanfare_island: int = 1
 var surge_beat_clock: float = 0.0
 var pest_alert: Node
 var _zoom_target_size: float = 38.0
+var _camera_home_position := Vector3.ZERO
+var _camera_home_size: float = 38.0
+var _camera_home_id: int = 0
+var _camera_pan_offset := Vector3.ZERO
+var _map_drag_origin := Vector2.ZERO
+var _map_drag_distance := Vector2.ZERO
+var _map_drag_moved := false
+var _map_drag_button: int = 0
+var _map_drag_window_size := Vector2i.ZERO
 var tutorial: Node
 var tutorial_notes: Array[float] = []
 var tutorial_note_clock: float = 0.0
@@ -116,7 +127,9 @@ func _ready() -> void:
 	add_child(farm_viewport)
 	farm_viewport.add_child(world)
 	world.build_world(state.current_island)
-	_reset_camera_zoom()
+	_reset_camera_view()
+	get_tree().root.size_changed.connect(_stop_map_navigation)
+	get_tree().root.focus_exited.connect(_stop_map_navigation)
 	world.set_day_time(state.elapsed)
 	world.pest_warning.connect(_on_pest_warning)
 	hud = HudScript.new()
@@ -451,6 +464,34 @@ func _debug_action(parts: PackedStringArray) -> void:
 			if not test_mode:
 				state.save_game()
 
+func _input(event: InputEvent) -> void:
+	# Keep ownership when a drag crosses HUD controls or is released over them.
+	if _map_drag_button == 0: return
+	if not _map_navigation_allowed() or _map_drag_window_size != get_tree().root.size:
+		_cancel_map_drag()
+		if event is InputEventMouse: get_viewport().set_input_as_handled()
+		return
+	if event is InputEventMouseMotion:
+		if (event.button_mask & (1 << (_map_drag_button - 1))) == 0:
+			_cancel_map_drag()
+			return
+		_map_drag_distance += event.relative
+		if _map_drag_button != MOUSE_BUTTON_LEFT or _map_drag_moved:
+			_pan_camera_by(event.relative)
+		elif _map_drag_distance.length() >= 6.0:
+			_map_drag_moved = true
+			Input.set_default_cursor_shape(Input.CURSOR_DRAG)
+			_pan_camera_by(_map_drag_distance)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton:
+		if event.button_index == _map_drag_button and not event.pressed:
+			var tap: bool = _map_drag_button == MOUSE_BUTTON_LEFT and not _map_drag_moved and event.position.distance_to(_map_drag_origin) < 6.0
+			var origin: Vector2 = _map_drag_origin
+			_cancel_map_drag()
+			if tap: _tap_world(origin)
+		# A second mouse button during a pan must not farm or open a shop.
+		get_viewport().set_input_as_handled()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
 		touch_controls.toggle_fullscreen()
@@ -500,14 +541,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_E, KEY_SPACE:
 				if not hud.is_panel_open():
 					_interact_nearby()
-	if hud.is_panel_open():
+	if not _map_navigation_allowed():
+		return
+	if _handle_map_pan(event):
+		get_viewport().set_input_as_handled()
 		return
 	if _handle_map_zoom(event):
 		get_viewport().set_input_as_handled()
 		return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_tap_world(event.position)
 	if touch_controls.enabled:
 		touch_controls.world_input(event)
 
@@ -517,26 +558,33 @@ func _tap_world(point: Vector2) -> void:
 		queue_plot(int(hit.plot_index))
 	elif hit.has("station"):
 		_interact_station(str(hit.station))
-	elif hit.has("ground"):
-		_cancel_prize_target()
-		_close_equipment()
-		_cancel_walk()
-		_start_walk(hit.ground)
 
 func _interact_station(station: String) -> void:
 	if station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
 	elif station.begins_with("profession:"):
-		hud._build_selection = station.get_slice(":", 1)
 		_on_action("builds")
 	elif station == "island":
 		queue_ferry()
+	elif station == "market" and not _tutorial_active():
+		# Visiting Mara herself is a deliberate conversation, even after her intro.
+		_start_conversation("mara", "market")
 	else:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
 	if conversation.visible: return
+	if action in ["market", "sell_potatoes"]:
+		# Market tabs navigate the same shop session; they are not NPC visits.
+		# Use the existing saved memory for ordinary re-entry, so a completed
+		# introduction stays completed after loading, too. The stall and talk:mara
+		# still allow players to start a conversation deliberately.
+		var browsing_market: bool = hud._panel_kind in ["market", "sell_potatoes"]
+		var met_mara: bool = int(state.npc_history.get("mara", {}).get("visits", 0)) > 0
+		if browsing_market or met_mara:
+			_on_action(action)
+			return
 	var id: String = state.NpcRoster.for_station(action, state.current_island)
 	if not id.is_empty() and state.NpcRoster.available(id, state.current_island) and not _tutorial_active():
 		_start_conversation(id, action)
@@ -573,17 +621,97 @@ func _camera_zoom_max() -> float:
 func _reset_camera_zoom() -> void:
 	_zoom_target_size = clampf(world.camera.size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
+func _reset_camera_view() -> void:
+	_cancel_map_drag()
+	if is_instance_valid(touch_controls): touch_controls.release_all()
+	# Loading a save on the current island reuses its camera. Do not promote
+	# the player's current pan/zoom into the new default overview.
+	if _camera_home_id == world.camera.get_instance_id():
+		_recenter_camera()
+		world.camera.size = _camera_home_size
+		return
+	_camera_home_id = world.camera.get_instance_id()
+	_camera_home_position = world.camera.global_position
+	_camera_home_size = world.camera.size
+	_camera_pan_offset = Vector3.ZERO
+	_reset_camera_zoom()
+
+func _recenter_camera() -> void:
+	_cancel_map_drag()
+	_camera_pan_offset = Vector3.ZERO
+	world.camera.global_position = _camera_home_position
+	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
+
+func _map_navigation_allowed() -> bool:
+	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.rocket_pending and not state.climate.data.intro_pending and not hud.is_roll_animating() and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
+
+func _stop_map_navigation() -> void:
+	_cancel_map_drag()
+	if is_instance_valid(world) and is_instance_valid(world.camera):
+		_camera_pan_offset = world.camera.global_position - _camera_home_position
+
+func _cancel_map_drag() -> void:
+	if _map_drag_button != 0: Input.set_default_cursor_shape(Input.CURSOR_ARROW)
+	_map_drag_button = 0
+
+func _handle_map_pan(event: InputEvent) -> bool:
+	if not _map_navigation_allowed(): return false
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_HOME:
+		_recenter_camera()
+		return true
+	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT]:
+		_map_drag_button = event.button_index
+		_map_drag_origin = event.position
+		_map_drag_distance = Vector2.ZERO
+		_map_drag_moved = false
+		_map_drag_window_size = get_tree().root.size
+		if event.button_index != MOUSE_BUTTON_LEFT: Input.set_default_cursor_shape(Input.CURSOR_DRAG)
+		return true
+	if event is InputEventPanGesture:
+		if not event.delta.is_finite(): return false
+		_pan_camera_by(-event.delta * CAMERA_TRACKPAD_PAN)
+		return true
+	return false
+
+func _camera_pan_limit() -> Vector2:
+	# The view's focus stays over the island, even at the closest zoom.
+	return (Vector2(28, 22) if world.current_island == 3 else (Vector2(23, 18) if world.current_island == 2 else Vector2(20, 15))) * world.LAND_SPACING
+
+func _pan_camera_by(screen_delta: Vector2) -> void:
+	if not screen_delta.is_finite() or screen_delta.is_zero_approx() or not is_instance_valid(world.camera): return
+	# Ground-plane projection preserves the angle/height and tracks the pointer
+	# exactly, including when the 3D viewport renders below display resolution.
+	var center: Vector2 = get_viewport().get_visible_rect().size * 0.5
+	var from: Vector2 = farm_viewport.to_farm_position(center)
+	var to: Vector2 = farm_viewport.to_farm_position(center + screen_delta)
+	var ground := Plane(Vector3.UP, 0.0)
+	var start: Variant = ground.intersects_ray(world.camera.project_ray_origin(from), world.camera.project_ray_normal(from))
+	var finish: Variant = ground.intersects_ray(world.camera.project_ray_origin(to), world.camera.project_ray_normal(to))
+	if start == null or finish == null: return
+	_camera_pan_offset += Vector3(start) - Vector3(finish)
+	var limit: Vector2 = _camera_pan_limit()
+	_camera_pan_offset.x = clampf(_camera_pan_offset.x, -limit.x, limit.x)
+	_camera_pan_offset.y = 0.0
+	_camera_pan_offset.z = clampf(_camera_pan_offset.z, -limit.y, limit.y)
+
+func _update_camera_pan(delta: float) -> void:
+	if not is_instance_valid(world.camera) or not is_finite(delta) or delta <= 0.0: return
+	if not _map_navigation_allowed():
+		_stop_map_navigation()
+		return
+	# Input sets the destination; rendered frames follow it smoothly. Exponential
+	# damping is frame-rate independent and cannot overshoot a release or reversal.
+	var target: Vector3 = _camera_home_position + _camera_pan_offset
+	world.camera.global_position = world.camera.global_position.lerp(target, 1.0 - exp(-CAMERA_PAN_RESPONSE * minf(delta, 0.1)))
+	if world.camera.global_position.distance_squared_to(target) < 0.00000001:
+		world.camera.global_position = target
+
 func _handle_map_zoom(event: InputEvent) -> bool:
 	if event is InputEventMagnifyGesture:
 		if not is_finite(event.factor) or event.factor <= 0.0:
 			return false
 		# A spread-out pinch magnifies the map, reducing its orthographic span.
 		_zoom_by_log_amount(-log(event.factor))
-		return true
-	if event is InputEventPanGesture:
-		if not is_finite(event.delta.y) or is_zero_approx(event.delta.y):
-			return false
-		_zoom_by_log_amount(event.delta.y * CAMERA_SCROLL_STEP)
 		return true
 	if event is InputEventMouseButton and event.pressed and event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 		if not is_finite(event.factor):
@@ -600,6 +728,9 @@ func _zoom_by_log_amount(amount: float) -> void:
 	_zoom_target_size = clampf(_zoom_target_size * exp(clampf(amount, -3.0, 3.0)), CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _update_camera_zoom(delta: float) -> void:
+	_update_camera_pan(delta)
+	# Letterboxing can resize the window without changing logical viewport size.
+	if _map_drag_button != 0 and (not _map_navigation_allowed() or _map_drag_window_size != get_tree().root.size): _cancel_map_drag()
 	if not is_instance_valid(world.camera) or not is_finite(delta) or delta <= 0.0:
 		return
 	_zoom_target_size = clampf(_zoom_target_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
@@ -717,7 +848,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		if state.plots[index].get("cultivated", false) and not already_prize:
 			_cancel_prize_target()
 			hud.show_farm_hint("Giant potato growing · Harvest [4] when ripe." if state.plots[index].watered else "Compost added · Water [3], then harvest the giant potato when ripe.")
-			world.play_farm_effect([index], "plant", 1, 0)
+			world.play_farm_effect([index], "compost", 1, 0)
 			_save_blind_checkpoint.call_deferred()
 		else:
 			hud.set_plot_action(result + "\nChoose another glowing crop, or cancel.")
@@ -742,10 +873,13 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	var result: String = state.interact_plot(index, tool)
 	_working_plot = false
 	var changed_indices: Array[int] = []
+	var harvest_snapshots: Dictionary = {}
 	for step in range(indices.size()):
 		var tile: int = indices[step]
 		if ice_before.has(str(tile)) != state.climate.data.operations.ice.has(str(tile)) or before[step] != state.plots[tile] or float(danger_before.get(str(tile), 0.0)) != float(state.climate.data.operations.stress.get(str(tile), 0.0)):
 			changed_indices.append(tile)
+			if action == "harvest" and int(before[step].stage) == 3:
+				harvest_snapshots[tile] = before[step]
 	if lesson_before == "water" and state.climate.data.lesson.stage == "area": changed_indices.append(index)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
@@ -754,9 +888,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		hud.clear_farm_hint()
 		if tool == "harvest" and state.storage_used() >= state.capacity:
 			hud.show_farm_hint("Barn full · Sell crops [F]")
-		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)))
-		var pitch: float = 440.0 + float(state.combo_multiplier) * 28.0 if action == "harvest" else float({"hoe": 220.0, "plant": 440.0, "water": 660.0, "pest": 880.0}.get(action, 330.0))
-		_play_tone(pitch, 0.16 if action == "harvest" else 0.10)
+		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)), harvest_snapshots)
 	if _tutorial_active():
 		tutorial.update(0.0)
 
@@ -993,7 +1125,7 @@ func _on_island_changed(id: int) -> void:
 		hud._climate_console.targeting = ""
 		hud.close_panel()
 	world.switch_island(id)
-	_reset_camera_zoom()
+	_reset_camera_view()
 	world.set_day_time(state.elapsed)
 	destination = world.player.position
 	world.update_plots(state.plots)
@@ -1135,7 +1267,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "tracked_prices", "market", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate":
+		"menu", "tracked_prices", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1160,6 +1292,7 @@ func _on_action(action: String) -> void:
 			else:
 				_cancel_prize_target()
 				_cancel_walk()
+				if parts[0] == "builds": hud._build_selection = ""
 				hud.show_panel(parts[0], state)
 		"roll_batch":
 			if parts.size() != 3 or not hud.begin_roll(parts[1]):
@@ -1197,6 +1330,11 @@ func _on_action(action: String) -> void:
 			if parts.size() == 2:
 				_climate_action(parts[1])
 				_save_blind_checkpoint.call_deferred()
+		"recovery":
+			if parts.size() != 2: return
+			if parts[1] == "deliver": state.deliver_recovery()
+			elif parts[1] == "seeds": state.claim_recovery_seeds()
+			_save_blind_checkpoint.call_deferred()
 		"climate_fund":
 			if parts.size() == 2:
 				state.climate.fund(state, parts[1])
@@ -1386,6 +1524,7 @@ func _on_pest_warning(_index: int, destroyed: bool) -> void:
 		pest_alert.notify_attack(destroyed)
 
 func _on_chain(count: int, multiplier: int) -> void:
+	# The rising streak note layers over the potato's pull/pop foley.
 	if count > 0:
 		_play_tone(400.0 + float(multiplier) * 40.0, 0.25)
 
@@ -1402,6 +1541,8 @@ func play_tutorial_cue(kind: String) -> void:
 	tutorial_note_clock = 0.0
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_stop_map_navigation()
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if state != null and not test_mode:
 			state.save_game()

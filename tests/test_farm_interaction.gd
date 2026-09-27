@@ -37,7 +37,14 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.state.debug_unlock_island(3)
+	game.state.coins = 1e18
 	game.state.travel_to(2)
+	game.state.climate.acknowledge(game.state)
+	game.state.climate.fund(game.state, "irrigation")
+	await frames()
+	game._close_equipment()
+	game.state.climate.data.lesson.stage = "offer"
+	game._on_state_changed()
 	game.hud.close_panel()
 	var card = game.hud._climate_console
 	await click(card.primary)

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2.75
+
+- Added drag-to-pan directly on the island with mouse or one finger; retained angled view, zoom, WASD, joystick and bed/shop taps. Blank-ground taps no longer walk.
+- Fixed narrow, vertically stretched Weather Station buttons. Added the navy/cyan radar dashboard and tech station exterior.
+- Rebuilt the potato furnace as a warm brick-and-copper hearth, with glowing embers and a matching compact UI. Bellows remain free; fuel and boost timings are unchanged.
+- Gave each island its own relic and mystery artifact pool, strengthened artifact effects, restored a useful Trader Token bonus, and scaled completed-collection payouts to 2×/5× the stake. Quest cash scales with each island economy; longer challenges award an Almanac, Tideglass Lens or Aurora Heart. Existing quest claims remain claimed.
+- Reworked seed buying, selling, Tools, Barn and build pages; added casino colours and lights throughout the Roll House and a cuter duck pond panel. Removed repeated slogans, tutorial filler and automatic reminder banners.
+- Added harvest pull/pop/landing feedback and original tool/harvest sounds, unified crop growth with the intro model, varied NPC facing, and added repaired sacks, crates and purposeful village details.
+- Added bounded farm purchase credit and crop-based debt repayment. Barn-full and blocked expansion alerts use clear red warnings.
+- Added textured snowbanks, sandy shores with shells, and transparent compact fullscreen controls.
+
 ## 1.0.2.5
 
 - Added eleven named NPCs with distinct 3D appearances, animated close-up conversations, optional dialogue choices and contextual weather advice. Friendly replies and introductions persist in saves.

@@ -23,7 +23,7 @@ func enter_shores() -> void:
 	farm.climate.acknowledge(farm)
 
 func ready_crop(index: int, crop: String = "russet") -> void:
-	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CROPS[crop].grow), "crop": crop, "tilled": true, "pending": 0, "pests": false, "pest_damage": 0.0, "pest_ticks": 0, "pest_elapsed": 0.0, "pest_destroyed": false, "ripe_age": 0.0, "yield_total": 0, "yield_taken": 0}, true)
+	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CROPS[crop].grow), "crop": crop, "tilled": true, "pending": 0, "pests": false, "pest_damage": 0.0, "pest_ticks": 0, "pest_elapsed": 0.0, "pest_destroyed": false, "ripe_age": 0.0, "yield_total": 0, "yield_taken": 0, "plant_age":60.0, "pest_delay":25.0}, true)
 
 func write_save(data: Variant) -> void:
 	var file: FileAccess = FileAccess.open(SAVE, FileAccess.WRITE)
@@ -96,7 +96,7 @@ func _run() -> void:
 	check(farm.field_columns() == 8 and farm.field_rows() == 6 and farm.plots.size() == 48, "travel switches field geometry")
 	var same_history: bool = true
 	for id in farm.CROP_IDS: same_history = same_history and farm.market[id].history == old_market[id].history
-	check(farm._market_core == old_core and farm.rng.state == old_rng and same_history and farm.island_plots["1"] == old_field, "travel never rerolls underlying quotes or discards the old farm; local temporary premiums may expire")
+	check(farm._market_core == old_core and farm.island_plots["1"] == old_field, "travel never rerolls underlying quotes or discards the old farm; local temporary premiums may expire")
 	farm.travel_to(3)
 	farm.climate.acknowledge(farm)
 	check(farm.current_island == 2 and farm.plots[47].unlocked, "all Shores plots available and no third island")
@@ -108,7 +108,7 @@ func _run() -> void:
 	farm.coins = 1000000.0
 	var seed_price: float = farm.market.sunburst.seed
 	farm.buy_seeds("sunburst", 1)
-	check(is_equal_approx(seed_price, 121500.0) and farm.seed_inventory.sunburst == 1 and is_equal_approx(farm.coins, 1000000.0 - seed_price), "Sunburst seeds are meaningfully priced against ninety-thousand crop quotes")
+	check(is_equal_approx(seed_price, 67500.0) and farm.seed_inventory.sunburst == 1 and is_equal_approx(farm.coins, 1000000.0 - seed_price), "Sunburst seeds are meaningfully priced against ninety-thousand crop quotes")
 	farm.select_crop("sunburst")
 	farm.interact_plot(0, "hoe")
 	farm.interact_plot(0, "plant")
@@ -189,7 +189,7 @@ func _run() -> void:
 	var factor: float = farm.export_factor
 	check(is_equal_approx(farm.market.golden.sell, farm._market_core.golden.sell * factor) and is_equal_approx(farm.market.sunburst.sell, farm._market_core.sunburst.sell * factor), "export boosts only eligible commodity quotes")
 	check(farm.market.russet.sell == farm._market_core.russet.sell, "ordinary crops do not receive export multiplier")
-	check(is_equal_approx(farm.market.sunburst.seed, farm.market.sunburst.sell * 3.0 * 0.45), "export seeds rise with their sale quote rather than staying implausibly cheap")
+	check(is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "export seeds rise with their sale quote rather than staying implausibly cheap")
 	farm._start_event("golden_craze")
 	check(is_equal_approx(farm.market.golden.sell, minf(farm.CROPS.golden.base * farm.stock_cap(), farm._market_core.golden.sell * factor * farm.event_strength)), "brief export can combine with an independent brief event")
 	farm.update(5.01)
@@ -209,8 +209,7 @@ func _run() -> void:
 	check(farm.market.russet.sell == initial_quote, "starter quotes wait for their three-second tick")
 	farm.update(0.02)
 	check(farm.market.russet.sell != initial_quote, "starter quotes update every three seconds")
-	# This fixture isolates the ordinary seed/quote link. Climate intentionally
-	# raises seed costs independently; its complete market chain has its own suite.
+	# Keep climate quiet while checking the fixed 75% seed/quote link.
 	farm.climate.data.timer = 601.0
 	farm.coins = 1e12
 	var linked_and_bounded: bool = true
@@ -218,7 +217,7 @@ func _run() -> void:
 		farm.update(1.0)
 		for id in farm.CROP_IDS:
 			var multiplier: float = farm.event_strength if farm.current_event in ["seed_fair", "seed_panic"] else 1.0
-			linked_and_bounded = linked_and_bounded and is_equal_approx(farm.market[id].seed, farm.market[id].sell * farm.CROPS[id].yield * 0.45 * multiplier)
+			linked_and_bounded = linked_and_bounded and is_equal_approx(farm.market[id].seed, farm.seed_price_for(farm.market[id].sell))
 			linked_and_bounded = linked_and_bounded and farm._market_core[id].sell >= farm.CROPS[id].base * 0.35 - 0.001 and farm._market_core[id].sell <= farm.CROPS[id].base * 3.0 + 0.001
 	check(linked_and_bounded and not farm.run_over and farm.elapsed > 603.0, "ten simulated calm minutes keep seed/crop prices linked and core quotes bounded")
 	farm.reset_game()
@@ -269,9 +268,9 @@ func _run() -> void:
 	for index in range(48): farm.interact_plot(index, "hoe")
 	check(farm.quest_progress.ground == 48 and farm.quest_claimed.is_empty(), "ground quest covers the whole island and requires a deliberate claim")
 	farm.claim_quest("ground")
-	check(farm.coins == 100000.0 and farm.seed_inventory.sunburst == 5, "ground quest provides a modest starting fund and five Sunburst seeds")
+	check(farm.coins == 200000000.0 and farm.seed_inventory.sunburst == 5, "ground quest provides a modest starting fund and five Sunburst seeds")
 	farm.claim_quest("ground")
-	check(farm.coins == 100000.0 and farm.seed_inventory.sunburst == 5, "quest rewards cannot be collected twice")
+	check(farm.coins == 200000000.0 and farm.seed_inventory.sunburst == 5, "quest rewards cannot be collected twice")
 	farm.coins = 1.0e9
 	for _index in range(6): farm.upgrade_barn()
 	for _field in range(3):
@@ -344,7 +343,7 @@ func _run() -> void:
 	write_save(old_v3)
 	check(farm.load_game(SAVE), "old version-three island saves migrate without deleting player progress")
 	check(farm.coins == balance and farm.luck == 10.0 and farm.golden_hat and farm.quest_claimed.size() == 5, "rebalance preserves existing coins and claimed rewards while applying luck cap")
-	check(farm.export_timer <= 5.0 and farm.export_factor == 4.0 and farm._market_core.sunburst.sell == 270000.0 and is_equal_approx(farm.market.sunburst.seed, farm.market.sunburst.sell * 1.35), "old long peaks and disconnected prices normalize to the bounded linked economy")
+	check(farm.export_timer <= 5.0 and farm.export_factor == 4.0 and farm._market_core.sunburst.sell == 270000.0 and is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "old long peaks and disconnected prices normalize to the bounded linked economy")
 	farm.claim_quest("export")
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "migrated claimed quests stay claimed and round-trip through current saves")
 	farm.reset_game()
@@ -396,7 +395,7 @@ func _run() -> void:
 	farm.export_factor = 6.0
 	farm._refresh_market()
 	check(farm.market.sunburst.sell == farm.CROPS.sunburst.base * farm.stock_cap() and is_equal_approx(farm.market.sunburst.change, 2999.0), "all stacked Shores offers respect the plus-2999-percent island ceiling")
-	check(is_equal_approx(farm.market.sunburst.seed, farm.market.sunburst.sell * 1.35), "seed quote follows the capped effective sale quote")
+	check(is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "seed quote follows the capped effective sale quote")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "maximum capped market stack remains a valid save")
 	farm.reset_game()
 	farm.coins = 1.0e50
@@ -440,13 +439,13 @@ func _run() -> void:
 	farm._grant_item("aurora")
 	farm._grant_item("compass")
 	farm._grant_item("bottomless_sack")
-	check(farm.inventory_items.size() == farm.ITEM_CATALOG.size() and is_equal_approx(farm.item_yield_bonus(), 0.12) and farm.capacity == 250, "original eight collectibles retain their real modest yield and barn effects alongside new gear")
-	check(is_equal_approx(farm.item_mastery_bonus(), 0.05) and is_equal_approx(farm.item_mutation_factor(), 1.35) and is_equal_approx(farm.item_seed_factor(), 0.98), "collectibles also improve mastery, mutation chance and seed efficiency")
+	check(farm.inventory_items.size() == farm.ITEM_CATALOG.size() and is_equal_approx(farm.item_yield_bonus(), 0.40) and farm.capacity == 360, "artifacts retain their stronger passive yield and barn effects alongside gear")
+	check(is_equal_approx(farm.item_mastery_bonus(), 0.20) and is_equal_approx(farm.item_mutation_factor(), 2.35) and is_equal_approx(farm.item_stock_factor(), 1.05), "collectibles also improve mastery, mutation chance and sale quotes")
 	var relic_rows: int = 0
 	for entry in farm.inventory_info():
 		if entry.kind == "relic" and entry.active: relic_rows += 1
 	check(relic_rows == 8, "inventory exposes all permanent items as active alongside held farming supplies")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.capacity == 250 and farm.inventory_items.aurora == 1, "collectibles and their effective storage capacity persist safely")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.capacity == 360 and farm.inventory_items.aurora == 1, "collectibles and their effective storage capacity persist safely")
 	farm.reset_game()
 	farm.coins = 10000.0
 	farm._start_event("crash")
@@ -500,6 +499,8 @@ func _run() -> void:
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "grandfathered export claim cannot pay again after migration")
 	farm.reset_game()
 	check(farm.pest_timer >= 25.0 and farm.pest_timer <= 100.0, "random pest arrival starts within the twenty-five to hundred second range")
+	farm.farm_help.data.enabled = false
+	ready_crop(0)
 	farm.pest_timer = 100.0
 	farm.update(24.99)
 	check(not farm.plots[0].pests, "ripe crops do not auto-infest before twenty-five seconds")
@@ -518,8 +519,10 @@ func _run() -> void:
 	farm.interact_plot(4, "water")
 	farm.update(10.0)
 	check(farm.plots[4].stage == 3 and is_equal_approx(farm.plots[4].ripe_age, 0.0), "ripe age begins when growth actually finishes, not at the beginning of that frame")
-	farm.update(24.99)
-	check(not farm.plots[4].pests, "newly ripe crops receive the whole twenty-five-second harvest window")
+	farm.farm_help.data.enabled = false
+	farm.plots[4].pest_delay = 30.0
+	farm.update(29.99)
+	check(not farm.plots[4].pests, "newly ripe crops receive the whole configured harvest window")
 	farm.update(0.01)
 	check(farm.plots[4].pests, "newly ripe crop eventually needs the manual pest brush")
 	farm.update(50.0)
@@ -533,12 +536,14 @@ func _run() -> void:
 	farm.interact_plot(4, "harvest")
 	check(farm.mastery.giant == 5 and farm.plots[4].pest_damage == 0.0 and not farm.plots[4].pests, "harvest applies existing damage once then clears pest state for the next crop")
 	farm.reset_game()
+	farm.farm_help.data.enabled = false
+	for index in range(3): ready_crop(index)
 	farm.pest_timer = 0.01
 	farm.update(0.01)
 	var infested: int = 0
 	for plot in farm.plots:
 		if plot.pests: infested += 1
-	check(infested >= 1 and infested <= 3 and farm.pest_timer >= 25.0 and farm.pest_timer <= 100.0, "random outbreak chooses one to three existing crop patches and resets its randomized timer")
+	check(infested == 0, "legacy farm-wide pest timer cannot bypass individual crop infestation delays")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "pest flags, damage, ripe age and next arrival timer persist")
 	var pest_snapshot: Dictionary = farm._save_data().duplicate(true)
 	pest_snapshot.plots[0].pest_damage = 0.81

@@ -1,5 +1,48 @@
 extends RefCounted
 const Art = preload("res://scripts/build_illustration.gd")
+const Type = preload("res://scripts/ui_type.gd")
+const HAND = preload("res://assets/fonts/PatrickHand.ttf")
+const PAPER := Color("eee5ce")
+const INK := Color("30463a")
+const MARGIN_NOTES: Dictionary = {
+	"farmer": "Mara: Use the whole scoop. Stand back.",
+	"industrialist": "Ada: It only jams when somebody watches.",
+	"scientist": "Keep the labels. They all look like potatoes.",
+	"investor": "Nell: Count them before you seal the crate.",
+	"gambler": "Rook: Count your seed money before your winnings.",
+}
+const ORDER: Array[String] = ["farmer", "industrialist", "scientist", "investor", "gambler"]
+const ACCENTS: Dictionary = {"farmer": Color("42976d"), "industrialist": Color("d47a45"), "scientist": Color("6c79c7"), "investor": Color("238b92"), "gambler": Color("a568ab")}
+const PLAYSTYLE: Dictionary = {
+	"farmer": "A scoop of compost. A potato that needs two hands.",
+	"industrialist": "Brush off the mud. Give Ada's sorter a fighting chance.",
+	"scientist": "Cross two harvests. Keep the useful oddities.",
+	"investor": "Get the price in writing. Then fill the crates.",
+	"gambler": "Put a harvest on the table. Half can walk away.",
+}
+const HOW: Dictionary = {
+	"farmer": "Plant a crop, choose Grow a giant potato, then click a highlighted growing patch. Spend 1 compost for 3× its harvest; water and harvest normally.",
+	"industrialist": "Load 20 or 100 harvested crops. Polish Golden, Icecap or Radioactive; cure the others. A matching process and crops harvested within 45 seconds improve the grade.",
+	"scientist": "Choose a recipe and spend 10 of each listed crop. Select the discovered trait for future plantings; ordinary seeds are still used.",
+	"investor": "Reserve a buyer at the displayed price, then deliver 20 crops within 180 seconds from the same island. Shipment size becomes 100 at level 10.",
+	"gambler": "Stake 5, 20 or 100 harvested crops at their current value. Claim coins worth half, the same or triple that locked value. A charm can replace the result once.",
+}
+const BENEFITS: Dictionary = {
+	"farmer": "Active Farmer adds 5% yield per level. Growth speed rises from level 2; tool area widens at levels 3, 10 and 20. Each new patch harvested earns 1 compost (up to 99).",
+	"industrialist": "Grades range from F (1.05× sale value) to SSS (8×). Higher build levels process faster; machine grade improves at 3, 10 and 20, with extra queue slots at 10 and 20.",
+	"scientist": "Honeyheart gives 50% more harvest; Sundew halves drought stress; Frostgold avoids ordinary frost selection. Active Scientist also improves mutation chance.",
+	"investor": "The buyer starts at 20% above the current price. Each completed delivery adds 3 percentage points, capped after ten. Active Investor raises the chance of positive market events.",
+	"gambler": "Active Gambler adds 8% Roll House reward quality per level. Stake results: 20% triple, 55% unchanged, 25% half. The table recovers in 30 seconds; a used charm recharges in 180 seconds.",
+}
+const TRADEOFFS: Dictionary = {
+	"farmer": "Compost only works on a planted, still-growing, unfrozen patch, once per crop. Switching removes Farmer's active yield, speed and tool-area bonuses; a composted patch keeps its 3× harvest.",
+	"industrialist": "Loading removes raw crops and keeps that barn space occupied. Wait for processing before selling. The final payout follows the market, so it can fall while you wait.",
+	"scientist": "Crossbreeding consumes both ingredients. Traits affect future plantings, not crops already growing. Discoveries stay available with every build; the active mutation bonus changes when you switch.",
+	"investor": "A locked quote misses later price rises. An expired offer pays nothing and leaves your crops untouched. Switching builds keeps the offer and its running deadline; delivery is still available.",
+	"gambler": "The staked crops leave your barn. A half-value result loses half their locked value, and a charm can produce a worse result. Switching keeps a pending result available to claim.",
+}
+const SWITCH_NOTE: String = "Switching is free and immediate. Only one build's active bonuses apply; discoveries and loaded jobs stay with you."
+const UNLOCK_NOTE: String = "Find its card in a Build Crate. Crates have a 5% chance to drop from paid Roll House rolls; open them in Inventory."
 const PURPOSE: Dictionary = {
 	"farmer": "Turn a growing crop into a giant potato.",
 	"industrialist": "Match a crop to its process, then sell the graded harvest.",
@@ -14,21 +57,10 @@ static func create(h) -> void:
 	if system == null: return
 	var id: String = h._build_selection
 	if id.is_empty():
-		h._heading("Choose your way to farm", "Equip one profession; keep your discoveries and loaded jobs when you switch.")
-		for entry in system.build_info():
-			var card = h._surface("build", h.Cozy.BUILD_COLORS[entry.id], entry.active)
-			h._body.add_child(card)
-			var row = h._hbox(12)
-			card.add_child(row)
-			row.add_child(h._icon({"kind": "build", "id": entry.id}, 48))
-			var words = h._vbox(3)
-			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(words)
-			words.add_child(h._label(entry.name + (" · equipped" if entry.active else ""), 18, h.INK, true))
-			words.add_child(h._wrap(PURPOSE[entry.id], 13, h.MUTED))
-			row.add_child(h._button("Explore" if entry.unlocked else "Preview", "build:inspect:" + entry.id))
+		create_overview(h, system)
 		return
-	h._heading(id.capitalize(), PURPOSE[id])
+	h._heading(id.capitalize(), PLAYSTYLE[id])
+	_notebook(h, ACCENTS[id])
 	var height: float = 552.0 if id == "farmer" else (634.0 if id == "scientist" else 600.0)
 	h._modal_card.offset_top = -height * 0.5
 	h._modal_card.offset_bottom = height * 0.5
@@ -38,16 +70,20 @@ static func create(h) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nav.add_child(spacer)
-	var equip = h._button("Equip", "build:select:" + id, true)
+	var equip = h._button("Select build", "build:select:" + id, true)
 	nav.add_child(equip)
 	h._refs.build_equip = equip
+	var selection_note = h._wrap("", 12, h.MUTED)
+	h._body.add_child(selection_note)
+	h._refs.build_selection_note = selection_note
 	var art = Art.new()
 	art.kind = id
-	art.custom_minimum_size = Vector2(0, 116 if id == "scientist" else 128)
+	art.compact_layout = _touch(h)
+	art.custom_minimum_size = Vector2(0, 196 if _touch(h) else (116 if id == "scientist" else 128))
 	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h._body.add_child(art)
 	h._refs.build_art = art
-	var card = h._surface("build", h.Cozy.BUILD_COLORS[id])
+	var card = _folio(h, ACCENTS[id])
 	h._body.add_child(card)
 	var body = h._vbox(6 if id == "scientist" else 8)
 	if id == "scientist":
@@ -80,7 +116,7 @@ static func create(h) -> void:
 			choice(h, row, "recipe", "Cross to discover", [["hearty", "Honeyheart"], ["dry", "Sundew"], ["frost", "Frostgold"]])
 		"gambler":
 			choice(h, row, "stake_size", "Crops to stake", [["5", "5 crops"], ["20", "20 crops"], ["100", "100 crops"]])
-	var status = h._wrap("", 13, h.GREEN, true)
+	var status = h._wrap("", 13, h.MUTED)
 	body.add_child(status)
 	h._refs.prof_status = status
 	var actions = h._hbox(8)
@@ -120,7 +156,11 @@ static func create(h) -> void:
 			var note = h._wrap("", 12, h.MUTED)
 			body.add_child(note)
 			h._refs.prof_note = note
-	var details = h._details_section("build_details", "bonuses & progression")
+	var details = h._details_section("build_details", "field notes & progression")
+	h._refs.build_details.add_theme_stylebox_override("panel", _paper_skin(ACCENTS[id]))
+	for entry in [["Method", HOW[id]], ["What the village has measured", BENEFITS[id]], ["Read before trying", TRADEOFFS[id]]]:
+		details.add_child(_display(h, entry[0], 17, h.INK))
+		details.add_child(h._wrap(entry[1], 13, h.MUTED))
 	var label = h._wrap("", 13, h.MUTED)
 	details.add_child(label)
 	h._refs.prof_details = label
@@ -128,7 +168,198 @@ static func create(h) -> void:
 	_fit_height(h, id)
 	h._refs["build_details:toggle"].pressed.connect(func(): _fit_height(h, id))
 
+static func _display(h, text: String, size: int, color: Color) -> Label:
+	var label: Label = h._wrap(text, size, color, true)
+	var font = Type.face(Type.DISPLAY, 600)
+	font.fallbacks = []
+	label.add_theme_font_override("font", font)
+	label.add_theme_constant_override("outline_size", 0)
+	return label
+
+static func _compact_type(node: Node) -> void:
+	if node is Label and node.has_meta("field_annotation"):
+		node.add_theme_font_override("font", HAND)
+		node.add_theme_font_size_override("font_size", 17)
+	elif node is Label or node is Button or node is LineEdit:
+		var font: Font = node.get_theme_font("font").duplicate()
+		font.fallbacks = []
+		node.add_theme_font_override("font", font)
+	for child in node.get_children(): _compact_type(child)
+
+static func _finish_type(h) -> void:
+	# The shared HUD applies its type pass after this page is created.
+	var page: String = h._panel_kind
+	var inspected: String = h._build_selection
+	await h.get_tree().process_frame
+	if not is_instance_valid(h) or h._panel_kind != page or h._build_selection != inspected: return
+	_compact_type(h._body)
+	_compact_type(h._modal_title)
+	_compact_type(h._modal_subtitle)
+
+static func _overview_size(h) -> void:
+	var width: float = minf(980, h.root.size.x - 48)
+	var height: float = minf(710, h.root.size.y - 48)
+	h._modal_card.offset_left = -width * 0.5
+	h._modal_card.offset_right = width * 0.5
+	h._modal_card.offset_top = -height * 0.5
+	h._modal_card.offset_bottom = height * 0.5
+
+static func _touch(h) -> bool:
+	var touch = h.get_parent().get("touch_controls")
+	return is_instance_valid(touch) and touch.enabled
+
+static func _paper_skin(accent: Color, selected: bool = false) -> StyleBoxFlat:
+	var skin := StyleBoxFlat.new()
+	skin.bg_color = Color("f6efdc") if selected else Color("eee5ce")
+	skin.border_color = accent.darkened(0.1) if selected else Color("b3b199")
+	skin.border_width_left = 4 if selected else 1
+	skin.border_width_bottom = 1
+	skin.set_corner_radius_all(2)
+	skin.content_margin_left = 12
+	skin.content_margin_right = 10
+	skin.content_margin_top = 8
+	skin.content_margin_bottom = 10
+	return skin
+
+static func _folio(h, accent: Color, selected: bool = false) -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	panel.add_theme_stylebox_override("panel", _paper_skin(accent, selected))
+	return panel
+
+static func _notebook(h, accent: Color = INK) -> void:
+	var skin: StyleBoxFlat = h._modal_card.get_theme_stylebox("panel").duplicate()
+	skin.bg_color = PAPER
+	skin.border_color = Color("647056")
+	skin.set_border_width_all(2)
+	skin.border_width_left = 10
+	skin.border_width_bottom = 5
+	skin.set_corner_radius_all(5)
+	skin.shadow_color = Color("172a20", 0.3)
+	skin.shadow_size = 12
+	h._modal_card.add_theme_stylebox_override("panel", skin)
+	h._modal_title.add_theme_color_override("font_color", INK)
+	h._modal_subtitle.add_theme_color_override("font_color", accent.darkened(0.25))
+
+static func _annotation(h, words: String, color: Color = INK) -> Label:
+	var label = h._wrap(words, 17, color)
+	label.add_theme_font_override("font", HAND)
+	label.add_theme_constant_override("outline_size", 0)
+	label.set_meta("field_annotation", true)
+	return label
+
+static func create_overview(h, system) -> void:
+	h._heading("The village field guide", "Five ways to put a potato to work. Notes from muddy hands.")
+	_notebook(h)
+	_overview_size(h)
+	var intro = h._hbox(12)
+	h._body.add_child(intro)
+	var selected = h._badge("✓ Selected · " + system.active.capitalize(), "active")
+	selected.add_theme_font_size_override("font_size", 14)
+	intro.add_child(selected)
+	h._refs.build_selected_summary = selected
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro.add_child(spacer)
+	intro.add_child(h._button("Read the guide", "build_guide"))
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 18)
+	grid.add_theme_constant_override("v_separation", 10)
+	h._body.add_child(grid)
+	h._refs.build_overview = grid
+	grid.resized.connect(func():
+		var columns: int = 2 if grid.size.x >= 620 else 1
+		if grid.columns != columns: grid.columns = columns)
+	var entries: Dictionary = {}
+	for entry in system.build_info(): entries[entry.id] = entry
+	for id in ORDER:
+		var entry: Dictionary = entries[id]
+		var accent: Color = ACCENTS[id]
+		var card = _folio(h, accent, entry.active)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(card)
+		h._refs["build_card:" + id] = card
+		var hero := HBoxContainer.new()
+		hero.add_theme_constant_override("separation", 10)
+		card.add_child(hero)
+		var sketch = h._vbox(1)
+		hero.add_child(sketch)
+		var leaf = h._label("LEAF %02d" % (ORDER.find(id) + 1), 11, accent.darkened(0.25), true)
+		sketch.add_child(leaf)
+		var picture = Art.new()
+		picture.kind = id
+		picture.specimen = true
+		picture.custom_minimum_size = Vector2(110, 128) if _touch(h) else Vector2(86, 100)
+		sketch.add_child(picture)
+		h._refs["build_preview:" + id] = picture
+		var title = h._vbox(4)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero.add_child(title)
+		var heading = h._hbox(8)
+		title.add_child(heading)
+		var name_label = _display(h, entry.name, 23, INK)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		heading.add_child(name_label)
+		var badge = h._badge("✓ Selected" if entry.active else ("Lv.%d · Ready" % entry.level if entry.unlocked else "Locked"), "active" if entry.active else ("ready" if entry.unlocked else "locked"))
+		title.add_child(badge)
+		h._refs["build_status:" + id] = badge
+		var tagline = h._wrap(PLAYSTYLE[id], 13, INK)
+		tagline.custom_minimum_size.y = 36
+		title.add_child(tagline)
+		var explore = h._button("Open notes" if entry.unlocked else "Preview notes", "build:inspect:" + id, entry.active)
+		title.add_child(explore)
+		h._refs["build_explore:" + id] = explore
+	var guide = _folio(h, h.GOLD)
+	grid.add_child(guide)
+	var guide_body = h._vbox(6)
+	guide.add_child(guide_body)
+	guide_body.add_child(h._label("A NOTE INSIDE THE COVER", 11, INK, true))
+	guide_body.add_child(_annotation(h, "Mara: Start with the soil. The other schemes will keep.", Color("496744")))
+	guide_body.add_child(h._wrap("Farmer is your starter. Other builds come in Build Crates. Looking through these pages changes nothing; select an unlocked build for free.", 13, h.MUTED))
+	guide_body.add_child(h._button("How builds work", "build_guide"))
+	_finish_type(h)
+
+static func create_guide(h) -> void:
+	h._heading("Field notes: builds", "Written down before somebody tries it twice.")
+	_notebook(h)
+	h._body.add_child(h._button("‹ Browse all builds", "build:inspect:"))
+	var intro = _folio(h, h.GOLD)
+	h._body.add_child(intro)
+	var body = h._vbox(8)
+	intro.add_child(body)
+	body.add_child(_display(h, "First, a working pair of hands", 22, h.INK))
+	body.add_child(h._wrap("A build adds active bonuses and a special way to use your crops. You start as Farmer: bigger harvests and compost-powered giants.", 14, h.INK))
+	body.add_child(h._wrap("Open Builds [C] to compare all five. Open notes shows the appearance, actions and tradeoffs. Only Select build changes your active build; the Selected badge always marks it.", 14, h.MUTED))
+	body.add_child(h._wrap(SWITCH_NOTE, 14, h.INK))
+	var unlock = _folio(h, ACCENTS.scientist)
+	h._body.add_child(unlock)
+	var unlock_body = h._vbox(6)
+	unlock.add_child(unlock_body)
+	unlock_body.add_child(_display(h, "Where the other build cards turn up", 20, h.INK))
+	unlock_body.add_child(h._wrap(UNLOCK_NOTE + " A card unlocks its build or adds a level, up to 30. A crate does not guarantee a particular build.", 14, h.MUTED))
+	unlock_body.add_child(h._wrap("Paid rolls spend coins and can return little. Keep seed and tax money before trying for a crate.", 13, h.CHERRY))
+	for id in ORDER:
+		var card = _folio(h, ACCENTS[id])
+		h._body.add_child(card)
+		var column = h._vbox(8)
+		card.add_child(column)
+		var heading = h._hbox(9)
+		column.add_child(heading)
+		heading.add_child(h._icon({"kind": "build", "id": id}, 52))
+		var heading_text = _display(h, "%02d  %s" % [ORDER.find(id) + 1, id.capitalize()], 21, h.INK)
+		heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		heading.add_child(heading_text)
+		column.add_child(_annotation(h, MARGIN_NOTES[id]))
+		column.add_child(h._wrap(HOW[id], 14, h.INK))
+		column.add_child(h._wrap(TRADEOFFS[id], 13, h.MUTED))
+		column.add_child(h._button("Explore " + id.capitalize(), "build:inspect:" + id))
+	h._body.add_child(h._wrap("Loaded workshop batches keep processing after a switch. Discovered traits stay in your seed bank; reserved buyers keep their deadlines and harvest stakes remain claimable.", 13, h.MUTED))
+	_finish_type(h)
+
 static func _fit_height(h, id: String) -> void:
+	_finish_type(h)
 	var touch = h.get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
 		touch.fit_modal()
@@ -200,7 +431,9 @@ static func refresh(h) -> void:
 	var id: String = h._build_selection
 	var equipped: bool = b.active == id
 	var unlocked: bool = int(b.levels[id]) > 0
-	h._refs.build_equip.text = "Equipped · Lv.%d" % b.levels[id] if equipped else ("Equip · Lv.%d" % b.levels[id] if unlocked else "Find in a Build Crate")
+	h._refs.build_equip.text = "✓ Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Locked · Build Crate")
+	h._refs.build_selection_note.visible = not equipped
+	h._refs.build_selection_note.text = "Free switch · replaces %s's active bonuses. Your progress stays." % b.active.capitalize() if unlocked else UNLOCK_NOTE
 	h._refs.build_equip.disabled = equipped or not unlocked
 	h._refs.build_art.grade = str(d.last_grade) if d.last_grade != "" else p.grade_preview().grade
 	h._refs.build_art.grade_caption = "Last stamped batch" if d.last_grade != "" else "Expected grade"
@@ -309,12 +542,11 @@ static func refresh(h) -> void:
 				h._refs.prof_stake.text = "Stake %d %s" % [d.stake, farm.selected_crop.capitalize()]
 				h._refs.prof_note.text = "Receive half, the same, or triple this value in coins; your other crops stay in the barn."
 	h._refs.prof_status.text = status
-	h._refs.prof_status.add_theme_color_override("font_color", h.GREEN if ready.get("ready", false) or (id == "scientist" and d.recipe in d.seedbank) else h.CHERRY)
+	h._refs.prof_status.add_theme_color_override("font_color", h.MUTED if ready.get("ready", false) or (id == "scientist" and d.recipe in d.seedbank) else h.CHERRY)
 	var passive: String = ""
 	for entry in b.build_info():
 		if entry.id == id: passive = entry.bonuses
-	var extra: String = {"farmer": "One compost grows a giant potato with three times the ordinary harvest. Plant a crop first; water and harvest as usual. Each new harvest supplies one compost, up to 99.", "industrialist": "Grades: F · E · D · C · B · A · S · SS · SSS. Fresh harvests last 45s. Machine grade improves at levels 3, 10 and 20; queue slots at 10 and 20. SSS needs level 20, a fresh matching crop and two seed discoveries. Finished batches stay in the barn; sale prices follow the market.", "scientist": "Honeyheart: 50% more harvest. Sundew: half drought stress. Frostgold: avoids ordinary frost selection. Discovered traits are permanent and apply to future plantings with any build. Normal seeds are consumed as usual.", "investor": "Reserved prices last 180s. Delivery size becomes 100 at level 10. Completed deliveries improve future buyer premiums, capped after ten. An expired offer keeps all your crops.", "gambler": "20% chance of 3× · 55% of 1× · 25% of half. Outcomes use the locked stake price. Tables recover in 30s; a charm recharges in 180s. A charm replaces a result once per stake. The initial expected return is 1.275× before a charm; repeated play can still lose money."}[id]
-	h._refs.prof_details.text = passive + "\n\n" + extra
+	h._refs.prof_details.text = "Your build bonuses\n" + passive
 	if id == "industrialist":
 		var g: Dictionary = p.grade_preview()
-		h._refs.prof_details.text += "\nGrade points: freshness %d/2 · matching process %d/2 · machine %d/3 · research %d/1." % [g.fresh, g.fit, g.tier, g.discovery]
+		h._refs.prof_details.text += "\nSSS needs level 20, a fresh matching crop and two seed discoveries.\nGrade points: freshness %d/2 · matching process %d/2 · machine %d/3 · research %d/1." % [g.fresh, g.fit, g.tier, g.discovery]

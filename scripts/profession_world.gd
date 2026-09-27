@@ -1,5 +1,6 @@
 extends Node3D
 ## Persistent small props, pooled result sign, and a tax visitor on the actual path.
+const VillageDetails = preload("res://scripts/village_details.gd")
 var world
 var props: Dictionary = {}
 var jars: Array[Node3D] = []
@@ -22,6 +23,14 @@ var tax_route: Array[Vector3] = []
 var tax_length: float = 0.0
 var cargo_route: Array[Vector3] = []
 var cargo_length: float = 0.0
+var workshop_loads: Array[Node3D] = []
+var buyer: Node3D
+var buyer_avatar: Node3D
+var buyer_label: Label3D
+var buyer_route: Array[Vector3] = []
+var buyer_length: float = 0.0
+var buyer_progress: float = 0.0
+var buyer_expected: bool = false
 
 func group(id: String, at: Vector3) -> Node3D:
 	var root := Node3D.new()
@@ -64,6 +73,7 @@ func setup(w) -> void:
 	for x in [-.65,.65]: world._sphere(cargo,Vector3(x,.06,0),Vector3(.16,.20,.28),Color("3e514e"))
 	world._crate(cargo,Vector3.ZERO,true)
 	world._crate(cargo,Vector3(0,.8,0),true)
+	_setup_buyer(investor)
 	var table := group("gambler", world.layout_point(Vector3(10,0,-8) if world.current_island == 1 else (Vector3(13,0,-10) if world.current_island == 2 else Vector3(17,0,-12))) + Vector3(-4.8,0,4.0))
 	world._cylinder(table,Vector3(0,.8,0),.9,.9,.16,Color("79618a"),12)
 	world._box(table,Vector3(0,.35,0),Vector3(.4,.7,.4),Color("806343"))
@@ -75,6 +85,11 @@ func setup(w) -> void:
 	var workshop: Node3D = world.get_node("WashAndSortWorkshop")
 	var machine := group("industrialist", workshop.position)
 	world._target(machine,Vector3(0,1.2,0),Vector3(4.8,2.5,3.0),"station","profession:industrialist")
+	# One physical crate per loaded batch, pooled and kept off Ada's front path.
+	for i in range(3):
+		var loaded := VillageDetails.produce_crate(world, machine, Vector3(3.15 + (i % 2) * .08, .03 + i * .76, 1.25), true, i)
+		loaded.name = "WorkshopLoad%d" % (i + 1)
+		workshop_loads.append(loaded)
 	for i in range(2):
 		var upgrade := Node3D.new()
 		machine.add_child(upgrade)
@@ -116,6 +131,44 @@ func setup(w) -> void:
 	for i in range(cargo_route.size()-1): cargo_length += cargo_route[i].distance_to(cargo_route[i+1])
 	for i in range(tax_route.size()-1): tax_length += tax_route[i].distance_to(tax_route[i+1])
 	for prop in props.values(): world._geometry_batcher.batch_tree(prop,{})
+	for loaded in workshop_loads: loaded.hide()
+
+func _setup_buyer(investor: Node3D) -> void:
+	buyer = Node3D.new()
+	buyer.name = "ReservedBuyer"
+	add_child(buyer)
+	# A local produce buyer uses the same articulated potato silhouette as the
+	# player and shopkeepers, with an earthy waistcoat and a battered tally pad.
+	buyer_avatar = world.FarmerAvatar.new()
+	buyer.add_child(buyer_avatar)
+	buyer_avatar.skin_color = Color("cda576")
+	buyer_avatar.setup()
+	buyer_avatar.set_equipment({"head":"traders_visor", "body":"investor_shirt", "legs":"farmer_pants", "feet":"farmer_boots"}, {"investor_shirt":{"color":"92745f"}, "farmer_pants":{"color":"454f50"}, "farmer_boots":{"color":"695347"}})
+	world._geometry_batcher.batch_tree(buyer_avatar,{})
+	world._box(buyer,Vector3(.64,.70,.20),Vector3(.40,.54,.12),Color("769078"))
+	world._box(buyer,Vector3(.64,.73,.28),Vector3(.31,.37,.025),Color("e4d1a1"))
+	world._bar(buyer,Vector3(.51,.69,.30),Vector3(.76,.69,.30),.012,Color("806343"))
+	buyer_label = world._shop_label(buyer,"Buyer",Vector3(0,2.6,0))
+	world._target(buyer,Vector3(0,1,0),Vector3(1.5,2.2,1.3),"station","profession:investor")
+	buyer_route = world.walk_route(world.ferry_position(), investor.position + Vector3(-.1,0,1.2), true)
+	buyer_route.push_front(world.ferry_position())
+	for i in range(buyer_route.size()-1): buyer_length += buyer_route[i].distance_to(buyer_route[i+1])
+	buyer.position = buyer_route.front()
+	world._geometry_batcher.batch_tree(buyer,{})
+	buyer.hide()
+	_buyer_collision(false)
+
+func _buyer_collision(active: bool) -> void:
+	for child in buyer.get_children():
+		if child is StaticBody3D: child.collision_layer = 1 if active else 0
+
+func _buyer_point(progress: float) -> Vector3:
+	var distance: float = clampf(progress,0,1) * buyer_length
+	for i in range(buyer_route.size()-1):
+		var length: float = buyer_route[i].distance_to(buyer_route[i+1])
+		if distance <= length: return buyer_route[i].lerp(buyer_route[i+1],distance/maxf(.001,length))
+		distance -= length
+	return buyer_route.back()
 
 func refresh(builds, state) -> void:
 	for id in props:
@@ -124,6 +177,18 @@ func refresh(builds, state) -> void:
 		for child in props[id].get_children():
 			if child is StaticBody3D: child.collision_layer = 1 if visible_prop else 0
 	var d: Dictionary = builds.professions.data
+	var loaded_batches: int = mini(3, d.queue.size() + (0 if builds.processing.is_empty() else 1))
+	for i in range(workshop_loads.size()): workshop_loads[i].visible = i < loaded_batches
+	var local_contract: bool = not d.contract.is_empty() and int(d.contract.get("island", 0)) == world.current_island
+	if local_contract and int(builds.levels.investor) > 0:
+		buyer_expected = true
+		buyer.show()
+		_buyer_collision(true)
+		buyer_label.text = "Buyer · %d %s" % [int(d.contract.quantity), builds.professions.crop_name(str(d.contract.crop))]
+	elif buyer_expected:
+		buyer_expected = false
+		buyer_label.text = "All counted." if float(d.shipping) > 0 else "Offer's gone."
+		_buyer_collision(false)
 	for i in range(machine_tiers.size()): machine_tiers[i].visible = int(builds.levels.industrialist) >= (i+1)*10
 	charm.visible = bool(d.charm)
 	for i in range(jars.size()): jars[i].visible = ["hearty","dry","frost"][i] in d.seedbank
@@ -166,6 +231,17 @@ func route_point(progress: float) -> Vector3:
 
 func animate(delta: float) -> void:
 	clock += delta
+	if buyer.visible:
+		var before: Vector3 = buyer.position
+		buyer_progress = move_toward(buyer_progress, 1.0 if buyer_expected else 0.0, delta / 6.0)
+		buyer.position = _buyer_point(buyer_progress)
+		var direction: Vector3 = buyer.position - before
+		var moving: bool = direction.length_squared() > .0001
+		if moving: buyer.rotation.y = lerp_angle(buyer.rotation.y, atan2(direction.x,direction.z), minf(1,delta*12))
+		buyer_avatar.animate(delta,moving)
+		if not buyer_expected and buyer_progress <= 0:
+			buyer.hide()
+			_buyer_collision(false)
 	if result_left > 0:
 		result_left = maxf(0,result_left-delta)
 		result_sign.modulate.a = minf(1,result_left)

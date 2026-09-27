@@ -80,7 +80,7 @@ func _run() -> void:
 	state.equip_gear("prospectors_hat")
 	state.equip_gear("market_monocle")
 	state._refresh_market()
-	check(is_equal_approx(state.item_stock_factor(), 1.25), "only equipped stock gear applies, with no duplicate stacking")
+	check(is_equal_approx(state.item_stock_factor(), 1.40), "only equipped stock gear applies, with no duplicate stacking")
 	state.surge_crop = "russet"
 	state.surge_remaining = State.SURGE_DURATION
 	state.surge_factor = state.stock_cap()
@@ -92,7 +92,7 @@ func _run() -> void:
 	state.surge_remaining = 0.0
 	state.surge_factor = 1.0
 	state._refresh_market()
-	check(is_equal_approx(state.market.russet.sell, quote * 1.25), "surge expiry returns to ordinary quote with equipped gear bonus")
+	check(is_equal_approx(state.market.russet.sell, quote * 1.40), "surge expiry returns to ordinary quote with equipped gear bonus")
 	state.reset_game()
 	var odds_before: float = state.roll_odds()[0].chance
 	var mutation_before: float = state.mutation_chance("russet")

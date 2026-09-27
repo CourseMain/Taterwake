@@ -180,7 +180,7 @@ func fund(farm, id: String) -> String:
 	var level: int = int(levels.get(id, 0))
 	if level >= MAX_PROJECT_LEVEL: return farm._finish("This initiative is fully funded.")
 	var cost: float = float(Rules.PROGRESSION_BASELINES[2 if id == "irrigation" else farm.current_island]) * float(PROJECTS[id].cost) * float(level + 1)
-	if farm.coins < cost: return farm._reject_purchase("Not enough money for this climate initiative.")
+	if not farm.can_purchase(cost): return farm._reject_purchase(farm.credit_refusal())
 	farm.coins -= cost
 	levels[id] = level + 1
 	if id == "irrigation":

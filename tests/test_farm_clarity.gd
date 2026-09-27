@@ -35,15 +35,16 @@ func run() -> void:
 	state.surge_timer = 25.0
 	hud.update_state(state)
 	await settle()
-	check(hud._farm_help_card.visible and hud._farm_help_card.size.y <= 48, "optional tax tip is one compact row")
 	check(not hud._farm_help_card.get_global_rect().intersects(hud._blind_card.get_global_rect()), "tax tip does not overlap tax clock")
+	check(not hud._farm_help_card.visible, "optional tax advice never floats over the farm")
+	hud.show_panel("help", state)
 	hud._farm_help_action.pressed.emit()
 	check(hud._panel_kind == "farm_tip" and hud._refs.farm_tip_body.text.contains("3 major booms"), "full explanation opens only on request")
 	check(not hud._farm_help_card.visible, "open explanation hides its small launcher")
 	# The action belongs to the explanation the user opened, even if another tip gains priority.
 	state.coins = -1.0
 	hud.update_state(state)
-	check(hud._farm_tip.id == "debt" and hud._opened_farm_tip.id == "taxes", "opened help keeps its own action when tip priority changes")
+	check(hud._farm_tip.id == "debt" and hud._opened_farm_tip.id == "taxes", "manual help keeps its action when tip priority changes")
 	hud._act("farm_help:act")
 	check(hud._panel_kind == "taxes" and "taxes" in state.farm_help.data.dismissed and "debt" not in state.farm_help.data.dismissed, "forecast button acts on the viewed tip")
 	hud.close_panel()
@@ -98,9 +99,7 @@ func run() -> void:
 		await settle()
 		hud._process(0.0)
 		await settle()
-		var tip_rect: Rect2 = hud._farm_help_card.get_global_rect()
-		check(hud.root.get_global_rect().encloses(tip_rect) and tip_rect.size.y <= 48, "compact help fits " + str(dimensions))
-		check(not tip_rect.intersects(hud._hotbar.get_global_rect()) and not tip_rect.intersects(hud._blind_card.get_global_rect()), "help preserves farming controls " + str(dimensions))
+		check(not hud._farm_help_card.visible, "no floating advice at " + str(dimensions))
 		hud.show_farm_hint("Already watered")
 		await settle()
 		check(hud.root.get_global_rect().encloses(hud._context_box.get_global_rect()) and not hud._context_box.get_global_rect().intersects(hud._hotbar.get_global_rect()), "reminder fits " + str(dimensions))
@@ -118,7 +117,7 @@ func run() -> void:
 		for label: Label3D in game.world.find_children("*", "Label3D", true, false):
 			if not label.get_meta("shop_label", false): continue
 			signs += 1
-			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size <= 4, "compact shared shop typography: " + label.text)
+			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size > 0, "shared outlined shop typography: " + label.text)
 		check(signs >= 8, "island %d retains discoverable shop signs" % island)
 		await shot("island-%d" % island)
 	state.coins = 215e6

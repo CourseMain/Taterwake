@@ -24,9 +24,9 @@ func _run() -> void:
 	root.add_child(activities)
 	state.rng.seed = 4092
 	check(activities.valid_data(activities.save_data()), "default activity data validates")
-	state.coins = 1499.0
+	state.coins = state.bankruptcy_limit() + 1499.0
 	activities.buy_duck()
-	check(activities.duck_level == 0 and state.coins == 1499.0, "unaffordable patrol cannot be hired")
+	check(activities.duck_level == 0 and state.coins == state.bankruptcy_limit() + 1499.0, "unaffordable patrol cannot be hired")
 	state.coins = 1000000.0
 	activities.buy_duck()
 	check(activities.duck_level == 1 and state.coins == 998500.0, "first patrol charges exactly the displayed price")

@@ -9,6 +9,7 @@ signal island_changed(id: int)
 signal export_changed(active: bool)
 signal quest_completed(id: String)
 signal purchase_completed(receipt: Dictionary)
+signal sale_completed(receipt: Dictionary)
 signal purchase_rejected(message: String)
 signal blind_resolved(result: Dictionary)
 signal tax_boom_started
@@ -20,7 +21,7 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 19
+const MECHANICS_REVISION: int = 20
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -39,18 +40,18 @@ const ISLAND3_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[2]
 const ISLAND3_UNLOCK_HARVEST: int = 25000
 const EXPORT_MIN_WAIT: float = 75.0
 const EXPORT_MAX_WAIT: float = 180.0
-const SEED_YIELD_RATIO: float = 0.45
+const SEED_PRICE_RATIO: float = 0.75
 const QUEST_TARGETS: Dictionary = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 3.0, "mutation": 3.0, "starter_crash": 10.0, "starter_spike": 10.0, "starter_combo": 12.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
 const DEFAULT_SAVE_PATH: String = "user://spud_valley_save_v3.json"
 const LEGACY_SAVE_PATH: String = "user://spud_valley_save.json"
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
 const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 12.0, "base": 38.0, "grow": 10.0, "yield": 3, "vol": 0.08, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 350.0, "base": 900.0, "grow": 25.0, "yield": 2, "vol": 0.18, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 90.0, "base": 180.0, "grow": 40.0, "yield": 8, "vol": 0.12, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 2500.0, "base": 6800.0, "grow": 50.0, "yield": 4, "vol": 0.35, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 3000.0, "base": 90000.0, "grow": 55.0, "yield": 3, "vol": 0.26, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 3600000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "vol": 0.30, "color": "aeeaff"},
+	"russet": {"name": "Russet Potato", "seed": 28.5, "base": 38.0, "grow": 10.0, "yield": 3, "vol": 0.08, "color": "a87b45"},
+	"golden": {"name": "Golden Potato", "seed": 675.0, "base": 900.0, "grow": 25.0, "yield": 2, "vol": 0.18, "color": "efc74c"},
+	"giant": {"name": "Giant Potato", "seed": 135.0, "base": 180.0, "grow": 40.0, "yield": 8, "vol": 0.12, "color": "c7855d"},
+	"radioactive": {"name": "Radioactive Potato", "seed": 5100.0, "base": 6800.0, "grow": 50.0, "yield": 4, "vol": 0.35, "color": "b6f064"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 67500.0, "base": 90000.0, "grow": 55.0, "yield": 3, "vol": 0.26, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 1500000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "vol": 0.30, "color": "aeeaff"},
 }
 const OLD_GROW_TIMES: Dictionary = {"russet": 10.0, "golden": 30.0, "giant": 45.0, "radioactive": 90.0, "sunburst": 45.0, "icecap": 60.0}
 const MAX_GROW_SECONDS: float = 60.0
@@ -63,23 +64,36 @@ const TROPHY_LIMIT: int = 16
 const ROLL_TIERS: Array[String] = ["common", "rare", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]
 const DEBUG_MONEY_LIMIT: float = 1000000.0
 const DEBUG_LUCK_LIMIT: float = 1000.0
+const ARTIFACT_POOLS: Dictionary = {
+	1: {"relic": ["sunstone", "almanac", "trader_token"], "mystery": ["bottomless_sack"]},
+	2: {"relic": ["lens", "market_monocle", "sunstone", "trader_token"], "mystery": ["compass", "bottomless_sack"]},
+	3: {"relic": ["winter_weave", "lens", "market_monocle", "almanac"], "mystery": ["aurora", "loaded_dice", "compass"]},
+}
+const QUEST_REWARDS: Dictionary = {
+	"starter_crash": {"share": 0.005}, "starter_spike": {"share": 0.015},
+	"starter_combo": {"share": 0.03, "item": "almanac"},
+	"ground": {"share": 0.002}, "sunburst": {"share": 0.025}, "combo": {"share": 0.01},
+	"export": {"share": 0.05}, "mutation": {"share": 0.02, "item": "lens"},
+	"winter_ground": {"share": 0.002}, "winter_harvest": {"share": 0.025},
+	"winter_frost": {"share": 0.05, "item": "aurora"},
+}
 const ITEM_CATALOG: Dictionary = {
-	"sunstone": {"name": "Sunstone Medallion", "rarity": "relic", "description": "Warmth for every harvest, even in winter.", "effect": "+2% crop yield per copy", "max_count": 10},
-	"almanac": {"name": "Ancient Farmer's Almanac", "rarity": "relic", "description": "Every crop teaches a little more.", "effect": "+5% harvest mastery per copy", "max_count": 5},
-	"lens": {"name": "Tideglass Mutation Lens", "rarity": "relic", "description": "Find unusual potatoes in every climate.", "effect": "+10% mutation chance per copy", "max_count": 10},
-	"winter_weave": {"name": "Winter-Weave Barn Lining", "rarity": "relic", "description": "Store bigger harvests on every island.", "effect": "+5% barn capacity per copy", "max_count": 10},
-	"trader_token": {"name": "Old Trader's Token", "rarity": "relic", "description": "Seed merchants remember this token.", "effect": "2% linked-seed discount per copy", "max_count": 5},
-	"aurora": {"name": "Aurora Heart", "rarity": "mystery", "description": "A little northern light grows inside it.", "effect": "+10% crop yield per copy", "max_count": 3},
-	"compass": {"name": "Evergreen Compass", "rarity": "mystery", "description": "Its needle follows rare mutations.", "effect": "+25% mutation chance per copy", "max_count": 3},
-	"bottomless_sack": {"name": "Impossible Potato Sack", "rarity": "mystery", "description": "It has more inside than outside.", "effect": "+20% barn capacity per copy", "max_count": 3},
+	"sunstone": {"name": "Sunstone Medallion", "rarity": "relic", "description": "Warmth for every harvest, even in winter.", "effect": "+10% crop yield per copy", "max_count": 10},
+	"almanac": {"name": "Ancient Farmer's Almanac", "rarity": "relic", "description": "Every crop teaches a little more.", "effect": "+20% harvest mastery per copy", "max_count": 5},
+	"lens": {"name": "Tideglass Mutation Lens", "rarity": "relic", "description": "Find unusual potatoes in every climate.", "effect": "+35% mutation chance per copy", "max_count": 10},
+	"winter_weave": {"name": "Winter-Weave Barn Lining", "rarity": "relic", "description": "Store bigger harvests on every island.", "effect": "+20% barn capacity per copy", "max_count": 10},
+	"trader_token": {"name": "Old Trader's Token", "rarity": "relic", "description": "Seed merchants remember this token.", "effect": "+5% crop sale quotes per copy · seed costs follow", "max_count": 5},
+	"aurora": {"name": "Aurora Heart", "rarity": "mystery", "description": "A little northern light grows inside it.", "effect": "+30% crop yield per copy", "max_count": 3},
+	"compass": {"name": "Evergreen Compass", "rarity": "mystery", "description": "Its needle follows rare mutations.", "effect": "+100% mutation chance per copy", "max_count": 3},
+	"bottomless_sack": {"name": "Impossible Potato Sack", "rarity": "mystery", "description": "It has more inside than outside.", "effect": "+60% barn capacity per copy", "max_count": 3},
 	"straw_hat": {"name": "Harvest Straw Hat", "kind": "gear", "slot": "head", "color": "d9b457", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Bigger harvests. One hat at a time.", "effect": "+8% crop yield while equipped", "max_count": 10},
 	"lucky_cap": {"name": "Lucky Patchwork Cap", "kind": "gear", "slot": "head", "color": "ae79df", "rarity": "rare", "bonuses": {"luck": 0.25}, "description": "Lucky patches. Permanent luck caps at 10×.", "effect": "+0.25x roll, mutation and market luck while equipped", "max_count": 10},
 	"traders_visor": {"name": "Trader's Visor", "kind": "gear", "slot": "head", "color": "63b982", "rarity": "epic", "bonuses": {"stock": 0.08}, "description": "Better quotes. Seed costs follow.", "effect": "+8% stock prices while equipped", "max_count": 10},
 	"harvest_gloves": {"name": "Harvest Gauntlets", "kind": "gear", "slot": "hands", "color": "c28349", "rarity": "epic", "bonuses": {"yield": 0.12}, "description": "Bring home a bigger harvest.", "effect": "+12% crop yield while equipped", "max_count": 10},
 	"prospectors_hat": {"name": "Prospector's Gold Hat", "kind": "gear", "slot": "head", "color": "f0c750", "rarity": "legendary", "bonuses": {"stock": 0.15}, "description": "Golden deals. Higher caps in winter.", "effect": "+15% stock prices while equipped", "max_count": 5},
 	"aurora_crown": {"name": "Aurora Crown", "kind": "gear", "slot": "head", "color": "70e9e1", "rarity": "mythic", "bonuses": {"luck": 1.0}, "description": "Equip before buying: +1 free pull per purchase, including batches. Never chains.", "effect": "+1x luck and +1 free roll per purchase while equipped", "max_count": 5},
-	"market_monocle": {"name": "Bull Market Monocle", "kind": "gear", "slot": "charm", "color": "ead889", "rarity": "relic", "bonuses": {"stock": 0.10}, "description": "Better crop quotes. Seed costs follow.", "effect": "+10% stock prices while equipped", "max_count": 3},
-	"loaded_dice": {"name": "Impossible Lucky Dice", "kind": "gear", "slot": "charm", "color": "ce8fe8", "rarity": "mystery", "bonuses": {"luck": 1.5}, "description": "Carry your luck. Permanent luck caps at 10×.", "effect": "+1.5x roll, mutation and market luck while equipped", "max_count": 3},
+	"market_monocle": {"name": "Bull Market Monocle", "kind": "gear", "slot": "charm", "color": "ead889", "rarity": "relic", "bonuses": {"stock": 0.25}, "description": "Better crop quotes. Seed costs follow.", "effect": "+25% stock prices while equipped", "max_count": 3},
+	"loaded_dice": {"name": "Impossible Lucky Dice", "kind": "gear", "slot": "charm", "color": "ce8fe8", "rarity": "mystery", "bonuses": {"luck": 2.5}, "description": "Carry your luck. Permanent luck caps at 10×.", "effect": "+2.5x roll, mutation and market luck while equipped", "max_count": 3},
 	"farmer_shirt": {"name": "Fieldwork Shirt", "kind": "gear", "slot": "body", "role": "farmer", "color": "75bc60", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop yield while equipped", "max_count": 5},
 	"farmer_pants": {"name": "Grower's Dungarees", "kind": "gear", "slot": "legs", "role": "farmer", "color": "528449", "rarity": "rare", "bonuses": {"growth": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop growth speed while equipped", "max_count": 5},
 	"farmer_boots": {"name": "Field Boots", "kind": "gear", "slot": "feet", "role": "farmer", "color": "8b713f", "rarity": "rare", "bonuses": {"growth": 0.06}, "description": "Farmer build: +25% gear bonuses.", "effect": "+6% crop growth speed while equipped", "max_count": 5},
@@ -335,11 +349,11 @@ func _empty_items() -> Dictionary:
 
 
 func item_yield_bonus() -> float:
-	return int(inventory_items.get("sunstone", 0)) * 0.02 + int(inventory_items.get("aurora", 0)) * 0.10 + equipment_bonus("yield")
+	return int(inventory_items.get("sunstone", 0)) * 0.10 + int(inventory_items.get("aurora", 0)) * 0.30 + equipment_bonus("yield")
 
 
 func item_stock_factor() -> float:
-	return 1.0 + equipment_bonus("stock")
+	return 1.0 + equipment_bonus("stock") + int(inventory_items.get("trader_token", 0)) * 0.05
 
 
 func effective_luck() -> float:
@@ -602,11 +616,11 @@ func _migrate_equipment() -> void:
 
 
 func item_mastery_bonus() -> float:
-	return int(inventory_items.get("almanac", 0)) * 0.05
+	return int(inventory_items.get("almanac", 0)) * 0.20
 
 
 func item_mutation_factor() -> float:
-	return (1.0 + int(inventory_items.get("lens", 0)) * 0.10 + int(inventory_items.get("compass", 0)) * 0.25) * equipment_mutation_factor()
+	return (1.0 + int(inventory_items.get("lens", 0)) * 0.35 + int(inventory_items.get("compass", 0)) * 1.0) * equipment_mutation_factor()
 
 
 func item_seed_factor() -> float:
@@ -614,14 +628,14 @@ func item_seed_factor() -> float:
 
 
 func item_barn_factor() -> float:
-	return 1.0 + int(inventory_items.get("winter_weave", 0)) * 0.05 + int(inventory_items.get("bottomless_sack", 0)) * 0.20
+	return 1.0 + int(inventory_items.get("winter_weave", 0)) * 0.20 + int(inventory_items.get("bottomless_sack", 0)) * 0.60
 
 
 func _recompute_capacity() -> void:
 	var base: int = 200
 	for level in range(barn_level):
 		base += int(200.0 * pow(4.0, level))
-	capacity = mini(MAX_INVENTORY, int(floor(base * item_barn_factor())))
+	capacity = mini(MAX_INVENTORY, int(floor(base * item_barn_factor() + 0.000001)))
 
 
 func _grant_item(id: String, duplicate_refund: float = 0.0) -> String:
@@ -631,7 +645,7 @@ func _grant_item(id: String, duplicate_refund: float = 0.0) -> String:
 	if int(inventory_items.get(id, 0)) >= int(item["max_count"]):
 		var refund: float = clampf(duplicate_refund, 0.0, MAX_MONEY) if is_finite(duplicate_refund) else 0.0
 		coins = minf(MAX_MONEY, coins + refund)
-		return "%s collection complete.%s" % [item["name"], " Duplicate traded for %s (20%% of this roll's stake)." % money(refund) if refund > 0.0 else " You already own the maximum number of copies."]
+		return "%s collection complete.%s" % [item["name"], " Duplicate traded for %s." % money(refund) if refund > 0.0 else " You already own the maximum number of copies."]
 	inventory_items[id] = int(inventory_items.get(id, 0)) + 1
 	var is_gear: bool = str(item.get("kind", "")) == "gear"
 	var auto_equipped: bool = is_gear and str(equipment.get(str(item.get("slot", "")), "")).is_empty()
@@ -994,25 +1008,34 @@ func _toggle_export() -> void:
 
 func quest_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = [
-		{"id": "ground", "title": "BREAK NEW GROUND", "description": "Hoe all 48 Shores beds.", "target": 48, "reward_text": "$100K + 5 Sunburst seeds", "coins": 100000.0},
-		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Harvest 10,000 Sunbursts by hand.", "target": 10000, "reward_text": "$10M", "coins": 10000000.0},
-		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest all 48 Shores beds in one combo.", "target": 48, "reward_text": "$25M", "coins": 25000000.0},
-		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell 100+ Golden/Sunburst per Export Rush. Do it 3 times.", "target": 3, "reward_text": "$5B", "coins": 5000000000.0},
-		{"id": "mutation", "title": "STRUCK GOLD", "description": "Harvest 3 mutations on the Shores.", "target": 3, "reward_text": "$100M + Golden Hat", "coins": 100000000.0},
+		{"id": "ground", "title": "BREAK NEW GROUND", "description": "Hoe all 48 Shores beds.", "target": 48},
+		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Harvest 10,000 Sunbursts by hand.", "target": 10000},
+		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest all 48 Shores beds in one combo.", "target": 48},
+		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell 100+ Golden/Sunburst per Export Rush. Do it 3 times.", "target": 3},
+		{"id": "mutation", "title": "STRUCK GOLD", "description": "Harvest 3 mutations on the Shores.", "target": 3},
 	]
 	if current_island == 1:
 		entries = [
-			{"id": "starter_crash", "title": "BUY THE DIP", "description": "Buy 10 seeds during a crash.", "target": 10, "reward_text": "$750 + 2 Golden seeds", "coins": 750.0},
-			{"id": "starter_spike", "title": "SELL THE SPIKE", "description": "Sell 10 potatoes at 2× base price or better.", "target": 10, "reward_text": "$2.5K", "coins": 2500.0},
-			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Harvest 12 beds in one combo.", "target": 12, "reward_text": "$5K", "coins": 5000.0},
+			{"id": "starter_crash", "title": "BUY THE DIP", "description": "Buy 10 seeds during a crash.", "target": 10},
+			{"id": "starter_spike", "title": "SELL THE SPIKE", "description": "Sell 10 potatoes at 2× base price or better.", "target": 10},
+			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Harvest 12 beds in one combo.", "target": 12},
 		]
 	elif current_island == 3:
 		entries = [
-			{"id": "winter_ground", "title": "BREAK THE FROZEN GROUND", "description": "Hoe all 80 new beds in Frosthollow.", "target": 80, "reward_text": "$20B + 5 Icecap seeds", "coins": 20000000000.0},
-			{"id": "winter_harvest", "title": "WINTER HARVEST", "description": "Harvest 100,000 winter potatoes by hand.", "target": 100000, "reward_text": "$1T", "coins": 1000000000000.0},
-			{"id": "winter_frost", "title": "FROSTBREAKER", "description": "Beat the clock in 3 full Frostbreaks.", "target": 3, "reward_text": "$5T", "coins": 5000000000000.0},
+			{"id": "winter_ground", "title": "BREAK THE FROZEN GROUND", "description": "Hoe all 80 new beds in Frosthollow.", "target": 80},
+			{"id": "winter_harvest", "title": "WINTER HARVEST", "description": "Harvest 100,000 winter potatoes by hand.", "target": 100000},
+			{"id": "winter_frost", "title": "FROSTBREAKER", "description": "Beat the clock in 3 full Frostbreaks.", "target": 3},
 		]
 	for entry in entries:
+		var reward: Dictionary = QUEST_REWARDS[entry.id]
+		entry.coins = float(BlindRules.PROGRESSION_BASELINES[current_island]) * float(reward.share)
+		entry.reward_text = money(entry.coins)
+		if entry.id == "starter_crash": entry.reward_text += " + 2 Golden seeds"
+		elif entry.id == "ground": entry.reward_text += " + 5 Sunburst seeds"
+		elif entry.id == "winter_ground": entry.reward_text += " + 5 Icecap seeds"
+		elif entry.id == "mutation": entry.reward_text += " + Golden Hat"
+		entry.item = str(reward.get("item", ""))
+		if not entry.item.is_empty(): entry.reward_text += " + " + str(ITEM_CATALOG[entry.item].name)
 		entry["progress"] = quest_progress[entry["id"]]
 		entry["complete"] = float(entry["progress"]) >= float(entry["target"])
 		entry["claimed"] = quest_claimed.has(str(entry["id"]))
@@ -1053,9 +1076,10 @@ func claim_quest(id: String) -> String:
 			golden_hat = true
 		if id == "winter_ground":
 			seed_inventory["icecap"] = mini(MAX_INVENTORY, int(seed_inventory["icecap"]) + 5)
+		if not str(entry.item).is_empty(): _grant_item(entry.item)
 		reward_received.emit("QUEST REWARD!", "%s: %s" % [entry["title"], entry["reward_text"]], "legendary")
 		return _finish("Collected %s!" % entry["reward_text"])
-	return _finish("Choose a quest from the Golden Shores board.")
+	return _finish("Choose a quest from this island’s board.")
 
 
 func set_tutorial_active(active: bool) -> void:
@@ -1103,7 +1127,7 @@ func set_tutorial_active(active: bool) -> void:
 	if active:
 		for id in CROP_IDS:
 			var base: float = float(CROPS[id]["base"])
-			_market_core[id] = {"seed": base * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO, "sell": base}
+			_market_core[id] = {"seed": seed_price_for(base), "sell": base}
 			market[id]["history"] = [base]
 		news = "Take your time. Your crops are safe and the market is calm during the farm tour."
 	else:
@@ -1637,6 +1661,89 @@ func select_crop(id: String) -> String:
 	return _finish("Selected %s. You have %s seeds ready to plant." % [CROPS[id]["name"], format_number(seed_inventory[id])])
 
 
+static func seed_price_for(sale_price: float) -> float:
+	return snappedf(sale_price * SEED_PRICE_RATIO + 1e-9, 0.01)
+
+
+static func price_change(price: float, base_price: float) -> float:
+	return ((price / base_price) - 1.0) * 100.0 if base_price > 0.0 else 0.0
+
+
+static func crops_by_base_price(ids: Array) -> Array[String]:
+	var result: Array[String] = []
+	for id: String in ids:
+		if CROPS.has(id): result.append(id)
+	result.sort_custom(func(a: String, b: String) -> bool: return float(CROPS[a].base) < float(CROPS[b].base))
+	return result
+
+
+func market_money(value: float) -> String:
+	# Keep cents explicit in small trade quotes; retain the game's large-value suffixes.
+	return "$%.2f" % value if absf(value) < 1000.0 else money(value, true)
+
+
+func purchase_credit() -> float:
+	return maxf(0.0, minf(0.0, coins) - bankruptcy_limit()) if not run_over and not tutorial_active else 0.0
+
+
+func can_purchase(cost: float) -> bool:
+	if run_over or not is_finite(cost) or cost < 0.0: return false
+	return coins >= cost if tutorial_active else coins - cost >= bankruptcy_limit()
+
+
+func purchase_caption(caption: String, cost: float) -> String:
+	return caption + (" · Credit" if coins < cost and can_purchase(cost) else "")
+
+
+func credit_refusal() -> String:
+	return "Credit limit reached. Deliver recovery crops or sell your harvest."
+
+
+func recovery_order() -> Dictionary:
+	# A full credit line takes at most 100 ordinary potatoes to repay, on every
+	# tax tier. Relief never produces cash or consumes rare mutation crates.
+	var debt: float = maxf(0.0, -coins)
+	var rate: float = -bankruptcy_limit() / 100.0
+	var needed: int = ceili(debt / rate)
+	var held: int = 0
+	for crop: String in CROP_IDS: held += int(storage[crop])
+	var quantity: int = mini(needed, held)
+	return {"debt": debt, "rate": rate, "needed": needed, "held": held,
+		"quantity": quantity, "payment": minf(debt, quantity * rate)}
+
+
+func deliver_recovery() -> String:
+	if run_over: return "Run over. Start a new farm."
+	var order: Dictionary = recovery_order()
+	if order.debt <= 0.0: return _finish("No debt to repay.")
+	if order.quantity <= 0: return _finish("Harvest potatoes for the recovery order.")
+	var remaining: int = int(order.quantity)
+	for crop: String in crops_by_base_price(CROP_IDS):
+		var amount: int = mini(remaining, int(storage[crop]))
+		storage[crop] = int(storage[crop]) - amount
+		if amount > 0 and is_instance_valid(build_system): build_system.professions.consumed(crop, amount)
+		remaining -= amount
+		if remaining == 0: break
+	coins = minf(0.0, coins + float(order.payment))
+	return _finish("Debt cleared." if coins >= 0.0 else "Repaid %s · %s debt left." % [money(order.payment), money(-coins)])
+
+
+func can_claim_recovery_seeds() -> bool:
+	if run_over or coins >= 0.0: return false
+	for crop: String in CROP_IDS:
+		if int(seed_inventory[crop]) > 0 or int(storage[crop]) > 0: return false
+	for field in island_plots.values():
+		for plot in field:
+			if int(plot.stage) > 0: return false
+	return true
+
+
+func claim_recovery_seeds() -> String:
+	if not can_claim_recovery_seeds(): return _finish("Use your existing seeds or harvest first.")
+	seed_inventory.russet = 3
+	return _finish("3 recovery seeds collected.")
+
+
 func buy_seeds(id: String, quantity: int = 5) -> String:
 	if run_over:
 		return "Run over. Start a new farm."
@@ -1645,11 +1752,11 @@ func buy_seeds(id: String, quantity: int = 5) -> String:
 	if not available_crops().has(id):
 		return _reject_purchase("These seeds are sold on their home island. Visit its market first.")
 	var cost: float = float(market[id]["seed"]) * quantity
-	if coins < cost:
-		return _reject_purchase("%d %s seeds cost %s. Sell crops or choose a smaller bundle." % [quantity, CROPS[id]["name"], money(cost)])
+	if not can_purchase(cost):
+		return _reject_purchase(credit_refusal())
 	if int(seed_inventory[id]) + quantity > MAX_INVENTORY:
 		return _reject_purchase("Your seed shed is full for this crop.")
-	coins = maxf(0.0, coins - cost)
+	coins -= cost
 	seed_inventory[id] = int(seed_inventory[id]) + quantity
 	if current_island == 1 and current_event == "crash":
 		_progress_quest("starter_crash", float(quantity))
@@ -1661,7 +1768,9 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		return "Run over. Start a new farm."
 	if not CROPS.has(id) or quantity == 0 or quantity < -1:
 		return _finish("Choose a crop and an amount to sell.")
-	var amount: int = int(storage[id]) if quantity == -1 else mini(quantity, int(storage[id]))
+	if quantity > int(storage[id]):
+		return _finish("Not enough %s. You own %s; choose a smaller quantity." % [CROPS[id]["name"], format_number(storage[id])])
+	var amount: int = int(storage[id]) if quantity == -1 else quantity
 	if amount <= 0:
 		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
@@ -1675,7 +1784,9 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		_progress_quest("starter_spike", float(amount))
 	if current_island == 2 and export_active and id in ["golden", "sunburst"]:
 		_record_export_sale(amount)
-	return _finish("Sold %s %s for %s at %s each." % [format_number(amount), CROPS[id]["name"], money(earnings), money(sold_quote)])
+	var message: String = _finish("Sold %s %s for %s at %s each." % [format_number(amount), CROPS[id]["name"], money(earnings), money(sold_quote)])
+	sale_completed.emit({"id": id, "quantity": amount, "price": sold_quote, "total": earnings, "owned": int(storage[id])})
+	return message
 
 
 func sell_mutations() -> String:
@@ -1745,9 +1856,9 @@ func upgrade_tool(key: String) -> String:
 	if rank == 2 and current_island != 3:
 		return _reject_purchase("Rank 3 tools are sold in Frosthollow: unlock the winter island to upgrade further.")
 	var cost: float = float(TOOL_COSTS[key][rank])
-	if coins < cost:
-		return _reject_purchase("This upgrade costs %s. Farm and sell crops to fund it." % money(cost))
-	coins = maxf(0.0, coins - cost)
+	if not can_purchase(cost):
+		return _reject_purchase(credit_refusal())
+	coins -= cost
 	tools[key] = rank + 1
 	if key == "water":
 		return _complete_purchase({"kind": "tool", "id": key, "name": "Bigger watering can", "quantity": 1, "cost": cost, "level": rank + 1}, "Can now carries %d water. Click the tank to fill the extra space." % int(ClimateSystem.Operations.can_capacity(self)))
@@ -1761,10 +1872,10 @@ func upgrade_barn() -> String:
 	if barn_level >= 20:
 		return _reject_purchase("Your barn has reached its maximum capacity.")
 	var cost: float = 500.0 * pow(5.0, barn_level)
-	if coins < cost:
-		return _reject_purchase("The next barn upgrade costs %s and adds %s spaces." % [money(cost), format_number(200.0 * pow(4.0, barn_level))])
+	if not can_purchase(cost):
+		return _reject_purchase(credit_refusal())
 	var old_capacity: int = capacity
-	coins = maxf(0.0, coins - cost)
+	coins -= cost
 	barn_level += 1
 	_recompute_capacity()
 	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room to hold crops for a price spike!" % format_number(capacity))
@@ -1779,8 +1890,8 @@ func expand_field() -> String:
 		return _reject_purchase("All 48 Golden Shores patches are already open. Upgrade your tools to cover the bigger field.")
 	if expansion > 0:
 		return _reject_purchase("All 24 patches are already unlocked. Upgrade your tools to farm bigger areas.")
-	if coins < 1800.0:
-		return _reject_purchase("Field expansion costs $1.8K and unlocks 12 more patches.")
+	if not can_purchase(1800.0):
+		return _reject_purchase(credit_refusal())
 	coins -= 1800.0
 	expansion = 1
 	for plot in plots:
@@ -1889,8 +2000,8 @@ func _roll_odds_with_stake(stake_bonus: float) -> Array[Dictionary]:
 		{"tier": "legendary", "chance": 5.0, "description": "Gold Hat + tool upgrades or a 5s offer."},
 		{"tier": "mythic", "chance": 2.0, "description": "Aurora Crown + mutations worth up to 75% of stake."},
 		{"tier": "jackpot", "chance": 1.0, "description": "20× your stake in game coins!"},
-		{"tier": "relic", "chance": 0.1, "description": "Permanent relic or market charm · Base 0.1%"},
-		{"tier": "mystery", "chance": 0.01, "description": "Ultra-rare relic or luck charm.", "hidden_chance": true},
+		{"tier": "relic", "chance": 0.1, "description": "Island artifact · Full collection: 2× stake"},
+		{"tier": "mystery", "chance": 0.01, "description": "Island wonder · Full collection: 5× stake.", "hidden_chance": true},
 	]
 	var total: float = 0.0
 	for index in range(entries.size()):
@@ -2040,6 +2151,8 @@ func _roll_collectible(tier: String) -> String:
 	for id in ITEM_CATALOG:
 		if ITEM_CATALOG[id]["rarity"] != tier:
 			continue
+		if tier in ["relic", "mystery"] and id not in ARTIFACT_POOLS[current_island][tier]:
+			continue
 		complete.append(str(id))
 		if int(inventory_items.get(id, 0)) < int(ITEM_CATALOG[id]["max_count"]):
 			available.append(str(id))
@@ -2116,8 +2229,8 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 			detail = "%s mutation potatoes stored.%s %s" % [format_number(added), " Barn space limited the crate; upgrade it for future rewards." if added < crate_count else "", _grant_item(item_id, bet * 0.20)]
 		"relic", "mystery":
 			item_id = _roll_collectible(tier)
-			title = "ANCIENT RELIC!" if tier == "relic" else "??? DISCOVERED!"
-			detail = _grant_item(item_id, bet * 0.20)
+			title = str(ITEM_CATALOG[item_id]["name"]).to_upper()
+			detail = _grant_item(item_id, minf(MAX_MONEY, bet * (2.0 if tier == "relic" else 5.0)))
 		"jackpot":
 			var reward: float = minf(MAX_MONEY, bet * 20.0)
 			coins = minf(MAX_MONEY, coins + reward)
@@ -2159,7 +2272,7 @@ func _market_tick() -> void:
 		if current_island == 1:
 			movement = rng.randf_range(0.0, volatility * 0.8) if rng.randf() < 0.62 else rng.randf_range(-volatility, 0.0)
 		core["sell"] = base * clampf(exp(log_ratio * 0.82 + movement), 0.35, 3.0)
-		core["seed"] = float(core["sell"]) * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO
+		core["seed"] = seed_price_for(float(core["sell"]))
 	if not disaster_market_active() and surge_remaining <= 0.0 and natural_remaining <= 0.0 and float(farm_help.data.practice_remaining) <= 0.0 and rng.randf() < natural_stock_chance():
 		natural_crop = selected_crop
 		natural_factor = _natural_boom_roll(71.0 if current_island >= 3 else 21.0, stock_cap())
@@ -2167,26 +2280,22 @@ func _market_tick() -> void:
 	_refresh_market(true)
 
 
-func _refresh_market(record_history: bool = true) -> void:
+func _refresh_market(_record_history: bool = true) -> void:
 	var crashing: bool = disaster_market_active()
 	if crashing: _clear_disaster_booms()
 	for id in CROP_IDS:
 		var sale_factor: float = boost_factor if boost_remaining > 0.0 else 1.0
-		var seed_factor: float = 1.0
 		match current_event:
 			"shortage", "crash", "festival": sale_factor *= event_strength
 			"golden_craze": sale_factor *= event_strength if id == "golden" else 1.0
 			"mystery_buyer", "supply_collapse": sale_factor *= event_strength if id == event_crop else 1.0
-			"seed_panic", "seed_fair": seed_factor = event_strength
 		if export_active and id in ["golden", "sunburst"]:
 			sale_factor *= export_factor
 		if id == "icecap" and thaw_remaining > 0.0:
 			sale_factor *= 8.0
 		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
-		var seed_anchor: float = current
 		if not tutorial_active:
 			if not crashing: current *= climate.factor("sell", current_island)
-			seed_factor *= climate.factor("seed", current_island)
 		if natural_remaining > 0.0 and id == natural_crop:
 			# Explicit boom draws are final quotes. Stacked offers must not flatten
 			# their decreasing rarity curves into a pile-up at the ceiling.
@@ -2198,21 +2307,20 @@ func _refresh_market(record_history: bool = true) -> void:
 			current = float(CROPS[id]["base"]) * 2.0
 		if tutorial_active:
 			current = float(CROPS[id]["base"])
-			seed_factor = 1.0
 		elif crashing:
 			var base: float = float(CROPS[id].base)
 			# Final authority, after every offer, export, reward and gear multiplier.
 			# Recovery eases the crash, but no positive quote returns before calm.
 			current = clampf(minf(current, base) * climate.factor("sell", current_island), base * 0.05, base)
-			seed_anchor = maxf(base, minf(seed_anchor, base * 3.0))
-		# A seed buys one plant's normal yield: its live price follows the same quote,
-		# including exports and spikes. Combos, mastery and mutations reward farming.
-		var seed_quote: float = maxf(current, seed_anchor) if not tutorial_active and climate.factor("seed", current_island) > 1.0 else current
-		market[id]["seed"] = seed_quote * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO * seed_factor * item_seed_factor() * _build_bonus("seed_factor", 1.0)
+		# One seed costs 75% of one potato, rounded to the nearest cent.
+		# This final quote takes precedence over legacy seed-only modifiers.
+		market[id]["seed"] = seed_price_for(current)
 		market[id]["sell"] = current
-		market[id]["change"] = ((current / float(CROPS[id]["base"])) - 1.0) * 100.0
-		if record_history:
-			market[id]["history"].append(current)
+		market[id]["change"] = price_change(current, float(CROPS[id]["base"]))
+		var history: Array = market[id]["history"]
+		# Retain actual price changes, including gear, weather and boom endings.
+		if history.is_empty() or not is_equal_approx(float(history.back()), current):
+			history.append(current)
 			if market[id]["history"].size() > 40:
 				market[id]["history"].pop_front()
 
@@ -2247,7 +2355,7 @@ func _start_event(id: String = "") -> void:
 		"seed_panic":
 			event_strength = rng.randf_range(1.4, 2.2)
 			event_name = "SEED PANIC"
-			news = "Seed panic! Seed demand charges x%.1f for %.1f seconds. Crop sale quotes stay independent of this seed premium." % [event_strength, event_remaining]
+			news = "Seed panic! Merchants keep seeds at 75% of each potato’s live sale price."
 		"chaos":
 			event_strength = rng.randf_range(2.0, 3.5)
 			event_name = "TOTALLY NORMAL MARKET"
@@ -2263,7 +2371,7 @@ func _start_event(id: String = "") -> void:
 		"seed_fair":
 			event_strength = rng.randf_range(0.6, 0.8)
 			event_name = "SEED FAIR"
-			news = "Seed fair! %.0f%% off linked seed prices for %.1f seconds. Prepare your next manual harvest." % [(1.0 - event_strength) * 100.0, event_remaining]
+			news = "Seed fair! Seeds cost 75% of each potato’s live sale price. Prepare your next manual harvest."
 		"festival":
 			event_strength = rng.randf_range(1.5, 2.5)
 			event_name = "FRIES FESTIVAL"
@@ -2628,6 +2736,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	for item_id in ITEM_CATALOG:
 		if not inventory_items.has(item_id):
 			inventory_items[item_id] = 0
+	_recompute_capacity()
 	debug_luck_multiplier = float(data.get("debug_luck_multiplier", 1.0))
 	debug_money_modified = bool(data.get("debug_money_modified", false))
 	debug_islands_modified = bool(data.get("debug_islands_modified", false))
@@ -2710,7 +2819,7 @@ func _migrate_v2(original: Dictionary) -> Dictionary:
 	data["schema_version"] = 3
 	for key in ["seed_inventory", "storage", "mastery"]:
 		data[key]["sunburst"] = 0
-	data["market_core"]["sunburst"] = {"seed": 3000.0, "sell": 90000.0}
+	data["market_core"]["sunburst"] = {"seed": 67500.0, "sell": 90000.0}
 	var seed_factor: float = 5.0 if data["current_event"] == "seed_panic" else (0.3 if data["current_event"] == "crash" else 1.0)
 	var sale_factor: float = float(data["boost_factor"]) if float(data["boost_remaining"]) > 0.0 else 1.0
 	if data["current_event"] == "shortage":
@@ -2718,7 +2827,7 @@ func _migrate_v2(original: Dictionary) -> Dictionary:
 	elif data["current_event"] == "crash":
 		sale_factor *= 0.3
 	var sell: float = 90000.0 * sale_factor
-	data["market"]["sunburst"] = {"seed": 3000.0 * seed_factor, "sell": sell, "change": (sale_factor - 1.0) * 100.0, "history": [sell]}
+	data["market"]["sunburst"] = {"seed": 67500.0 * seed_factor, "sell": sell, "change": (sale_factor - 1.0) * 100.0, "history": [sell]}
 	data["current_island"] = 1
 	data["island2_unlocked"] = false
 	data["island_plots"] = {"1": data["plots"], "2": _empty_shores(false)}
@@ -2751,7 +2860,7 @@ func _migrate_economy(original: Dictionary) -> Dictionary:
 	for id in data["market_core"]:
 		var base: float = float(CROPS[id]["base"])
 		data["market_core"][id]["sell"] = clampf(float(data["market_core"][id]["sell"]), base * 0.35, base * 3.0)
-		data["market_core"][id]["seed"] = float(data["market_core"][id]["sell"]) * float(CROPS[id]["yield"]) * SEED_YIELD_RATIO
+		data["market_core"][id]["seed"] = seed_price_for(float(data["market_core"][id]["sell"]))
 	# Preserve already collected rewards/cosmetics without allowing a second payout.
 	for id in data["quest_claimed"]:
 		data["quest_progress"][id] = float(QUEST_TARGETS[id])
@@ -2763,8 +2872,8 @@ func _migrate_winter(original: Dictionary) -> Dictionary:
 	data["economy_revision"] = ECONOMY_REVISION
 	for key in ["seed_inventory", "storage", "mastery"]:
 		data[key]["icecap"] = 0
-	data["market_core"]["icecap"] = {"seed": 3600000000.0, "sell": 2000000000.0}
-	data["market"]["icecap"] = {"seed": 3600000000.0, "sell": 2000000000.0, "change": 0.0, "history": [2000000000.0]}
+	data["market_core"]["icecap"] = {"seed": 1500000000.0, "sell": 2000000000.0}
+	data["market"]["icecap"] = {"seed": 1500000000.0, "sell": 2000000000.0, "change": 0.0, "history": [2000000000.0]}
 	data["island3_unlocked"] = false
 	data["island_plots"]["3"] = _empty_winter(false)
 	for field in data["island_plots"].values():
@@ -3150,7 +3259,8 @@ func _valid_save(raw: Variant) -> bool:
 	for level in range(int(data["barn_level"])):
 		expected_capacity += int(200.0 * pow(4.0, level))
 	if newest:
-		expected_capacity = mini(MAX_INVENTORY, int(floor(expected_capacity * (1.0 + int(data["inventory_items"]["winter_weave"]) * 0.05 + int(data["inventory_items"]["bottomless_sack"]) * 0.20))))
+		var revised_artifacts: bool = int(data.get("mechanics_revision", 0)) >= 20
+		expected_capacity = mini(MAX_INVENTORY, int(floor(expected_capacity * (1.0 + int(data["inventory_items"]["winter_weave"]) * (0.20 if revised_artifacts else 0.05) + int(data["inventory_items"]["bottomless_sack"]) * (0.60 if revised_artifacts else 0.20)) + (0.000001 if revised_artifacts else 0.0))))
 	if int(data["capacity"]) != expected_capacity:
 		return false
 	if int(data["combo_multiplier"]) not in [1, 2, 4, 8, 16]:

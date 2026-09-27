@@ -20,6 +20,9 @@ func _ready() -> void:
 	game._on_state_changed()
 	callback = JavaScriptBridge.create_callback(command)
 	JavaScriptBridge.get_interface("window").mobileQA = callback
+func _process(delta: float) -> void:
+	if is_instance_valid(game) and not game.is_processing(): game._update_camera_zoom(delta)
+
 func command(args: Array) -> void:
 	var action: String = str(args[0])
 	if action == "tutorial":
@@ -68,10 +71,14 @@ func command(args: Array) -> void:
 		game.hud.close_panel()
 		game._on_state_changed()
 	elif action.begins_with("user:"): game._on_user_action(action.trim_prefix("user:"))
+	elif action == "scroll_bottom": game.hud._body.get_parent().scroll_vertical = 100000
+	elif action.begins_with("quality:"): game._on_action("graphics:" + action.get_slice(":",1))
 	elif action == "status": pass
 	else: game._on_action(action)
 	var rect: Rect2 = game.hud._modal_card.get_global_rect()
 	var report := {"touch":game.touch_controls.enabled,"logical":[game.hud.root.size.x,game.hud.root.size.y],"panel":game.hud._panel_kind,"modal":[rect.position.x,rect.position.y,rect.size.x,rect.size.y],"zoom":game._zoom_target_size,"walking":game.walking,"tool":game.selected_tool,"player":[game.world.player.position.x,game.world.player.position.z]}
+	report.camera = [game.world.camera.position.x, game.world.camera.position.y, game.world.camera.position.z]
+	report.version = ProjectSettings.get_setting("application/config/version")
 	report.window_size = [get_tree().root.size.x,get_tree().root.size.y]
 	var transform: Transform2D = game.conversation.get_screen_transform()
 	report.screen_transform = [transform.x.x,transform.y.y,transform.origin.x,transform.origin.y]

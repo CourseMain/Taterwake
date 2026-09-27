@@ -137,7 +137,7 @@ func run() -> void:
 		state.event_strength = 1.0
 		state.event_remaining = 0.0
 		state._refresh_market(false)
-		check(state.market.russet.sell < state.CROPS.russet.base and state.market.russet.seed > state.CROPS.russet.base * 3.0 * State.SEED_YIELD_RATIO, "ordinary sell prices weaken while seeds become more expensive")
+		check(state.market.russet.sell < state.CROPS.russet.base and state.market.russet.seed == State.seed_price_for(state.market.russet.sell), "disaster seed prices remain 75% of weakened sale quotes")
 		state.update(30.0)
 		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost
@@ -171,9 +171,9 @@ func run() -> void:
 	var paid: float = state.coins
 	state.climate.fund(state, "drainage")
 	check(state.coins == paid and state.climate.data.projects["2"].drainage == 2, "initiatives cannot exceed two levels or charge at cap")
-	state.coins = 0.0
+	state.coins = state.bankruptcy_limit()
 	state.climate.fund(state, "barn")
-	check(state.coins == 0.0 and not state.climate.data.projects["2"].has("barn"), "unaffordable protection never charges or grants a level")
+	check(state.coins == state.bankruptcy_limit() and not state.climate.data.projects["2"].has("barn"), "unaffordable protection never charges or grants a level")
 
 	fresh(3)
 	state.climate.begin_warning(state, "storm", 1.0)

@@ -11,6 +11,7 @@ var world_fingers: Dictionary = {}
 var tap_origins: Dictionary = {}
 var gesture_used: bool = false
 var pinch_distance: float = 0.0
+var pinch_center := Vector2.ZERO
 var root: Control
 var stick: Control
 var knob: Control
@@ -55,9 +56,10 @@ func _ready() -> void:
 	tools_button = button("Tools", func(): open_drawer("tools"))
 	menu_button = button("Menu", func(): game.hud._act("menu"))
 	sell_button = button("Sell", func(): game.hud._act("quick_sell"))
-	fullscreen = button("×", toggle_fullscreen)
+	fullscreen = preload("res://scripts/fullscreen_button.gd").new()
 	fullscreen.custom_minimum_size = Vector2(44, 44)
-	fullscreen.tooltip_text = "Toggle fullscreen (F11)"
+	root.add_child(fullscreen)
+	fullscreen.pressed.connect(toggle_fullscreen)
 	interaction_prompt = button("E", func(): game._interact_nearby())
 	interaction_prompt.custom_minimum_size = Vector2(68, 68) if enabled else Vector2(34, 34)
 	var key_font = preload("res://scripts/ui_type.gd").face(preload("res://assets/fonts/Fredoka.ttf"),600)
@@ -183,7 +185,8 @@ func fit_modal() -> void:
 	if not enabled or not is_instance_valid(game.hud._modal_card): return
 	var hud = game.hud
 	var view := get_viewport().get_visible_rect().size
-	var width := minf(940, view.x - 24)
+	var trading: bool = hud._panel_kind == "sell_potatoes"
+	var width := minf(1200 if trading else 940, view.x - 24)
 	# Filters and stake choices must also scroll on a short landscape phone.
 	if hud._modal_fixed.get_parent() != hud._body:
 		hud._modal_fixed.reparent(hud._body)
@@ -194,9 +197,12 @@ func fit_modal() -> void:
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
-	place(hud._modal_card, Rect2((view.x - width) / 2, 100, width, view.y - 112))
+	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, view.y - (24 if trading else 112)))
 
 func adapt(node: Node, available: float, stack: bool) -> void:
+	if node.has_meta("market_responsive"):
+		node._layout()
+		return
 	if node is Control:
 		if not node.has_meta("touch_min"):
 			node.set_meta("touch_min", node.custom_minimum_size)
@@ -261,6 +267,7 @@ func _process(delta: float) -> void:
 	if not enabled: return
 	_clock += delta
 	var hud = game.hud
+	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or hud.is_roll_animating()
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):
@@ -275,7 +282,8 @@ func _process(delta: float) -> void:
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._tracked_box, hud._context_box, hud._blind_card, hud._export_box, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._tracked_box, hud._blind_card, hud._export_box, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	if not hud._context_box.get_meta("warning", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
 		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), hud._export_title.text if not game._tutorial_active() else "Drag to move · pinch to zoom"]
@@ -347,6 +355,7 @@ func open_drawer(kind: String) -> void:
 	button("Crop", open_seeds, grid).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button("Zoom +", func(): game._zoom_by_log_amount(-0.18), drawer_body)
 	button("Zoom −", func(): game._zoom_by_log_amount(0.18), drawer_body)
+	button("Recenter view", func(): game._recenter_camera(); drawer.hide(), drawer_body)
 	button("Cancel task", func(): game._cancel_prize_target(); game._climate_action("cancel"); game._cancel_walk(); drawer.hide(), drawer_body)
 	drawer.show()
 
@@ -399,13 +408,24 @@ func _input(event: InputEvent) -> void:
 			move_stick(event.position)
 			get_viewport().set_input_as_handled()
 		elif world_fingers.has(event.index):
+			if not game._map_navigation_allowed():
+				release_all()
+				get_viewport().set_input_as_handled()
+				return
+			var previous: Vector2 = world_fingers[event.index]
+			var was_dragging: bool = gesture_used
 			world_fingers[event.index] = event.position
 			if event.position.distance_to(tap_origins[event.index]) > 16: gesture_used = true
+			if world_fingers.size() == 1 and gesture_used:
+				game._pan_camera_by(event.position - (previous if was_dragging else Vector2(tap_origins[event.index])))
 			if world_fingers.size() == 2:
 				var points: Array = world_fingers.values()
 				var distance: float = points[0].distance_to(points[1])
+				var center: Vector2 = (points[0] + points[1]) * 0.5
+				game._pan_camera_by(center - pinch_center)
 				if pinch_distance > 1 and distance > 1: game._zoom_by_log_amount(log(pinch_distance / distance))
 				pinch_distance = distance
+				pinch_center = center
 			get_viewport().set_input_as_handled()
 
 func move_stick(point: Vector2) -> void:
@@ -419,18 +439,25 @@ func world_input(event: InputEvent) -> void:
 		tap_origins[event.index] = event.position
 		if world_fingers.size() > 1:
 			gesture_used = true
-			var points: Array = world_fingers.values()
-			pinch_distance = points[0].distance_to(points[1])
+			_reset_pinch_origin()
 		get_viewport().set_input_as_handled()
+
+func _reset_pinch_origin() -> void:
+	pinch_distance = 0.0
+	pinch_center = Vector2.ZERO
+	if world_fingers.size() == 2:
+		var points: Array = world_fingers.values()
+		pinch_distance = points[0].distance_to(points[1])
+		pinch_center = (points[0] + points[1]) * 0.5
 
 func finish_world_touch(event: InputEventScreenTouch) -> void:
 	var tap: bool = not event.canceled and not gesture_used and event.position.distance_to(tap_origins[event.index]) < 16
 	world_fingers.erase(event.index)
 	tap_origins.erase(event.index)
+	_reset_pinch_origin()
 	if world_fingers.is_empty():
 		gesture_used = false
-		pinch_distance = 0
-	if tap and not game.hud.is_panel_open() and not game.state.run_over and not game.state.rocket_pending and not game.state.climate.data.intro_pending:
+	if tap and game._map_navigation_allowed():
 		game._tap_world(event.position)
 
 func release_all() -> void:
@@ -442,11 +469,12 @@ func release_all() -> void:
 	tap_origins.clear()
 	gesture_used = false
 	pinch_distance = 0
+	pinch_center = Vector2.ZERO
 
 func toggle_fullscreen() -> void:
 	if OS.has_feature("web"):
 		JavaScriptBridge.eval("window.taterFullscreen && window.taterFullscreen()", true)
 	else:
 		var window := get_tree().root
-		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
-		fullscreen.tooltip_text = "Exit fullscreen (F11)" if window.mode == Window.MODE_FULLSCREEN else "Enter fullscreen (F11)"
+		var active: bool = window.mode == Window.MODE_FULLSCREEN or window.mode == Window.MODE_EXCLUSIVE_FULLSCREEN
+		window.mode = Window.MODE_WINDOWED if active else Window.MODE_FULLSCREEN

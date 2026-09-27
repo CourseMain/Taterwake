@@ -69,7 +69,7 @@ func run() -> void:
 	hud.show_purchase({"kind": "seeds", "id": "radioactive", "name": "Radioactive", "quantity": 12500, "cost": 125000000.0, "total": 12506})
 	await process_frame
 	check(hud._purchase_title.text == "+12500 Radioactive seeds" and hud._purchase_detail.text.begins_with("Owned 12506"), "different seed replaces receipt and large quantities stay exact")
-	check(hud._purchase_box.size.x == 230 and hud._purchase_box.get_global_rect().end.x <= 1280, "long seed receipt retains its clear right-margin width")
+	check(hud._purchase_box.size.x >= 112 and hud._purchase_box.get_global_rect().end.x <= 1280 and not hud._purchase_box.get_global_rect().intersects(hud._modal_card.get_global_rect()), "long seed receipt wraps within the wider counter's clear right margin")
 	await capture("purchase-receipt-long")
 	hud.show_purchase({"kind": "seeds", "id": "radioactive", "name": "Radioactive", "quantity": 0, "cost": 0.0, "total": 12506})
 	check(hud._purchase_title.text == "+12500 Radioactive seeds", "zero-quantity failure cannot fabricate a success receipt")
@@ -93,7 +93,7 @@ func run() -> void:
 		hud.show_panel("duck_patrol", state)
 		check(hud._modal_title.text == "Duck patrol" and hud._refs.has("activity:duck"), "island %d duck station opens dedicated patrol controls" % island)
 		check(not hud._refs.has("activity:contract:bulk") and not hud._refs.has("activity:furnace:icecap"), "island %d duck controls contain no unrelated buyer or furnace" % island)
-		check(hud._refs["activity:duck:detail"].text.begins_with("0 / %d ducks" % island) and hud._refs.has("activity:duck:speed"), "island %d has separate count and speed choices" % island)
+		check(hud._refs.duck_pond.count == 0 and hud._refs.duck_pond.capacity == island and hud._refs.has("activity:duck:speed"), "island %d shows only its local flock with separate speed controls" % island)
 		if island == 2:
 			await capture("purchase-ducks-island2")
 		activities.duck_level = 3

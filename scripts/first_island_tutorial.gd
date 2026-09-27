@@ -1,7 +1,7 @@
 extends Node
 ## One real harvest. Further introductions belong to optional, contextual help.
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Grow your first potato", "body": "One seed, one harvest, one sale.\nThen the farm is yours.\nClick to walk; WASD works too.", "next": true, "label": "Start farming →"},
+	{"id": "welcome", "title": "Mara has a theory", "body": "One Russet. A little too much compost.\nLet's see what comes out of the ground.\nWASD to walk. Drag the island to look around.", "next": true, "label": "Try Mara's seed →"},
 	{"id": "market", "title": "Buy a seed", "body": "Click Seeds, then Buy 1 Russet. Or press B.", "focus": "market", "key": "B · SEEDS"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
@@ -16,7 +16,7 @@ const TOUR: Array[Dictionary] = [
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect crops, equipment and Build Crates. Clothing helps only while equipped."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "builds", "title": "Builds", "body": "Click Builds to inspect your abilities. Farmer starts unlocked; Build Crates unlock the others.", "focus": "builds"},
+	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose an unlocked build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
 	{"id": "roll", "title": "Roll House", "body": "Click the Roll House to inspect odds. Rolls spend earned coins and can return little. Keep seed money.", "focus": "roll"},
 	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
@@ -85,6 +85,13 @@ func _enter_step() -> void:
 	sale_baseline = game.state.lifetime_sales
 	if not _tour_only() and current_id() in ["plant", "sell"]:
 		game.state.select_crop("russet")
+	if not _tour_only() and current_id() == "water":
+		# Demonstrate the real Farmer ability in the existing planting lesson.
+		# The saved cultivated flag prevents spending twice after a reload.
+		var index: int = _plot_index()
+		if game.builds.professions.cultivation_info(index).ready:
+			game.builds.professions.cultivate(index)
+			game.world.play_farm_effect([index], "compost")
 	refresh()
 	var step: Dictionary = _steps()[_index()]
 	if step.has("tool"):
@@ -107,13 +114,13 @@ func _features() -> Array[String]:
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "barn", "inventory", "inventory_tab:", "tools", "builds", "quests", "roll", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "builds", "build_guide", "build:inspect:", "quests", "roll", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)
 	for tool: String in _tools(): result.append("tool:" + tool)
 	if current_id() == "market": result.append("buy:russet:1")
-	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell"])
+	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
 	if current_id() == "plant": result.append("crop:russet")
 	return result
 
@@ -153,13 +160,25 @@ func refresh() -> void:
 	if not active: return
 	var step: Dictionary = _steps()[_index()]
 	var body: String = str(step.body)
+	var title: String = str(step.title)
 	var focus: String = str(step.get("focus", ""))
 	if not _tour_only() and current_id() in ["hoe", "plant", "water", "grow", "harvest"]:
 		focus = "plot:%d" % _plot_index()
 	if current_id() == "grow":
 		var plot: Dictionary = game.state.plots[_plot_index()]
 		body = "Ready in %ds. Watering once is enough.\nYou can walk around while it grows." % maxi(0, int(ceil(10.0 - float(plot.elapsed))))
-	game.hud.set_tutorial({"title": str(step.title), "body": body, "step": _index() + 1, "total": _steps().size(),
+	if not _tour_only() and bool(game.state.plots[_plot_index()].get("cultivated", false)):
+		match current_id():
+			"water":
+				title = "One scoop from Mara"
+				body = "Mara added 1 of your starter compost. This crop will yield 3× as much.\nClick the gold bed to water it."
+			"grow":
+				title = "That is still getting bigger"
+				body = "Mara: 'The sack said one scoop. Didn't say how big.'\nReady in %ds. Watch your patch." % maxi(0,int(ceil(10.0-float(game.state.plots[_plot_index()].elapsed))))
+			"harvest":
+				title = "Bram: 'Bend your knees.'"
+				body = "Harvest tool selected. Click the gold bed to pull out your giant potato."
+	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "id": current_id(), "key": str(step.get("key", "")),
 		"tool": str(step.get("tool", "")), "tour_only": _tour_only(), "visited": visited, "focus": focus, "allowed_actions": allowed_actions()})

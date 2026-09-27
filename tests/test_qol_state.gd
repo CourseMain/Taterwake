@@ -131,7 +131,7 @@ func run() -> void:
 	farm.boost_factor = 3.0
 	farm._refresh_market()
 	check(farm.market.golden.sell == quote, "stacked crash and roll effects cannot reduce or compound guaranteed surge")
-	check(is_equal_approx(farm.market.golden.seed, quote * farm.CROPS.golden.yield * farm.SEED_YIELD_RATIO), "surge seeds stay linked to increased crop value")
+	check(is_equal_approx(farm.market.golden.seed, State.seed_price_for(quote)), "surge seeds stay linked to increased crop value")
 	farm.select_crop("russet")
 	check(farm.surge_crop == "golden" and farm.market.golden.sell == quote, "changing selected seed cannot transfer or duplicate active surge")
 	var saved_ok: bool = farm.save_game(SAVE)

@@ -102,7 +102,7 @@ func tip(farm: Node) -> Dictionary:
 		var crop: String = str(data.practice_crop)
 		return _tip("stocks", "Practice boom · %ds" % int(ceil(float(data.practice_remaining))), "%s: +100%% · %s each. Sell from storage before the price returns. Seeds cost more too." % [str(farm.CROPS[crop].name), farm.money(farm.market[crop].sell)], "Sell practice crop", "sell:" + crop + ":-1")
 	if farm.coins < 0.0 and unseen("debt"):
-		return _tip("debt", "Debt is still playable", "You can keep farming below zero. This run ends only below %s. Sell held crops to recover." % farm.money(farm.bankruptcy_limit()), "View taxes", "taxes")
+		return _tip("debt", "Debt is still playable", "Buy farm supplies on credit down to %s. Deliver potatoes to pay down debt." % farm.money(farm.bankruptcy_limit()), "Recovery orders", "debt")
 	if unseen("taxes") and (farm.surge_timer <= 30.0 or int(farm.blind_cycle.booms) > 0):
 		return _tip("taxes", "Keep money for taxes", "After 3 major booms, a tax collector walks in. You have 10 seconds to sell before collection. Forecast: %s. Debt is allowed down to %s." % [farm.money(farm.blind_info().tax), farm.money(farm.bankruptcy_limit())], "View forecast", "taxes")
 	if int(data.independent) < 4:

@@ -55,7 +55,8 @@ class DebugMoneyInput extends LineEdit:
 			return {"error": "That positive multiplier is too small. Enter 0 explicitly to clear money."}
 		return {"value": parsed, "canonical": canonical}
 
-const Sparkline = preload("res://scripts/price_sparkline.gd")
+const MarketPages = preload("res://scripts/market_pages.gd")
+const ShopPages = preload("res://scripts/shop_pages.gd")
 const RollReel = preload("res://scripts/roll_spinner.gd")
 const RollLuckMeter = preload("res://scripts/roll_luck_meter.gd")
 const MarketImpact = preload("res://scripts/market_impact.gd")
@@ -106,12 +107,16 @@ var _context: Label
 var _combo_box: PanelContainer
 var _combo_label: Label
 var _combo_bar: ProgressBar
+var _barn_full_alert: PanelContainer
+var _barn_full_detail: Label
+var _barn_full_sell: Button
 var _purchase_box: PanelContainer
 var _purchase_title: Label
 var _purchase_detail: Label
 var _purchase_bar: ProgressBar
 var _purchase_remaining: float = 0.0
 var _purchase_receipt: Dictionary = {}
+var _purchase_layout_key: String = ""
 var _toast_box: PanelContainer
 var _toast_label: Label
 var _toast_timer: Timer
@@ -125,8 +130,11 @@ var _modal: Control
 var _modal_title: Label
 var _modal_subtitle: Label
 var _body: VBoxContainer
+var _modal_market_nav: HBoxContainer
+var _modal_trade_footer: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
+var _sell_crop: String = ""
 var _build_selection: String = ""
 const BuildPages = preload("res://scripts/build_pages.gd")
 var _panel_island: int = 0
@@ -216,6 +224,8 @@ var _run_end: Control
 var _run_end_title: Label
 var _run_end_detail: Label
 var _blind_modal_warning: Label
+var _recovery_link: Button
+var _credit_row: BoxContainer
 var _climate_console: PanelContainer
 var _weather_button: Button
 var _climate_intro: Control
@@ -234,6 +244,7 @@ func _process(delta: float) -> void:
 	_update_context()
 	_update_farm_help()
 	if _purchase_remaining > 0.0:
+		_layout_purchase()
 		_purchase_remaining = maxf(0.0, _purchase_remaining - delta)
 		_purchase_bar.value = _purchase_remaining
 		if _purchase_remaining == 0.0:
@@ -374,9 +385,16 @@ func _update_blind_ui() -> void:
 	var weather_name: String = "Storm" if climate.event == "storm" else str(climate.name).capitalize()
 	_blind_labels.weather.text = "%s %s%ds" % [weather_name, "in " if climate.phase == "warning" else ("recovery · " if climate.phase == "recovery" else "· "), ceili(climate.timer)] if climate.phase != "calm" else "Recovery costs +%.0f%%" % (float(climate.pressure) * 100.0)
 	_blind_modal_warning.visible = _tutorial.is_empty() and not bool(info.run_over) and (info.due_in > 0.0 or info.current < 0.0)
+	_recovery_link.visible = _blind_modal_warning.visible and info.current < 0.0 and _panel_kind != "debt"
+	_credit_row.visible = _blind_modal_warning.visible
+	var touch: bool = is_instance_valid(get_parent().get("touch_controls")) and get_parent().touch_controls.enabled
+	_blind_modal_warning.add_theme_font_size_override("font_size", 18 if touch else 13)
+	_recovery_link.custom_minimum_size.y = 68 if touch else 42
+	_recovery_link.add_theme_font_size_override("font_size", 20 if touch else 14)
+	_credit_row.vertical = touch and root.size.x < 560
 	var stocks_left: int = int(info.booms_required) - int(info.booms)
 	_blind_modal_warning.text = "Tax %s in %ds · Cash %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
-	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind == "roll" else (GREEN if info.cleared else Color("bb4334")))
+	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
 	elif _climate_intro.visible: _climate_intro.stop()
@@ -434,6 +452,7 @@ func _build_blinds() -> void:
 	summary_body.add_child(_refs.tax_balance)
 	_refs.tax_limit = _wrap("", 13, MUTED)
 	summary_body.add_child(_refs.tax_limit)
+	_body.add_child(_button("Recovery orders →", "debt", true))
 	_info("tax_advice", "", MUTED, 13)
 	if _island_id() >= 2: _body.add_child(_button("Protect your farm →", "climate", true))
 	var details := _details_section("tax_details", "rates, ranks & last payment")
@@ -475,127 +494,54 @@ func _refresh_blinds() -> void:
 	_refs.blind_last.text = "No payments yet. Your latest receipt will appear here." if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
 
 func _build_climate() -> void:
-	_heading("Weather station", "Forecasts, equipment and farm protection in one place.")
-	if _island_id() < 2:
-		_info("climate_locked", "Climate action begins on Golden Shores.", INK, 23)
-		_body.add_child(_button("Explore islands →", "island", true))
-		return
-	var hero := _surface("island", GREEN, true)
-	_body.add_child(hero)
-	var row := _hbox(16)
-	hero.add_child(row)
-	var icon := ClimateIcon.new()
-	icon.custom_minimum_size = Vector2(64, 64)
-	row.add_child(icon)
-	_refs.climate_icon = icon
-	var status := _vbox(3)
-	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(status)
-	_refs.climate_status = _wrap("", 26, INK, true)
-	_refs.climate_market = _wrap("", 16, INK)
-	status.add_child(_refs.climate_status)
-	status.add_child(_refs.climate_market)
-	_info("protection_summary", "")
-	if _island_id() == 3: _body.add_child(_button("Open furnace · heat the thawing hoe →", "activities"))
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 12)
-	_body.add_child(grid)
-	var captions: Dictionary = {"irrigation": "Buy once. Sprinklers and pipes carry to every island.", "rainwater": "More stored water for your can and sprinklers.", "drainage": "Open the gate to send floodwater to the sea.", "barn": "Automatic shutters protect your stored harvest.", "windbreaks": "Fixed trees calm the wind over the far beds."}
-	var equipment_names: Dictionary = {"irrigation": "Sprinklers & irrigation", "rainwater": "Bigger rainwater tank", "drainage": "Drain channels", "barn": "Reinforced barn", "windbreaks": "Shelter trees"}
-	for id in _state.ClimateSystem.PROJECTS:
-		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
-		var card := _surface("upgrade", GREEN)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.tooltip_text = project.detail
-		grid.add_child(card)
-		var column := _vbox(3)
-		card.add_child(column)
-		var top := _hbox(8)
-		column.add_child(top)
-		top.add_child(_wrap(equipment_names[id], 19, INK, true))
-		var story := preload("res://scripts/water_story.gd").new()
-		story.concept = {"rainwater": "tank", "drainage": "drain", "windbreaks": "trees"}.get(id, id)
-		column.add_child(story)
-		var effect := _wrap(captions[id], 14, MUTED)
-		effect.custom_minimum_size.y = 42
-		column.add_child(effect)
-		_refs["climate_effect:" + id] = effect
-		var progress := _badge("")
-		column.add_child(progress)
-		_refs["climate_level:" + id] = progress
-		var button := _button("", "climate_fund:" + id, true)
-		button.add_theme_font_override("font", _card_button_font)
-		column.add_child(button)
-		_refs["climate_fund:" + id] = button
-	if _island_id() == 2:
-		var practice := _button("Try the water lesson · safe practice", "climate_operate:lesson_start")
-		_body.add_child(practice)
-		_refs.climate_practice = practice
-	var bottom := _hbox(12)
-	_body.add_child(bottom)
-	var tax := _button("Tax forecast →", "taxes")
-	tax.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom.add_child(tax)
-	var details := _details_section("climate_details", "weather & protection details")
-	_section_title(details, "Weather risks")
-	for event: String in (["drought", "flood", "storm", "freeze"] if _island_id() == 3 else ["drought", "flood", "storm"]):
-		var weather_row := _hbox(10)
-		details.add_child(weather_row)
-		var weather_icon := ClimateIcon.new()
-		weather_icon.kind = event
-		weather_icon.custom_minimum_size = Vector2(40, 40)
-		weather_row.add_child(weather_icon)
-		var weather_text := _vbox(3)
-		weather_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		weather_row.add_child(weather_text)
-		weather_text.add_child(_label(str(_state.ClimateSystem.EVENTS[event].name).capitalize(), 16, INK, true))
-		weather_text.add_child(_wrap(_state.ClimateSystem.EVENTS[event].prepare, 13, MUTED))
-	details.add_child(_wrap("45s warning → 30s disaster → 75s recovery. Sale prices can crash up to −95%. No positive stocks during the disaster or recovery; the Rocket waits for clear skies.", 13, CHERRY))
-	_section_title(details, "What each project protects")
-	for project in _state.ClimateSystem.PROJECTS.values(): details.add_child(_wrap(project.name + " · " + project.detail, 13, MUTED))
-	_refs.climate_reference = _wrap("", 14, GREEN)
-	details.add_child(_refs.climate_reference)
-	_refresh_climate()
+	var page := preload("res://scripts/weather_pages.gd").new()
+	_body.add_child(page)
+	_refs.weather_page = page
+	page.setup(self)
 
 func _refresh_climate() -> void:
-	if not _refs.has("climate_status"): return
-	var info: Dictionary = _state.call("climate_info")
-	_refs.climate_icon.kind = info.event if info.phase != "calm" else "calm"
-	_refs.climate_icon.queue_redraw()
-	_refs.climate_status.text = "Clear skies" if info.phase == "calm" else "%s · %ds" % [str(info.name).capitalize(), ceili(info.timer)]
-	if info.phase == "recovery": _refs.climate_status.text = "Weather clearing · %ds" % ceili(info.timer)
-	if info.phase == "warning":
-		_refs.climate_market.text = "Harvest now. Recovery tax: about %s." % _blind_money(info.warning_tax)
-	elif info.phase in ["active", "recovery"]:
-		_refs.climate_market.text = "Seeds +%.0f%% · Sales %.0f%%
-Next tax %s" % [(float(info.seed_factor) - 1.0) * 100.0, (float(info.sell_factor) - 1.0) * 100.0, _blind_money(_state.call("blind_info").tax)]
-	else:
-		_refs.climate_market.text = "Prepare before the next warning." if info.pressure == 0.0 else "Weather passed. Recovery tax is still due."
-	var protection_lines: Array[String] = ["FARM PROTECTION · " + ("Frosthollow" if _island_id() == 3 else "Golden Shores")]
-	for event: String in (["drought", "flood", "storm", "freeze"] if _island_id() == 3 else ["drought", "flood", "storm"]):
-		protection_lines.append("%s: crop stress −%d%% · barn loss −%d%% · recovery tax −%d%%" % [str(_state.ClimateSystem.EVENTS[event].name).capitalize(),roundi(_state.climate.protection(event,_island_id(),"field")*100),roundi(_state.climate.protection(event,_island_id(),"barn")*100),roundi(_state.climate.protection(event,_island_id(),"tax")*100)])
-	protection_lines.append("Trees shelter the far patch; barn shutters add automatic cover. Operate equipment for active rescue.")
-	if _island_id() == 3: protection_lines.append("Frozen crops: %d · Thawing hoe: %ds heat" % [info.frozen_crops,ceili(info.supply.heat)])
-	_refs.protection_summary.text = "\n".join(protection_lines)
-	if _refs.has("climate_practice"):
-		var owned: bool = int(info.projects["2"].get("irrigation", 0)) > 0
-		_refs.climate_practice.disabled = not owned
-		_refs.climate_practice.text = "Try the water lesson · safe practice" if owned else "Buy sprinklers above to try the water lesson"
-	var opportunity: Dictionary = _state.call("stock_opportunity")
-	_refs.climate_reference.text = "Stock haul reference: %s · %s potatoes at this quote." % [_blind_money(opportunity.reference), _number(opportunity.units)]
-	for id in _state.ClimateSystem.PROJECTS:
-		var project: Dictionary = _state.ClimateSystem.PROJECTS[id]
-		var level: int = int(info.projects[str(_island_id())].get(id, 0))
-		var cost: float = float(BlindRules.PROGRESSION_BASELINES[2 if id == "irrigation" else _island_id()]) * float(project.cost) * float(level + 1)
-		var maximum: int = _state.ClimateSystem.MAX_PROJECT_LEVEL
-		if id == "rainwater":
-			_refs["climate_effect:" + id].text = "%d stored water · shared by can and sprinklers." % int(info.water_capacity) if level >= maximum else "%d → %d stored water for your can and sprinklers." % [int(info.water_capacity), int(info.water_capacity) + 36]
-		elif id == "irrigation":
-			_refs["climate_effect:" + id].text = "4 water per patch · your most efficient pipes." if level >= maximum else ("6 → 4 water for the same fixed patch." if level == 1 else "Connect three fixed patches · 6 tank water each.")
-		Cozy.badge(_refs["climate_level:" + id], "Level %d / %d · %s" % [level, maximum, "Complete" if level >= maximum else ("Affordable" if float(_state.coins) >= cost else "Save up")], "active" if level >= maximum or float(_state.coins) >= cost else "warning")
-		_set_button("climate_fund:" + id, "Fully upgraded" if level >= maximum else "%s · %s" % ["Build" if level == 0 and id != "rainwater" else "Upgrade", _blind_money(cost)], level >= maximum or float(_state.coins) < cost)
+	if _refs.has("weather_page"): _refs.weather_page.refresh()
+
+func _build_debt() -> void:
+	_heading("Recovery orders", "")
+	var summary := _surface("quest")
+	_body.add_child(summary)
+	var column := _vbox(8)
+	summary.add_child(column)
+	column.add_child(_label("OUTSTANDING DEBT", 12, MUTED, true))
+	_refs.recovery_balance = _wrap("", 34, CHERRY, true)
+	column.add_child(_refs.recovery_balance)
+	_refs.recovery_credit = _wrap("", 15, INK)
+	column.add_child(_refs.recovery_credit)
+	var order := _surface("upgrade")
+	_body.add_child(order)
+	var contents := _vbox(10)
+	order.add_child(contents)
+	contents.add_child(_label("Potatoes for debt repayment", 22, INK, true))
+	_refs.recovery_rate = _wrap("", 16, INK)
+	contents.add_child(_refs.recovery_rate)
+	_refs.recovery_needed = _wrap("", 15, MUTED)
+	contents.add_child(_refs.recovery_needed)
+	_refs.recovery_deliver = _button("", "recovery:deliver", true)
+	contents.add_child(_refs.recovery_deliver)
+	contents.add_child(_wrap("Uses ordinary potatoes, starting with Russets. Stops at $0 debt.", 13, MUTED))
+	_refs.recovery_seeds = _button("Collect 3 free seeds", "recovery:seeds")
+	_body.add_child(_refs.recovery_seeds)
+	_body.add_child(_button("Sell crops at market prices", "sell_potatoes"))
+	_body.add_child(_button("Buy seeds", "market"))
+	_body.add_child(_button("Tax forecast", "taxes"))
+	_refresh_debt()
+
+func _refresh_debt() -> void:
+	if not _refs.has("recovery_balance"): return
+	var order: Dictionary = _state.recovery_order()
+	_refs.recovery_balance.text = _money(order.debt) if order.debt > 0 else "Debt cleared"
+	_refs.recovery_credit.text = "Credit left %s · Debt limit %s" % [_money(_state.purchase_credit()), _money(-_state.bankruptcy_limit())]
+	_refs.recovery_rate.text = "%s repaid per potato" % _money(order.rate)
+	_refs.recovery_needed.text = "%d potatoes to clear debt · %s stored" % [order.needed, _number(order.held)]
+	_refs.recovery_deliver.text = "Deliver %d · Repay %s" % [order.quantity, _money(order.payment)] if order.quantity > 0 else ("Debt cleared" if order.debt == 0 else "Harvest potatoes to deliver")
+	_refs.recovery_deliver.disabled = order.quantity <= 0 or _state.run_over
+	_refs.recovery_seeds.visible = _state.can_claim_recovery_seeds()
 
 func _build_tutorial() -> void:
 	_tutorial_card = _card(Color("17382d"), 15)
@@ -816,6 +762,9 @@ func _apply_tutorial_visibility() -> void:
 		return
 	# Logical game size is preserved by the viewport. Measure the modal's
 	# clear margin too, keeping this guide outside every shop's controls.
+	if is_panel_open():
+		# Wide exchange/build pages leave room for the first-lesson guide.
+		_modal_card.position.x = maxf(_modal_card.position.x, minf(264.0, root.size.x - _modal_card.size.x - 16.0))
 	var available_width: float = _modal_card.position.x - 44.0 if is_panel_open() else 219.0
 	var card_width: float = minf(219.0, maxf(138.0, available_width))
 	# Roll House is wider than other shops. Stack its guide heading so the
@@ -839,8 +788,9 @@ func _update_tutorial_pointer() -> void:
 	if not _tutorial_next.disabled:
 		target = _tutorial_next
 	elif is_panel_open():
-		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else ("sell:russet:-1" if _tutorial.get("id") == "sell" else "")
-		for node: Node in _body.find_children("*", "Button", true, false):
+		var sale_action: String = "market_sell" if _panel_kind == "sell_potatoes" else "sell:russet:-1"
+		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else (sale_action if _tutorial.get("id") == "sell" else "")
+		for node: Node in _modal_card.find_children("*", "Button", true, false):
 			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
 				target = node
 				break
@@ -972,6 +922,9 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action == "build_guide":
+		show_panel("build_guide", _state)
+		return
 	if action.begins_with("build:inspect:"):
 		_build_selection = action.get_slice(":", 2)
 		show_panel("builds", _state)
@@ -1288,7 +1241,7 @@ func _build_footer() -> void:
 	nav_grid.offset_right = 326
 	nav_grid.offset_top = -106
 	nav_grid.offset_bottom = -21
-	for nav: Array in [["Market [B]", "market"], ["Inventory [I]", "inventory"], ["Upgrades [U]", "tools"], ["Roll House [R]", "roll"]]:
+	for nav: Array in [["Buy Seeds [B]", "market"], ["Inventory [I]", "inventory"], ["Upgrades [U]", "tools"], ["Roll House [R]", "roll"]]:
 		var button: Button = _button(nav[0], nav[1], nav[1] == "market")
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nav_grid.add_child(button)
@@ -1332,6 +1285,33 @@ func _icon(data: Dictionary, pixels: float = 62.0) -> Control:
 	return icon
 
 func _build_notices() -> void:
+	_barn_full_alert = _card(Color("a52f38"), 16)
+	_barn_full_alert.name = "BarnFullAlert"
+	root.add_child(_barn_full_alert)
+	_barn_full_alert.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_barn_full_alert.z_index = 15
+	var alert_skin: StyleBoxFlat = _barn_full_alert.get_theme_stylebox("panel")
+	alert_skin.border_color = Color("ffd0a3")
+	alert_skin.set_border_width_all(2)
+	alert_skin.shadow_color = Color(0, 0, 0, .2)
+	alert_skin.shadow_size = 8
+	var alert_row := _hbox(16)
+	_barn_full_alert.add_child(alert_row)
+	var alert_words := _vbox(3)
+	alert_words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	alert_row.add_child(alert_words)
+	var alert_title := _label("BARN FULL", 26, Color.WHITE, true)
+	alert_title.add_theme_font_override("font", _compact_heading_font())
+	alert_words.add_child(alert_title)
+	_barn_full_detail = _wrap("Sell crops to keep harvesting.", 15, Color("fff4e1"))
+	_barn_full_detail.add_theme_font_override("font", UI_FONT)
+	alert_words.add_child(_barn_full_detail)
+	var sell := _button("Sell crops", "sell_potatoes")
+	sell.custom_minimum_size = Vector2(128, 52)
+	sell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	alert_row.add_child(sell)
+	_barn_full_sell = sell
+	_barn_full_alert.hide()
 	_toast_box = _card(INK, 10)
 	_place(_toast_box, Rect2(926, 104, 326, 0))
 	_toast_box.z_index = 20
@@ -1368,6 +1348,8 @@ func _build_notices() -> void:
 	_purchase_box.add_child(purchase_body)
 	_purchase_title = _wrap("", 18, GOLD, true)
 	_purchase_detail = _wrap("", 13, CREAM)
+	_purchase_title.add_theme_font_override("font", _compact_heading_font())
+	_purchase_detail.add_theme_font_override("font", UI_FONT)
 	purchase_body.add_child(_purchase_title)
 	purchase_body.add_child(_purchase_detail)
 	_purchase_bar = ProgressBar.new()
@@ -1430,12 +1412,24 @@ func _build_modal() -> void:
 	_modal_subtitle = _wrap("Good soil. Wild markets.", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
+	_modal_market_nav = HBoxContainer.new()
+	_modal_market_nav.add_theme_constant_override("separation", 8)
+	titles.add_child(_modal_market_nav)
+	_modal_market_nav.hide()
 	var close: Button = _button("×", "close")
 	close.custom_minimum_size.x = 40
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	header.add_child(close)
 	_blind_modal_warning = _wrap("", 13, CHERRY, true)
-	column.add_child(_blind_modal_warning)
+	_credit_row = _hbox(12)
+	column.add_child(_credit_row)
+	_blind_modal_warning.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_credit_row.add_child(_blind_modal_warning)
+	_recovery_link = _button("Repay debt →", "debt", true)
+	_credit_row.add_child(_recovery_link)
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		_recovery_link.add_theme_stylebox_override(state, Cozy.box(Color("8f3342") if state == "normal" else Color("a44250"), 8, 12, Color("ce7884")))
+	_recovery_link.hide()
 	_modal_fixed = _vbox(6)
 	column.add_child(_modal_fixed)
 	_modal_fixed.hide()
@@ -1451,6 +1445,9 @@ func _build_modal() -> void:
 	_body = _vbox(10)
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_body)
+	_modal_trade_footer = _vbox(4)
+	column.add_child(_modal_trade_footer)
+	_modal_trade_footer.hide()
 	_modal.hide()
 
 func update_state(state: Node) -> void:
@@ -1506,10 +1503,12 @@ func update_state(state: Node) -> void:
 		if _panel_kind in ["inventory", "barn"] and _inventory_signature != _inventory_id_string(_inventory_data()):
 			show_panel(_panel_kind, state)
 			return
-		if _panel_kind in ["market", "barn", "inventory", "dex"] and _panel_crops != expected_crops:
+		if _panel_kind == "sell_potatoes": expected_crops = preload("res://scripts/game_state.gd").crops_by_base_price(_known_crops())
+		if _panel_kind in ["market", "sell_potatoes", "barn", "inventory", "dex"] and _panel_crops != expected_crops:
 			show_panel(_panel_kind, state)
 		else:
 			_refresh_panel()
+	_update_barn_full_alert()
 
 func set_tool(tool: String) -> void:
 	if tool not in ["hoe", "plant", "water", "harvest", "pest"]:
@@ -1551,18 +1550,56 @@ func clear_farm_hint() -> void:
 
 func _update_context() -> void:
 	if not is_instance_valid(_context): return
+	_update_barn_full_alert()
 	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
 	if is_instance_valid(_plot_action_box):
 		_plot_action_box.visible = not _plot_action_text.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
+	var warning: bool = _notice_is_warning(text)
+	var skin: StyleBoxFlat = _context_box.get_theme_stylebox("panel")
+	skin.bg_color = Color("a5343c") if warning else Color("333b40")
+	skin.border_color = Color("ffbd9e") if warning else Color("657079")
+	skin.set_border_width_all(1)
+	_context_box.set_meta("warning", warning)
 	_context.text = text
-	_context_box.visible = not text.is_empty() and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
+	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
 	# Hug the single line instead of spanning the farm. Input passes through.
 	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
 	_context_box.offset_left = -width * 0.5
 	_context_box.offset_right = width * 0.5
 	_context.size.x = width - 12
 	_context_box.size = Vector2(width, 0)
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled:
+		_context_box.visible = _context_box.visible and warning
+		_context_box.offset_top = -310
+		_context_box.offset_bottom = -268
+		_context.add_theme_font_size_override("font_size", 20)
+
+func _notice_is_warning(text: String) -> bool:
+	var lower := text.to_lower()
+	for word: String in ["unlock", "full", "not enough", "need ", "needs ", "credit limit", "empty", "frozen", "no seeds", "no water", "out of", "cannot", "can't", "could not"]:
+		if lower.contains(word): return true
+	return false
+
+func _update_barn_full_alert() -> void:
+	if not is_instance_valid(_barn_full_alert): return
+	_barn_full_alert.visible = is_instance_valid(_state) and _state.storage_used() >= _state.capacity and not _state.run_over and _tutorial.is_empty() and not is_panel_open() and not _rolling
+	if not _barn_full_alert.visible: return
+	_barn_full_detail.text = "%s stored · Sell crops to keep harvesting." % _number(_state.storage_used())
+	var width: float = minf(520, root.size.x - 36)
+	var top: float = 112
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled:
+		top = maxf(touch.status.get_global_rect().end.y, touch.sell_button.get_global_rect().end.y) + 12
+		_barn_full_detail.add_theme_font_size_override("font_size", 19)
+		_barn_full_sell.custom_minimum_size.y = 68
+		_barn_full_sell.add_theme_font_size_override("font_size", 22)
+	_barn_full_alert.offset_left = -width / 2
+	_barn_full_alert.offset_right = width / 2
+	_barn_full_alert.offset_top = top
+	_barn_full_alert.offset_bottom = top
+	_barn_full_alert.size.y = 0
 
 func show_toast(text: String) -> void:
 	if _rolling or not _tutorial.is_empty():
@@ -1570,6 +1607,8 @@ func show_toast(text: String) -> void:
 	if not is_instance_valid(root):
 		build_ui()
 	_toast_label.text = text
+	var skin: StyleBoxFlat = _toast_box.get_theme_stylebox("panel")
+	skin.bg_color = Color("a5343c") if _notice_is_warning(text) else INK
 	_toast_layout_key = ""
 	_layout_toast()
 	_toast_box.show()
@@ -1597,6 +1636,26 @@ func _layout_toast() -> void:
 	_toast_box.size = Vector2(width, 0)
 	_toast_box.position = Vector2((root.size.x-width)*.5, root.size.y-(42 if compact else 70)) if in_menu else (Vector2(28, _blind_card.get_global_rect().end.y+12) if weather_on_right else Vector2(root.size.x-width-28,104))
 	_toast_label.tooltip_text = _toast_label.text
+
+func _layout_purchase() -> void:
+	if not is_instance_valid(_purchase_box) or _purchase_receipt.is_empty(): return
+	var touch: bool = is_instance_valid(get_parent().get("touch_controls")) and get_parent().touch_controls.enabled
+	var menu: bool = is_instance_valid(_modal_card) and _modal.visible
+	var bounds: Rect2 = _modal_card.get_rect() if menu else Rect2()
+	var key: String = str([root.size, bounds, menu, touch])
+	if key == _purchase_layout_key: return
+	_purchase_layout_key = key
+	# New counters are wider than the original menus. Wrap the receipt in
+	# their actual outer margin instead of covering the right-hand controls.
+	# TouchControls positions notices in the space above its mobile menus.
+	var width: float = minf(230.0, root.size.x - bounds.end.x - 24.0) if menu and not touch else 230.0
+	width = maxf(112.0, width)
+	_purchase_title.add_theme_font_size_override("font_size", 16 if width < 180.0 else 18)
+	_purchase_title.size.x = width - 28.0
+	_purchase_detail.size.x = width - 28.0
+	_purchase_box.size = Vector2(width, _purchase_title.get_minimum_size().y + _purchase_detail.get_minimum_size().y + 45.0)
+	if not touch:
+		_purchase_box.position = Vector2(root.size.x - width - (12.0 if menu else 28.0), 216.0)
 
 func show_purchase(receipt: Dictionary) -> void:
 	# Only committed purchases reach this method; failed affordability checks
@@ -1632,11 +1691,11 @@ func show_purchase(receipt: Dictionary) -> void:
 			title = "+%d garden beds" % int(combined.quantity)
 			detail = "%d beds unlocked" % int(combined.get("total", quantity))
 		"island": detail = "Island unlocked"
-	_purchase_title.size.x = 202.0
-	_purchase_detail.size.x = 202.0
 	_purchase_title.text = title
 	_purchase_detail.text = "%s · −%s" % [detail, _money(float(combined.cost))]
-	_purchase_box.size = Vector2(230.0, _purchase_title.get_minimum_size().y + _purchase_detail.get_minimum_size().y + 45.0)
+	_purchase_layout_key = ""
+	_layout_purchase()
+	_layout_purchase.call_deferred()
 	_purchase_remaining = PURCHASE_SECONDS
 	_purchase_bar.value = PURCHASE_SECONDS
 	_combo_box.hide()
@@ -1675,6 +1734,7 @@ func close_panel() -> void:
 	_reset_pending = false
 	_all_in_pending = false
 	_apply_tutorial_visibility()
+	_layout_purchase()
 
 func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	if _rolling:
@@ -1695,12 +1755,27 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_modal_card.offset_right = 452 if kind == "roll" else 376
 	_modal_card.offset_top = -354 if kind == "roll" else -317
 	_modal_card.offset_bottom = 354 if kind == "roll" else 317
+	if kind in ["market", "sell_potatoes"]:
+		_modal_card.offset_left = -500
+		_modal_card.offset_right = 500
+		_modal_card.offset_top = -380
+		_modal_card.offset_bottom = 380
 	_modal_title.add_theme_color_override("font_color", INK)
 	_modal_title.add_theme_font_override("font", _card_heading_font)
 	_modal_title.add_theme_font_size_override("font_size", 28)
 	_modal_subtitle.add_theme_font_override("font", _plain_font)
 	_modal_subtitle.add_theme_color_override("font_color", MUTED)
+	_modal_title.visible = kind not in ["market", "sell_potatoes"]
+	_modal_subtitle.visible = kind not in ["market", "sell_potatoes"]
+	for child: Node in _modal_market_nav.get_children():
+		_modal_market_nav.remove_child(child)
+		child.queue_free()
+	_modal_market_nav.hide()
 	_refs.clear()
+	for child: Node in _modal_trade_footer.get_children():
+		_modal_trade_footer.remove_child(child)
+		child.queue_free()
+	_modal_trade_footer.hide()
 	for child: Node in _modal_fixed.get_children():
 		_modal_fixed.remove_child(child)
 		child.queue_free()
@@ -1714,6 +1789,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	match kind:
 		"farm_tip": _build_farm_tip()
 		"market": _build_market()
+		"sell_potatoes": _build_market(true)
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
 		"roll": _build_roll()
@@ -1722,6 +1798,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"island": _build_island()
 		"quests": _build_quests()
 		"builds": _build_builds()
+		"build_guide": BuildPages.create_guide(self)
 		"tracked_prices": _build_tracked_prices()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
@@ -1729,14 +1806,18 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"graphics": _build_graphics()
 		"taxes", "blinds": _build_blinds()
 		"climate": _build_climate()
+		"debt": _build_debt()
 		_: _build_help()
 	_polish_card_typography(_body)
+	_polish_card_typography(_modal_trade_footer)
+	_polish_card_typography(_modal_market_nav)
 	var bottom_space := Control.new()
 	bottom_space.custom_minimum_size.y = 8
 	bottom_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_body.add_child(bottom_space)
 	_refresh_panel()
 	_modal.show()
+	_barn_full_alert.hide()
 	_context_box.hide()
 	_farm_help_card.hide()
 	_blind_card.hide()
@@ -1745,6 +1826,7 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_update_blind_ui()
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
+	_layout_purchase.call_deferred()
 	if is_instance_valid(get_parent().get("touch_controls")):
 		get_parent().touch_controls.fit_modal()
 		# Newly built content can settle its minimum size after the first fit.
@@ -1812,127 +1894,24 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 	row.add_child(button)
 	_refs[action] = button
 
-func _build_market() -> void:
-	var first_seed: bool = _tutorial_seed_market()
-	_heading("Meet the seed seller" if first_seed else "The Spud Exchange", "Start small. One Russet seed is all you need." if first_seed else "Buy low. Grow. Sell high.")
-	_info("market_note", "Live prices · Buy seeds or sell your harvest.")
-	_panel_crops = _market_crops()
-	for crop: String in _panel_crops:
-		var card: PanelContainer = _card(PAPER, 7 if _panel_crops.size() == 5 else 12)
-		_body.add_child(card)
-		var column: VBoxContainer = _vbox(4 if _panel_crops.size() == 5 else 6)
-		card.add_child(column)
-		var header: BoxContainer = _hbox(12)
-		column.add_child(header)
-		var name_label: Label = _label(str(_crop_name(crop)).to_upper(), 14, _crop_color(crop), true)
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		header.add_child(name_label)
-		var sell: Label = _label("SELL $0", 17, INK, true)
-		var change: Label = _label("+0%", 14, GREEN, true)
-		header.add_child(sell)
-		header.add_child(change)
-		sell.visible = not first_seed
-		change.visible = not first_seed
-		_refs[crop + ":price"] = sell
-		_refs[crop + ":change"] = change
-		var row: BoxContainer = _hbox(10)
-		column.add_child(row)
-		var graph: Control = Sparkline.new()
-		graph.custom_minimum_size = Vector2(118, 36)
-		row.add_child(graph)
-		graph.visible = not first_seed
-		if first_seed:
-			row.add_child(_icon({"kind": "seed", "id": "russet", "crop": "russet"}, 78))
-		_refs[crop + ":graph"] = graph
-		var quote: Label = _wrap("", 12, MUTED)
-		quote.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(quote)
-		_refs[crop + ":quote"] = quote
-		for qty: int in [1, 5]:
-			var action: String = "buy:%s:%d" % [crop, qty]
-			var buy: Button = _button("Buy %d" % qty, action, first_seed and qty == 1)
-			buy.visible = not first_seed or qty == 1
-			row.add_child(buy)
-			_refs[action] = buy
-		var sell_button: Button = _button("Sell held", "sell:" + crop + ":-1", true)
-		row.add_child(sell_button)
-		sell_button.visible = not first_seed
-		_refs["sell:" + crop + ":-1"] = sell_button
+func _build_market(selling: bool = false) -> void:
+	_heading("Sell Potatoes" if selling else "Buy Seeds", "")
+	var style: StyleBoxFlat = Cozy.modal()
+	style.bg_color = Color("f7f4e6")
+	style.border_color = Color("d3dbbe")
+	style.set_corner_radius_all(28)
+	_modal_card.add_theme_stylebox_override("panel", style)
+	var page = MarketPages.new()
+	_body.add_child(page)
+	_refs.market_page = page
+	page.setup(self, selling)
+
 
 func _build_barn() -> void:
-	_heading("Your inventory", "Crops, gear and everything you own.")
-	_info("inventory_total", "")
-	_info("barn_tip", "Beginner tip: upgrade your barn here to store more crops and save harvests for better market prices.")
-	_offer("A roomier barn", "", "Upgrade", "upgrade:barn")
-	_panel_crops = _known_crops()
-	_inventory_sections.clear()
-	var tabs: BoxContainer = _hbox(8)
-	_body.add_child(tabs)
-	for section: String in ["crops", "gear", "items", "builds"]:
-		var names: Dictionary = {"crops": "Crops & seeds", "gear": "Gear", "items": "Items & mutations", "builds": "Builds & crates"}
-		var button: Button = _button(names[section], "inventory_tab:" + section)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tabs.add_child(button)
-		_refs["tab:" + section] = button
-		var column: VBoxContainer = _vbox(9)
-		_inventory_sections[section] = column
-	for section: String in ["crops", "gear", "items", "builds"]:
-		_body.add_child(_inventory_sections[section])
-	_build_equipment_header(_inventory_sections.gear)
-	var entries: Array[Dictionary] = _inventory_data()
-	_inventory_signature = _inventory_id_string(entries)
-	var gear_grid := GridContainer.new()
-	gear_grid.columns = 2
-	gear_grid.add_theme_constant_override("h_separation", 10)
-	gear_grid.add_theme_constant_override("v_separation", 10)
-	_inventory_sections.gear.add_child(gear_grid)
-	for entry: Dictionary in entries:
-		var id: String = str(entry.get("id", ""))
-		var kind: String = str(entry.get("kind", "relic"))
-		if kind == "gear":
-			_build_gear_card(gear_grid, entry)
-			continue
-		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build", "build_crate"] else "items")
-		var card: PanelContainer = _card(PAPER, 12)
-		_inventory_sections[section].add_child(card)
-		var row: BoxContainer = _hbox(12)
-		card.add_child(row)
-		row.add_child(_icon(entry))
-		var description: VBoxContainer = _vbox(4)
-		description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(description)
-		var title: Label = _wrap("", 16, INK, true)
-		var detail: Label = _wrap("", 13, MUTED)
-		description.add_child(title)
-		description.add_child(detail)
-		_refs["item:" + id + ":title"] = title
-		_refs["item:" + id + ":detail"] = detail
-		var action: String = str(entry.get("action", ""))
-		if kind == "crop":
-			action = "sell:" + str(entry.get("crop", "russet")) + ":-1"
-		elif kind == "processed" and action in ["", "sell"]:
-			action = "build:sell_processed"
-		if not action.is_empty():
-			var button: Button = _button("Select", action, kind == "crop")
-			button.custom_minimum_size.x = 145
-			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			row.add_child(button)
-			_refs["item:" + id + ":action"] = button
-	if gear_grid.get_child_count() == 0:
-		var empty := _surface("gear", GREEN)
-		_inventory_sections.gear.add_child(empty)
-		var empty_row := _hbox(14)
-		empty.add_child(empty_row)
-		empty_row.add_child(_icon({"kind": "slot", "id": "body"}, 62))
-		empty_row.add_child(_wrap("Your wardrobe starts here. Find clothing at the Roll House, then equip it for extra bonuses.", 14, MUTED))
-	for section: String in ["crops", "gear", "items", "builds"]:
-		if _inventory_sections[section].get_child_count() == 0:
-			_inventory_sections[section].add_child(_wrap("Empty for now. Keep farming!", 15, MUTED))
-
-	var sell_rare: Button = _button("Sell all mutation crates", "sell_mutations")
-	_inventory_sections.items.add_child(sell_rare)
-	_refs["sell_mutations"] = sell_rare
-	_set_inventory_tab()
+	var page = ShopPages.new()
+	_body.add_child(page)
+	_refs.shop_page = page
+	page.setup(self, true)
 
 func _build_gear_card(parent: GridContainer, entry: Dictionary) -> void:
 	var id: String = str(entry.id)
@@ -1974,23 +1953,36 @@ func _build_gear_card(parent: GridContainer, entry: Dictionary) -> void:
 	_refs[key + ":action"] = button
 
 func _build_tools() -> void:
-	_heading("Tool shed", "Better tools. More beds. Fewer trips.")
-	for tool: String in ["hoe", "water", "harvest"]:
-		var names: Dictionary = {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe"}
-		_offer(names[tool], "", "Upgrade", "upgrade:" + tool, true)
-	_offer("More room to grow", "Unlock all 24 beds.", "$1.8K", "upgrade:expansion")
-	var row: BoxContainer = _hbox(10)
-	_body.add_child(row)
-	var dex_button: Button = _button("PotatoDex  [P]", "dex")
-	dex_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(dex_button)
-	var island_button: Button = _button("Explore the islands", "island")
-	island_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(island_button)
-	_info("tool_tip", "Equip tools with keys 1–5 or the hotbar.", MUTED, 13)
+	var page = ShopPages.new()
+	_body.add_child(page)
+	_refs.shop_page = page
+	page.setup(self, false)
+
+func _casino_button(button: Button, color: Color = Color("942b3b")) -> void:
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		var fill: Color = color.lightened(.12) if state == "hover" else (color.darkened(.15) if state == "pressed" else color)
+		if state == "disabled": fill = Color("334d42")
+		var style: StyleBoxFlat = Cozy.box(fill, 10, 12, Color("edc665") if state != "disabled" else Color("6a7961"))
+		style.border_width_bottom = 4 if state not in ["pressed", "disabled"] else 1
+		button.add_theme_stylebox_override(state, style)
+	for key: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		button.add_theme_color_override(key, Color("302b21") if color.get_luminance() > .45 else Color("fff5d7"))
+	button.add_theme_color_override("font_disabled_color", Color("a7b4a4"))
+	button.add_theme_stylebox_override("focus", Cozy.box(Color.TRANSPARENT, 10, 12, Color("fff0b2")))
 
 func _build_roll() -> void:
-	_heading("Build crate" if _crate_reel else "The Questionable Shack", "")
+	_heading("Build crate" if _crate_reel else "Roll House", "")
+	var casino_skin: StyleBoxFlat = Cozy.modal()
+	casino_skin.bg_color = Color("103c2e")
+	casino_skin.border_color = Color("d5a848")
+	casino_skin.set_border_width_all(4)
+	_modal_card.add_theme_stylebox_override("panel", casino_skin)
+	_modal_title.add_theme_color_override("font_color", Color("ffe6a0"))
+	_modal_subtitle.add_theme_color_override("font_color", Color("d8e3c6"))
+	_modal_card.offset_left = -530
+	_modal_card.offset_right = 530
+	_modal_card.offset_top = -380
+	_modal_card.offset_bottom = 380
 	_refs.roll_purse = _modal_subtitle
 	_modal_subtitle.visible = not _crate_reel
 	if not _crate_reel:
@@ -1999,7 +1991,7 @@ func _build_roll() -> void:
 		_modal_fixed.add_child(meter)
 		_refs.roll_luck_meter = meter
 		meter.completed.connect(_start_pending_spin)
-		var quality := _label("", 12, GREEN)
+		var quality := _label("", 12, Color("decd91"))
 		quality.add_theme_font_override("font", _card_button_font)
 		_modal_fixed.add_child(quality)
 		_refs.roll_quality = quality
@@ -2013,8 +2005,8 @@ func _build_roll() -> void:
 	odds_column.custom_minimum_size.x = 234
 	odds_column.visible = not _crate_reel
 	core.add_child(odds_column)
-	var reel_card := _surface("island", Color("9375a7"))
-	reel_card.add_theme_stylebox_override("panel", _style(Color("eee7ed"), 7, 14, Color("c9b9ce")))
+	var reel_card := preload("res://scripts/casino_surface.gd").new()
+	reel_card.configure("reel")
 	play_column.add_child(reel_card)
 	_spinner = RollReel.new()
 	_spinner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2023,14 +2015,14 @@ func _build_roll() -> void:
 	_spinner.set_build_deck(_crate_reel)
 	var result_box := _vbox(4)
 	play_column.add_child(result_box)
-	var result_title := _wrap("Choose your stake", 17, INK, true)
+	var result_title := _wrap("Choose your stake", 17, Color("ffe6a0"), true)
 	result_box.add_child(result_title)
 	_refs.roll_result_title = result_title
-	var result_detail := _wrap("Your prize lands in the centre.", 12, MUTED)
+	var result_detail := _wrap("", 12, Color("e1e8d3"))
 	result_box.add_child(result_detail)
 	result_detail.hide()
 	_refs.roll_result_detail = result_detail
-	var receipt := _wrap("", 12, GREEN)
+	var receipt := _wrap("", 12, Color("ffe6a0"))
 	result_box.add_child(receipt)
 	receipt.hide()
 	_refs.roll_accounting = receipt
@@ -2039,6 +2031,7 @@ func _build_roll() -> void:
 		result_title.text = "One crate. One new build level."
 		result_detail.text = "Open your crate to discover a specialty."
 		var open_button := _button("Open another Build Crate", "build:open_crate", true)
+		_casino_button(open_button, Color("e7b84f"))
 		play_column.add_child(open_button)
 		_refs["build:open_crate"] = open_button
 		return
@@ -2049,6 +2042,7 @@ func _build_roll() -> void:
 	play_column.add_child(stakes)
 	for kind: String in ["normal", "big", "stupid", "all_in"]:
 		var button := _button("Roll", "roll:" + kind, kind == "normal")
+		_casino_button(button, Color("e7b84f") if kind == "normal" else (Color("282d29") if kind == "all_in" else Color("a62f40")))
 		button.custom_minimum_size.y = 39
 		button.mouse_entered.connect(_preview_stake.bind(kind))
 		button.focus_entered.connect(_preview_stake.bind(kind))
@@ -2068,19 +2062,22 @@ func _build_roll() -> void:
 				_preview_stake(_batch_kind)
 				_refresh_panel())
 		_style_choice(batch_stake)
+		_casino_button(batch_stake, Color("245840"))
 		batches.add_child(batch_stake)
 		_refs.batch_stake = batch_stake
 		for count: int in [3, 5]:
 			var batch := _button("Roll ×%d" % count, "batch:" + str(count))
+			_casino_button(batch, Color("8f293b"))
 			batch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			batches.add_child(batch)
 			_refs["batch:" + str(count)] = batch
-	_info("all_in_warning", "", CHERRY, 13)
+	_info("all_in_warning", "", Color("ffb9a0"), 13)
 	var cancel := _button("Keep my coins · cancel all-in", "cancel_all_in")
+	_casino_button(cancel, Color("275b43"))
 	play_column.add_child(cancel)
 	_refs.cancel_all_in = cancel
-	_info("crown_offer", "Aurora Crown · One free same-stake roll with every purchase.", GREEN, 12)
-	_info("roll_minimum", "", MUTED, 11)
+	_info("crown_offer", "Aurora Crown · One free same-stake roll with every purchase.", Color("ffe6a0"), 12)
+	_info("roll_minimum", "", Color("c5d4bc"), 11)
 	for key: String in ["all_in_warning", "crown_offer", "roll_minimum"]:
 		_refs[key].reparent(play_column)
 	play_column.move_child(cancel, _refs.all_in_warning.get_index() + 1)
@@ -2091,12 +2088,12 @@ func _build_roll() -> void:
 	play_column.add_child(batch_results)
 	batch_results.hide()
 	_refs.batch_results = batch_results
-	var odds_card := _surface("quest", Color("9375a7"))
+	var odds_card := preload("res://scripts/casino_surface.gd").new()
+	odds_card.configure("felt")
 	odds_column.add_child(odds_card)
 	var odds_body := _vbox(9)
 	odds_card.add_child(odds_body)
-	_section_title(odds_body, "Live odds")
-	odds_body.add_child(_wrap("Every rarity, for this stake.", 12, MUTED))
+	odds_body.add_child(_label("LIVE ODDS", 17, Color("ffe6a0"), true))
 	var odds := GridContainer.new()
 	odds.columns = 1
 	odds.add_theme_constant_override("h_separation", 10)
@@ -2104,19 +2101,20 @@ func _build_roll() -> void:
 	odds_body.add_child(odds)
 	for entry: Dictionary in _state.call("roll_odds", _stake_kind):
 		var tier: String = str(entry.get("tier", "common"))
-		var label := _label("", 13, INK)
+		var label := _label("", 13, Color("fff5d7"))
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.tooltip_text = str(entry.get("description", ""))
 		label.mouse_filter = Control.MOUSE_FILTER_PASS
-		var odds_style := _style(RollReel.COLORS.get(tier, GOLD).lerp(CREAM, 0.85), 8, 7)
+		var odds_style := _style(Color("215e46"), 8, 7, RollReel.COLORS.get(tier, GOLD))
+		odds_style.border_width_left = 3
 		odds_style.content_margin_top = 3
 		odds_style.content_margin_bottom = 3
 		label.add_theme_stylebox_override("normal", odds_style)
 		odds.add_child(label)
 		_refs["odds:" + tier] = label
-	_refs.roll_luck_total = _wrap("", 12, GREEN)
+	_refs.roll_luck_total = _wrap("", 12, Color("d1ddbf"))
 	odds_column.add_child(_refs.roll_luck_total)
-	odds_column.add_child(_wrap("Odds include empty sacks.", 12, MUTED))
+	odds_column.add_child(_wrap("Odds include empty sacks.", 12, Color("c5d4bc")))
 	var math_body := _details_section("roll_math_section", "roll calculation")
 	_section_title(math_body, "How this roll is calculated")
 	var math := _wrap("", 14, INK)
@@ -2124,6 +2122,8 @@ func _build_roll() -> void:
 	_refs.roll_luck_math = math
 	math_body.add_child(_wrap("Non-common weight = base weight × roll quality × luck weight raised to the tier’s rarity power. Above 10× luck, multiply again by (luck / 10) raised to 0.35 × rarity steps above Rare. Normalize to the displayed odds. Ordinary cash jackpots cap at 2.25%; excess moves to Relic and Mystery.", 12, MUTED))
 	var trophies := _button("Show trophy cabinet", "toggle_trophies")
+	_casino_button(trophies, Color("245840"))
+	_casino_button(_refs["roll_math_section:toggle"], Color("245840"))
 	_body.add_child(trophies)
 	_refs.trophy_toggle = trophies
 	var utilities := _hbox(10)
@@ -2324,7 +2324,7 @@ func _refresh_islands() -> void:
 		_set_button("island_unlock" if id == 2 else "island3_unlock", "Unlock · " + _money(cost), unlocked or not ready)
 
 func _build_quests() -> void:
-	_heading(str(_state.call("island_name")).capitalize() + " quests", "A little purpose for every harvest.")
+	_heading(str(_state.call("island_name")).capitalize() + " quests", "")
 	_info("quest_note", "", GREEN, 13)
 	var icons: Dictionary = {"starter_crash": {"kind": "seed", "crop": "golden"}, "starter_spike": {"kind": "build", "id": "investor"}, "starter_combo": {"kind": "tool", "id": "harvest"}, "ground": {"kind": "tool", "id": "hoe"}, "sunburst": {"kind": "crop", "crop": "sunburst"}, "combo": {"kind": "tool", "id": "harvest"}, "export": {"kind": "collectible", "id": "compass"}, "mutation": {"kind": "mutation", "id": "mutation:russet:golden"}, "winter_ground": {"kind": "tool", "id": "hoe"}, "winter_harvest": {"kind": "crop", "crop": "icecap"}, "winter_frost": {"kind": "crop", "crop": "icecap"}}
 	for quest: Dictionary in _quests():
@@ -2358,45 +2358,70 @@ func _build_quests() -> void:
 		_refs[key + ":detail"] = detail
 		var footer := _hbox(8)
 		body.add_child(footer)
-		var rewards := HFlowContainer.new()
+		var rewards := _vbox(6)
 		rewards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		rewards.add_theme_constant_override("h_separation", 12)
 		footer.add_child(rewards)
-		rewards.add_child(_metric("coin", _money(float(quest.get("coins", 0))), Color("896221")))
+		rewards.add_child(_wrap(_money(float(quest.get("coins", 0))), 20, Color("896221"), true))
 		var reward_text: String = str(quest.get("reward_text", ""))
-		if " + " in reward_text:
-			var special: String = reward_text.get_slice(" + ", 1)
+		var extras: PackedStringArray = reward_text.split(" + ")
+		for index: int in range(1, extras.size()):
+			var special: String = extras[index]
 			var reward_row := _hbox(5)
 			rewards.add_child(reward_row)
 			var seed_crop: String = "icecap" if "Icecap" in special else ("sunburst" if "Sunburst" in special else "golden")
-			reward_row.add_child(_icon({"kind": "seed", "crop": seed_crop} if "seeds" in special else {"kind": "gear", "id": "prospectors_hat"}, 26))
-			reward_row.add_child(_label(special, 13, INK, true))
+			var icon_data: Dictionary = {"kind": "seed", "crop": seed_crop} if "seeds" in special else {"kind": "gear", "id": "prospectors_hat"}
+			var artifact: String = str(quest.get("item", ""))
+			if not artifact.is_empty() and special == str(_state.ITEM_CATALOG[artifact].name): icon_data = {"kind": "collectible", "id": artifact}
+			reward_row.add_child(_icon(icon_data, 26))
+			var words := _wrap(special, 13, INK, true)
+			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			reward_row.add_child(words)
 		var claim := _button("Claim reward", key, true)
 		claim.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		footer.add_child(claim)
 		_refs[key] = claim
 
 func _build_help() -> void:
-	_heading("Welcome to Taterland", "A little manual farming. A very wild potato market.")
-	var intro: PanelContainer = _card(INK, 18)
+	_heading("Help", "")
+	var skin: StyleBoxFlat = Cozy.box(Color("e8e5d7"), 24, 5, Color("898e78"))
+	skin.border_width_top = 7
+	_modal_card.add_theme_stylebox_override("panel", skin)
+	var intro: PanelContainer = _card(Color("345346"), 18)
 	_body.add_child(intro)
-	intro.add_child(_wrap("CHECK PRICES → PLANT → WATER → HARVEST → SELL OR HOLD", 20, CREAM, true))
-	_help_step("Touch screens", "Drag the stick to move; push to its edge to sprint. Tap beds, buildings and equipment to interact. Pinch the farm with two fingers to zoom. Tools contains tools, seeds, zoom +/− and Cancel task. Swipe menus to scroll. Use works beside beds, the tank and ferry; Menu opens every activity.")
-	_help_step("01  Move & farm", "WASD / arrows to walk · Hold Shift to sprint\nTwo-finger scroll / pinch to zoom\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nClick a bed to use your tool.")
-	_help_step("02  Grow", "Water once. Harvest when ripe.\nRusset 10s · Golden 25s · Giant 40s · Radioactive 50s · Sunburst 55s · Icecap 60s")
-	_help_step("03  Buy low. Sell high.", "B: Market · I: Inventory · F: Sell held\nSurges last 10 seconds. Save crops for the right price.")
-	_help_step("04  Go bigger", "U: Upgrade tools\nChain harvests within 3.5s for up to ×16 bonuses.")
-	_help_step("05  Find your build", "R: Roll for gear and builds using game coins. Empty rolls happen.\nP: Discoveries · Q: Quests")
-	_help_step("06  Hire a crew", "Ducks clear pests: up to 1 / 2 / 3 per island.\nHire more or train them for speed.")
-	_help_step("07  Shops & travel", "Walk up to a shop or NPC and press E when the small badge appears, or tap the badge. You can also click a building or sign. E still works beside beds and the ferry.")
-	_help_step("08  Taxes & debt", "Tax is deducted after every third major boom and its full 10-second selling window. Natural spikes and practice do not count. Debt is playable; only going below your bankruptcy limit ends the run. Check the forecast in Taxes.")
-	_help_step("09  Winter tricks", "Burn 25 Icecaps for faster growth.\nFrostbreak: hoe icy beds within 20s for a seed + stock bonus.")
+	var intro_words: VBoxContainer = _vbox(6)
+	intro.add_child(intro_words)
+	intro_words.add_child(_wrap("HOE · PLANT · WATER · HARVEST · SELL", 22, Color("fff3d7"), true))
+	_help_step("Grow potatoes", "Hoe a bed, plant a seed, then water it. Russets have a 10-second base growing time. Harvest into your barn; crops stay there until you sell.")
+	_help_step("Buy and sell", "Buy Seeds shows what a seed costs and what its potatoes sell for. Seeds cost 75% of the live potato quote. Sell Potatoes has price history and a quantity picker. A +10% quote means 10% above that variety’s fixed base price.")
+	var builds_intro := _surface("build", Color("dfa63d"))
+	_body.add_child(builds_intro)
+	var builds_words := _vbox(8)
+	builds_intro.add_child(builds_words)
+	builds_words.add_child(_label("Player builds", 21, INK, true))
+	builds_words.add_child(_wrap("You start as a Farmer. Builds add a special way to grow, use or sell crops: giant crops, graded batches, seed discoveries, reserved buyers or harvest stakes.", 14, INK))
+	builds_words.add_child(_wrap("Open a card to look around. Only Select build changes your active build. Switching an unlocked build is free; its active bonuses and ability change. Your discoveries and loaded jobs stay with you.", 14, MUTED))
+	builds_words.add_child(_button("Meet the five builds", "build_guide", true))
+	_help_step("Tools and harvests", "Upgrade tools for more beds per click. Chain harvests within 3.5 seconds for bonuses up to ×16. Ducks clear pests while you tend the farm.")
+	_help_step("Tax and debt", "Every third major stock boom ends with a tax bill after its 10-second selling window. Unpaid tax becomes debt. Going below the bankruptcy limit ends the run. Check Taxes before you spend.")
+	var controls := _details_section("intro_controls", "controls & islands")
+	controls.add_child(_wrap("Camera: drag the island or use two-finger scroll to pan. Wheel/pinch to zoom. Home to recenter. Touch: Tools → Recenter.", 14, MUTED))
+	controls.add_child(_wrap("Desktop: WASD / arrows to move, Shift to sprint. 1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray. Click a bed to use your tool. B Buy Seeds · I Inventory · C Builds · F sell all of the selected crop.", 14, MUTED))
+	controls.add_child(_wrap("Touch: use the stick to move, Tools to choose equipment, and Menu to explore. Tap beds or shops. Drag the island to pan, or pinch to zoom. Swipe pages to scroll. On Sell Potatoes, swipe sideways to change variety.", 14, MUTED))
+	controls.add_child(_wrap("Meet neighbours by clicking a shop or pressing E nearby. Roll House uses earned coins and can return nothing. Build Crates unlock the other builds. On Frosthollow, the furnace burns 25 Icecaps for heat; hoe frozen beds before the Frostbreak timer ends for its reward.", 14, MUTED))
 	_body.add_child(_button("Optional Valley tour", "tutorial:restart"))
-	_body.add_child(_button("Show farm tips" if _state.farm_help.data.hidden or not _state.farm_help.data.enabled else "Hide farm tips", "farm_help:toggle"))
-	_body.add_child(_button("Let's get growing  →", "close", true))
+	_update_farm_help()
+	if not _farm_tip.is_empty():
+		_farm_help_action = _button("Current farm help", "farm_help:details")
+		_body.add_child(_farm_help_action)
+	_body.add_child(_button("Back to my farm", "close", true))
+	BuildPages._finish_type(self)
 
 func _help_step(title: String, detail: String) -> void:
-	var card := _surface("quest")
+	var card := PanelContainer.new()
+	var rule: StyleBoxFlat = Cozy.box(Color.TRANSPARENT, 10, 0, Color("c0c4b1"))
+	rule.set_border_width_all(0)
+	rule.border_width_bottom = 1
+	card.add_theme_stylebox_override("panel", rule)
 	_body.add_child(card)
 	var box: VBoxContainer = _vbox(3)
 	card.add_child(box)
@@ -2404,14 +2429,14 @@ func _help_step(title: String, detail: String) -> void:
 	box.add_child(_wrap(detail, 14, MUTED))
 
 func _build_pause() -> void:
-	_heading("Your farm", "Choose your next move.")
+	_heading("Your farm", "")
 	var menu: GridContainer = GridContainer.new()
 	menu.columns = 3
 	menu.add_theme_constant_override("h_separation", 10)
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Market", "market", "B", "trader_token"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
+	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Buy Seeds", "market", "B", "trader_token"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	if _tutorial.is_empty():
@@ -2492,6 +2517,9 @@ func _refresh_graphics() -> void:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
+	if _panel_kind == "debt":
+		_refresh_debt()
+		return
 	if _panel_kind == "climate":
 		_refresh_climate()
 		return
@@ -2512,33 +2540,11 @@ func _refresh_panel() -> void:
 	var markets: Dictionary = _state.get("market")
 	var storage: Dictionary = _state.get("storage")
 	match _panel_kind:
-		"market":
-			_refs.market_note.text = ("EXPORT ×%.1f · %.1fs left. " % [float(_state.get("export_factor")), float(_state.get("export_timer"))] if bool(_state.get("export_active")) else "") + "Changes vs opening prices; graphs show recent sale prices."
-			if _state.disaster_market_active():
-				_refs.market_note.text = "Disaster market · Up to −95%. Export and reward bonuses cannot create a positive boom during recovery."
-			if _tutorial_seed_market():
-				_refs.market_note.text = "Buy 1 Russet → head to the gold bed." if _tutorial_allows("buy:russet:1") else "Just browsing. Shop after the tour."
-			for crop: String in _panel_crops:
-				var quote: Dictionary = markets.get(crop, {})
-				var sell: float = float(quote.get("sell", 0))
-				var seed: float = float(quote.get("seed", 0))
-				var change: float = float(quote.get("change", 0))
-				var color: Color = GREEN if change >= 0 else CHERRY
-				_refs[crop + ":price"].text = "SELL " + _money(sell)
-				_refs[crop + ":change"].text = _change_text(change)
-				_refs[crop + ":change"].add_theme_color_override("font_color", color)
-				_refs[crop + ":quote"].text = "%s\nSeed %s · Held %s" % [_trend(change, quote.get("history", [])), _money(seed), _number(float(storage.get(crop, 0)))]
-				if _tutorial_seed_market():
-					_refs[crop + ":quote"].text = "Seed %s each\nOwned %s seeds · Grows in 10s" % [_money(seed), _number(float(_state.get("seed_inventory").get(crop, 0)))]
-				var history: Array = quote.get("history", [])
-				_refs[crop + ":graph"].set_history(history, color)
-				var single_buy: String = "buy:" + crop + ":1"
-				var guided_purchase: bool = not _tutorial.is_empty() and crop == "russet" and _tutorial_allows(single_buy)
-				_set_button(single_buy, "Buy 1 Russet" if guided_purchase else "Buy 1", coins < seed)
-				_set_button("buy:" + crop + ":5", "Buy 5", coins < seed * 5)
-				_set_button("sell:" + crop + ":-1", "Sell held", float(storage.get(crop, 0)) <= 0)
+		"market", "sell_potatoes":
+			_refs.market_page.refresh()
 		"barn", "inventory":
 			_refresh_inventory()
+			_refs.shop_page.refresh()
 		"tools":
 			var levels: Dictionary = _state.get("tools")
 			for tool: String in ["hoe", "water", "harvest"]:
@@ -2554,10 +2560,11 @@ func _refresh_panel() -> void:
 					if not maximum:
 						_refs["upgrade:water:detail"].text += "\nNext: %d water · %s%s" % [carried + 16, areas[mini(level + 1, areas.size() - 1)], " · Frost Hollow only." if winter_gate else "."]
 				var cost: float = float(costs[level]) if not maximum else 0.0
-				_set_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _money(cost)), maximum or winter_gate or coins < cost)
+				_set_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _state.purchase_caption("Upgrade · " + _money(cost), cost)), maximum or winter_gate or not _state.can_purchase(cost))
 			var expanded: bool = bool(_state.get("expansion")) or _island_id() >= 2
-			_refs["upgrade:expansion:detail"].text = "All %d beds are open. Your hands make them productive." % int(_state.get("plots").size()) if _island_id() >= 2 else "Unlock all 24 garden beds. Every patch is still farmed by hand."
-			_set_button("upgrade:expansion", "Open ✓" if expanded else "$1.8K", expanded or coins < 1800)
+			_refs["upgrade:expansion:detail"].text = "All %d beds are unlocked." % int(_state.get("plots").size()) if _island_id() >= 2 else "Unlock all 24 garden beds."
+			_set_button("upgrade:expansion", "Open ✓" if expanded else _state.purchase_caption("Open beds · $1.8K", 1800), expanded or not _state.can_purchase(1800))
+			_refs.shop_page.refresh()
 		"roll":
 			_refresh_trophies()
 			_refs.crown_offer.visible = _frozen_crown if _rolling else _wears_crown()
@@ -2642,7 +2649,7 @@ func _refresh_panel() -> void:
 				claim.visible = complete and not claimed
 				claim.disabled = claimed or not complete
 				claim.text = "Claim reward"
-			_refs.quest_note.text = "%d / %d rewards collected%s" % [completed, _quests().size(), " · %d ready to claim!" % ready if ready > 0 else " · Keep growing!"]
+			_refs.quest_note.text = "%d / %d rewards collected%s" % [completed, _quests().size(), " · %d ready to claim!" % ready if ready > 0 else ""]
 	_apply_tutorial_buttons()
 
 func _set_button(key: String, text: String, disabled: bool) -> void:
@@ -2688,12 +2695,12 @@ func _market_crops() -> Array[String]:
 	if _tutorial_seed_market():
 		return ["russet"]
 	if not is_instance_valid(_state) or not _state.has_method("available_crops"):
-		return CROP_IDS.duplicate()
+		return preload("res://scripts/game_state.gd").crops_by_base_price(CROP_IDS)
 	var result: Array[String] = []
 	var available: Array = _state.call("available_crops")
 	for id: Variant in available:
 		result.append(str(id))
-	return result
+	return preload("res://scripts/game_state.gd").crops_by_base_price(result)
 
 func _tutorial_seed_market() -> bool:
 	return not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
@@ -2815,7 +2822,7 @@ func begin_roll(kind: String = "") -> bool:
 			_refs.batch_results.remove_child(child)
 			child.queue_free()
 	_refs.roll_result_title.text = "CALCULATING YOUR ROLL…" if not _crate_reel else "LET IT ROLL…"
-	_refs.roll_result_detail.text = "A little suspense. A lot of possibility."
+	_refs.roll_result_detail.text = "Rook: 'Let it settle. The last bounce counts.'"
 	_refs.roll_result_detail.hide()
 	_refs.roll_accounting.hide()
 	_toast_box.hide()
@@ -2950,7 +2957,6 @@ func _inventory_id_string(entries: Array[Dictionary]) -> String:
 
 func _set_inventory_tab() -> void:
 	_refs["upgrade:barn:card"].visible = _inventory_tab == "crops"
-	_refs["barn_tip"].visible = _inventory_tab == "crops" and int(_state.get("barn_level")) == 0
 	for section: Variant in _inventory_sections:
 		_inventory_sections[section].visible = str(section) == _inventory_tab
 		var button: Button = _refs.get("tab:" + str(section)) as Button
@@ -3021,9 +3027,8 @@ func _refresh_inventory() -> void:
 		_refs[key + ":detail"].text = detail
 	var barn_cost: float = 500.0 * pow(5.0, int(_state.get("barn_level")))
 	var maxed: bool = int(_state.get("barn_level")) >= 20
-	_refs["barn_tip"].visible = _inventory_tab == "crops" and int(_state.get("barn_level")) == 0
 	_refs["upgrade:barn:detail"].text = "Maximum barn capacity reached." if maxed else "Adds %s spaces for your harvest." % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
-	_set_button("upgrade:barn", "Max level" if maxed else "Upgrade · " + _money(barn_cost), maxed or float(_state.get("coins")) < barn_cost)
+	_set_button("upgrade:barn", "Max level" if maxed else _state.purchase_caption("Upgrade · " + _money(barn_cost), barn_cost), maxed or not _state.can_purchase(barn_cost))
 	var mutations: Array = _state.get("mutations")
 	_set_button("sell_mutations", "Sell all mutation crates", mutations.is_empty())
 
@@ -3298,6 +3303,9 @@ func _build_activities() -> void:
 	if _island_id() == 1:
 		_build_duck_patrol()
 		return
+	if _island_id() == 3:
+		_build_furnace()
+		return
 	var data: Dictionary = _activity_info()
 	_heading(str(data.get("title", "Island activities")), str(data.get("description", "A different way to work your farm on each island.")))
 	var hero: BoxContainer = _hbox(15)
@@ -3359,35 +3367,69 @@ func _build_activities() -> void:
 			_refs["contract_progress"] = progress
 			_offer("Ship your harvest", "Live price locks per shipment. Paid when the order is full.", "Deliver held", "activity:deliver", true)
 			_refs["contract_delivery"] = _body.get_child(_body.get_child_count() - 1)
-			_info("activity_hint", "Partial deliveries welcome · No deadline", MUTED)
-		3:
-			_offer("Thawing forge", "Pump the bellows to heat your hoe for 60 seconds. Then use Hoe [1] on frozen crops. No potato fuel needed.", "Heat thawing hoe", "climate_operate:heat_hoe", true)
-			_offer("Feed the frost furnace", "20s burst · 2.5× growth · 3× processing", "Burn 25 Icecaps", "activity:furnace:icecap", true)
-			_info("activity_hint", "Uses stored Icecaps · 60s between bursts", MUTED)
-			_body.add_child(_button("Winter Roll House · 3 or 5 rolls together", "roll"))
+	_refresh_activities()
+
+
+func _build_furnace() -> void:
+	_heading("Potato furnace", "")
+	_modal_title.add_theme_color_override("font_color", Color("ffdeb0"))
+	_modal_card.add_theme_stylebox_override("panel", Cozy.box(Color("30201d"), 22, 24, Color("ae7650")))
+	_modal_card.offset_left = -380
+	_modal_card.offset_right = 380
+	_modal_card.offset_top = -300
+	_modal_card.offset_bottom = 300
+	var hearth := preload("res://scripts/furnace_view.gd").new()
+	_body.add_child(hearth)
+	_refs.furnace_hearth = hearth
+	_refs.activity_status = _wrap("", 22, Color("ffcf79"), true)
+	_refs.activity_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_body.add_child(_refs.activity_status)
+	_refs.activity_detail = _wrap("", 15, Color("e7bd9a"))
+	_refs.activity_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_body.add_child(_refs.activity_detail)
+	_offer("Thawing forge", "Free · 60s of hoe heat", "Work the bellows", "climate_operate:heat_hoe", true)
+	_offer("Fire up the furnace", "2.5× growth · 3× processing for 20s · 60s cooldown", "Burn 25 Icecaps", "activity:furnace:icecap", true)
+	for action: String in ["climate_operate:heat_hoe", "activity:furnace:icecap"]:
+		var card: Control = _refs[action + ":card"]
+		card.add_theme_stylebox_override("panel", Cozy.box(Color("523329"), 13, 16, Color("8f6044")))
+		for label: Node in card.find_children("*", "Label", true, false):
+			label.add_theme_color_override("font_color", Color("ffe2bd"))
+		var button: Button = _refs[action]
+		for state: String in ["normal", "hover", "pressed", "disabled"]:
+			button.add_theme_stylebox_override(state, Cozy.box(Color("eab474") if state == "normal" else (Color("ffd092") if state == "hover" else (Color("c88a52") if state == "pressed" else Color("79533f"))), 10, 12, Color("c78a56")))
+		for state: String in ["font_color", "font_hover_color", "font_pressed_color"]: button.add_theme_color_override(state, Color("38231e"))
+		button.add_theme_color_override("font_disabled_color", Color("e7bd9a"))
 	_refresh_activities()
 
 func _build_duck_patrol() -> void:
-	_heading("Duck patrol", "More ducks. Faster patrols. Fewer pests.")
-	var hero_card := _surface("island", GREEN, true)
+	_heading("Duck patrol", "")
+	_modal_card.offset_top = -380
+	_modal_card.offset_bottom = 380
+	var modal_skin: StyleBoxFlat = Cozy.modal()
+	modal_skin.bg_color = Color("fff9eb")
+	modal_skin.border_color = Color("eacb85")
+	_modal_card.add_theme_stylebox_override("panel", modal_skin)
+	var hero_card := _card(Color("edf7f1"), 14)
 	_body.add_child(hero_card)
-	var hero: BoxContainer = _hbox(15)
+	var hero: VBoxContainer = _vbox(7)
 	hero_card.add_child(hero)
-	hero.add_child(_icon({"kind": "activity", "id": "duck"}, 92))
-	var description: VBoxContainer = _vbox(5)
-	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hero.add_child(description)
-	var status: Label = _wrap("", 21, GREEN, true)
-	description.add_child(status)
+	var pond := preload("res://scripts/duck_pond_view.gd").new()
+	hero.add_child(pond)
+	_refs.duck_pond = pond
+	var status: Label = _wrap("", 23, INK, true)
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hero.add_child(status)
 	_refs["activity_status"] = status
 	var detail: Label = _wrap("", 14, MUTED)
-	description.add_child(detail)
+	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hero.add_child(detail)
 	_refs["activity_detail"] = detail
-	_section_title(_body, "Train your feathered crew")
-	_offer("Flock size", "", "Hire a duck", "activity:duck", true)
+	_offer("Add a duck", "", "Hire a duck", "activity:duck", true)
 	_offer("Patrol speed", "", "Train ducks", "activity:duck:speed", true)
-	_info("duck_summary", "", MUTED, 12)
-	_info("activity_hint", "This island's flock works while you visit.", MUTED)
+	for action: String in ["activity:duck", "activity:duck:speed"]:
+		var skin: StyleBoxFlat = Cozy.box(Color("fff0bf") if action == "activity:duck" else Color("e8f2fa"), 14, 20, Color("e1ce98") if action == "activity:duck" else Color("a7cbd6"))
+		_refs[action + ":card"].add_theme_stylebox_override("panel", skin)
+		_refs[action + ":value"].add_theme_color_override("font_color", Color("435c6b"))
 	_refresh_duck_patrol()
 
 func _refresh_duck_patrol() -> void:
@@ -3400,19 +3442,20 @@ func _refresh_duck_patrol() -> void:
 	var hire_cost: float = float(data.get("duck_cost", 1500))
 	var speed_cost: float = float(data.get("duck_speed_cost", 15000))
 	var coins: float = float(_state.coins)
-	_set_button("activity:duck", "Flock full" if count >= capacity else "Hire +1 · " + _money(float(data.get("duck_cost", 1500))), not bool(data.get("duck_can_buy", false)))
-	_refs["activity:duck:detail"].text = "%d / %d ducks · Each duck covers a different bed." % [count, capacity]
-	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else "Faster · " + _money(float(data.get("duck_speed_cost", 15000)))), not bool(data.get("duck_can_train", false)))
+	_set_button("activity:duck", "Flock full" if count >= capacity else _state.purchase_caption("Hire +1 · " + _money(hire_cost), hire_cost), not bool(data.get("duck_can_buy", false)))
+	_refs["activity:duck:detail"].text = "Room for %d more duck%s" % [capacity - count, "" if capacity - count == 1 else "s"] if count < capacity else "No more room on this island"
+	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else _state.purchase_caption("Faster · " + _money(speed_cost), speed_cost)), not bool(data.get("duck_can_train", false)))
 	_refs["activity:duck:speed:detail"].text = "%.0fs → %.0fs per bed" % [float(data.get("duck_interval", 4)), maxf(2.0, float(data.get("duck_interval", 4)) - 1.0)] if speed < 2 else "2s per bed · Maximum speed"
 	if _refs.has("activity:duck:value"):
-		_refs["activity:duck:value"].text = "%d → %d ducks" % [count, count + 1] if count < capacity else "%d / %d ducks" % [count, capacity]
+		_refs["activity:duck:value"].text = "Clears pests automatically"
 		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
-		_refs["activity:duck:speed:detail"].text = "Less time between beds for your whole flock."
-		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else "Need " + _money(hire_cost - coins) + " more"), "active" if count >= capacity or coins >= hire_cost else "warning")
-		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else "Need " + _money(speed_cost - coins) + " more")), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
-	_refs.duck_summary.text = "Island limits: 1 / 2 / 3 ducks · %d pests cleared" % int(data.get("duck_clears", 0))
-	_refs.activity_status.text = "%d / %d DUCKS ON PATROL" % [count, capacity]
-	_refs.activity_detail.text = "%.0fs between beds" % float(data.get("duck_interval", 4)) if count > 0 else "Build your feathered crew."
+		_refs["activity:duck:speed:detail"].text = "Applies to all your ducks"
+		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("Credit" if _state.can_purchase(hire_cost) else "Credit limit")), "active" if count >= capacity or coins >= hire_cost else "warning")
+		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("Credit" if _state.can_purchase(speed_cost) else "Credit limit"))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
+	_refs.duck_pond.count = count
+	_refs.duck_pond.capacity = capacity
+	_refs.activity_status.text = "%d duck%s on patrol" % [count, "" if count == 1 else "s"] if count > 0 else "No ducks hired yet"
+	_refs.activity_detail.text = "%.0fs per bed · %d pests cleared" % [float(data.get("duck_interval", 4)), int(data.get("duck_clears", 0))] if count > 0 else "Hire a duck to clear pests."
 
 func _refresh_activities() -> void:
 	if _island_id() == 1:
@@ -3452,8 +3495,9 @@ func _refresh_activities() -> void:
 			var remaining: float = float(data.get("furnace_remaining", 0))
 			var cooldown: float = float(data.get("furnace_cooldown", 0))
 			_refs.activity_status.text = "HEAT BURST · %.1fs" % remaining if remaining > 0 else ("COOLING · %ds" % ceili(cooldown) if cooldown > 0 else "READY TO FIRE")
-			_refs["climate_operate:heat_hoe:detail"].text = "Hoe heat: %ds · Hoe [1] melts frozen crops. Reheat with the bellows for free." % ceili(float(data.get("thaw_heat", 0)))
-			_refs.activity_detail.text = "%s Icecaps in storage\n2.5× crop growth · 3× processing · 20 seconds" % _number(float(data.get("furnace_held", 0)))
+			_refs["climate_operate:heat_hoe:detail"].text = "Hoe heat · %ds left" % ceili(float(data.get("thaw_heat", 0))) if float(data.get("thaw_heat", 0)) > 0 else "Free · 60s of hoe heat · Thaws frozen crops"
+			_refs.activity_detail.text = "%s Icecaps stored · 25 per burst" % _number(float(data.get("furnace_held", 0)))
+			if _refs.has("furnace_hearth"): _refs.furnace_hearth.burning = remaining > 0 or float(data.get("thaw_heat", 0)) > 0
 			_set_button("activity:furnace:icecap", "Burning…" if remaining > 0 else ("Cooling…" if cooldown > 0 else "Burn 25 Icecaps"), not bool(data.get("can_charge", false)))
 
 func _build_equipment_header(parent: VBoxContainer) -> void:
@@ -3921,39 +3965,18 @@ func show_tutorial_feedback(message: String) -> void:
 		_tutorial_body.text = message
 
 func _build_farm_help() -> void:
-	_farm_help_card = _card(CREAM, 4)
+	# Keep the shared layout handle for older touch/capture callers. Contextual
+	# advice is now opened from Help, never painted over the farm.
+	_farm_help_card = PanelContainer.new()
 	_farm_help_card.name = "FarmHelp"
-	_place(_farm_help_card, Rect2(28, 290, 302, 0))
-	var row := _hbox(4)
-	_farm_help_card.add_child(row)
-	_farm_help_action = _button("", "farm_help:details")
-	_farm_help_action.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_farm_help_action.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	row.add_child(_farm_help_action)
-	var dismiss_button := _button("×", "farm_help:dismiss")
-	dismiss_button.tooltip_text = "Dismiss this tip"
-	row.add_child(dismiss_button)
-	for button: Button in [_farm_help_action, dismiss_button]:
-		button.custom_minimum_size.y = 30
-		button.add_theme_font_override("font", _plain_font)
-		button.add_theme_font_size_override("font_size", 13)
-		button.add_theme_stylebox_override("normal", _style(CREAM, 6, 6))
-		button.add_theme_stylebox_override("hover", _style(PAPER, 6, 6))
+	_farm_help_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_farm_help_card)
 	_farm_help_card.hide()
 
 func _update_farm_help() -> void:
 	if not is_instance_valid(_farm_help_card) or not is_instance_valid(_state): return
-	var tip: Dictionary = _state.farm_help.tip(_state)
-	if not tip.is_empty() and _help_cooldown > 0.0 and tip.id not in ["pests", "taxes", "debt"]:
-		tip = {}
-	_farm_tip = tip
-	_farm_help_card.visible = not tip.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not _state.run_over and not _crop_row.visible and not _toast_box.visible and _farm_busy_remaining <= 0.0 and _plot_action_text.is_empty() and _climate_console.equipment.is_empty() and not _state.ClimateSystem.Lesson.active(_state)
-	if tip.is_empty(): return
-	var summaries: Dictionary = {"repeat": "Grow another crop · Help", "pests": "Pests · Press 5 to spray", "stocks": "Try a practice boom", "taxes": "Tax after 3 stocks · Help", "debt": "In debt · Recovery tips", "tools": "Upgrade your tools", "ducks": "Ducks can clear pests", "builds": "Explore your builds"}
-	_farm_help_action.text = str(tip.title) if tip.id == "stocks" and float(_state.farm_help.data.practice_remaining) > 0.0 else str(summaries[tip.id])
-	_farm_help_action.text += "  ›"
-	_farm_help_card.position = Vector2(28, root.size.y - 230)
-	_farm_help_card.size = Vector2(302, 0)
+	_farm_help_card.hide()
+	_farm_tip = _state.farm_help.tip(_state)
 
 func _build_plot_action() -> void:
 	_plot_action_box = _card(Color("193c33"), 10)
@@ -3983,10 +4006,10 @@ func set_plot_action(text: String) -> void:
 
 func _build_farm_tip() -> void:
 	if _opened_farm_tip.is_empty(): return
-	_heading(str(_opened_farm_tip.title), "Optional farm help")
+	_heading(str(_opened_farm_tip.title), "")
 	_info("farm_tip_body", str(_opened_farm_tip.body), INK, 16)
 	_body.add_child(_button(str(_opened_farm_tip.label), "farm_help:act", true))
-	_body.add_child(_button("Dismiss this tip", "farm_help:dismiss"))
+	_body.add_child(_button("Back to help", "help"))
 
 func _luck_math() -> String:
 	if not is_instance_valid(_state): return ""

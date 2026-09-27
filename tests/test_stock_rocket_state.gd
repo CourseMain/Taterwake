@@ -166,7 +166,7 @@ func _run() -> void:
 	state.surge_factor = 1001.0
 	state._refresh_market(false)
 	check(is_equal_approx(state.market.icecap.change, 100000.0) and is_equal_approx(state.surge_info().percent, 100000.0), "rocket selected quote and banner allow the exact one-hundred-thousand percent maximum")
-	check(is_equal_approx(state.market.icecap.seed, state.market.icecap.sell * state.CROPS.icecap.yield * state.SEED_YIELD_RATIO), "rocket seeds follow the same final sale value")
+	check(is_equal_approx(state.market.icecap.seed, State.seed_price_for(state.market.icecap.sell)), "rocket seeds follow the same final sale value")
 	state._start_event("shortage")
 	state.event_strength = 16.0
 	state.boost_remaining = 5.0
@@ -188,8 +188,7 @@ func _run() -> void:
 	state.update(0.001)
 	check(state.surge_remaining == 0.0 and state.surge_factor == 1.0 and state.surge_kind == "normal" and is_equal_approx(state.surge_timer, 170.0), "rocket expiry removes the exception without delaying the next regular boom")
 	check(state.market.icecap.sell <= state.CROPS.icecap.base * 101.0 and is_equal_approx(state.rocket_timer, 1790.0), "after expiry the normal ceiling and eligible rocket countdown resume")
-	var seed_event_factor: float = state.event_strength if state.current_event in ["seed_panic", "seed_fair"] else 1.0
-	check(state.market.icecap.seed < rocket_seed_price and is_equal_approx(state.market.icecap.seed, state.market.icecap.sell * state.CROPS.icecap.yield * State.SEED_YIELD_RATIO * seed_event_factor), "rocket expiry lowers actual seed costs along with the sell price while preserving independent seed offers")
+	check(state.market.icecap.seed < rocket_seed_price and is_equal_approx(state.market.icecap.seed, State.seed_price_for(state.market.icecap.sell)), "rocket expiry lowers actual seed costs along with the sell price at the fixed 75% rate")
 
 	state.reset_game()
 	winter(state)
@@ -242,7 +241,7 @@ func _run() -> void:
 	legacy.surge_factor = 31.0
 	legacy.market.golden.sell = state.CROPS.golden.base * 31.0
 	legacy.market.golden.change = 3000.0
-	legacy.market.golden.seed = legacy.market.golden.sell * state.CROPS.golden.yield * state.SEED_YIELD_RATIO
+	legacy.market.golden.seed = legacy.market.golden.sell * state.CROPS.golden.yield * 0.45 # Historical save pricing.
 	for revision in [4, 5, 6, 7]:
 		legacy.mechanics_revision = revision
 		write_save(legacy)

@@ -26,6 +26,8 @@ var _tool_duration: float = 0.5
 var _tool_action: String = ""
 var _tool_grade_scale: float = 1.0
 var _effect_particles: Array[Dictionary] = []
+var harvest_feedback: Node3D
+var _crop_tubers: Dictionary = {}
 var _area_selection: Node3D
 var _area_key: String = ""
 var _furrow_roots: Array[Node3D] = []
@@ -234,6 +236,9 @@ func build_world(island: int = 1) -> void:
 	_climate_field.setup(self)
 	_prepare_tutorial_guidance()
 	set_tutorial_focus(_tutorial_focus, _tutorial_show_labels)
+	harvest_feedback = preload("res://scripts/harvest_feedback.gd").new()
+	add_child(harvest_feedback)
+	harvest_feedback.setup(self)
 
 
 static func layout_point(point: Vector3) -> Vector3:
@@ -454,10 +459,11 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 		var index: int = int(plot_text)
 		if index < 0 or index >= plot_positions.size():
 			return
-		point = plot_positions[index] + Vector3(0.0, 1.85, 0.0)
+		var giant_focus: bool = _crop_tubers.has(index) and bool(_crop_tubers[index].plot.get("cultivated", false))
+		point = plot_positions[index] + Vector3(0.0, 3.15 if giant_focus else 1.85, 0.0)
 		_tutorial_plot_outline.position = plot_positions[index]
 		_tutorial_plot_outline.visible = true
-		_tutorial_marker.font_size = 72
+		_tutorial_marker.font_size = 46 if giant_focus else 72
 		_tutorial_marker.pixel_size = 0.025
 	elif _tutorial_station_roots.has(station):
 		_tutorial_marker.font_size = 38
@@ -506,6 +512,8 @@ func _clear_world() -> void:
 	_villagers.clear()
 	_toolsmiths.clear()
 	_effect_particles.clear()
+	_crop_tubers.clear()
+	harvest_feedback = null
 	_export_flags.clear()
 	_ice_roots.clear()
 	_pest_roots.clear()
@@ -809,6 +817,8 @@ func _garden() -> void:
 func update_plots(plots: Array) -> void:
 	for i in range(mini(plots.size(), _crop_roots.size())):
 		var data: Dictionary = plots[i]
+		# Loading can replace a plot dictionary without changing its visual key.
+		if _crop_tubers.has(i): _crop_tubers[i].plot = data
 		if i < _ice_roots.size():
 			_ice_roots[i].visible = current_island == 3 and (bool(data.get("frozen", false)) or _climate_ice.has(str(i)))
 		var unlocked: bool = bool(data.get("unlocked", true))
@@ -820,41 +830,17 @@ func update_plots(plots: Array) -> void:
 		var watered: bool = bool(data.get("watered", false))
 		var tilled: bool = bool(data.get("tilled", true))
 		var crop_kind: String = str(data.get("crop", "russet"))
-		var crop_color: Color = Color("dfb36f")
-		var foliage_color: Color = Color("749e44")
-		var crop_scale: float = 1.0
-		match crop_kind:
-			"golden":
-				crop_color = Color("f5cc38")
-				foliage_color = Color("9ba149")
-			"giant":
-				crop_color = Color("d7a37b")
-				crop_scale = 1.7
-				foliage_color = Color("729758")
-			"radioactive":
-				crop_color = Color("afff48")
-				foliage_color = Color("75c962")
-			"sunburst":
-				crop_color = Color("ffa629")
-				foliage_color = Color("83a746")
-				crop_scale = 1.2
-			"icecap":
-				crop_color = Color("d8f1ff")
-				foliage_color = Color("759ba5")
-				crop_scale = 1.25
+		var crop_color: Color = _crop_appearance(data).crop
 		var variety: String = str(data.get("variety", ""))
-		if variety in ["hearty", "dry", "frost"]:
-			crop_color = Color({"hearty":"f3cb69", "dry":"a7cb78", "frost":"a6e6eb"}[variety])
-			foliage_color = crop_color.darkened(.24)
-		foliage_color = foliage_color.lerp(Color("988759"), float(damage_level) * 0.065)
-		crop_color = crop_color.lerp(Color("9e8969"), float(damage_level) * 0.035)
-		var elapsed: float = float(data.get("elapsed", 0.0))
-		_crop_roots[i].scale.y = 0.72 + minf(elapsed / 35.0, 1.0) * 0.28 if stage == 2 else 1.0
+		# Only the plant grows. Soil marks and the pest-shaking parent stay fixed.
+		_crop_roots[i].scale = Vector3.ONE
 		var key: String = "%s/%d/%s/%s/%s/%s/%d/%s" % [str(unlocked), stage, str(watered), str(tilled), crop_kind, str(infested), damage_level, str(data.get("pest_destroyed", false))]
 		key += "/" + variety + "/" + str(data.get("cultivated", false))
 		if key == _plot_states[i]:
+			if _crop_tubers.has(i): _update_crop_tuber(_crop_tubers[i])
 			continue
 		_plot_states[i] = key
+		_crop_tubers.erase(i)
 		var root: Node3D = _crop_roots[i]
 		for child in root.get_children():
 			root.remove_child(child)
@@ -886,44 +872,61 @@ func update_plots(plots: Array) -> void:
 					_sphere(root, remains + Vector3(0.10, -0.08, 0.16), Vector3(0.14, 0.055, 0.09), Color("ad8545"))
 			_geometry_batcher.batch_siblings(root)
 			continue
+		var tuber: Node3D = _create_crop_tuber(root, data)
+		tuber.position = Vector3(0, .25, 0)
+		_crop_tubers[i] = {"node": tuber, "plot": data}
+		_update_crop_tuber(_crop_tubers[i])
 		if bool(data.get("cultivated", false)):
-			_sphere(root, Vector3(0, .5 if stage == 3 else .3, 0), Vector3(.85,.68,.8) * (1 if stage == 3 else .55), crop_color)
-			_box(root, Vector3(-.86,.65,.74), Vector3(.08,1.0,.08),Color("b89355"))
-			_gem(root,Vector3(-.86,1.18,.74),GOLD,.16)
-		for crop in range(1 if bool(data.get("cultivated", false)) else 4):
-			var pos := Vector3(-0.48 + float(crop % 2) * 0.96, 0.25, -0.48 + float(crop / 2) * 0.96)
-			if bool(data.get("cultivated", false)): pos = Vector3(0,.8 if stage == 3 else .4,0)
-			if stage == 1:
-				_sphere(root, pos, Vector3(0.24, 0.08, 0.18), Color("af865a"))
-				_leaf(root, pos + Vector3(-0.07, 0.14, 0.0), Vector3(0.17, 0.08, 0.11), Color("8eaf4f"), -0.4)
-				_leaf(root, pos + Vector3(0.07, 0.2, 0.0), Vector3(0.17, 0.08, 0.11), Color("a2bc62"), 0.4)
-			else:
-				var height: float = 0.53 if stage == 2 else 0.77
-				_cylinder(root, pos + Vector3(0.0, height * 0.48, 0.0), 0.045, 0.025, height, LEAF, 5)
-				for leaf_index in range(5):
-					var angle: float = float(leaf_index) * 2.4 + float(crop)
-					var radius: float = 0.16 if stage == 2 else 0.23
-					var leaf_pos: Vector3 = pos + Vector3(cos(angle) * radius, 0.20 + float(leaf_index) * height * 0.13, sin(angle) * radius)
-					var leaf_color: Color = foliage_color if leaf_index % 2 == 0 else foliage_color.darkened(0.20)
-					var leaf := _sphere(root, leaf_pos, Vector3(0.30, 0.11, 0.19) * (0.84 if stage == 2 else 1.0), leaf_color)
-					leaf.rotation = Vector3(0.0, -angle, 0.28)
-				if stage == 3:
-					for potato_index in range(2):
-						var potato_pos: Vector3 = pos + Vector3(-0.2 + float(potato_index) * 0.39, 0.02, 0.20)
-						var potato := _sphere(root, potato_pos, Vector3(0.22, 0.17, 0.18) * crop_scale, crop_color)
-						potato.rotation.y = 0.6
-						_sphere(root, potato_pos + Vector3(0.08, 0.14, 0.04) * crop_scale, Vector3(0.025, 0.015, 0.025), crop_color.darkened(0.22))
-					_sphere(root, pos + Vector3(0.0, height + 0.06, 0.0), Vector3(0.09, 0.055, 0.09), Color("f5dfdc"))
-					_sphere(root, pos + Vector3(0.0, height + 0.10, 0.0), Vector3(0.025, 0.025, 0.025), GOLD)
-					if crop_kind == "sunburst":
-						_sunburst_bloom(root, pos + Vector3(0.0, height + 0.11, 0.0))
-					elif crop_kind == "icecap":
-						_icecap_bloom(root, pos + Vector3(0.0, height + 0.13, 0.0))
+			# Compost and the measuring stake distinguish the real bonus crop.
+			for clump in range(6):
+				var angle: float = clump * TAU / 6.0
+				_sphere(root, Vector3(cos(angle)*.72,.25,sin(angle)*.72), Vector3(.18,.08,.15), Color("4e4230"))
+			_box(root, Vector3(-.86,.65,.74), Vector3(.08,1.0,.08), Color("b89355"))
+			for notch in range(3): _box(root, Vector3(-.86,.56+notch*.21,.79), Vector3(.16,.035,.025), CREAM)
 		if stage == 3:
-			var sparkle := _gem(root, Vector3(0.0, 1.53, 0.0), crop_color if crop_kind == "radioactive" else GOLD, 0.12)
+			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), crop_color if crop_kind == "radioactive" else GOLD, 0.12)
 			_ripe_sparkles.append(sparkle)
 		_geometry_batcher.batch_siblings(root)
 	_update_pest_caption_density()
+
+func _crop_appearance(plot: Dictionary) -> Dictionary:
+	var crop_kind: String = str(plot.get("crop", "russet"))
+	var crop_color := Color(str({"russet":"dfb36f", "giant":"d7a37b", "golden":"f5cc38", "radioactive":"afff48", "sunburst":"ffa629", "icecap":"d8f1ff"}.get(crop_kind, "dfb36f")))
+	var foliage := Color(str({"russet":"749e44", "giant":"729758", "golden":"9ba149", "radioactive":"75c962", "sunburst":"83a746", "icecap":"759ba5"}.get(crop_kind, "749e44")))
+	var variety: String = str(plot.get("variety", ""))
+	if variety in ["hearty", "dry", "frost"]:
+		crop_color = Color({"hearty":"f3cb69", "dry":"a7cb78", "frost":"a6e6eb"}[variety])
+		foliage = crop_color.darkened(.24)
+	var damage: int = int(clampf(float(plot.get("pest_damage", 0)), 0, 1) * 10)
+	return {"crop": crop_color.lerp(Color("9e8969"), damage * .035), "foliage": foliage.lerp(Color("988759"), damage * .065)}
+
+func _crop_tuber_size(plot: Dictionary) -> float:
+	if bool(plot.get("cultivated", false)): return 1.12
+	return float({"giant": .90, "sunburst": .70, "icecap": .72}.get(str(plot.get("crop", "russet")), .62))
+
+func _create_crop_tuber(parent: Node3D, plot: Dictionary) -> Node3D:
+	# The intro, ordinary growth and harvest all use this same potato.
+	var tuber := Node3D.new()
+	tuber.name = "GiantTuber" if bool(plot.get("cultivated", false)) else "PotatoTuber"
+	parent.add_child(tuber)
+	var appearance: Dictionary = _crop_appearance(plot)
+	var color: Color = appearance.crop
+	_sphere(tuber, Vector3(0,.58,0), Vector3(1.03,.87,.83), color)
+	_sphere(tuber, Vector3(-.65,.48,.03), Vector3(.45,.52,.59), color.darkened(.07))
+	for eye: Vector3 in [Vector3(.35,1.19,.43), Vector3(-.30,.72,.79), Vector3(.65,.38,.63)]:
+		_sphere(tuber, eye, Vector3(.05,.035,.025), color.darkened(.27))
+	for side: float in [-1, 1]:
+		_leaf(tuber, Vector3(side*.22,1.44,0), Vector3(.42,.14,.24), appearance.foliage, side*.35)
+	if int(plot.get("stage", 0)) == 3:
+		if plot.get("crop") == "sunburst": _sunburst_bloom(tuber, Vector3(0,1.58,0))
+		elif plot.get("crop") == "icecap": _icecap_bloom(tuber, Vector3(0,1.58,0))
+	_geometry_batcher.batch_siblings(tuber)
+	return tuber
+
+func _update_crop_tuber(entry: Dictionary) -> void:
+	var plot: Dictionary = entry.plot
+	var progress: float = 1.0 if int(plot.stage) == 3 else clampf(float(plot.get("elapsed", 0)) / float(FarmState.CROPS[str(plot.crop)].grow), 0, 1)
+	entry.node.scale = Vector3.ONE * _crop_tuber_size(plot) * lerpf(.375, 1.0, smoothstep(0, 1, progress))
 
 
 func highlight_plot(index: int) -> void:
@@ -946,6 +949,9 @@ func set_player_position(pos: Vector3) -> void:
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
+	if is_instance_valid(harvest_feedback): harvest_feedback.animate(delta)
+	for entry: Dictionary in _crop_tubers.values():
+		if is_instance_valid(entry.node): _update_crop_tuber(entry)
 	if is_instance_valid(coast): coast.animate(delta)
 	if is_instance_valid(profession_world): profession_world.animate(delta)
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
@@ -979,6 +985,7 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	if is_instance_valid(_player_body):
 		_player_body.carry_weight = 1.0
 		_player_body.pour_pose = pow(sin((1.0 - _tool_time / _tool_duration) * PI), 2) if _tool_time > 0 and _tool_action == "water" else 0.0
+		_player_body.harvest_pose = harvest_feedback.pull_pose if is_instance_valid(harvest_feedback) else 0.0
 		_player_body.animate(delta, moving, sprint)
 	if is_instance_valid(_rotor):
 		_rotor.rotation.z += delta * 0.38
@@ -1069,8 +1076,7 @@ func _market(pos: Vector3) -> void:
 	for i in range(2):
 		var crate_pos := Vector3(-1.65 + float(i) * 3.3, 1.08, 1.6)
 		_crate(root, crate_pos, true)
-	_crate(root, Vector3(2.9, 0.42, 0.8), true)
-	_crate(root, Vector3(3.0, 1.2, 0.8), false)
+	preload("res://scripts/village_details.gd").mara_stall(self, root)
 	var vendor := _npc_person(root, Vector3(0.0, 0.18, 0.65), "mara")
 	_villagers.append(vendor)
 	_shop_label(root, "Seeds", Vector3(0.0, 4.45, 0.0))
@@ -1079,18 +1085,18 @@ func _market(pos: Vector3) -> void:
 func _roll_house(pos: Vector3) -> void:
 	var root := _root("RollHouse", pos)
 	_box(root, Vector3(0.0, 0.16, 0.0), Vector3(5.5, 0.35, 4.5), Color("aaa58e"))
-	_box(root, Vector3(0.0, 1.88, 0.0), Vector3(4.7, 3.45, 3.6), Color("b0a394") if current_island == 3 else (Color("82c8ba") if current_island == 2 else Color("ead4a8")))
+	_box(root, Vector3(0.0, 1.88, 0.0), Vector3(4.7, 3.45, 3.6), Color("e3b355"))
 	_box(root, Vector3(0.0, 0.21, 2.35), Vector3(5.65, 0.35, 1.0), Color("c4c1a6"))
 	_box(root, Vector3(0.0, 0.12, 2.89), Vector3(6.0, 0.2, 0.55), Color("d5ceb2"))
-	_roof(root, 5.55, 4.45, 3.68, 1.25, Color("5b748b") if current_island == 3 else (Color("ec996d") if current_island == 2 else Color("4b8688")))
+	_roof(root, 5.55, 4.45, 3.68, 1.25, Color("a6293c"))
 	if current_island == 3:
 		_snow_roof(root, 5.55, 4.45, 3.68, 1.25)
-	_box(root, Vector3(0.0, 1.34, 1.88), Vector3(1.25, 2.4, 0.18), Color("647966"))
-	_box(root, Vector3(0.0, 1.38, 1.99), Vector3(0.96, 2.1, 0.06), Color("45685f"))
+	_box(root, Vector3(0.0, 1.34, 1.88), Vector3(1.25, 2.4, 0.18), Color("713039"))
+	_box(root, Vector3(0.0, 1.38, 1.99), Vector3(0.96, 2.1, 0.06), Color("281f2d"))
 	_sphere(root, Vector3(0.29, 1.32, 2.05), Vector3(0.065, 0.065, 0.065), GOLD)
 	for x in [-1.66, 1.66]:
 		_box(root, Vector3(x, 2.27, 1.87), Vector3(0.81, 1.28, 0.14), CREAM)
-		_box(root, Vector3(x, 2.27, 1.97), Vector3(0.6, 1.03, 0.07), Color("ffd48c") if current_island == 3 else Color("749e9a"))
+		_box(root, Vector3(x, 2.27, 1.97), Vector3(0.6, 1.03, 0.07), Color("ffd778"))
 		_box(root, Vector3(x, 2.27, 2.03), Vector3(0.07, 1.05, 0.07), CREAM)
 		_box(root, Vector3(x, 2.27, 2.03), Vector3(0.6, 0.07, 0.07), CREAM)
 	for x in [-2.1, 2.1]:
@@ -1098,15 +1104,15 @@ func _roll_house(pos: Vector3) -> void:
 		_box(root, Vector3(x, 0.39, 2.1), Vector3(0.46, 0.3, 0.43), Color("e8d8b8"))
 	_box(root, Vector3(0.0, 3.55, 2.12), Vector3(5.1, 0.36, 0.35), CREAM)
 	_cylinder(root, Vector3(0.0, 5.3, 0.0), 0.045, 0.045, 1.6, Color("8b704c"), 6)
-	_box(root, Vector3(0.58, 5.75, 0.0), Vector3(1.15, 0.57, 0.06), Color("e2b255"))
-	_sphere(root, Vector3(0.58, 5.77, 0.065), Vector3(0.17, 0.22, 0.04), Color("7f693d"))
+	_box(root, Vector3(0.58, 5.75, 0.0), Vector3(1.15, 0.57, 0.06), Color("be3345"))
+	_sphere(root, Vector3(0.58, 5.77, 0.065), Vector3(0.17, 0.22, 0.04), Color("ffda71"))
 	# The gem display and dice identify the high-stakes Roll House.
-	_box(root, Vector3(3.4, 0.52, 1.7), Vector3(0.94, 1.02, 0.78), Color("807093"))
-	_box(root, Vector3(3.4, 1.07, 1.7), Vector3(1.02, 0.11, 0.88), Color("a493b0"))
-	_box(root, Vector3(3.4, 1.14, 1.7), Vector3(0.5, 0.025, 0.065), Color("423e50"))
+	_box(root, Vector3(3.4, 0.52, 1.7), Vector3(0.94, 1.02, 0.78), Color("922f42"))
+	_box(root, Vector3(3.4, 1.07, 1.7), Vector3(1.02, 0.11, 0.88), Color("e2b44d"))
+	_box(root, Vector3(3.4, 1.14, 1.7), Vector3(0.5, 0.025, 0.065), Color("302432"))
 	_box(root, Vector3(3.4, 0.62, 2.10), Vector3(0.40, 0.45, 0.035), CREAM)
-	_label(root, "ROLL", Vector3(3.4, 0.64, 2.15), 20, Color("655175"), false)
-	_rare_gem = _gem(root, Vector3(3.4, 1.65, 1.7), Color("ba8de8"), 0.43)
+	_label(root, "ROLL", Vector3(3.4, 0.64, 2.15), 20, Color("8c2438"), false)
+	_rare_gem = _gem(root, Vector3(3.4, 1.65, 1.7), Color("ffe17e"), 0.43)
 	_die(root, Vector3(-3.1, 0.64, 2.0), 0.72, 0.3)
 	_die(root, Vector3(-2.9, 1.23, 2.0), 0.5, -0.2)
 	_roll_label = _shop_label(root, "Roll House", Vector3(0.0, 6.50, 0.0))
@@ -1118,10 +1124,38 @@ func _roll_house(pos: Vector3) -> void:
 		board.rotation.z = side * 0.50
 	_box(_roll_gate, Vector3(0.0, 1.39, 2.24), Vector3(0.23, 0.28, 0.08), Color("d3b06d"))
 	_roll_gate.visible = false
-	for i in range(7):
-		var x: float = -2.15 + float(i) * 0.72
-		var flag := _box(root, Vector3(x, 3.16 - sin(float(i) * PI / 6.0) * 0.34, 2.34), Vector3(0.33, 0.45, 0.04), Color("a88dad") if i % 2 == 0 else GOLD)
-		flag.rotation.z = 0.15 * sin(float(i))
+	# Velvet folds and tied curtains turn the entrance into a little stage.
+	var curtains := Node3D.new()
+	curtains.name = "RollHouseCurtains"
+	root.add_child(curtains)
+	for side: float in [-1, 1]:
+		for fold in range(4):
+			var x: float = side * (.53 + fold * .13)
+			var tint := Color("bb3546") if fold % 2 == 0 else Color("8f2436")
+			_bar(curtains, Vector3(x, 3.26, 2.2), Vector3(side * .93, 1.65, 2.23 + fold * .025), .14, tint)
+			_bar(curtains, Vector3(side * .93, 1.65, 2.23 + fold * .025), Vector3(x, .52, 2.24), .14, tint)
+		_box(curtains, Vector3(side * .94, 1.65, 2.37), Vector3(.38, .12, .1), GOLD)
+		_bar(curtains, Vector3(side * 1.02, 1.63, 2.39), Vector3(side * 1.11, 1.24, 2.4), .04, GOLD)
+		_sphere(curtains, Vector3(side * 1.11, 1.2, 2.4), Vector3(.08,.13,.06), GOLD)
+		for fold in range(3):
+			_box(root, Vector3(side * (1.42 + fold * .16), 2.27, 2.07), Vector3(.12, 1.05, .10), Color("aa3243") if fold % 2 == 0 else Color("cf4e51"))
+	# Gold-trimmed red carpet stays flat and clear of the station's hit targets.
+	_box(root, Vector3(0, .24, 2.9), Vector3(1.85, .04, 1.8), GOLD)
+	_box(root, Vector3(0, .27, 2.9), Vector3(1.64, .045, 1.76), Color("aa273b"))
+	var marquee := Node3D.new()
+	marquee.name = "RollHouseMarquee"
+	root.add_child(marquee)
+	_box(marquee, Vector3(0, 3.54, 2.37), Vector3(4.95, .70, .32), Color("e6b646"))
+	_box(marquee, Vector3(0, 3.54, 2.56), Vector3(4.61, .44, .08), Color("822938"))
+	var sign := _label(marquee, "ROLL HOUSE", Vector3(0, 3.55, 2.63), 35, Color("ffe7a2"), false)
+	sign.outline_size = 2
+	for i in range(13):
+		var x: float = -2.27 + i * .378
+		for y: float in [3.23, 3.85]:
+			var bulb := _sphere(marquee, Vector3(x, y, 2.59), Vector3(.065,.065,.06), Color("fff0b0"))
+			bulb.material_override = _bright_material(Color("ffe398"))
+	for side: float in [-1, 1]:
+		_bar(root, Vector3(side * 2.5, 3.78, 2.27), Vector3(0, 4.93, 2.27), .075, GOLD)
 
 func _windmill(pos: Vector3) -> void:
 	var root := _root("Windmill", pos)
@@ -1209,22 +1243,24 @@ func _tree(pos: Vector3, size: float) -> void:
 		_sphere(root, Vector3(-0.65 + float(i) * 0.58, 2.45 + float(i % 2) * 0.65, 1.03), Vector3(0.15, 0.16, 0.15), Color("d5a660"))
 
 func _staff_stalls() -> void:
-	_place_stallholder("mara", "market", "MarketStall", Vector3(0,.18,.65))
-	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.6,.05,3.0))
-	_place_stallholder("rook", "roll", "RollHouse", Vector3(.7,.25,3.3))
-	_place_stallholder("ada", "builds", "WashAndSortWorkshop", Vector3(1.65,0,4.8 if current_island == 2 else 2.2))
-	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.0,0,.3))
-	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.7,0,.8))
+	# Each keeper has a reason to stand here: serve the counter, mind the
+	# doorway, inspect the belt or watch the ducks. Leave their approaches open.
+	_place_stallholder("mara", "market", "MarketStall", Vector3(-.25,.18,.68), -12)
+	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
+	_place_stallholder("rook", "roll", "RollHouse", Vector3(1.1,.25,3.15), -32)
+	_place_stallholder("ada", "builds", "WashAndSortWorkshop", Vector3(2.65,0,1.05), -108)
+	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
+	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
 	var dock: String = "GoldenShoresDock" if current_island == 1 else "GoldenShoresHarbor" if current_island == 2 else "FrosthollowFerry"
-	_place_stallholder("hollis", "island", dock, Vector3(-.5,.28,1.2))
-	if current_island == 3: _place_stallholder("oren", "activities", "FrostFurnace", Vector3(-1.45,0,2.1))
+	_place_stallholder("hollis", "island", dock, Vector3(-.62,.28,.95), 145 if current_island == 1 else 65)
+	if current_island == 3: _place_stallholder("oren", "activities", "FrostFurnace", Vector3(-1.65,0,2.0), 100)
 	elif current_island == 2:
-		_place_stallholder("tess", "activities", "BuyerContracts", Vector3(.2,0,1.5))
+		_place_stallholder("tess", "activities", "BuyerContracts", Vector3(.4,0,1.55), 38)
 		_staff_by_station.erase("quests")
 		for target: StaticBody3D in _interaction_targets:
 			if target.get_parent() == _npc_actors.tess: target.set_meta("station","activities")
 
-func _place_stallholder(id: String, station: String, stall_name: String, at: Vector3) -> void:
+func _place_stallholder(id: String, station: String, stall_name: String, at: Vector3, facing_degrees: float) -> void:
 	var stall: Node3D = get_node(stall_name)
 	var actor: Node3D = _npc_actors.get(id)
 	if actor == null:
@@ -1233,7 +1269,7 @@ func _place_stallholder(id: String, station: String, stall_name: String, at: Vec
 	elif actor.get_parent() != stall:
 		actor.reparent(stall, false)
 	actor.position = at
-	actor.rotation.y = .15
+	actor.rotation.y = deg_to_rad(facing_degrees)
 	_staff_by_station[station] = actor
 
 func _npc_person(parent: Node3D, pos: Vector3, id: String, station: String = "") -> Node3D:
@@ -1334,7 +1370,7 @@ func nearby_station() -> Dictionary:
 	for point: Vector3 in plot_positions:
 		reach = minf(reach, player.position.distance_to(point))
 	for body: StaticBody3D in _interaction_targets:
-		if not is_instance_valid(body) or not body.is_visible_in_tree(): continue
+		if not is_instance_valid(body) or not body.is_visible_in_tree() or body.collision_layer == 0: continue
 		var station: String = str(body.get_meta("station"))
 		if station.begins_with("equipment:"): continue
 		var shape: BoxShape3D = body.get_child(0).shape
@@ -1468,7 +1504,7 @@ func _roof(parent: Node3D, width: float, depth: float, base: float, rise: float,
 	_bar(parent, verts[5], verts[4], 0.065, CREAM)
 	_bar(parent, verts[2], verts[5], 0.075, color.lightened(0.15))
 
-func _prism(parent: Node3D, pos: Vector3, width: float, depth: float, height: float, color: Color) -> void:
+func _prism(parent: Node3D, pos: Vector3, width: float, depth: float, height: float, color: Color) -> MeshInstance3D:
 	var x: float = width * 0.5
 	var z: float = depth * 0.5
 	var cut: float = 2.3
@@ -1491,6 +1527,7 @@ func _prism(parent: Node3D, pos: Vector3, width: float, depth: float, height: fl
 	instance.set_meta("terrain_shell", true)
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(instance)
+	return instance
 
 func highlight_tiles(indices: Array[int]) -> void:
 	if not is_instance_valid(_area_selection):
@@ -1510,15 +1547,20 @@ func highlight_tiles(indices: Array[int]) -> void:
 			_box(_area_selection, pos + Vector3(side, 0.25, 0.0), Vector3(0.075, 0.04, 2.1), Color("8ce5d2"))
 			_box(_area_selection, pos + Vector3(0.0, 0.25, side), Vector3(2.1, 0.04, 0.075), Color("8ce5d2"))
 
-func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade: int = 0) -> void:
+func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade: int = 0, snapshots: Dictionary = {}) -> void:
 	if not is_instance_valid(_tool):
 		return
+	if is_instance_valid(harvest_feedback):
+		if action == "harvest" and not snapshots.is_empty(): harvest_feedback.harvest(snapshots)
+		elif action == "compost":
+			for index in indices: harvest_feedback.compost(int(index))
+		else: harvest_feedback.audio.play_action(action)
 	_tool_action = action
 	_tool_duration = 0.5 / (1.0 + float(grade) * 0.35)
 	_tool_time = _tool_duration
 	_tool_grade_scale = 1.0 + float(grade) * 0.2
 	_tool.scale = Vector3.ONE * 0.001
-	_tool.visible = action != "water"
+	_tool.visible = action not in ["water", "harvest", "compost"]
 	for child in _tool.get_children():
 		_tool.remove_child(child)
 		child.queue_free()
@@ -1541,6 +1583,7 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 		if index < 0 or index >= plot_positions.size():
 			continue
 		valid_indices.append(index)
+		if action in ["harvest", "compost"]: continue
 		var pos: Vector3 = plot_positions[index]
 		# Keep the action readable without filling a large field with hundreds of particles.
 		var budget: int = 64 if action == "harvest" and multiplier >= 8 else 40
@@ -1636,8 +1679,8 @@ func _animate_effects(delta: float) -> void:
 		# Brief eased pickup/put-away avoids a full-size tool popping into existence.
 		var envelope: float = smoothstep(0, 0.18, progress) * (1.0 - smoothstep(0.76, 1.0, progress))
 		_tool.scale = Vector3.ONE * maxf(0.001, envelope) * _tool_grade_scale
-		_player_body.rotation.x = stroke * -0.14
-		_tool.visible = _tool_time > 0.0 and _tool_action != "water"
+		_player_body.rotation.x = stroke * -0.14 if _tool_action != "harvest" else 0.0
+		_tool.visible = _tool_time > 0.0 and _tool_action not in ["water", "harvest", "compost"]
 		if _tool_time == 0.0:
 			_player_body.rotation.x = 0.0
 	for i in range(_effect_particles.size() - 1, -1, -1):
@@ -1711,9 +1754,10 @@ func _valley_dock() -> void:
 
 
 func _tropical_island() -> void:
-	_prism(self, Vector3(0.0, -1.35, 0.0), 45.7, 35.5, 1.6, Color("b99563"))
-	_prism(self, Vector3(0.0, -0.58, 0.0), 46.0, 36.0, 0.55, Color("d6b97d"))
-	_prism(self, Vector3(0.0, -0.17, 0.0), 46.3, 36.3, 0.30, Color("efdaa0"))
+	_prism(self, Vector3(0.0, -1.35, 0.0), 45.7, 35.5, 1.6, Color("9d8668"))
+	_prism(self, Vector3(0.0, -0.58, 0.0), 46.0, 36.0, 0.55, Color("b9a884"))
+	var sand := _prism(self, Vector3(0.0, -0.17, 0.0), 46.3, 36.3, 0.30, Color("e5d4ac"))
+	sand.material_override = preload("res://scripts/island_terrain.gd").material(false, Vector2(46.3, 36.3))
 	var ground := StaticBody3D.new()
 	ground.name = "GoldenShoresGround"
 	ground.set_meta("ground", true)
@@ -1727,24 +1771,20 @@ func _tropical_island() -> void:
 
 
 func _tropical_paths() -> void:
-	_box(self, Vector3(0.0, 0.027, -6.6), Vector3(35.0, 0.07, 2.0), Color("e2c78e"))
-	_box(self, Vector3(10.2, 0.029, 2.0), Vector3(2.0, 0.07, 18.0), Color("e2c78e"))
-	_box(self, Vector3(1.0, 0.032, 10.6), Vector3(30.5, 0.07, 2.1), Color("e2c78e"))
+	_box(self, Vector3(0.0, 0.027, -6.6), Vector3(35.0, 0.07, 2.0), Color("c9b99a"))
+	_box(self, Vector3(10.2, 0.029, 2.0), Vector3(2.0, 0.07, 18.0), Color("c9b99a"))
+	_box(self, Vector3(1.0, 0.032, 10.6), Vector3(30.5, 0.07, 2.1), Color("c9b99a"))
 	for i in range(29):
-		_box(self, Vector3(-15.5 + float(i) * 1.1, 0.075, -6.6 + _rng.randf_range(-0.35, 0.35)), Vector3(0.60, 0.035, 0.65), Color("f4e5b8"))
+		_box(self, Vector3(-15.5 + float(i) * 1.1, 0.075, -6.6 + _rng.randf_range(-0.35, 0.35)), Vector3(0.60, 0.035, 0.65), Color("e4d6b6"))
 	for i in range(15):
-		var paver := _box(self, Vector3(10.2, 0.078, -5.5 + float(i) * 1.02), Vector3(0.76, 0.036, 0.42), Color("f4e5b8"))
+		var paver := _box(self, Vector3(10.2, 0.078, -5.5 + float(i) * 1.02), Vector3(0.76, 0.036, 0.42), Color("e4d6b6"))
 		paver.rotation.y = _rng.randf_range(-0.1, 0.1)
 
 
 func _tropical_scenery() -> void:
 	for point in [Vector3(-21.0, 0.0, -12.5), Vector3(-20.0, 0.0, -3.0), Vector3(-20.3, 0.0, 9.5), Vector3(-16.2, 0.0, 14.7), Vector3(20.1, 0.0, -12.5), Vector3(21.2, 0.0, 3.5), Vector3(20.0, 0.0, 14.6), Vector3(10.9, 0.0, 15.7)]:
 		_palm(self, point, _rng.randf_range(0.9, 1.25))
-	for i in range(24):
-		var point := Vector3(_rng.randf_range(-20.0, 20.0), 0.1, _rng.randf_range(13.0, 16.6))
-		if absf(point.x) < 6.0:
-			point.z = 16.0
-		_sphere(self, point, Vector3(0.14, 0.07, 0.11), Color("fff1ce") if i % 2 == 0 else Color("dfad87"))
+	preload("res://scripts/island_terrain.gd").beach_shells(self)
 	for point in [Vector3(-19.0, 0.0, 5.0), Vector3(-17.8, 0.0, -15.0), Vector3(17.1, 0.0, -15.0), Vector3(17.8, 0.0, 13.9)]:
 		for index in range(4):
 			var angle: float = float(index) * 1.9
@@ -1938,7 +1978,9 @@ func set_golden_hat(value: bool) -> void:
 func _winter_island() -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
 	_prism(self, Vector3(0.0, -0.59, 0.0), 55.8, 43.8, 0.57, Color("b4c4ca"))
-	_prism(self, Vector3(0.0, -0.15, 0.0), 56.2, 44.2, 0.34, Color("e6eef0"))
+	var snow := _prism(self, Vector3(0.0, -0.15, 0.0), 56.2, 44.2, 0.34, Color("e6eef0"))
+	snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(56.2, 44.2))
+	preload("res://scripts/island_terrain.gd").snowbanks(self)
 	var ground := StaticBody3D.new()
 	ground.name = "FrosthollowGround"
 	ground.set_meta("ground", true)
@@ -2072,7 +2114,7 @@ func _toolsmith(parent: Node3D, pos: Vector3) -> void:
 	_staff_by_station["tools"] = smith
 	smith.name = "PotatoToolsmith"
 	smith.position = pos
-	smith.rotation.y = 0.30
+	smith.rotation.y = deg_to_rad(55 if current_island == 3 else -55)
 	_toolsmiths.append(smith)
 	# The NPC has its own compact hit box: clicking their face or boots opens
 	# upgrades, as does clicking the bench. It never extends over crop beds.
@@ -2430,12 +2472,25 @@ func _activity_station() -> void:
 		_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "activities")
 	else:
 		var furnace: Node3D = _root("FrostFurnace", Vector3(17.8, 0, 10))
-		_box(furnace, Vector3(0, 0.22, 0), Vector3(3.3, 0.44, 2.8), Color("668291"))
-		_box(furnace, Vector3(0, 1.2, 0), Vector3(2.5, 2.1, 2.2), Color("7395a6"))
-		_box(furnace, Vector3(0, 1.0, 1.15), Vector3(1.8, 1.2, 0.10), Color("273e4d"))
-		_box(furnace, Vector3(0.74, 2.8, -0.45), Vector3(0.64, 1.9, 0.68), Color("476373"))
-		_box(furnace, Vector3(0.74, 3.81, -0.45), Vector3(0.93, 0.18, 0.94), Color("cbe8ed"))
+		_box(furnace, Vector3(0, 0.22, 0), Vector3(3.3, 0.44, 2.8), Color("7c6050"))
+		_box(furnace, Vector3(0, 1.2, 0), Vector3(2.5, 2.1, 2.2), Color("a2644b"))
+		_box(furnace, Vector3(0, 1.0, 1.15), Vector3(1.8, 1.2, 0.10), Color("261b19"))
+		_box(furnace, Vector3(0.74, 2.8, -0.45), Vector3(0.64, 1.9, 0.68), Color("8a553c"))
+		_box(furnace, Vector3(0.74, 3.81, -0.45), Vector3(0.93, 0.18, 0.94), Color("e2eff1"))
 		_box(furnace, Vector3(-0.3, 2.3, 0), Vector3(2.2, 0.16, 2.3), Color("d9f0f0"))
+		# Copper hood, brick joints, stacked fuel and a permanently warm hearth.
+		for y: float in [0.48, 0.88, 1.28, 1.68, 2.08]:
+			_box(furnace, Vector3(0, y, 1.108), Vector3(2.52, 0.035, 0.025), Color("764c3b"))
+			_box(furnace, Vector3(1.258, y, 0), Vector3(0.025, 0.035, 2.2), Color("764c3b"))
+		_box(furnace, Vector3(0, 1.78, 1.28), Vector3(2.15, 0.2, 0.36), Color("d29459"))
+		_box(furnace, Vector3(0, 0.4, 1.42), Vector3(2.35, 0.18, 0.68), Color("d1a47b"))
+		var embers: MeshInstance3D = _box(furnace, Vector3(0, 0.55, 1.22), Vector3(1.55, 0.15, 0.15), Color("db7436"))
+		embers.material_override = _bright_material(Color("ffad55"))
+		for index in range(5):
+			_box(furnace, Vector3(-1.5, 0.38 + (index / 2) * 0.2, -0.5 + (index % 2) * 0.48), Vector3(0.62, 0.18, 0.4), Color("735039"))
+		_box(furnace, Vector3(1.46, 0.53, 0.68), Vector3(0.6, 0.18, 0.76), Color("bd824a"))
+		_box(furnace, Vector3(1.46, 0.7, 0.68), Vector3(0.5, 0.15, 0.65), Color("663e2e"))
+		_box(furnace, Vector3(1.46, 0.82, 0.68), Vector3(0.6, 0.1, 0.76), Color("bd824a"))
 		_furnace_flame = Node3D.new()
 		furnace.add_child(_furnace_flame)
 		for x: float in [-0.55, 0.0, 0.55]:
@@ -2462,7 +2517,7 @@ func set_activity_state(info: Dictionary) -> void:
 		3:
 			var remaining: float = maxf(float(info.get("furnace_remaining", 0)), float(info.get("thaw_heat", 0)))
 			_activity_label.text = "Furnace · %.0fs" % remaining if remaining > 0 else "Furnace"
-			_furnace_flame.visible = remaining > 0
+			_furnace_flame.visible = true
 			for steam: Node3D in _furnace_steam: steam.visible = remaining > 0
 
 func _animate_activities(delta: float) -> void:
@@ -2487,7 +2542,8 @@ func _animate_activities(delta: float) -> void:
 		body.position.y = absf(sin(clock * (11 if active else 2))) * (0.09 if active else 0.015)
 		body.rotation.x = sin(float(patrol.get("peck", 0)) * 18) * 0.35 if float(patrol.get("peck", 0)) > 0 else 0.0
 	if current_island == 3 and is_instance_valid(_furnace_flame) and _furnace_flame.visible:
-		_furnace_flame.scale = Vector3(1, 0.95 + sin(_time * 12) * 0.12, 1)
+		var active: bool = maxf(float(_activity_info.get("furnace_remaining", 0)), float(_activity_info.get("thaw_heat", 0))) > 0
+		_furnace_flame.scale = Vector3(1, (0.95 if active else 0.42) + sin(_time * 8) * 0.06, 1)
 		for index: int in range(_furnace_steam.size()):
 			var phase: float = fmod(_time * 0.5 + float(index) / 5, 1.0)
 			_furnace_steam[index].position = Vector3(0.74 + phase * 0.8, 4.0 + phase * 2.3, -0.45)

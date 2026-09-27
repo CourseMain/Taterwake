@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<meta name="game-version" content="1.0.2.5">
+		<meta name="game-version" content="1.0.2.75">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<title>Taterland</title>
@@ -49,13 +49,34 @@ body {
 	min-height: 44px;
 	width: 44px;
 	padding: 0;
-	border: 1px solid #87a68b;
-	border-radius: 10px;
-	background: #193c33;
+	border: 0;
+	background: transparent;
 	color: #fff3cf;
-	font: 500 26px system-ui, sans-serif;
+	display: grid;
+	place-items: center;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 }
+#fullscreen-button svg {
+	width: 22px;
+	height: 22px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	filter: drop-shadow(0 1px 1px #071a1aaa);
+}
+#fullscreen-button:hover { color: #fff; }
+#fullscreen-button:active { color: #ffe09b; }
+#fullscreen-button:focus-visible {
+	outline: 1px solid #fff3cf;
+	outline-offset: -5px;
+	border-radius: 8px;
+}
+#fullscreen-button .fullscreen-exit { display: none; }
+#fullscreen-button[aria-pressed="true"] .fullscreen-enter { display: none; }
+#fullscreen-button[aria-pressed="true"] .fullscreen-exit { display: block; }
 #fullscreen-hint {
 	position: fixed; z-index: 21; left: 10%; right: 10%; bottom: 70px;
 	padding: 16px; border-radius: 12px; background: #193c33; color: #fff3cf;
@@ -136,7 +157,10 @@ body {
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
-		<button id="fullscreen-button" type="button" aria-label="Enter fullscreen" title="Enter fullscreen (F11)">×</button>
+		<button id="fullscreen-button" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen (F11)">
+			<svg class="fullscreen-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9V3h6M3 3l6 6M15 3h6v6M21 3l-6 6M3 15v6h6M3 21l6-6M15 21h6v-6M21 21l-6-6"/></svg>
+			<svg class="fullscreen-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M5 19 19 5"/></svg>
+		</button>
 		<div id="fullscreen-hint" role="status" hidden></div>
 
 		<noscript>
@@ -151,7 +175,7 @@ body {
 
 		<script src="index.js"></script>
 		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":3131716,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":3248000,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4,"serviceWorker":"index.service.worker.js"};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -195,7 +219,7 @@ function getGameCanvasSize(width, height, deviceScale) {
 	fullButton.addEventListener('click', window.taterFullscreen);
 	function updateFullButton() {
 		const active = !!(document.fullscreenElement || document.webkitFullscreenElement);
-		fullButton.textContent = '×';
+		fullButton.setAttribute('aria-pressed', String(active));
 		const label = active ? 'Exit fullscreen' : 'Enter fullscreen';
 		fullButton.setAttribute('aria-label', label);
 		fullButton.title = label + ' (F11)';

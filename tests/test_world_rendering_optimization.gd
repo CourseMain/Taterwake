@@ -24,7 +24,7 @@ func _run() -> void:
 		for index: int in range(world.plot_positions.size()):
 			plots.append({"unlocked": true, "stage": 3, "crop": "icecap" if island == 3 else "russet", "tilled": true, "watered": true, "pests": true, "frozen": island == 3})
 		world.update_plots(plots)
-		check(world._crop_roots[0].find_children("CompiledGeometry*", "MeshInstance3D", false, false).size() == 1, "all ordinary crop colours share one surface within the shaking parent")
+		check(world._crop_tubers[0].node.find_children("CompiledGeometry*", "MeshInstance3D", false, false).size() == 1, "all crop colours share one compiled surface within the growing plant")
 		check(world._pest_roots[0].get_child_count() == 3, "three beetle parents remain independently animated")
 		var meshes: int = world.find_children("*", "MeshInstance3D", true, false).size()
 		world.update_plots(plots)

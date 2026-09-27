@@ -110,7 +110,7 @@ func _test_seeds() -> void:
 	_failure(func(): return state.buy_seeds("russet", -5), "negative seed quantity")
 	_failure(func(): return state.buy_seeds("russet", 1000000001), "oversized seed request")
 	_failure(func(): return state.buy_seeds("sunburst", 5), "wrong-island seeds")
-	state.coins = float(state.market.russet.seed) * 5 - 0.5
+	state.coins = state.bankruptcy_limit() + float(state.market.russet.seed) * 5 - 0.5
 	_failure(func(): return state.buy_seeds("russet", 5), "unaffordable seeds")
 	state.coins = float(state.market.russet.seed) * 5
 	_success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, state.coins, "exact-wallet seed checkout")
@@ -147,7 +147,8 @@ func _test_seeds() -> void:
 func _test_tools_and_space() -> void:
 	_fresh()
 	_failure(func(): return state.upgrade_tool("pest"), "non-upgradeable tool")
-	_failure(func(): return state.upgrade_tool("hoe"), "unaffordable tool")
+	state.coins = state.bankruptcy_limit()
+	_failure(func(): return state.upgrade_tool("hoe"), "tool credit limit")
 	state.coins = 1.0e15
 	for tool: String in ["hoe", "water", "harvest"]:
 		for rank in [1, 2]:
@@ -166,7 +167,8 @@ func _test_tools_and_space() -> void:
 		check(state.tools[tool] == 3 and int(receipt.get("level", -1)) == 3, tool + " winter receipt reports final rank")
 		_failure(func(): return state.upgrade_tool(tool), tool + " maximum rank")
 	_fresh()
-	_failure(func(): return state.upgrade_barn(), "unaffordable barn")
+	state.coins = state.bankruptcy_limit()
+	_failure(func(): return state.upgrade_barn(), "barn credit limit")
 	state.coins = 100000.0
 	state._grant_item("winter_weave")
 	var old_capacity: int = state.capacity
@@ -175,7 +177,7 @@ func _test_tools_and_space() -> void:
 	state.barn_level = 20
 	state._recompute_capacity()
 	_failure(func(): return state.upgrade_barn(), "maximum barn")
-	state.coins = 1799.0
+	state.coins = state.bankruptcy_limit() + 1799.0
 	_failure(func(): return state.expand_field(), "unaffordable field")
 	state.coins = 1800.0
 	_success(func(): return state.expand_field(), "field", "expansion", 12, 1800.0, "starter field expansion")
@@ -211,7 +213,8 @@ func _test_islands() -> void:
 
 func _test_ducks_and_services() -> void:
 	_fresh()
-	_failure(func(): return activities.buy_duck(), "unaffordable duck training")
+	state.coins = state.bankruptcy_limit()
+	_failure(func(): return activities.buy_duck(), "duck credit limit")
 	state.coins = 1000000.0
 	_success(func(): return activities.hire_duck(), "duck", "duck_patrol", 1, 1500.0, "hire one Valley duck")
 	_failure(func(): return activities.hire_duck(), "Valley duck capacity")
@@ -221,34 +224,9 @@ func _test_ducks_and_services() -> void:
 	_failure(func(): return activities.train_ducks(), "maximum duck speed")
 	state.current_island = 2
 	_failure(func(): return activities.train_ducks(), "empty Shores flock cannot train")
-	for island in [1, 2, 3]:
-		_fresh()
-		state.island2_unlocked = island >= 2
-		state.island3_unlocked = island == 3
-		state.travel_to(island)
-		state.climate.acknowledge(state)
-		builds.active = "gambler"
-		builds.levels.gambler = 1
-		var cost: float = state.roll_cost("normal") * 0.5
-		state.coins = cost - 1.0
-		_failure(func(): return builds.use_ability(), "island %d unaffordable scouting" % island)
-		state.coins = cost
-		_success(func(): return builds.use_ability(), "service", "scout", 1, cost, "island %d scouting" % island)
-		check(builds.next_roll_charge == 0.5 and builds.cooldown == 30.0, "scout receipt follows applying the paid reward boost")
-		state.coins = cost * 10
-		_failure(func(): return builds.use_ability(), "island %d duplicate scouting charge" % island)
+	# Profession actions now trade crops; covered by test_build_transactions.
+	# The retired scouting/market-call services no longer issue purchases.
 	_fresh()
-	builds.active = "investor"
-	builds.levels.investor = 5
-	state._refresh_market(false)
-	var cost: float = float(state.market.russet.seed) * 10
-	state.coins = cost - 1.0
-	_failure(func(): return builds.use_ability(), "unaffordable market call")
-	state.coins = cost
-	_success(func(): return builds.use_ability(), "service", "market_call", 1, cost, "paid market call", true)
-	check(state.current_event == "shortage" and builds.cooldown == 45.0 and notices.size() == 1, "market call keeps its distinct event notification and applies the bought service")
-	state.coins = 1000000.0
-	_failure(func(): return builds.use_ability(), "market-call cooldown")
 	_clear_signals()
 	state.storage.russet = 1
 	state.sell_crop("russet")

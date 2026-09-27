@@ -46,14 +46,14 @@ func run() -> void:
 	game.builds.levels.investor = 2
 	game.hud._build_selection = "farmer"
 	game.hud.show_panel("builds", game.state)
-	check(game.hud._refs.build_equip.text.begins_with("Equipped") and game.hud._refs.build_equip.disabled, "active profession is identified on its detail page")
+	check(game.hud._refs.build_equip.text.contains("Selected") and game.hud._refs.build_equip.disabled, "active profession is identified on its detail page")
 	game.hud._act("build:inspect:scientist")
 	check(game.hud._refs.build_equip.disabled, "locked build cannot be selected")
 	game.hud._act("build:inspect:investor")
-	check(game.hud._refs.build_equip.text == "Equip · Lv.2" and not game.hud._refs.build_equip.disabled, "owned profession can be equipped from its detail page")
+	check(game.hud._refs.build_equip.text == "Select build · Free" and not game.hud._refs.build_equip.disabled, "owned profession can be equipped from its detail page")
 	await inspect("builds")
 	game.hud._refs.build_equip.pressed.emit()
-	check(game.builds.active == "investor" and game.hud._refs.build_equip.text.begins_with("Equipped"), "selecting a build refreshes the live card states")
+	check(game.builds.active == "investor" and game.hud._refs.build_equip.text.contains("Selected"), "selecting a build refreshes the live card states")
 	game.state.quest_progress.starter_crash = 10
 	game.state.quest_progress.starter_spike = 4
 	game.hud.show_panel("quests", game.state)

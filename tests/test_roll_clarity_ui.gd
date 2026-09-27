@@ -36,10 +36,13 @@ func run() -> void:
 	check(game.hud._font.variation_opentype.get(2003265652) == 400.0 and game.hud._heading_font.variation_opentype.get(2003265652) == 600.0, "bundled variable font uses readable body and heading weights")
 	game._on_action("menu")
 	var menu: GridContainer = game.hud._body.get_child(0)
-	check(menu.get_child(2).get_meta("action", "") == "debug", "Debug is in the first menu row")
+	var debug_card: Button
+	for button: Button in menu.get_children():
+		if button.get_meta("action", "") == "debug": debug_card = button
+	check(is_instance_valid(debug_card), "Debug remains available from the farm menu")
 	await shot("debug-menu")
-	menu.get_child(2).pressed.emit()
-	check(game.hud._panel_kind == "debug", "first-row Debug card opens money and luck controls")
+	if is_instance_valid(debug_card): debug_card.pressed.emit()
+	check(game.hud._panel_kind == "debug", "Debug card opens money and luck controls")
 	await shot("debug-controls")
 	game.hud.close_panel()
 	game.state.coins = 1e16

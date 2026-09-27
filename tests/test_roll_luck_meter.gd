@@ -40,9 +40,9 @@ func run() -> void:
 	var result: Dictionary = {"tier": "common", "title": "THE EMPTY SACK", "detail": "No reward", "bet": 2000.0}
 	game.hud.spin_roll(result)
 	check(meter.playing and not game.hud._spinner.spinning, "calculation runs before reel starts")
-	check(meter.numbers[0].text == "4×" and meter.captions[0].text == "1 · Roll", "first step shows frozen stake and build quality")
+	check(meter.numbers[0].text == "4×" and meter.captions[0].text == "Roll quality", "first step shows frozen stake and build quality")
 	meter._process(0.7)
-	check(meter.captions[1].text == "2 · Add earned + gear" and meter.numbers[1].text == "+125%", "second step shows earned and equipped bonus as a percentage")
+	check(meter.captions[1].text == "Earned + gear" and meter.numbers[1].text == "+125%", "second step shows earned and equipped bonus as a percentage")
 	await shot("add-luck")
 	var frozen: Dictionary = meter.values.duplicate(true)
 	var elapsed: float = meter.elapsed
@@ -50,7 +50,7 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	check(meter.values == frozen and meter.elapsed == elapsed, "refresh cannot restart or replace purchased math")
 	meter._process(0.65)
-	check(meter.captions[2].text == "3 · Multiply luck" and meter.details[2].text == "+575% final bonus", "third step multiplies capped normal luck and shows its full total")
+	check(meter.captions[2].text == "Luck multiplier" and meter.details[2].text == "+575% final bonus", "third step multiplies capped normal luck and shows its full total")
 	await shot("multiply-luck")
 	meter._process(0.65)
 	check(not meter.playing and game.hud._spinner.spinning, "reel starts only after complete calculation")

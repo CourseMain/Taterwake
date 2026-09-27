@@ -81,7 +81,7 @@ func build_info() -> Array[Dictionary]:
 		match id:
 			"farmer": benefits = "+%d%% yield · +%.1f%% growth speed%s" % [rank * 5, maxf(0, rank - 1) * 2.5, " · wider tools" if rank >= 3 else " · wider tools at level 3"]
 			"gambler": benefits = "+%d%% Roll House reward quality · a rechargeable harvest-stake charm" % [rank * 8]
-			"investor": benefits = "%.1f%% seed discount · +%.1f points positive-event chance" % [rank * 1.5, rank * 1.2]
+			"investor": benefits = "+%.1f points positive-event chance · reserved-price deliveries" % [rank * 1.2]
 			"scientist": benefits = "+%d%% mutation chance · %d research completed" % [rank * 15 + mini(50, research / 2), research]
 			"industrialist": benefits = "Machine grade improves at levels 3, 10 and 20 · larger levels process faster"
 		entries.append({"id": id, "name": id.capitalize(), "level": rank, "unlocked": rank > 0, "active": active == id, "description": DESCRIPTIONS[id], "bonuses": benefits})

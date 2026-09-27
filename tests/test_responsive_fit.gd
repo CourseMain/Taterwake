@@ -94,6 +94,14 @@ func run() -> void:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)
+		if kind in ["inventory", "tools"]:
+			game.hud.show_purchase({"kind": "barn" if kind == "inventory" else "tool", "name": "Watering can", "quantity": 200 if kind == "inventory" else 1, "cost": 500.0, "total": 400, "level": 2})
+			await settle()
+			inside(game.hud._purchase_box, kind + " upgrade receipt")
+			check(not game.hud._purchase_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), kind + " receipt leaves upgrade controls clear")
+			game.hud._purchase_remaining = 0.0
+			game.hud._purchase_receipt.clear()
+			game.hud._purchase_box.hide()
 		if kind == "debug":
 			game.hud._refs.debug_code.text = "ORIGINALLYSPUDREPUBLIC"
 			game.hud._refs.debug_unlock.pressed.emit()

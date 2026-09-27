@@ -31,7 +31,7 @@ func run() -> void:
 		game.state.travel_to(island)
 		game.state.climate.acknowledge(game.state)
 		game.hud._climate_alert.dismiss()
-		game.state.coins = 0
+		game.state.coins = game.state.bankruptcy_limit()
 		game._on_action("climate_fund:rainwater")
 		check(game.world._project_nodes.has("rainwater") and not game.world._project_nodes.has("drainage"), "starter tank exists before purchases")
 		game.state.coins = 1e18
