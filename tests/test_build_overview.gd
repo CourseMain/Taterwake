@@ -63,7 +63,7 @@ func run() -> void:
 	check(b.active == "farmer" and b.levels.farmer == 1, "a new farm selects the Farmer starter")
 	await overview()
 	check(h._refs.build_selected_summary.text.contains("Farmer"), "overview marks actual starter selection")
-	check(h._refs.build_overview.get_child_count() == 6, "overview contains five build cards and the guide")
+	check(h._refs.build_overview.get_child_count() == 5, "overview contains only the five build cards")
 	check(not h._modal_subtitle.visible and not labels(h._body).contains("LEAF "), "overview omits decorative subtitles and page numbers")
 	var saved: Dictionary = b.save_data().duplicate(true)
 	var coins: float = farm.coins
@@ -81,7 +81,7 @@ func run() -> void:
 		h._refs["build_details:toggle"].pressed.emit()
 		await frames()
 		var copy: String = labels(h._refs.build_details)
-		check(copy.contains(Pages.HOW[id]) and copy.contains(Pages.TRADEOFFS[id]), id + " explains actual usage and tradeoffs")
+		check(not copy.contains("How it works") and copy.contains(Pages.BENEFITS[id]) and copy.contains(Pages.TRADEOFFS[id]), id + " retains bonuses and limits without repeated instructions")
 		await overview()
 	b.levels.scientist = 1
 	h._act("build:inspect:scientist")
@@ -103,11 +103,8 @@ func run() -> void:
 	check(h._build_selection.is_empty() and h._refs.has("build_overview") and b.active == "scientist", "ordinary Builds entry returns to overview without changing saved selection")
 	h._act("build_guide")
 	await frames()
-	check(h._panel_kind == "build_guide", "dedicated builds introduction is reachable")
-	var guide_copy: String = labels(h._body)
-	check(guide_copy.contains(Pages.SWITCH_NOTE) and guide_copy.contains("5%") and guide_copy.contains("does not guarantee"), "guide explains free switching and real crate unlocks")
-	for id in Pages.ORDER: check(guide_copy.contains(Pages.HOW[id]), "guide introduces actual " + id + " usage")
-	check(b.active == "scientist", "reading introduction preserves saved selection")
+	check(h._panel_kind == "builds" and h._build_selection.is_empty(), "legacy guide action returns to builds without reopening help")
+	check(b.active == "scientist", "browsing preserves saved selection")
 	for dimensions in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(390, 844), Vector2i(844, 390)]:
 		root.size = dimensions
 		await frames()

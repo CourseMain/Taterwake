@@ -5,13 +5,6 @@ const PAPER := Color("eee5ce")
 const INK := Color("30463a")
 const ORDER: Array[String] = ["farmer", "industrialist", "scientist", "investor", "gambler"]
 const ACCENTS: Dictionary = {"farmer": Color("42976d"), "industrialist": Color("d47a45"), "scientist": Color("6c79c7"), "investor": Color("238b92"), "gambler": Color("a568ab")}
-const HOW: Dictionary = {
-	"farmer": "1 compost → 3× harvest. Choose a growing patch, then water and harvest.",
-	"industrialist": "Load 20 or 100 crops. Polish Golden, Icecap or Radioactive; cure other crops. Harvest within 45 seconds for a freshness bonus.",
-	"scientist": "Cross 10 of each listed crop. Select the discovered trait for future plantings; uses ordinary seeds.",
-	"investor": "Lock a price, then deliver 20 crops from the same island within 180 seconds. Level 10: 100 crops per shipment.",
-	"gambler": "Stake 5, 20 or 100 crops at their current value. Payout: 0.5×, 1× or 3×. One charm can replace the result.",
-}
 const BENEFITS: Dictionary = {
 	"farmer": "+5% yield per level. Faster growth from level 2; wider tools at 3, 10 and 20. +1 compost per harvested patch (max 99).",
 	"industrialist": "Grades: F (1.05× sale value) to SSS (8×). Faster processing each level; better machine grades at 3, 10 and 20. Extra queue slots at 10 and 20.",
@@ -26,7 +19,6 @@ const TRADEOFFS: Dictionary = {
 	"investor": "The locked quote cannot rise. Expired offers pay nothing; crops stay in your barn. Switching builds keeps the deadline running.",
 	"gambler": "Staked crops are consumed. Half-value results lose half the stake. Charms can lower the payout. Pending results remain claimable after switching.",
 }
-const SWITCH_NOTE: String = "Switch free. One active build at a time. Discoveries, jobs and pending rewards stay."
 const UNLOCK_NOTE: String = "Build Crates: 5% drop chance from paid Roll House rolls. Open in Inventory."
 const PURPOSE: Dictionary = {
 	"farmer": "3× harvest · 1 compost",
@@ -109,7 +101,7 @@ static func create(h) -> void:
 	match id:
 		"farmer":
 			add_action(h, actions, "Grow a giant potato · 1 compost", "giant")
-			var prepare = h._button("Plant a crop first [2]", "close")
+			var prepare = h._button("Plant a crop", "close")
 			prepare.set_meta("tool", "plant")
 			prepare.pressed.connect(func(): h.action_requested.emit("tool:" + str(prepare.get_meta("tool"))))
 			body.add_child(prepare)
@@ -142,7 +134,7 @@ static func create(h) -> void:
 			h._refs.prof_note = note
 	var details = h._details_section("build_details", "details")
 	h._refs.build_details.add_theme_stylebox_override("panel", _paper_skin(ACCENTS[id]))
-	for entry in [["How it works", HOW[id]], ["Bonuses", BENEFITS[id]], ["Limits", TRADEOFFS[id]]]:
+	for entry in [["Bonuses", BENEFITS[id]], ["Limits", TRADEOFFS[id]]]:
 		details.add_child(_display(h, entry[0], 17, h.INK))
 		details.add_child(h._wrap(entry[1], 13, h.MUTED))
 	var label = h._wrap("", 13, h.MUTED)
@@ -235,7 +227,6 @@ static func create_overview(h, system) -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro.add_child(spacer)
-	intro.add_child(h._button("How builds work", "build_guide"))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -282,47 +273,7 @@ static func create_overview(h, system) -> void:
 		var explore = h._button("Open" if entry.unlocked else "Preview", "build:inspect:" + id, entry.active)
 		title.add_child(explore)
 		h._refs["build_explore:" + id] = explore
-	var guide = _folio(h, h.GOLD)
-	grid.add_child(guide)
-	var guide_body = h._vbox(6)
-	guide.add_child(guide_body)
-	guide_body.add_child(_display(h, "Unlock builds", 20, INK))
-	guide_body.add_child(h._wrap("Build Crates · 5% drop from paid rolls", 13, INK))
-	guide_body.add_child(h._button("Details", "build_guide"))
 	_fit_height(h, "")
-
-static func create_guide(h) -> void:
-	h._heading("How builds work", "")
-	_notebook(h)
-	h._body.add_child(h._button("‹ Browse all builds", "build:inspect:"))
-	var intro = _folio(h, h.GOLD)
-	h._body.add_child(intro)
-	var body = h._vbox(8)
-	intro.add_child(body)
-	body.add_child(_display(h, "Select a build", 22, h.INK))
-	body.add_child(h._wrap("Farmer is unlocked from the start. Select a build to use its bonuses and ability.", 14, h.INK))
-	body.add_child(h._wrap(SWITCH_NOTE, 14, h.INK))
-	var unlock = _folio(h, ACCENTS.scientist)
-	h._body.add_child(unlock)
-	var unlock_body = h._vbox(6)
-	unlock.add_child(unlock_body)
-	unlock_body.add_child(_display(h, "Unlocks & levels", 20, h.INK))
-	unlock_body.add_child(h._wrap(UNLOCK_NOTE + " Cards unlock builds or add a level (max 30). A crate does not guarantee a particular build.", 14, h.MUTED))
-	for id in ORDER:
-		var card = _folio(h, ACCENTS[id])
-		h._body.add_child(card)
-		var column = h._vbox(8)
-		card.add_child(column)
-		var heading = h._hbox(9)
-		column.add_child(heading)
-		heading.add_child(h._icon({"kind": "build", "id": id}, 52))
-		var heading_text = _display(h, id.capitalize(), 21, h.INK)
-		heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		heading.add_child(heading_text)
-		column.add_child(h._wrap(HOW[id], 14, h.INK))
-		column.add_child(h._wrap(TRADEOFFS[id], 13, h.MUTED))
-		column.add_child(h._button("Explore " + id.capitalize(), "build:inspect:" + id))
-	_finish_type(h)
 
 static func _fit_height(h, id: String) -> void:
 	_finish_type(h)
@@ -447,7 +398,7 @@ static func refresh(h) -> void:
 			if h._refs.prof_prepare.visible:
 				var tool: String = "harvest" if ripe else ("hoe" if frozen else "plant")
 				h._refs.prof_prepare.set_meta("tool", tool)
-				h._refs.prof_prepare.text = {"harvest": "Harvest ripe crops first [4]", "hoe": "Thaw a growing crop first [1]", "plant": "Plant a crop first [2]"}[tool]
+				h._refs.prof_prepare.text = {"harvest": "Harvest ripe crops", "hoe": "Thaw a crop", "plant": "Plant a crop"}[tool]
 				if growing.eligible.is_empty() and d.compost > 0:
 					if ripe: status = "Plant a new crop before adding compost."
 					elif frozen: status = "Thaw with your hoe before adding compost."

@@ -927,7 +927,8 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 
 func _act(action: String) -> void:
 	if action == "build_guide":
-		show_panel("build_guide", _state)
+		_build_selection = ""
+		show_panel("builds", _state)
 		return
 	if action.begins_with("build:inspect:"):
 		_build_selection = action.get_slice(":", 2)
@@ -1802,7 +1803,6 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"island": _build_island()
 		"quests": _build_quests()
 		"builds": _build_builds()
-		"build_guide": BuildPages.create_guide(self)
 		"tracked_prices": _build_tracked_prices()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
@@ -2384,50 +2384,24 @@ func _build_quests() -> void:
 		_refs[key] = claim
 
 func _build_help() -> void:
-	_heading("Help", "")
-	var skin: StyleBoxFlat = Cozy.box(Color("e8e5d7"), 24, 5, Color("898e78"))
-	skin.border_width_top = 7
-	_modal_card.add_theme_stylebox_override("panel", skin)
-	var intro: PanelContainer = _card(Color("345346"), 18)
-	_body.add_child(intro)
-	var intro_words: VBoxContainer = _vbox(6)
-	intro.add_child(intro_words)
-	intro_words.add_child(_wrap("HOE · PLANT · WATER · HARVEST · SELL", 22, Color("fff3d7"), true))
-	_help_step("Grow potatoes", "Hoe a bed, plant a seed, then water it. Russets have a 10-second base growing time. Harvest into your barn; crops stay there until you sell.")
-	_help_step("Buy and sell", "Seeds cost 75% of the live potato price. A +10% quote means 10% above that crop’s base price.")
-	var builds_intro := _surface("build", Color("dfa63d"))
-	_body.add_child(builds_intro)
-	var builds_words := _vbox(8)
-	builds_intro.add_child(builds_words)
-	builds_words.add_child(_label("Player builds", 21, INK, true))
-	builds_words.add_child(_wrap("One active build. Free switching. Unlock others with Build Crates.", 14, INK))
-	builds_words.add_child(_button("Meet the five builds", "build_guide", true))
-	_help_step("Tools and harvests", "Upgrade tools for more beds per click. Chain harvests within 3.5 seconds for bonuses up to ×16. Ducks clear pests while you tend the farm.")
-	_help_step("Tax and debt", "Tax: every third major stock, after the 10s selling window. Unpaid tax becomes debt. Crossing the debt limit ends the run.")
-	var controls := _details_section("intro_controls", "controls & islands")
-	controls.add_child(_wrap("Camera: drag / two-finger scroll to pan · wheel / pinch to zoom. Recenter: Home or Tools → Recenter.", 14, MUTED))
-	controls.add_child(_wrap("Move: WASD / arrows · Sprint: Shift · Use tool: click bed.\n1 Hoe · 2 Seeds · 3 Water · 4 Harvest · 5 Spray\nB Seeds · I Inventory · C Builds · F Sell selected crop", 14, MUTED))
-	controls.add_child(_wrap("Touch: stick to move · Tools to equip · tap beds or shops. Swipe menus to scroll; swipe the selling board sideways to change crops.", 14, MUTED))
-	controls.add_child(_wrap("Interact: click a shop or press E nearby. Frosthollow: heat your hoe at the furnace, then thaw frozen beds before Frostbreak ends.", 14, MUTED))
-	_body.add_child(_button("Optional Valley tour", "tutorial:restart"))
-	_update_farm_help()
-	if not _farm_tip.is_empty():
-		_farm_help_action = _button("Current farm help", "farm_help:details")
-		_body.add_child(_farm_help_action)
-	_body.add_child(_button("Back to my farm", "close", true))
-	BuildPages._finish_type(self)
-
-func _help_step(title: String, detail: String) -> void:
-	var card := PanelContainer.new()
-	var rule: StyleBoxFlat = Cozy.box(Color.TRANSPARENT, 10, 0, Color("c0c4b1"))
-	rule.set_border_width_all(0)
-	rule.border_width_bottom = 1
-	card.add_theme_stylebox_override("panel", rule)
-	_body.add_child(card)
-	var box: VBoxContainer = _vbox(3)
-	card.add_child(box)
-	box.add_child(_label(title, 17, INK, true))
-	box.add_child(_wrap(detail, 14, MUTED))
+	_heading("Controls", "")
+	_modal_card.offset_left = -310
+	_modal_card.offset_right = 310
+	_modal_card.offset_top = -200
+	_modal_card.offset_bottom = 200
+	var entries: Array = [["Camera", "Hold click + drag"], ["Zoom", "Mouse wheel / pinch"], ["Recenter", "Home"], ["Move", "WASD / arrows"], ["Interact", "Click / E"], ["Sell", "F"]]
+	if get_parent().touch_controls.enabled:
+		entries = [["Camera", "Drag island"], ["Zoom", "Pinch"], ["Move", "Joystick"], ["Interact", "Tap bed or shop"], ["Recenter", "Tools → Recenter"]]
+	var controls := _vbox(10)
+	_body.add_child(controls)
+	for entry: Array in entries:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 16)
+		controls.add_child(row)
+		var title := _label(entry[0], 16, INK, true)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(title)
+		row.add_child(_label(entry[1], 16, INK))
 
 func _build_pause() -> void:
 	_heading("Your farm", "")
@@ -2468,19 +2442,17 @@ func _build_pause() -> void:
 		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(name_label)
-	_body.add_child(_button("Settings, saves & help", "toggle_details:menu_settings"))
+	_body.add_child(_button("Settings & saves", "toggle_details:menu_settings"))
 	var settings := _vbox(8)
 	_body.add_child(settings)
 	_refs.menu_settings = settings
 	settings.hide()
 	var utility: BoxContainer = _hbox(8)
 	settings.add_child(utility)
-	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["How to play", "help"]]:
+	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["Controls", "help"]]:
 		var button: Button = _button(entry[0], entry[1])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		utility.add_child(button)
-	if _tutorial.is_empty():
-		settings.add_child(_button("Optional Valley tour", "tutorial:restart"))
 	if _reset_pending:
 		settings.show()
 		settings.add_child(_wrap("Start over? This replaces your farm.", 14, CHERRY))

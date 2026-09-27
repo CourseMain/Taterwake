@@ -91,8 +91,7 @@ func run() -> void:
 		check(button("tool:" + tool) != null, "full control includes " + tool)
 	game.hud._process(3.1)
 	await shot("free-farm")
-	press("farm_help:dismiss")
-	check(game.state.farm_help.data.dismissed.has("repeat"), "optional prompt dismisses in one click")
+	check(not game.hud._farm_help_card.visible, "finishing the introduction does not add an extra help prompt")
 	# Use ordinary controls on an unmarked bed. No controller lesson assists it.
 	game._on_action("market")
 	press("buy:russet:1")
@@ -116,32 +115,16 @@ func run() -> void:
 	for key: String in game.state.farm_help.data.protected.duplicate():
 		game.perform_plot(int(key.get_slice(":", 1)), "pest")
 	check(game.state.farm_help.data.pest_phase == 2, "clearing first group returns to normal hazards")
-	# Hold a fresh harvest before opting into a practice sale.
-	game.state.storage.russet = 10
-	game.state.current_event = ""
-	game.state.natural_remaining = 0.0
-	game.state.surge_remaining = 0.0
-	game.state.surge_timer = 180.0
-	game.state._market_core.russet.sell = game.state.CROPS.russet.base
-	game.state._refresh_market(false)
-	game.hud._help_cooldown = 0.0
-	game.hud._process(3.1)
-	game.hud.update_state(game.state)
-	await shot("practice-offer")
-	press("farm_help:details")
-	press("farm_help:act")
-	check(game.state.farm_help.data.practice_remaining == 10.0 and game.state.blind_cycle.booms == 0, "practice starts ten-second quote without counting tax boom")
-	await shot("practice-boom")
-	press("farm_help:details")
-	press("farm_help:act")
-	check(game.state.storage.russet == 0 and game.state.farm_help.data.dismissed.has("stocks"), "real practice sale completes timing lesson")
+	game._on_action("help")
+	check(game.hud._modal_title.text == "Controls" and button("farm_help:details") == null, "controls page has no extra practice or help launcher")
+	game.hud.close_panel()
 	game.state.surge_timer = 30.0
 	game.hud.update_state(game.state)
 	await shot("taxes")
 	check(game.hud._farm_tip.id == "taxes", "tax explanation appears before first scheduled boom")
 	# Optional tour can advance without pretending a shop visit proves learning.
 	game._on_action("help")
-	press("tutorial:restart")
+	game._on_action("tutorial:restart")
 	var snapshot: Dictionary = game.state._save_data().duplicate(true)
 	game._process(100.0)
 	check(game.state._save_data() == snapshot, "tour preserves farm and help timers")
@@ -153,9 +136,7 @@ func run() -> void:
 	check(game.state.roll_count == 0, "optional tour cannot spend coins")
 	game._on_action("builds")
 	await settle()
-	check(not button("build_guide").disabled and not button("build:inspect:scientist").disabled, "optional tour allows build explanations and previews")
-	press("build_guide")
-	check(game.hud._panel_kind == "build_guide", "tour opens the dedicated builds introduction")
+	check(not button("build:inspect:scientist").disabled, "tour still allows build previews without the removed help guide")
 	game.hud._act("build:inspect:scientist")
 	await settle()
 	check(game.builds.active == "farmer" and game.hud._refs.build_equip.disabled, "tour preview keeps saved Farmer and blocks selection")

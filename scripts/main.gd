@@ -472,9 +472,8 @@ func _input(event: InputEvent) -> void:
 		if event is InputEventMouse: get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseMotion:
-		if (event.button_mask & (1 << (_map_drag_button - 1))) == 0:
-			_cancel_map_drag()
-			return
+		# The press owns this gesture until release (or focus/menu/resize
+		# cancellation). A missing motion mask must not require another click.
 		_map_drag_distance += event.relative
 		if _map_drag_button != MOUSE_BUTTON_LEFT or _map_drag_moved:
 			_pan_camera_by(event.relative)

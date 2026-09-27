@@ -38,15 +38,9 @@ func run() -> void:
 	check(not hud._farm_help_card.get_global_rect().intersects(hud._blind_card.get_global_rect()), "tax tip does not overlap tax clock")
 	check(not hud._farm_help_card.visible, "optional tax advice never floats over the farm")
 	hud.show_panel("help", state)
-	hud._farm_help_action.pressed.emit()
-	check(hud._panel_kind == "farm_tip" and hud._refs.farm_tip_body.text.contains("3 major booms"), "full explanation opens only on request")
-	check(not hud._farm_help_card.visible, "open explanation hides its small launcher")
-	# The action belongs to the explanation the user opened, even if another tip gains priority.
-	state.coins = -1.0
-	hud.update_state(state)
-	check(hud._farm_tip.id == "debt" and hud._opened_farm_tip.id == "taxes", "manual help keeps its action when tip priority changes")
-	hud._act("farm_help:act")
-	check(hud._panel_kind == "taxes" and "taxes" in state.farm_help.data.dismissed and "debt" not in state.farm_help.data.dismissed, "forecast button acts on the viewed tip")
+	check(hud._modal_title.text == "Controls", "help contains only controls")
+	check(not is_instance_valid(hud._farm_help_action) and not hud._refs.has("farm_tip_body"), "extra help launcher and explanation are removed")
+	check(not hud._farm_help_card.visible, "controls never add a floating help launcher")
 	hud.close_panel()
 	state.coins = 240.0
 	state.farm_help.data.dismissed.erase("taxes")

@@ -2,6 +2,9 @@
 
 ## 1.0.2.75
 
+- Kept held camera drags active through motion events with missing button masks; release, focus loss and menus still end the gesture.
+- Removed extra Builds guide cards, repeated usage instructions and optional coaching links. Replaced the long Help page with compact controls.
+
 - Added drag-to-pan directly on the island with mouse or one finger; retained angled view, zoom, WASD, joystick and bed/shop taps. Blank-ground taps no longer walk.
 - Fixed narrow, vertically stretched Weather Station buttons. Added the navy/cyan radar dashboard and tech station exterior.
 - Rebuilt the potato furnace as a warm brick-and-copper hearth, with glowing embers and a matching compact UI. Bellows remain free; fuel and boost timings are unchanged.

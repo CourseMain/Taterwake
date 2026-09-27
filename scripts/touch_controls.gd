@@ -198,7 +198,7 @@ func fit_modal() -> void:
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
 	var height: float = view.y - (24 if trading else 112)
-	if hud._panel_kind == "builds":
+	if hud._panel_kind in ["builds", "help"]:
 		height = minf(height, hud.BuildPages.content_height(hud))
 	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, height))
 

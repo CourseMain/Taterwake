@@ -101,6 +101,21 @@ func run() -> void:
 	mouse_button(MOUSE_BUTTON_LEFT, false, Vector2(690, 390))
 	check(camera.global_position != original.origin and not game.walking and game.pending_plot == -1, "left drag pans without farming or walking")
 	home()
+	mouse_button(MOUSE_BUTTON_LEFT, true)
+	# Embedded/native input can omit a held-button mask on a motion event.
+	# Ownership belongs to the press/release pair, including pauses and reversals.
+	for delta in [Vector2(18, 7), Vector2.ZERO, Vector2(24, 11), Vector2(-12, -6)]:
+		var held_motion := InputEventMouseMotion.new()
+		held_motion.relative = delta
+		held_motion.position = Vector2(600, 350) + delta
+		var prior: Vector3 = game._camera_pan_offset
+		root.push_input(held_motion, true)
+		check(game._map_drag_button == MOUSE_BUTTON_LEFT, "held drag survives a motion event without a button mask")
+		check(delta == Vector2.ZERO or game._camera_pan_offset != prior, "held drag continues moving without another press")
+		settle_pan()
+	mouse_button(MOUSE_BUTTON_LEFT, false, Vector2(640, 370))
+	check(game._map_drag_button == 0 and not game.walking and game.pending_plot == -1, "explicit release ends a maskless drag without a farm tap")
+	home()
 	await physics_frame
 	# Find a genuinely empty ground target rather than assuming screen coordinates.
 	var found_ground := false
