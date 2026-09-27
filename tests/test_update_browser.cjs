@@ -45,7 +45,7 @@ fs.mkdirSync('artifacts/update-browser',{recursive:true});
   await screenshot('pan');
   await command('climate'); await command('scroll_bottom');
   let state=await report();
-  for(const text of ['Water practice','Tax forecast','Show system data']){
+  for(const text of ['Water practice','Tax forecast','Show weather timings']){
    const b=state.buttons.find(b=>b.text===text);assert.ok(b,text);
    assert.ok(b.rect[2]>state.modal[2]*.65 && b.rect[3]<125,`${name} ${text} compact width/height`);
   }

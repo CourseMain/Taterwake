@@ -197,7 +197,10 @@ func fit_modal() -> void:
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
-	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, view.y - (24 if trading else 112)))
+	var height: float = view.y - (24 if trading else 112)
+	if hud._panel_kind == "builds":
+		height = minf(height, hud.BuildPages.content_height(hud))
+	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, height))
 
 func adapt(node: Node, available: float, stack: bool) -> void:
 	if node.has_meta("market_responsive"):

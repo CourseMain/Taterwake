@@ -64,6 +64,7 @@ func run() -> void:
 	await overview()
 	check(h._refs.build_selected_summary.text.contains("Farmer"), "overview marks actual starter selection")
 	check(h._refs.build_overview.get_child_count() == 6, "overview contains five build cards and the guide")
+	check(not h._modal_subtitle.visible and not labels(h._body).contains("LEAF "), "overview omits decorative subtitles and page numbers")
 	var saved: Dictionary = b.save_data().duplicate(true)
 	var coins: float = farm.coins
 	for id in Pages.ORDER:
@@ -74,6 +75,8 @@ func run() -> void:
 		check(h._build_selection == id and b.save_data() == saved and farm.coins == coins, id + " browsing changes no gameplay or save state")
 		check(h._refs.build_equip.disabled, id + " cannot be selected while already active or locked")
 		check(h._refs.has("build_art") and h._refs.build_art.kind == id, id + " detail shows its own appearance")
+		if game.touch_controls.enabled:
+			check(h._modal_card.size.y <= Pages.content_height(h) + 1, id + " touch panel fits remaining content")
 		if id != "farmer": check(h._refs.build_selection_note.text.contains("5%") and h._refs.build_selection_note.text.contains("Inventory"), "locked " + id + " states the real crate route")
 		h._refs["build_details:toggle"].pressed.emit()
 		await frames()
@@ -84,7 +87,7 @@ func run() -> void:
 	h._act("build:inspect:scientist")
 	await frames()
 	check(not h._refs.build_equip.disabled and b.active == "farmer", "unlocked preview leaves Farmer selected")
-	check(h._refs.build_equip.text.contains("Free") and h._refs.build_selection_note.text.contains("Farmer"), "selection states the real cost and replaced active bonuses")
+	check(h._refs.build_equip.text.contains("Free") and not h._refs.build_selection_note.visible and h._refs.build_equip.tooltip_text.contains("Farmer"), "selection shows cost without repeating switch instructions")
 	h._refs.build_equip.pressed.emit()
 	await frames()
 	check(b.active == "scientist" and farm.coins == coins, "explicit selection equips Scientist for no fee")

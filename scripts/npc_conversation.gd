@@ -12,7 +12,6 @@ var portrait
 var card: Panel
 var text_card: PanelContainer
 var speech_bubble: PanelContainer
-var choice_caption: Label
 var speech: RichTextLabel
 var title: Label
 var role: Label
@@ -39,7 +38,7 @@ func _ready() -> void:
 	card.add_theme_stylebox_override("panel", style(Color("152f2b"),24,0))
 	add_child(card)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint = label("CONVERSATION  ·  Farm paused",16,Color("c2d4c3"))
+	hint = label("Farm paused",16,Color("c2d4c3"))
 	add_child(hint)
 	close_button = button("Leave  ×",func(): finish())
 	add_child(close_button)
@@ -84,9 +83,6 @@ func _ready() -> void:
 	space.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	space.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body.add_child(space)
-	choice_caption = label("YOUR REPLY",14,Color("657063"))
-	choice_caption.add_theme_font_override("font",face(Type.BODY,700))
-	body.add_child(choice_caption)
 	choices = VBoxContainer.new()
 	choices.add_theme_constant_override("separation",8)
 	body.add_child(choices)
@@ -175,7 +171,6 @@ func layout() -> void:
 	close_button.position = origin+Vector2(width-162,12)
 	close_button.size = Vector2(146,target_height)
 	hint.position = origin+Vector2(24,22)
-	hint.text = "Farm paused" if width < 700 else "CONVERSATION  ·  Farm paused"
 	var top: float = target_height+24
 	var inner := Rect2(origin+Vector2(16,top),Vector2(width-32,height-top-16))
 	if width < 700:
@@ -197,8 +192,6 @@ func layout() -> void:
 	for b: Button in choice_buttons: b.custom_minimum_size.y = target_height
 	speech.add_theme_font_size_override("normal_font_size",22 if height < 640 else 24 if _touch else 23)
 	speech.custom_minimum_size.y = 60 if height < 640 else 112
-	choice_caption.visible = height >= 640
-	choice_caption.text = "YOUR REPLY" if _touch else "YOUR REPLY  ·  1 / 2 / 3"
 	title.add_theme_font_size_override("font_size",30 if height < 640 else 34)
 	if title.has_theme_stylebox_override("normal"):
 		var tag: StyleBox = title.get_theme_stylebox("normal")

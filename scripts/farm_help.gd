@@ -107,7 +107,7 @@ func tip(farm: Node) -> Dictionary:
 		return _tip("taxes", "Keep money for taxes", "After 3 major booms, a tax collector walks in. You have 10 seconds to sell before collection. Forecast: %s. Debt is allowed down to %s." % [farm.money(farm.blind_info().tax), farm.money(farm.bankruptcy_limit())], "View forecast", "taxes")
 	if int(data.independent) < 4:
 		if unseen("repeat"):
-			return _tip("repeat", "The farm is yours", "Try growing and selling another crop on your own. All tools and shops are open. H brings up help whenever you need it.", "Go farming", "dismiss")
+			return _tip("repeat", "Next harvest", "Hoe → plant → water → harvest → sell.", "Go farming", "dismiss")
 		return {}
 	if practice_available(farm):
 		return _tip("stocks", "Try a small stock boom", "You have crops ready to sell. Try +100% for 10 seconds, then sell before it ends. This practice does not count toward tax.", "Try again · 10 seconds" if data.practice_tried else "Start practice boom", "practice")

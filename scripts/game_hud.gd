@@ -421,7 +421,7 @@ func _update_blind_ui() -> void:
 
 
 func _build_blinds() -> void:
-	_heading("Tax day", "A clear forecast for your farm's next bill.")
+	_heading("Tax day", "")
 	var hero := _surface("island", GREEN, true)
 	_body.add_child(hero)
 	var column := _vbox(8)
@@ -489,9 +489,10 @@ func _refresh_blinds() -> void:
 	_refs.tax_limit.text = "Current savings %s · Bankruptcy below %s" % [_blind_money(info.current), _blind_money(info.bankruptcy)]
 	_refs.blind_due.text = "Collector arrives in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks until collection" % [int(info.booms), int(info.booms_required)]
 	_refs.tax_progress.value = float(info.booms) / maxf(1, float(info.booms_required)) * 100
-	_refs.tax_advice.text = "Disaster markets are down. Booms resume after recovery; crashes do not advance collection." if _state.disaster_market_active() else "Sell your harvest when prices suit you. Collection follows every third major stock and its full selling window. Unpaid tax becomes debt."
+	_refs.tax_advice.text = "Collection paused until recovery ends." if _state.disaster_market_active() else "Tax follows every third major stock. Unpaid tax becomes debt."
 	var last: Dictionary = info.last_result
-	_refs.blind_last.text = "No payments yet. Your latest receipt will appear here." if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
+	_refs.blind_last.text = "" if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
+	_refs.blind_last.visible = not last.is_empty()
 
 func _build_climate() -> void:
 	var page := preload("res://scripts/weather_pages.gd").new()
@@ -524,7 +525,7 @@ func _build_debt() -> void:
 	contents.add_child(_refs.recovery_needed)
 	_refs.recovery_deliver = _button("", "recovery:deliver", true)
 	contents.add_child(_refs.recovery_deliver)
-	contents.add_child(_wrap("Uses ordinary potatoes, starting with Russets. Stops at $0 debt.", 13, MUTED))
+	contents.add_child(_wrap("Raw crops only · Repayment capped at your debt", 13, MUTED))
 	_refs.recovery_seeds = _button("Collect 3 free seeds", "recovery:seeds")
 	_body.add_child(_refs.recovery_seeds)
 	_body.add_child(_button("Sell crops at market prices", "sell_potatoes"))
@@ -1412,7 +1413,7 @@ func _build_modal() -> void:
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
 	_modal_title = _wrap("Welcome to Taterland", 34, INK, true)
-	_modal_subtitle = _wrap("Good soil. Wild markets.", 14, MUTED)
+	_modal_subtitle = _wrap("", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
 	_modal_market_nav = HBoxContainer.new()
@@ -2036,9 +2037,7 @@ func _build_roll() -> void:
 	receipt.hide()
 	_refs.roll_accounting = receipt
 	if _crate_reel:
-		result_detail.show()
-		result_title.text = "One crate. One new build level."
-		result_detail.text = "Open your crate to discover a specialty."
+		result_title.text = "+1 build level"
 		var open_button := _button("Open another Build Crate", "build:open_crate", true)
 		_casino_button(open_button, Color("e7b84f"))
 		play_column.add_child(open_button)
@@ -2174,7 +2173,7 @@ func _style_choice(choice: OptionButton) -> void:
 	popup.add_theme_color_override("font_hover_color", INK)
 
 func _build_dex() -> void:
-	_heading("The PotatoDex", "An illustrated field guide to ordinary spuds and extraordinary finds.")
+	_heading("The PotatoDex", "")
 	_panel_crops = _known_crops()
 	var tabs := _hbox(10)
 	_body.add_child(tabs)
@@ -2190,8 +2189,6 @@ func _build_dex() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	_body.add_child(grid)
 	var ids: Array = _state.MUTATION_IDS if _dex_tab == "mutations" else _state.CROP_IDS
-	var crop_notes: Dictionary = {"russet": "A quick, dependable first harvest.", "golden": "Golden skin with a valuable little harvest.", "giant": "A hefty potato with a generous yield.", "radioactive": "Bright green, with wildly changing prices.", "sunburst": "A sun-loving specialty of Golden Shores.", "icecap": "A frosty blue potato grown in Frosthollow."}
-	var mutation_notes: Dictionary = {"golden": "A gleaming gold mutation. A different discovery from the ordinary Golden crop.", "crystal": "Translucent crystals turn this potato into a rare mineral treasure.", "rainbow": "Bands of colour make this a prized, many-hued harvest.", "radioactive": "An intense glow marks this mutation. Any potato variety can develop it."}
 	for index: int in range(ids.size()):
 		var id: String = str(ids[index])
 		var special: bool = _dex_tab == "mutations"
@@ -2208,9 +2205,6 @@ func _build_dex() -> void:
 		var title := _wrap("#%02d · %s" % [index + 1, id.capitalize() + " mutation" if special else _crop_name(id)], 18, INK, true)
 		title.custom_minimum_size.x = 155
 		heading.add_child(title)
-		var description := _wrap(str(mutation_notes[id] if special else crop_notes[id]), 14, MUTED)
-		description.custom_minimum_size.x = 250
-		column.add_child(description)
 		var status := _wrap("", 12, GREEN, true)
 		column.add_child(status)
 		_refs["dex_status:" + id] = status
@@ -2221,14 +2215,14 @@ func _build_dex() -> void:
 	_body.add_child(footer)
 	var footer_body := _vbox(6)
 	footer.add_child(footer_body)
-	_section_title(footer_body, "Every discovery stays with you")
+	_section_title(footer_body, "Discovery bonuses")
 	_refs.dex_bonus = _wrap("", 14, GREEN, true)
 	footer_body.add_child(_refs.dex_bonus)
-	footer_body.add_child(_wrap("Mutation value = live crop price × its multiplier. Sell a find whenever you like; its discovery remains in your field guide.", 13, MUTED))
+	footer_body.add_child(_wrap("Selling mutations keeps their discovery bonuses.", 13, MUTED))
 
 func _refresh_dex() -> void:
 	var found: Array = _state.dex
-	_refs.dex_entries.text = "%d / 4 mutation types discovered" % found.size() if _dex_tab == "mutations" else "6 varieties · Water once · Growth bonuses can make them faster"
+	_refs.dex_entries.text = "%d / 4 mutations discovered" % found.size() if _dex_tab == "mutations" else "6 varieties"
 	var ids: Array = _state.MUTATION_IDS if _dex_tab == "mutations" else _state.CROP_IDS
 	for id: String in ids:
 		if _dex_tab == "mutations":
@@ -2242,11 +2236,11 @@ func _refresh_dex() -> void:
 	_refs.dex_bonus.text = "Permanent harvest bonus +%s%% · Total luck %s× (+%s%%)" % [_number(_state.permanent_yield * 100.0), String.num(_effective_luck(), 3), _number((_effective_luck() - 1.0) * 100.0)]
 
 func _build_island() -> void:
-	_heading("Set sail", "Three little worlds. Your crops keep growing while you explore.")
+	_heading("Set sail", "")
 	var destinations: Array[Dictionary] = [
-		{"id": 1, "name": "Spud Valley", "tagline": "Good soil. A place to call home.", "beds": "24 beds", "crops": "4 crops", "feature": "Home farm", "accent": GREEN},
-		{"id": 2, "name": "Golden Shores", "tagline": "Sunburst harvests and seaside fortunes.", "beds": "48 beds", "crops": "2× yield", "feature": "Wild weather", "accent": CORAL},
-		{"id": 3, "name": "Frosthollow", "tagline": "Rare Icecaps, Frostbreaks and northern lights.", "beds": "80 beds", "crops": "3× yield", "feature": "Frozen beds", "accent": Color("56899d")},
+		{"id": 1, "name": "Spud Valley", "beds": "24 beds", "crops": "4 crops", "feature": "Home farm", "accent": GREEN},
+		{"id": 2, "name": "Golden Shores", "beds": "48 beds", "crops": "2× yield", "feature": "Wild weather", "accent": CORAL},
+		{"id": 3, "name": "Frosthollow", "beds": "80 beds", "crops": "3× yield", "feature": "Frozen beds", "accent": Color("56899d")},
 	]
 	for destination: Dictionary in destinations:
 		var id: int = int(destination.id)
@@ -2271,7 +2265,6 @@ func _build_island() -> void:
 		var status := _badge("")
 		title_row.add_child(status)
 		_refs[key + ":status"] = status
-		description.add_child(_wrap(destination.tagline, 13, MUTED))
 		var features := HFlowContainer.new()
 		features.add_theme_constant_override("h_separation", 14)
 		description.add_child(features)
@@ -2285,7 +2278,7 @@ func _build_island() -> void:
 		var unlock_body := _vbox(6)
 		body.add_child(unlock_body)
 		_refs[key + ":unlock"] = unlock_body
-		_section_title(unlock_body, "Your next adventure" if id == 2 else "Beyond the golden coast")
+		_section_title(unlock_body, "Unlock requirements")
 		for requirement: String in ["harvest", "coins"]:
 			var progress_row := _hbox(8)
 			unlock_body.add_child(progress_row)
@@ -2329,7 +2322,8 @@ func _refresh_islands() -> void:
 		_refs[key + ":coins:bar"].value = clampf(coins / cost * 100.0, 0, 100)
 		var previous_unlocked: bool = id == 2 or _flag("island2_unlocked")
 		var ready: bool = coins >= cost and harvested >= target and previous_unlocked
-		_refs[key + ":gate"].text = "Unlock Golden Shores first" if not previous_unlocked else ("Ready for a new horizon!" if ready else "Keep harvesting and saving for passage.")
+		_refs[key + ":gate"].text = "Unlock Golden Shores first" if not previous_unlocked else ""
+		_refs[key + ":gate"].visible = not previous_unlocked
 		_set_button("island_unlock" if id == 2 else "island3_unlock", "Unlock · " + _money(cost), unlocked or not ready)
 
 func _build_quests() -> void:
@@ -2401,14 +2395,13 @@ func _build_help() -> void:
 	intro.add_child(intro_words)
 	intro_words.add_child(_wrap("HOE · PLANT · WATER · HARVEST · SELL", 22, Color("fff3d7"), true))
 	_help_step("Grow potatoes", "Hoe a bed, plant a seed, then water it. Russets have a 10-second base growing time. Harvest into your barn; crops stay there until you sell.")
-	_help_step("Buy and sell", "Buy Seeds shows what a seed costs and what its potatoes sell for. Seeds cost 75% of the live potato quote. Sell Potatoes has price history and a quantity picker. A +10% quote means 10% above that variety’s fixed base price.")
+	_help_step("Buy and sell", "Seeds cost 75% of the live potato price. A +10% quote means 10% above that crop’s base price.")
 	var builds_intro := _surface("build", Color("dfa63d"))
 	_body.add_child(builds_intro)
 	var builds_words := _vbox(8)
 	builds_intro.add_child(builds_words)
 	builds_words.add_child(_label("Player builds", 21, INK, true))
-	builds_words.add_child(_wrap("You start as a Farmer. Builds add a special way to grow, use or sell crops: giant crops, graded batches, seed discoveries, reserved buyers or harvest stakes.", 14, INK))
-	builds_words.add_child(_wrap("Open a card to look around. Only Select build changes your active build. Switching an unlocked build is free; its active bonuses and ability change. Your discoveries and loaded jobs stay with you.", 14, MUTED))
+	builds_words.add_child(_wrap("One active build. Free switching. Unlock others with Build Crates.", 14, INK))
 	builds_words.add_child(_button("Meet the five builds", "build_guide", true))
 	_help_step("Tools and harvests", "Upgrade tools for more beds per click. Chain harvests within 3.5 seconds for bonuses up to ×16. Ducks clear pests while you tend the farm.")
 	_help_step("Tax and debt", "Every third major stock boom ends with a tax bill after its 10-second selling window. Unpaid tax becomes debt. Going below the bankruptcy limit ends the run. Check Taxes before you spend.")
@@ -2507,14 +2500,13 @@ func set_graphics_quality(mode: String) -> void:
 		_refresh_graphics()
 
 func _build_graphics() -> void:
-	_heading("Graphics", "Choose what feels best on this device.")
+	_heading("Graphics", "")
 	_info("graphics_current", "", GREEN, 19)
 	for entry: Array in [["balanced", "Balanced", "Clear farm · gentle shadows"], ["smooth", "Smooth", "Faster farm · shadows off"], ["crisp", "Crisp", "Sharpest farm · needs more power"]]:
 		var choice: Button = _button(str(entry[1]) + "\n" + str(entry[2]), "graphics:" + str(entry[0]))
 		choice.custom_minimum_size.y = 70
 		_body.add_child(choice)
 		_refs["graphics_" + str(entry[0])] = choice
-	_info("graphics_note", "Sharp menus in every mode.\nSaved on this device.", MUTED, 15)
 	_body.add_child(_button("Back to farm", "close"))
 	_refresh_graphics()
 
@@ -2830,8 +2822,8 @@ func begin_roll(kind: String = "") -> bool:
 		for child: Node in _refs.batch_results.get_children():
 			_refs.batch_results.remove_child(child)
 			child.queue_free()
-	_refs.roll_result_title.text = "CALCULATING YOUR ROLL…" if not _crate_reel else "LET IT ROLL…"
-	_refs.roll_result_detail.text = "Rook: 'Let it settle. The last bounce counts.'"
+	_refs.roll_result_title.text = "Rolling…"
+	_refs.roll_result_detail.text = ""
 	_refs.roll_result_detail.hide()
 	_refs.roll_accounting.hide()
 	_toast_box.hide()
@@ -2847,7 +2839,7 @@ func _start_pending_spin() -> void:
 	if not _rolling or _pending_spin.is_empty() or not is_instance_valid(_spinner): return
 	_spinner.spin_to(_pending_spin)
 	_pending_spin = {}
-	_refs.roll_result_title.text = "LET IT ROLL…"
+	_refs.roll_result_title.text = "Rolling…"
 
 func spin_roll(result: Dictionary) -> void:
 	if not _rolling:
@@ -2868,8 +2860,8 @@ func cancel_roll() -> void:
 		_spinner.spinning = false
 		_spinner.set_process(false)
 	if _panel_kind == "roll":
-		_refs.roll_result_title.text = "PICK A STAKE. LET IT ROLL."
-		_refs.roll_result_detail.text = "Your coins are ready when you are."
+		_refs.roll_result_title.text = "Choose stake"
+		_refs.roll_result_detail.text = ""
 		_refs.roll_result_detail.hide()
 		_refs.roll_accounting.hide()
 		_refresh_panel()
@@ -2889,7 +2881,8 @@ func _on_roll_finished(result: Dictionary) -> void:
 	if not _batch_results.is_empty():
 		var bonus_count: int = _batch_bonus_count()
 		_refs.roll_result_title.text = "%d PAID + AURORA BONUS · %s" % [_batch_results.size() - bonus_count, title] if bonus_count > 0 else "%d ROLLS · %s" % [_batch_results.size(), title]
-		_refs.roll_result_detail.text = ("Your Crown added one free roll. " if bonus_count > 0 else "") + "Best pull shown above. Hover a card for the full result."
+		_refs.roll_result_detail.text = "Aurora bonus: +1 free roll" if bonus_count > 0 else ""
+		_refs.roll_result_detail.visible = not _refs.roll_result_detail.text.is_empty()
 		_show_batch_results()
 	_show_roll_accounting()
 	_refresh_panel()
@@ -2987,34 +2980,34 @@ func _refresh_inventory() -> void:
 		var button: Button = _refs.get(key + ":action") as Button
 		match kind:
 			"crop", "mutation", "processed":
-				detail = "Current value %s%s" % [_money(float(entry.get("sell_value", entry.get("processed_value", entry.get("value", 0))))), " · " + detail if kind == "mutation" else " · held until you sell"]
+				detail = "Current value %s%s" % [_money(float(entry.get("sell_value", entry.get("processed_value", entry.get("value", 0))))), " · " + detail if kind == "mutation" else ""]
 				if is_instance_valid(button):
 					button.text = "Sell · " + _money(float(entry.get("sell_value", entry.get("processed_value", entry.get("value", 0)))))
 				if kind == "processed" and id == "processing":
-					detail = str(entry.get("effect", "Processing")) + " · loaded batch"
+					detail = str(entry.get("effect", "Processing"))
 					if is_instance_valid(button):
 						button.text = "View processor"
 				elif kind == "processed" and id.begins_with("queued:"):
-					detail = str(entry.get("effect", "")) + " · waiting in the production queue"
+					detail = str(entry.get("effect", ""))
 					if is_instance_valid(button): button.text = "View queue"
 				elif kind == "processed" and id == "harvest_stake":
-					detail = str(entry.get("effect", "")) + " · reserved harvest stake"
+					detail = str(entry.get("effect", ""))
 					if is_instance_valid(button): button.text = "View stake result"
 				elif kind == "processed" and is_instance_valid(button):
 					button.text = "Sell all batches"
 			"build":
-				detail = str(entry.get("effect", "")) + " · " + str(entry.get("description", ""))
+				detail = str(entry.get("effect", ""))
 				if is_instance_valid(button):
 					button.text = "Equipped" if bool(entry.get("active", false)) else "Equip build"
 					button.disabled = bool(entry.get("active", false))
 			"seed":
 				var crop: String = str(entry.get("crop", "russet"))
-				detail = "%ds growth · %s" % [_crop_grow(crop), "Ready to plant here" if crop in available else "Plant on its home island"]
+				detail = "%ds growth" % _crop_grow(crop) + ("" if crop in available else " · Home island only")
 				if is_instance_valid(button):
 					button.text = "Selected" if str(_state.get("selected_crop")) == crop else "Select seeds"
 					button.disabled = crop not in available or str(_state.get("selected_crop")) == crop
 			"build_crate":
-				detail = "Own %d · Open for one build level" % maxi(0, int(entry.get("count", 0)))
+				detail = "+1 build level per crate"
 				if is_instance_valid(button):
 					button.text = "Open crate"
 					button.disabled = int(entry.get("count", 0)) <= 0
@@ -3034,9 +3027,10 @@ func _refresh_inventory() -> void:
 			"relic":
 				detail = "ACTIVE · " + (detail if not detail.is_empty() else str(entry.get("description", "Permanent bonus")))
 		_refs[key + ":detail"].text = detail
+		_refs[key + ":detail"].visible = not detail.is_empty()
 	var barn_cost: float = 500.0 * pow(5.0, int(_state.get("barn_level")))
 	var maxed: bool = int(_state.get("barn_level")) >= 20
-	_refs["upgrade:barn:detail"].text = "Maximum barn capacity reached." if maxed else "Adds %s spaces for your harvest." % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
+	_refs["upgrade:barn:detail"].text = "Maximum capacity" if maxed else "+%s storage" % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
 	_set_button("upgrade:barn", "Max level" if maxed else _state.purchase_caption("Upgrade · " + _money(barn_cost), barn_cost), maxed or not _state.can_purchase(barn_cost))
 	var mutations: Array = _state.get("mutations")
 	_set_button("sell_mutations", "Sell all mutation crates", mutations.is_empty())
@@ -3089,7 +3083,7 @@ func _refresh_builds() -> void:
 	BuildPages.refresh(self)
 
 func _build_tracked_prices() -> void:
-	_heading("Tracked Seed Prices", "Pin your favourite seeds to the Seeds tray [2]. Choices save automatically.")
+	_heading("Tracked Seed Prices", "")
 	var summary := _label("", 14, GREEN, true)
 	_body.add_child(summary)
 	_refs.tracked_summary = summary
@@ -3136,7 +3130,7 @@ func _build_tracked_prices() -> void:
 func _refresh_tracked_prices() -> void:
 	if not _refs.has("tracked_summary"): return
 	var tracked := _tracked_ids()
-	_refs.tracked_summary.text = "%d of %d seeds tracked" % [tracked.size(), _market_crops().size()] if not tracked.is_empty() else "No seeds tracked · choose a seed to pin its price"
+	_refs.tracked_summary.text = "%d of %d seeds tracked" % [tracked.size(), _market_crops().size()] if not tracked.is_empty() else "No seeds tracked"
 	for id: String in _market_crops():
 		var key: String = "tracked:" + id
 		if not _refs.has(key + ":toggle"): continue
@@ -3175,7 +3169,7 @@ func _update_tracked_prices() -> void:
 			column.add_child(quote)
 			_tracked_labels[id] = quote
 		if ids.is_empty():
-			_tracked_row.add_child(_label("Choose seeds to pin their prices here.", 13, MUTED))
+			_tracked_row.add_child(_label("No prices pinned", 13, MUTED))
 	var now: float = Time.get_ticks_msec() / 1000.0
 	var market: Dictionary = _state.get("market")
 	for id: String in ids:
@@ -3263,8 +3257,8 @@ func spin_batch(results: Array) -> void:
 	for result: Dictionary in results:
 		if order.find(str(result.get("tier", "common"))) > order.find(str(best.get("tier", "common"))):
 			best = result
-	_refs.roll_result_title.text = "%d ROLLS IN ONE · FINDING YOUR BEST PULL…" % results.size()
-	_refs.roll_result_detail.text = "%d paid + 1 Aurora bonus roll. Every result is yours." % (results.size() - 1) if _batch_bonus_count() > 0 else "All %d rewards are locked in. One reel, every reward." % results.size()
+	_refs.roll_result_title.text = "Rolling ×%d…" % results.size()
+	_refs.roll_result_detail.text = "%d paid + 1 Aurora bonus" % (results.size() - 1) if _batch_bonus_count() > 0 else ""
 	spin_roll(best)
 
 func _show_batch_results() -> void:
@@ -3316,7 +3310,7 @@ func _build_activities() -> void:
 		_build_furnace()
 		return
 	var data: Dictionary = _activity_info()
-	_heading(str(data.get("title", "Island activities")), str(data.get("description", "A different way to work your farm on each island.")))
+	_heading(str(data.get("title", "Island activities")), "")
 	var hero: BoxContainer = _hbox(15)
 	_body.add_child(hero)
 	hero.add_child(_icon({"kind": "activity", "id": "contract" if _island_id() == 2 else "furnace"}, 64))
@@ -3374,7 +3368,7 @@ func _build_activities() -> void:
 			progress.add_theme_stylebox_override("background", _style(Color("dce2cf"), 0, 7))
 			_body.add_child(progress)
 			_refs["contract_progress"] = progress
-			_offer("Ship your harvest", "Live price locks per shipment. Paid when the order is full.", "Deliver held", "activity:deliver", true)
+			_offer("Ship your harvest", "Price locked on delivery · Paid on completion", "Deliver held", "activity:deliver", true)
 			_refs["contract_delivery"] = _body.get_child(_body.get_child_count() - 1)
 	_refresh_activities()
 
@@ -3452,19 +3446,20 @@ func _refresh_duck_patrol() -> void:
 	var speed_cost: float = float(data.get("duck_speed_cost", 15000))
 	var coins: float = float(_state.coins)
 	_set_button("activity:duck", "Flock full" if count >= capacity else _state.purchase_caption("Hire +1 · " + _money(hire_cost), hire_cost), not bool(data.get("duck_can_buy", false)))
-	_refs["activity:duck:detail"].text = "Room for %d more duck%s" % [capacity - count, "" if capacity - count == 1 else "s"] if count < capacity else "No more room on this island"
+	_refs["activity:duck:detail"].text = "%d / %d ducks" % [count, capacity]
 	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else _state.purchase_caption("Faster · " + _money(speed_cost), speed_cost)), not bool(data.get("duck_can_train", false)))
 	_refs["activity:duck:speed:detail"].text = "%.0fs → %.0fs per bed" % [float(data.get("duck_interval", 4)), maxf(2.0, float(data.get("duck_interval", 4)) - 1.0)] if speed < 2 else "2s per bed · Maximum speed"
 	if _refs.has("activity:duck:value"):
 		_refs["activity:duck:value"].text = "Clears pests automatically"
 		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
-		_refs["activity:duck:speed:detail"].text = "Applies to all your ducks"
+		_refs["activity:duck:speed:detail"].text = "Whole flock"
 		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("Credit" if _state.can_purchase(hire_cost) else "Credit limit")), "active" if count >= capacity or coins >= hire_cost else "warning")
 		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("Credit" if _state.can_purchase(speed_cost) else "Credit limit"))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
 	_refs.duck_pond.count = count
 	_refs.duck_pond.capacity = capacity
 	_refs.activity_status.text = "%d duck%s on patrol" % [count, "" if count == 1 else "s"] if count > 0 else "No ducks hired yet"
-	_refs.activity_detail.text = "%.0fs per bed · %d pests cleared" % [float(data.get("duck_interval", 4)), int(data.get("duck_clears", 0))] if count > 0 else "Hire a duck to clear pests."
+	_refs.activity_detail.text = "%.0fs per bed · %d pests cleared" % [float(data.get("duck_interval", 4)), int(data.get("duck_clears", 0))] if count > 0 else ""
+	_refs.activity_detail.visible = count > 0
 
 func _refresh_activities() -> void:
 	if _island_id() == 1:
@@ -3490,12 +3485,12 @@ func _refresh_activities() -> void:
 				_refs["contract_icon:" + kind].item = {"kind": "crop", "crop": crop} if kind == "bulk" else {"kind": "mutation", "id": "mutation:" + crop + ":crystal", "crop": crop}
 				_refs["contract_icon:" + kind].queue_redraw()
 				var unit: String = ("mutation" if int(offer.get("target", 1)) == 1 else "mutations") if kind == "mutation" else "potatoes"
-				_refs["contract_offer:" + kind].text = "%s %s · Held %s\n%s" % [_number(float(offer.get("target", 0))), unit, _number(float(offer.get("held", 0))), "Pays the full rarity value + bonus" if kind == "mutation" else "At this price: " + _money(float(offer.get("base_quote", 0)))]
+				_refs["contract_offer:" + kind].text = "%s %s · Held %s\n%s" % [_number(float(offer.get("target", 0))), unit, _number(float(offer.get("held", 0))), "Full mutation value +50%" if kind == "mutation" else "Quote: " + _money(float(offer.get("base_quote", 0)))]
 			for index: int in range(crop_choice.item_count):
 				if str(crop_choice.get_item_metadata(index)) == str(contract.get("crop", data.get("contract_crop", "sunburst"))):
 					crop_choice.select(index)
 			_refs.activity_status.text = (str(contract.get("crop_name", "Harvest")).to_upper() + (" MUTATIONS" if str(contract.get("kind", "bulk")) == "mutation" else " BULK ORDER")) if active else ("NEXT BUYER IN %ds" % ceili(cooldown) if cooldown > 0 else "PICK YOUR BUYER")
-			_refs.activity_detail.text = "%s / %s shipped · %s banked" % [_number(float(contract.get("delivered", 0))), _number(float(contract.get("target", 1))), _money(float(contract.get("credit", 0)))] if active else "%d orders completed · Choose your crop below" % int(data.get("contract_completed", 0))
+			_refs.activity_detail.text = "%s / %s shipped · %s banked" % [_number(float(contract.get("delivered", 0))), _number(float(contract.get("target", 1))), _money(float(contract.get("credit", 0)))] if active else "%d orders completed" % int(data.get("contract_completed", 0))
 			_set_button("activity:contract:bulk", "Take bulk order →", active or cooldown > 0)
 			_set_button("activity:contract:mutation", "Take rare order →", active or cooldown > 0)
 			var amount: int = int(contract.get("ship_amount", 0))
@@ -3522,9 +3517,6 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	portrait_column.add_child(preview)
 	_refs["equipment_preview"] = preview
-	var hint: Label = _label("DRAG TO TURN YOUR FARMER", 10, MUTED, true)
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	portrait_column.add_child(hint)
 	var matching := _wrap("", 13, GREEN, true)
 	matching.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	portrait_column.add_child(matching)
@@ -3535,7 +3527,6 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 	var build_title: Label = _wrap("YOUR LOADOUT", 17, INK, true)
 	right.add_child(build_title)
 	_refs["equipment_build"] = build_title
-	right.add_child(_wrap("Click an occupied slot to remove it.", 12, MUTED))
 	var slots: GridContainer = GridContainer.new()
 	slots.columns = 2
 	slots.add_theme_constant_override("h_separation", 7)
@@ -3565,7 +3556,7 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 		labels.add_child(_label(slot.to_upper(), 10, MUTED, true))
 		var name_label: Label = _wrap("Empty", 11, INK, true)
 		labels.add_child(name_label)
-		var slot_status := _label("Find gear below", 10, MUTED)
+		var slot_status := _label("", 10, MUTED)
 		labels.add_child(slot_status)
 		_refs["equipment:" + slot + ":status"] = slot_status
 		_refs["equipment:" + slot] = button
@@ -3577,8 +3568,8 @@ func _build_equipment_header(parent: VBoxContainer) -> void:
 	var build_bonus := _wrap("", 13, INK)
 	parent.add_child(build_bonus)
 	_refs.equipment_build_bonus = build_bonus
-	parent.add_child(_wrap("Matching pieces gain +25% to their gear bonuses. Extra copies do not stack.", 12, MUTED))
-	_section_title(parent, "Owned Gear", "Choose a piece to equip")
+	parent.add_child(_wrap("Build match: +25% gear bonuses · Duplicates don't stack", 12, MUTED))
+	_section_title(parent, "Owned Gear")
 
 func _refresh_equipment() -> void:
 	if not _refs.has("equipment_preview") or not _state.has_method("equipment_info"):
@@ -3610,7 +3601,8 @@ func _refresh_equipment() -> void:
 		total_parts.append("%s +%s%s" % [names[stat], number, "×" if stat == "luck" else "%"])
 	if _wears_crown():
 		total_parts.append("Bonus roll +1 / purchase")
-	_refs.equipment_totals.text = "Gear total · " + " · ".join(total_parts) if not total_parts.is_empty() else "Equip gear below to activate its bonuses."
+	_refs.equipment_totals.text = "Gear total · " + " · ".join(total_parts) if not total_parts.is_empty() else ""
+	_refs.equipment_totals.visible = not total_parts.is_empty()
 	var entries: Array = _state.call("equipment_info")
 	for entry: Dictionary in entries:
 		var slot: String = str(entry.get("slot", ""))
@@ -3623,7 +3615,8 @@ func _refresh_equipment() -> void:
 		button.disabled = empty
 		button.tooltip_text = "Empty %s slot. Equip something from your owned gear below." % slot if empty else str(entry.get("name", "Gear")) + "\n" + str(entry.get("effect", "")) + "\nClick to remove."
 		_refs[key + ":name"].text = "Empty" if empty else str(entry.get("name", "Gear"))
-		_refs[key + ":status"].text = "Find gear below" if empty else ("Build match +25%" if float(entry.get("synergy", 1.0)) > 1.0 else "Equipped · Remove")
+		_refs[key + ":status"].text = "" if empty else ("Build match +25%" if float(entry.get("synergy", 1.0)) > 1.0 else "Remove")
+		_refs[key + ":status"].visible = not empty
 		var icon: Control = _refs[key + ":icon"]
 		icon.item = {"kind": "slot", "id": slot} if empty else {"kind": "gear", "id": id, "slot": slot, "role": entry.get("role", "")}
 		icon.queue_redraw()
@@ -3911,11 +3904,10 @@ func _refresh_trophies() -> void:
 	for child: Node in gallery.get_children():
 		gallery.remove_child(child)
 		child.queue_free()
-	gallery.add_child(_wrap("Your rarest drops. Odds show that roll's rarity tier, not the specific item.", 12, MUTED))
 	if trophies.is_empty():
 		var empty := _surface("quest", GOLD)
 		gallery.add_child(empty)
-		empty.add_child(_wrap("A shelf for future treasures. Rare and better finds will appear here as you roll.", 14, MUTED))
+		empty.add_child(_wrap("No trophies yet", 14, MUTED))
 		return
 	var grid: GridContainer = GridContainer.new()
 	grid.columns = 2

@@ -125,6 +125,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	_show_secondary = false
 	primary.disabled = false
 	secondary.disabled = false
+	hint.text = ""
 	# Weather & protection has a dedicated HUD/menu entry and a world station.
 	more.hide()
 	close.visible = not equipment.is_empty()
@@ -141,9 +142,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			_water(s, info.water_capacity)
 			reserves.text += "   ·   Can %d / %d" % [floori(s.can), int(info.can_capacity)]
 			var drought: bool = info.event == "drought" and info.phase == "active" and int(info.island) == island
-			hint.text = "The same tank fills your can and feeds the connected sprinklers." if int(p.get("irrigation", 0)) > 0 else "Rain fills the tank; carry its water to your crops in the can."
-			if drought: hint.text = "Rain has stopped; the can and sprinklers share this stored water."
-			if float(s.can) < 1.0: hint.text = "Can empty: refill here, then use Water [3] on your crops."
+			if drought: hint.text = "No rain during drought."
 			_primary("Refill watering can", "refill")
 			if float(s.can) >= float(info.can_capacity):
 				primary.text = "Watering can is full"
@@ -151,36 +150,34 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			elif float(s.water) < 1.0:
 				primary.text = "Waiting for rain"
 				primary.disabled = true
-				hint.text = "Rain returns after the dry spell; use the water already in your can." if drought else "Rain is refilling your tank; it will be ready in a moment."
+				hint.text = "Rain returns after drought." if drought else "Tank refilling."
 		elif equipment.begins_with("sprinkler"):
 			var cost: int = 8 - 2 * int(p.get("irrigation", 0))
 			var patch: int = clampi(int(equipment.trim_prefix("sprinkler")), 0, 2)
 			title.text = ["Far-bed sprinkler", "Middle-bed sprinkler", "Near-bed sprinkler"][patch]
 			_water(s, info.water_capacity)
-			hint.text = "Follow the pipe: your tank waters this fixed patch in any weather."
 			_primary("Water these beds · %d water" % cost, "use_sprinkler")
 			primary.disabled = float(s.water) < cost
-			if primary.disabled: hint.text = "This patch needs %d tank water; rain replenishes the reserve after drought." % cost
+			if primary.disabled: hint.text = "Need %d tank water." % cost
 		elif equipment == "drain":
 			title.text = "Drain gate"
-			hint.text = "Water follows these channels to the sea, clearing the puddles around your crops."
 			_primary("Drain is open" if s.gates else "Open drain", "gates")
 			primary.disabled = s.gates
 		elif equipment == "trees":
 			title.text = "Living wind shelter"
-			hint.text = "Trees automatically calm the wind over the glowing far beds; lightning can still strike."
+			hint.text = "Far beds sheltered; lightning still strikes."
 		else:
 			title.text = "Reinforced barn"
-			hint.text = "Automatic protection: shutters close at the weather warning to protect stored harvests."
+			hint.text = "Stored crops protected automatically."
 		_finish_refresh()
 		return
 	more.text = "Farm protection  ›"
 	if teaching:
 		var practice_cost: int = int(info.lesson.cost)
 		story.concept = "can" if lesson == "water" else "irrigation"
-		title.text = {"offer": "Meet your sprinklers", "water": "First, water one bed", "area": "Now, water the patch", "success": "Watch the beds recover"}[lesson]
-		hint.text = {"offer": "Your familiar tank now feeds sprinklers: try both ways to water in a short, safe practice.", "water": "Choose Water [3] and click the glowing bed; your real crops and bills are paused.", "area": "Click the near sprinkler, then Water these beds to spend %d tank water." % practice_cost, "success": "%d tank water rescued the whole patch; follow the pipes to use it on your own crops." % practice_cost}[lesson]
-		if lesson == "offer": _primary("Try it · about 30 seconds", "lesson_start")
+		title.text = {"offer": "Water practice", "water": "Water one bed", "area": "Water a patch", "success": "Practice complete"}[lesson]
+		hint.text = {"offer": "Crops and bills pause during practice.", "water": "Water [3] → highlighted bed.", "area": "Near sprinkler → Water these beds · %d water." % practice_cost, "success": "Patch watered · %d tank water used." % practice_cost}[lesson]
+		if lesson == "offer": _primary("Start practice · 30s", "lesson_start")
 		elif lesson == "area": _primary("Show the near sprinkler", "show_sprinkler")
 		_show_secondary = lesson != "success"
 		secondary.text = "Not now" if lesson == "offer" else "Skip practice"
@@ -192,7 +189,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			meter.value = s.can
 	elif info.phase == "recovery":
 		title.text = "WEATHER CLEARING"
-		hint.text = "Rain replenishes your tank; markets recover in %ds." % ceili(info.timer)
+		hint.text = "Markets recover in %ds." % ceili(info.timer)
 		if info.event == "freeze" and int(info.get("frozen_crops", 0)) > 0:
 			hint.text = "Hoe [1] thaws ice while hot."
 			_primary("Open furnace", "open_furnace")
@@ -207,12 +204,12 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 				_primary("Open furnace", "open_furnace")
 			"drought":
 				_water(s, info.water_capacity)
-				hint.text = "Fill your can before rain stops." if info.phase == "warning" else "Water [3] rescues thirsty crops."
+				hint.text = "Refill before drought." if info.phase == "warning" else "Water [3] → dry crops."
 				if int(p.get("irrigation", 0)) > 0: _primary("Show sprinklers", "show_sprinkler")
 			"flood":
 				hint.text = "Hoe [1] drains flooded beds."
 				if int(p.get("drainage", 0)) > 0:
-					if s.gates: hint.text = "Drains are open; water flows to sea."
+					if s.gates: hint.text = "Drains are open."
 					else: _primary("Show drain gate", "show_drain")
 			"storm":
 				hint.text = "Harvest gold rows before lightning."
@@ -221,11 +218,12 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			reserves.show()
 			reserves.text = "Sprayer · %d charges" % floori(s.spray)
 	if not targeting.is_empty():
-		hint.text = "Click the highlighted patch; its sprinkler draws water from the tank."
+		hint.text = "Choose a highlighted patch."
 		_primary("Cancel selection · Esc", "cancel")
 	_finish_refresh()
 
 func _finish_refresh() -> void:
+	hint.visible = not hint.text.is_empty()
 	primary.visible = not primary_action.is_empty()
 	secondary.visible = _show_secondary
 	# Shrink only when the content changes, keeping hit targets stable between ticks.

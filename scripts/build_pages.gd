@@ -1,54 +1,39 @@
 extends RefCounted
 const Art = preload("res://scripts/build_illustration.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const HAND = preload("res://assets/fonts/PatrickHand.ttf")
 const PAPER := Color("eee5ce")
 const INK := Color("30463a")
-const MARGIN_NOTES: Dictionary = {
-	"farmer": "Mara: Use the whole scoop. Stand back.",
-	"industrialist": "Ada: It only jams when somebody watches.",
-	"scientist": "Keep the labels. They all look like potatoes.",
-	"investor": "Nell: Count them before you seal the crate.",
-	"gambler": "Rook: Count your seed money before your winnings.",
-}
 const ORDER: Array[String] = ["farmer", "industrialist", "scientist", "investor", "gambler"]
 const ACCENTS: Dictionary = {"farmer": Color("42976d"), "industrialist": Color("d47a45"), "scientist": Color("6c79c7"), "investor": Color("238b92"), "gambler": Color("a568ab")}
-const PLAYSTYLE: Dictionary = {
-	"farmer": "A scoop of compost. A potato that needs two hands.",
-	"industrialist": "Brush off the mud. Give Ada's sorter a fighting chance.",
-	"scientist": "Cross two harvests. Keep the useful oddities.",
-	"investor": "Get the price in writing. Then fill the crates.",
-	"gambler": "Put a harvest on the table. Half can walk away.",
-}
 const HOW: Dictionary = {
-	"farmer": "Plant a crop, choose Grow a giant potato, then click a highlighted growing patch. Spend 1 compost for 3× its harvest; water and harvest normally.",
-	"industrialist": "Load 20 or 100 harvested crops. Polish Golden, Icecap or Radioactive; cure the others. A matching process and crops harvested within 45 seconds improve the grade.",
-	"scientist": "Choose a recipe and spend 10 of each listed crop. Select the discovered trait for future plantings; ordinary seeds are still used.",
-	"investor": "Reserve a buyer at the displayed price, then deliver 20 crops within 180 seconds from the same island. Shipment size becomes 100 at level 10.",
-	"gambler": "Stake 5, 20 or 100 harvested crops at their current value. Claim coins worth half, the same or triple that locked value. A charm can replace the result once.",
+	"farmer": "1 compost → 3× harvest. Choose a growing patch, then water and harvest.",
+	"industrialist": "Load 20 or 100 crops. Polish Golden, Icecap or Radioactive; cure other crops. Harvest within 45 seconds for a freshness bonus.",
+	"scientist": "Cross 10 of each listed crop. Select the discovered trait for future plantings; uses ordinary seeds.",
+	"investor": "Lock a price, then deliver 20 crops from the same island within 180 seconds. Level 10: 100 crops per shipment.",
+	"gambler": "Stake 5, 20 or 100 crops at their current value. Payout: 0.5×, 1× or 3×. One charm can replace the result.",
 }
 const BENEFITS: Dictionary = {
-	"farmer": "Active Farmer adds 5% yield per level. Growth speed rises from level 2; tool area widens at levels 3, 10 and 20. Each new patch harvested earns 1 compost (up to 99).",
-	"industrialist": "Grades range from F (1.05× sale value) to SSS (8×). Higher build levels process faster; machine grade improves at 3, 10 and 20, with extra queue slots at 10 and 20.",
-	"scientist": "Honeyheart gives 50% more harvest; Sundew halves drought stress; Frostgold avoids ordinary frost selection. Active Scientist also improves mutation chance.",
-	"investor": "The buyer starts at 20% above the current price. Each completed delivery adds 3 percentage points, capped after ten. Active Investor raises the chance of positive market events.",
-	"gambler": "Active Gambler adds 8% Roll House reward quality per level. Stake results: 20% triple, 55% unchanged, 25% half. The table recovers in 30 seconds; a used charm recharges in 180 seconds.",
+	"farmer": "+5% yield per level. Faster growth from level 2; wider tools at 3, 10 and 20. +1 compost per harvested patch (max 99).",
+	"industrialist": "Grades: F (1.05× sale value) to SSS (8×). Faster processing each level; better machine grades at 3, 10 and 20. Extra queue slots at 10 and 20.",
+	"scientist": "Honeyheart: +50% yield. Sundew: half drought stress. Frostgold: ordinary frost immunity. Active bonus: more mutations.",
+	"investor": "Quotes start 20% above market. Each delivery adds 3 percentage points, up to 50%. Active bonus: more positive market events.",
+	"gambler": "+8% Roll House reward quality per level. Odds: 20% triple, 55% unchanged, 25% half. Table cooldown: 30s. Charm recharge: 180s.",
 }
 const TRADEOFFS: Dictionary = {
-	"farmer": "Compost only works on a planted, still-growing, unfrozen patch, once per crop. Switching removes Farmer's active yield, speed and tool-area bonuses; a composted patch keeps its 3× harvest.",
-	"industrialist": "Loading removes raw crops and keeps that barn space occupied. Wait for processing before selling. The final payout follows the market, so it can fall while you wait.",
-	"scientist": "Crossbreeding consumes both ingredients. Traits affect future plantings, not crops already growing. Discoveries stay available with every build; the active mutation bonus changes when you switch.",
-	"investor": "A locked quote misses later price rises. An expired offer pays nothing and leaves your crops untouched. Switching builds keeps the offer and its running deadline; delivery is still available.",
-	"gambler": "The staked crops leave your barn. A half-value result loses half their locked value, and a charm can produce a worse result. Switching keeps a pending result available to claim.",
+	"farmer": "Compost: once per crop, before ripe; frozen crops must be thawed. The 3× harvest stays after switching builds; active bonuses do not.",
+	"industrialist": "Loaded crops occupy barn space until sold. Payout follows the market while processing.",
+	"scientist": "Both ingredients are consumed. Traits apply to future plantings and stay unlocked after switching; the active mutation bonus does not.",
+	"investor": "The locked quote cannot rise. Expired offers pay nothing; crops stay in your barn. Switching builds keeps the deadline running.",
+	"gambler": "Staked crops are consumed. Half-value results lose half the stake. Charms can lower the payout. Pending results remain claimable after switching.",
 }
-const SWITCH_NOTE: String = "Switching is free and immediate. Only one build's active bonuses apply; discoveries and loaded jobs stay with you."
-const UNLOCK_NOTE: String = "Find its card in a Build Crate. Crates have a 5% chance to drop from paid Roll House rolls; open them in Inventory."
+const SWITCH_NOTE: String = "Switch free. One active build at a time. Discoveries, jobs and pending rewards stay."
+const UNLOCK_NOTE: String = "Build Crates: 5% drop chance from paid Roll House rolls. Open in Inventory."
 const PURPOSE: Dictionary = {
-	"farmer": "Turn a growing crop into a giant potato.",
-	"industrialist": "Match a crop to its process, then sell the graded harvest.",
-	"scientist": "Cross harvested crops to discover a permanent planting trait.",
-	"investor": "Lock a buyer's price, then deliver the promised crops.",
-	"gambler": "Stake part of your harvest for a coin payout that can rise or fall.",
+	"farmer": "3× harvest · 1 compost",
+	"industrialist": "Grade crops for higher prices",
+	"scientist": "Discover planting traits",
+	"investor": "Reserve a buyer's price",
+	"gambler": "Stake crops for coin payouts",
 }
 const ACTION_TITLE: Dictionary = {"farmer": "Grow a giant potato", "industrialist": "Grade a batch", "scientist": "Discover a variety", "investor": "Reserve a buyer", "gambler": "Stake a harvest"}
 
@@ -59,7 +44,7 @@ static func create(h) -> void:
 	if id.is_empty():
 		create_overview(h, system)
 		return
-	h._heading(id.capitalize(), PLAYSTYLE[id])
+	h._heading(id.capitalize(), "")
 	_notebook(h, ACCENTS[id])
 	var height: float = 552.0 if id == "farmer" else (634.0 if id == "scientist" else 600.0)
 	h._modal_card.offset_top = -height * 0.5
@@ -79,7 +64,7 @@ static func create(h) -> void:
 	var art = Art.new()
 	art.kind = id
 	art.compact_layout = _touch(h)
-	art.custom_minimum_size = Vector2(0, 196 if _touch(h) else (116 if id == "scientist" else 128))
+	art.custom_minimum_size = Vector2(0, 82 if _touch(h) else 108)
 	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h._body.add_child(art)
 	h._refs.build_art = art
@@ -145,7 +130,6 @@ static func create(h) -> void:
 			var bank = h._hbox(10)
 			body.add_child(bank)
 			choice(h, bank, "variety", "Trait for future plantings", [["", "Ordinary crops"], ["hearty", "Honeyheart · larger harvest"], ["dry", "Sundew · drought tolerant"], ["frost", "Frostgold · frost hardy"]])
-			body.add_child(h._wrap("Plant with normal seeds; your selected trait stays available with every build.", 12, h.MUTED))
 		"investor":
 			add_action(h, actions, "Reserve price", "reserve")
 			add_action(h, actions, "Deliver crops", "deliver")
@@ -156,9 +140,9 @@ static func create(h) -> void:
 			var note = h._wrap("", 12, h.MUTED)
 			body.add_child(note)
 			h._refs.prof_note = note
-	var details = h._details_section("build_details", "field notes & progression")
+	var details = h._details_section("build_details", "details")
 	h._refs.build_details.add_theme_stylebox_override("panel", _paper_skin(ACCENTS[id]))
-	for entry in [["Method", HOW[id]], ["What the village has measured", BENEFITS[id]], ["Read before trying", TRADEOFFS[id]]]:
+	for entry in [["How it works", HOW[id]], ["Bonuses", BENEFITS[id]], ["Limits", TRADEOFFS[id]]]:
 		details.add_child(_display(h, entry[0], 17, h.INK))
 		details.add_child(h._wrap(entry[1], 13, h.MUTED))
 	var label = h._wrap("", 13, h.MUTED)
@@ -177,10 +161,7 @@ static func _display(h, text: String, size: int, color: Color) -> Label:
 	return label
 
 static func _compact_type(node: Node) -> void:
-	if node is Label and node.has_meta("field_annotation"):
-		node.add_theme_font_override("font", HAND)
-		node.add_theme_font_size_override("font_size", 17)
-	elif node is Label or node is Button or node is LineEdit:
+	if node is Label or node is Button or node is LineEdit:
 		var font: Font = node.get_theme_font("font").duplicate()
 		font.fallbacks = []
 		node.add_theme_font_override("font", font)
@@ -241,27 +222,20 @@ static func _notebook(h, accent: Color = INK) -> void:
 	h._modal_title.add_theme_color_override("font_color", INK)
 	h._modal_subtitle.add_theme_color_override("font_color", accent.darkened(0.25))
 
-static func _annotation(h, words: String, color: Color = INK) -> Label:
-	var label = h._wrap(words, 17, color)
-	label.add_theme_font_override("font", HAND)
-	label.add_theme_constant_override("outline_size", 0)
-	label.set_meta("field_annotation", true)
-	return label
-
 static func create_overview(h, system) -> void:
-	h._heading("The village field guide", "Five ways to put a potato to work. Notes from muddy hands.")
+	h._heading("Builds", "")
 	_notebook(h)
 	_overview_size(h)
 	var intro = h._hbox(12)
 	h._body.add_child(intro)
-	var selected = h._badge("✓ Selected · " + system.active.capitalize(), "active")
+	var selected = h._badge("Selected · " + system.active.capitalize(), "active")
 	selected.add_theme_font_size_override("font_size", 14)
 	intro.add_child(selected)
 	h._refs.build_selected_summary = selected
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro.add_child(spacer)
-	intro.add_child(h._button("Read the guide", "build_guide"))
+	intro.add_child(h._button("How builds work", "build_guide"))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -286,12 +260,10 @@ static func create_overview(h, system) -> void:
 		card.add_child(hero)
 		var sketch = h._vbox(1)
 		hero.add_child(sketch)
-		var leaf = h._label("LEAF %02d" % (ORDER.find(id) + 1), 11, accent.darkened(0.25), true)
-		sketch.add_child(leaf)
 		var picture = Art.new()
 		picture.kind = id
 		picture.specimen = true
-		picture.custom_minimum_size = Vector2(110, 128) if _touch(h) else Vector2(86, 100)
+		picture.custom_minimum_size = Vector2(110, 105) if _touch(h) else Vector2(86, 82)
 		sketch.add_child(picture)
 		h._refs["build_preview:" + id] = picture
 		var title = h._vbox(4)
@@ -302,44 +274,40 @@ static func create_overview(h, system) -> void:
 		var name_label = _display(h, entry.name, 23, INK)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		heading.add_child(name_label)
-		var badge = h._badge("✓ Selected" if entry.active else ("Lv.%d · Ready" % entry.level if entry.unlocked else "Locked"), "active" if entry.active else ("ready" if entry.unlocked else "locked"))
+		var badge = h._badge("Selected" if entry.active else ("Lv.%d · Ready" % entry.level if entry.unlocked else "Locked"), "active" if entry.active else ("ready" if entry.unlocked else "locked"))
 		title.add_child(badge)
 		h._refs["build_status:" + id] = badge
-		var tagline = h._wrap(PLAYSTYLE[id], 13, INK)
-		tagline.custom_minimum_size.y = 36
-		title.add_child(tagline)
-		var explore = h._button("Open notes" if entry.unlocked else "Preview notes", "build:inspect:" + id, entry.active)
+		var effect = h._wrap(PURPOSE[id], 13, INK)
+		title.add_child(effect)
+		var explore = h._button("Open" if entry.unlocked else "Preview", "build:inspect:" + id, entry.active)
 		title.add_child(explore)
 		h._refs["build_explore:" + id] = explore
 	var guide = _folio(h, h.GOLD)
 	grid.add_child(guide)
 	var guide_body = h._vbox(6)
 	guide.add_child(guide_body)
-	guide_body.add_child(h._label("A NOTE INSIDE THE COVER", 11, INK, true))
-	guide_body.add_child(_annotation(h, "Mara: Start with the soil. The other schemes will keep.", Color("496744")))
-	guide_body.add_child(h._wrap("Farmer is your starter. Other builds come in Build Crates. Looking through these pages changes nothing; select an unlocked build for free.", 13, h.MUTED))
-	guide_body.add_child(h._button("How builds work", "build_guide"))
-	_finish_type(h)
+	guide_body.add_child(_display(h, "Unlock builds", 20, INK))
+	guide_body.add_child(h._wrap("Build Crates · 5% drop from paid rolls", 13, INK))
+	guide_body.add_child(h._button("Details", "build_guide"))
+	_fit_height(h, "")
 
 static func create_guide(h) -> void:
-	h._heading("Field notes: builds", "Written down before somebody tries it twice.")
+	h._heading("How builds work", "")
 	_notebook(h)
 	h._body.add_child(h._button("‹ Browse all builds", "build:inspect:"))
 	var intro = _folio(h, h.GOLD)
 	h._body.add_child(intro)
 	var body = h._vbox(8)
 	intro.add_child(body)
-	body.add_child(_display(h, "First, a working pair of hands", 22, h.INK))
-	body.add_child(h._wrap("A build adds active bonuses and a special way to use your crops. You start as Farmer: bigger harvests and compost-powered giants.", 14, h.INK))
-	body.add_child(h._wrap("Open Builds [C] to compare all five. Open notes shows the appearance, actions and tradeoffs. Only Select build changes your active build; the Selected badge always marks it.", 14, h.MUTED))
+	body.add_child(_display(h, "Select a build", 22, h.INK))
+	body.add_child(h._wrap("Farmer is unlocked from the start. Select a build to use its bonuses and ability.", 14, h.INK))
 	body.add_child(h._wrap(SWITCH_NOTE, 14, h.INK))
 	var unlock = _folio(h, ACCENTS.scientist)
 	h._body.add_child(unlock)
 	var unlock_body = h._vbox(6)
 	unlock.add_child(unlock_body)
-	unlock_body.add_child(_display(h, "Where the other build cards turn up", 20, h.INK))
-	unlock_body.add_child(h._wrap(UNLOCK_NOTE + " A card unlocks its build or adds a level, up to 30. A crate does not guarantee a particular build.", 14, h.MUTED))
-	unlock_body.add_child(h._wrap("Paid rolls spend coins and can return little. Keep seed and tax money before trying for a crate.", 13, h.CHERRY))
+	unlock_body.add_child(_display(h, "Unlocks & levels", 20, h.INK))
+	unlock_body.add_child(h._wrap(UNLOCK_NOTE + " Cards unlock builds or add a level (max 30). A crate does not guarantee a particular build.", 14, h.MUTED))
 	for id in ORDER:
 		var card = _folio(h, ACCENTS[id])
 		h._body.add_child(card)
@@ -348,14 +316,12 @@ static func create_guide(h) -> void:
 		var heading = h._hbox(9)
 		column.add_child(heading)
 		heading.add_child(h._icon({"kind": "build", "id": id}, 52))
-		var heading_text = _display(h, "%02d  %s" % [ORDER.find(id) + 1, id.capitalize()], 21, h.INK)
+		var heading_text = _display(h, id.capitalize(), 21, h.INK)
 		heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		heading.add_child(heading_text)
-		column.add_child(_annotation(h, MARGIN_NOTES[id]))
 		column.add_child(h._wrap(HOW[id], 14, h.INK))
 		column.add_child(h._wrap(TRADEOFFS[id], 13, h.MUTED))
 		column.add_child(h._button("Explore " + id.capitalize(), "build:inspect:" + id))
-	h._body.add_child(h._wrap("Loaded workshop batches keep processing after a switch. Discovered traits stay in your seed bank; reserved buyers keep their deadlines and harvest stakes remain claimable.", 13, h.MUTED))
 	_finish_type(h)
 
 static func _fit_height(h, id: String) -> void:
@@ -363,6 +329,10 @@ static func _fit_height(h, id: String) -> void:
 	var touch = h.get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
 		touch.fit_modal()
+		await h.get_tree().process_frame
+		await h.get_tree().process_frame
+		if is_instance_valid(h) and h._panel_kind == "builds" and h._build_selection == id:
+			touch.fit_modal()
 		return
 	# Measure once after layout, and when the optional drawer changes. Live
 	# resource refreshes must not move a button under the pointer.
@@ -371,6 +341,19 @@ static func _fit_height(h, id: String) -> void:
 	await h.get_tree().process_frame
 	if not is_instance_valid(h): return
 	if h._panel_kind != "builds" or h._build_selection != id: return
+	var height: float = content_height(h)
+	if id == "industrialist" and not h._refs.prof_job.visible:
+		# Reserve the later job label, meter and their gaps before the first load.
+		# Starting a batch must not resize the modal or hide the details toggle.
+		var job: Label = h._refs.prof_job
+		height += job.get_theme_font("font").get_height(job.get_theme_font_size("font_size"))
+		height += h._refs.prof_progress.get_combined_minimum_size().y
+		height += 2 * job.get_parent().get_theme_constant("separation")
+	height = clampf(height, 360, 634)
+	h._modal_card.offset_top = -height * 0.5
+	h._modal_card.offset_bottom = height * 0.5
+
+static func content_height(h) -> float:
 	var column: VBoxContainer = h._modal_card.get_child(0)
 	var extra: float = h._modal_card.get_theme_stylebox("panel").get_minimum_size().y
 	var visible_children: int = 0
@@ -379,16 +362,7 @@ static func _fit_height(h, id: String) -> void:
 		visible_children += 1
 		if child != h._body.get_parent(): extra += child.get_combined_minimum_size().y
 	extra += maxf(0, visible_children - 1) * column.get_theme_constant("separation")
-	if id == "industrialist" and not h._refs.prof_job.visible:
-		# Reserve the later job label, meter and their gaps before the first load.
-		# Starting a batch must not resize the modal or hide the details toggle.
-		var job: Label = h._refs.prof_job
-		extra += job.get_theme_font("font").get_height(job.get_theme_font_size("font_size"))
-		extra += h._refs.prof_progress.get_combined_minimum_size().y
-		extra += 2 * job.get_parent().get_theme_constant("separation")
-	var height: float = clampf(h._body.get_combined_minimum_size().y + extra, 360, 634)
-	h._modal_card.offset_top = -height * 0.5
-	h._modal_card.offset_bottom = height * 0.5
+	return h._body.get_combined_minimum_size().y + extra
 
 static func add_action(h, row, title: String, action: String, primary: bool = true) -> void:
 	var button = h._button(title, "profession:" + action, primary)
@@ -431,9 +405,10 @@ static func refresh(h) -> void:
 	var id: String = h._build_selection
 	var equipped: bool = b.active == id
 	var unlocked: bool = int(b.levels[id]) > 0
-	h._refs.build_equip.text = "✓ Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Locked · Build Crate")
-	h._refs.build_selection_note.visible = not equipped
-	h._refs.build_selection_note.text = "Free switch · replaces %s's active bonuses. Your progress stays." % b.active.capitalize() if unlocked else UNLOCK_NOTE
+	h._refs.build_equip.text = "Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Locked · Build Crate")
+	h._refs.build_selection_note.visible = not unlocked
+	h._refs.build_selection_note.text = UNLOCK_NOTE if not unlocked else ""
+	h._refs.build_equip.tooltip_text = "Replaces %s bonuses" % b.active.capitalize() if unlocked and not equipped else ""
 	h._refs.build_equip.disabled = equipped or not unlocked
 	h._refs.build_art.grade = str(d.last_grade) if d.last_grade != "" else p.grade_preview().grade
 	h._refs.build_art.grade_caption = "Last stamped batch" if d.last_grade != "" else "Expected grade"
@@ -459,7 +434,7 @@ static func refresh(h) -> void:
 			ready = _readiness(h, p, "giant")
 			var growing: Dictionary = p.cultivation_info()
 			h._refs.prof_resource.text = "%d compost available · %d growing crop%s ready" % [d.compost, growing.eligible.size(), "" if growing.eligible.size() == 1 else "s"]
-			status = "Choose a highlighted growing crop; then water, grow and harvest normally." if ready.ready else str(ready.reason)
+			status = "" if ready.ready else str(ready.reason)
 			var ripe: bool = false
 			var frozen: bool = false
 			var empty: bool = false
@@ -474,16 +449,16 @@ static func refresh(h) -> void:
 				h._refs.prof_prepare.set_meta("tool", tool)
 				h._refs.prof_prepare.text = {"harvest": "Harvest ripe crops first [4]", "hoe": "Thaw a growing crop first [1]", "plant": "Plant a crop first [2]"}[tool]
 				if growing.eligible.is_empty() and d.compost > 0:
-					if ripe: status = "Harvest a ripe crop, then plant a new seed before adding compost."
-					elif frozen: status = "Clear the ice with your hoe before adding compost to a growing crop."
+					if ripe: status = "Plant a new crop before adding compost."
+					elif frozen: status = "Thaw with your hoe before adding compost."
 			elif equipped and growing.eligible.is_empty() and d.compost > 0:
-				status = "Your growing crops already have compost; let them grow, then harvest."
+				status = "All growing crops already have compost."
 		"industrialist":
 			ready = _readiness(h, p, "load")
 			var preview: Dictionary = p.grade_preview()
 			var held: int = int(farm.storage[farm.selected_crop])
 			h._refs.prof_resource.text = "Next batch: grade %s · %s× sale value · %d / %d %s in barn" % [preview.grade, String.num(preview.multiplier, 2), mini(held, int(d.batch_size)), d.batch_size, farm.selected_crop.capitalize()]
-			status = ("Process matched · " + ("freshly harvested." if preview.fresh else "stored harvest.")) if preview.fit else "Choose %s to improve this crop's grade." % str(preview.desired).capitalize()
+			status = ("Matched process · " + ("fresh" if preview.fresh else "stored")) if preview.fit else "Better grade with %s" % str(preview.desired).capitalize()
 			if not ready.ready: status = str(ready.reason)
 			h._refs.prof_load.text = "Load %d %s" % [d.batch_size, farm.selected_crop.capitalize()]
 			h._refs.prof_sell.text = "Sell graded · " + farm.money(b.processed_value())
@@ -498,10 +473,10 @@ static func refresh(h) -> void:
 			ready = _readiness(h, p, "breed")
 			var recipe: Dictionary = p.RECIPES[d.recipe]
 			h._refs.prof_title.text = "%s · %s" % [recipe.name, recipe.trait]
-			h._refs.prof_resource.text = "10 %s + 10 %s · a permanent planting trait" % [str(recipe.a).capitalize(), str(recipe.b).capitalize()]
+			h._refs.prof_resource.text = "10 %s + 10 %s" % [str(recipe.a).capitalize(), str(recipe.b).capitalize()]
 			status = "%d / 10 %s · %d / 10 %s in barn" % [mini(10, int(farm.storage[recipe.a])), str(recipe.a).capitalize(), mini(10, int(farm.storage[recipe.b])), str(recipe.b).capitalize()] if ready.ready else str(ready.reason)
 			h._refs.prof_breed.text = "Already discovered" if d.recipe in d.seedbank else "Crossbreed · 10 + 10 crops"
-			if d.recipe in d.seedbank: status = "Saved to your seed bank; select this trait for future plantings below."
+			if d.recipe in d.seedbank: status = ""
 		"investor":
 			var contract: Dictionary = d.contract
 			var active: bool = not contract.is_empty()
@@ -514,12 +489,12 @@ static func refresh(h) -> void:
 			ready = p.readiness("deliver" if active else "reserve")
 			if active:
 				h._refs.prof_resource.text = "%d %s · %s locked payout · %ds left" % [contract.quantity, str(contract.crop).capitalize(), farm.money(contract.quantity * contract.quote), ceili(contract.remaining)]
-				status = "%d / %d crops in barn · deliver from Island %d." % [mini(int(contract.quantity), int(farm.storage[contract.crop])), contract.quantity, contract.island] if ready.ready else str(ready.reason)
+				status = "%d / %d crops · deliver from Island %d" % [mini(int(contract.quantity), int(farm.storage[contract.crop])), contract.quantity, contract.island] if ready.ready else str(ready.reason)
 				h._refs.prof_deliver.text = "Deliver %d %s · %s" % [contract.quantity, str(contract.crop).capitalize(), farm.money(contract.quantity * contract.quote)]
 			else:
 				var quote: Dictionary = p.contract_preview()
 				h._refs.prof_resource.text = "%d %s · %s locked payout" % [quote.quantity, str(quote.crop).capitalize(), farm.money(quote.total)]
-				status = "No upfront cost; deliver within 3 minutes from this island." if ready.ready else str(ready.reason)
+				status = "Free reservation · deliver here within 3 minutes" if ready.ready else str(ready.reason)
 		"gambler":
 			var active: bool = not d.wager.is_empty()
 			h._refs.prof_title.text = "Your harvest stake result" if active else ACTION_TITLE[id]
@@ -533,15 +508,16 @@ static func refresh(h) -> void:
 				var payout: String = farm.money(d.wager.quantity * d.wager.quote * d.wager.factor)
 				h._refs.prof_resource.text = "%s× result · %s ready to claim" % [d.wager.factor, payout]
 				h._refs.prof_claim.text = "Claim " + payout
-				status = "%d %s were staked at their locked value." % [d.wager.quantity, str(d.wager.crop).capitalize()]
-				h._refs.prof_note.text = "A charm replaces this payout once; the replacement can be lower." if p.readiness("reroll").ready else str(p.readiness("reroll").reason)
+				status = "Staked: %d %s" % [d.wager.quantity, str(d.wager.crop).capitalize()]
+				h._refs.prof_note.text = "Charm: one replacement; payout may fall." if p.readiness("reroll").ready else str(p.readiness("reroll").reason)
 			else:
 				var value: float = float(d.stake) * float(farm.market[farm.selected_crop].sell)
 				h._refs.prof_resource.text = "%d %s · %s stake value" % [d.stake, farm.selected_crop.capitalize(), farm.money(value)]
-				status = "%d / %d crops in barn · only this quantity is removed." % [mini(int(d.stake), int(farm.storage[farm.selected_crop])), d.stake] if ready.ready else str(ready.reason)
+				status = "%d / %d crops in barn" % [mini(int(d.stake), int(farm.storage[farm.selected_crop])), d.stake] if ready.ready else str(ready.reason)
 				h._refs.prof_stake.text = "Stake %d %s" % [d.stake, farm.selected_crop.capitalize()]
-				h._refs.prof_note.text = "Receive half, the same, or triple this value in coins; your other crops stay in the barn."
+				h._refs.prof_note.text = "Odds: 20% triple · 55% unchanged · 25% half"
 	h._refs.prof_status.text = status
+	h._refs.prof_status.visible = not status.is_empty()
 	h._refs.prof_status.add_theme_color_override("font_color", h.MUTED if ready.get("ready", false) or (id == "scientist" and d.recipe in d.seedbank) else h.CHERRY)
 	var passive: String = ""
 	for entry in b.build_info():

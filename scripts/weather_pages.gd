@@ -38,7 +38,6 @@ func setup(owner_hud) -> void:
 	var hero := _panel(self)
 	var hero_body : VBoxContainer = hud._vbox(9)
 	hero.add_child(hero_body)
-	hero_body.add_child(_label(str(hud._state.island_name()).to_upper() + " / LIVE FORECAST", 12, CYAN))
 	_hero = BoxContainer.new()
 	_hero.add_theme_constant_override("separation", 20)
 	hero_body.add_child(_hero)
@@ -101,9 +100,6 @@ func setup(owner_hud) -> void:
 		heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(heading)
 		heading.add_child(_label(titles[id], 19, WHITE))
-		var level := _label("", 12, CYAN)
-		heading.add_child(level)
-		hud._refs["climate_level:" + id] = level
 		var effect := _label("", 14, MUTED)
 		column.add_child(effect)
 		hud._refs["climate_effect:" + id] = effect
@@ -118,16 +114,14 @@ func setup(owner_hud) -> void:
 		actions.add_child(hud._refs.climate_practice)
 	else: actions.add_child(_button("Heat thawing hoe", "climate_operate:heat_hoe"))
 	actions.add_child(_button("Tax forecast", "taxes"))
-	# Retain factual timing and balance references behind one optional disclosure.
-	var details: VBoxContainer = hud._details_section("climate_details", "system data")
+	# Optional reference for the duration of each weather phase.
+	var details: VBoxContainer = hud._details_section("climate_details", "weather timings")
 	hud._refs.climate_details.reparent(self)
 	hud._refs["climate_details:toggle"].reparent(self)
 	move_child(hud._refs["climate_details:toggle"], get_child_count() - 2)
 	_style_button(hud._refs["climate_details:toggle"], false)
 	hud._refs.climate_details.add_theme_stylebox_override("panel", hud.Cozy.box(PANEL, 10, 14, Color("355870")))
 	details.add_child(_label("Warning 45s · Impact 30s · Recovery 75s", 13, MUTED))
-	hud._refs.climate_reference = _label("", 13, MUTED)
-	details.add_child(hud._refs.climate_reference)
 	resized.connect(_layout)
 	refresh()
 	_layout.call_deferred()
@@ -180,14 +174,11 @@ func refresh() -> void:
 		var level: int = int(info.projects[str(hud._island_id())].get(id, 0))
 		var full: bool = level >= farm.ClimateSystem.MAX_PROJECT_LEVEL
 		var cost: float = float(farm.BlindRules.PROGRESSION_BASELINES[2 if id == "irrigation" else hud._island_id()]) * float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
-		hud._refs["climate_level:" + id].text = "MAX OUTPUT" if full else ("ONLINE" if level > 0 else "OFFLINE")
 		var stats := {"irrigation":"4 water / patch" if full else ("6 → 4 water / patch" if level == 1 else "3 patches · 6 water each"), "rainwater":"%d water capacity" % int(info.water_capacity) if full else "%d → %d water capacity" % [int(info.water_capacity), int(info.water_capacity)+36], "drainage":"Flood: −30% crop damage / level", "barn":"−35% stored crop loss / level", "windbreaks":"Shelters far beds · wind only"}
 		hud._refs["climate_effect:" + id].text = stats[id]
 		hud._set_button("climate_fund:" + id, "Fully upgraded" if full else farm.purchase_caption(("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost), cost), full or not farm.can_purchase(cost))
 	if hud._refs.has("climate_practice"):
 		hud._refs.climate_practice.disabled = int(info.projects["2"].get("irrigation", 0)) == 0
-	var opportunity: Dictionary = farm.stock_opportunity()
-	hud._refs.climate_reference.text = "Stock reference %s · %s potatoes" % [farm.money(opportunity.reference), farm.format_number(opportunity.units)]
 func _layout() -> void:
 	if not is_instance_valid(_grid): return
 	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled

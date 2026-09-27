@@ -200,8 +200,6 @@ func _build_buy() -> void:
 			button.visible = not hud._tutorial_seed_market() or count == 1
 			actions.add_child(button)
 			hud._refs[action] = button
-	var rule: Label = _label("Seeds cost 75% of the current potato price.", 13, MUTED)
-	add_child(rule)
 
 func _build_sell() -> void:
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
@@ -221,7 +219,6 @@ func _build_sell() -> void:
 	_hero_words = hud._vbox(2)
 	_hero_words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_hero_words)
-	_hero_words.add_child(_label("TODAY'S BUYING BOARD", 11, Color("c7d1b6")))
 	crop_name = _label("", 30, CHALK, true)
 	_hero_words.add_child(crop_name)
 	_hero_quote_row = HBoxContainer.new()
@@ -392,8 +389,8 @@ func refresh() -> void:
 		for crop: String in crops:
 			var quote: Dictionary = state.market[crop]
 			hud._refs[crop + ":seed_price"].text = "%s / seed" % state.market_money(quote.seed)
-			hud._refs[crop + ":price"].text = "Potato sells for %s" % state.market_money(quote.sell)
-			hud._refs[crop + ":quote"].text = "%s seeds · %s potatoes owned" % [state.format_number(state.seed_inventory[crop]), state.format_number(state.storage[crop])]
+			hud._refs[crop + ":price"].text = "Sale price %s" % state.market_money(quote.sell)
+			hud._refs[crop + ":quote"].text = "%s seeds · %s potatoes" % [state.format_number(state.seed_inventory[crop]), state.format_number(state.storage[crop])]
 			for count: int in [1, 5]:
 				var key := "buy:%s:%d" % [crop, count]
 				hud._set_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else state.purchase_caption("Buy %d" % count, quote.seed * count), not state.can_purchase(quote.seed * count) or int(state.seed_inventory[crop]) + count > State.MAX_INVENTORY)
@@ -420,7 +417,7 @@ func refresh() -> void:
 	minus.disabled = not quantity.valid or amount <= 1
 	plus.disabled = not quantity.valid or amount >= owned
 	maximum.disabled = owned == 0
-	status.text = "Enter a whole number of potatoes. We don't buy slices." if not quantity.valid else (_receipt if _receipt_left > 0 else ("Empty crate. Bring a harvest; we'll find a buyer." if owned == 0 else "Quoted on the board. Counted into the crate."))
+	status.text = "Enter a whole number." if not quantity.valid else (_receipt if _receipt_left > 0 else ("No potatoes to sell." if owned == 0 else ""))
 	status.visible = not status.text.is_empty()
 	status.add_theme_color_override("font_color", LOSS if not quantity.valid else (GAIN if _receipt_left > 0 else MUTED))
 	_refresh_history_controls()
@@ -431,7 +428,7 @@ func _refresh_history_controls() -> void:
 	var bounds: Vector2i = chart.window_bounds()
 	older.disabled = bounds.x == 0
 	newer.disabled = chart.history_offset == 0
-	history_label.text = "No chalk on the ledger yet" if chart.samples.is_empty() else "%d–%d of %d · %s" % [bounds.x + 1, bounds.y, chart.samples.size(), "Live" if chart.history_offset == 0 else "History"]
+	history_label.text = "No price history." if chart.samples.is_empty() else "%d–%d of %d · %s" % [bounds.x + 1, bounds.y, chart.samples.size(), "Live" if chart.history_offset == 0 else "History"]
 
 func navigate(direction: int) -> void:
 	if not selling or crops.size() < 2: return

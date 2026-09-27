@@ -1,7 +1,6 @@
 extends Control
 ## Inked field-guide diagrams. The same crop silhouettes appear in the inventory.
 const Items = preload("res://scripts/item_icon.gd")
-const HAND = preload("res://assets/fonts/PatrickHand.ttf")
 var specimen: bool = false
 var compact_layout: bool = false
 const Type = preload("res://scripts/ui_type.gd")
@@ -48,8 +47,8 @@ func _process(delta: float) -> void:
 		tick = 0
 		queue_redraw()
 func canvas_dimensions() -> Vector2:
-	if specimen: return Vector2(110, 128)
-	return Vector2(320, 128) if compact_layout or size.x < 440 else Vector2(620, 152)
+	if specimen: return Vector2(110, 105)
+	return Vector2(620, 128)
 func canvas_scale() -> float:
 	var dimensions: Vector2 = canvas_dimensions()
 	return minf(size.x / dimensions.x, size.y / dimensions.y)
@@ -97,7 +96,6 @@ func _specimen() -> void:
 		"farmer":
 			ellipse(Rect2(21, 85, 69, 9), Color("c3b99c"))
 			spud(Vector2(54, 57), 2.35)
-			draw_string(HAND, Vector2(32, 115), "3× harvest", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, INK)
 		"industrialist":
 			box(Rect2(25, 32, 63, 42), Color("668778"), 4)
 			box(Rect2(18, 68, 74, 13), INK, 3)
@@ -105,7 +103,6 @@ func _specimen() -> void:
 			spud(Vector2(44, 25), 0.7)
 			box(Rect2(66, 37, 16, 14), Color("b18c5c"), 2)
 			for y in [40, 46]: draw_line(Vector2(67,y), Vector2(71,y+2), INK, 1, true)
-			draw_string(HAND, Vector2(24, 112), "grade by grade", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, INK)
 		"scientist":
 			spud(Vector2(34, 35), 1.0)
 			spud(Vector2(79, 36), 1.0, Color("9bd7da"))
@@ -113,49 +110,24 @@ func _specimen() -> void:
 			draw_polyline(PackedVector2Array([Vector2(34,58),Vector2(34,67),Vector2(78,67),Vector2(78,58)]), LEAF, 1.5, true)
 			box(Rect2(39, 77, 34, 23), Color("e4bf78"), 2)
 			draw_line(Vector2(57, 69), Vector2(55, 84), INK, 1, true)
-			draw_string(HAND, Vector2(26, 121), "keep the trait", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, INK)
 		"investor":
 			crate(Vector2(57, 68))
 			box(Rect2(35, 17, 44, 52), Color("f5efd9"), 2)
 			for y in [33, 42, 51]: draw_line(Vector2(42, y), Vector2(70,y+1), LEAF, 1.4, true)
 			draw_circle(Vector2(60, 58), 6, Color("b76c50"))
-			draw_string(HAND, Vector2(28, 112), "get it in ink", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, INK)
 		"gambler":
 			spud(Vector2(33, 35), 1.05)
 			box(Rect2(45, 38, 43, 43), Color("b7a294"), 5)
 			for point in [Vector2(56,49),Vector2(77,70),Vector2(66,59)]: draw_circle(point, 3, INK)
 			draw_line(Vector2(26, 88), Vector2(90, 86), INK, 1, true)
-			draw_string(HAND, Vector2(23, 112), "half can go", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, INK)
-
-func _compact_story() -> void:
-	_specimen()
-	var steps: Array = {
-		"farmer": ["Plant a crop", "Add 1 compost", "Water, grow, harvest"],
-		"industrialist": ["Load harvested crops", "Match the process", "Grade " + grade],
-		"scientist": ["10 + 10 harvested crops", "Crossbreed", "Keep the planting trait"],
-		"investor": ["Reserve a price", "Fill the order", "Deliver for coins"],
-		"gambler": ["Choose a stake", "Reveal the result", "Claim or use a charm"],
-	}[kind]
-	for index in range(3):
-		var y: float = 36 + index * 29
-		label(Vector2(113, y), str(index + 1), LEAF, 12)
-		label(Vector2(132, y), str(steps[index]), INK, 14)
-		if index < 2: draw_line(Vector2(132, y + 10), Vector2(309, y + 10), Color("b5b6a0"), 1, true)
 
 func _draw() -> void:
 	base_transform()
 	if specimen:
 		_specimen()
 		return
-	if compact_layout or size.x < 440:
-		_compact_story()
-		return
 	# One continuous sheet replaces the three interchangeable cream cards.
 	draw_line(Vector2(13, 117), Vector2(607, 117), Color("b0b19a"), 1, true)
-	for index in range(3):
-		var left: int = 8 + index * 206
-		label(Vector2(left + 2, 22), "%02d" % (index + 1), Color("79866b"), 11)
-		for mark in range(3): draw_line(Vector2(left + 28 + mark * 7, 16), Vector2(left + 32 + mark * 7, 16), Color("b2b59e"), 1, true)
 	var bob: float = sin(t*2.5)*2 if motion else 0
 	match kind:
 		"farmer":
@@ -180,9 +152,6 @@ func _draw() -> void:
 			for i in range(3):
 				draw_line(Vector2(463+i*8,44),Vector2(460+i*8,52),Color("76bac2"),3,true)
 			draw_circle(Vector2(566,36),10,GOLD)
-			label(Vector2(58,131),"Plant a crop")
-			label(Vector2(257,131),"Add 1 compost")
-			label(Vector2(447,131),"Water, grow, harvest")
 		"industrialist":
 			crate(Vector2(100,74))
 			for i in range(3): spud(Vector2(80+i*20,47),.60)
@@ -202,10 +171,6 @@ func _draw() -> void:
 					var ray := Vector2(cos(i*TAU/8),sin(i*TAU/8))
 					var centre := Vector2(518,65-pop)
 					draw_line(centre+ray*46,centre+ray*(46+stamp_left*14),Color(GOLD,stamp_left),3,true)
-			label(Vector2(53,131),"Load harvest")
-			label(Vector2(258,131),"Match process")
-			var caption_width: float = font.get_string_size(grade_caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-			label(Vector2(517 - caption_width * 0.5,131),grade_caption)
 		"scientist":
 			spud(Vector2(76,69),1.1)
 			spud(Vector2(133,69),1.1,Color("9bd7da"))
@@ -216,9 +181,6 @@ func _draw() -> void:
 			for i in range(4): draw_circle(Vector2(296+i*8,62-fmod(t*10+i*12,30)),2.5,Color("f8efca"))
 			spud(Vector2(511,62),1.2,Color("b8d979"))
 			box(Rect2(548,60,31,42),Color("e4bf78"),3)
-			label(Vector2(43,131),"10 + 10 harvested crops")
-			label(Vector2(272,131),"Crossbreed")
-			label(Vector2(459,131),"Save a planting trait")
 		"investor":
 			box(Rect2(57,25,88,78),Color("b48d5e"),4)
 			box(Rect2(65,33,72,61),Color("fff4d5"),3)
@@ -228,9 +190,6 @@ func _draw() -> void:
 			draw_colored_polygon(PackedVector2Array([Vector2(458,76+bob),Vector2(578,76+bob),Vector2(558,103+bob),Vector2(476,103+bob)]),INK)
 			box(Rect2(502,39+bob,51,35),Color("deb473"),3)
 			draw_line(Vector2(451,112),Vector2(582,112),Color("7daeb8"),3,true)
-			label(Vector2(55,131),"Reserve price")
-			label(Vector2(263,131),"Prepare cargo")
-			label(Vector2(463,131),"Deliver for coins")
 		"gambler":
 			crate(Vector2(100,77))
 			box(Rect2(66,47,67,27),Color("efe2b9"),4)
@@ -242,9 +201,6 @@ func _draw() -> void:
 			draw_circle(Vector2(515,68),29,GOLD)
 			var reward_width: float = font.get_string_size(reward_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 23).x
 			label(Vector2(515-reward_width*.5,77),reward_text,INK,23)
-			label(Vector2(51,131),"Choose stake")
-			label(Vector2(265,131),"Reveal result")
-			label(Vector2(469,131),"Claim or charm")
 	for x in [199,405]:
 		draw_line(Vector2(x-10,76),Vector2(x+3,76),INK,1.5,true)
 		draw_polyline(PackedVector2Array([Vector2(x-2,71),Vector2(x+3,76),Vector2(x-2,81)]),INK,1.5,true)

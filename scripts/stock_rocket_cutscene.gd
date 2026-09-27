@@ -374,7 +374,6 @@ func _draw_titles() -> void:
 	if elapsed < LIFTOFF_AT:
 		_text("FULL OF SPUDS.", Vector2(88, 350), 31, Color("f5ecce"), false, true)
 		_text("BOUND FOR THE MOON.", Vector2(88, 391), 31, _accent, false, true)
-		_text("One crowded rocket. One wild market.", Vector2(89, 424), 16, Color("9ab4c6"))
 		var remaining: int = maxi(1, 3 - int(elapsed / (IGNITION_AT / 3.0)))
 		var countdown: float = fposmod(elapsed, IGNITION_AT / 3.0) / (IGNITION_AT / 3.0)
 		var ring := Vector2(905, 437)
@@ -385,9 +384,7 @@ func _draw_titles() -> void:
 	else:
 		var subtitle: float = smoothstep(LIFTOFF_AT, 2.9, elapsed) * fade
 		_text("LIFTOFF", Vector2(88, 361), 45, Color(_accent, subtitle), false, true)
-		_text("Tiny potatoes. Enormous ambitions.", Vector2(90, 393), 16, Color(0.68, 0.80, 0.86, subtitle))
 	var bottom_alpha: float = 1.0 - smoothstep(5.2, 5.8, elapsed)
-	_text("SPUD EXPRESS  /  FULL HOUSE", Vector2(89, 722), 13, Color(0.62, 0.77, 0.83, bottom_alpha), false, true)
 	_text("T + %04.1f s" % maxf(0.0, elapsed - LIFTOFF_AT) if elapsed >= LIFTOFF_AT else "LAUNCH SEQUENCE", Vector2(1110, 722), 13, Color(_accent, bottom_alpha), true)
 	_art.draw_line(Vector2(370, 717), Vector2(999, 717), Color(0.48, 0.71, 0.80, bottom_alpha * 0.18), 2, true)
 	_art.draw_line(Vector2(370, 717), Vector2(370 + 629 * minf(1.0, elapsed / 5.8), 717), Color(_accent, bottom_alpha * 0.72), 2, true)
@@ -406,7 +403,6 @@ func _draw_finale() -> void:
 	# A quiet central field keeps the payoff readable inside the money orbit.
 	for ring: int in range(3):
 		_ellipse(Vector2(640, y + 56), Vector2(360 + ring * 18, 166 + ring * 14), Color(0.027, 0.043, 0.12, progress * (0.22 - ring * 0.05)))
-	_text("FULL CREW. FULL SEND.", Vector2(640, y - 66), 18, Color("ff94dc") * Color(1, 1, 1, progress), true, true)
 	_text("TO THE MOON", Vector2(640, y + 11), 69, Color("ffe34a") * Color(1, 1, 1, progress), true, true)
 	_text("10-SECOND STOCK BOOM INCOMING", Vector2(640, y + 67), 20, Color("86dfff") * Color(1, 1, 1, progress), true, true)
 	_text("Get ready to sell.", Vector2(640, y + 101), 17, Color(0.94, 0.95, 1.0, progress), true)

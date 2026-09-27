@@ -654,7 +654,7 @@ func _grant_item(id: String, duplicate_refund: float = 0.0) -> String:
 	_recompute_capacity()
 	_refresh_market()
 	if is_gear:
-		return "%s collected! %s. %s Extra copies do not stack." % [item["name"], item["effect"], "Equipped in your empty %s slot." % item["slot"] if auto_equipped else "Choose your loadout in Inventory."]
+		return "%s collected! %s. %s Extra copies do not stack." % [item["name"], item["effect"], "Equipped in your empty %s slot." % item["slot"] if auto_equipped else "Stored in Inventory."]
 	return "%s collected! %s. Permanently active on every island." % [item["name"], item["effect"]]
 
 
@@ -2213,11 +2213,11 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 					if int(tools[key]) >= (3 if current_island == 3 else 2):
 						available.erase(key)
 				title = "LEGENDARY TOOL CRATE"
-				detail = "%d free tool rank upgrades! Larger areas; farming remains manual." % upgrades_received
+				detail = "+%d tool upgrades" % upgrades_received
 			else:
 				pending_roll_boost = maxf(pending_roll_boost, 1.25 + minf(1.75, sqrt(float(scale)) * 0.10))
 				title = "MARKET ROCKET"
-				detail = "All crop quotes x%s for 5 seconds after this reveal. Get ready to sell!" % format_number(pending_roll_boost)
+				detail = "All crop prices ×%s for 5s after reveal." % format_number(pending_roll_boost)
 			detail += " " + _grant_item(item_id, bet * 0.20)
 		"mythic":
 			item_id = "aurora_crown"

@@ -36,9 +36,26 @@ func command(args: Array) -> void:
 		game.hud._inventory_tab = "gear"
 		game.tutorial.start()
 		game._on_action("barn")
+	elif action.begins_with("audit_state:"):
+		game.set_process(false)
+		game.conversation.finish()
+		game.hud.close_panel()
+		game.state.reset_game()
+		game.state.tutorial_progress.completed = true
+		game.state.debug_unlock_island(3)
+		game.state.travel_to(int(action.get_slice(":", 2)))
+		game.state.climate.acknowledge(game.state)
+		game.hud._climate_alert.dismiss()
+		var stocked: bool = action.get_slice(":", 1) == "stocked"
+		game.state.coins = 1e18 if stocked else -1000.0
+		game.state.capacity = 100000 if stocked else 200
+		for id in game.builds.IDS: game.builds.levels[id] = 20 if stocked else (1 if id == "farmer" else 0)
+		for id in game.state.CROP_IDS:
+			game.state.storage[id] = 500 if stocked else 0
+			game.state.seed_inventory[id] = 100 if stocked else 0
+		game._on_state_changed()
 	elif action.begins_with("build:"):
-		game.hud._build_selection = action.get_slice(":",1)
-		game._on_action("builds")
+		game.hud._act("build:inspect:" + action.get_slice(":",1))
 	elif action == "island2":
 		game.state.travel_to(2)
 		game.state.climate.acknowledge(game.state)
@@ -79,6 +96,7 @@ func command(args: Array) -> void:
 		game.hud.close_panel()
 		game._on_state_changed()
 	elif action.begins_with("user:"): game._on_user_action(action.trim_prefix("user:"))
+	elif action.begins_with("hud:"): game.hud._act(action.trim_prefix("hud:"))
 	elif action == "scroll_bottom": game.hud._body.get_parent().scroll_vertical = 100000
 	elif action.begins_with("quality:"): game._on_action("graphics:" + action.get_slice(":",1))
 	elif action == "status": pass
@@ -97,6 +115,14 @@ func command(args: Array) -> void:
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
 	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":game.state.storage.russet,"coins":game.state.coins}
+	report.build_selection = game.hud._build_selection
+	report.labels = []
+	collect_labels(game.hud._modal_card, report.labels)
+	collect_labels(game.conversation, report.labels)
+	var scroll: ScrollContainer = game.hud._body.get_parent()
+	report.content_fits = game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1
+	report.content_bottom = game.hud._body.get_global_rect().end.y
+	report.scroll_bottom = scroll.get_global_rect().end.y
 	report.buttons = []
 	collect_buttons(game.hud.root, report.buttons)
 	collect_buttons(game.touch_controls.root, report.buttons)
@@ -108,3 +134,8 @@ func collect_buttons(node: Node, out: Array) -> void:
 		var rect: Rect2 = node.get_global_rect()
 		out.append({"text":node.text,"action":node.get_meta("hud_action", ""),"rect":[rect.position.x,rect.position.y,rect.size.x,rect.size.y],"disabled":node.disabled})
 	for child in node.get_children(): collect_buttons(child,out)
+
+func collect_labels(node: Node, out: Array) -> void:
+	if (node is Label or node is RichTextLabel) and node.is_visible_in_tree() and not node.text.is_empty():
+		out.append(node.text)
+	for child in node.get_children(): collect_labels(child, out)

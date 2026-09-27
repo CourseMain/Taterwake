@@ -39,6 +39,8 @@ func run() -> void:
 	check(game.state.elapsed == intro_elapsed, "introduction pauses taxes, crops and weather")
 	await shot("climate-introduction")
 	game.hud._climate_intro.skip.pressed.emit()
+	check(game.conversation.visible and game.conversation.npc_id == "iris", "arrival retains Iris's station introduction")
+	game.conversation.choose(0)
 	game._on_action("climate")
 	check(not game.state.climate.data.intro_pending and game.hud._panel_kind == "climate", "one clear introduction button opens protection choices")
 	game.state.barn_level = 3
@@ -54,7 +56,9 @@ func run() -> void:
 		plot.crop = "russet"
 	game._on_action("climate")
 	check(game.hud._panel_kind == "climate" and game.hud._refs.has("climate_fund:drainage"), "climate initiatives open from the controller")
-	check(game.hud._refs.climate_reference.text.contains("$8B") and not game.hud._refs.climate_reference.is_visible_in_tree(), "balancing details stay available behind an optional toggle")
+	var timing_reference: String = ""
+	for label: Label in game.hud._refs.climate_details.find_children("*", "Label", true, false): timing_reference += label.text
+	check(not game.hud._refs.has("climate_reference") and timing_reference.contains("Warning 45s") and not game.hud._refs.climate_details.is_visible_in_tree(), "weather timings remain optional without the unrelated stock-reference footer")
 	game.state.climate.begin_warning(game.state, "flood", 1.0)
 	game.hud.update_state(game.state)
 	check(game.hud._refs.climate_status.text.contains("45s") and game.hud._refs.climate_status.text.to_upper().contains("FLOOD"), "warning names the disaster and preparation time")
@@ -74,7 +78,7 @@ func run() -> void:
 	check(game.hud._weather_button.visible and game.hud._weather_button.text.to_upper().contains("FLOOD"), "dedicated weather shortcut carries the warning")
 	await shot("climate-flood")
 	game._on_action("climate")
-	check(game.hud._refs.climate_market.text.contains("Seeds +70%") and game.hud._refs.climate_market.text.contains("$9.4B"), "market disruption and protection-adjusted recovery costs appear together")
+	check(game.hud._refs.weather_page._values.market.text == "5%" and game.hud._refs.climate_market.text.contains("$9.4B"), "sale-price disruption and protection-adjusted recovery costs appear together")
 	game.hud.close_panel()
 	# Crashes no longer advance tax collection; let the market recover first.
 	game._advance_simulation(105.0)

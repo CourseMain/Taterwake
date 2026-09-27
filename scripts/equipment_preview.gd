@@ -28,7 +28,7 @@ func _ready() -> void:
 	custom_minimum_size = Vector2(220, 310)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_DRAG
-	tooltip_text = "Drag to turn your farmer. Equipped clothes appear here and on the farm."
+	tooltip_text = "Drag to rotate"
 	_background = StyleBoxFlat.new()
 	_background.bg_color = Color("253b42")
 	_background.set_corner_radius_all(13)

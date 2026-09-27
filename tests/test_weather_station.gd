@@ -35,7 +35,7 @@ func run() -> void:
 	check(not farm.climate.data.projects["2"].has("irrigation"),"arrival never gives free sprinklers")
 	game.hud._climate_intro.elapsed = 5
 	game.hud._climate_intro._process(0)
-	check(game.hud._climate_intro.subtitle.text.contains("climate is changing"),"cinematic has requested subtitle")
+	check(game.hud._climate_intro.chapter.text == "GOLDEN SHORES" and game.hud._climate_intro.find_children("*", "Label", true, false).size() == 1, "arrival keeps the island title without filler subtitles")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.climate.data.intro_pending,"arrival cinema survives reload without advancing the farm")
 	game.hud._climate_intro.skip.pressed.emit()
 	check(game.conversation.visible and game.conversation.npc_id == "iris", "arrival introduces Iris before station")

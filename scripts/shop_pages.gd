@@ -14,7 +14,6 @@ var barn: bool = false
 var _grids: Array[GridContainer] = []
 var _tabs: GridContainer
 var _capacity: ProgressBar
-var _ledger_title: Label
 var _ledger_trade: Button
 var _wallet: Label
 var _levels: Dictionary = {}
@@ -109,7 +108,7 @@ func _build_tools() -> void:
 	add_child(_wallet)
 	var bench := _timber(self, "BramWorkbench", 0, true)
 	var grid := _grid(bench)
-	var titles := {"hoe": "The trusty hoe", "water": "Watering can", "harvest": "Harvest scythe", "expansion": "Open the far beds"}
+	var titles := {"hoe": "Hoe", "water": "Watering can", "harvest": "Harvest scythe", "expansion": "Garden beds"}
 	for tool: String in ["hoe", "water", "harvest", "expansion"]:
 		var action := "upgrade:" + tool
 		var tray := _timber(grid, tool.capitalize() + "ToolTray", grid.get_child_count())
@@ -124,9 +123,10 @@ func _build_tools() -> void:
 		names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		display.add_child(names)
 		names.add_child(_label(titles[tool], 24, INK, true))
-		var level := _label("", 12, Color("4e563f"))
-		names.add_child(level)
-		_levels[tool] = level
+		if tool != "expansion":
+			var level := _label("", 12, Color("4e563f"))
+			names.add_child(level)
+			_levels[tool] = level
 		var detail := _label("", 14)
 		detail.custom_minimum_size.y = 40
 		contents.add_child(detail)
@@ -138,7 +138,7 @@ func _build_tools() -> void:
 	links.add_theme_constant_override("separation", 8)
 	add_child(links)
 	links.add_child(_button("PotatoDex  [P]", "dex"))
-	links.add_child(_button("Explore the islands", "island"))
+	links.add_child(_button("Islands", "island"))
 
 func _build_barn() -> void:
 	var board := Surface.new()
@@ -150,8 +150,6 @@ func _build_barn() -> void:
 	add_child(board)
 	var tally: VBoxContainer = hud._vbox(7)
 	board.add_child(tally)
-	_ledger_title = _label("COUNTED & STORED", 11, Color("c7d1b6"))
-	tally.add_child(_ledger_title)
 	var total := _label("", 19, CHALK)
 	tally.add_child(total)
 	hud._refs.inventory_total = total
@@ -162,7 +160,7 @@ func _build_barn() -> void:
 	_capacity.add_theme_stylebox_override("background", hud.Cozy.box(Color("213b30"), 3, 0))
 	_capacity.add_theme_stylebox_override("fill", hud.Cozy.box(HONEY, 3, 0))
 	tally.add_child(_capacity)
-	_ledger_trade = _button("Check the selling board", "sell_potatoes", GREEN, true)
+	_ledger_trade = _button("Sell potatoes", "sell_potatoes", GREEN, true)
 	tally.add_child(_ledger_trade)
 	_tabs = GridContainer.new()
 	_tabs.columns = 4
@@ -207,7 +205,6 @@ func _build_barn() -> void:
 		var description: VBoxContainer = hud._vbox(3)
 		description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(description)
-		description.add_child(_label("SEED SACK" if kind == "seed" else ("HARVEST CRATE" if kind == "crop" else kind.replace("_", " ").to_upper()), 11, Color("4e563f")))
 		var title := _label("", 21, INK, true)
 		description.add_child(title)
 		hud._refs["item:" + id + ":title"] = title
@@ -224,9 +221,10 @@ func _build_barn() -> void:
 	for section: String in ["crops", "items", "builds"]:
 		if shelves[section].get_child_count() == 0:
 			shelves[section].get_parent().hide()
-			hud._inventory_sections[section].add_child(_label("Nothing stored here yet.", 14, MUTED))
+			var empty: String = {"crops": "No crops or seeds.", "items": "No items.", "builds": "No builds or crates."}[section]
+			hud._inventory_sections[section].add_child(_label(empty, 14, MUTED))
 	if gear_grid.get_child_count() == 0:
-		hud._inventory_sections.gear.add_child(_label("No spare gear. Find clothing at the Roll House.", 14, MUTED))
+		hud._inventory_sections.gear.add_child(_label("No spare gear.", 14, MUTED))
 	var upgrade := _timber(self, "BarnExtensionPlan")
 	move_child(upgrade, 1)
 	hud._refs["upgrade:barn:card"] = upgrade
@@ -235,7 +233,7 @@ func _build_barn() -> void:
 	var plan: VBoxContainer = hud._vbox(6)
 	plan.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	extension_row.add_child(plan)
-	plan.add_child(_label("Make room in the barn", 21, INK, true))
+	plan.add_child(_label("Barn capacity", 21, INK, true))
 	var detail := _label("", 14)
 	plan.add_child(detail)
 	hud._refs["upgrade:barn:detail"] = detail
@@ -255,7 +253,7 @@ func refresh() -> void:
 	if not barn:
 		_wallet.text = "Balance %s · Credit left %s" % [hud._money(float(hud._state.coins)), hud._money(hud._state.purchase_credit())]
 		for tool: String in _levels:
-			_levels[tool].text = "FENCE WORK" if tool == "expansion" else "LEVEL %d" % int(hud._state.tools.get(tool, 0))
+			_levels[tool].text = "LEVEL %d" % int(hud._state.tools.get(tool, 0))
 		return
 	_capacity.max_value = maxf(1.0, float(hud._state.capacity))
 	_capacity.value = float(hud._state.storage_used())
@@ -263,7 +261,6 @@ func refresh() -> void:
 	# expansion nearby, and save the full crop ledger for the crop shelves.
 	var crop_shelves: bool = hud._inventory_tab == "crops"
 	_capacity.visible = crop_shelves
-	_ledger_title.visible = crop_shelves
 	_ledger_trade.visible = crop_shelves
 	hud._refs["upgrade:barn:card"].show()
 	for section: String in hud._inventory_sections:

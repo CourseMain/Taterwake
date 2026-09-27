@@ -4,7 +4,6 @@ signal finished
 const Type = preload("res://scripts/ui_type.gd")
 const DURATION: float = 12.0
 var elapsed: float = 0.0
-var subtitle: Label
 var chapter: Label
 var skip: Button
 func _ready() -> void:
@@ -13,19 +12,11 @@ func _ready() -> void:
 	z_index = 130
 	chapter = Label.new()
 	add_child(chapter)
-	chapter.text = "GOLDEN SHORES  /  A CHANGING SKY"
+	chapter.text = "GOLDEN SHORES"
 	chapter.add_theme_font_override("font", Type.face(Type.BODY, 650))
 	chapter.add_theme_font_size_override("font_size", 18)
 	chapter.add_theme_color_override("font_color", Color("f2dfb5"))
 	chapter.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	subtitle = Label.new()
-	add_child(subtitle)
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	subtitle.add_theme_font_override("font", Type.face(Type.BODY, 650))
-	subtitle.add_theme_color_override("font_color", Color("fff2d6"))
-	subtitle.add_theme_color_override("font_shadow_color", Color("142c3e"))
-	subtitle.add_theme_constant_override("shadow_offset_y", 3)
 	skip = Button.new()
 	skip.text = "Skip →"
 	skip.focus_mode = Control.FOCUS_NONE
@@ -54,10 +45,6 @@ func _process(delta: float) -> void:
 	chapter.size = Vector2(maxf(180,size.x-60),60)
 	skip.position = Vector2(size.x-154,18)
 	skip.size = Vector2(130,68)
-	subtitle.position = Vector2(30,size.y*0.73)
-	subtitle.size = Vector2(size.x-60,size.y*0.2)
-	subtitle.add_theme_font_size_override("font_size", 28 if size.x<700 else 36)
-	subtitle.text = "A new island. Familiar skies." if elapsed<3 else ("The climate is changing." if elapsed<7 else "Prepare yourselves.\nProtect your farm before the next storm.")
 	queue_redraw()
 	if elapsed>=DURATION:
 		stop()
@@ -101,4 +88,3 @@ func _draw() -> void:
 		var bolt := PackedVector2Array([Vector2(size.x*.63,0),Vector2(size.x*.59,size.y*.22),Vector2(size.x*.63,size.y*.21),Vector2(size.x*.57,size.y*.42)])
 		draw_polyline(bolt,Color(.85,.94,1,.8),3,true)
 	draw_rect(Rect2(0,0,size.x,84),Color(0.04,0.1,0.15,.88))
-	draw_rect(Rect2(0,size.y*.71,size.x,size.y*.29),Color(0.04,0.1,0.15,.84))
