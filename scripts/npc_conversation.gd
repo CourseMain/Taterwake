@@ -146,7 +146,9 @@ func start(id: String, farm, return_service: String, touch: bool = false) -> voi
 	if not is_instance_valid(portrait):
 		portrait = Portrait.new()
 		add_child(portrait)
-		move_child(portrait,1)
+		# Keep the portrait above its background even when nonvisual children
+		# (such as the voice player) are inserted before the card.
+		move_child(portrait, card.get_index() + 1)
 	show()
 	set_process(true)
 	portrait.show_person(id)

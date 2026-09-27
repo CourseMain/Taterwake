@@ -42,6 +42,7 @@ func run() -> void:
 		check(talk.speech.text == Roster.PEOPLE[id].first,"first introduction " + id)
 		check(farm.npc_history[id].visits == 1,"remembers meeting " + id)
 		check(talk.portrait.avatar.npc_id == id,"matching character model " + id)
+		check(talk.portrait.get_index() > talk.card.get_index(), "portrait draws above the dialogue background " + id)
 		check(talk.voice.PROFILES.has(id) and talk.voice.speaker == id and talk.voice.utterances > 0, "character voice starts with the dialogue " + id)
 		check(talk.voice.player.stream in talk.voice.CLIPS, "dialogue uses a potato voice clip " + id)
 		var signature: String = str(talk.portrait.avatar.scale)+str(talk.portrait.avatar.skin_color)+Roster.PEOPLE[id].detail
