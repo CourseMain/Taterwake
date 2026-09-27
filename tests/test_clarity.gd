@@ -42,9 +42,22 @@ func run() -> void:
 	check(game.hud._export_box.visible and game.hud._top.surge.text.contains("3:00"), "one prominent stock countdown occupies the banner")
 	await shot("clarity-farm")
 	key(KEY_2)
-	check(game.selected_tool == "plant" and game.hud._crop_row.visible and game.hud._tracked_box.visible, "2 equips seeds and reveals seed choices and tracked prices")
+	check(game.selected_tool == "plant" and game.hud._crop_row.visible and not game.hud._tracked_box.visible, "2 equips seeds and reveals seed choices without a second tracked-price strip")
+	var russet = game.hud._crop_buttons.russet
+	var old_seeds: int = game.state.seed_inventory.russet
+	var old_held: int = game.state.storage.russet
+	game.state.seed_inventory.russet = 17
+	game.state.storage.russet = 9
+	game._on_state_changed()
+	await process_frame
+	check(russet.seed_count.text == "17" and russet.barn_count.text == "9", "seed slot separates actual seed inventory from potatoes held in barn")
+	var dividers: Array[Node] = russet.find_children("*", "VSeparator", true, false)
+	check(dividers.size() == 1 and dividers[0].is_visible_in_tree() and dividers[0].size.x > 0, "seed and barn quantities have a visible dividing line")
+	game.state.seed_inventory.russet = old_seeds
+	game.state.storage.russet = old_held
+	game._on_state_changed()
 	game.hud._crop_buttons.golden.pressed.emit()
-	check(game.state.selected_crop == "golden" and game.selected_tool == "plant", "seed tray selects the actual planting crop")
+	check(game.state.selected_crop == "golden" and game.selected_tool == "plant" and game.hud._crop_buttons.golden.selected and not russet.selected, "seed tray selects the actual planting crop and marks the active packet")
 	await shot("clarity-seeds")
 	key(KEY_3)
 	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "switching tools immediately clears seed tray")

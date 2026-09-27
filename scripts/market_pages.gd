@@ -6,14 +6,15 @@ const Quantity = preload("res://scripts/market_quantity.gd")
 const Portrait = preload("res://scripts/market_portrait.gd")
 const Surface = preload("res://scripts/exchange_surface.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const INK := Color("253b3b")
-const MUTED := Color("617171")
-const GAIN := Color("168366")
-const LOSS := Color("be4964")
-const PAPER := Color("fffcf3")
-const CHALK := Color("f2edda")
-const SAGE := Color("587858")
-const SUNLIGHT := Color("ffedc8")
+const INK := Color("3f2c1c")
+const MUTED := Color("705236")
+const GAIN := Color("436733")
+const LOSS := Color("a63529")
+const PAPER := Color("f1dca4")
+const CANVAS := Color("ddc084")
+const PACKET := Color("e7c78b")
+const FRAME := Color("795b32")
+const PRICE_TAG := Color("f4df9c")
 const ACCENTS := {"russet": Color("df9c42"), "giant": Color("e87c59"), "golden": Color("dcad24"), "radioactive": Color("73b64c"), "sunburst": Color("ed9737"), "icecap": Color("51aeca")}
 var hud
 var selling: bool = false
@@ -70,7 +71,7 @@ func setup(owner_hud, sell_page: bool) -> void:
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 14)
-	Surface.apply_modal_lighting(hud._modal_card, Color("192f35") if selling else Color("dce8d5"), Color("7dc4b2") if selling else SUNLIGHT, Color("25393c") if selling else Color("e9e3d0"))
+	Surface.apply_modal_frame(hud._modal_card, Color("c5a56b") if selling else CANVAS, FRAME)
 	crops = State.crops_by_base_price(hud._known_crops() if selling else hud._market_crops())
 	hud._panel_crops = crops.duplicate()
 	_build_navigation()
@@ -93,7 +94,7 @@ func _build_navigation() -> void:
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud._modal_market_nav.add_child(header)
 	hud._modal_market_nav.show()
-	_brand = _label("Spud Exchange" if selling else "Mara's seed counter", 25, CHALK if selling else INK, true)
+	_brand = _label("Spud Exchange" if selling else "Mara's seed counter", 25, INK, true)
 	_brand.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_brand.custom_minimum_size.x = 250
 	_brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -106,7 +107,7 @@ func _build_navigation() -> void:
 		var active: bool = selling == (tab[1] == "sell_potatoes")
 		var button: Button = hud._button(tab[0], tab[1])
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_style_button(button, SAGE if not selling else GAIN, active)
+		_style_button(button, Color("c89644") if not selling else Color("9cac64"), active)
 		tabs.add_child(button)
 
 func _label(text: String, font_size: int, color: Color = INK, display: bool = false) -> Label:
@@ -118,25 +119,40 @@ func _style_button(button: Button, accent: Color = GAIN, filled: bool = false) -
 	button.custom_minimum_size.y = 46
 	button.add_theme_font_override("font", _body_font)
 	button.add_theme_font_size_override("font_size", 15)
-	var on_color: Color = INK if accent.get_luminance() > 0.5 else Color.WHITE
+	var pigment: Color = Color("9cac64") if accent == GAIN else accent
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = accent if filled else PAPER
-		if state == "hover": fill = accent.lightened(0.10) if filled else accent.lerp(PAPER, 0.84)
-		if state == "pressed": fill = accent.darkened(0.08) if filled else accent.lerp(PAPER, 0.68)
-		if state == "disabled": fill = Color("e6e9df")
-		var skin: StyleBoxFlat = hud.Cozy.box(fill, 12, 18, Color.TRANSPARENT if filled else accent.lerp(PAPER, 0.72))
-		skin.border_width_bottom = 2 if state not in ["pressed", "disabled"] else 1
-		skin.shadow_size = 3 if state == "normal" else 1
-		skin.shadow_color = Color(0.12, 0.20, 0.13, 0.08)
-		skin.shadow_offset = Vector2(0, 2)
-		skin.border_color = accent.darkened(0.12) if filled else accent.lerp(PAPER, 0.45)
+		var fill: Color = pigment if filled else PAPER
+		if state == "hover": fill = Color("f2ce78")
+		if state == "pressed": fill = Color("c9a25e")
+		if state == "disabled": fill = Color("cbbb92")
+		var skin: StyleBoxFlat = hud.Cozy.box(fill, 12, 3, FRAME)
+		skin.set_border_width_all(2)
+		skin.border_width_bottom = 3 if state != "pressed" else 2
 		skin.content_margin_top = 9
 		skin.content_margin_bottom = 9
 		button.add_theme_stylebox_override(state, skin)
-	button.add_theme_color_override("font_color", on_color if filled else INK)
-	button.add_theme_color_override("font_hover_color", on_color if filled else INK)
-	button.add_theme_color_override("font_pressed_color", on_color if filled else INK)
-	button.add_theme_color_override("font_disabled_color", Color("79867c"))
+	for state: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		button.add_theme_color_override(state, INK)
+	button.add_theme_color_override("font_disabled_color", MUTED)
+
+func _rule(vertical: bool = false) -> Separator:
+	var line: Separator = VSeparator.new() if vertical else HSeparator.new()
+	var stroke := StyleBoxLine.new()
+	stroke.color = FRAME
+	stroke.thickness = 2
+	stroke.vertical = vertical
+	line.add_theme_stylebox_override("separator", stroke)
+	line.add_theme_constant_override("separation", 10)
+	return line
+
+func _stock_cell(parent: HBoxContainer, title: String) -> Label:
+	var cell: VBoxContainer = hud._vbox(1)
+	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(cell)
+	cell.add_child(_label(title, 11, MUTED))
+	var amount: Label = _label("", 16, INK)
+	cell.add_child(amount)
+	return amount
 
 func _build_buy() -> void:
 	var counter := PanelContainer.new()
@@ -152,9 +168,8 @@ func _build_buy() -> void:
 		var accent: Color = ACCENTS[crop]
 		var card := Surface.new()
 		card.name = crop.capitalize() + "SeedBin"
-		card.soft = true
-		var base: Color = Color("f8f3e3").lerp(accent, 0.075)
-		var skin: StyleBoxTexture = Surface.soft_skin(base, SUNLIGHT, Color("e6eddc").lerp(accent, 0.08), 19, 24)
+		card.plain_frame = true
+		var skin: StyleBoxFlat = Surface.framed_skin(PACKET, FRAME, Color.TRANSPARENT, 17, 3)
 		card.add_theme_stylebox_override("panel", skin)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(card)
@@ -173,26 +188,33 @@ func _build_buy() -> void:
 		var identity: VBoxContainer = hud._vbox(4)
 		identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		preview.add_child(identity)
-		identity.add_child(_label(hud._crop_name(crop), 24, INK, true))
-		var badge := _label("%ds to grow" % State.CROPS[crop].grow, 12, Color("4e563f"))
+		var crop_tab: Label = _label(hud._crop_name(crop), 24, INK, true)
+		crop_tab.add_theme_stylebox_override("normal", hud.Cozy.box(accent, 5, 2, FRAME))
+		identity.add_child(crop_tab)
+		var badge := _label("%ds to grow" % State.CROPS[crop].grow, 12, MUTED)
 		identity.add_child(badge)
 		_card_badges[crop] = badge
 		var price: Label = _label("", 20, INK)
+		price.add_theme_stylebox_override("normal", hud.Cozy.box(PRICE_TAG, 5, 2, FRAME))
 		identity.add_child(price)
 		hud._refs[crop + ":seed_price"] = price
 		var produce: Label = _label("", 14, INK)
 		body.add_child(produce)
 		hud._refs[crop + ":price"] = produce
-		var owned: Label = _label("", 13, Color("4e563f"))
-		body.add_child(owned)
-		hud._refs[crop + ":quote"] = owned
+		body.add_child(_rule())
+		var stock := HBoxContainer.new()
+		stock.add_theme_constant_override("separation", 10)
+		body.add_child(stock)
+		hud._refs[crop + ":quote"] = _stock_cell(stock, "SEEDS")
+		stock.add_child(_rule(true))
+		hud._refs[crop + ":barn_quantity"] = _stock_cell(stock, "IN BARN")
 		var actions := HBoxContainer.new()
 		actions.add_theme_constant_override("separation", 8)
 		body.add_child(actions)
 		for count: int in [1, 5]:
 			var action := "buy:%s:%d" % [crop, count]
 			var button: Button = hud._button("Buy %d" % count, action)
-			_style_button(button, accent if crop != "radioactive" else GAIN, count == 1)
+			_style_button(button, accent, count == 1)
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			button.visible = not hud._tutorial_seed_market() or count == 1
 			actions.add_child(button)
@@ -204,7 +226,7 @@ func _build_sell() -> void:
 	hero = Surface.new()
 	hero.name = "ExchangeTradingBoard"
 	hero.chalkboard = true
-	hero.soft = true
+	hero.plain_frame = true
 	hero.add_theme_stylebox_override("panel", _board_skin())
 	add_child(hero)
 	var row := HBoxContainer.new()
@@ -217,12 +239,12 @@ func _build_sell() -> void:
 	_hero_words = hud._vbox(2)
 	_hero_words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(_hero_words)
-	crop_name = _label("", 30, CHALK, true)
+	crop_name = _label("", 30, INK, true)
 	_hero_words.add_child(crop_name)
 	_hero_quote_row = HBoxContainer.new()
 	_hero_quote_row.add_theme_constant_override("separation", 12)
 	_hero_words.add_child(_hero_quote_row)
-	crop_quote = _label("", 30, CHALK)
+	crop_quote = _label("", 30, INK)
 	_hero_quote_row.add_child(crop_quote)
 	_hero_badges = HBoxContainer.new()
 	_hero_badges.add_theme_constant_override("separation", 8)
@@ -232,13 +254,13 @@ func _build_sell() -> void:
 	crop_change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	crop_change.tooltip_text = "Change from this potato's fixed base price."
 	_hero_badges.add_child(crop_change)
-	crop_owned = _label("", 13, Color("d5dac6"))
+	crop_owned = _label("", 13, INK)
 	crop_owned.autowrap_mode = TextServer.AUTOWRAP_OFF
 	crop_owned.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hero_badges.add_child(crop_owned)
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
 	_graph_card = hud._card(PAPER, 10)
-	_graph_card.add_theme_stylebox_override("panel", hud.Cozy.box(PAPER, 12, 20, Color("74968b")))
+	_graph_card.add_theme_stylebox_override("panel", hud.Cozy.box(Color("fffcf3"), 12, 3, FRAME))
 	add_child(_graph_card)
 	chart = Chart.new()
 	chart.custom_minimum_size.y = 300
@@ -249,7 +271,7 @@ func _build_sell() -> void:
 	older = _local_button("‹ Older", "history_older", func() -> void: chart.move_window(1))
 	newer = _local_button("Newer ›", "history_newer", func() -> void: chart.move_window(-1))
 	pager.add_child(older)
-	history_label = _label("", 12, Color("cadbcf"))
+	history_label = _label("", 12, INK)
 	history_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	history_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pager.add_child(history_label)
@@ -257,12 +279,12 @@ func _build_sell() -> void:
 	chart.window_changed.connect(_refresh_history_controls)
 	_build_trade_bar()
 
-func _board_skin() -> StyleBoxTexture:
-	return Surface.soft_skin(Color("29483f"), Color("a0cdae"), Color("203c3a"), 20, 22)
+func _board_skin() -> StyleBoxFlat:
+	return Surface.framed_skin(Color("d9c283"), FRAME, Color.TRANSPARENT, 20, 3)
 
 func _build_trade_bar() -> void:
 	footer = hud._card(PAPER, 12)
-	footer.add_theme_stylebox_override("panel", Surface.soft_skin(Color("e0e6d7"), SUNLIGHT, Color("e8e2d0"), 14, 22))
+	footer.add_theme_stylebox_override("panel", Surface.framed_skin(Color("dec488"), FRAME, Color.TRANSPARENT, 14, 3))
 	hud._modal_trade_footer.add_child(footer)
 	hud._modal_trade_footer.show()
 	var content: VBoxContainer = hud._vbox(8)
@@ -283,9 +305,9 @@ func _build_trade_bar() -> void:
 	amount_row.add_child(minus)
 	quantity = Quantity.new()
 	quantity.custom_minimum_size = Vector2(84, 46)
-	quantity.add_theme_stylebox_override("normal", hud.Cozy.box(PAPER, 8, 12, Color("bdcfae")))
-	quantity.add_theme_stylebox_override("focus", hud.Cozy.box(Color.WHITE, 8, 12, GAIN))
-	quantity.add_theme_stylebox_override("read_only", hud.Cozy.box(Color("e6e9df"), 8, 12, Color("c6d0bf")))
+	quantity.add_theme_stylebox_override("normal", hud.Cozy.box(PAPER, 8, 3, FRAME))
+	quantity.add_theme_stylebox_override("focus", hud.Cozy.box(PRICE_TAG, 8, 3, INK))
+	quantity.add_theme_stylebox_override("read_only", hud.Cozy.box(Color("cbbb92"), 8, 3, FRAME))
 	quantity.add_theme_color_override("font_color", INK)
 	quantity.add_theme_color_override("font_uneditable_color", MUTED)
 	quantity.add_theme_font_override("font", _body_font)
@@ -391,9 +413,10 @@ func refresh() -> void:
 	if not selling:
 		for crop: String in crops:
 			var quote: Dictionary = state.market[crop]
-			hud._refs[crop + ":seed_price"].text = "%s / seed" % state.market_money(quote.seed)
+			hud._refs[crop + ":seed_price"].text = "%s each" % state.market_money(quote.seed)
 			hud._refs[crop + ":price"].text = "Sale price %s" % state.market_money(quote.sell)
-			hud._refs[crop + ":quote"].text = "%s seeds · %s potatoes" % [state.format_number(state.seed_inventory[crop]), state.format_number(state.storage[crop])]
+			hud._refs[crop + ":quote"].text = state.format_number(state.seed_inventory[crop])
+			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.storage[crop])
 			for count: int in [1, 5]:
 				var key := "buy:%s:%d" % [crop, count]
 				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else state.purchase_caption("Buy %d" % count, quote.seed * count), quote.seed * count, int(state.seed_inventory[crop]) + count > State.MAX_INVENTORY)
@@ -410,7 +433,7 @@ func refresh() -> void:
 	crop_owned.text = "%s owned" % state.format_number(owned)
 	crop_change.text = Chart.percent_label(price, base)
 	crop_change.add_theme_color_override("font_color", GAIN if price >= base else LOSS)
-	crop_change.add_theme_stylebox_override("normal", hud.Cozy.box(Color("d7efe5") if price >= base else Color("f8e0e5"), 5, 8))
+	crop_change.add_theme_stylebox_override("normal", hud.Cozy.box(Color("d9d8a0") if price >= base else Color("e9b68d"), 5, 2, FRAME))
 	crop_image.crop = selected
 	crop_image.accent = ACCENTS[selected]
 	crop_image.queue_redraw()
@@ -459,9 +482,6 @@ func _sold(receipt: Dictionary) -> void:
 	hud._toast_box.hide()
 	refresh()
 	_bounce(crop_image)
-	var tween := create_tween()
-	footer.modulate = Color("d2f5ad")
-	tween.tween_property(footer, "modulate", Color.WHITE, 0.45)
 
 func _purchased(receipt: Dictionary) -> void:
 	if selling or not is_visible_in_tree() or receipt.kind != "seeds": return

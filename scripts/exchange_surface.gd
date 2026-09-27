@@ -1,15 +1,14 @@
 extends PanelContainer
-## Painted stall surfaces and readable chalkboards, with light baked once per palette.
+## Solid painted timber and canvas frames for the village shops.
 var chalkboard: bool = false
-var soft: bool = false
-static var _light_textures: Dictionary = {}
+var plain_frame: bool = false
 
 func _ready() -> void:
 	resized.connect(queue_redraw)
 	mouse_filter = Control.MOUSE_FILTER_PASS
 
 func _draw() -> void:
-	if soft: return
+	if plain_frame: return
 	var edge := Color("795a3c")
 	if chalkboard:
 		# The ledge holds the chalk. The middle stays clean for the live quote.
@@ -28,26 +27,22 @@ func _draw() -> void:
 		draw_line(point - Vector2(1, 0), point + Vector2(1, 0), Color("d0bc92"), 1, true)
 
 
-static func soft_skin(base: Color, glow: Color, secondary: Color = Color.TRANSPARENT, padding: int = 20, radius: int = 24) -> StyleBoxTexture:
-	# One small cached texture supplies the blended light. Nine-patch margins
-	# preserve rounded corners at every shop size without a per-frame shader.
-	var key := "%s:%s:%s:%d" % [base.to_html(), glow.to_html(), secondary.to_html(), radius]
-	if not _light_textures.has(key):
-		var other: Color = base if secondary.a == 0.0 else secondary
-		var source := '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><defs><linearGradient id="base" x2="0.7" y2="1"><stop stop-color="#%s"/><stop offset="1" stop-color="#%s"/></linearGradient><radialGradient id="light" cx="0.16" cy="0.05" r="0.92"><stop stop-color="#%s" stop-opacity="0.38"/><stop offset="1" stop-color="#%s" stop-opacity="0"/></radialGradient></defs><rect x="0.75" y="0.75" width="254.5" height="254.5" rx="%d" fill="url(#base)"/><rect x="0.75" y="0.75" width="254.5" height="254.5" rx="%d" fill="url(#light)"/><rect x="0.75" y="0.75" width="254.5" height="254.5" rx="%d" fill="none" stroke="#%s" stroke-opacity="0.28" stroke-width="1.5"/></svg>' % [base.to_html(false), other.to_html(false), glow.to_html(false), glow.to_html(false), radius, radius, radius, glow.to_html(false)]
-		var light := Image.new()
-		light.load_svg_from_string(source)
-		_light_textures[key] = ImageTexture.create_from_image(light)
-	var skin := StyleBoxTexture.new()
-	skin.texture = _light_textures[key]
+static func framed_skin(base: Color, frame: Color, secondary: Color = Color.TRANSPARENT, padding: int = 20, radius: int = 3) -> StyleBoxFlat:
+	# Kept as the shared skin entry point. Colours occupy separate, solid areas;
+	# no blended textures, translucent lighting, or cached gradient images.
+	var skin := StyleBoxFlat.new()
+	skin.bg_color = base
+	skin.border_color = frame if secondary.a == 0.0 else secondary
+	skin.set_border_width_all(2)
+	skin.set_corner_radius_all(clampi(radius, 2, 5))
 	for edge: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		skin.set_texture_margin(edge, radius + 2)
 		skin.set_content_margin(edge, padding)
 	return skin
 
-static func apply_modal_lighting(modal: PanelContainer, base: Color, glow: Color, secondary: Color = Color.TRANSPARENT) -> void:
+static func apply_modal_frame(modal: PanelContainer, base: Color, frame: Color, secondary: Color = Color.TRANSPARENT) -> void:
 	var previous: StyleBox = modal.get_theme_stylebox("panel")
-	var skin: StyleBoxTexture = soft_skin(base, glow, secondary, 24, 30)
+	var skin: StyleBoxFlat = framed_skin(base, frame, secondary, 24, 4)
+	skin.set_border_width_all(3)
 	for edge: int in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		skin.set_content_margin(edge, previous.get_content_margin(edge))
 	modal.add_theme_stylebox_override("panel", skin)

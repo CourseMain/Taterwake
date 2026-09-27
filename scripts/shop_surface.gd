@@ -1,11 +1,26 @@
 extends PanelContainer
-## Static, cached lighting keeps the workbench and barn soft on native and web.
-const Lighting = preload("res://scripts/exchange_surface.gd")
-var base := Color("304753")
-var light := Color("dfa772")
-var radius: int = 22
-var padding: int = 20
+## Painted frames and stock-bin joinery. Every line follows a structural edge.
+var base := Color("eee1c5")
+var edge := Color("405a6b")
+var radius: int = 3
+var padding: int = 16
+var frame: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
-	add_theme_stylebox_override("panel", Lighting.soft_skin(base, light, base.darkened(0.13), padding, radius))
+	var skin := StyleBoxFlat.new()
+	skin.bg_color = base
+	skin.border_color = edge
+	skin.set_border_width_all(2 if frame else 1)
+	skin.set_corner_radius_all(radius)
+	skin.set_content_margin_all(padding)
+	add_theme_stylebox_override("panel", skin)
+	resized.connect(queue_redraw)
+
+func _draw() -> void:
+	if not frame: return
+	# Corner straps tie the rack together; the middle stays clear for stock.
+	for x: float in [4.0, size.x - 4.0]:
+		var direction := 1.0 if x < size.x / 2.0 else -1.0
+		for y: float in [4.0, size.y - 4.0]:
+			draw_line(Vector2(x, y), Vector2(x + direction * 14.0, y), edge, 2, true)

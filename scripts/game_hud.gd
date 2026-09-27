@@ -279,10 +279,10 @@ func _refresh_seed_visibility() -> void:
 		_crop_row.offset_left = -150.0 if first_seed else 28.0
 		_crop_row.offset_right = 150.0 if first_seed else -28.0
 	if is_instance_valid(_tracked_box):
-		_tracked_box.visible = showing and not _tracked_ids().is_empty() and (_tutorial.is_empty() or "stock" in _tutorial.get("features", []))
+		_tracked_box.hide()
 	if is_instance_valid(_context_box):
-		_context_box.offset_top = -274 if showing else -152
-		_context_box.offset_bottom = -244 if showing else -122
+		_context_box.offset_top = -251 if showing else -152
+		_context_box.offset_bottom = -221 if showing else -122
 
 
 func build_ui() -> void:
@@ -396,7 +396,7 @@ func _update_blind_ui() -> void:
 	_credit_row.vertical = touch and root.size.x < 560
 	var stocks_left: int = int(info.booms_required) - int(info.booms)
 	_blind_modal_warning.text = "Tax %s in %ds · Cash %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
-	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate", "tools", "barn", "inventory", "sell_potatoes"] else (GREEN if info.cleared else Color("bb4334")))
+	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate", "tools", "barn", "inventory"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
 	elif _climate_intro.visible: _climate_intro.stop()
@@ -806,7 +806,7 @@ func _update_tutorial_pointer() -> void:
 func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(mini(radius, 5))
 	style.content_margin_left = padding
 	style.content_margin_right = padding
 	style.content_margin_top = padding
@@ -1178,7 +1178,7 @@ func _build_footer() -> void:
 	_crop_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	_crop_row.offset_left = 28
 	_crop_row.offset_right = -28
-	_crop_row.offset_top = -185
+	_crop_row.offset_top = -214
 	_crop_row.offset_bottom = -130
 	for crop: String in _all_crop_ids():
 		_add_crop_chip(crop)
@@ -1488,8 +1488,7 @@ func update_state(state: Node) -> void:
 	for id: String in _all_crop_ids():
 		var button: Button = _crop_buttons[id]
 		button.visible = id in available
-		button.text = "%s%s  ·  %ds\n%s seeds   /   %s in barn" % ["● " if id == crop else "", _crop_name(id), _crop_grow(id), _number(float(seeds.get(id, 0))), _number(float(storage.get(id, 0)))]
-		button.add_theme_stylebox_override("normal", _style((Color("f8dfae") if _island_id() == 2 else Color("e4ebd7")) if id == crop else (SHORES_PAPER if _island_id() == 2 else CREAM), 10, 12, (CORAL if _island_id() == 2 else GREEN) if id == crop else Color.TRANSPARENT))
+		button.refresh(int(seeds.get(id, 0)), int(storage.get(id, 0)), id == crop)
 	_update_quest_sidebar()
 	_update_builds_badge()
 	_update_export_strip()
@@ -1851,6 +1850,17 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		# Newly built content can settle its minimum size after the first fit.
 		# Refit this frame rather than waiting for the periodic touch update.
 		get_parent().touch_controls.fit_modal.call_deferred()
+
+func _fit_shop_modal() -> void:
+	if _panel_kind not in ["barn", "inventory", "tools"] or not _modal.visible: return
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled:
+		touch.fit_modal()
+		return
+	var height: float = clampf(ShopPages.content_height(self), 240.0, minf(760.0, root.size.y - 40.0))
+	_modal_card.offset_top = -height * 0.5
+	_modal_card.offset_bottom = height * 0.5
+	_layout_purchase.call_deferred()
 
 func _heading(title: String, subtitle: String) -> void:
 	_modal_title.text = title
@@ -2549,7 +2559,7 @@ func _refresh_panel() -> void:
 				var cost: float = float(costs[level]) if not maximum else 0.0
 				_set_purchase_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _state.purchase_caption("Upgrade · " + _money(cost), cost)), cost, maximum or winter_gate)
 			var land: Dictionary = _state.field_expansion_info()
-			_refs["upgrade:expansion:detail"].text = "All %d beds open" % int(land.total) if land.complete else "%d / %d beds open · Unlock +%d" % [int(land.opened), int(land.total), int(land.remaining)]
+			_refs["upgrade:expansion:detail"].text = "All %d beds open" % int(land.total) if land.complete else "%d beds open · Unlock +%d" % [int(land.opened), int(land.remaining)]
 			_set_purchase_button("upgrade:expansion", "Open ✓" if land.complete else _state.purchase_caption("Open beds · " + _money(float(land.cost)), float(land.cost)), float(land.cost), land.complete)
 			_refs.shop_page.refresh()
 		"roll":
@@ -2903,10 +2913,10 @@ func _all_crop_ids() -> Array[String]:
 	return result
 
 func _add_crop_chip(id: String) -> void:
-	var button: Button = _button(_crop_name(id), "crop:" + id)
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.add_theme_font_size_override("font_size", 12)
+	var button := preload("res://scripts/seed_slot.gd").new()
 	_crop_row.add_child(button)
+	button.setup(self, id)
+	button.pressed.connect(func(): _act("crop:" + id))
 	_crop_buttons[id] = button
 	button.visible = id in _market_crops()
 
@@ -3113,7 +3123,7 @@ func _build_tracked_prices() -> void:
 		for icon_name: String in ["checked", "checked_disabled"]: toggle.add_theme_icon_override(icon_name, checked)
 		for icon_name: String in ["unchecked", "unchecked_disabled"]: toggle.add_theme_icon_override(icon_name, unchecked)
 		toggle.set_meta("tracked_seed", id)
-		toggle.tooltip_text = "Show " + _crop_name(id) + " seed prices in your Seeds tray."
+		toggle.tooltip_text = "Show " + _crop_name(id) + " on this price list."
 		toggle.toggled.connect(func(enabled: bool) -> void:
 			action_requested.emit("tracked_seed:%s:%d" % [id, 1 if enabled else 0])
 			_refresh_tracked_prices())

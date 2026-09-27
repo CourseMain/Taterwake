@@ -2,6 +2,9 @@
 
 ## 1.0.2.75
 
+- Removed the extra price strip while planting. Seed packets now show separate, ruled Seeds and In barn counts on desktop and touch controls.
+- Replaced shop gradients with solid canvas, navy/copper and barn-red palettes, dark inventory labels, small corners and framed price tags.
+
 - Fixed NPC portraits disappearing behind the conversation background.
 - Restricted buying on account to existing tax debt, with confirmation near bankruptcy and blocked purchases beyond the limit.
 - Added separate paid land expansions on every island. Existing planted beds remain accessible when older saves receive the new land locks.

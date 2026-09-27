@@ -20,7 +20,7 @@ static func box(color: Color, padding: int = 14, radius: int = 14, border: Color
 	return style
 
 static func surface(kind: String, accent: Color = GREEN, selected: bool = false) -> StyleBoxFlat:
-	var style := box(Color("fffdf4").lerp(accent, 0.07 if selected else 0.015), 14, 14, accent.lerp(CREAM, 0.42 if selected else 0.76))
+	var style := box(Color("fffdf4").lerp(accent, 0.07 if selected else 0.015), 14, 4, accent.lerp(CREAM, 0.42 if selected else 0.76))
 	style.shadow_color = Color(0.12, 0.20, 0.14, 0.07)
 	style.shadow_size = 3
 	style.shadow_offset = Vector2(0, 2)
@@ -33,9 +33,9 @@ static func surface(kind: String, accent: Color = GREEN, selected: bool = false)
 	return style
 
 static func modal(dark: bool = false) -> StyleBoxFlat:
-	var style := box(Color("2b1d40") if dark else Color("f3efdf"), 24, 22, Color("72558e") if dark else Color("d9dcc9"))
+	var style := box(Color("2b1d40") if dark else Color("f3efdf"), 24, 5, Color("72558e") if dark else Color("d9dcc9"))
 	style.shadow_color = Color(0.04, 0.12, 0.08, 0.28)
-	style.shadow_size = 18
+	style.shadow_size = 6
 	style.shadow_offset = Vector2(0, 8)
 	return style
 
@@ -48,7 +48,7 @@ static func button_style(state: String, primary: bool) -> StyleBoxFlat:
 		"disabled":
 			fill = Color("e7e7dc")
 			border = Color("d3d7c7")
-	var style := box(fill, 10, 10, border)
+	var style := box(fill, 10, 3, border)
 	style.border_width_bottom = 1 if state in ["pressed", "disabled"] else 3
 	# Reserve the same space in every state to prevent layout movement.
 	style.content_margin_bottom = 11
@@ -69,7 +69,7 @@ static func badge(label: Label, text: String, tone: String = "neutral") -> void:
 	var colors: Array = palettes.get(tone, palettes.neutral)
 	label.text = text
 	label.add_theme_color_override("font_color", colors[1])
-	var style := box(colors[0], 7, 8)
+	var style := box(colors[0], 7, 3)
 	style.content_margin_top = 3
 	style.content_margin_bottom = 3
 	label.add_theme_stylebox_override("normal", style)

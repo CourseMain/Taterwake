@@ -116,15 +116,17 @@ func run() -> void:
 	stock_fits("Compact window")
 	await shot("compact")
 	game.hud.set_tool("plant")
-	check(game.hud._crop_row.visible and game.hud._tracked_box.visible, "seed tool still reveals the intentional seed controls")
+	check(game.hud._crop_row.visible and not game.hud._tracked_box.visible, "seed tool reveals seed controls without the extra tracked-price strip")
 	await shot("compact-seeds")
 	game.hud.set_tool("water")
 	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "leaving seeds returns to the clean farm view")
 	game._on_action("help")
-	var gestures_explained: bool = false
+	var drag_explained: bool = false
+	var zoom_explained: bool = false
 	for label: Node in game.hud._body.find_children("*", "Label", true, false):
-		gestures_explained = gestures_explained or (label.text.contains("Two-finger scroll") and label.text.contains("pinch"))
-	check(gestures_explained, "camera gestures are explained inside How to play")
+		drag_explained = drag_explained or label.text.contains("Hold click + drag")
+		zoom_explained = zoom_explained or label.text.contains("Mouse wheel / pinch")
+	check(drag_explained and zoom_explained, "controls explain held-click camera dragging and wheel or pinch zoom")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout

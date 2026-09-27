@@ -129,7 +129,7 @@ func _ready() -> void:
 func skin(color: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(mini(radius, 5))
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 6
@@ -201,6 +201,8 @@ func fit_modal() -> void:
 	var height: float = view.y - (24 if trading else 112)
 	if hud._panel_kind in ["builds", "help"]:
 		height = minf(height, hud.BuildPages.content_height(hud))
+	elif hud._panel_kind in ["barn", "inventory", "tools"]:
+		height = minf(height, maxf(240.0, hud.ShopPages.content_height(hud)))
 	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, height))
 
 func adapt(node: Node, available: float, stack: bool) -> void:
@@ -375,7 +377,11 @@ func open_seeds() -> void:
 		child.queue_free()
 	button("Close seeds", func(): drawer.hide(), drawer_body)
 	for crop in game.hud._market_crops():
-		button("%s · %d seeds" % [crop.capitalize(), game.state.seed_inventory.get(crop, 0)], func(): game.hud._act("crop:" + crop); drawer.hide(), drawer_body)
+		var packet := preload("res://scripts/seed_slot.gd").new()
+		drawer_body.add_child(packet)
+		packet.setup(game.hud, crop, true)
+		packet.refresh(int(game.state.seed_inventory.get(crop, 0)), int(game.state.storage.get(crop, 0)), game.state.selected_crop == crop)
+		packet.pressed.connect(func(): game.hud._act("crop:" + crop); drawer.hide())
 	drawer.show()
 
 func _input(event: InputEvent) -> void:

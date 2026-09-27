@@ -1,14 +1,13 @@
 extends VBoxContainer
-## Two village interiors: Bram's copper-lit workbench and Nell's lantern-lit barn.
+## Painted workbench and timber stock bins, with clear labels and real dividers.
 const Surface = preload("res://scripts/shop_surface.gd")
-const StallSurface = preload("res://scripts/exchange_surface.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const INK := Color("fff3df")
-const MUTED := Color("cfcbc7")
-const PAPER := Color("304651")
-const COPPER := Color("e8ac7c")
-const HONEY := Color("f1c47e")
-const GREEN := Color("a0d8bd")
+const INK := Color("282d30")
+const MUTED := Color("594b39")
+const PAPER := Color("f2e2c2")
+const COPPER := Color("d8955f")
+const HONEY := Color("ebc781")
+const GREEN := Color("d4a654")
 const CHALK := Color("f2edda")
 var hud
 var barn: bool = false
@@ -18,6 +17,9 @@ var _capacity: ProgressBar
 var _ledger_trade: Button
 var _wallet: Label
 var _levels: Dictionary = {}
+var _item_quantities: Dictionary = {}
+var _ledger: Dictionary = {}
+var _fit_pending: bool = false
 var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
 
@@ -28,32 +30,48 @@ func setup(owner_hud, barn_page: bool) -> void:
 	_body_font.fallbacks = []
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 16)
+	add_theme_constant_override("separation", 12)
 	var modal: StyleBoxFlat = hud.Cozy.modal()
 	modal.bg_color = _room_color()
-	modal.border_color = _accent().lerp(_room_color(), 0.7)
-	modal.set_corner_radius_all(32)
+	modal.border_color = Color("3d211a") if barn else Color("12212c")
+	modal.set_corner_radius_all(5)
+	modal.set_border_width_all(3)
+	modal.shadow_size = 0
 	hud._modal_card.add_theme_stylebox_override("panel", modal)
-	StallSurface.apply_modal_lighting(hud._modal_card, _room_color(), _accent().darkened(0.28), _room_color().darkened(0.12))
 	hud._modal_card.offset_left = -500
 	hud._modal_card.offset_right = 500
 	hud._modal_card.offset_top = -380
 	hud._modal_card.offset_bottom = 380
 	hud._modal_title.text = "Nell's barn" if barn else "Bram's workbench"
-	hud._modal_title.add_theme_color_override("font_color", INK)
+	hud._modal_title.add_theme_color_override("font_color", CHALK)
 	hud._modal_title.add_theme_font_override("font", _title_font)
 	hud._modal_title.add_theme_font_size_override("font_size", 29)
 	hud._modal_subtitle.hide()
 	if barn: _build_barn()
 	else: _build_tools()
 	resized.connect(_layout)
+	minimum_size_changed.connect(_queue_modal_fit)
 	_layout.call_deferred()
+	_queue_modal_fit()
+
+func _queue_modal_fit() -> void:
+	if _fit_pending or not is_inside_tree(): return
+	_fit_pending = true
+	# Wrapping and responsive columns settle after the page is attached.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_fit_pending = false
+	if is_queued_for_deletion() or not is_instance_valid(hud): return
+	if hud._refs.get("shop_page") == self: hud._fit_shop_modal()
+
+static func content_height(owner_hud) -> float:
+	return owner_hud.BuildPages.content_height(owner_hud)
 
 func _room_color() -> Color:
-	return Color("302534") if barn else Color("152a32")
+	return Color("723e32") if barn else Color("213a4d")
 
 func _card_color() -> Color:
-	return Color("57404e") if barn else Color("304753")
+	return Color("e6c89f") if barn else Color("eee1c5")
 
 func _accent() -> Color:
 	return HONEY if barn else COPPER
@@ -70,23 +88,24 @@ func _style_button(button: Button, accent: Color = HONEY, filled: bool = false) 
 	button.add_theme_font_size_override("font_size", 15)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if accent == HONEY: accent = _accent()
-	var foreground := Color("29282b")
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = accent if filled else _card_color().lightened(0.03)
-		if state == "hover": fill = accent.lightened(0.1) if filled else _card_color().lightened(0.12)
-		if state == "pressed": fill = accent.darkened(0.1) if filled else _card_color().darkened(0.12)
-		if state == "disabled": fill = _card_color().darkened(0.08)
-		var skin: StyleBoxFlat = hud.Cozy.box(fill, 14, 17, Color(_accent(), 0.2 if not filled else 0.05))
-		skin.content_margin_top = 10
-		skin.content_margin_bottom = 10
-		skin.shadow_color = Color(0.02, 0.02, 0.03, 0.16)
-		skin.shadow_size = 4 if state == "normal" else 1
-		skin.shadow_offset = Vector2(0, 2)
+		var fill: Color = accent if filled else PAPER
+		if state == "hover": fill = Color("f2cf96") if filled else Color("fff0d5")
+		if state == "pressed": fill = Color("c9975a") if filled else Color("d9bc92")
+		if state == "disabled": fill = Color("d1bd9e")
+		var skin: StyleBoxFlat = hud.Cozy.box(fill, 12, 3, Color("6b482e") if barn else Color("344957"))
+		skin.set_border_width_all(1)
+		skin.border_width_bottom = 2 if state != "pressed" else 1
+		skin.content_margin_top = 9
+		skin.content_margin_bottom = 9
+		skin.shadow_size = 0
 		button.add_theme_stylebox_override(state, skin)
 	for state: String in ["font_color", "font_hover_color", "font_pressed_color"]:
-		button.add_theme_color_override(state, foreground if filled else INK)
-	button.add_theme_color_override("font_disabled_color", Color("b5b0b4"))
-	button.add_theme_stylebox_override("focus", hud.Cozy.box(Color.TRANSPARENT, 14, 17, _accent()))
+		button.add_theme_color_override(state, INK)
+	button.add_theme_color_override("font_disabled_color", Color("6b5c48"))
+	var focus: StyleBoxFlat = hud.Cozy.box(Color.TRANSPARENT, 12, 3, INK)
+	focus.set_border_width_all(2)
+	button.add_theme_stylebox_override("focus", focus)
 
 func _button(words: String, action: String, accent: Color = HONEY, filled: bool = false) -> Button:
 	var result: Button = hud._button(words, action)
@@ -97,13 +116,25 @@ func _button(words: String, action: String, accent: Color = HONEY, filled: bool 
 func _timber(parent: Control, name_value: String, _index: int = 0, frame: bool = false) -> PanelContainer:
 	var panel := Surface.new()
 	panel.name = name_value
-	panel.base = _room_color().lightened(0.025) if frame else _card_color()
-	panel.light = _accent()
-	panel.radius = 26 if frame else 22
-	panel.padding = 10 if frame else 20
+	panel.base = Color("4c2822") if barn and frame else (Color("152836") if frame else _card_color())
+	panel.edge = Color("795438") if barn else Color("405a6b")
+	panel.radius = 3
+	panel.frame = frame
+	panel.padding = 8 if frame else 16
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(panel)
 	return panel
+
+func _rule(vertical: bool = false) -> Separator:
+	var rule: Separator = VSeparator.new() if vertical else HSeparator.new()
+	var line := StyleBoxLine.new()
+	line.color = Color("906643") if barn else Color("7b6d58")
+	line.thickness = 2
+	line.vertical = vertical
+	rule.add_theme_stylebox_override("separator", line)
+	rule.add_theme_constant_override("separation", 3)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rule
 
 func _grid(parent: Control) -> GridContainer:
 	var result := GridContainer.new()
@@ -115,7 +146,7 @@ func _grid(parent: Control) -> GridContainer:
 	return result
 
 func _build_tools() -> void:
-	_wallet = _label("", 14, MUTED)
+	_wallet = _label("", 14, CHALK)
 	_wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_wallet)
 	var bench := _timber(self, "BramWorkbench", 0, true)
@@ -134,7 +165,9 @@ func _build_tools() -> void:
 		var names: VBoxContainer = hud._vbox(4)
 		names.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		display.add_child(names)
-		names.add_child(_label(titles[tool], 24, INK, true))
+		var tool_name := _label(titles[tool], 23, INK, true)
+		tool_name.add_theme_stylebox_override("normal", hud.Cozy.box(COPPER, 7, 2, Color("9b613d")))
+		names.add_child(tool_name)
 		if tool != "expansion":
 			var level := _label("", 12, MUTED)
 			names.add_child(level)
@@ -156,15 +189,28 @@ func _build_barn() -> void:
 	var board := _timber(self, "NellStockLedger")
 	var tally: VBoxContainer = hud._vbox(7)
 	board.add_child(tally)
-	var total := _label("", 19, CHALK)
+	var total := _label("", 19)
+	total.hide()
 	tally.add_child(total)
 	hud._refs.inventory_total = total
+	var ledger_row := HBoxContainer.new()
+	ledger_row.add_theme_constant_override("separation", 12)
+	tally.add_child(ledger_row)
+	for key: String in ["value", "stored", "capacity"]:
+		if ledger_row.get_child_count() > 0: ledger_row.add_child(_rule(true))
+		var cell: VBoxContainer = hud._vbox(3)
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ledger_row.add_child(cell)
+		cell.add_child(_label({"value": "HELD VALUE", "stored": "STORED", "capacity": "CAPACITY"}[key], 11, MUTED))
+		var value := _label("", 21, INK, true)
+		cell.add_child(value)
+		_ledger[key] = value
 	_capacity = ProgressBar.new()
 	_capacity.custom_minimum_size.y = 7
 	_capacity.show_percentage = false
 	_capacity.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_capacity.add_theme_stylebox_override("background", hud.Cozy.box(_room_color(), 0, 4))
-	_capacity.add_theme_stylebox_override("fill", hud.Cozy.box(HONEY, 0, 4))
+	_capacity.add_theme_stylebox_override("background", hud.Cozy.box(Color("bd9a71"), 0, 1))
+	_capacity.add_theme_stylebox_override("fill", hud.Cozy.box(Color("93462f"), 0, 1))
 	tally.add_child(_capacity)
 	_ledger_trade = _button("Sell potatoes", "sell_potatoes", GREEN, true)
 	tally.add_child(_ledger_trade)
@@ -215,6 +261,20 @@ func _build_barn() -> void:
 		var title := _label("", 21, INK, true)
 		description.add_child(title)
 		hud._refs["item:" + id + ":title"] = title
+		if kind in ["seed", "crop"]:
+			contents.add_child(_rule())
+			var quantity_row := HBoxContainer.new()
+			quantity_row.add_theme_constant_override("separation", 12)
+			contents.add_child(quantity_row)
+			var kind_label := _label("SEEDS" if kind == "seed" else "POTATOES", 12, MUTED)
+			kind_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			quantity_row.add_child(kind_label)
+			quantity_row.add_child(_rule(true))
+			var quantity := _label("", 20, INK, true)
+			quantity.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			quantity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			quantity_row.add_child(quantity)
+			_item_quantities[id] = quantity
 		var detail := _label("", 13, MUTED)
 		contents.add_child(detail)
 		hud._refs["item:" + id + ":detail"] = detail
@@ -229,9 +289,9 @@ func _build_barn() -> void:
 		if shelves[section].get_child_count() == 0:
 			shelves[section].get_parent().hide()
 			var empty: String = {"crops": "No crops or seeds.", "items": "No items.", "builds": "No builds or crates."}[section]
-			hud._inventory_sections[section].add_child(_label(empty, 14, MUTED))
+			hud._inventory_sections[section].add_child(_label(empty, 14, CHALK))
 	if gear_grid.get_child_count() == 0:
-		hud._inventory_sections.gear.add_child(_label("No spare gear.", 14, MUTED))
+		hud._inventory_sections.gear.add_child(_label("No spare gear.", 14, CHALK))
 	var upgrade := _timber(self, "BarnExtensionPlan")
 	move_child(upgrade, 1)
 	hud._refs["upgrade:barn:card"] = upgrade
@@ -266,6 +326,9 @@ func refresh() -> void:
 		for tool: String in _levels:
 			_levels[tool].text = "LEVEL %d" % int(hud._state.tools.get(tool, 0))
 		return
+	_ledger.value.text = hud._money(float(hud._state.barn_value()))
+	_ledger.stored.text = hud._number(float(hud._state.storage_used()))
+	_ledger.capacity.text = hud._number(float(hud._state.capacity))
 	_capacity.max_value = maxf(1.0, float(hud._state.capacity))
 	_capacity.value = float(hud._state.storage_used())
 	# Gear needs room for the farmer and worn-slot totals. Keep the tally and
@@ -277,11 +340,15 @@ func refresh() -> void:
 	for section: String in hud._inventory_sections:
 		_style_button(hud._refs["tab:" + section], HONEY, section == hud._inventory_tab)
 	for entry: Dictionary in hud._inventory_data():
+		var id: String = str(entry.id)
+		if _item_quantities.has(id):
+			_item_quantities[id].text = hud._number(float(entry.get("count", 0)))
+			hud._refs["item:" + id + ":title"].text = str(entry.get("name", ""))
 		if str(entry.get("kind", "")) != "gear": continue
 		var key: String = "item:" + str(entry.id)
 		var card: PanelContainer = hud._refs.get(key + ":card")
 		if card == null: continue
-		var skin: StyleBoxFlat = hud.Cozy.box(_card_color(), 18, 22, Color(_accent(), 0.2))
+		var skin: StyleBoxFlat = hud.Cozy.box(_card_color(), 16, 3, Color("795438"))
 		card.add_theme_stylebox_override("panel", skin)
 		_style_button(hud._refs[key + ":action"], HONEY, not bool(entry.get("equipped", false)))
 	_tint_equipment()
@@ -290,11 +357,16 @@ func refresh() -> void:
 func _tint_equipment() -> void:
 	var gear: Control = hud._inventory_sections.gear
 	for panel: Node in gear.find_children("*", "PanelContainer", true, false):
-		panel.add_theme_stylebox_override("panel", hud.Cozy.box(_card_color(), 18, 22, Color(_accent(), 0.2)))
+		panel.add_theme_stylebox_override("panel", hud.Cozy.box(_card_color(), 16, 3, Color("795438")))
 	for label: Node in gear.find_children("*", "Label", true, false):
-		label.add_theme_color_override("font_color", INK)
+		var within_card := false
+		var ancestor: Node = label.get_parent()
+		while ancestor != gear:
+			if ancestor is PanelContainer: within_card = true; break
+			ancestor = ancestor.get_parent()
+		label.add_theme_color_override("font_color", INK if within_card else CHALK)
 		if label.has_theme_stylebox_override("normal"):
-			label.add_theme_stylebox_override("normal", hud.Cozy.box(_room_color(), 7, 9, Color(_accent(), 0.2)))
+			label.add_theme_stylebox_override("normal", hud.Cozy.box(HONEY, 7, 2, Color("9b7445")))
 	for slot: String in ["head", "body", "legs", "feet", "hands", "charm"]:
 		_style_button(hud._refs["equipment:" + slot])
 
