@@ -16,6 +16,8 @@ func setup(hud, id: String, touch: bool = false) -> void:
 	_hud = hud
 	crop_id = id
 	_touch = touch
+	# Let touch drags reach the surrounding drawer's ScrollContainer.
+	mouse_filter = Control.MOUSE_FILTER_PASS if touch else Control.MOUSE_FILTER_STOP
 	text = ""
 	set_meta("hud_action", "crop:" + id)
 	set_meta("action", "crop:" + id)
