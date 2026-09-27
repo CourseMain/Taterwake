@@ -1033,6 +1033,7 @@ func _act(action: String) -> void:
 	if action.begins_with("inventory_tab:"):
 		_inventory_tab = action.get_slice(":", 1)
 		_set_inventory_tab()
+		if is_instance_valid(_refs.get("shop_page")): _refs.shop_page.refresh()
 		(_body.get_parent() as ScrollContainer).scroll_vertical = 0
 		return
 	if action.begins_with("roll:"):

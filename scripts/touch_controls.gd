@@ -100,6 +100,7 @@ func _ready() -> void:
 	drawer_body.add_theme_constant_override("separation", 8)
 	drawer_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(drawer_body)
+	drawer_body.minimum_size_changed.connect(fit_drawer, CONNECT_DEFERRED)
 	drawer.hide()
 	if enabled:
 		equipment_sheet = ScrollContainer.new()
@@ -173,7 +174,7 @@ func resize() -> void:
 	place(status, Rect2(96, 16, minf(w - 250, 500), 72))
 	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
 	place(guide_button, Rect2(96, 16, 204, 68))
-	place(drawer, Rect2(maxf(16, w - 430), 92, minf(w - 32, 408), maxf(180, h - 280)))
+	fit_drawer()
 	if enabled: fit_modal()
 	game.farm_viewport.sync_resolution.call_deferred()
 
@@ -181,6 +182,11 @@ func place(control: Control, rect: Rect2) -> void:
 	control.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	control.position = rect.position
 	control.size = rect.size
+
+func fit_drawer() -> void:
+	var view := get_viewport().get_visible_rect().size
+	var height := minf(maxf(180, view.y - 280), drawer_body.get_combined_minimum_size().y + 12)
+	place(drawer, Rect2(maxf(16, view.x - 430), 92, minf(view.x - 32, 408), height))
 
 func fit_modal() -> void:
 	if not enabled or not is_instance_valid(game.hud._modal_card): return
@@ -351,6 +357,7 @@ func open_drawer(kind: String) -> void:
 		drawer.hide()
 		return
 	drawer_kind = kind
+	drawer.add_theme_stylebox_override("panel", skin(Color("193c33"), 5))
 	for child in drawer_body.get_children():
 		drawer_body.remove_child(child)
 		child.queue_free()
@@ -370,12 +377,17 @@ func open_drawer(kind: String) -> void:
 	button("Recenter view", func(): game._recenter_camera(); drawer.hide(), drawer_body)
 	button("Cancel task", func(): game._cancel_prize_target(); game._climate_action("cancel"); game._cancel_walk(); drawer.hide(), drawer_body)
 	drawer.show()
+	fit_drawer.call_deferred()
 
 func open_seeds() -> void:
+	drawer_kind = "seeds"
+	drawer.add_theme_stylebox_override("panel", skin(Color("5b422b"), 3))
 	for child in drawer_body.get_children():
 		drawer_body.remove_child(child)
 		child.queue_free()
-	button("Close seeds", func(): drawer.hide(), drawer_body)
+	var close := button("Close seeds", func(): drawer.hide(), drawer_body)
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		close.add_theme_stylebox_override(state, skin(Color("765333") if state == "pressed" else Color("5b422b"), 3))
 	for crop in game.hud._market_crops():
 		var packet := preload("res://scripts/seed_slot.gd").new()
 		drawer_body.add_child(packet)
@@ -383,6 +395,7 @@ func open_seeds() -> void:
 		packet.refresh(int(game.state.seed_inventory.get(crop, 0)), int(game.state.storage.get(crop, 0)), game.state.selected_crop == crop)
 		packet.pressed.connect(func(): game.hud._act("crop:" + crop); drawer.hide())
 	drawer.show()
+	fit_drawer.call_deferred()
 
 func _input(event: InputEvent) -> void:
 	if not enabled: return
