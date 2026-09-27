@@ -27,7 +27,7 @@ const PURPOSE: Dictionary = {
 	"investor": "Reserve a buyer's price",
 	"gambler": "Stake crops for coin payouts",
 }
-const ACTION_TITLE: Dictionary = {"farmer": "Grow a giant potato", "industrialist": "Grade a batch", "scientist": "Discover a variety", "investor": "Reserve a buyer", "gambler": "Stake a harvest"}
+const ACTION_TITLE: Dictionary = {"farmer": "Compost · Farmer perk", "industrialist": "Grade a batch", "scientist": "Discover a variety", "investor": "Reserve a buyer", "gambler": "Stake a harvest"}
 
 static func create(h) -> void:
 	var system = h._build_system()
@@ -100,7 +100,7 @@ static func create(h) -> void:
 	body.add_child(actions)
 	match id:
 		"farmer":
-			add_action(h, actions, "Grow a giant potato · 1 compost", "giant")
+			add_action(h, actions, "Grow giant · 1 compost → 3× harvest", "giant")
 			var prepare = h._button("Plant a crop", "close")
 			prepare.set_meta("tool", "plant")
 			prepare.pressed.connect(func(): h.action_requested.emit("tool:" + str(prepare.get_meta("tool"))))

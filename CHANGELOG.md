@@ -2,6 +2,9 @@
 
 ## 1.0.2.75
 
+- Compost opens Farmer’s compost controls directly, with its perk, cost and 3× harvest benefit shown together.
+- Added short, varied “potato” voices for all 11 NPCs. Each villager has a distinct pitch and rhythm; revealing text or leaving a conversation stops speech.
+
 - Kept held camera drags active through motion events with missing button masks; release, focus loss and menus still end the gesture.
 - Removed extra Builds guide cards, repeated usage instructions and optional coaching links. Replaced the long Help page with compact controls.
 

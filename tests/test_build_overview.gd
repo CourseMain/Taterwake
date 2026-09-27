@@ -61,6 +61,10 @@ func run() -> void:
 	var farm = game.state
 	var h = game.hud
 	check(b.active == "farmer" and b.levels.farmer == 1, "a new farm selects the Farmer starter")
+	game._interact_station("profession:farmer")
+	await frames()
+	check(h._panel_kind == "builds" and h._build_selection == "farmer" and h._refs.has("prof_giant") and not h._refs.has("build_overview"), "Compost opens its controls directly instead of the build list")
+	check(h._refs.prof_title.text == "Compost · Farmer perk", "compost is briefly identified as a Farmer perk")
 	await overview()
 	check(h._refs.build_selected_summary.text.contains("Farmer"), "overview marks actual starter selection")
 	check(h._refs.build_overview.get_child_count() == 5, "overview contains only the five build cards")
@@ -96,6 +100,11 @@ func run() -> void:
 	check(b.load_data(chosen) and b.active == "scientist", "saved active selection reloads unchanged")
 	await overview()
 	check(h._refs["build_status:scientist"].text.contains("Selected") and not h._refs["build_status:farmer"].text.contains("Selected"), "overview uses saved selection rather than resetting to Farmer")
+	var before_compost_visit: Dictionary = b.save_data().duplicate(true)
+	game._interact_station("profession:farmer")
+	await frames()
+	check(h._build_selection == "farmer" and b.save_data() == before_compost_visit, "visiting Compost keeps an existing Scientist selection and its saved progress")
+	check(h._refs.prof_giant.disabled and not h._refs.build_equip.disabled and h._refs.prof_status.text.contains("Farmer"), "non-Farmer sees an explicit build selection and reason before using compost")
 	h._act("build:inspect:farmer")
 	await frames()
 	game._on_action("builds")

@@ -56,6 +56,7 @@ func command(args: Array) -> void:
 		game._on_state_changed()
 	elif action.begins_with("build:"):
 		game.hud._act("build:inspect:" + action.get_slice(":",1))
+	elif action == "compost": game._interact_station("profession:farmer")
 	elif action == "island2":
 		game.state.travel_to(2)
 		game.state.climate.acknowledge(game.state)
@@ -109,6 +110,8 @@ func command(args: Array) -> void:
 	var transform: Transform2D = game.conversation.get_screen_transform()
 	report.screen_transform = [transform.x.x,transform.y.y,transform.origin.x,transform.origin.y]
 	report.conversation = {"visible":game.conversation.visible,"npc":game.conversation.npc_id,"page":game.conversation.page,"text":game.conversation.speech.text,"clock":game.state.elapsed}
+	var voice = game.conversation.voice
+	report.voice = {"speaker":voice.speaker,"utterances":voice.utterances,"playing":voice.player.playing,"pitch":voice.player.pitch_scale,"take":voice.last_clip}
 	report.intro_visible = game.hud._climate_intro.visible
 	report.frozen_crops = game.state.climate.data.operations.ice.size()
 	report.hoe_heat = game.state.ClimateSystem.Operations.local(game.state).heat

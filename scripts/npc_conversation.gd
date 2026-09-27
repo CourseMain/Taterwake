@@ -3,6 +3,7 @@ extends Control
 signal finished(service: String)
 const Roster = preload("res://scripts/npc_roster.gd")
 const Portrait = preload("res://scripts/npc_portrait.gd")
+const Voice = preload("res://scripts/npc_voice.gd")
 const Type = preload("res://scripts/ui_type.gd")
 var state
 var npc_id: String = ""
@@ -26,8 +27,11 @@ var elapsed: float = 0
 var _revealed: float = 0
 var _entry_time: float = 0
 var _touch: bool = false
+var voice
 
 func _ready() -> void:
+	voice = Voice.new()
+	add_child(voice)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var theme := Theme.new()
@@ -235,6 +239,7 @@ func show_page(next_page: String, text: String = "") -> void:
 	elapsed = 0
 	portrait.avatar.speaking = true
 	portrait.avatar.expression = "concerned" if page == "weather" else "warm"
+	voice.begin_line(npc_id, speech.get_total_character_count(), page == "weather")
 	for i in range(3):
 		var b: Button = choice_buttons[i]
 		b.text = labels[i]
@@ -263,6 +268,7 @@ func choose(index: int) -> void:
 	else: show_page(action)
 
 func reveal() -> void:
+	voice.stop()
 	speech.visible_characters = -1
 	_revealed = float(speech.get_total_character_count())
 	portrait.avatar.speaking = false
@@ -297,6 +303,7 @@ func _input(event: InputEvent) -> void:
 
 func finish(next_service: String = "") -> void:
 	if not visible: return
+	voice.stop()
 	hide()
 	set_process(false)
 	if is_instance_valid(portrait): portrait.avatar.speaking = false

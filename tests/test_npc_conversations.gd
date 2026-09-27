@@ -24,6 +24,8 @@ func run() -> void:
 	farm.climate.acknowledge(farm)
 	farm.coins = 1e18
 	var talk = game.conversation
+	for clip in talk.voice.CLIPS:
+		check(clip.get_length() >= .15 and clip.get_length() <= 1.0, "potato takes are short, nonempty audio clips")
 	var looks: Array = []
 	for id: String in Roster.PEOPLE:
 		farm.travel_to(3 if id == "oren" else 2)
@@ -40,6 +42,8 @@ func run() -> void:
 		check(talk.speech.text == Roster.PEOPLE[id].first,"first introduction " + id)
 		check(farm.npc_history[id].visits == 1,"remembers meeting " + id)
 		check(talk.portrait.avatar.npc_id == id,"matching character model " + id)
+		check(talk.voice.PROFILES.has(id) and talk.voice.speaker == id and talk.voice.utterances > 0, "character voice starts with the dialogue " + id)
+		check(talk.voice.player.stream in talk.voice.CLIPS, "dialogue uses a potato voice clip " + id)
 		var signature: String = str(talk.portrait.avatar.scale)+str(talk.portrait.avatar.skin_color)+Roster.PEOPLE[id].detail
 		check(not looks.has(signature),"distinct appearance " + id)
 		looks.append(signature)
@@ -56,6 +60,12 @@ func run() -> void:
 		check(talk.speech.text == Roster.PEOPLE[id].answer and farm.npc_history[id].kind,"choice gets personal response " + id)
 		talk.choose(0)
 		check(talk.speech.text == Roster.PEOPLE[id].advice,"practical branch " + id)
+		var first_take: int = talk.voice.last_clip
+		var spoken: int = talk.voice.utterances
+		for i in range(100): talk.voice._process(.1)
+		check(talk.voice.utterances - spoken <= 2 and not talk.voice.is_processing(), "voice repeats stay bounded while reading " + id)
+		if talk.voice.utterances == spoken + 1:
+			check(talk.voice.last_clip != first_take, "successive potato takes vary " + id)
 		talk.portrait.avatar.speaking = true
 		talk.portrait.avatar.animate(.1)
 		var mouth_scale: Vector3 = talk.portrait.avatar.talk_mouth.scale
@@ -63,11 +73,13 @@ func run() -> void:
 		check(talk.portrait.avatar.talk_mouth.visible and talk.portrait.avatar.talk_mouth.scale != mouth_scale,"animated speech " + id)
 		check(talk.portrait.avatar.talk_mouth.scale.x < .1 and talk.portrait.avatar.talk_mouth.scale.y < .06,"talking mouth stays within the face")
 		talk.reveal()
+		check(not talk.voice.player.playing and not talk.voice.is_processing(), "revealing text immediately stops speech " + id)
 		for i in range(20): talk.portrait.avatar.animate(.1)
 		check(not talk.portrait.avatar.talk_mouth.visible and talk.portrait.avatar._mouth.visible,"returns to listening " + id)
 		talk.choose(0)
 		await frames()
 		check(not talk.visible and game.hud._panel_kind == service,"returns to service without spending " + id)
+		check(not talk.voice.player.playing and not talk.voice.is_processing(), "service transition leaves no voice playing " + id)
 		check(talk.portrait.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"hidden portrait stops rendering " + id)
 		game._on_action("talk:" + id)
 		check(talk.speech.text == Roster.PEOPLE[id].thanks,"remembers friendly response " + id)

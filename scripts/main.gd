@@ -562,6 +562,8 @@ func _interact_station(station: String) -> void:
 	if station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
+	elif station == "profession:farmer":
+		_on_action("build:inspect:farmer")
 	elif station.begins_with("profession:"):
 		_on_action("builds")
 	elif station == "island":
@@ -1362,6 +1364,12 @@ func _on_action(action: String) -> void:
 			else: builds.professions.action(parts[1], parts[2] if parts.size() > 2 else "")
 		"build":
 			match parts[1]:
+				"inspect":
+					if parts.size() != 3 or (not parts[2].is_empty() and parts[2] not in builds.IDS): return
+					_cancel_prize_target()
+					_cancel_walk()
+					hud._build_selection = parts[2]
+					hud.show_panel("builds", state)
 				"select":
 					_cancel_prize_target()
 					builds.select_build(parts[2])

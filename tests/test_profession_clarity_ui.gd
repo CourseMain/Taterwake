@@ -40,16 +40,16 @@ func run() -> void:
 	for plot in farm.plots: farm._clear_crop(plot)
 	await show_build("farmer")
 	check(game.hud._refs.prof_giant.disabled and game.hud._refs.prof_status.text.contains("Plant a seed"), "empty farm explains planting before compost")
-	check(game.hud._refs.prof_giant.text == "Grow a giant potato · 1 compost", "Farmer states its result and cost without prize-bed jargon")
+	check(game.hud._refs.prof_giant.text == "Grow giant · 1 compost → 3× harvest", "Farmer states its result and cost without prize-bed jargon")
 	check(game.hud._refs.prof_prepare.visible and game.hud._refs.prof_prepare.get_meta("tool") == "plant", "empty farm offers a direct planting shortcut")
 	game.hud._refs.prof_prepare.pressed.emit()
 	check(not game.hud.is_panel_open() and game.selected_tool == "plant", "planting shortcut closes the detail and equips the seed tool")
 	farm.plots[0].merge({"unlocked": true, "stage": 3, "crop": "russet", "watered": true}, true)
 	await show_build("farmer")
-	check(game.hud._refs.prof_prepare.get_meta("tool") == "harvest" and game.hud._refs.prof_status.text.contains("Harvest a ripe"), "ripe-only field explains harvesting before replanting")
+	check(game.hud._refs.prof_giant.disabled and game.hud._refs.prof_prepare.visible and game.hud._refs.prof_prepare.get_meta("tool") == "harvest" and game.hud._refs.prof_prepare.text.contains("Harvest"), "ripe-only field blocks compost and offers the harvest action")
 	farm.plots[0].merge({"stage": 2, "frozen": true}, true)
 	await refresh()
-	check(game.hud._refs.prof_prepare.get_meta("tool") == "hoe" and game.hud._refs.prof_status.text.contains("Clear the ice"), "frozen growing crop offers the hoe instead of misleading planting advice")
+	check(game.hud._refs.prof_giant.disabled and game.hud._refs.prof_prepare.visible and game.hud._refs.prof_prepare.get_meta("tool") == "hoe" and game.hud._refs.prof_prepare.text.contains("Thaw"), "frozen growing crop blocks compost and offers the hoe to thaw it")
 	farm.plots[0].frozen = false
 	farm.plots[0].merge({"unlocked": true, "tilled": true, "stage": 1, "crop": "russet", "watered": false}, true)
 	await refresh()
@@ -98,16 +98,22 @@ func run() -> void:
 	game.hud._refs.prof_breed.pressed.emit()
 	await refresh()
 	check(p.data.seedbank == ["hearty"] and farm.storage.russet == 0 and farm.storage.golden == 0, "crossbreed button spends its exact displayed harvest ingredients")
-	check(game.hud._refs.prof_breed.disabled and game.hud._refs.prof_breed.text == "Already discovered" and game.hud._refs.prof_resource.text.contains("permanent planting trait"), "discovery is an enduring trait rather than an implied stack of seeds")
+	var varieties: OptionButton = game.hud._refs.prof_variety
+	var honeyheart_available: bool = false
+	for index in range(varieties.item_count):
+		if varieties.get_item_metadata(index) == "hearty": honeyheart_available = not varieties.is_item_disabled(index)
+	check(game.hud._refs.prof_breed.disabled and game.hud._refs.prof_breed.text == "Already discovered" and honeyheart_available and not game.hud._refs.prof_status.visible, "discovery disables repeat spending and unlocks Honeyheart for future planting without redundant status text")
 	var scroll: ScrollContainer = game.hud._body.get_parent()
 	check(scroll.get_global_rect().grow(1).encloses(game.hud._refs["build_details:toggle"].get_global_rect()), "Scientist base card and bonuses toggle fit without scrolling at 1280×800")
 	await capture("scientist")
 	builds.select_build("investor")
 	await show_build("investor")
 	var quote: Dictionary = p.contract_preview()
-	check(game.hud._refs.prof_resource.text.contains(farm.money(quote.total)) and game.hud._refs.prof_status.text.contains("No upfront cost"), "buyer preview discloses actual payout and no upfront crop requirement")
+	check(game.hud._refs.prof_resource.text.contains(farm.money(quote.total)) and game.hud._refs.prof_status.text.contains("Free reservation") and game.hud._refs.prof_status.text.contains("3 minutes") and not game.hud._refs.prof_reserve.disabled, "buyer preview discloses actual payout, free reservation and delivery deadline")
+	var coins_before_reserving: float = farm.coins
 	game.hud._refs.prof_reserve.pressed.emit()
 	await refresh()
+	check(farm.coins == coins_before_reserving and farm.storage.russet == 0 and not p.data.contract.is_empty(), "reserving with an empty barn consumes neither coins nor crops")
 	check(not game.hud._refs.prof_inputs.visible and game.hud._refs.prof_deliver.disabled and game.hud._refs.prof_status.text.contains("20 more Russet"), "locked buyer hides irrelevant crop selection and explains delivery shortfall")
 	farm.storage.russet = 20
 	await refresh()
@@ -121,7 +127,7 @@ func run() -> void:
 	check(game.hud._refs.prof_stake.disabled and game.hud._refs.prof_status.text.contains("20 more Russet"), "stake explains exact missing harvest")
 	farm.storage.russet = 20
 	await refresh()
-	check(game.hud._refs.prof_note.text.contains("half") and game.hud._refs.prof_note.text.contains("coins"), "stake names its possible loss and payout currency before committing")
+	check(game.hud._refs.prof_note.is_visible_in_tree() and game.hud._refs.prof_note.text.contains("20% triple") and game.hud._refs.prof_note.text.contains("55% unchanged") and game.hud._refs.prof_note.text.contains("25% half") and game.hud._refs.prof_resource.text.contains(farm.money(20 * farm.market.russet.sell)), "stake shows all three odds, the half-value loss and the stake's money value before committing")
 	game.hud._refs.prof_stake.pressed.emit()
 	await refresh()
 	check(farm.storage.russet == 0 and not game.hud._refs.prof_inputs.visible and game.hud._refs.prof_claim.visible, "pending stake shows claim controls instead of irrelevant new-stake choices")
