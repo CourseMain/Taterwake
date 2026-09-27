@@ -11,6 +11,7 @@ const RewardFeedback = preload("res://scripts/reward_feedback.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
 const FarmViewport = preload("res://scripts/farm_viewport.gd")
+const PurchaseReview = preload("res://scripts/purchase_review.gd")
 const WALK_SPEED: float = 7.0
 const SPRINT_MULTIPLIER: float = 1.65
 const NO_TILES: Array[int] = []
@@ -575,6 +576,7 @@ func _interact_station(station: String) -> void:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
+	if is_instance_valid(hud._purchase_review) and hud._purchase_review.visible: return
 	if conversation.visible: return
 	if action in ["market", "sell_potatoes"]:
 		# Market tabs navigate the same shop session; they are not NPC visits.
@@ -990,7 +992,8 @@ func _update_hover() -> void:
 		elif bool(plot.get("pests", false)):
 			hud.set_context("Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0))))
 		elif not plot.unlocked:
-			hud.set_context("12 more beds · Unlock at Tools for $1.8K")
+			var land: Dictionary = state.field_expansion_info()
+			hud.set_context("%d more beds · Tools · %s" % [int(land.remaining), state.money(float(land.cost))])
 		elif int(plot.stage) == 3:
 			hud.set_context("%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action])
 		elif int(plot.stage) > 0 and bool(plot.watered):
@@ -1223,8 +1226,9 @@ func _climate_action(action: String) -> void:
 	hud.update_state(state)
 	_save_blind_checkpoint.call_deferred()
 
-func _on_action(action: String) -> void:
+func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 	if is_instance_valid(conversation) and conversation.visible: return
+	if is_instance_valid(hud._purchase_review) and hud._purchase_review.visible: return
 	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu"] and not action.begins_with("graphics"):
 		state.ClimateSystem.Lesson.finish(state)
 		climate_target = ""
@@ -1258,6 +1262,15 @@ func _on_action(action: String) -> void:
 	if _tutorial_active() and not tutorial.allows_action(action):
 		tutorial.explain_block()
 		return
+	var purchase_cost: float = PurchaseReview.cost_for(self, action)
+	if purchase_cost >= 0.0:
+		var quote: Dictionary = state.purchase_quote(purchase_cost)
+		quote.cost = purchase_cost
+		quote.island = state.current_island
+		# Requote at confirmation: prices, taxes and the available allowance may change.
+		if not quote.affordable or (quote != approved_quote and (quote.near_limit or not approved_quote.is_empty())):
+			hud.show_purchase_review(quote, func(): _on_action(action, quote), not approved_quote.is_empty())
+			return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
 		"talk":

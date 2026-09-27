@@ -2,6 +2,11 @@
 
 ## 1.0.2.75
 
+- Fixed NPC portraits disappearing behind the conversation background.
+- Restricted buying on account to existing tax debt, with confirmation near bankruptcy and blocked purchases beyond the limit.
+- Added separate paid land expansions on every island. Existing planted beds remain accessible when older saves receive the new land locks.
+- Softened Seeds, Tools and Barn with distinct lighting, rounded surfaces and gentle opening transitions; fixed mobile equipment text and shop layout overflow.
+
 - Compost opens Farmer’s compost controls directly, with its perk, cost and 3× harvest benefit shown together.
 - Added short, varied “potato” voices for all 11 NPCs. Each villager has a distinct pitch and rhythm; revealing text or leaving a conversation stops speech.
 

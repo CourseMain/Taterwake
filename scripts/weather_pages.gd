@@ -176,7 +176,7 @@ func refresh() -> void:
 		var cost: float = float(farm.BlindRules.PROGRESSION_BASELINES[2 if id == "irrigation" else hud._island_id()]) * float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
 		var stats := {"irrigation":"4 water / patch" if full else ("6 → 4 water / patch" if level == 1 else "3 patches · 6 water each"), "rainwater":"%d water capacity" % int(info.water_capacity) if full else "%d → %d water capacity" % [int(info.water_capacity), int(info.water_capacity)+36], "drainage":"Flood: −30% crop damage / level", "barn":"−35% stored crop loss / level", "windbreaks":"Shelters far beds · wind only"}
 		hud._refs["climate_effect:" + id].text = stats[id]
-		hud._set_button("climate_fund:" + id, "Fully upgraded" if full else farm.purchase_caption(("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost), cost), full or not farm.can_purchase(cost))
+		hud._set_purchase_button("climate_fund:" + id, "Fully upgraded" if full else farm.purchase_caption(("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost), cost), cost, full)
 	if hud._refs.has("climate_practice"):
 		hud._refs.climate_practice.disabled = int(info.projects["2"].get("irrigation", 0)) == 0
 func _layout() -> void:

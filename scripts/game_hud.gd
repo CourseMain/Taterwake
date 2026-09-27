@@ -226,6 +226,8 @@ var _run_end_detail: Label
 var _blind_modal_warning: Label
 var _recovery_link: Button
 var _credit_row: BoxContainer
+var _purchase_review: Control
+var _modal_fade: Tween
 var _climate_console: PanelContainer
 var _weather_button: Button
 var _climate_intro: Control
@@ -394,7 +396,7 @@ func _update_blind_ui() -> void:
 	_credit_row.vertical = touch and root.size.x < 560
 	var stocks_left: int = int(info.booms_required) - int(info.booms)
 	_blind_modal_warning.text = "Tax %s in %ds · Cash %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
-	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate"] else (GREEN if info.cleared else Color("bb4334")))
+	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate", "tools", "barn", "inventory", "sell_potatoes"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
 	elif _climate_intro.visible: _climate_intro.stop()
@@ -537,7 +539,7 @@ func _refresh_debt() -> void:
 	if not _refs.has("recovery_balance"): return
 	var order: Dictionary = _state.recovery_order()
 	_refs.recovery_balance.text = _money(order.debt) if order.debt > 0 else "Debt cleared"
-	_refs.recovery_credit.text = "Credit left %s · Debt limit %s" % [_money(_state.purchase_credit()), _money(-_state.bankruptcy_limit())]
+	_refs.recovery_credit.text = ("Available on account %s · Debt limit %s" % [_money(_state.purchase_credit()), _money(-_state.bankruptcy_limit())]) if _state.has_tax_credit() else "Debt limit " + _money(-_state.bankruptcy_limit())
 	_refs.recovery_rate.text = "%s repaid per potato" % _money(order.rate)
 	_refs.recovery_needed.text = "%d potatoes to clear debt · %s stored" % [order.needed, _number(order.held)]
 	_refs.recovery_deliver.text = "Deliver %d · Repay %s" % [order.quantity, _money(order.payment)] if order.quantity > 0 else ("Debt cleared" if order.debt == 0 else "Harvest potatoes to deliver")
@@ -926,6 +928,7 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	return button
 
 func _act(action: String) -> void:
+	if action.is_empty(): return
 	if action == "build_guide":
 		_build_selection = ""
 		show_panel("builds", _state)
@@ -1724,9 +1727,17 @@ func show_reward(title: String, detail: String, rarity: String) -> void:
 	_market_impact.reward(_island_id(), 6.0)
 
 func is_panel_open() -> bool:
-	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible)
+	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible) or (is_instance_valid(_purchase_review) and _purchase_review.visible)
+
+func show_purchase_review(quote: Dictionary, callback: Callable, changed: bool = false) -> void:
+	if not is_instance_valid(_purchase_review):
+		_purchase_review = preload("res://scripts/purchase_review.gd").new()
+		root.add_child(_purchase_review)
+	_purchase_review.present(self, quote, callback, changed)
 
 func close_panel() -> void:
+	if is_instance_valid(_purchase_review): _purchase_review.hide()
+	if is_instance_valid(_modal_fade): _modal_fade.kill()
 	if is_instance_valid(_conversation) and _conversation.visible: _conversation.finish()
 	if _rolling:
 		return
@@ -1821,6 +1832,10 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 	_body.add_child(bottom_space)
 	_refresh_panel()
 	_modal.show()
+	if is_instance_valid(_modal_fade): _modal_fade.kill()
+	_modal.modulate.a = 0.0
+	_modal_fade = create_tween()
+	_modal_fade.tween_property(_modal, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_barn_full_alert.hide()
 	_context_box.hide()
 	_farm_help_card.hide()
@@ -2237,9 +2252,9 @@ func _refresh_dex() -> void:
 func _build_island() -> void:
 	_heading("Set sail", "")
 	var destinations: Array[Dictionary] = [
-		{"id": 1, "name": "Spud Valley", "beds": "24 beds", "crops": "4 crops", "feature": "Home farm", "accent": GREEN},
-		{"id": 2, "name": "Golden Shores", "beds": "48 beds", "crops": "2× yield", "feature": "Wild weather", "accent": CORAL},
-		{"id": 3, "name": "Frosthollow", "beds": "80 beds", "crops": "3× yield", "feature": "Frozen beds", "accent": Color("56899d")},
+		{"id": 1, "name": "Spud Valley", "beds": "12 beds + 12 at Tools", "crops": "4 crops", "feature": "Home farm", "accent": GREEN},
+		{"id": 2, "name": "Golden Shores", "beds": "24 beds + 24 at Tools", "crops": "2× yield", "feature": "Wild weather", "accent": CORAL},
+		{"id": 3, "name": "Frosthollow", "beds": "40 beds + 40 at Tools", "crops": "3× yield", "feature": "Frozen beds", "accent": Color("56899d")},
 	]
 	for destination: Dictionary in destinations:
 		var id: int = int(destination.id)
@@ -2532,10 +2547,10 @@ func _refresh_panel() -> void:
 					if not maximum:
 						_refs["upgrade:water:detail"].text += "\nNext: %d water · %s%s" % [carried + 16, areas[mini(level + 1, areas.size() - 1)], " · Frost Hollow only." if winter_gate else "."]
 				var cost: float = float(costs[level]) if not maximum else 0.0
-				_set_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _state.purchase_caption("Upgrade · " + _money(cost), cost)), maximum or winter_gate or not _state.can_purchase(cost))
-			var expanded: bool = bool(_state.get("expansion")) or _island_id() >= 2
-			_refs["upgrade:expansion:detail"].text = "All %d beds are unlocked." % int(_state.get("plots").size()) if _island_id() >= 2 else "Unlock all 24 garden beds."
-			_set_button("upgrade:expansion", "Open ✓" if expanded else _state.purchase_caption("Open beds · $1.8K", 1800), expanded or not _state.can_purchase(1800))
+				_set_purchase_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Visit Frost Hollow" if winter_gate else _state.purchase_caption("Upgrade · " + _money(cost), cost)), cost, maximum or winter_gate)
+			var land: Dictionary = _state.field_expansion_info()
+			_refs["upgrade:expansion:detail"].text = "All %d beds open" % int(land.total) if land.complete else "%d / %d beds open · Unlock +%d" % [int(land.opened), int(land.total), int(land.remaining)]
+			_set_purchase_button("upgrade:expansion", "Open ✓" if land.complete else _state.purchase_caption("Open beds · " + _money(float(land.cost)), float(land.cost)), float(land.cost), land.complete)
 			_refs.shop_page.refresh()
 		"roll":
 			_refresh_trophies()
@@ -2629,6 +2644,15 @@ func _set_button(key: String, text: String, disabled: bool) -> void:
 	if is_instance_valid(button):
 		button.text = text
 		button.disabled = disabled
+
+func _set_purchase_button(key: String, caption: String, cost: float, blocked: bool = false) -> void:
+	var quote: Dictionary = _state.purchase_quote(cost)
+	# An exhausted account remains inspectable; the review blocks the transaction.
+	var account_block: bool = not quote.affordable and _state.has_tax_credit()
+	_set_button(key, caption + (" · Limit" if account_block and not blocked else ""), blocked or (not quote.affordable and not account_block))
+	var button: Button = _refs.get(key) as Button
+	if is_instance_valid(button):
+		button.tooltip_text = str(quote.reason) if not quote.affordable else ("Review bankruptcy warning before buying." if quote.near_limit else "")
 
 func _change_text(change: float) -> String:
 	if absf(change) >= 10000.0:
@@ -3002,7 +3026,7 @@ func _refresh_inventory() -> void:
 	var barn_cost: float = 500.0 * pow(5.0, int(_state.get("barn_level")))
 	var maxed: bool = int(_state.get("barn_level")) >= 20
 	_refs["upgrade:barn:detail"].text = "Maximum capacity" if maxed else "+%s storage" % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
-	_set_button("upgrade:barn", "Max level" if maxed else _state.purchase_caption("Upgrade · " + _money(barn_cost), barn_cost), maxed or not _state.can_purchase(barn_cost))
+	_set_purchase_button("upgrade:barn", "Max level" if maxed else _state.purchase_caption("Upgrade · " + _money(barn_cost), barn_cost), barn_cost, maxed)
 	var mutations: Array = _state.get("mutations")
 	_set_button("sell_mutations", "Sell all mutation crates", mutations.is_empty())
 
@@ -3416,16 +3440,16 @@ func _refresh_duck_patrol() -> void:
 	var hire_cost: float = float(data.get("duck_cost", 1500))
 	var speed_cost: float = float(data.get("duck_speed_cost", 15000))
 	var coins: float = float(_state.coins)
-	_set_button("activity:duck", "Flock full" if count >= capacity else _state.purchase_caption("Hire +1 · " + _money(hire_cost), hire_cost), not bool(data.get("duck_can_buy", false)))
+	_set_purchase_button("activity:duck", "Flock full" if count >= capacity else _state.purchase_caption("Hire +1 · " + _money(hire_cost), hire_cost), hire_cost, count >= capacity or _state.run_over)
 	_refs["activity:duck:detail"].text = "%d / %d ducks" % [count, capacity]
-	_set_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else _state.purchase_caption("Faster · " + _money(speed_cost), speed_cost)), not bool(data.get("duck_can_train", false)))
+	_set_purchase_button("activity:duck:speed", "Top speed" if speed >= 2 else ("Hire a duck first" if count == 0 else _state.purchase_caption("Faster · " + _money(speed_cost), speed_cost)), speed_cost, speed >= 2 or count == 0 or _state.run_over)
 	_refs["activity:duck:speed:detail"].text = "%.0fs → %.0fs per bed" % [float(data.get("duck_interval", 4)), maxf(2.0, float(data.get("duck_interval", 4)) - 1.0)] if speed < 2 else "2s per bed · Maximum speed"
 	if _refs.has("activity:duck:value"):
 		_refs["activity:duck:value"].text = "Clears pests automatically"
 		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
 		_refs["activity:duck:speed:detail"].text = "Whole flock"
-		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("Credit" if _state.can_purchase(hire_cost) else "Credit limit")), "active" if count >= capacity or coins >= hire_cost else "warning")
-		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("Credit" if _state.can_purchase(speed_cost) else "Credit limit"))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
+		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("On account" if _state.can_purchase(hire_cost) else ("Account limit" if _state.has_tax_credit() else "Need cash"))), "active" if count >= capacity or coins >= hire_cost else "warning")
+		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("On account" if _state.can_purchase(speed_cost) else ("Account limit" if _state.has_tax_credit() else "Need cash")))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
 	_refs.duck_pond.count = count
 	_refs.duck_pond.capacity = capacity
 	_refs.activity_status.text = "%d duck%s on patrol" % [count, "" if count == 1 else "s"] if count > 0 else "No ducks hired yet"

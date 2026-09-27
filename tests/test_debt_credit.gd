@@ -11,6 +11,9 @@ func check(ok: bool, note: String) -> void:
 		push_error("FAIL: " + note)
 func settle() -> void:
 	for i in range(8): await process_frame
+func tax_debt(farm, amount: float) -> void:
+	farm.coins = float(farm.blind_info().tax) - amount
+	farm._resolve_blind()
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate()
@@ -19,12 +22,12 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.coins = -1000
+	tax_debt(farm,1000)
 	game.hud.show_panel("market",farm)
 	await settle()
 	var seed_cost: float = farm.market.russet.seed
 	var seeds: int = farm.seed_inventory.russet
-	check(not game.hud._refs["buy:russet:5"].disabled and game.hud._refs["buy:russet:5"].text.contains("Credit"),"seed checkout exposes credit while negative")
+	check(not game.hud._refs["buy:russet:5"].disabled and game.hud._refs["buy:russet:5"].text.contains("On account"),"seed checkout exposes credit while negative")
 	game.hud._refs["buy:russet:5"].pressed.emit()
 	check(farm.seed_inventory.russet == seeds+5 and is_equal_approx(farm.coins,-1000-seed_cost*5),"credit seed purchase charges exact live quote below zero")
 	check(game.hud._recovery_link.visible,"debt recovery remains reachable from shop")
@@ -32,7 +35,7 @@ func run() -> void:
 		game.hud.show_panel(panel,farm)
 		await settle()
 		var action: String = {"tools":"upgrade:hoe","barn":"upgrade:barn","duck_patrol":"activity:duck"}[panel]
-		check(not game.hud._refs[action].disabled and game.hud._refs[action].text.contains("Credit"),"credit available for "+panel)
+		check(not game.hud._refs[action].disabled and game.hud._refs[action].text.contains("On account"),"credit available for "+panel)
 		var balance: float = farm.coins
 		game.hud._refs[action].pressed.emit()
 		check(farm.coins < balance and not farm.run_over,"credit purchase completes safely for "+panel)
@@ -105,7 +108,7 @@ func run() -> void:
 		farm.deliver_recovery()
 		check(farm.coins == 0 and farm.storage.russet == 0,"full debt cleared by actual delivery on tier %d" % island)
 		if island >= 2:
-			farm.coins = -100
+			tax_debt(farm,100)
 			game.hud.show_panel("climate",farm)
 			await settle()
 			check(not game.hud._refs["climate_fund:rainwater"].disabled,"weather equipment available on credit")

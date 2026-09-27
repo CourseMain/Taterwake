@@ -117,7 +117,7 @@ func hire_duck() -> String:
 		return state._reject_purchase("Flock full: %d / %d ducks." % [duck_count(), duck_capacity()])
 	var cost: float = duck_hire_cost()
 	if not state.can_purchase(cost):
-		return state._reject_purchase(state.credit_refusal())
+		return state._reject_purchase(state.credit_refusal(cost))
 	state.coins -= cost
 	duck_counts[str(_island())] = duck_count() + 1
 	_ensure_patrols()
@@ -133,7 +133,7 @@ func train_ducks() -> String:
 		return state._reject_purchase("Top speed reached · 2s per bed.")
 	var cost: float = duck_speed_cost()
 	if not state.can_purchase(cost):
-		return state._reject_purchase(state.credit_refusal())
+		return state._reject_purchase(state.credit_refusal(cost))
 	var previous_interval: float = duck_interval()
 	state.coins -= cost
 	duck_speeds[str(_island())] = duck_speed() + 1

@@ -25,6 +25,7 @@ var drawer_body: VBoxContainer
 var drawer_kind: String = ""
 var interaction_prompt: Button
 var fullscreen: Button
+var _browser_fullscreen_hidden: bool = false
 var guide_button: Button
 var guide_open: bool = false
 var last_size := Vector2.ZERO
@@ -267,10 +268,16 @@ func update_interaction_prompt() -> void:
 
 func _process(delta: float) -> void:
 	update_interaction_prompt()
+	var hud = game.hud
+	if OS.has_feature("web"):
+		var cover_fullscreen: bool = enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes"
+		if cover_fullscreen != _browser_fullscreen_hidden:
+			_browser_fullscreen_hidden = cover_fullscreen
+			JavaScriptBridge.eval("document.getElementById('fullscreen-button').style.visibility = '%s';" % ("hidden" if cover_fullscreen else "visible"))
 	if not enabled: return
 	_clock += delta
-	var hud = game.hud
 	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
+
 	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or hud.is_roll_animating()
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):

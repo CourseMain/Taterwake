@@ -21,7 +21,8 @@ const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 20
+const MECHANICS_REVISION: int = 21
+const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
 const ROCKET_INTERVAL: float = 1800.0
@@ -125,6 +126,7 @@ var tutorial_active: bool = false
 var blind_cycle: Dictionary = BlindRules.new_cycle()
 var climate = ClimateSystem.new()
 var _restoring_balance: bool = false
+var tax_credit_eligible: bool = false
 var run_over: bool:
 	get: return bool(blind_cycle.run_over)
 var coins: float = 240.0:
@@ -132,6 +134,8 @@ var coins: float = 240.0:
 		if not is_finite(value) or (run_over and not _restoring_balance):
 			return
 		coins = clampf(value, -MAX_MONEY, MAX_MONEY)
+		if coins >= 0.0:
+			tax_credit_eligible = false
 		if not _restoring_balance and coins < bankruptcy_limit():
 			_end_run("bankrupt")
 var selected_crop: String = "russet"
@@ -165,6 +169,9 @@ var thaw_remaining: float = 0.0
 var inventory_items: Dictionary = {}
 var equipment: Dictionary = {"head": "", "body": "", "legs": "", "feet": "", "hands": "", "charm": ""}
 var island_plots: Dictionary = {}
+var field_expansions: Dictionary = {"2": false, "3": false}
+# Older farms retain access to occupied beds beyond the new starting boundary.
+var retained_beds: Dictionary = {"2": [], "3": []}
 var shores_first_mutation: bool = false
 var export_timer: float = 120.0
 var export_factor: float = 1.0
@@ -264,9 +271,8 @@ func unlock_island3() -> String:
 	coins -= ISLAND3_UNLOCK_COST
 	island3_unlocked = true
 	frost_timer = rng.randf_range(120.0, 220.0)
-	for plot in island_plots["3"]:
-		plot["unlocked"] = true
-	return _complete_purchase({"kind": "island", "id": "3", "name": "Frosthollow", "quantity": 1, "cost": ISLAND3_UNLOCK_COST}, "FROSTHOLLOW UNLOCKED! 80 winter beds, Icecap potatoes, rank 3 tools, and hands-on Frostbreak challenges await.")
+	_open_starting_beds(3)
+	return _complete_purchase({"kind": "island", "id": "3", "name": "Frosthollow", "quantity": 1, "cost": ISLAND3_UNLOCK_COST}, "Frosthollow unlocked · 40 beds open · 40 more at Tools.")
 
 
 func winter_info() -> Dictionary:
@@ -284,7 +290,8 @@ func _start_frost() -> void:
 	var remaining: Array[int] = []
 	for index in range(80):
 		island_plots["3"][index]["frozen"] = false
-		remaining.append(index)
+		if island_plots["3"][index]["unlocked"]:
+			remaining.append(index)
 	frost_target_count = 12
 	for _index in range(frost_target_count):
 		var pick: int = rng.randi_range(0, remaining.size() - 1)
@@ -453,11 +460,11 @@ func debug_unlock_island(id: int) -> String:
 	if not island2_unlocked:
 		island2_unlocked = true
 		export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
-		for plot in island_plots["2"]: plot.unlocked = true
+		_open_starting_beds(2)
 	if id == 3:
 		island3_unlocked = true
 		frost_timer = rng.randf_range(120.0, 220.0)
-		for plot in island_plots["3"]: plot.unlocked = true
+		_open_starting_beds(3)
 	return _finish("DEBUG: %s unlocked; cash unchanged. Visiting raises base tax to %s, even after returning. Set test funds before travelling." % [("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"), money(float(BlindRules.PROGRESSION_BASELINES[id]) * BlindRules.TAX_RATE, true)])
 
 func reset_debug() -> String:
@@ -808,6 +815,7 @@ func _resolve_blind() -> void:
 	# One bill is both the displayed threshold and the actual collection.
 	# The balance setter makes bankruptcy immediate and gives it precedence.
 	coins = float(info.projected)
+	tax_credit_eligible = coins < 0.0 and not run_over
 	if not run_over:
 		blind_cycle.clears = int(blind_cycle.clears) + 1
 		blind_cycle.kind = "big" if blind_cycle.kind == "small" else "small"
@@ -937,9 +945,8 @@ func unlock_island2() -> String:
 	coins -= ISLAND2_UNLOCK_COST
 	island2_unlocked = true
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
-	for plot in island_plots["2"]:
-		plot["unlocked"] = true
-	return _complete_purchase({"kind": "island", "id": "2", "name": "Golden Shores", "quantity": 1, "cost": ISLAND2_UNLOCK_COST}, "GOLDEN SHORES! 48 beds · 2× harvests · Sunburst potatoes")
+	_open_starting_beds(2)
+	return _complete_purchase({"kind": "island", "id": "2", "name": "Golden Shores", "quantity": 1, "cost": ISLAND2_UNLOCK_COST}, "Golden Shores unlocked · 24 beds open · 24 more at Tools.")
 
 
 func travel_to(id: int) -> String:
@@ -1682,21 +1689,43 @@ func market_money(value: float) -> String:
 	return "$%.2f" % value if absf(value) < 1000.0 else money(value, true)
 
 
+func has_tax_credit() -> bool:
+	return tax_credit_eligible and coins < 0.0 and not run_over and not tutorial_active
+
+
 func purchase_credit() -> float:
-	return maxf(0.0, minf(0.0, coins) - bankruptcy_limit()) if not run_over and not tutorial_active else 0.0
+	return maxf(0.0, coins - bankruptcy_limit()) if has_tax_credit() else 0.0
+
+
+func purchase_quote(cost: float) -> Dictionary:
+	var valid_cost: bool = is_finite(cost) and cost >= 0.0
+	var after: float = clampf(coins - cost, -MAX_MONEY, MAX_MONEY) if valid_cost else coins
+	var borrowing: bool = valid_cost and cost > 0.0 and coins < cost and has_tax_credit()
+	var affordable: bool = valid_cost and not run_over and (cost == 0.0 or coins >= cost or (borrowing and after >= bankruptcy_limit()))
+	var remaining: float = maxf(0.0, after - bankruptcy_limit()) if has_tax_credit() else 0.0
+	var reason: String = ""
+	if not affordable:
+		if run_over: reason = "Run over. Start a new farm."
+		elif not valid_cost: reason = "Choose a valid purchase amount."
+		elif not has_tax_credit(): reason = "Not enough cash. Buying on account is only available while repaying tax debt."
+		else: reason = "Purchase blocked: it would exceed the %s bankruptcy limit. Sell crops or repay debt first." % money(-bankruptcy_limit())
+	return {"affordable": affordable, "uses_credit": borrowing, "after_balance": after,
+		"credit_left_after": remaining, "bankruptcy_limit": bankruptcy_limit(),
+		"near_limit": borrowing and remaining <= -bankruptcy_limit() * 0.10, "reason": reason}
 
 
 func can_purchase(cost: float) -> bool:
-	if run_over or not is_finite(cost) or cost < 0.0: return false
-	return coins >= cost if tutorial_active else coins - cost >= bankruptcy_limit()
+	return bool(purchase_quote(cost).affordable)
 
 
 func purchase_caption(caption: String, cost: float) -> String:
-	return caption + (" · Credit" if coins < cost and can_purchase(cost) else "")
+	var quote: Dictionary = purchase_quote(cost)
+	return caption + (" · On account" if quote.affordable and quote.uses_credit else "")
 
 
-func credit_refusal() -> String:
-	return "Credit limit reached. Deliver recovery crops or sell your harvest."
+func credit_refusal(cost: float = -1.0) -> String:
+	if cost >= 0.0: return str(purchase_quote(cost).reason)
+	return "Account limit reached. Sell crops or repay debt first." if has_tax_credit() else "Not enough cash. Buying on account is only available while repaying tax debt."
 
 
 func recovery_order() -> Dictionary:
@@ -1753,7 +1782,7 @@ func buy_seeds(id: String, quantity: int = 5) -> String:
 		return _reject_purchase("These seeds are sold on their home island. Visit its market first.")
 	var cost: float = float(market[id]["seed"]) * quantity
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal())
+		return _reject_purchase(credit_refusal(cost))
 	if int(seed_inventory[id]) + quantity > MAX_INVENTORY:
 		return _reject_purchase("Your seed shed is full for this crop.")
 	coins -= cost
@@ -1857,7 +1886,7 @@ func upgrade_tool(key: String) -> String:
 		return _reject_purchase("Rank 3 tools are sold in Frosthollow: unlock the winter island to upgrade further.")
 	var cost: float = float(TOOL_COSTS[key][rank])
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal())
+		return _reject_purchase(credit_refusal(cost))
 	coins -= cost
 	tools[key] = rank + 1
 	if key == "water":
@@ -1873,7 +1902,7 @@ func upgrade_barn() -> String:
 		return _reject_purchase("Your barn has reached its maximum capacity.")
 	var cost: float = 500.0 * pow(5.0, barn_level)
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal())
+		return _reject_purchase(credit_refusal(cost))
 	var old_capacity: int = capacity
 	coins -= cost
 	barn_level += 1
@@ -1881,22 +1910,37 @@ func upgrade_barn() -> String:
 	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room to hold crops for a price spike!" % format_number(capacity))
 
 
+func _open_starting_beds(island: int) -> void:
+	var field: Array = island_plots[str(island)]
+	for index in range(field.size() / 2):
+		field[index].unlocked = true
+
+
+func field_expansion_info() -> Dictionary:
+	var opened: int = 0
+	for plot in plots:
+		if plot.unlocked: opened += 1
+	return {"island": current_island, "opened": opened, "total": plots.size(),
+		"remaining": plots.size() - opened, "cost": float(FIELD_EXPANSION_COSTS[current_island]),
+		"complete": opened == plots.size()}
+
+
 func expand_field() -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if current_island == 3:
-		return _reject_purchase("All 80 Frosthollow patches are open. Try the rank 3 tools to farm five rows at once!")
-	if current_island == 2:
-		return _reject_purchase("All 48 Golden Shores patches are already open. Upgrade your tools to cover the bigger field.")
-	if expansion > 0:
-		return _reject_purchase("All 24 patches are already unlocked. Upgrade your tools to farm bigger areas.")
-	if not can_purchase(1800.0):
-		return _reject_purchase(credit_refusal())
-	coins -= 1800.0
-	expansion = 1
+	var info: Dictionary = field_expansion_info()
+	if info.complete:
+		return _reject_purchase("All %d beds are already open." % int(info.total))
+	if not can_purchase(float(info.cost)):
+		return _reject_purchase(credit_refusal(float(info.cost)))
+	coins -= float(info.cost)
+	if current_island == 1: expansion = 1
+	else:
+		field_expansions[str(current_island)] = true
+		retained_beds[str(current_island)] = []
 	for plot in plots:
 		plot["unlocked"] = true
-	return _complete_purchase({"kind": "field", "id": "expansion", "name": "Field beds", "quantity": 12, "cost": 1800.0, "total": 24}, "Field expanded! All 24 patches are yours to hoe, plant, water, and harvest.")
+	return _complete_purchase({"kind": "field", "id": "expansion", "name": "Garden beds", "quantity": int(info.remaining), "cost": float(info.cost), "total": int(info.total), "island": current_island}, "%d more beds open." % int(info.remaining))
 
 
 func mastery_level(id: String) -> int:
@@ -2464,6 +2508,9 @@ func _reject_purchase(message: String) -> String:
 
 func reset_game() -> void:
 	npc_history.clear()
+	tax_credit_eligible = false
+	field_expansions = {"2": false, "3": false}
+	retained_beds = {"2": [], "3": []}
 	blind_cycle = BlindRules.new_cycle()
 	climate.reset()
 	tutorial_active = false
@@ -2556,6 +2603,8 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "economy_revision": ECONOMY_REVISION, "mechanics_revision": MECHANICS_REVISION,
+		"tax_credit_eligible": tax_credit_eligible and coins < 0.0 and not run_over,
+		"field_expansions": field_expansions.duplicate(), "retained_beds": retained_beds.duplicate(true),
 		"blind_cycle": blind_cycle.duplicate(true),
 		"climate": climate.data.duplicate(true),
 		"tutorial_progress": tutorial_progress.duplicate(true),
@@ -2714,6 +2763,11 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	# string is only needed when the numeric path lost a tiny positive balance.
 	if data.has("coins_scientific") and coins == 0.0:
 		coins = str(data["coins_scientific"]).to_float()
+	# Earlier saves had no debt origin flag. A negative tax receipt is the
+	# available evidence of tax debt; a negative balance alone is not enough.
+	var old_receipt: Dictionary = blind_cycle.last_result
+	var saved_tax_credit: bool = bool(data.tax_credit_eligible) if mechanics >= 21 else float(old_receipt.get("tax", 0.0)) > 0.0 and float(old_receipt.get("after", 0.0)) < 0.0
+	tax_credit_eligible = coins < 0.0 and not run_over and saved_tax_credit
 	for key in ["capacity", "combo_count", "combo_multiplier", "roll_count", "expansion", "barn_level", "current_island", "export_cycles", "frost_cleared", "frost_target_count", "export_cycle_sold"]:
 		set(key, int(data[key]))
 	for key in ["selected_crop", "news", "event_name", "current_event", "event_crop", "surge_crop"]:
@@ -2769,6 +2823,11 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 				restored.elapsed = float(restored.elapsed) / float(OLD_GROW_TIMES[restored.crop]) * float(CROPS[restored.crop].grow)
 			field.append(restored)
 		island_plots[id] = field
+	if mechanics >= 21:
+		field_expansions = data.field_expansions.duplicate()
+		retained_beds = data.retained_beds.duplicate(true)
+	else:
+		_migrate_field_access()
 	plots = island_plots[str(current_island)]
 	mutations.clear()
 	for crate in data["mutations"]:
@@ -3113,6 +3172,46 @@ func _valid_stock_events(data: Dictionary) -> bool:
 	return float(data["natural_factor"]) >= 21.0
 
 
+func _migrate_field_access() -> void:
+	# Only unoccupied land is reclaimed. Retained beds stay usable after harvest
+	# and save/load; buying the expansion opens all remaining land once.
+	field_expansions = {"2": false, "3": false}
+	retained_beds = {"2": [], "3": []}
+	for id: String in ["2", "3"]:
+		var field: Array = island_plots[id]
+		var available: bool = island2_unlocked if id == "2" else island3_unlocked
+		if not available: continue
+		for index in range(field.size() / 2, field.size()):
+			var plot: Dictionary = field[index]
+			var occupied: bool = int(plot.stage) > 0 or int(plot.pending) > 0 or bool(plot.frozen)
+			plot.unlocked = occupied
+			if occupied: retained_beds[id].append(index)
+			else: plot.tilled = false
+		if retained_beds[id].size() == field.size() / 2:
+			field_expansions[id] = true
+			retained_beds[id] = []
+
+
+func _valid_field_access(data: Dictionary) -> bool:
+	if not data.get("tax_credit_eligible") is bool: return false
+	if not _number(data.get("coins"), -MAX_MONEY, MAX_MONEY) or not data.get("blind_cycle") is Dictionary: return false
+	if bool(data.tax_credit_eligible) and (float(data.coins) >= 0.0 or bool(data.blind_cycle.get("run_over", false))): return false
+	for key: String in ["field_expansions", "retained_beds"]:
+		if not data.get(key) is Dictionary or data[key].size() != 2: return false
+	for id: String in ["2", "3"]:
+		if not data.field_expansions.get(id) is bool or not data.retained_beds.get(id) is Array: return false
+		var available: bool = bool(data.get("island2_unlocked", false)) if id == "2" else bool(data.get("island3_unlocked", false))
+		var retained: Array = data.retained_beds[id]
+		if (not available and (data.field_expansions[id] or not retained.is_empty())) or (data.field_expansions[id] and not retained.is_empty()): return false
+		var total: int = 48 if id == "2" else 80
+		var seen: Array[int] = []
+		if retained.size() > total / 2: return false
+		for value in retained:
+			if not _number(value, total / 2, total - 1, true) or seen.has(int(value)): return false
+			seen.append(int(value))
+	return true
+
+
 func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary:
 		return false
@@ -3142,6 +3241,8 @@ func _valid_save(raw: Variant) -> bool:
 		return false
 	var newest: bool = rebalanced and int(data["economy_revision"]) == 3
 	if data.has("mechanics_revision") and (not newest or not _number(data["mechanics_revision"], 2.0, float(MECHANICS_REVISION), true)):
+		return false
+	if int(data.get("mechanics_revision", 0)) >= 21 and not _valid_field_access(data):
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 6 and not data.has("equipment"):
 		return false
@@ -3503,6 +3604,8 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 			expected_unlocked = bool(data["island2_unlocked"])
 		elif island == 3:
 			expected_unlocked = bool(data["island3_unlocked"])
+		if island > 1 and int(data.get("mechanics_revision", 0)) >= 21:
+			expected_unlocked = expected_unlocked and (index < expected_size / 2 or bool(data.field_expansions[str(island)]) or data.retained_beds[str(island)].any(func(value): return int(value) == index))
 		if bool(plot["unlocked"]) != expected_unlocked:
 			return false
 		if int(data.get("mechanics_revision", 0)) >= 15:

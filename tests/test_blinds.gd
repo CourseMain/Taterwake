@@ -22,6 +22,7 @@ func fresh(island: int = 1) -> void:
 		state.island2_unlocked = true
 		state.island3_unlocked = island == 3
 		for id in range(2, island + 1):
+			state.field_expansions[str(id)] = true
 			for plot in state.island_plots[str(id)]:
 				plot.unlocked = true
 		state.travel_to(island)
@@ -204,6 +205,7 @@ func _run() -> void:
 	check(state.blind_cycle.island == 2 and state.blind_cycle.booms == 1, "returning to island one cannot erase or lower current obligations")
 	roundtrip()
 	state.island3_unlocked = true
+	state.field_expansions["3"] = true
 	for plot in state.island_plots["3"]:
 		plot.unlocked = true
 	state.travel_to(3)
