@@ -18,7 +18,7 @@ var tiles: Array[PanelContainer] = []
 var _body_font: FontVariation = Type.face(Type.BODY, 600.0)
 
 func _ready() -> void:
-	_body_font.fallbacks = []
+	_body_font.fallbacks = [Type.SPUDION]
 	add_theme_constant_override("separation", 8)
 	custom_minimum_size.y = 76
 	mouse_filter = Control.MOUSE_FILTER_PASS
@@ -48,7 +48,7 @@ func _ready() -> void:
 		tile.add_child(column)
 		var caption := _label(["Roll quality", "Earned + gear", "Luck multiplier"][index], 11, _body_font)
 		var number_font := Type.face(Type.BODY, 750)
-		number_font.fallbacks = []
+		number_font.fallbacks = [Type.SPUDION]
 		var number_label := _label("", 22, number_font)
 		number_label.add_theme_color_override("font_color", Color("ffe49a"))
 		var detail := _label("", 10, _body_font)

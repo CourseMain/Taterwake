@@ -17,7 +17,7 @@ var _values: Dictionary = {}
 var _font: FontVariation = Type.face(Type.BODY, 650)
 func setup(owner_hud) -> void:
 	hud = owner_hud
-	_font.fallbacks = []
+	_font.fallbacks = [Type.SPUDION]
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 14)

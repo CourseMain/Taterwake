@@ -70,15 +70,15 @@ func run() -> void:
 		game.state.coins = 1e20
 		type_money(source)
 		check(not game.hud._refs.debug_apply.disabled and game.hud._refs.debug_money.value > 0.0, "tiny positive input is accepted without becoming zero: " + source)
-		check(game.hud._refs.debug_preview.text.contains("× 1e-20 → $1"), "tiny multiplier previews the true one-dollar result")
+		check(game.hud._refs.debug_preview.text.contains("× 1e-20 → \uE000 1"), "tiny multiplier previews the true one-dollar result")
 		await shot("tiny-input")
 		game.hud._refs.debug_apply.pressed.emit()
 		check(game.state.coins == 1.0 and sent_action.contains(":1e-20:"), "scientific and long decimal input both scale 1e20 to exactly1")
 	game.state.coins = 240.0
 	type_money("1e-3")
-	check(game.hud._refs.debug_preview.text.contains("$0.24"), "fractional-dollar preview does not round to zero")
+	check(game.hud._refs.debug_preview.text.contains("\uE000 0.24"), "fractional-dollar preview does not round to zero")
 	game.hud._refs.debug_apply.pressed.emit()
-	check(is_equal_approx(game.state.coins, 0.24) and game.hud._refs.debug_balance.text.contains("$0.24"), "fractional balance is preserved and displayed")
+	check(is_equal_approx(game.state.coins, 0.24) and game.hud._refs.debug_balance.text.contains("\uE000 0.24"), "fractional balance is preserved and displayed")
 	game.state.coins = 1e20
 	type_money("0.12345678901234567")
 	var exact: float = game.hud._refs.debug_money.value
@@ -93,14 +93,14 @@ func run() -> void:
 	game.state.coins = 1e-200
 	type_money("1e-200")
 	check(game.hud._refs.debug_money.value > 0.0 and game.hud._refs.debug_apply.disabled, "a valid positive multiplier whose product underflows is visibly disabled")
-	check(game.hud._refs.debug_preview.text.contains("nonzero balance") and not game.hud._refs.debug_preview.text.contains("→ $0"), "product underflow shows the reason instead of promising a zero balance")
+	check(game.hud._refs.debug_preview.text.contains("nonzero balance") and not game.hud._refs.debug_preview.text.contains("→ \uE000 0"), "product underflow shows the reason instead of promising a zero balance")
 	game.hud._act("debug_apply")
 	check(game.state.coins == 1e-200 and game.hud._refs.debug_money.text == "1e-200", "rejected product underflow keeps the purse and editable input unchanged")
 	type_money("1")
 	check(not game.hud._refs.debug_apply.disabled, "a representable replacement immediately enables Apply again")
 	game.state.coins = 240.0
 	type_money("0")
-	check(not game.hud._refs.debug_apply.disabled and game.hud._refs.debug_preview.text.contains("× 0 → $0"), "explicit zero clearly previews wiping the purse")
+	check(not game.hud._refs.debug_apply.disabled and game.hud._refs.debug_preview.text.contains("× 0 → \uE000 0"), "explicit zero clearly previews wiping the purse")
 	game.hud._refs.debug_apply.pressed.emit()
 	check(game.state.coins == 0.0 and game.hud._refs.debug_money.value == 1.0, "explicit zero applies and returns the field to neutral")
 	game.hud._refs.debug_apply.pressed.emit()
@@ -132,8 +132,8 @@ func run() -> void:
 	game.hud._refs.roll_luck_meter._process(5)
 	game.hud._spinner._process(5)
 	var receipt: String = game.hud._refs.roll_accounting.text
-	check(game.hud._refs.roll_accounting.visible and receipt.contains("Spent $100Qi") and receipt.contains("Returned $10.0Qi") and receipt.contains("Balance $10.0Qi"), "receipt distinguishes full payment from the later10percent return")
-	check(receipt.contains("10% stake refunds") and game.hud._refs.roll_accounting.tooltip_text.contains("Net change: $" + String.num_scientific(-9e19)), "refund source and net change are explained")
+	check(game.hud._refs.roll_accounting.visible and receipt.contains("Spent \uE000 100Qi") and receipt.contains("Returned \uE000 10.0Qi") and receipt.contains("Balance \uE000 10.0Qi"), "receipt distinguishes full payment from the later10percent return")
+	check(receipt.contains("10% stake refunds") and game.hud._refs.roll_accounting.tooltip_text.contains("Net change: -\uE000 " + String.num_scientific(9e19)), "refund source and net change are explained")
 	await shot("all-in-refund")
 	game.state._grant_item("aurora_crown")
 	game.state.coins = 1e20
@@ -142,7 +142,7 @@ func run() -> void:
 	game.hud._refs.roll_luck_meter._process(5)
 	game.hud._spinner._process(5)
 	check(game.hud._batch_results.size() == 2 and game.hud._refs.batch_results.get_child_count() == 2, "Crown still presents both actual outcomes")
-	check(game.hud._refs.roll_accounting.text.contains("Spent $20.0T") and game.state.roll_accounting_info().paid_count == 1, "Crown receipt charges only the one purchased roll")
+	check(game.hud._refs.roll_accounting.text.contains("Spent \uE000 20.0T") and game.state.roll_accounting_info().paid_count == 1, "Crown receipt charges only the one purchased roll")
 	game.hud.close_panel()
 	game._on_action("roll")
 	check(not game.hud._refs.roll_accounting.visible, "reopening an idle reel does not pretend a prior receipt is a new reward")

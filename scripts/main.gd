@@ -835,7 +835,7 @@ func queue_plot(index: int) -> void:
 		hud.set_plot_action("Walking to feed this crop · 1 compost\nIt will grow a giant potato with 3× the harvest.")
 	hud.note_farm_action()
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
-		hud.show_farm_hint("Unlock more beds at Tools · $1.8K")
+		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1.8K")
 		return
 	pending_ferry = false
 	pending_plot = index

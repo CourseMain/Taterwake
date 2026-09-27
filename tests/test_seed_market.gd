@@ -109,7 +109,7 @@ func run() -> void:
 	# Legacy seed-only discounts must not undo that final 75% relationship.
 	check(state.market.russet.sell == 125 and state.market.giant.sell == 78.75, "five Trader Tokens increase live crop quotes by 25 percent")
 	check(state.market.russet.seed == 93.75 and state.market.giant.seed == 59.06, "token-adjusted seed quotes remain 75 percent, rounded to cents")
-	# The transaction cases below deliberately use unmodified $100/$63 quotes.
+	# The transaction cases below deliberately use unmodified \uE000 100/\uE000 63 quotes.
 	# Do not leak this perk fixture into their exact receipt and chart amounts.
 	state.inventory_items.trader_token = 0
 	state._refresh_market(false)
@@ -145,13 +145,13 @@ func run() -> void:
 	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
 	check(page.crops == expected.slice(0, 4), "buy and sell share base order")
 	page.quantity.value = 3
-	check(page.payout.text == "$114.00", "quantity previews actual expected payout")
+	check(page.payout.text == "\uE000 114.00", "quantity previews actual expected payout")
 	cash = state.coins
 	press(page, "market_sell")
 	check(state.storage.russet == 9 and state.coins == cash + 114, "sell commits chosen quantity at live price")
 	check(page.status.text.contains("sold") and page.status.text.contains("114.00"), "successful sale confirms committed payout")
 	page.quantity.value = 10
-	check(page.quantity.value == 9 and page.payout.text == "$342.00", "quantity is bounded by owned stock")
+	check(page.quantity.value == 9 and page.payout.text == "\uE000 342.00", "quantity is bounded by owned stock")
 	page.quantity.text = "2.5"
 	page.quantity.text_changed.emit("2.5")
 	check(page.sell_button.disabled and page.status.text.contains("whole number"), "invalid text blocks selling with clear guidance")
@@ -166,7 +166,7 @@ func run() -> void:
 	state.sell_crop("russet", 10)
 	check(state.storage.russet == 9 and state.coins == cash + 114, "insufficient direct sale is rejected without partial payout")
 	press(page, "market_all")
-	check(page.quantity.value == 9 and page.payout.text == "$342.00", "Max selects available stock and previews its value")
+	check(page.quantity.value == 9 and page.payout.text == "\uE000 342.00", "Max selects available stock and previews its value")
 	page.quantity.get_line_edit().grab_focus()
 	page.quantity.get_line_edit().text = "4"
 	cash = state.coins
@@ -175,7 +175,7 @@ func run() -> void:
 	press(page, "market_next")
 	check(page.selected == "giant" and page.quantity.value == 1 and page.chart.base_price == 180 and page.crop_owned.text == "7 owned", "arrow updates variety, chart, quantity and inventory together")
 	page.quantity.value = 2
-	check(page.payout.text == "$126.00", "navigated payout uses new crop")
+	check(page.payout.text == "\uE000 126.00", "navigated payout uses new crop")
 	press(page, "market_previous")
 	check(page.selected == "russet", "previous returns to Russet")
 	await settle()
@@ -231,7 +231,7 @@ func run() -> void:
 	state._market_core.russet.sell = 69.16
 	state._refresh_market(false)
 	game.hud.update_state(state)
-	check(page.quantity.value == 2 and page.payout.text == "$138.32" and page.crops == expected.slice(0, 4), "live refresh updates payout and preserves selection/order")
+	check(page.quantity.value == 2 and page.payout.text == "\uE000 138.32" and page.crops == expected.slice(0, 4), "live refresh updates payout and preserves selection/order")
 	check(state.market.russet.history.back() == 69.16 and state.market.russet.history.size() == 40, "history includes unscheduled changes and remains bounded")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "new market and bounded history round-trip saves")
 	check(is_equal_approx(state.market.russet.seed, 51.87), "load recomputes 75% seed price")

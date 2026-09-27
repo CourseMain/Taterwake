@@ -18,10 +18,12 @@ func check(condition: bool, message: String) -> void:
 func enter_island(state, island: int) -> void:
 	if island >= 2:
 		state.island2_unlocked = true
+		state.field_expansions["2"] = true
 		for plot in state.island_plots["2"]:
 			plot.unlocked = true
 	if island >= 3:
 		state.island3_unlocked = true
+		state.field_expansions["3"] = true
 		for plot in state.island_plots["3"]:
 			plot.unlocked = true
 	state.travel_to(island)
@@ -111,7 +113,7 @@ func _run() -> void:
 		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes"]:
 			state._grant_item(id)
 		var outfit_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
-		check(is_equal_approx(state.item_stock_factor(), 1.525), "natural independence includes the maximum stock outfit")
+		check(is_equal_approx(state.item_stock_factor(), 1.675), "natural independence includes the maximum stock outfit")
 		state.build_system = null
 		builds.free()
 		check(regular_spikes.hits >= 100 and regular_spikes.hits <= 200, "island %d natural spikes occur about 1.5 percent of eligible ticks" % island)
@@ -196,9 +198,9 @@ func _run() -> void:
 	var suffixes: Array[String] = ["Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]
 	for index in range(suffixes.size()):
 		var value: float = pow(10.0, 15 + index * 3)
-		check(state.money(value) == "$1.0" + suffixes[index] and state.money(value * 12.5) == "$12.5" + suffixes[index], "large money formats with " + suffixes[index])
-	check(state.money(1e36) == "$1e36" and state.money(8.4e71) == "$8.4e71", "balances beyond decillions retain scientific notation")
-	check(state.money(0.24) == "$0.24" and state.money(1e-20) == "$1e-20" and state.money(-9e19) == "-$90.0Qi", "extended suffixes preserve fractional, tiny, and signed balances")
+		check(state.money(value) == "\uE000 1.0" + suffixes[index] and state.money(value * 12.5) == "\uE000 12.5" + suffixes[index], "large money formats with " + suffixes[index])
+	check(state.money(1e36) == "\uE000 1e36" and state.money(8.4e71) == "\uE000 8.4e71", "balances beyond decillions retain scientific notation")
+	check(state.money(0.24) == "\uE000 0.24" and state.money(1e-20) == "\uE000 1e-20" and state.money(-9e19) == "-\uE000 90.0Qi", "extended suffixes preserve fractional, tiny, and signed balances")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	state.free()
 	print("STOCK CEILINGS AND DISTRIBUTIONS: %d checks, %d failures" % [checks, failures])

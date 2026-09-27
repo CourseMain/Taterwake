@@ -15,7 +15,7 @@ fs.mkdirSync('artifacts/update-browser',{recursive:true});
   await page.waitForFunction(()=>!!window.mobileQA,null,{timeout:60000});
   const report=()=>page.evaluate(()=>{window.mobileQA('status');return window.mobileReport});
   const command=async action=>{await page.evaluate(a=>window.mobileQA(a),action);await page.waitForTimeout(300);return report()};
-  assert.equal((await report()).version,'1.0.2.75');
+  assert.equal((await report()).version,'1.0.3');
   const screenshot=async suffix=>page.screenshot({path:`artifacts/update-browser/${name}-${suffix}.png`});
   await command('layout:2');
   await screenshot('sand');

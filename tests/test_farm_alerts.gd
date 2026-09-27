@@ -46,7 +46,7 @@ func run() -> void:
 	game.hud.close_panel()
 	await settle()
 	check(game.state.storage_used() == 0 and not game.hud._barn_full_alert.visible, "selling clears the warning immediately")
-	game.hud.set_context("12 more beds · Unlock at Tools for $1.8K")
+	game.hud.set_context("12 more beds · Unlock at Tools for \uE000 1.8K")
 	await settle()
 	check(game.hud._context_box.visible and game.hud._context_box.get_meta("warning", false), "locked-bed reminder stays visible on desktop and touch")
 	var skin: StyleBoxFlat = game.hud._context_box.get_theme_stylebox("panel")

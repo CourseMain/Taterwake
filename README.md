@@ -4,7 +4,9 @@
 
 Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.2.75:** Drag to explore the farm, visit the warm potato furnace and redesigned shops, grow giant potatoes with new harvest sounds, and discover island-specific artifacts and quest rewards. Includes the weather layout fix, farm credit and debt recovery, snowy and sandy terrain, and slimmer fullscreen controls. See [all changes](CHANGELOG.md#10275).
+**v1.0.3:** Spudions are the farm currency, with a potato symbol on balances and prices throughout the game. Includes the solid-colour village shops, compact seed controls and touch scrolling fixes. Existing farms and balances are preserved. See [all changes](CHANGELOG.md#103).
+
+For the next release stages, follow the [publishing checklist](PUBLISHING.md): browser playtesting, Steamworks setup, desktop testing and release review.
 
 On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Drag the farm with two fingers to pan; pinch to zoom. Use **Tools → Recenter** to return to the original view. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
 
@@ -29,7 +31,7 @@ A 3D potato farming game about growing crops, riding wild markets and building y
 - Farm through a **60-second day–night cycle** across three islands.
 - Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
 
-The Roll House uses coins earned in the game. There are no real-money purchases.
+The Roll House uses Spudions earned in the game. There are no real-money purchases.
 
 ## Download and play locally
 

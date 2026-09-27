@@ -94,7 +94,7 @@ func _run() -> void:
 
 	fresh(2)
 	state.coins = -4e9
-	check(not state.run_over and state.money(state.coins) == "-$4.0B", "negative balance stays playable and reads clearly")
+	check(not state.run_over and state.money(state.coins) == "-\uE000 4.0B", "negative balance stays playable and reads clearly")
 	roundtrip()
 	state.storage.sunburst = 10000
 	state.sell_crop("sunburst")
@@ -111,8 +111,8 @@ func _run() -> void:
 	fresh()
 	settle(8.4e103)
 	check(not state.run_over and state.coins == 8.4e103 and state.blind_cycle.last_result.tax == 50000.0, "huge wealth never increases the fixed tax bill")
-	check(state.money(8.4e103) == "$8.4e103" and state.money(-8.4e103) == "-$8.4e103", "positive and negative huge numbers")
-	check(state.money(-1.25e12, true) == "-$1.25T", "critical winter bankruptcy threshold is never rounded to -1.2T")
+	check(state.money(8.4e103) == "\uE000 8.4e103" and state.money(-8.4e103) == "-\uE000 8.4e103", "positive and negative huge numbers")
+	check(state.money(-1.25e12, true) == "-\uE000 1.25T", "critical winter bankruptcy threshold is never rounded to -1.2T")
 	check(state.blind_progress_text(8.4e103 / 1e104) == "84%", "large-number progress example retains 84 percent")
 	roundtrip()
 	fresh()

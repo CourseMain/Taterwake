@@ -1,4 +1,5 @@
 extends RefCounted
+const SPUDION = preload("res://assets/fonts/SpudionGlyph.ttf")
 const BODY = preload("res://assets/fonts/NunitoSans.ttf")
 const DISPLAY = preload("res://assets/fonts/Fredoka.ttf")
 const SIGN = DISPLAY
@@ -9,6 +10,6 @@ const SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
 static func face(source: Font, weight: float = 600.0) -> FontVariation:
 	var font := FontVariation.new()
 	font.base_font = source
-	font.fallbacks = [SYMBOLS, SYMBOLS_2]
+	font.fallbacks = [SPUDION, SYMBOLS, SYMBOLS_2]
 	font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
 	return font

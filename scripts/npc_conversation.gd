@@ -100,8 +100,8 @@ func _ready() -> void:
 
 func face(font: Font, weight: float) -> FontVariation:
 	var result: FontVariation = Type.face(font,weight)
-	# This dialogue uses Latin text; symbol fallbacks inflate every line on some browsers.
-	result.fallbacks = []
+	# Keep dialogue metrics compact; only the small currency glyph needs a fallback.
+	result.fallbacks = [Type.SPUDION]
 	return result
 
 func style(color: Color, radius: int, margin: int) -> StyleBoxFlat:

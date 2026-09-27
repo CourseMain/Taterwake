@@ -60,8 +60,8 @@ func run() -> void:
 	check(farm.coins == -10e9 and farm.run_over, "second unpaid bill crosses the same limit once")
 	await settle()
 	var collapse = game.hud._run_end
-	check(collapse.visible and collapse._threshold.text.contains("-$5B"), "collapse shows actual bankruptcy threshold")
-	check(collapse._calculation.text.contains("-$5B before") and collapse._calculation.text.contains("$5B tax") and collapse._calculation.text.contains("-$10B after"), "receipt explains the user's negative balance arithmetic")
+	check(collapse.visible and collapse._threshold.text.contains("-\uE000 5B"), "collapse shows actual bankruptcy threshold")
+	check(collapse._calculation.text.contains("-\uE000 5B before") and collapse._calculation.text.contains("\uE000 5B tax") and collapse._calculation.text.contains("-\uE000 10B after"), "receipt explains the user's negative balance arithmetic")
 	check(not collapse._ledger.visible, "optional climate education does not cover the tax cause")
 	await shot("receipt")
 	game._on_action("debug:lock")

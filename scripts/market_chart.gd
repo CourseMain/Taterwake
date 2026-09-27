@@ -100,7 +100,7 @@ func move_window(direction: int) -> void:
 	window_changed.emit()
 
 func _money(value: float) -> String:
-	return str(money.call(value)) if money.is_valid() else "$%.2f" % value
+	return str(money.call(value)) if money.is_valid() else "\uE000 %.2f" % value
 
 func chart_layout() -> Dictionary:
 	var bounds := window_bounds()

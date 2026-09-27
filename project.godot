@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="Taterland"
 config/description="A scrappy potato village, oversized harvests, and a slightly questionable produce exchange."
-config/version="1.0.2.75"
+config/version="1.0.3"
 run/main_scene="res://scenes/main.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="Godot/app_userdata/Spud Valley"

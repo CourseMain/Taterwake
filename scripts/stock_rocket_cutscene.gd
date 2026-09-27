@@ -29,11 +29,8 @@ func _ready() -> void:
 		_ellipse_unit.append(Vector2.from_angle(float(point) / 24.0 * TAU))
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_font = ThemeDB.fallback_font
-	var bold := SystemFont.new()
-	bold.font_names = PackedStringArray(["Avenir Next", "DejaVu Sans", "Arial"])
-	bold.font_weight = 800
-	_bold_font = bold
+	_font = preload("res://scripts/ui_type.gd").face(preload("res://scripts/ui_type.gd").BODY, 600)
+	_bold_font = preload("res://scripts/ui_type.gd").face(preload("res://scripts/ui_type.gd").DISPLAY, 800)
 	_sky = ColorRect.new()
 	_sky.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_sky.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -268,14 +265,14 @@ func _draw_rocket() -> void:
 func _draw_money_symbol(center: Vector2, radius: float, index: int, alpha: float) -> void:
 	var color: Color = CELEBRATION_COLORS[index % CELEBRATION_COLORS.size()]
 	if index % 3 == 0:
-		_text("$", center + Vector2(0, radius * 0.56), int(radius * 2.0), Color(color, alpha), true, true)
+		_text("\uE000", center + Vector2(0, radius * 0.56), int(radius * 2.0), Color(color, alpha), true, true)
 		return
 	var width: float = radius * (0.54 + absf(cos(elapsed * 2.7 + index)) * 0.46)
 	_ellipse(center + Vector2(2, 3), Vector2(width + 2, radius + 2), Color("182a49") * Color(1, 1, 1, alpha * 0.6))
 	_ellipse(center, Vector2(width, radius), Color(color.darkened(0.12), alpha))
 	_ellipse(center + Vector2(-1, -1), Vector2(width * 0.81, radius * 0.81), Color(color.lightened(0.20), alpha))
 	if width > radius * 0.70:
-		_text("$", center + Vector2(0, radius * 0.42), int(radius * 1.35), Color("27364f") * Color(1, 1, 1, alpha), true, true)
+		_text("\uE000", center + Vector2(0, radius * 0.42), int(radius * 1.35), Color("27364f") * Color(1, 1, 1, alpha), true, true)
 
 func _draw_money_streams() -> void:
 	var energy: float = smoothstep(IGNITION_AT - 0.18, LIFTOFF_AT + 0.3, elapsed) * (1.0 - smoothstep(5.8, 6.35, elapsed))

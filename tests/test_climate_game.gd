@@ -78,7 +78,7 @@ func run() -> void:
 	check(game.hud._weather_button.visible and game.hud._weather_button.text.to_upper().contains("FLOOD"), "dedicated weather shortcut carries the warning")
 	await shot("climate-flood")
 	game._on_action("climate")
-	check(game.hud._refs.weather_page._values.market.text == "5%" and game.hud._refs.climate_market.text.contains("$9.4B"), "sale-price disruption and protection-adjusted recovery costs appear together")
+	check(game.hud._refs.weather_page._values.market.text == "5%" and game.hud._refs.climate_market.text.contains("\uE000 9.4B"), "sale-price disruption and protection-adjusted recovery costs appear together")
 	game.hud.close_panel()
 	# Crashes no longer advance tax collection; let the market recover first.
 	game._advance_simulation(105.0)
@@ -109,7 +109,7 @@ func run() -> void:
 	game.state.climate.data.collapse.balance = -8.4e103
 	page.show_report(game.state)
 	await frames()
-	check(page._balance.text == "-$8.4e103" and game.hud.root.get_global_rect().encloses(page._balance.get_global_rect()), "huge negative balance remains legible")
+	check(page._balance.text == "-\uE000 8.4e103" and game.hud.root.get_global_rect().encloses(page._balance.get_global_rect()), "huge negative balance remains legible")
 	page.find_child("TryAgain", true, false).pressed.emit()
 	await frames()
 	check(not game.state.run_over and not page.visible and game.tutorial.active, "Try Again returns to a clean tutorial")

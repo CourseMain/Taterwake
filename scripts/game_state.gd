@@ -19,6 +19,8 @@ signal climate_changed(phase: String)
 const NpcRoster = preload("res://scripts/npc_roster.gd")
 const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
+const CURRENCY_NAME: String = "Spudions"
+const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
 const MECHANICS_REVISION: int = 21
@@ -267,7 +269,7 @@ func unlock_island3() -> String:
 	if island3_unlocked:
 		return _reject_purchase("Frosthollow is already unlocked. The winter ferry is ready.")
 	if not island2_unlocked or total_mastery() < ISLAND3_UNLOCK_HARVEST or coins < ISLAND3_UNLOCK_COST:
-		return _reject_purchase("Frosthollow needs $100B and 25,000 harvested potatoes. Grow your Golden Shores fortune first.")
+		return _reject_purchase("Frosthollow needs \uE000 100B and 25,000 harvested potatoes. Grow your Golden Shores fortune first.")
 	coins -= ISLAND3_UNLOCK_COST
 	island3_unlocked = true
 	frost_timer = rng.randf_range(120.0, 220.0)
@@ -465,13 +467,13 @@ func debug_unlock_island(id: int) -> String:
 		island3_unlocked = true
 		frost_timer = rng.randf_range(120.0, 220.0)
 		_open_starting_beds(3)
-	return _finish("DEBUG: %s unlocked; cash unchanged. Visiting raises base tax to %s, even after returning. Set test funds before travelling." % [("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"), money(float(BlindRules.PROGRESSION_BASELINES[id]) * BlindRules.TAX_RATE, true)])
+	return _finish("DEBUG: %s unlocked; Spudions unchanged. Visiting raises base tax to %s, even after returning. Set test funds before travelling." % [("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"), money(float(BlindRules.PROGRESSION_BASELINES[id]) * BlindRules.TAX_RATE, true)])
 
 func reset_debug() -> String:
 	if _rolling_reward:
 		return "Wait for the current roll purchase to settle."
 	debug_luck_multiplier = 1.0
-	return _finish("Debug luck reset to x1. Your current coins are unchanged.%s" % (" Earlier coin edits remain marked in future trophy results." if debug_money_modified else ""))
+	return _finish("Debug luck reset to x1. Your current Spudions are unchanged.%s" % (" Earlier Spudion edits remain marked in future trophy results." if debug_money_modified else ""))
 
 
 func crown_bonus_active() -> bool:
@@ -941,7 +943,7 @@ func unlock_island2() -> String:
 	if island2_unlocked:
 		return _reject_purchase("Golden Shores is already unlocked. The ferry is ready whenever you are.")
 	if total_mastery() < ISLAND2_UNLOCK_HARVEST or coins < ISLAND2_UNLOCK_COST:
-		return _reject_purchase("Golden Shores needs $1M and 500 potatoes harvested. You have %s harvested; keep farming and selling!" % format_number(total_mastery()))
+		return _reject_purchase("Golden Shores needs \uE000 1M and 500 potatoes harvested. You have %s harvested; keep farming and selling!" % format_number(total_mastery()))
 	coins -= ISLAND2_UNLOCK_COST
 	island2_unlocked = true
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
@@ -957,9 +959,9 @@ func travel_to(id: int) -> String:
 	if id not in [1, 2, 3]:
 		return _finish("The ferry visits Spud Valley, Golden Shores, and Frosthollow.")
 	if id == 3 and not island3_unlocked:
-		return _finish("Frosthollow needs $100B and 25,000 potatoes harvested. Finish your Golden Shores journey first.")
+		return _finish("Frosthollow needs \uE000 100B and 25,000 potatoes harvested. Finish your Golden Shores journey first.")
 	if id == 2 and not island2_unlocked:
-		return _finish("Unlock Golden Shores with $1M and 500 potatoes harvested before boarding.")
+		return _finish("Unlock Golden Shores with \uE000 1M and 500 potatoes harvested before boarding.")
 	if id == current_island:
 		return _finish("You are already on %s." % island_name().capitalize())
 	island_plots[str(current_island)] = plots
@@ -988,7 +990,7 @@ func travel_to(id: int) -> String:
 	island_changed.emit(id)
 	climate.on_arrival(self)
 	changed.emit()
-	return _finish("Welcome to %s! Both farms keep growing while you travel. Your coins, tools, seeds, and barn come with you." % island_name().capitalize())
+	return _finish("Welcome to %s! Both farms keep growing while you travel. Your Spudions, tools, seeds, and barn come with you." % island_name().capitalize())
 
 
 func _toggle_export() -> void:
@@ -1494,7 +1496,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if index < 0 or index >= plots.size():
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
-		return _finish("Unlock more beds at Tools · $1.8K")
+		return _finish("Unlock more beds at Tools · \uE000 1.8K")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
@@ -1686,7 +1688,7 @@ static func crops_by_base_price(ids: Array) -> Array[String]:
 
 func market_money(value: float) -> String:
 	# Keep cents explicit in small trade quotes; retain the game's large-value suffixes.
-	return "$%.2f" % value if absf(value) < 1000.0 else money(value, true)
+	return ("-" if value < 0.0 else "") + CURRENCY_SYMBOL + " " + ("%.2f" % absf(value)) if absf(value) < 1000.0 else money(value, true)
 
 
 func has_tax_credit() -> bool:
@@ -1707,7 +1709,7 @@ func purchase_quote(cost: float) -> Dictionary:
 	if not affordable:
 		if run_over: reason = "Run over. Start a new farm."
 		elif not valid_cost: reason = "Choose a valid purchase amount."
-		elif not has_tax_credit(): reason = "Not enough cash. Buying on account is only available while repaying tax debt."
+		elif not has_tax_credit(): reason = "Not enough Spudions. Buying on account is only available while repaying tax debt."
 		else: reason = "Purchase blocked: it would exceed the %s bankruptcy limit. Sell crops or repay debt first." % money(-bankruptcy_limit())
 	return {"affordable": affordable, "uses_credit": borrowing, "after_balance": after,
 		"credit_left_after": remaining, "bankruptcy_limit": bankruptcy_limit(),
@@ -1725,7 +1727,7 @@ func purchase_caption(caption: String, cost: float) -> String:
 
 func credit_refusal(cost: float = -1.0) -> String:
 	if cost >= 0.0: return str(purchase_quote(cost).reason)
-	return "Account limit reached. Sell crops or repay debt first." if has_tax_credit() else "Not enough cash. Buying on account is only available while repaying tax debt."
+	return "Account limit reached. Sell crops or repay debt first." if has_tax_credit() else "Not enough Spudions. Buying on account is only available while repaying tax debt."
 
 
 func recovery_order() -> Dictionary:
@@ -2043,7 +2045,7 @@ func _roll_odds_with_stake(stake_bonus: float) -> Array[Dictionary]:
 		{"tier": "epic", "chance": 12.0, "description": "Build gear or permanent luck/yield."},
 		{"tier": "legendary", "chance": 5.0, "description": "Gold Hat + tool upgrades or a 5s offer."},
 		{"tier": "mythic", "chance": 2.0, "description": "Aurora Crown + mutations worth up to 75% of stake."},
-		{"tier": "jackpot", "chance": 1.0, "description": "20× your stake in game coins!"},
+		{"tier": "jackpot", "chance": 1.0, "description": "20× your stake in game Spudions!"},
 		{"tier": "relic", "chance": 0.1, "description": "Island artifact · Full collection: 2× stake"},
 		{"tier": "mystery", "chance": 0.01, "description": "Island wonder · Full collection: 5× stake.", "hidden_chance": true},
 	]
@@ -2079,8 +2081,8 @@ func roll(kind: String) -> String:
 	var bet: float = roll_cost(kind)
 	if not can_roll(kind):
 		if kind == "all_in":
-			return _finish("All-in requires strictly more than %s on this island. No coins spent." % money(roll_minimum_stake("all_in")))
-		return _finish("This island requires at least %s in earned coins per roll. Choose an affordable stake." % money(roll_cost("normal")))
+			return _finish("All-in requires strictly more than %s on this island. No Spudions spent." % money(roll_minimum_stake("all_in")))
+		return _finish("This island requires at least %s in earned Spudions per roll. Choose an affordable stake." % money(roll_cost("normal")))
 	var chosen_odds: Array[Dictionary] = roll_odds(kind)
 	var chosen_stake_bonus: float = stake_luck_bonus(kind)
 	var has_crown: bool = crown_bonus_active()
@@ -2117,7 +2119,7 @@ func roll_batch(kind: String, count: int) -> Array[Dictionary]:
 		_finish("Multi-rolls are exclusive to Frosthollow: choose 3 or 5 rolls at a fixed stake.")
 		return results
 	if coins < total:
-		_finish("You need %s upfront for all %d rolls. No coins spent." % [money(total), count])
+		_finish("You need %s upfront for all %d rolls. No Spudions spent." % [money(total), count])
 		return results
 	var has_crown: bool = crown_bonus_active()
 	var is_debug: bool = bool(debug_info()["active"])
@@ -2155,7 +2157,7 @@ func _complete_roll_transaction(results: Array[Dictionary], paid_count: int, has
 			"jackpot": jackpot_returns = minf(MAX_MONEY, jackpot_returns + float(results[index]["cash_awarded"]))
 		if index >= paid_count:
 			if str(results[index]["title"]) == "THE EMPTY SACK":
-				results[index]["detail"] = "Free Aurora Crown pull: nothing this time. No extra coins were charged."
+				results[index]["detail"] = "Free Aurora Crown pull: nothing this time. No extra Spudions were charged."
 			else:
 				results[index]["detail"] = "Free Aurora Crown pull. " + str(results[index]["detail"])
 		_record_roll_trophy(results[index])
@@ -2279,7 +2281,7 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 			var reward: float = minf(MAX_MONEY, bet * 20.0)
 			coins = minf(MAX_MONEY, coins + reward)
 			title = "THE POTATO JACKPOT!"
-			detail = "%s in earned game coins — 20 times your stake!" % money(reward)
+			detail = "%s in earned game Spudions — 20 times your stake!" % money(reward)
 	if is_instance_valid(build_system) and build_system.has_method("grant_roll_build"):
 		var build_reward: String = str(build_system.grant_roll_build(tier))
 		if not build_reward.is_empty():
@@ -2484,7 +2486,10 @@ func format_number(value: float, suffix_decimals: int = 1) -> String:
 
 
 func money(value: float, precise: bool = false) -> String:
-	return ("-$" if value < 0.0 else "$") + format_number(absf(value), 2 if precise else 1)
+	return ("-" if value < 0.0 else "") + CURRENCY_SYMBOL + " " + format_number(absf(value), 2 if precise else 1)
+
+func _saved_currency_text(text: String) -> String:
+	return text.replace("$", CURRENCY_SYMBOL + " ").replace("game coins", "game Spudions")
 
 
 func _finish(message: String) -> String:
@@ -2598,7 +2603,7 @@ func reset_game() -> void:
 	_build_starters()
 	island_changed.emit(1)
 	export_changed.emit(false)
-	_finish("A fresh farm and $240. Your next fortune starts with a potato.")
+	_finish("A fresh farm and \uE000 240. Your next fortune starts with a potato.")
 
 
 func _save_data() -> Dictionary:
@@ -2801,6 +2806,10 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	last_roll_results.clear()
 	for result in data.get("last_roll_results", []):
 		last_roll_results.append(result.duplicate(true))
+	# Historical receipts keep their values; update only their displayed currency.
+	news = _saved_currency_text(news)
+	for result: Dictionary in [last_roll] + last_roll_results:
+		if result.has("detail"): result.detail = _saved_currency_text(str(result.detail))
 	last_roll_accounting = data.get("last_roll_accounting", {}).duplicate()
 	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 	for id in CROP_IDS:

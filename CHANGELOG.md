@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+
+- Named the farm currency Spudions, with an original potato symbol beside balances, prices, rewards, stakes and debt amounts.
+- Bundled a compact currency glyph so the symbol looks the same on native and browser builds. Existing balances and saves are preserved.
+
 ## 1.0.2.75
 
 - Removed the extra price strip while planting. Seed packets now show separate, ruled Seeds and In barn counts on desktop and touch controls.

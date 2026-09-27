@@ -18,6 +18,7 @@ func winter(state) -> void:
 	state.island2_unlocked = true
 	state.island3_unlocked = true
 	for id in ["2", "3"]:
+		state.field_expansions[id] = true
 		for plot in state.island_plots[id]:
 			plot.unlocked = true
 	state.travel_to(3)
@@ -52,9 +53,9 @@ func pattern_seed(state, first: String, first_refund: bool = false, second: Stri
 func _run() -> void:
 	var state = State.new()
 	root.add_child(state)
-	check(state.money(0.0) == "$0" and state.money(0.24) == "$0.24", "zero and ordinary decimal money retain their familiar display")
-	check(state.money(1e-20) == "$1e-20" and state.money(1e-200) == "$1e-200", "tiny positive balances remain visibly nonzero in HUD and toast money strings")
-	check(state.money(200.0) == "$200" and state.money(4200000.0) == "$4.2M", "small-balance display change preserves ordinary prices and magnitude suffixes")
+	check(state.money(0.0) == "\uE000 0" and state.money(0.24) == "\uE000 0.24", "zero and ordinary decimal money retain their familiar display")
+	check(state.money(1e-20) == "\uE000 1e-20" and state.money(1e-200) == "\uE000 1e-200", "tiny positive balances remain visibly nonzero in HUD and toast money strings")
+	check(state.money(200.0) == "\uE000 200" and state.money(4200000.0) == "\uE000 4.2M", "small-balance display change preserves ordinary prices and magnitude suffixes")
 	check(state.debug_info().money_min == 0.0 and state.valid_debug_settings(0.1, 1.0) and state.valid_debug_settings(1e-3, 1.0) and state.valid_debug_settings(0.0, 1.0), "debug API accepts decimal, scientific and zero money multipliers")
 	state.coins = 1e20
 	state.apply_debug(0.1, 2.0)
@@ -145,6 +146,8 @@ func _run() -> void:
 			"bad_credit": malformed.last_roll_results[0].cash_awarded = NAN
 		check(not state._valid_save(malformed), "save rejects malformed transaction accounting: " + error_kind)
 	var old_data: Dictionary = saved.duplicate(true)
+	old_data.last_roll.detail = "$2.0Sx in earned game coins"
+	old_data.last_roll_results.back().detail = "$2.0Sx in earned game coins"
 	old_data.erase("last_roll_accounting")
 	for result in old_data.last_roll_results:
 		result.erase("cash_awarded")
@@ -153,6 +156,7 @@ func _run() -> void:
 	file.store_string(JSON.stringify(old_data))
 	file.close()
 	check(state.load_game(SAVE) and state.roll_accounting_info().is_empty(), "old saves load without inventing unknown historical receipts")
+	check(state.last_roll.detail == "\uE000 2.0Sx in earned game Spudions" and state.last_roll_results.back().detail == state.last_roll.detail, "old receipt currency updates without changing saved transactions")
 	state.coins = 1e200
 	state.rng.seed = pattern_seed(state, "common")
 	state.roll("all_in")

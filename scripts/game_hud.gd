@@ -291,13 +291,13 @@ func build_ui() -> void:
 	layer = 10
 	var body_font: FontVariation = FontVariation.new()
 	body_font.base_font = UI_FONT
-	body_font.fallbacks = [UI_SYMBOLS, UI_SYMBOLS_2]
+	body_font.fallbacks = [Type.SPUDION, UI_SYMBOLS, UI_SYMBOLS_2]
 	var weight_axis: int = TextServerManager.get_primary_interface().name_to_tag("wght")
 	body_font.variation_opentype = {weight_axis: 400.0}
 	_font = body_font
 	var title_font: FontVariation = FontVariation.new()
 	title_font.base_font = Type.DISPLAY
-	title_font.fallbacks = [UI_SYMBOLS, UI_SYMBOLS_2]
+	title_font.fallbacks = [Type.SPUDION, UI_SYMBOLS, UI_SYMBOLS_2]
 	title_font.variation_opentype = {weight_axis: 600.0}
 	_heading_font = title_font
 	root = Control.new()
@@ -378,7 +378,7 @@ func _update_blind_ui() -> void:
 	_blind_labels.balance.text = "%s due  ›" % _blind_money(info.target)
 	_blind_labels.title.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else GOLD)
 	_blind_labels.balance.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff7777"))
-	_blind_card.tooltip_text = "Cash %s · %s covered\nAfter tax %s · Bankruptcy below %s\nClick for forecast, rates and last payment" % [_blind_money(info.current), str(_state.call("blind_progress_text", float(info.ratio))), _blind_money(info.projected), _blind_money(info.bankruptcy)]
+	_blind_card.tooltip_text = "Spudions %s · %s covered\nAfter tax %s · Bankruptcy below %s\nClick for forecast, rates and last payment" % [_blind_money(info.current), str(_state.call("blind_progress_text", float(info.ratio))), _blind_money(info.projected), _blind_money(info.bankruptcy)]
 	_blind_labels.debt.hide()
 	_blind_labels.debt.text = "Bankruptcy below " + _blind_money(info.bankruptcy)
 	_blind_labels.weather.hide()
@@ -395,7 +395,7 @@ func _update_blind_ui() -> void:
 	_recovery_link.add_theme_font_size_override("font_size", 20 if touch else 14)
 	_credit_row.vertical = touch and root.size.x < 560
 	var stocks_left: int = int(info.booms_required) - int(info.booms)
-	_blind_modal_warning.text = "Tax %s in %ds · Cash %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
+	_blind_modal_warning.text = "Tax %s in %ds · Spudions %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
 	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate", "tools", "barn", "inventory"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
@@ -827,10 +827,10 @@ func _label(text: String, size: int = 15, color: Color = INK, bold: bool = false
 	return label
 
 func _compact_heading_font() -> FontVariation:
-	# Nunito covers plain numeric HUD labels; symbol fallbacks have taller
-	# line metrics and are only needed on labels that actually use symbols.
+	# Nunito plus our potato glyph keeps balances compact on native and web.
 	var compact: FontVariation = FontVariation.new()
 	compact.base_font = UI_FONT
+	compact.fallbacks = [Type.SPUDION]
 	compact.variation_opentype = _heading_font.variation_opentype
 	return compact
 
@@ -1082,13 +1082,13 @@ func _build_top() -> void:
 	var row: BoxContainer = _hbox(20)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stats.add_child(row)
-	_top["coins"] = _stat(row, "COINS", "$240", GOLD)
+	_top["coins"] = _stat(row, "SPUDIONS", "\uE000 240", GOLD)
 	var market_box: VBoxContainer = _vbox(0)
 	market_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(market_box)
 	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
-	_top["price"] = _label("$38  +0%", 22, GREEN, true)
+	_top["price"] = _label("\uE000 38  +0%", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	market_box.add_child(_top["price"])
 	_top["luck"] = _stat(row, "LUCK · +0%", "1.0×", GREEN)
@@ -2106,7 +2106,7 @@ func _build_roll() -> void:
 			batches.add_child(batch)
 			_refs["batch:" + str(count)] = batch
 	_info("all_in_warning", "", Color("ffb9a0"), 13)
-	var cancel := _button("Keep my coins · cancel all-in", "cancel_all_in")
+	var cancel := _button("Keep my Spudions · cancel all-in", "cancel_all_in")
 	_casino_button(cancel, Color("275b43"))
 	play_column.add_child(cancel)
 	_refs.cancel_all_in = cancel
@@ -2590,7 +2590,7 @@ func _refresh_panel() -> void:
 			if _refs.has("batch_stake"):
 				_refs.batch_stake.disabled = _rolling or not stall_open
 			_refs.all_in_warning.visible = _all_in_pending
-			_refs.all_in_warning.text = "Risk every coin? Click CONFIRM ALL-IN to commit this stake."
+			_refs.all_in_warning.text = "Risk every Spudion? Click CONFIRM ALL-IN to commit this stake."
 			_refs.cancel_all_in.visible = _all_in_pending and not _rolling
 			var stake_bonus: float = _frozen_stake_bonus if _rolling else float(_state.stake_luck_bonus(_stake_kind))
 			var build_quality: float = _frozen_build_quality if _rolling else float(_state._build_bonus("roll_quality_factor", 1.0))
@@ -2690,7 +2690,7 @@ func _blind_money(value: float) -> String:
 	return str(_state.call("money", value, true))
 
 func _money(value: float) -> String:
-	return str(_state.call("money", value)) if is_instance_valid(_state) else "$%.0f" % value
+	return str(_state.call("money", value)) if is_instance_valid(_state) else "\uE000 %.0f" % value
 
 func _number(value: float) -> String:
 	return str(_state.call("format_number", value)) if is_instance_valid(_state) else "%.0f" % value
@@ -3459,8 +3459,8 @@ func _refresh_duck_patrol() -> void:
 		_refs["activity:duck:value"].text = "Clears pests automatically"
 		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
 		_refs["activity:duck:speed:detail"].text = "Whole flock"
-		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("On account" if _state.can_purchase(hire_cost) else ("Account limit" if _state.has_tax_credit() else "Need cash"))), "active" if count >= capacity or coins >= hire_cost else "warning")
-		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("On account" if _state.can_purchase(speed_cost) else ("Account limit" if _state.has_tax_credit() else "Need cash")))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
+		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else ("On account" if _state.can_purchase(hire_cost) else ("Account limit" if _state.has_tax_credit() else "Need Spudions"))), "active" if count >= capacity or coins >= hire_cost else "warning")
+		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else ("On account" if _state.can_purchase(speed_cost) else ("Account limit" if _state.has_tax_credit() else "Need Spudions")))), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
 	_refs.duck_pond.count = count
 	_refs.duck_pond.capacity = capacity
 	_refs.activity_status.text = "%d duck%s on patrol" % [count, "" if count == 1 else "s"] if count > 0 else "No ducks hired yet"
@@ -3697,7 +3697,7 @@ func _build_debug() -> void:
 	presets.add_theme_constant_override("h_separation", 7)
 	presets.add_theme_constant_override("v_separation", 7)
 	funds.add_child(presets)
-	for item: Array in [["Valley · $150K", "150000"], ["Shores · $15B", "15e9"], ["Winter · $750T", "750e12"]]:
+	for item: Array in [["Valley · \uE000 150K", "150000"], ["Shores · \uE000 15B", "15e9"], ["Winter · \uE000 750T", "750e12"]]:
 		var preset := _button(item[0], "debug_balance_preset:" + item[1])
 		preset.tooltip_text = "Fill the input with three base tax bills. Nothing changes until you apply."
 		presets.add_child(preset)
@@ -3711,7 +3711,7 @@ func _build_debug() -> void:
 	fund_actions.add_child(_refs.debug_set_balance)
 	_refs.debug_recover = _button("Recover test farm", "debug_recover", true)
 	fund_actions.add_child(_refs.debug_recover)
-	funds.add_child(_wrap("Sets money directly, including from debt or $0. Recovery keeps your farm and restarts the tax countdown at normal speed.", 13, MUTED))
+	funds.add_child(_wrap("Sets money directly, including from debt or \uE000 0. Recovery keeps your farm and restarts the tax countdown at normal speed.", 13, MUTED))
 
 	var time_card: PanelContainer = _card(PAPER, 14)
 	_body.add_child(time_card)
@@ -3742,7 +3742,7 @@ func _build_debug() -> void:
 		var unlock := _button("", "debug:island:%d" % island)
 		islands.add_child(unlock)
 		_refs["debug_island_%d" % island] = unlock
-	_refs.debug_island_note = _wrap("Unlocking gives access, not money. Visiting Shores raises base tax to $5B; Winter to $250T. That tier stays when you return. Set test funds before travelling.", 13, MUTED)
+	_refs.debug_island_note = _wrap("Unlocking gives access, not money. Visiting Shores raises base tax to \uE000 5B; Winter to \uE000 250T. That tier stays when you return. Set test funds before travelling.", 13, MUTED)
 	access_body.add_child(_refs.debug_island_note)
 	var weather_tests := HFlowContainer.new()
 	weather_tests.add_theme_constant_override("h_separation", 8)
@@ -3815,7 +3815,7 @@ func _build_debug() -> void:
 	actions.add_child(_refs.debug_apply)
 	_refs.debug_reset = _button("Reset luck + time", "debug:reset")
 	actions.add_child(_refs.debug_reset)
-	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps coins and all Debug history.", 13, MUTED))
+	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps Spudions and all Debug history.", 13, MUTED))
 	_body.add_child(_button("Lock debug · restore 1× time", "debug:lock"))
 	_refresh_debug()
 func _debug_money_value() -> Dictionary:
@@ -3878,7 +3878,7 @@ func _refresh_debug() -> void:
 	_refs.debug_weather_note.text = "Starts a full 45-second warning; crops and stores can be lost." if can_weather else ("Recover this test farm first." if ended else ("Travel to Shores or Winter first." if _island_id() < 2 else "Finish the current weather or lesson before starting a test."))
 
 func _precise_money(amount: float) -> String:
-	return "$" + String.num_scientific(amount)
+	return ("-\uE000 " if amount < 0.0 else "\uE000 ") + String.num_scientific(absf(amount))
 
 func _show_roll_accounting() -> void:
 	if _crate_reel or not _refs.has("roll_accounting") or not _state.has_method("roll_accounting_info"):

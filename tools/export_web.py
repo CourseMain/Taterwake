@@ -190,7 +190,8 @@ Open the printed HTTP address; opening index.html as a file will not run
 the game's WebAssembly assets correctly.
 
 CONTROLS
-Click to walk and use the selected tool. Keys 1–5 select farm tools.
+WASD moves your farmer. Click beds and shops to interact; hold and drag
+the farm to pan the camera. Keys 1–5 select farm tools.
 I opens inventory, B market, C builds, R rolling, and Esc the menu.
 The three-line menu contains the remaining panels and activities.
 Touch: drag the stick to move (outer edge sprints), tap the farm to interact,

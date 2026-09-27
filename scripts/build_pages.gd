@@ -25,7 +25,7 @@ const PURPOSE: Dictionary = {
 	"industrialist": "Grade crops for higher prices",
 	"scientist": "Discover planting traits",
 	"investor": "Reserve a buyer's price",
-	"gambler": "Stake crops for coin payouts",
+	"gambler": "Stake crops for Spudion payouts",
 }
 const ACTION_TITLE: Dictionary = {"farmer": "Compost · Farmer perk", "industrialist": "Grade a batch", "scientist": "Discover a variety", "investor": "Reserve a buyer", "gambler": "Stake a harvest"}
 
@@ -147,7 +147,7 @@ static func create(h) -> void:
 static func _display(h, text: String, size: int, color: Color) -> Label:
 	var label: Label = h._wrap(text, size, color, true)
 	var font = Type.face(Type.DISPLAY, 600)
-	font.fallbacks = []
+	font.fallbacks = [Type.SPUDION]
 	label.add_theme_font_override("font", font)
 	label.add_theme_constant_override("outline_size", 0)
 	return label
@@ -155,7 +155,7 @@ static func _display(h, text: String, size: int, color: Color) -> Label:
 static func _compact_type(node: Node) -> void:
 	if node is Label or node is Button or node is LineEdit:
 		var font: Font = node.get_theme_font("font").duplicate()
-		font.fallbacks = []
+		font.fallbacks = [Type.SPUDION]
 		node.add_theme_font_override("font", font)
 	for child in node.get_children(): _compact_type(child)
 

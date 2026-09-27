@@ -26,8 +26,8 @@ var _body_font: FontVariation = Type.face(Type.BODY, 600)
 func setup(owner_hud, barn_page: bool) -> void:
 	hud = owner_hud
 	barn = barn_page
-	_title_font.fallbacks = []
-	_body_font.fallbacks = []
+	_title_font.fallbacks = [Type.SPUDION]
+	_body_font.fallbacks = [Type.SPUDION]
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 12)

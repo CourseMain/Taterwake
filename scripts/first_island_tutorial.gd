@@ -18,7 +18,7 @@ const TOUR: Array[Dictionary] = [
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
 	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose an unlocked build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
-	{"id": "roll", "title": "Roll House", "body": "Click the Roll House to inspect odds. Rolls spend earned coins and can return little. Keep seed money.", "focus": "roll"},
+	{"id": "roll", "title": "Roll House", "body": "Click the Roll House to inspect odds. Rolls spend earned Spudions and can return little. Keep seed money.", "focus": "roll"},
 	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
 	{"id": "dock", "title": "The ferry", "body": "Click the ferry to walk to it, or press E nearby. Sailing needs the island unlock.", "focus": "island"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},

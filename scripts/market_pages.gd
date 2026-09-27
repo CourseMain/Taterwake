@@ -65,8 +65,8 @@ var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 
 func setup(owner_hud, sell_page: bool) -> void:
 	hud = owner_hud
-	_body_font.fallbacks = []
-	_title_font.fallbacks = []
+	_body_font.fallbacks = [Type.SPUDION]
+	_title_font.fallbacks = [Type.SPUDION]
 	selling = sell_page
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -438,7 +438,7 @@ func refresh() -> void:
 	crop_image.accent = ACCENTS[selected]
 	crop_image.queue_redraw()
 	chart.set_history(quote.get("history", []), base, state.market_money)
-	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else "$0.00"
+	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else "\uE000 0.00"
 	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])
 	minus.disabled = not quantity.valid or amount <= 1
 	plus.disabled = not quantity.valid or amount >= owned

@@ -64,7 +64,7 @@ func _ready() -> void:
 	interaction_prompt = button("E", func(): game._interact_nearby())
 	interaction_prompt.custom_minimum_size = Vector2(68, 68) if enabled else Vector2(34, 34)
 	var key_font = preload("res://scripts/ui_type.gd").face(preload("res://assets/fonts/Fredoka.ttf"),600)
-	key_font.fallbacks = []
+	key_font.fallbacks = [preload("res://scripts/ui_type.gd").SPUDION]
 	interaction_prompt.add_theme_font_override("font",key_font)
 	interaction_prompt.add_theme_font_size_override("font_size", 22)
 	for state in ["normal", "hover", "pressed", "disabled"]:

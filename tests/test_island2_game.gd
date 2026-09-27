@@ -61,7 +61,7 @@ func _run() -> void:
 	game.state.coins = 1300000.0
 	game._on_state_changed()
 	press("island_unlock")
-	check(game.state.island2_unlocked and game.state.coins == 300000.0, "unlock button charges exactly $1M once")
+	check(game.state.island2_unlocked and game.state.coins == 300000.0, "unlock button charges exactly \uE000 1M once")
 	press("travel:2")
 	await settle_world()
 	check(game.world.current_island == 2 and game.state.current_island == 2, "travel button switches scene and state together")
@@ -87,7 +87,7 @@ func _run() -> void:
 	game._unhandled_input(event)
 	check(game.hud.is_panel_open(), "Q opens the quest board")
 	press("quest:ground")
-	check(game.state.coins == 400000.0 and game.state.seed_inventory.sunburst == 5, "claim button pays $100K and five Sunburst seeds")
+	check(game.state.coins == 400000.0 and game.state.seed_inventory.sunburst == 5, "claim button pays \uE000 100K and five Sunburst seeds")
 	check(button("quest:ground") == null or button("quest:ground").disabled, "claimed reward cannot be collected twice")
 	game.hud.close_panel()
 	press("crop:sunburst")
@@ -180,7 +180,7 @@ func _run() -> void:
 	game.state.coins = 8.4e71
 	game.state._event_in = 8.0
 	game._on_state_changed()
-	check(game.hud._top.coins.text == "$8.4e71", "second-island HUD can show astronomical balances")
+	check(game.hud._top.coins.text == "\uE000 8.4e71", "second-island HUD can show astronomical balances")
 	check(game.state.save_game(SAVE), "complete island progress saves")
 	game._on_action("reset")
 	check(game.state.current_island == 1 and game.world.current_island == 1, "reset synchronizes both scene and farm")

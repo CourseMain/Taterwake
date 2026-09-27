@@ -50,7 +50,7 @@ func run() -> void:
 	chart.size = Vector2(1080, 400)
 	root.add_child(chart)
 	var recorded: Array = [100.0, 182.0, 75.0, 100.0, 100.0, 90.0, 120.0, 118.0, 70.0, 88.0, 99.0, 103.0]
-	chart.set_history(recorded, 100.0, func(value: float) -> String: return "$%.2f" % value)
+	chart.set_history(recorded, 100.0, func(value: float) -> String: return "\uE000 %.2f" % value)
 	for dimensions: Vector2 in [Vector2(1080, 400), Vector2(620, 280), Vector2(290, 230)]:
 		chart.size = dimensions
 		await process_frame

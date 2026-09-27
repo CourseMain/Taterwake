@@ -161,7 +161,7 @@ func _run() -> void:
 	farm.update(4.0)
 	farm._start_event("shortage")
 	farm.coins = 8.4e71
-	check(farm.money(farm.coins) == "$8.4e71" and farm.money(4200000.0) == "$4.2M", "large balances use magnitude suffixes and scientific notation")
+	check(farm.money(farm.coins) == "\uE000 8.4e71" and farm.money(4200000.0) == "\uE000 4.2M", "large balances use magnitude suffixes and scientific notation")
 	check(farm.save_game(SAVE), "valid farm saves atomically")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
