@@ -28,6 +28,14 @@ func command(args: Array) -> void:
 	if action == "tutorial":
 		game.state.travel_to(1)
 		game.tutorial.start(true)
+	elif action == "tutorial_sale":
+		game.set_process(false)
+		game.state.reset_game()
+		game.state.tutorial_progress = {"version": 2, "step": 7, "completed": false, "plot": 4}
+		game.state.storage.russet = 9
+		game.hud._inventory_tab = "gear"
+		game.tutorial.start()
+		game._on_action("barn")
 	elif action.begins_with("build:"):
 		game.hud._build_selection = action.get_slice(":",1)
 		game._on_action("builds")
@@ -88,6 +96,7 @@ func command(args: Array) -> void:
 	report.hoe_heat = game.state.ClimateSystem.Operations.local(game.state).heat
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
+	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":game.state.storage.russet,"coins":game.state.coins}
 	report.buttons = []
 	collect_buttons(game.hud.root, report.buttons)
 	collect_buttons(game.touch_controls.root, report.buttons)
@@ -97,5 +106,5 @@ func command(args: Array) -> void:
 func collect_buttons(node: Node, out: Array) -> void:
 	if node is Button and node.is_visible_in_tree():
 		var rect: Rect2 = node.get_global_rect()
-		out.append({"text":node.text,"rect":[rect.position.x,rect.position.y,rect.size.x,rect.size.y],"disabled":node.disabled})
+		out.append({"text":node.text,"action":node.get_meta("hud_action", ""),"rect":[rect.position.x,rect.position.y,rect.size.x,rect.size.y],"disabled":node.disabled})
 	for child in node.get_children(): collect_buttons(child,out)

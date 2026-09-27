@@ -679,6 +679,9 @@ func set_tutorial(info: Dictionary) -> void:
 		_reward_timer.stop()
 		_apply_tutorial_visibility()
 	if is_panel_open():
+		if _panel_kind in ["barn", "inventory"] and _first_harvest_barn():
+			_inventory_tab = "crops"
+			_set_inventory_tab()
 		if _panel_kind in ["pause", "menu"] or (_panel_kind == "market" and _panel_crops != _market_crops()):
 			show_panel(_panel_kind, _state)
 		else:
@@ -1907,7 +1910,13 @@ func _build_market(selling: bool = false) -> void:
 	page.setup(self, selling)
 
 
+func _first_harvest_barn() -> bool:
+	return not _tutorial.is_empty() and not bool(_tutorial.get("tour_only", false))
+
 func _build_barn() -> void:
+	# The first sale must remain reachable even if Gear was open beforehand.
+	if _first_harvest_barn():
+		_inventory_tab = "crops"
 	var page = ShopPages.new()
 	_body.add_child(page)
 	_refs.shop_page = page

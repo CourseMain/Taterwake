@@ -8,7 +8,7 @@ const STEPS: Array[Dictionary] = [
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
 	{"id": "grow", "title": "Let it grow", "body": "Watered potatoes grow on their own. You can walk around while you wait."},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
-	{"id": "sell", "title": "Your first sale", "body": "Press F to sell your Russets. Or click the barn, then Sell all.\nThat finishes the lesson.", "focus": "barn", "key": "F · SELL"},
+	{"id": "sell", "title": "Your first sale", "body": "Open the barn, then Sell on your Russet crate. Or press F.", "focus": "barn", "key": "F · SELL"},
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
@@ -118,6 +118,7 @@ func allowed_actions() -> Array[String]:
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)
+	if "barn" in _features(): result.append("inventory_tab:crops")
 	for tool: String in _tools(): result.append("tool:" + tool)
 	if current_id() == "market": result.append("buy:russet:1")
 	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
