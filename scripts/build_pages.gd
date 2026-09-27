@@ -19,7 +19,7 @@ const TRADEOFFS: Dictionary = {
 	"investor": "The locked quote cannot rise. Expired offers pay nothing; crops stay in your barn. Switching builds keeps the deadline running.",
 	"gambler": "Staked crops are consumed. Half-value results lose half the stake. Charms can lower the payout. Pending results remain claimable after switching.",
 }
-const UNLOCK_NOTE: String = "Build Crates: 5% drop chance from paid Roll House rolls. Open in Inventory."
+const UNLOCK_NOTE: String = "Build Crates: 10% drop chance from paid Roll House rolls. Open in Inventory."
 const PURPOSE: Dictionary = {
 	"farmer": "3× harvest · 1 compost",
 	"industrialist": "Grade crops for higher prices",
@@ -44,13 +44,11 @@ static func create(h) -> void:
 	var nav = h._hbox(10)
 	h._body.add_child(nav)
 	nav.add_child(h._button("‹ All builds", "build:inspect:"))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nav.add_child(spacer)
+	_progress(h, nav, id)
 	var equip = h._button("Select build", "build:select:" + id, true)
 	nav.add_child(equip)
 	h._refs.build_equip = equip
-	var selection_note = h._wrap("", 12, h.MUTED)
+	var selection_note = h._wrap("", 12, INK)
 	h._body.add_child(selection_note)
 	h._refs.build_selection_note = selection_note
 	var art = Art.new()
@@ -151,6 +149,31 @@ static func _display(h, text: String, size: int, color: Color) -> Label:
 	label.add_theme_font_override("font", font)
 	label.add_theme_constant_override("outline_size", 0)
 	return label
+
+static func _progress(h, parent: Control, id: String) -> void:
+	var column = h._vbox(3)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	parent.add_child(column)
+	h._refs["build_xp_box:" + id] = column
+	var caption = h._wrap("", 13, INK, true)
+	column.add_child(caption)
+	h._refs["build_xp:" + id] = caption
+	var meter = h._meter(ACCENTS[id])
+	meter.custom_minimum_size.y = 6
+	column.add_child(meter)
+	h._refs["build_xp_meter:" + id] = meter
+	_refresh_progress(h, id)
+
+static func _refresh_progress(h, id: String) -> void:
+	if not h._refs.has("build_xp:" + id): return
+	var info: Dictionary = h._build_system().progression(id)
+	h._refs["build_xp_box:" + id].visible = info.level > 0
+	h._refs["build_xp:" + id].text = "Lv.%d · MAX" % info.level if info.maxed else "Lv.%d · %d / %d XP" % [info.level, info.xp, info.required]
+	h._refs["build_xp:" + id].tooltip_text = info.source
+	var meter: ProgressBar = h._refs["build_xp_meter:" + id]
+	meter.max_value = maxi(1, int(info.required))
+	meter.value = meter.max_value if info.maxed else info.xp
 
 static func _compact_type(node: Node) -> void:
 	if node is Label or node is Button or node is LineEdit:
@@ -270,6 +293,7 @@ static func create_overview(h, system) -> void:
 		h._refs["build_status:" + id] = badge
 		var effect = h._wrap(PURPOSE[id], 13, INK)
 		title.add_child(effect)
+		_progress(h, title, id)
 		var explore = h._button("Open" if entry.unlocked else "Preview", "build:inspect:" + id, entry.active)
 		title.add_child(explore)
 		h._refs["build_explore:" + id] = explore
@@ -348,8 +372,10 @@ static func _readiness(h, p, verb: String) -> Dictionary:
 	return info
 
 static func refresh(h) -> void:
-	if not h._refs.has("prof_status"): return
 	var b = h._build_system()
+	if b == null: return
+	for build_id in ORDER: _refresh_progress(h, build_id)
+	if not h._refs.has("prof_status"): return
 	var p = b.professions
 	var d: Dictionary = p.data
 	var farm = b.state
@@ -357,8 +383,8 @@ static func refresh(h) -> void:
 	var equipped: bool = b.active == id
 	var unlocked: bool = int(b.levels[id]) > 0
 	h._refs.build_equip.text = "Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Locked · Build Crate")
-	h._refs.build_selection_note.visible = not unlocked
-	h._refs.build_selection_note.text = UNLOCK_NOTE if not unlocked else ""
+	h._refs.build_selection_note.visible = not unlocked or int(b.levels[id]) < b.MAX_LEVEL
+	h._refs.build_selection_note.text = UNLOCK_NOTE if not unlocked else str(b.XP_SOURCES[id])
 	h._refs.build_equip.tooltip_text = "Replaces %s bonuses" % b.active.capitalize() if unlocked and not equipped else ""
 	h._refs.build_equip.disabled = equipped or not unlocked
 	h._refs.build_art.grade = str(d.last_grade) if d.last_grade != "" else p.grade_preview().grade

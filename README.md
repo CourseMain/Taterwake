@@ -4,7 +4,7 @@
 
 Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.3:** Spudions are the farm currency, with a potato symbol on balances and prices throughout the game. Includes the solid-colour village shops, compact seed controls and touch scrolling fixes. Existing farms and balances are preserved. See [all changes](CHANGELOG.md#103).
+**v1.0.3.1:** Builds now earn XP from completed profession activities. The Builds pages show your progress, and Build Crates now have a 10% drop chance per paid Roll House roll. Existing farms, Spudions, build levels and unopened crates are preserved. See [all changes](CHANGELOG.md#1031).
 
 For the next release stages, follow the [publishing checklist](PUBLISHING.md): browser playtesting, Steamworks setup, desktop testing and release review.
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3.1
+
+- Builds earn XP from their profession's completed work, with progress bars and short XP instructions in Builds. Existing levels are preserved; crates keep earned XP when adding a level.
+- Increased the independent Build Crate chance from 5% to 10% per paid Roll House roll. Free Crown bonus rolls no longer receive extra paid-roll crate attempts.
+- Preserved old saves and guarded XP against repeated claims, partial harvests and failed activities. Maximum build level remains 30.
+
 ## 1.0.3
 
 - Named the farm currency Spudions, with an original potato symbol beside balances, prices, rewards, stakes and debt amounts.

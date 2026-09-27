@@ -1642,7 +1642,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 		return 0
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	storage[id] = int(storage[id]) + quantity
-	if is_instance_valid(build_system): build_system.professions.harvested(id, first_cut, quantity)
+	if is_instance_valid(build_system): build_system.professions.harvested(id, first_cut, quantity, str(plot.get("variety", "")))
 	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + int(ceil(quantity * (1.0 + item_mastery_bonus()))))
 	plot["pending"] = int(plot["pending"]) - quantity
 	if current_island == 3:
@@ -2092,7 +2092,7 @@ func roll(kind: String) -> String:
 	coins = maxf(0.0, coins - bet)
 	var results: Array[Dictionary] = [_resolve_roll(bet, chosen_odds, chosen_stake_bonus)]
 	if has_crown:
-		results.append(_resolve_roll(bet, _roll_odds_with_stake(chosen_stake_bonus), chosen_stake_bonus))
+		results.append(_resolve_roll(bet, _roll_odds_with_stake(chosen_stake_bonus), chosen_stake_bonus, false))
 	_complete_roll_transaction(results, 1, has_crown, is_debug, balance_before, bet)
 	reward_received.emit(str(last_roll["title"]), str(last_roll["detail"]), str(last_roll["tier"]))
 	var message: String = _finish("%s — %s%s" % [last_roll["title"], last_roll["detail"], " Aurora Crown granted one free bonus roll." if has_crown else ""])
@@ -2134,7 +2134,7 @@ func roll_batch(kind: String, count: int) -> Array[Dictionary]:
 		var result: Dictionary = _resolve_roll(bet, roll_odds(kind), stake_bonus)
 		results.append(result.duplicate(true))
 	if has_crown:
-		results.append(_resolve_roll(bet, _roll_odds_with_stake(stake_bonus), stake_bonus))
+		results.append(_resolve_roll(bet, _roll_odds_with_stake(stake_bonus), stake_bonus, false))
 	_complete_roll_transaction(results, count, has_crown, is_debug, balance_before, total)
 	_finish("%d paid rolls%s settled. %s spent; every reward is in your inventory." % [count, " + 1 free Crown roll" if has_crown else "", money(total)])
 	_rolling_reward = false
@@ -2169,7 +2169,7 @@ func _complete_roll_transaction(results: Array[Dictionary], paid_count: int, has
 		"paid_count": paid_count, "bonus_count": 1 if has_crown else 0, "refunds": refunds, "duplicate_returns": duplicate_returns, "jackpot_returns": jackpot_returns}
 
 
-func _resolve_roll(bet: float, chosen_odds: Array[Dictionary], chosen_stake_bonus: float) -> Dictionary:
+func _resolve_roll(bet: float, chosen_odds: Array[Dictionary], chosen_stake_bonus: float, paid_roll: bool = true) -> Dictionary:
 	roll_count += 1
 	var draw: float = rng.randf() * 100.0
 	var cumulative: float = 0.0
@@ -2179,7 +2179,7 @@ func _resolve_roll(bet: float, chosen_odds: Array[Dictionary], chosen_stake_bonu
 		if draw < cumulative:
 			tier = str(entry["tier"])
 			break
-	var result: Dictionary = _grant_roll_reward(tier, bet)
+	var result: Dictionary = _grant_roll_reward(tier, bet, paid_roll)
 	result["stake_bonus"] = chosen_stake_bonus
 	result["odds"] = chosen_odds
 	result["roll_number"] = roll_count
@@ -2206,7 +2206,7 @@ func _roll_collectible(tier: String) -> String:
 	return pool[rng.randi_range(0, pool.size() - 1)] if not pool.is_empty() else ""
 
 
-func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
+func _grant_roll_reward(tier: String, bet: float, paid_roll: bool = true) -> Dictionary:
 	var coins_before_reward: float = coins
 	var scale: int = maxi(1, int(minf(1000000000.0, floor(bet / roll_cost("normal")))))
 	var title: String = tier.to_upper()
@@ -2282,7 +2282,7 @@ func _grant_roll_reward(tier: String, bet: float) -> Dictionary:
 			coins = minf(MAX_MONEY, coins + reward)
 			title = "THE POTATO JACKPOT!"
 			detail = "%s in earned game Spudions — 20 times your stake!" % money(reward)
-	if is_instance_valid(build_system) and build_system.has_method("grant_roll_build"):
+	if paid_roll and is_instance_valid(build_system) and build_system.has_method("grant_roll_build"):
 		var build_reward: String = str(build_system.grant_roll_build(tier))
 		if not build_reward.is_empty():
 			detail += " " + build_reward

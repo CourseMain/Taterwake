@@ -219,10 +219,13 @@ func cultivate(index: int) -> String:
 func planted(plot: Dictionary) -> void:
 	if data.variety in data.seedbank: plot.variety = data.variety
 
-func harvested(crop: String, first_cut: bool, quantity: int) -> void:
+func harvested(crop: String, first_cut: bool, quantity: int, variety: String = "") -> void:
 	if quantity <= 0: return
 	mark_fresh(crop, quantity)
-	if first_cut: data.compost = mini(99, int(data.compost) + 1)
+	if first_cut:
+		data.compost = mini(99, int(data.compost) + 1)
+		if owner_build.active == "farmer": owner_build.award_xp("farmer", 4)
+		elif owner_build.active == "scientist" and variety in data.seedbank: owner_build.award_xp("scientist", 4)
 
 func breed() -> String:
 	var farm = owner_build.state
@@ -236,6 +239,7 @@ func breed() -> String:
 	data.seedbank.append(data.recipe)
 	data.variety = data.recipe
 	owner_build.research = mini(10000, owner_build.research + 1)
+	owner_build.award_xp("scientist", 80)
 	return emit_result("scientist", recipe.name + " discovered", "%s seeds saved · %s. Your next plantings inherit this trait, with any build." % [recipe.name, recipe.trait])
 
 func reserve() -> String:
@@ -258,6 +262,7 @@ func deliver() -> String:
 	data.deliveries = mini(10000, int(data.deliveries) + 1)
 	data.shipping = 8.0
 	pay(value, order.crop)
+	owner_build.award_xp("investor", int(order.quantity) * 2)
 	return emit_result("investor", "Shipment · " + farm.money(value), "Cargo loaded · %s paid at your reserved price." % farm.money(value))
 
 func stake_harvest() -> String:
@@ -298,6 +303,7 @@ func claim() -> String:
 	data.wager = {}
 	var value: float = wager.quantity * wager.quote * wager.factor
 	pay(value, wager.crop)
+	owner_build.award_xp("gambler", 20)
 	return emit_result("gambler", "Claimed · " + farm.money(value), "Harvest stake paid %s. Everything else in your farm stayed untouched." % farm.money(value))
 
 func pay(value: float, crop: String) -> void:

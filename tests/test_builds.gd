@@ -124,7 +124,7 @@ func _run() -> void:
 	state.rng.seed = 182
 	for index in range(1000):
 		builds.grant_roll_build("common")
-	check(builds.build_crates >= 30 and builds.build_crates <= 70, "independent common rolls include the five percent crate drop")
+	check(builds.build_crates >= 70 and builds.build_crates <= 130, "independent common rolls include the ten percent crate drop")
 	check(builds.levels.farmer == 1, "common crate drops do not silently grant a build before opening")
 	starting_levels = builds.levels.duplicate()
 	for tier in ["rare", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]:

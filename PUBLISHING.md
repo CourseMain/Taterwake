@@ -1,12 +1,12 @@
 # Taterland publishing steps
 
-The v1.0.3 browser build is a release candidate for playtesting. It is not a
+The v1.0.3.1 browser build is a release candidate for playtesting. It is not a
 Steam submission. Spudions rename the existing game currency; balances,
 prices and save data retain their values.
 
 ## 1. Get the release and test a fresh farm
 
-1. Open https://github.com/CourseMain/Taterwake/releases/tag/v1.0.3.
+1. Open https://github.com/CourseMain/Taterwake/releases/tag/v1.0.3.1.
 2. Under **Assets**, download `Taterland-Web.zip` for the packaged browser build,
    or use https://coursemain.github.io/Taterwake/.
 3. Keep your existing save. Use a separate browser profile for a fresh test farm.

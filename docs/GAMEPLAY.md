@@ -114,7 +114,7 @@ Open the three-line menu or visit the new island station for these activities:
 
 The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] contains illustrated seeds, raw crops, mutation crates, permanent items, build cards, build crates and processed batches, each with distinct artwork. Raw and processed potatoes stay held until you choose to sell them.
 
-You begin as **Farmer**. Opening owned Build Crates can unlock and develop five specializations, each with **30 levels**. Paid rolls only award sealed crates, never build levels directly. Select one in Builds [C].
+You begin as **Farmer**. Opening owned Build Crates can unlock and develop five specializations, each with **30 levels**. Paid rolls only award sealed crates, never build levels directly. Select one in Builds [C]. Equipped harvest professions and completed build activities earn XP toward the next level. The Builds pages show XP progress; see [XP amounts](BUILD_PROFESSIONS.md#activity-rules-and-tradeoffs).
 
 | Build | Focus and active ability |
 | --- | --- |
@@ -130,7 +130,7 @@ Prize crops, seed-bank jars, machine additions, shipment carts and the lucky cha
 
 For disposable scenarios, open **Play Builds Lab.command**. See the [build activities and testing guide](BUILD_PROFESSIONS.md) for recipes, grades, save compatibility and test steps.
 
-Every paid roll also has an independent **5% chance of a Build Crate**. Open it from Inventory for a separate, build-only illustrated reward reel. Ownership is checked by the game simulation before RNG runs. The crate is consumed before its single reward is granted, overlapping requests are blocked, and its result is saved immediately. Requests without a crate show “You need a Build Crate.” Fully developed builds preserve unused crates.
+Every paid roll also has an independent **10% chance of a Build Crate**. Open it from Inventory for a separate, build-only illustrated reward reel. Ownership is checked by the game simulation before RNG runs. The crate is consumed before its single reward is granted, overlapping requests are blocked, and its result is saved immediately. Requests without a crate show “You need a Build Crate.” Fully developed builds preserve unused crates.
 
 ## Roll House
 

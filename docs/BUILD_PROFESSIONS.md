@@ -20,6 +20,24 @@ Expand **Builds & sea lab · scenarios**:
 
 ## Activity rules and tradeoffs
 
+Builds earn activity XP as well as levels from crates. Open **Builds [C]**
+to see the level, XP bar and next target. Level 1 needs 40 XP; each following
+level needs 10 more XP, up to the level-30 cap. Crates still unlock builds or
+add one level; they preserve earned XP unless that level reaches the cap.
+
+| Build | XP earned |
+| --- | --- |
+| Farmer | 4 per successfully harvested patch while equipped. A partial harvest counts once. |
+| Industrialist | 1 per surviving crop in a finished batch; loading or selling adds none. |
+| Scientist | 80 per new variety discovered, then 4 per patch of a discovered variety harvested while equipped. |
+| Investor | 2 per crop in a completed reserved-price shipment; expired offers give none. |
+| Gambler | 20 per claimed harvest stake, regardless of stake size or outcome. Rerolls add none. |
+
+Committed batches, shipments and stakes credit their owning build even after
+switching. Failed actions, full-barn clicks and repeated claims award no XP.
+Build Crates have an independent 10% chance on each paid Roll House roll;
+free Crown bonus rewards add no crate attempt.
+
 | Build | Player action | Persistent result |
 | --- | --- | --- |
 | Farmer | Spend **1 compost** on one planted, still-growing crop; starts with three compost | That patch grows a giant potato with **3× ordinary harvest**. Each crop patch's first successful harvest earns one compost, capped at 99. Partial follow-up harvests earn no extra compost. |
@@ -54,7 +72,7 @@ Prior local Safari measurements on this Apple M4 Mac (eight-second samples after
 
 These are short local measurements, not a promise for every Safari device. An earlier sample during concurrent test activity averaged about 50 FPS. The lab includes the same measurement controls so performance can be checked on other hardware. Loading, processing and selling an SSS batch were also exercised through the Safari canvas.
 
-Build save schema **3** accepts schemas **1 and 2**. Levels, crates, research, discoveries, contracts, committed wagers, running production and processed inventory remain intact. Schema 1 receives safe profession defaults; legacy jobs without a letter grade keep their original multiplier through resaving and completion. Schema 2's old freshness marker becomes one timed group, capped to the actual raw crop stock in the barn. Existing timers continue from their saved values. Pending wagers receive a saved reroll flag; an already-spent charm is treated as used for that wager.
+Build save schema **4** stores XP for each profession and accepts schemas **1, 2 and 3**. Older farms retain their levels and start with zero XP toward their next level. Levels, crates, research, discoveries, contracts, committed wagers, running production and processed inventory remain intact. Schema 1 receives safe profession defaults; legacy jobs without a letter grade keep their original multiplier through resaving and completion. Schema 2's old freshness marker becomes one timed group, capped to the actual raw crop stock in the barn. Existing timers continue from their saved values. Pending wagers receive a saved reroll flag; an already-spent charm is treated as used for that wager.
 
 Schema 3 saves each crop's timed freshness groups and the per-wager reroll flag. Validation accepts legitimate partially damaged production batches and rejects malformed data before mutating the farm. Growing giant-potato flags and inherited traits stay with each island's fields. The main save filename and native application-data location are unchanged. Tax collection still uses the existing simulation and amount; the visitor presents that event.
 
