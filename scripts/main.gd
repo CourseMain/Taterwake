@@ -4,7 +4,6 @@ extends Node3D
 const StateScript = preload("res://scripts/game_state.gd")
 const WorldScript = preload("res://scripts/farm_world.gd")
 const HudScript = preload("res://scripts/game_hud.gd")
-const BuildsScript = preload("res://scripts/player_builds.gd")
 const ActivitiesScript = preload("res://scripts/island_activities.gd")
 const PestAlert = preload("res://scripts/pest_alert.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
@@ -27,8 +26,6 @@ const MAX_ACCELERATED_STEP: float = 1.0
 var state
 var world
 var hud
-var builds
-var prize_target: bool = false
 var activities
 var selected_tool: String = "hoe"
 var destination: Vector3 = Vector3.ZERO
@@ -91,11 +88,6 @@ func _ready() -> void:
 	state = StateScript.new()
 	state.name = "FarmState"
 	add_child(state)
-	builds = BuildsScript.new()
-	builds.name = "PlayerBuilds"
-	builds.state = state
-	state.build_system = builds
-	add_child(builds)
 	activities = ActivitiesScript.new()
 	activities.name = "IslandActivities"
 	activities.setup(state)
@@ -208,11 +200,6 @@ func _process(delta: float) -> void:
 	if state.run_over:
 		return
 	_update_equipment_card(delta)
-	if prize_target:
-		var ready: Dictionary = builds.professions.cultivation_info()
-		if not ready.ready:
-			_cancel_prize_target()
-			hud.show_farm_hint(ready.reason)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
 	world.set_day_time(state.elapsed)
@@ -232,8 +219,6 @@ func _process(delta: float) -> void:
 		if touch_controls.movement.length() > 0.05:
 			input_vector = touch_controls.movement
 		if input_vector.length() > 0.05:
-			if prize_target and walking:
-				hud.set_plot_action("Click a glowing crop · 1 compost · grows a giant potato with 3× yield.")
 			walking = false
 			pending_plot = -1
 			pending_refill = false
@@ -290,10 +275,7 @@ func _process(delta: float) -> void:
 			hud.update_state(state)
 		world.set_export_state(state.export_active, state.export_timer)
 		world.set_frost_state(state.frost_active, state.frost_timer)
-		var activity: Dictionary = builds.activity_info()
-		world.set_processing(bool(activity.processing), float(activity.progress))
 		world.set_activity_state(activities.info())
-		world.profession_world.refresh(builds, state)
 	save_elapsed += delta
 	if save_elapsed >= 10.0 and not test_mode:
 		state.save_game()
@@ -335,18 +317,12 @@ func _advance_simulation(delta: float) -> void:
 	var remaining: float = delta
 	while remaining >= 0.000001:
 		var step: float = remaining
-		# Fertilizer belongs to builds but affects State's crop growth. Expire it
-		# at its own boundary, then consume the rest of this simulation interval.
-		if builds.fertilizer > 0.0:
-			step = minf(step, maxf(0.000001, float(builds.fertilizer)))
 		if float(state.blind_cycle.due_in) > 0.0:
 			step = minf(step, float(state.blind_cycle.due_in))
 		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
-		var processing_step: float = activities.processing_time(step)
 		state.update(step)
 		if state.run_over:
 			return
-		builds.update(step, processing_step)
 		remaining = maxf(0.0, remaining - step)
 
 func _set_debug_session(unlocked: bool, error: String = "") -> void:
@@ -460,9 +436,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE:
-				if prize_target:
-					_cancel_prize_target()
-					return
 				if not climate_target.is_empty() or not hud._climate_console.equipment.is_empty():
 					_climate_action("cancel")
 					return
@@ -473,7 +446,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_B: _on_user_action("market")
 			KEY_V: _on_user_action("barn")
 			KEY_I: _on_user_action("inventory")
-			KEY_C: _on_user_action("builds")
 			KEY_U: _on_user_action("tools")
 			KEY_P: _on_user_action("dex")
 			KEY_Q: _on_user_action("quests")
@@ -511,10 +483,6 @@ func _interact_station(station: String) -> void:
 	if station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
-	elif station == "profession:farmer":
-		_on_action("build:inspect:farmer")
-	elif station.begins_with("profession:"):
-		_on_action("builds")
 	elif station == "island":
 		queue_ferry()
 	elif station == "market" and not _tutorial_active():
@@ -547,7 +515,6 @@ func _start_conversation(id: String, requested_service: String = "") -> void:
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
 	_cancel_walk()
-	_cancel_prize_target()
 	_close_equipment()
 	climate_target = ""
 	hud._climate_console.targeting = ""
@@ -703,7 +670,6 @@ func queue_ferry() -> void:
 	if _tutorial_active() and not tutorial.allows_action("island"):
 		tutorial.explain_block()
 		return
-	_cancel_prize_target()
 	_cancel_walk()
 	if world.player.position.distance_to(world.ferry_position()) <= 2.0:
 		_on_user_action("island")
@@ -724,7 +690,6 @@ func _cancel_walk() -> void:
 		world.highlight_tiles(NO_TILES)
 
 func _select_tool(tool: String) -> void:
-	_cancel_prize_target()
 	world.set_meta("water_tool", tool == "water")
 	climate_target = ""
 	hud._climate_console.targeting = ""
@@ -739,29 +704,6 @@ func _select_tool(tool: String) -> void:
 	if not hud.is_panel_open():
 		_update_hover()
 
-func _begin_prize_target() -> void:
-	var info: Dictionary = builds.professions.cultivation_info()
-	if not info.ready:
-		hud.show_toast(info.reason)
-		return
-	_cancel_walk()
-	_close_equipment()
-	climate_target = ""
-	hud._climate_console.targeting = ""
-	prize_target = true
-	hud.close_panel()
-	hud._toast_box.hide()
-	hud.clear_farm_hint()
-	hud.set_plot_action("Grow a giant potato · 1 compost\nClick one of the glowing planted patches.")
-	_preview_area(-1, "cultivate")
-
-func _cancel_prize_target() -> void:
-	if not prize_target: return
-	prize_target = false
-	if pending_tool == "cultivate": _cancel_walk()
-	if is_instance_valid(hud): hud.set_plot_action("")
-	if is_instance_valid(world): world.highlight_tiles(NO_TILES)
-
 func queue_plot(index: int) -> void:
 	_close_equipment()
 	pending_refill = false
@@ -774,36 +716,17 @@ func queue_plot(index: int) -> void:
 		return
 	if index < 0 or index >= state.plots.size():
 		return
-	if prize_target:
-		var target_info: Dictionary = builds.professions.cultivation_info(index)
-		if not target_info.ready:
-			hud.set_plot_action(target_info.reason + "\nChoose a glowing planted patch.")
-			_preview_area(-1, "cultivate")
-			return
-		hud.set_plot_action("Walking to feed this crop · 1 compost\nIt will grow a giant potato with 3× the harvest.")
 	hud.note_farm_action()
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
 		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1.8K")
 		return
 	pending_ferry = false
 	pending_plot = index
-	pending_tool = "cultivate" if prize_target else selected_tool
+	pending_tool = selected_tool
 	_start_walk(world.plot_positions[index] + Vector3(0.0, 0.0, 0.65))
 	_preview_area(index, pending_tool)
 
 func perform_plot(index: int, tool: String = "hoe") -> void:
-	if state.run_over or index < 0 or index >= state.plots.size(): return
-	if tool == "cultivate":
-		var already_prize: bool = state.plots[index].get("cultivated", false)
-		var result: String = builds.professions.cultivate(index)
-		if state.plots[index].get("cultivated", false) and not already_prize:
-			_cancel_prize_target()
-			hud.show_farm_hint("Giant potato growing · Harvest [4] when ripe." if state.plots[index].watered else "Compost added · Water [3], then harvest the giant potato when ripe.")
-			world.play_farm_effect([index], "compost", 1, 0)
-			_save_blind_checkpoint.call_deferred()
-		else:
-			hud.set_plot_action(result + "\nChoose another glowing crop, or cancel.")
-		return
 	if state.run_over:
 		return
 	if _tutorial_active() and not tutorial.allows_plot(index, tool):
@@ -845,18 +768,6 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 
 func _interact_nearby() -> void:
 	if hud.is_panel_open() or state.run_over or state.climate.data.intro_pending: return
-	if prize_target:
-		var eligible: Array = builds.professions.cultivation_info().eligible
-		var nearest_crop: int = -1
-		var nearest_distance: float = 2.8
-		for index in eligible:
-			var distance: float = world.player.position.distance_to(world.plot_positions[index])
-			if distance < nearest_distance:
-				nearest_crop = index
-				nearest_distance = distance
-		if nearest_crop >= 0: perform_plot(nearest_crop, "cultivate")
-		else: hud.set_plot_action("Move closer to a glowing crop, or click it.\n1 compost makes this harvest 3× larger.")
-		return
 	if world.player.position.distance_to(world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2.0:
 		_select_equipment("tank")
 		_queue_refill()
@@ -885,11 +796,6 @@ func _interact_nearby() -> void:
 		hud.show_farm_hint("Click a bed, or move closer to use E")
 
 func _preview_area(index: int, tool: String) -> void:
-	if prize_target or tool == "cultivate":
-		var chosen: Array[int] = []
-		chosen.assign(builds.professions.cultivation_info().eligible)
-		world.highlight_tiles(chosen)
-		return
 	if not hud._climate_console.equipment.is_empty():
 		var id: String = hud._climate_console.equipment
 		var tiles: Array[int] = []
@@ -921,9 +827,6 @@ func _update_hover() -> void:
 	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(get_viewport().get_mouse_position()))
 	hover_plot = int(hit.get("plot_index", -1))
 	_preview_area(pending_plot if walking and pending_plot >= 0 else hover_plot, pending_tool if walking else selected_tool)
-	if prize_target:
-		hud.set_context("")
-		return
 	if not climate_target.is_empty():
 		hud.set_context("Click the highlighted beds · Esc cancels")
 		return
@@ -951,16 +854,12 @@ func _update_hover() -> void:
 			var area: int = state.affected_tiles(hover_plot, action).size()
 			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
 	elif hit.has("station"):
-		if str(hit.station).begins_with("profession:"):
-			var profession: String = str(hit.station).get_slice(":", 1)
-			hud.set_context({"farmer": "Compost · Click to grow a giant potato", "industrialist": "Workshop · Click to load and grade crops", "scientist": "Seed bench · Click to discover planting traits", "investor": "Buyers · Click to reserve a shipment price", "gambler": "Harvest stakes · Click to choose crops and see the odds"}.get(profession, "Builds · Click to explore"))
-			return
 		if str(hit.station).begins_with("equipment:"):
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
 		var travel_hint: String = "Ferry · Click to board"
-		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities", "climate": "Farm protection · Click to view upgrades"}
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
@@ -983,7 +882,6 @@ func _on_state_changed() -> void:
 	if world != null:
 		if world.current_island != state.current_island:
 			_on_island_changed(state.current_island)
-		world.profession_world.refresh(builds, state)
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_island2_unlocked(state.island2_unlocked)
@@ -1015,7 +913,6 @@ func _update_weather_shake(delta: float) -> void:
 	world.camera.v_offset = sin(weather_shake_clock * 57.0 + 0.8) * amplitude * 0.6
 
 func _on_island_changed(id: int) -> void:
-	_cancel_prize_target()
 	climate_target = ""
 	_cancel_walk()
 	if hud != null:
@@ -1163,13 +1060,11 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
-			_cancel_prize_target()
 			_cancel_walk()
-			if parts[0] == "builds": hud._build_selection = ""
 			hud.show_panel(parts[0], state)
 		"activity":
 			if parts.size() < 2:
@@ -1210,25 +1105,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			hud.show_panel("tools", state)
 		"travel": state.travel_to(int(parts[1]))
 		"quest": state.claim_quest(parts[1])
-		"profession":
-			if parts[1] == "giant":
-				_begin_prize_target()
-			elif parts[1] == "cancel": _cancel_prize_target()
-			elif parts[1] == "sell": builds.sell_processed()
-			else: builds.professions.action(parts[1], parts[2] if parts.size() > 2 else "")
-		"build":
-			match parts[1]:
-				"inspect":
-					if parts.size() != 3 or (not parts[2].is_empty() and parts[2] not in builds.IDS): return
-					_cancel_prize_target()
-					_cancel_walk()
-					hud._build_selection = parts[2]
-					hud.show_panel("builds", state)
-				"select":
-					_cancel_prize_target()
-					builds.select_build(parts[2])
-				"ability": builds.use_ability()
-				"sell_processed": builds.sell_processed()
 		"close": hud.close_panel()
 		"crop": state.select_crop(parts[1])
 
@@ -1296,7 +1172,6 @@ func _on_climate_changed(phase: String) -> void:
 	_save_blind_checkpoint.call_deferred()
 
 func _on_blind_resolved(result: Dictionary) -> void:
-	world.profession_world.tax_collected(result, state)
 	if not state.run_over:
 		hud.show_toast("TAX %s · %s\nCollected %s · Balance %s" % ["PAID" if result.cleared else "BORROWED", state.blind_progress_text(result.ratio), state.money(result.tax, true), state.money(result.after, true)])
 		_play_tone(1046.5, 0.35)
@@ -1327,7 +1202,7 @@ func _on_notification(message: String) -> void:
 	if _working_plot:
 		# Plot results use one quiet footer slot, never a second central toast.
 		return
-	for marker in ["quest complete", "shores unlocked", "frosthollow unlocked", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "all builds", "failed", "already collected", "emergency"]:
+	for marker in ["quest complete", "shores unlocked", "frosthollow unlocked", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "failed", "already collected", "emergency"]:
 		if lower.contains(marker):
 			hud.show_toast(message)
 			return
@@ -1442,7 +1317,6 @@ func _close_equipment() -> void:
 	if is_instance_valid(world._climate_field): world._climate_field.loop.selected = ""
 
 func _select_equipment(id: String, brief: bool = false) -> void:
-	_cancel_prize_target()
 	equipment_prompt_time = 10.0 if brief else 0.0
 	_cancel_walk()
 	hud.close_panel()

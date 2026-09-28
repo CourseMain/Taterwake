@@ -197,7 +197,7 @@ func show_report(farm) -> void:
 	_metrics["TAX BILL"].caption.text = "TAX COLLECTED" if tax_caused else "NEXT BASE TAX"
 	_metrics["TAX BILL"].value.text = farm.money(receipt.tax if tax_caused else farm.blind_info().base_tax, true)
 	_metrics["TAX BILL"].note.text = "Island %d tax tier" % int(farm.blind_cycle.island)
-	_context.text = "%s build" % report.build
+	_context.text = "Island %d" % int(report.island)
 	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%s tax collected\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), farm.money(report.tax_paid, true), project_count(report.projects)]
 	_ledger.hide()
 	_scroll.scroll_vertical = 0

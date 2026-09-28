@@ -22,7 +22,7 @@ const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 24
+const MECHANICS_REVISION: int = 25
 const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -61,7 +61,6 @@ const QUEST_REWARDS: Dictionary = {
 }
 const MAX_MONEY: float = 1.0e300
 const MAX_INVENTORY: int = 1000000000000000
-var build_system: Node = null
 var activity_system: Node = null
 
 # Progress is saved; the scene controller decides when to resume the guided lesson.
@@ -193,15 +192,9 @@ func _start_frost() -> void:
 	frost_target_count = 12
 	for _index in range(frost_target_count):
 		var pick: int = rng.randi_range(0, remaining.size() - 1)
-		if str(island_plots["3"][remaining[pick]].get("variety", "")) == "frost": frost_cleared += 1
-		else: island_plots["3"][remaining[pick]]["frozen"] = true
+		island_plots["3"][remaining[pick]]["frozen"] = true
 		remaining.remove_at(pick)
-	if frost_cleared >= frost_target_count:
-		_end_frost(true)
-		return
-	var icy_beds: int = frost_target_count - frost_cleared
-	news = "FROSTBREAK! Hoe %d icy beds in 20 seconds. Clear the field to earn an Icecap seed!" % icy_beds
-	if frost_cleared > 0: news += " Frostgold sheltered %d beds." % frost_cleared
+	news = "FROSTBREAK! Hoe %d icy beds in 20 seconds. Clear the field to earn an Icecap seed!" % frost_target_count
 	notified.emit(news)
 	changed.emit()
 
@@ -222,16 +215,12 @@ func _end_frost(success: bool = false) -> void:
 	changed.emit()
 
 
-func _build_bonus(method: String, fallback: float) -> float:
-	return float(build_system.call(method)) if is_instance_valid(build_system) and build_system.has_method(method) else fallback
-
-
 func crop_grow_time(id: String) -> float:
 	return float(CROPS[id]["grow"]) / crop_growth_speed(current_island, id)
 
 
 func _growth_speed(island: int) -> float:
-	var factor: float = maxf(0.1, _build_bonus("growth_factor", 1.0))
+	var factor: float = 1.0
 	if island == 3 and is_instance_valid(activity_system) and activity_system.has_method("growth_speed_multiplier"):
 		factor *= maxf(1.0, float(activity_system.growth_speed_multiplier()))
 	return factor * (1.0 if tutorial_active else climate.factor("growth", island))
@@ -813,8 +802,6 @@ func _pest_damage_tick(plot: Dictionary) -> void:
 
 
 func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
-	plot.erase("cultivated")
-	plot.erase("variety")
 	plot["stage"] = 0
 	plot["watered"] = false
 	plot["elapsed"] = 0.0
@@ -868,12 +855,6 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 	elif action == "harvest" and rank > 0:
 		column_radius = columns
 		row_radius = 2 if rank >= 3 else (1 if rank == 2 else 0)
-	var build_area: int = int(_build_bonus("area_bonus", 0.0))
-	if action in ["hoe", "water", "pest"]:
-		row_radius += build_area
-		column_radius += build_area
-	elif action == "harvest" and build_area > 0:
-		row_radius += build_area
 	for target_row in range(maxi(0, row - row_radius), mini(field_rows(), row + row_radius + 1)):
 		for target_column in range(maxi(0, column - column_radius), mini(columns, column + column_radius + 1)):
 			var target: int = target_row * columns + target_column
@@ -943,7 +924,6 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			plot["elapsed"] = 0.0
 			plot["watered"] = false
 			plot["pending"] = 0
-			if is_instance_valid(build_system): build_system.professions.planted(plot)
 			farm_help.observe_plot(self, target, "plant")
 			affected += 1
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
@@ -1011,11 +991,8 @@ func _harvest_plot(plot: Dictionary) -> int:
 		combo_count += 1
 		combo_multiplier = mini(16, int(pow(2.0, minf(4.0, float(combo_count - 1)))))
 		combo_time = 3.5
-		var yield_bonus: float = (1.0 + _build_bonus("yield_bonus", 0.0) + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
-		# Keep fractional potatoes between harvests so a modest yield item really
-		# earns more crops instead of being floored away on every small plant.
-		if bool(plot.get("cultivated", false)): yield_bonus *= 3.0
-		if str(plot.get("variety", "")) == "hearty": yield_bonus *= 1.5
+		var yield_bonus: float = (1.0 + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
+		# Keep fractional mastery yields between harvests.
 		var precise_yield: float = float(CROPS[id]["yield"]) * yield_bonus * combo_multiplier + float(harvest_fraction[id])
 		var whole_yield: float = floor(precise_yield + 0.000000001)
 		plot["yield_total"] = maxi(1, int(whole_yield))
@@ -1033,7 +1010,6 @@ func _harvest_plot(plot: Dictionary) -> int:
 		return 0
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	storage[id] = int(storage[id]) + quantity
-	if is_instance_valid(build_system): build_system.professions.harvested(id, first_cut, quantity, str(plot.get("variety", "")))
 	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + quantity)
 	plot["pending"] = int(plot["pending"]) - quantity
 	if current_island == 3:
@@ -1130,7 +1106,6 @@ func deliver_recovery() -> String:
 	for crop: String in crops_by_base_price(CROP_IDS):
 		var amount: int = mini(remaining, int(storage[crop]))
 		storage[crop] = int(storage[crop]) - amount
-		if amount > 0 and is_instance_valid(build_system): build_system.professions.consumed(crop, amount)
 		remaining -= amount
 		if remaining == 0: break
 	coins = minf(0.0, coins + float(order.payment))
@@ -1184,7 +1159,6 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
 	storage[id] = int(storage[id]) - amount
-	if is_instance_valid(build_system): build_system.professions.consumed(id, amount)
 	coins = minf(MAX_MONEY, coins + earnings)
 	_record_sales(earnings)
 	var sold_quote: float = float(market[id]["sell"])
@@ -1214,8 +1188,6 @@ func storage_used() -> int:
 	var total: int = 0
 	for id in CROP_IDS:
 		total += int(storage[id])
-	if is_instance_valid(build_system) and build_system.has_method("stored_count"):
-		total += int(build_system.stored_count())
 	return total
 
 
@@ -1415,8 +1387,6 @@ func reset_game() -> void:
 	tutorial_active = false
 	tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5}
 	farm_help.data = FarmHelp.fresh()
-	if is_instance_valid(build_system) and build_system.has_method("reset_builds"):
-		build_system.reset_builds()
 	if is_instance_valid(activity_system) and activity_system.has_method("reset"):
 		activity_system.reset()
 	current_island = 1
@@ -1493,8 +1463,6 @@ func _save_data() -> Dictionary:
 
 		"relief_clock": _relief_clock,
 		"rng_seed": str(rng.seed), "rng_state": str(rng.state)}
-	if is_instance_valid(build_system) and build_system.has_method("save_data"):
-		data["builds"] = build_system.save_data()
 	if is_instance_valid(activity_system) and activity_system.has_method("save_data"):
 		data["activities"] = activity_system.save_data()
 	return data
@@ -1699,11 +1667,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	for entry in data["quest_claimed"]:
 		quest_claimed.append(str(entry))
 	_relief_clock = float(data["relief_clock"])
-	if is_instance_valid(build_system):
-		if data.has("builds") and build_system.has_method("load_data"):
-			build_system.load_data(data["builds"])
-		elif build_system.has_method("reset_builds"):
-			build_system.reset_builds()
 	if is_instance_valid(activity_system):
 		if data.has("activities") and activity_system.has_method("load_data"):
 			activity_system.load_data(data["activities"])
@@ -1900,17 +1863,26 @@ func _current_save_fields(raw: Variant) -> Variant:
 		var base: int = 200
 		for level in range(int(data.barn_level)): base += int(200.0 * pow(4.0, level))
 		data.capacity = mini(MAX_INVENTORY, base)
-	if _number(data.get("mechanics_revision", 0), 0, 23, true) and data.get("farm_help") is Dictionary:
+	if _number(data.get("mechanics_revision", 0), 0, 24, true) and data.get("farm_help") is Dictionary:
 		var help: Dictionary = data.farm_help
 		for key in help.keys():
 			if not FarmHelp.fresh().has(key): help.erase(key)
 		if help.get("dismissed") is Array:
 			help.dismissed = help.dismissed.filter(func(id): return id in FarmHelp.TIP_IDS)
 	if data.get("climate") is Dictionary and data.climate.get("collapse") is Dictionary:
-		for key: String in ["seed_factor", "sell_factor", "market_crop", "market_change"]:
+		for key: String in ["build", "seed_factor", "sell_factor", "market_crop", "market_change"]:
 			data.climate.collapse.erase(key)
+	var saved_fields: Array = []
+	if data.get("plots") is Array: saved_fields.append(data.plots)
+	if data.get("island_plots") is Dictionary: saved_fields.append_array(data.island_plots.values())
+	for field in saved_fields:
+		if field is Array:
+			for plot in field:
+				if plot is Dictionary:
+					plot.erase("cultivated")
+					plot.erase("variety")
+	if data.get("npc_history") is Dictionary: data.npc_history.erase("ada")
 	var fields: Dictionary = _save_data()
-	fields["builds"] = {}
 	fields["activities"] = {}
 	for key in data.keys():
 		if not fields.has(key): data.erase(key)
@@ -1922,6 +1894,10 @@ func _current_save_fields(raw: Variant) -> Variant:
 		if data.get("npc_history") is Dictionary:
 			for id in data.npc_history.keys():
 				if not NpcRoster.PEOPLE.has(id): data.npc_history.erase(id)
+	if _number(data.get("mechanics_revision", 0), 0, 24, true) and data.get("tutorial_progress") is Dictionary:
+		var progress: Dictionary = data.tutorial_progress
+		if progress.get("tour_only") == true and _number(progress.get("version"), 2, 2, true) and _number(progress.get("step"), 6, 100, true):
+			progress.step = int(progress.step) - 1
 	return data
 
 
@@ -1937,8 +1913,6 @@ func _valid_save(raw: Variant) -> bool:
 		if not progress is Dictionary or not _number(progress.get("version"), 1.0, 2.0, true) or not _number(progress.get("step"), 0.0, 100.0, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0.0, 23.0, true):
 			return false
 	if data.has("farm_help") and not FarmHelp.valid(data.farm_help):
-		return false
-	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("valid_data") and not build_system.valid_data(data["builds"]):
 		return false
 	if data.has("activities") and is_instance_valid(activity_system) and activity_system.has_method("valid_data") and not activity_system.valid_data(data["activities"]):
 		return false
@@ -2053,8 +2027,6 @@ func _valid_save(raw: Variant) -> bool:
 	var used: int = 0
 	for id in save_crops:
 		used += int(data["storage"][id])
-	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("saved_storage_count"):
-		used += int(build_system.saved_storage_count(data["builds"]))
 	# Older farms can be overfull after losing storage bonuses; selling frees room.
 	if used > MAX_INVENTORY:
 		return false
@@ -2176,8 +2148,6 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 		if not raw[index] is Dictionary:
 			return false
 		var plot: Dictionary = raw[index]
-		if plot.has("cultivated") and not plot.cultivated is bool: return false
-		if plot.has("variety") and plot.variety not in ["hearty", "dry", "frost"]: return false
 		for key in ["unlocked", "watered", "tilled"]:
 			if not plot.has(key) or not plot[key] is bool:
 				return false

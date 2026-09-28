@@ -53,7 +53,6 @@ static func bake(kind: String) -> AudioStreamWAV:
 				"water": sample = (soft_noise * .6 + sin(TAU * (520 * t + sin(t * 51) * 1.5)) * .12) * sin(PI * t / duration)
 				"hoe": sample = (soft_noise * .8 + sin(TAU * 94 * t) * .45) * exp(-t * 17)
 				"pest": sample = noise * .25 * sin(PI * t / duration)
-				"compost": sample = soft_noise * .95 * sin(PI * t / duration) + sin(TAU * 180 * t) * .10 * exp(-t * 12)
 				_: sample = (soft_noise * .5 + sin(TAU * 240 * t) * .18) * exp(-t * 23)
 		var edge: float = minf(1, t * 700) * minf(1, (duration - t) * 80)
 		bytes.encode_s16(frame * 2, int(clampf(sample * edge, -.95, .95) * 32767))

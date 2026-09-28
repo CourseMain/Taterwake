@@ -205,8 +205,8 @@ func fit_modal() -> void:
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
 	var height: float = minf(view.y - 24, 620.0) if trading else view.y - 112
-	if hud._panel_kind in ["builds", "help"]:
-		height = minf(height, hud.BuildPages.content_height(hud))
+	if hud._panel_kind == "help":
+		height = minf(height, hud.modal_content_height())
 	elif hud._panel_kind in ["barn", "inventory", "tools"]:
 		height = minf(height, maxf(240.0, hud.ShopPages.content_height(hud)))
 	place(hud._modal_card, Rect2((view.x - width) / 2, (view.y - height) / 2 if trading else 100, width, height))
@@ -249,7 +249,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		node.vertical = available < 650 or row_width > available
 
 func update_interaction_prompt() -> void:
-	if game.hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
+	if game.hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending or not game.climate_target.is_empty() or drawer.visible:
 		interaction_prompt.hide()
 		return
 	var target: Dictionary = game.world.nearby_station()
@@ -309,8 +309,7 @@ func _process(delta: float) -> void:
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		elif game.state.blind_info().due_in > 0: status.text += "\nTax %s · %ds" % [game.state.money(game.state.blind_info().tax, true), ceili(game.state.blind_info().due_in)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
-		if game.prize_target: use_button.text = "Grow giant"
-		elif game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
+		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
 		elif game.world.player.position.distance_to(game.world.ferry_position()) <= 2: use_button.text = "Travel"
 		elif not game.world.nearby_station().is_empty() and game.climate_target.is_empty(): use_button.text = "Interact"
 		sell_button.disabled = hud._quick_sell.disabled
@@ -347,7 +346,7 @@ func fit_auxiliary() -> void:
 		adapt(panel, width - 64, false)
 		hud._climate_alert.title.add_theme_font_size_override("font_size", 32)
 		place(panel, Rect2((view.x - width) / 2, 100, width, 0))
-	for notice in [hud._toast_box, hud._purchase_box, hud._reward_box, hud._plot_action_box]:
+	for notice in [hud._toast_box, hud._purchase_box, hud._reward_box]:
 		if notice.visible:
 			place(notice, Rect2(96 if hud.is_panel_open() else 18, 10 if hud.is_panel_open() else view.y - 290, minf(440, view.x - (298 if hud.is_panel_open() else 36)), 0))
 	if game.state.run_over: adapt(hud._run_end, view.x - 72, true)
@@ -375,7 +374,7 @@ func open_drawer(kind: String) -> void:
 	button("Zoom +", func(): game._zoom_by_log_amount(-0.18), drawer_body)
 	button("Zoom −", func(): game._zoom_by_log_amount(0.18), drawer_body)
 	button("Recenter view", func(): game._recenter_camera(); drawer.hide(), drawer_body)
-	button("Cancel task", func(): game._cancel_prize_target(); game._climate_action("cancel"); game._cancel_walk(); drawer.hide(), drawer_body)
+	button("Cancel task", func(): game._climate_action("cancel"); game._cancel_walk(); drawer.hide(), drawer_body)
 	drawer.show()
 	fit_drawer.call_deferred()
 

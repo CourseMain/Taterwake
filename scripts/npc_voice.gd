@@ -9,7 +9,7 @@ const CLIPS: Array[AudioStream] = [
 const PROFILES: Dictionary = {
 	"mara": Vector2(1.12, .28), "bram": Vector2(.90, .42),
 	"nell": Vector2(1.04, .38), "tess": Vector2(1.18, .24),
-	"pip": Vector2(1.30, .20), "ada": Vector2(1.08, .23),
+	"pip": Vector2(1.30, .20),
 	"hollis": Vector2(.94, .45),
 	"iris": Vector2(1.20, .35), "oren": Vector2(.86, .46),
 	"edwin": Vector2(1.02, .40),

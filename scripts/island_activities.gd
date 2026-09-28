@@ -270,7 +270,6 @@ func deliver_contract() -> String:
 	var value: float = 0.0
 	var crop: String = str(contract.crop)
 	state.storage[crop] -= amount
-	if is_instance_valid(state.build_system): state.build_system.professions.consumed(crop, amount)
 	value = float(amount) * float(state.market[crop].sell)
 	contract.delivered = int(contract.delivered) + amount
 	contract.credit = minf(state.MAX_MONEY, float(contract.credit) + value * 1.25)
@@ -297,22 +296,13 @@ func charge_furnace(crop: String = "icecap") -> String:
 	if int(state.storage.icecap) < FURNACE_FUEL:
 		return state._finish("Hold 25 spare Icecap potatoes to fuel the furnace.")
 	state.storage.icecap -= FURNACE_FUEL
-	if is_instance_valid(state.build_system): state.build_system.professions.consumed("icecap", FURNACE_FUEL)
 	furnace_burned = mini(1000000000, furnace_burned + FURNACE_FUEL)
 	furnace_remaining = FURNACE_DURATION
 	furnace_cooldown = FURNACE_COOLDOWN
-	return state._finish("FURNACE BURST! 20s · 2.5× growth · 3× processing")
+	return state._finish("FURNACE BURST! 20s · 2.5× growth")
 
 func growth_speed_multiplier() -> float:
 	return 2.5 if furnace_remaining > 0.0 and int(state.current_island) == 3 else 1.0
-
-func processing_speed_multiplier() -> float:
-	return 3.0 if furnace_remaining > 0.0 and int(state.current_island) == 3 else 1.0
-
-func processing_time(delta: float) -> float:
-	if not is_finite(delta) or delta <= 0.0:
-		return 0.0
-	return delta + (processing_speed_multiplier() - 1.0) * minf(delta, furnace_remaining)
 
 func next_boundary() -> float:
 	var boundary: float = 3600.0
@@ -372,7 +362,7 @@ func info() -> Dictionary:
 		"thaw_heat": float(state.climate.data.operations.islands["3"].get("heat", 0)) if island == 3 else 0.0, "furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown,
 		"furnace_fuel": FURNACE_FUEL, "furnace_crop": "icecap", "furnace_held": int(state.storage.icecap),
 		"can_charge": island == 3 and state.island3_unlocked and furnace_cooldown <= 0.0 and int(state.storage.icecap) >= FURNACE_FUEL,
-		"furnace_growth": 2.5, "furnace_processing": 3.0}
+		"furnace_growth": 2.5}
 
 func save_data() -> Dictionary:
 	_ensure_patrols()

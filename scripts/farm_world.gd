@@ -37,7 +37,6 @@ var _clouds: Array[Node3D] = []
 const Climate = preload("res://scripts/climate_system.gd")
 const ClimateProjects = preload("res://scripts/climate_projects.gd")
 var weather_station: Node3D
-var profession_world: Node3D
 var coast: Node3D
 var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
@@ -78,13 +77,6 @@ var _pest_labels: Array[Label3D] = []
 var _pest_visuals: Array[Dictionary] = []
 var _pest_focus: int = -1
 var _snowflakes: Array[Node3D] = []
-var _processing_active: bool = false
-var _processing_progress: float = 0.0
-var _processing_rotors: Array[Node3D] = []
-var _processing_potatoes: Array[Node3D] = []
-var _processing_steam: Array[Node3D] = []
-var _processing_label: Label3D
-var _processing_light: MeshInstance3D
 var _dock_label: Label3D
 var _dock_gate: Node3D
 var _export_boat: Node3D
@@ -133,7 +125,7 @@ const FERRY_ROUTES: Dictionary = {
 }
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
-	"builds": "Builds", "duck_patrol": "Ducks",
+	"duck_patrol": "Ducks",
 	"quests": "Quests", "island": "Ferry", "activities": "Activities",
 }
 
@@ -170,7 +162,6 @@ func build_world(island: int = 1) -> void:
 		_quest_board(Vector3(-15.0, 0.0, 14.0))
 		_winter_ferry()
 		_ice_forge(Vector3(18.0, 0.0, 2.0))
-	_processing_station(Vector3(-18.0, 0.0, 3.5) if current_island == 3 else (Vector3(-15.0, 0.0, -1.0) if current_island == 2 else Vector3(-12.0, 0.0, -1.0)))
 	_activity_station()
 	_staff_stalls()
 	_expand_village()
@@ -179,9 +170,6 @@ func build_world(island: int = 1) -> void:
 	coast = preload("res://scripts/coastal_world.gd").new()
 	add_child(coast)
 	coast.setup(self)
-	profession_world = preload("res://scripts/profession_world.gd").new()
-	add_child(profession_world)
-	profession_world.setup(self)
 	if current_island >= 2:
 		weather_station = preload("res://scripts/weather_station.gd").new()
 		add_child(weather_station)
@@ -212,7 +200,6 @@ func build_world(island: int = 1) -> void:
 	set_island3_unlocked(_island3_unlocked)
 	set_frost_state(_frost_active, _frost_seconds)
 	set_export_state(_export_active, _export_seconds)
-	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
 	_batch_world_geometry()
 	_climate_field = load("res://scripts/climate_field_visuals.gd").new()
@@ -266,13 +253,11 @@ func ferry_route() -> Array[Vector3]:
 
 func _batch_world_geometry() -> void:
 	# These individual meshes change transform, material or visibility at runtime.
-	# All Node3D roots stay intact, including gates, ducks, rotors and tutorials.
+	# All Node3D roots stay intact, including gates, ducks and tutorials.
 	var mutable_meshes: Dictionary = {}
-	for collection: Array in [_soil_meshes, _snowflakes, _processing_potatoes, _processing_steam, _furnace_steam, _export_flags]:
+	for collection: Array in [_soil_meshes, _snowflakes, _furnace_steam, _export_flags]:
 		for node: Node3D in collection:
 			mutable_meshes[node.get_instance_id()] = true
-	if is_instance_valid(_processing_light):
-		mutable_meshes[_processing_light.get_instance_id()] = true
 	_geometry_batcher.batch_tree(self, mutable_meshes)
 
 
@@ -443,11 +428,10 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 		var index: int = int(plot_text)
 		if index < 0 or index >= plot_positions.size():
 			return
-		var giant_focus: bool = _crop_tubers.has(index) and bool(_crop_tubers[index].plot.get("cultivated", false))
-		point = plot_positions[index] + Vector3(0.0, 3.15 if giant_focus else 1.85, 0.0)
+		point = plot_positions[index] + Vector3(0.0, 1.85, 0.0)
 		_tutorial_plot_outline.position = plot_positions[index]
 		_tutorial_plot_outline.visible = true
-		_tutorial_marker.font_size = 46 if giant_focus else 72
+		_tutorial_marker.font_size = 72
 		_tutorial_marker.pixel_size = 0.025
 	elif _tutorial_station_roots.has(station):
 		_tutorial_marker.font_size = 38
@@ -506,9 +490,6 @@ func _clear_world() -> void:
 	_pest_visuals.clear()
 	_pest_focus = -1
 	_snowflakes.clear()
-	_processing_rotors.clear()
-	_processing_potatoes.clear()
-	_processing_steam.clear()
 	_furnace_steam.clear()
 	_ducks.clear()
 	_duck_bodies.clear()
@@ -522,7 +503,6 @@ func _clear_world() -> void:
 	_moon = null
 	_export_particle_clock = 0.0
 	coast = null
-	profession_world = null
 	camera = null
 	player = null
 	_player_body = null
@@ -537,8 +517,6 @@ func _clear_world() -> void:
 	_impact_root = null
 	_frost_label = null
 	_frost_beacon = null
-	_processing_label = null
-	_processing_light = null
 	_activity_label = null
 	_duck = null
 	_duck_body = null
@@ -810,11 +788,9 @@ func update_plots(plots: Array) -> void:
 		var tilled: bool = bool(data.get("tilled", true))
 		var crop_kind: String = str(data.get("crop", "russet"))
 		var crop_color: Color = _crop_appearance(data).crop
-		var variety: String = str(data.get("variety", ""))
 		# Only the plant grows. Soil marks and the pest-shaking parent stay fixed.
 		_crop_roots[i].scale = Vector3.ONE
 		var key: String = "%s/%d/%s/%s/%s/%s/%d/%s" % [str(unlocked), stage, str(watered), str(tilled), crop_kind, str(infested), damage_level, str(data.get("pest_destroyed", false))]
-		key += "/" + variety + "/" + str(data.get("cultivated", false))
 		if key == _plot_states[i]:
 			if _crop_tubers.has(i): _update_crop_tuber(_crop_tubers[i])
 			continue
@@ -855,13 +831,6 @@ func update_plots(plots: Array) -> void:
 		tuber.position = Vector3(0, .25, 0)
 		_crop_tubers[i] = {"node": tuber, "plot": data}
 		_update_crop_tuber(_crop_tubers[i])
-		if bool(data.get("cultivated", false)):
-			# Compost and the measuring stake distinguish the real bonus crop.
-			for clump in range(6):
-				var angle: float = clump * TAU / 6.0
-				_sphere(root, Vector3(cos(angle)*.72,.25,sin(angle)*.72), Vector3(.18,.08,.15), Color("4e4230"))
-			_box(root, Vector3(-.86,.65,.74), Vector3(.08,1.0,.08), Color("b89355"))
-			for notch in range(3): _box(root, Vector3(-.86,.56+notch*.21,.79), Vector3(.16,.035,.025), CREAM)
 		if stage == 3:
 			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), crop_color if crop_kind == "radioactive" else GOLD, 0.12)
 			_ripe_sparkles.append(sparkle)
@@ -872,21 +841,16 @@ func _crop_appearance(plot: Dictionary) -> Dictionary:
 	var crop_kind: String = str(plot.get("crop", "russet"))
 	var crop_color := Color(str({"russet":"dfb36f", "giant":"d7a37b", "golden":"f5cc38", "radioactive":"afff48", "sunburst":"ffa629", "icecap":"d8f1ff"}.get(crop_kind, "dfb36f")))
 	var foliage := Color(str({"russet":"749e44", "giant":"729758", "golden":"9ba149", "radioactive":"75c962", "sunburst":"83a746", "icecap":"759ba5"}.get(crop_kind, "749e44")))
-	var variety: String = str(plot.get("variety", ""))
-	if variety in ["hearty", "dry", "frost"]:
-		crop_color = Color({"hearty":"f3cb69", "dry":"a7cb78", "frost":"a6e6eb"}[variety])
-		foliage = crop_color.darkened(.24)
 	var damage: int = int(clampf(float(plot.get("pest_damage", 0)), 0, 1) * 10)
 	return {"crop": crop_color.lerp(Color("9e8969"), damage * .035), "foliage": foliage.lerp(Color("988759"), damage * .065)}
 
 func _crop_tuber_size(plot: Dictionary) -> float:
-	if bool(plot.get("cultivated", false)): return 1.12
 	return float({"giant": .90, "sunburst": .70, "icecap": .72}.get(str(plot.get("crop", "russet")), .62))
 
 func _create_crop_tuber(parent: Node3D, plot: Dictionary) -> Node3D:
 	# The intro, ordinary growth and harvest all use this same potato.
 	var tuber := Node3D.new()
-	tuber.name = "GiantTuber" if bool(plot.get("cultivated", false)) else "PotatoTuber"
+	tuber.name = "PotatoTuber"
 	parent.add_child(tuber)
 	var appearance: Dictionary = _crop_appearance(plot)
 	var color: Color = appearance.crop
@@ -932,7 +896,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	for entry: Dictionary in _crop_tubers.values():
 		if is_instance_valid(entry.node): _update_crop_tuber(entry)
 	if is_instance_valid(coast): coast.animate(delta)
-	if is_instance_valid(profession_world): profession_world.animate(delta)
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
 		var destination: Vector3 = _tutorial_marker.position
@@ -971,7 +934,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_animate_effects(delta)
 	_animate_export(delta)
 	_animate_winter(delta)
-	_animate_processing(delta)
 	_animate_pests(delta)
 	_animate_activities(delta)
 	for i in range(_ripe_sparkles.size() - 1, -1, -1):
@@ -1148,7 +1110,6 @@ func _staff_stalls() -> void:
 	# doorway, inspect the belt or watch the ducks. Leave their approaches open.
 	_place_stallholder("mara", "market", "MarketStall", Vector3(-.25,.18,.68), -12)
 	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
-	_place_stallholder("ada", "builds", "WashAndSortWorkshop", Vector3(2.65,0,1.05), -108)
 	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
 	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
 	var dock: String = "GoldenShoresDock" if current_island == 1 else "GoldenShoresHarbor" if current_island == 2 else "FrosthollowFerry"
@@ -1452,15 +1413,13 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 		return
 	if is_instance_valid(harvest_feedback):
 		if action == "harvest" and not snapshots.is_empty(): harvest_feedback.harvest(snapshots)
-		elif action == "compost":
-			for index in indices: harvest_feedback.compost(int(index))
 		else: harvest_feedback.audio.play_action(action)
 	_tool_action = action
 	_tool_duration = 0.5 / (1.0 + float(grade) * 0.35)
 	_tool_time = _tool_duration
 	_tool_grade_scale = 1.0 + float(grade) * 0.2
 	_tool.scale = Vector3.ONE * 0.001
-	_tool.visible = action not in ["water", "harvest", "compost"]
+	_tool.visible = action not in ["water", "harvest"]
 	for child in _tool.get_children():
 		_tool.remove_child(child)
 		child.queue_free()
@@ -1483,7 +1442,7 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 		if index < 0 or index >= plot_positions.size():
 			continue
 		valid_indices.append(index)
-		if action in ["harvest", "compost"]: continue
+		if action in ["harvest"]: continue
 		var pos: Vector3 = plot_positions[index]
 		# Keep the action readable without filling a large field with hundreds of particles.
 		var budget: int = 64 if action == "harvest" and multiplier >= 8 else 40
@@ -1577,7 +1536,7 @@ func _animate_effects(delta: float) -> void:
 		var envelope: float = smoothstep(0, 0.18, progress) * (1.0 - smoothstep(0.76, 1.0, progress))
 		_tool.scale = Vector3.ONE * maxf(0.001, envelope) * _tool_grade_scale
 		_player_body.rotation.x = stroke * -0.14 if _tool_action != "harvest" else 0.0
-		_tool.visible = _tool_time > 0.0 and _tool_action not in ["water", "harvest", "compost"]
+		_tool.visible = _tool_time > 0.0 and _tool_action not in ["water", "harvest"]
 		if _tool_time == 0.0:
 			_player_body.rotation.x = 0.0
 	for i in range(_effect_particles.size() - 1, -1, -1):
@@ -2081,81 +2040,6 @@ func _animate_winter(delta: float) -> void:
 			snowflake.position.y = 8.0
 	if is_instance_valid(_frost_beacon):
 		_frost_beacon.rotation.y += delta*0.7
-
-
-func _processing_station(pos: Vector3) -> void:
-	var workshop := _root("WashAndSortWorkshop", pos)
-	_box(workshop, Vector3(0.0,0.13,0.0), Vector3(4.7,0.26,3.5), Color("b8b39b") if current_island != 3 else Color("b8c3c8"))
-	for x in [-2.15,2.15]:
-		_box(workshop, Vector3(x,1.23,-1.15), Vector3(0.13,2.2,0.13), Color("987b54"))
-	_roof(workshop,4.7,1.1,2.46,0.55,Color("669791"))
-	if current_island == 3:
-		_snow_roof(workshop,4.7,1.1,2.46,0.55)
-	# The washer and belt process player-loaded crops; the garden remains manual.
-	_box(workshop,Vector3(-1.3,1.02,0.0),Vector3(1.37,1.61,1.44),Color("79a6a5"))
-	var drum := _cylinder(workshop,Vector3(-1.3,1.07,0.79),0.54,0.54,0.17,Color("c2d2cd"),12)
-	drum.rotation.x = PI*0.5
-	var glass := _cylinder(workshop,Vector3(-1.3,1.07,0.90),0.40,0.40,0.09,Color("7dabb8"),12)
-	glass.rotation.x = PI*0.5
-	_processing_light = _sphere(workshop,Vector3(-1.72,1.64,0.76),Vector3(0.06,0.06,0.03),Color("80958b"))
-	for x in [-1.35,-1.02]:
-		_box(workshop,Vector3(x,1.64,0.75),Vector3(0.16,0.06,0.035),CREAM)
-	_cylinder(workshop,Vector3(-1.30,1.96,-0.13),0.28,0.53,0.43,Color("b5beb3"),8)
-	_bar(workshop,Vector3(-1.97,0.61,-0.58),Vector3(-1.97,2.09,-0.58),0.075,Color("99adad"))
-	_bar(workshop,Vector3(-1.97,2.09,-0.58),Vector3(-1.54,2.09,-0.58),0.075,Color("99adad"))
-	for z in [-0.68,0.68]:
-		_box(workshop,Vector3(0.70,0.73,z),Vector3(2.65,0.22,0.12),Color("6f8c88"))
-		for x in [-0.28,1.70]:
-			_box(workshop,Vector3(x,0.42,z),Vector3(0.13,0.80,0.13),Color("8b9d96"))
-	for index in range(7):
-		var roller := Node3D.new()
-		workshop.add_child(roller)
-		roller.position = Vector3(-0.40+float(index)*0.34,0.85,0.0)
-		var cylinder := _cylinder(roller,Vector3.ZERO,0.12,0.12,1.30,Color("bccac0") if index%2==0 else Color("98afaa"),8)
-		cylinder.rotation.x = PI*0.5
-		_box(roller,Vector3(0.0,0.12,0.0),Vector3(0.04,0.035,1.18),Color("d8e0d3"))
-		_processing_rotors.append(roller)
-	for i in range(3):
-		var potato := _sphere(workshop,Vector3(0.0,1.05,-0.27+float(i)*0.27),Vector3(0.20,0.16,0.16),Color("d1a56d"))
-		potato.visible = false
-		_processing_potatoes.append(potato)
-	for i in range(4):
-		var steam := _sphere(workshop,Vector3(-1.94,2.1,-0.58),Vector3.ONE*0.12,Color("e5eee5"))
-		steam.visible = false
-		steam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_processing_steam.append(steam)
-	_crate(workshop,Vector3(1.67,0.39,1.11),false)
-	_processing_label = _shop_label(workshop, "Builds", Vector3(0.0,3.44,0.0))
-	_target(workshop,Vector3(0.0,1.42,0.15),Vector3(4.8,3.0,3.6),"station","builds")
-
-
-func set_processing(active: bool, progress: float) -> void:
-	_processing_active = active
-	_processing_progress = clampf(progress,0.0,1.0)
-	if is_instance_valid(_processing_label):
-		_processing_label.text = "Builds · %d%%" % int(_processing_progress*100.0) if active else "Builds"
-	if is_instance_valid(_processing_light):
-		_processing_light.material_override = _mat(Color("bade87") if active else Color("80958b"))
-	for potato in _processing_potatoes:
-		potato.visible = active
-	for steam in _processing_steam:
-		steam.visible = active
-
-
-func _animate_processing(delta: float) -> void:
-	if not _processing_active:
-		return
-	for roller in _processing_rotors:
-		roller.rotation.z -= delta*3.0
-	for i in range(_processing_potatoes.size()):
-		var potato: Node3D = _processing_potatoes[i]
-		potato.position.x = -0.39 + fmod(_time*0.58+float(i)*0.73,2.12)
-		potato.rotation.z -= delta*1.45
-	for i in range(_processing_steam.size()):
-		var steam: Node3D = _processing_steam[i]
-		var travel: float = fmod(_time*0.65+float(i)*0.25,1.0)
-		steam.position = Vector3(-1.95+sin(travel*3.0+float(i))*0.10,2.06+travel*0.88,-0.58)
-		steam.scale = Vector3.ONE*(0.07+travel*0.09)
 
 
 func _build_pest_swarm(parent: Node3D) -> void:

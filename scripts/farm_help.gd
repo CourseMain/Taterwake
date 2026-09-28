@@ -1,6 +1,6 @@
 extends RefCounted
 ## Saved, optional help. No action locks and no paused simulation.
-const TIP_IDS: Array[String] = ["repeat", "pests", "taxes", "debt", "tools", "ducks", "builds"]
+const TIP_IDS: Array[String] = ["repeat", "pests", "taxes", "debt", "tools", "ducks"]
 var data: Dictionary = fresh()
 
 static func fresh() -> Dictionary:
@@ -86,11 +86,6 @@ func tip(farm: Node) -> Dictionary:
 			var rank: int = int(farm.tools[tool])
 			if rank < 3 and (rank < 2 or farm.current_island == 3) and farm.coins >= float(farm.TOOL_COSTS[tool][rank]):
 				return _tip("tools", "Work more beds per click", "A %s upgrade is within reach at %s. Click the toolsmith or press U to compare its area and cost." % [tool, farm.money(farm.TOOL_COSTS[tool][rank])], "Browse upgrades [U]", "tools")
-	if unseen("builds") and is_instance_valid(farm.build_system):
-		if farm.build_system.active == "farmer" and farm.build_system.professions.data.compost > 0:
-			for plot in farm.plots:
-				if plot.unlocked and int(plot.stage) in [1, 2] and not plot.get("cultivated", false):
-					return _tip("builds", "Grow a giant potato", "Plant a crop, then open Farmer in Builds [C]. Spend 1 compost on a glowing planted patch for 3× its harvest. Water and harvest normally; each harvested patch earns 1 compost.", "Inspect Farmer [C]", "builds")
 	return {}
 
 func _tip(id: String, title: String, body: String, label: String, action: String) -> Dictionary:

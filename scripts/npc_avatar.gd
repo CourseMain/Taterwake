@@ -21,7 +21,7 @@ func configure(id: String) -> void:
 	scale = p.shape
 	_personality = float(Roster.PEOPLE.keys().find(id)) * .71
 	_time = _personality
-	var style: String = "workshop" if id in ["bram", "ada", "oren"] else ("vest" if id in ["edwin", "hollis"] else "field")
+	var style: String = "workshop" if id in ["bram", "oren"] else ("vest" if id in ["edwin", "hollis"] else "field")
 	dress(style, Color(p.color), str(p.hat))
 	var accessories := _group(_rig, "CharacterDetails")
 	for side: float in [-1.0, 1.0]:
@@ -30,16 +30,14 @@ func configure(id: String) -> void:
 		_bar(brow, Vector3(-.075,0,0), Vector3(.075,.008,0), .023 if id in ["bram","oren"] else .014, Color("69503e"))
 		_brows.append(brow)
 	match str(p.detail):
-		"glasses", "spectacles", "goggles":
-			var goggles: bool = p.detail == "goggles"
-			var y: float = 1.67 if goggles else 1.36
-			var z: float = .31 if goggles else .489
+		"glasses", "spectacles":
+			var y: float = 1.36
+			var z: float = .489
 			for side: float in [-1,1]:
-				var rim := _torus(accessories,Vector3(side*.20,y,z),.12,.151 if goggles else .135,Color("665b50"))
+				var rim := _torus(accessories,Vector3(side*.20,y,z),.12,.135,Color("665b50"))
 				rim.rotation.x = PI*.5
 			_bar(accessories,Vector3(-.07,y,z),Vector3(.07,y,z),.015,Color("bda977"))
-			if not goggles:
-				for side: float in [-1,1]: _bar(accessories,Vector3(side*.34,y,z),Vector3(side*.52,y,.12),.014,Color("665b50"))
+			for side: float in [-1,1]: _bar(accessories,Vector3(side*.34,y,z),Vector3(side*.52,y,.12),.014,Color("665b50"))
 		"flower":
 			for i in range(5):
 				var a: float = i*TAU/5

@@ -33,14 +33,13 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 		# Fixed paper grain and a short cast shadow keep every item in the same light.
 		for mark: Vector2 in [Vector2(-30, 26), Vector2(29, 23), Vector2(-22, 36), Vector2(22, 35)]:
 			c.draw_line(mark, mark + Vector2(4, -2), INK.lerp(wash, 0.8), 1, true)
-		if kind in ["crop", "seed", "processed", "build", "tool"]:
+		if kind in ["crop", "seed", "tool"]:
 			c.draw_set_transform(rect.get_center() + Vector2(5, 35) * scale_value, 0, Vector2(scale_value, scale_value * 0.2))
 			c.draw_circle(Vector2.ZERO, 27, Color("30463a", 0.13))
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
 		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id.trim_prefix("tool:"))))
-		"build": _build(c, str(data.get("build_id", id.trim_prefix("build:"))))
 		"activity": _activity(c, id)
 		"empty":
 			_poly(c, [Vector2(-17, -22), Vector2(-30, 18), Vector2(-22, 36), Vector2(22, 36), Vector2(30, 18), Vector2(17, -22)], Color("b5a792"))
@@ -55,11 +54,6 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_rect(Rect2(15, 18, 15, 12), Color("788167"))
 			for y: int in [20, 26]: c.draw_line(Vector2(13, y), Vector2(18, y + 2), Color("f4e6bd"), 1.5, true)
 		"crop": _potato(c, crop, Vector2.ZERO, 1.0)
-		"processed":
-			c.draw_rect(Rect2(-35, -12, 70, 48), Color("ab764d"))
-			for x: int in [-22, 0, 22]: _potato(c, crop, Vector2(x, -13), 0.42)
-			for y: int in [4, 20]: c.draw_line(Vector2(-35, y), Vector2(35, y), Color("d7ad74"), 5, true)
-			_spark(c, Vector2(29, -37), Color("f2bd45"), 7)
 		_: _symbol(c, id)
 	c.draw_set_transform(Vector2.ZERO)
 
@@ -204,39 +198,6 @@ static func _tool(c: CanvasItem, id: String) -> void:
 			c.draw_line(Vector2(-12, 23), Vector2(4, 7), Color("ca7554"), 3, true)
 			for index: int in range(5):
 				c.draw_circle(Vector2(33 + (index % 2) * 10, -29 + index * 5), 2.4, Color("5cbea8"))
-
-static func _build(c: CanvasItem, id: String) -> void:
-	match id:
-		"farmer":
-			c.draw_rect(Rect2(-28, -7, 56, 44), Color("c77650"))
-			_poly(c, [Vector2(-36, -6), Vector2(0, -36), Vector2(36, -6)], Color("496d51"))
-			c.draw_rect(Rect2(-11, 10, 22, 27), Color("f1d79e"))
-			c.draw_line(Vector2(-11, 10), Vector2(11, 37), Color("b58157"), 3, true)
-			for side: int in [-1, 1]:
-				c.draw_line(Vector2(side * 36, 36), Vector2(side * 36, -5), LEAF, 3, true)
-				for y: int in [-4, 6, 16]: c.draw_circle(Vector2(side * 37, y), 5, Color("d9b247"))
-		"gambler":
-			c.draw_style_box(_box(Color("ede1fa"), 8), Rect2(-29, -29, 58, 58))
-			for p: Vector2 in [Vector2(-15, -15), Vector2(15, -15), Vector2.ZERO, Vector2(-15, 15), Vector2(15, 15)]: c.draw_circle(p, 5, Color("77529b"))
-			for p: Vector2 in [Vector2(-31, 33), Vector2(31, -31)]:
-				c.draw_circle(p, 12, Color("e4bd4b"))
-				c.draw_circle(p, 7, Color("f9df8e"), false, 2, true)
-		"investor":
-			c.draw_style_box(_box(Color("ebf0e3"), 4), Rect2(-36, -30, 72, 66))
-			for index: int in range(3): c.draw_rect(Rect2(-25 + index * 18, 20 - index * 12, 11, 10 + index * 12), LEAF.lightened(index * 0.1))
-			c.draw_polyline(PackedVector2Array([Vector2(-28, 4), Vector2(-10, -10), Vector2(4, -3), Vector2(28, -27)]), Color("d3a13b"), 5, true)
-			_poly(c, [Vector2(16, -29), Vector2(30, -30), Vector2(29, -16)], Color("d3a13b"))
-		"scientist":
-			_poly(c, [Vector2(-11, -29), Vector2(11, -29), Vector2(11, -10), Vector2(33, 27), Vector2(25, 36), Vector2(-25, 36), Vector2(-33, 27), Vector2(-11, -10)], Color("b4e3df"))
-			_poly(c, [Vector2(-16, 2), Vector2(16, 2), Vector2(27, 26), Vector2(21, 30), Vector2(-21, 30), Vector2(-27, 26)], Color("9863c2"))
-			c.draw_line(Vector2(-16, -29), Vector2(16, -29), INK, 5, true)
-			for p: Vector2 in [Vector2(-8, 19), Vector2(9, 9), Vector2(23, -16), Vector2(-4, -40)]: c.draw_circle(p, 4, Color("ca9ce8"))
-		"industrialist":
-			c.draw_rect(Rect2(-32, -2, 66, 38), Color("76949a"))
-			_poly(c, [Vector2(-32, -2), Vector2(-8, -20), Vector2(-8, -2), Vector2(16, -20), Vector2(16, -2)], Color("55747f"))
-			c.draw_rect(Rect2(23, -36, 11, 35), Color("53727b"))
-			for x: int in [-21, -2, 17]: c.draw_rect(Rect2(x, 8, 11, 13), Color("f4d880"))
-			for p: Vector2 in [Vector2(29, -40), Vector2(19, -48)]: c.draw_circle(p, 7, Color("b8bdb0"))
 
 static func _symbol(c: CanvasItem, id: String) -> void:
 	match id:

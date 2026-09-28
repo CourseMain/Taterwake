@@ -11,7 +11,7 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"freeze": {"name": "DEEP FREEZE", "field": 0.4, "barn": 0.12, "growth": 0.5, "tax": 1.0, "prepare": "Visit the furnace and heat your thawing hoe. Hoe [1] melts frozen crops while the tool is hot. Frostgold resists ice."},
+	"freeze": {"name": "DEEP FREEZE", "field": 0.4, "barn": 0.12, "growth": 0.5, "tax": 1.0, "prepare": "Visit the furnace and heat your thawing hoe. Hoe [1] melts frozen crops while the tool is hot."},
 	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "growth": 0.6, "tax": 0.8, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
 	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
 	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Trees shelter the far beds from wind; trees do not stop lightning."},
@@ -128,7 +128,7 @@ func _impact(farm) -> void:
 		if int(field[index].stage) > 0: eligible.append(index)
 	if event == "freeze":
 		for index in eligible:
-			if str(field[index].get("variety", "")) != "frost": data.operations.ice[str(index)] = true
+			data.operations.ice[str(index)] = true
 	# Field damage accumulates during active weather; players can rescue beds.
 	var destroyed: int = 0
 	var held: int = farm.storage_used()
@@ -137,22 +137,6 @@ func _impact(farm) -> void:
 	for crop in farm.storage:
 		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
 		farm.storage[crop] = int(farm.storage[crop]) - lost
-		if is_instance_valid(farm.build_system): farm.build_system.professions.consumed(crop, lost)
-	# Processing is still barn inventory: no hiding stock in a machine.
-	if is_instance_valid(farm.build_system):
-		for crop in farm.build_system.processed.keys():
-			var batch: Dictionary = farm.build_system.processed[crop]
-			batch.count = int(batch.count) - lost_units(int(batch.count), barn_rate)
-			if batch.count <= 0: farm.build_system.processed.erase(crop)
-		if not farm.build_system.processing.is_empty():
-			var batch: Dictionary = farm.build_system.processing
-			batch.quantity = int(batch.quantity) - lost_units(int(batch.quantity), barn_rate)
-			if batch.quantity <= 0: farm.build_system.processing = {}
-		var queue: Array = farm.build_system.professions.data.queue
-		for index in range(queue.size()-1, -1, -1):
-			queue[index].quantity = int(queue[index].quantity) - lost_units(int(queue[index].quantity), barn_rate)
-			if queue[index].quantity <= 0: queue.remove_at(index)
-		if farm.build_system.processing.is_empty() and not queue.is_empty(): farm.build_system.processing = queue.pop_front()
 	var barn_lost: int = held - farm.storage_used()
 	data.field_lost = mini(1000000000, int(data.field_lost) + destroyed)
 	data.barn_lost = mini(farm.MAX_INVENTORY, int(data.barn_lost) + barn_lost)
@@ -205,12 +189,11 @@ func info(farm) -> Dictionary:
 func capture_collapse(farm) -> void:
 	var info: Dictionary = farm.blind_info()
 	var last: Dictionary = data.last
-	var build: String = str(farm.build_system.active).capitalize() if is_instance_valid(farm.build_system) else "Farmer"
 	var receipt: Dictionary = farm.blind_cycle.last_result
 	var tax_caused: bool = not receipt.is_empty() and float(receipt.after) == farm.coins and float(receipt.tax) > 0.0
 	data.collapse = {"balance": farm.coins, "event": str(data.event),
 		"last_event": str(last.get("event", "")),
-		"phase": data.phase, "island": farm.current_island, "build": build,
+		"phase": data.phase, "island": farm.current_island,
 		"cause": "Recovery taxes exceeded the farm's reserves." if tax_caused and tax_pressure() > 0.0 else ("The tax bill pushed debt beyond bankruptcy." if tax_caused else "Debt exceeded the farm's bankruptcy limit."),
 		"field_lost": int(last.get("field_lost", 0)), "field_total": int(last.get("field_total", 0)),
 		"barn_lost": int(last.get("barn_lost", 0)), "barn_total": int(last.get("barn_total", 0)),
@@ -256,7 +239,7 @@ static func valid(raw: Variant, maximum: float) -> bool:
 		if not Rules.number(raw.get(key), 0, maximum): return false
 	if not raw.get("collapse") is Dictionary: return false
 	if not raw.collapse.is_empty():
-		for key in ["event", "phase", "build", "cause"]:
+		for key in ["event", "phase", "cause"]:
 			if not raw.collapse.get(key) is String or raw.collapse[key].length() > 256: return false
 		for key in ["balance"]:
 			if not Rules.number(raw.collapse.get(key), -maximum, maximum): return false

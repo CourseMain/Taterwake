@@ -10,7 +10,7 @@ from serve_web import main as serve
 root = Path(__file__).resolve().parent.parent
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--fixture', choices=['climate', 'builds'], default='climate')
+    parser.add_argument('--fixture', choices=['climate'], default='climate')
     fixture = parser.parse_args().fixture
     subprocess.run([
         sys.executable, str(root / 'tools/export_browser_benchmark.py'),
@@ -18,5 +18,5 @@ if __name__ == '__main__':
     ], check=True)
     raise SystemExit(serve([
         '--directory', str(root / f'artifacts/browser-benchmark-{fixture}-web'),
-        '--port', '8093' if fixture == 'climate' else '8110', '--open',
+        '--port', '8093', '--open',
     ]))

@@ -3,7 +3,6 @@ extends RefCounted
 const INK: Color = Color("17382d")
 const GREEN: Color = Color("377858")
 const CREAM: Color = Color("fffbed")
-const BUILD_COLORS: Dictionary = {"farmer": Color("578052"), "gambler": Color("86629d"), "investor": Color("43867d"), "scientist": Color("677bb0"), "industrialist": Color("ae7850")}
 
 static func box(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -24,7 +23,7 @@ static func surface(kind: String, accent: Color = GREEN, selected: bool = false)
 	style.shadow_size = 3
 	style.shadow_offset = Vector2(0, 2)
 	match kind:
-		"build", "upgrade": style.border_width_left = 4
+		"upgrade": style.border_width_left = 4
 		"quest": style.border_width_left = 4 if selected else 1
 		"tracked": style.border_width_left = 4 if selected else 1
 		"island": style.border_width_bottom = 3

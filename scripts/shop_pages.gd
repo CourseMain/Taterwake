@@ -65,7 +65,7 @@ func _queue_modal_fit() -> void:
 	if hud._refs.get("shop_page") == self: hud._fit_shop_modal()
 
 static func content_height(owner_hud) -> float:
-	return owner_hud.BuildPages.content_height(owner_hud)
+	return owner_hud.modal_content_height()
 
 func _room_color() -> Color:
 	return Color("723e32") if barn else Color("213a4d")

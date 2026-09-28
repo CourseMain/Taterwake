@@ -1,7 +1,7 @@
 extends Node
 ## One real harvest. Further introductions belong to optional, contextual help.
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Mara has a theory", "body": "One Russet. A little too much compost.\nLet's see what comes out of the ground.\nWASD to walk. Drag the island to look around.", "next": true, "label": "Try Mara's seed →"},
+	{"id": "welcome", "title": "Mara has a theory", "body": "One Russet. A little water.\nLet's see what comes out of the ground.\nWASD to walk. Drag the island to look around.", "next": true, "label": "Try Mara's seed →"},
 	{"id": "market", "title": "Buy a seed", "body": "Click Seeds, then Buy 1 Russet. Or press B.", "focus": "market", "key": "B · SEEDS"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
@@ -16,7 +16,6 @@ const TOUR: Array[Dictionary] = [
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose a build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
 	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
 	{"id": "dock", "title": "The ferry", "body": "Click the ferry to walk to it, or press E nearby. Sailing needs the island unlock.", "focus": "island"},
@@ -84,13 +83,6 @@ func _enter_step() -> void:
 	sale_baseline = game.state.lifetime_sales
 	if not _tour_only() and current_id() in ["plant", "sell"]:
 		game.state.select_crop("russet")
-	if not _tour_only() and current_id() == "water":
-		# Demonstrate the real Farmer ability in the existing planting lesson.
-		# The saved cultivated flag prevents spending twice after a reload.
-		var index: int = _plot_index()
-		if game.builds.professions.cultivation_info(index).ready:
-			game.builds.professions.cultivate(index)
-			game.world.play_farm_effect([index], "compost")
 	refresh()
 	var step: Dictionary = _steps()[_index()]
 	if step.has("tool"):
@@ -107,13 +99,13 @@ func _tools() -> Array[String]:
 
 func _features() -> Array[String]:
 	if _tour_only():
-		return ["coins", "market", "barn", "inventory", "tools", "builds", "quests", "duck_patrol", "stock", "island", "menu"]
+		return ["coins", "market", "barn", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"]
 	return ["coins", "market", "barn"] if _index() >= 1 else []
 
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "builds", "build_guide", "build:inspect:", "quests", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)
@@ -167,17 +159,6 @@ func refresh() -> void:
 	if current_id() == "grow":
 		var plot: Dictionary = game.state.plots[_plot_index()]
 		body = "Ready in %ds. Watering once is enough.\nYou can walk around while it grows." % maxi(0, int(ceil(10.0 - float(plot.elapsed))))
-	if not _tour_only() and bool(game.state.plots[_plot_index()].get("cultivated", false)):
-		match current_id():
-			"water":
-				title = "One scoop from Mara"
-				body = "Mara added 1 of your starter compost. This crop will yield 3× as much.\nClick the gold bed to water it."
-			"grow":
-				title = "That is still getting bigger"
-				body = "Mara: 'The sack said one scoop. Didn't say how big.'\nReady in %ds. Watch your patch." % maxi(0,int(ceil(10.0-float(game.state.plots[_plot_index()].elapsed))))
-			"harvest":
-				title = "Bram: 'Bend your knees.'"
-				body = "Harvest tool selected. Click the gold bed to pull out your giant potato."
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "id": current_id(), "key": str(step.get("key", "")),

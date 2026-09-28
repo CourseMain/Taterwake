@@ -5,7 +5,6 @@ const MAX_CLODS: int = 64
 var world
 var active: Array[Dictionary] = []
 var clods: Array[Dictionary] = []
-var feeds: Array[Dictionary] = []
 var audio: Node
 var pull_pose: float = 0
 
@@ -21,7 +20,7 @@ func harvest(snapshots: Dictionary) -> void:
 		var index: int = int(raw_index)
 		var plot: Dictionary = snapshots[raw_index]
 		if index < 0 or index >= world.plot_positions.size() or int(plot.get("stage", 0)) != 3: continue
-		var heavy: bool = bool(plot.get("cultivated", false)) or plot.get("crop") == "giant"
+		var heavy: bool = plot.get("crop") == "giant"
 		heavy_sound = heavy_sound or heavy
 		# Repeated partial harvests replace their own receipt. Big tools have a
 		# hard visual budget, independent of field size and stored crop count.
@@ -41,14 +40,6 @@ func harvest(snapshots: Dictionary) -> void:
 		body.position = origin
 		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "popped":false, "landed":false})
 	if not snapshots.is_empty(): audio.play_action("giant" if heavy_sound else "harvest")
-
-func compost(index: int) -> void:
-	if index < 0 or index >= world.plot_positions.size(): return
-	for i in range(feeds.size() - 1, -1, -1):
-		if int(feeds[i].index) == index: feeds.remove_at(i)
-	feeds.append({"index":index, "age":0.0})
-	_scatter(world.plot_positions[index] + Vector3(0,.5,0), 8, false)
-	audio.play_action("compost")
 
 func _remove(index: int) -> void:
 	var node: Node3D = active[index].node
@@ -117,12 +108,3 @@ func animate(delta: float) -> void:
 			entry.velocity = Vector3.ZERO
 		node.rotation.z += delta*3
 		node.scale = Vector3(entry.size)*minf(1,(.7-float(entry.age))/.2)
-	for i in range(feeds.size() - 1, -1, -1):
-		var entry: Dictionary = feeds[i]
-		entry.age += delta
-		var tuber: Node3D = world._crop_roots[int(entry.index)].get_node_or_null("GiantTuber")
-		if is_instance_valid(tuber):
-			tuber.rotation.z = sin(float(entry.age)*18)*.10*maxf(0,1-float(entry.age))
-		if entry.age >= 1:
-			if is_instance_valid(tuber): tuber.rotation.z = 0
-			feeds.remove_at(i)

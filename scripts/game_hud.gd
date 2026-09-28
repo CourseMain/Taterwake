@@ -127,8 +127,6 @@ var _modal_trade_footer: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
 var _sell_crop: String = ""
-var _build_selection: String = ""
-const BuildPages = preload("res://scripts/build_pages.gd")
 var _panel_island: int = 0
 var _refs: Dictionary = {}
 var _reset_pending: bool = false
@@ -150,7 +148,6 @@ var _crop_defs: Dictionary = {}
 var _inventory_sections: Dictionary = {}
 var _inventory_tab: String = "crops"
 var _inventory_signature: String = ""
-var _builds_button: Button
 var _price_moves: Dictionary = {}
 var _hud_clock: float = 0.0
 var _farm_tip: Dictionary = {}
@@ -194,9 +191,6 @@ var _climate_intro: Control
 var _climate_alert: Control
 var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
-var _plot_action_box: PanelContainer
-var _plot_action_label: Label
-var _plot_action_text: String = ""
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -218,7 +212,7 @@ func _process(delta: float) -> void:
 		return
 
 func _refresh_seed_visibility() -> void:
-	var showing: bool = _selected_tool == "plant" and _plot_action_text.is_empty() and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
+	var showing: bool = _selected_tool == "plant" and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
 	if is_instance_valid(_crop_row):
 		_crop_row.visible = showing
 		var first_seed: bool = not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
@@ -269,7 +263,6 @@ func build_ui() -> void:
 	_climate_console.opened.connect(func() -> void: _act("climate"))
 	_build_tutorial()
 	_build_farm_help()
-	_build_plot_action()
 	_climate_alert = load("res://scripts/climate_alert.gd").new()
 	root.add_child(_climate_alert)
 	_climate_alert.continue_requested.connect(func() -> void: _act("climate_continue"))
@@ -314,7 +307,7 @@ func _update_blind_ui() -> void:
 	water_count.text = "%d/%d" % [floori(climate.supply.can), int(climate.can_capacity)]
 	water_count.add_theme_color_override("font_color", Color("ffd39f") if float(climate.supply.can) < 1.0 else CREAM)
 	_tool_buttons.water.tooltip_text = "Watering can: %d / %d water. Each watered bed uses 1. Click the tank to refill." % [floori(climate.supply.can), int(climate.can_capacity)]
-	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending or not _plot_action_text.is_empty())
+	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending)
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
 	_blind_labels.title.text = "Tax in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "No tax due"
@@ -856,14 +849,6 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 
 func _act(action: String) -> void:
 	if action.is_empty(): return
-	if action == "build_guide":
-		_build_selection = ""
-		show_panel("builds", _state)
-		return
-	if action.begins_with("build:inspect:"):
-		_build_selection = action.get_slice(":", 2)
-		show_panel("builds", _state)
-		return
 	if action == "farm_help:details":
 		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _state.run_over:
 			_opened_farm_tip = _farm_tip.duplicate(true)
@@ -1050,9 +1035,6 @@ func _build_sidebar() -> void:
 	_sidebar_box.add_child(body)
 	_crop_detail = _wrap("Russet · 12 seeds", 16, INK, true)
 	body.add_child(_crop_detail)
-	_builds_button = _button("Builds  [C]", "builds")
-	_builds_button.custom_minimum_size.y = 30
-	body.add_child(_builds_button)
 	_quest_button = _button("Quest board  [Q]", "quests")
 	_quest_button.custom_minimum_size.y = 30
 	body.add_child(_quest_button)
@@ -1379,7 +1361,6 @@ func update_state(state: Node) -> void:
 		button.visible = id in available
 		button.refresh(int(seeds.get(id, 0)), int(storage.get(id, 0)), id == crop)
 	_update_quest_sidebar()
-	_update_builds_badge()
 	_refresh_seed_visibility()
 	var combo_time: float = float(state.get("combo_time"))
 	_combo_box.visible = combo_time > 0 and _purchase_remaining <= 0.0
@@ -1446,8 +1427,6 @@ func _update_context() -> void:
 	if not is_instance_valid(_context): return
 	_update_barn_full_alert()
 	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
-	if is_instance_valid(_plot_action_box):
-		_plot_action_box.visible = not _plot_action_text.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
 	var warning: bool = _notice_is_warning(text)
 	var skin: StyleBoxFlat = _context_box.get_theme_stylebox("panel")
@@ -1456,7 +1435,7 @@ func _update_context() -> void:
 	skin.set_border_width_all(1)
 	_context_box.set_meta("warning", warning)
 	_context.text = text
-	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
+	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
 	# Hug the single line instead of spanning the farm. Input passes through.
 	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
 	_context_box.offset_left = -width * 0.5
@@ -1557,7 +1536,7 @@ func show_purchase(receipt: Dictionary) -> void:
 	var kind: String = str(receipt.get("kind", ""))
 	var quantity: int = int(receipt.get("quantity", 0))
 	var cost: float = float(receipt.get("cost", -1.0))
-	if kind not in ["seeds", "tool", "barn", "field", "duck", "island", "service"] or quantity <= 0 or not is_finite(cost) or cost < 0.0:
+	if kind not in ["seeds", "tool", "barn", "field", "duck", "island"] or quantity <= 0 or not is_finite(cost) or cost < 0.0:
 		return
 	if not is_instance_valid(root):
 		build_ui()
@@ -1686,7 +1665,6 @@ func show_panel(kind: String, state: Node) -> void:
 		"dex": _build_dex()
 		"island": _build_island()
 		"quests": _build_quests()
-		"builds": _build_builds()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
@@ -1978,7 +1956,7 @@ func _refresh_islands() -> void:
 func _build_quests() -> void:
 	_heading(str(_state.call("island_name")).capitalize() + " quests", "")
 	_info("quest_note", "", GREEN, 13)
-	var icons: Dictionary = {"starter_crash": {"kind": "seed", "crop": "golden"}, "starter_spike": {"kind": "build", "id": "investor"}, "starter_combo": {"kind": "tool", "id": "harvest"}, "ground": {"kind": "tool", "id": "hoe"}, "sunburst": {"kind": "crop", "crop": "sunburst"}, "combo": {"kind": "tool", "id": "harvest"}, "export": {"kind": "symbol", "id": "compass"}, "winter_ground": {"kind": "tool", "id": "hoe"}, "winter_harvest": {"kind": "crop", "crop": "icecap"}, "winter_frost": {"kind": "crop", "crop": "icecap"}}
+	var icons: Dictionary = {"starter_crash": {"kind": "seed", "crop": "golden"}, "starter_spike": {"kind": "crop", "crop": "russet"}, "starter_combo": {"kind": "tool", "id": "harvest"}, "ground": {"kind": "tool", "id": "hoe"}, "sunburst": {"kind": "crop", "crop": "sunburst"}, "combo": {"kind": "tool", "id": "harvest"}, "export": {"kind": "symbol", "id": "compass"}, "winter_ground": {"kind": "tool", "id": "hoe"}, "winter_harvest": {"kind": "crop", "crop": "icecap"}, "winter_frost": {"kind": "crop", "crop": "icecap"}}
 	for quest: Dictionary in _quests():
 		var id: String = str(quest.get("id", ""))
 		var key: String = "quest:" + id
@@ -2059,11 +2037,11 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "magnify"]]
+	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "coin"], ["Debug", "debug", "", "debug"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "magnify"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	if _tutorial.is_empty():
-		entries.append(["Taxes", "taxes", "", "investor"])
+		entries.append(["Taxes", "taxes", "", "coin"])
 		if _island_id() >= 2: entries.append(["Weather & protection", "climate", "", "book"])
 	for entry: Array in entries:
 		var tutorial_feature: String = str(entry[1])
@@ -2085,7 +2063,7 @@ func _build_pause() -> void:
 		row.offset_right = -8
 		row.offset_top = 8
 		row.offset_bottom = -8
-		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("build" if str(entry[3]) in ["farmer", "gambler", "investor"] else ("tool" if entry[3] == "hoe" else "symbol"))
+		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("metric" if entry[3] == "coin" else ("tool" if entry[3] == "hoe" else "symbol"))
 		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 36))
 		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2182,8 +2160,6 @@ func _refresh_panel() -> void:
 
 		"island":
 			_refresh_islands()
-		"builds":
-			_refresh_builds()
 		"activities":
 			_refresh_activities()
 		"duck_patrol":
@@ -2403,35 +2379,6 @@ func _catalog_number(key: String, fallback: float) -> float:
 	var constants: Dictionary = _state.get_script().get_script_constant_map()
 	return float(constants.get(key, fallback))
 
-func _build_system() -> Object:
-	if not is_instance_valid(_state):
-		return null
-	var system: Variant = _state.get("build_system")
-	return system if system is Object and is_instance_valid(system) else null
-
-func _build_entries() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	var system: Object = _build_system()
-	if system == null or not system.has_method("build_info"):
-		return result
-	var entries: Array = system.call("build_info")
-	for entry: Dictionary in entries:
-		result.append(entry)
-	return result
-
-func _update_builds_badge() -> void:
-	for entry: Dictionary in _build_entries():
-		if bool(entry.get("active", false)):
-			_builds_button.text = "%s Lv.%d  [C]" % [str(entry.get("name", "Farmer")), int(entry.get("level", 1))]
-			return
-	_builds_button.text = "Builds  [C]"
-
-func _build_builds() -> void:
-	BuildPages.create(self)
-
-func _refresh_builds() -> void:
-	BuildPages.refresh(self)
-
 func _activity_info() -> Dictionary:
 	if not is_instance_valid(_state):
 		return {}
@@ -2527,7 +2474,7 @@ func _build_furnace() -> void:
 	_refs.activity_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(_refs.activity_detail)
 	_offer("Thawing forge", "Free · 60s of hoe heat", "Work the bellows", "climate_operate:heat_hoe", true)
-	_offer("Fire up the furnace", "2.5× growth · 3× processing for 20s · 60s cooldown", "Burn 25 Icecaps", "activity:furnace:icecap", true)
+	_offer("Fire up the furnace", "2.5× growth for 20s · 60s cooldown", "Burn 25 Icecaps", "activity:furnace:icecap", true)
 	for action: String in ["climate_operate:heat_hoe", "activity:furnace:icecap"]:
 		var card: Control = _refs[action + ":card"]
 		card.add_theme_stylebox_override("panel", Cozy.box(Color("523329"), 13, 16, Color("8f6044")))
@@ -2870,35 +2817,20 @@ func _update_farm_help() -> void:
 	_farm_help_card.hide()
 	_farm_tip = _state.farm_help.tip(_state)
 
-func _build_plot_action() -> void:
-	_plot_action_box = _card(Color("193c33"), 10)
-	_plot_action_box.name = "CropActionPrompt"
-	root.add_child(_plot_action_box)
-	_plot_action_box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_plot_action_box.offset_left = -270
-	_plot_action_box.offset_right = 270
-	_plot_action_box.offset_top = -205
-	_plot_action_box.offset_bottom = -145
-	var row := _hbox(12)
-	_plot_action_box.add_child(row)
-	row.add_child(_icon({"kind": "build", "id": "farmer"}, 38))
-	_plot_action_label = _wrap("", 14, CREAM)
-	_plot_action_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_plot_action_label)
-	row.add_child(_button("Cancel · Esc", "profession:cancel"))
-	_plot_action_box.hide()
-
-func set_plot_action(text: String) -> void:
-	_plot_action_text = text
-	_plot_action_label.text = text
-	if not text.is_empty(): _climate_console.hide()
-	_refresh_seed_visibility()
-	_update_context()
-	_update_farm_help()
-
 func _build_farm_tip() -> void:
 	if _opened_farm_tip.is_empty(): return
 	_heading(str(_opened_farm_tip.title), "")
 	_info("farm_tip_body", str(_opened_farm_tip.body), INK, 16)
 	_body.add_child(_button(str(_opened_farm_tip.label), "farm_help:act", true))
 	_body.add_child(_button("Back to help", "help"))
+
+func modal_content_height() -> float:
+	var column: VBoxContainer = _modal_card.get_child(0)
+	var extra: float = _modal_card.get_theme_stylebox("panel").get_minimum_size().y
+	var visible_children: int = 0
+	for child in column.get_children():
+		if not child is Control or not child.visible: continue
+		visible_children += 1
+		if child != _body.get_parent(): extra += child.get_combined_minimum_size().y
+	extra += maxf(0, visible_children - 1) * column.get_theme_constant("separation")
+	return _body.get_combined_minimum_size().y + extra
