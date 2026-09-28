@@ -6,9 +6,9 @@
 
 New farms start with one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
-Mara adds one of your three starter compost to that first planted Russet. Water it and watch a giant potato push out of the soil, then pull it up for the Farmer's real **3× harvest**. This uses the ordinary compost ability; reloading the lesson never spends it twice. Later giants use **Builds → Farmer → Grow a giant potato**. Harvests now tug, pop and scatter soil; giants land with a heavier thump.
+Plant Mara’s Russet seed, water it and pull the ripe crop into your barn. Harvests tug, pop and scatter soil; the ordinary Giant variety lands with a heavier thump.
 
-Mara's seed counter has patched sacks and mismatched crates. Sell Potatoes uses the exchange's chalk buying board, with price, quantity and a sale confirmation. Builds opens the village field guide; Help is Nell's pinned barn notes. Loaded workshop batches appear in crates beside Ada, and reserved buyers walk in from the ferry and leave after delivery or expiry.
+Mara's seed counter has patched sacks and mismatched crates. Sell Potatoes uses the exchange's chalk buying board, with price, quantity and a sale confirmation. Help is Nell’s pinned barn notes.
 
 The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. E also works at the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
 
@@ -25,13 +25,13 @@ Return to the [project README](../README.md) for downloads and setup. Spud Valle
 
 ## Farming and controls
 
-The three-line menu opens the market, inventory, builds, quests, upgrades, travel, collection, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
+The three-line menu opens the market, inventory, quests, upgrades, travel, collection, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
 
 Farming is manual. Select a tool, then click a bed to walk over and work it, or press E beside it. Tools never choose the next task automatically.
 
 Each island has a **Tool Upgrades** shop with a potato toolsmith. On Spud Valley and Golden Shores, look between the barn and market; Frosthollow's toolsmith works at the winter forge. Click the NPC, shop or sign to buy the same upgrades available through **U** or the menu. Rank 3 tools still require Frosthollow.
 
-Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Builds**, **Quests**, **Ducks** and **Ferry**. The tax card shows any pending tax bill; click it for your full forecast and bankruptcy limit.
+Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Ferry**. The tax card shows any pending tax bill; click it for your full forecast and bankruptcy limit.
 
 Purchases show a short dark-and-gold confirmation card, matching the harvest-chain style. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 
@@ -47,7 +47,6 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | B | Buy Seeds |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
-| C | Player builds and abilities |
 | Q | Local challenges |
 | P | PotatoDex |
 | F | Sell held raw potatoes of the selected crop |
@@ -65,7 +64,7 @@ The farm keeps its angled orthographic 3D view. Drag anywhere on the island to s
 
 A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth.
 
-Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Builds and furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
+Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
 
 Manual equipment upgrades increase the area of a single action. Fast harvests build ×1, ×2, ×4, ×8 and ×16 chains, with a 3.5-second grace period. A full barn leaves the uncollected part of a harvest on the bed without granting its combo twice.
 
@@ -93,7 +92,7 @@ Both pages order varieties by their fixed base selling price: **Russet → Giant
 | Golden Shores | 48 beds | Unlock with $1M and 500 harvested potatoes. Double harvest yields and Sunburst potatoes; build toward hundreds of billions. |
 | Frosthollow | 80 beds | Unlock with $100B and 25K harvested potatoes. Snow, Icecap potatoes, triple yields and expensive manual tools; pursue trillion and quadrillion harvests. |
 
-Your fields persist independently. Coins, crops, tools and builds travel with you.
+Your fields persist independently. Coins, crops, tools travel with you.
 
 Golden Shores has randomly arriving export ships, with a warning before a five-second buying window. Ships use the ordinary selling price. Its shipment challenge rewards supplying separate ships, rather than repeatedly clicking one sale.
 
@@ -105,27 +104,11 @@ Open the three-line menu or visit the new island station for these activities:
 
 - **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. First-duck costs are **$1.5K / $25M / $750B**; each additional duck costs another multiple of that base. Speed costs scale with the island too. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
 - **Golden Shores — Buyer contracts.** Pick a crop for a **bulk +25%** order. The offer shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
-- **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth and 3× processing for 20 seconds**. Heat affects watered winter crops and a loaded processor while you are on the winter island; it does not plant, harvest or shorten ability cooldowns. The furnace can fire once per minute. Heat cannot be stacked or refreshed early.
+- **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth for 20 seconds**. Heat affects watered winter crops while you are on the winter island; it does not plant, harvest. The furnace can fire once per minute. Heat cannot be stacked or refreshed early.
 
-## Inventory and builds
+## Inventory
 
-The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] has **Crops** and **Tools** tabs: illustrated seeds and harvested potatoes, plus the five usable farm tools. Raw potatoes stay held until you sell them. Production queues and processed batches remain on the Builds pages.
-
-You begin as **Farmer**. All five specializations are available at level one and develop through **30 levels**. Select one in Builds [C]. Equipped harvest professions and completed build activities earn XP toward the next level. The Builds pages show XP progress; see [XP amounts](BUILD_PROFESSIONS.md#activity-rules-and-tradeoffs).
-
-| Build | Focus and active ability |
-| --- | --- |
-| Farmer | Choose a growing bed and spend compost to grow one giant prize crop. Harvests replenish compost. |
-| Gambler | Stake 5, 20 or 100 held crops at printed odds. Claim the result or spend a rechargeable charm to replace it. |
-| Investor | Reserve a buyer's price for three minutes, then deliver the requested cargo. Repeat deliveries build reputation. |
-| Scientist | Cross two crops into Honeyheart, Sundew or Frostgold. Keep discovered seed traits for every build. |
-| Industrialist | Load 20 or 100 crops, match their process and stamp F–SSS export batches. Larger machines unlock queue slots. |
-
-Builds opens an illustrated overview of all five paths, with your current build marked **Selected** and every build available. Click **Explore** to preview its appearance, controls, benefits and tradeoffs; browsing never changes your saved build. **Select build · Free** explicitly changes the active build. The introduction's **Meet the five builds** guide explains each path and switching. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
-
-Prize crops, seed-bank jars, machine additions, shipment carts and the carved charm appear on the farm. If an existing save has a tax bill already due, the collector walks from the ferry, collects after the remaining deadline, then leaves with a receipt. Clicking the visitor opens your tax information.
-
-For disposable scenarios, open **Play Builds Lab.command**. See the [build activities and testing guide](BUILD_PROFESSIONS.md) for recipes, grades, save compatibility and test steps.
+The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] has **Crops** and **Tools** tabs: illustrated seeds and harvested potatoes, plus the five usable farm tools. Raw potatoes stay held until you sell them.
 
 ## Quests and the farmer
 
@@ -149,7 +132,7 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory, builds and progression, and clears pending tax collection at 1× time. It preserves the previous receipt. **Try Again** instead starts a new farm.
+After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory and progression, and clears pending tax collection at 1× time. It preserves the previous receipt. **Try Again** instead starts a new farm.
 
 ### Climate action and taxes (v1.0.2)
 
@@ -186,13 +169,11 @@ On Island 3, **Deep Freeze** stops affected crops from growing, being watered or
 - **Flood:** open purchased drains to send water through channels toward the sea; Hoe [1] drains individual planted beds.
 - **Storm:** fixed trees shelter their highlighted patch from wind. A warned lightning row remains dangerous. Reinforced barn shutters close automatically.
 
-Each build has one compact action page, with bonuses and progression behind a drawer. Farmer uses **1 compost on a planted, growing crop**. Click its action, then a glowing crop; water, grow and harvest normally for three times its usual yield. Ripe and frozen crops explain what to do instead. Escape or the visible Cancel button exits selection without spending compost. See [the profession guide](BUILD_PROFESSIONS.md) for the other four builds and their tradeoffs.
-
-Double-click **Play Builds Lab.command** for a disposable farm with all five builds, supplied crops, an SSS batch preset, all three oceans, a tax collector scenario, a debt/bankruptcy scenario and an already-authenticated Debug workshop. Reload resets the lab. Double-click **Play Climate Lab.command** for water practice, ordinary farming, upgrades and weather scenarios. Neither lab reads or writes your saved farm. Hold **Shift** to sprint; use the lab's Balanced/Smooth controls and eight-second measurement for browser performance checks.
+Double-click **Play Climate Lab.command** for disposable water practice, ordinary farming, upgrades and weather scenarios. It never reads or writes your saved farm. Hold **Shift** to sprint.
 
 ## NPC conversations
 
-Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Ada, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
+Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
 
 Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current island and event.
 

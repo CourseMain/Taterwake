@@ -11,7 +11,7 @@
 
 ## Saves
 
-Taterland retains its earlier save names for compatibility: `user://spud_valley_save_v3.json` and the original `spud_valley_save.json` backup. Existing farms retain their coins, crops, builds, tools and island progress. Browser and native saves remain separate.
+Taterland retains its earlier save names for compatibility: `user://spud_valley_save_v3.json` and the original `spud_valley_save.json` backup. Existing farms retain their coins, crops, tools and island progress. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 path is never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -34,7 +34,15 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 4 — current
+#### Segment 5 — current
+
+2026-09-28, macOS, Godot `4.7.2.stable.official.ed1daf0bf`, branch `redesign`: `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1` completed with **82 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_profession_removal` (241 checks), `test_game` (41), `test_climate` (112), `test_seed_market` (248) and `test_save_safety` (28). Seven profession-only suites were deleted and a save/UI removal regression added. Surviving suites retain their non-profession checks; none are skipped or disabled.
+
+The first pass exposed obsolete workshop sign counts, old tour indices, processor fuel and Frostgold expectations, plus a crop-node naming regression. All are resolved. The full serial report is in ignored `artifacts/segment5-final-baseline.txt`; final focused boot/removal/winter/touch checks are in `artifacts/segment5-final-checks.txt`.
+
+Native GL Compatibility and a temporary Web resource pack each pass all 241 removal checks. The native menu capture has no Builds entry. The requested `build_system|profession|PlayerBuilds` audit is empty in `scripts/`. Python export helpers and updated browser-test JavaScript pass syntax checks; browser automation was not rerun. Published `docs/index.*` and `web/` are untouched.
+
+#### Segment 4 — historical
 
 2026-09-28, macOS, Godot `4.7.2.stable.official.ed1daf0bf`, branch `redesign`: `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1` completed with **88 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_placeholder_market` (282 checks), `test_seed_market` (248), `test_disaster_markets` (24), `test_save_safety` (28) and the required `test_game` boot check (41). Seven dedicated stock/chart suites were deleted; the placeholder model suite was added. No tests are skipped or disabled.
 
@@ -154,7 +162,7 @@ Collection deducts the displayed bill even if cash cannot cover it. Debt is play
 
 A first visit to a harder island resets the old collection counter at its tax tier. Returning to an earlier island keeps the highest visited tier and existing collection counter, preventing lower-tax travel loops. Last receipts retain actual tax, pre-tax cash, coverage, rank and post-tax debt.
 
-`scripts/climate_system.gd` owns climate timing, losses and local protection costs. Island 1 is free from weather disasters. First arrival at Island 2 (or an older save already on Island 3) shows a one-time introduction that pauses the simulation until acknowledged. The first warning follows 90 seconds of eligible play. Calm weather clocks pause on Island 1; an already warned disaster continues against its original island and shared barn. Drought, flood and severe storm give 45 seconds to prepare, hit once, last 30 seconds and recover over 75 seconds; another calm interval lasts 210–330 seconds. Warnings preview the estimated bill after impact. Disasters destroy a severity-dependent portion of planted beds and stored potatoes, including processed stock and processing queues. Floods also require damaged beds to be tilled again. Growth slows; placeholder prices are independent of climate. Temporary effects taper to normal during recovery; infrastructure pressure remains until the next tax collection.
+`scripts/climate_system.gd` owns climate timing, losses and local protection costs. Island 1 is free from weather disasters. First arrival at Island 2 (or an older save already on Island 3) shows a one-time introduction that pauses the simulation until acknowledged. The first warning follows 90 seconds of eligible play. Calm weather clocks pause on Island 1; an already warned disaster continues against its original island and shared barn. Drought, flood and severe storm give 45 seconds to prepare, hit once, last 30 seconds and recover over 75 seconds; another calm interval lasts 210–330 seconds. Warnings preview the estimated bill after impact. Disasters destroy a severity-dependent portion of planted beds and stored potatoes. Floods also require damaged beds to be tilled again. Growth slows; placeholder prices are independent of climate. Temporary effects taper to normal during recovery; infrastructure pressure remains until the next tax collection.
 
 Climate action funds two levels each of Rainwater Reserve, Drainage Network, Reinforced Barn and Living Windbreaks, priced relative to the local progression baseline. These reduce the relevant physical losses and recovery tax contributions. Funding during recovery can still lower a pending bill; it cannot restore destroyed crops. Damage remains attached to the warned island, while the shared barn is exposed wherever the player travels. One batched canvas layer draws drifting cloud banks, up to 100 rain streaks, wind ribbons, floodwater and drought dust. Existing 3D clouds accelerate and expand; the sky and sunlight respond. Original looped wind/rain audio and thunder accompany storms. Camera shake is bounded to 0.26 world units. No per-crop particle nodes are created.
 
@@ -168,7 +176,7 @@ Focused checks (all isolated from real saves):
 tools/run_tests.sh -j 1 test_blinds test_blinds_game test_climate test_climate_game
 ```
 
-These cover every island baseline, tax clearing/borrowing, overkill, negative huge numbers, exact bankruptcy boundaries, tax-caused collapse, caps, full selling windows, event counting, travel, old-save migration, every weather phase, initiative benefits, processing losses, corrupted saves, warning/deadline/death reloads, controller actions, responsive composition and restart. Omit `--headless` and add `--capture` to a scene check for screenshots under `artifacts/`.
+These cover every island baseline, tax clearing/borrowing, overkill, negative huge numbers, exact bankruptcy boundaries, tax-caused collapse, caps, full selling windows, event counting, travel, old-save migration, every weather phase, initiative benefits, corrupted saves, warning/deadline/death reloads, controller actions, responsive composition and restart. Omit `--headless` and add `--capture` to a scene check for screenshots under `artifacts/`.
 
 The runner handles the initial import. For a focused simulation and boot check:
 
@@ -296,30 +304,19 @@ The climate console keeps active button visibility stable across resource/timer 
 Hold Shift for an eased 1.65× sprint on WASD/arrows or click routes. Avatar running stride responds to sprint blend. The persistent can follows the carrying hand, performs the pour itself, and interpolates to/from the tap; temporary tools use a soft pickup/stroke/put-away envelope. All animations remain code-native and use existing batched world effects. The isolated Climate Lab adds the winter scenario and movement hints. Local Web exports only; no public files or remote branches are updated.
 
 
-### Build and playability audit (v1.0.2)
+### Playability and debug
 
-Profession pages now expose one concrete action, required ingredients, readiness and result. Illustrations retain their proportions. Farmer targeting highlights only eligible planted growing crops, persists until used/cancelled, and works through click-to-walk or E. Invalid clicks do not spend compost; tools, travel, equipment and other menus cancel the mode. Equipment cards avoid expanded tax forecasts; optional tips yield to equipment/targeting, and notifications dock clear of modal controls.
+Equipment cards avoid expanded tax forecasts, and notifications dock clear of modal controls. Debug has explicit funding for zero/negative balances and code-gated recovery after bankruptcy. Recovery keeps farm progress, resets collection timing and restores 1× time. Opening Debug pauses simulation. Travel warnings expose higher tax tiers; bankruptcy shows the actual receipt and debt threshold. Old receipts remain available without being misreported as new Debug-caused tax collections.
 
-Build schema v3 migrates v1/v2 saves, tracking freshness by crop and harvest deadline. Selling, breeding, contracts, staking, furnace use and disaster loss remove the consumed inventory's freshness. A new harvest cannot rejuvenate old stock. Queue jobs survive partial disaster loss and reload. Wagers permit one reroll per stake, including after charm recharge and save/reload. See [BUILD_PROFESSIONS.md](BUILD_PROFESSIONS.md) for bounded bookkeeping and transaction checks.
-
-Debug has explicit exact funding for zero/negative balances and code-gated recovery after bankruptcy. Recovery keeps farm/build progress, resets collection timing and restores 1× time. Opening Debug pauses simulation. Travel warnings expose higher tax tiers; bankruptcy shows the actual receipt and debt threshold. Old receipts remain available without being misreported as new Debug-caused tax collections.
-
-QA covers every profession's success and blocked paths, switching, save migration, climate inventory loss, tutorial/practice, watering/upgrades, real input, Debug recovery and responsive overlays. New suites: `test_build_transactions.gd`, `test_profession_clarity_ui.gd`, `test_playability_audit.gd`, `test_debug_recovery.gd`. Scene tests require `-- --integration-test`; add `--capture` in a native run for screenshots. The Builds Lab now includes repeatable tax-debt and Debug scenarios, always in its disposable test-mode copy. Public Pages exports remain untouched.
-
-Final automated passes also cover the ordinary simulation, ferry access/zoom, all existing equipment and market disaster rules. Two stale test assumptions were corrected: the seed-price test now funds its purchase, and sign checks follow the established Fredoka typography. The water-loop fixture waits for the audio mixer to release already-stopped streams before exit; its verbose pass has no leaked resources.
-
-Safari verification exercised the complete Farmer compost/water/harvest flow, SSS batch loading and bankruptcy→explicit Debug recovery in the disposable export. Browser QA also caught missing text-arrow glyphs (replaced with plain wording) and an old world celebration replayed after travel (new islands now adopt the event counter quietly). Industrialist reserves its job-footer height before loading, keeping its button and bonuses drawer stable.
-
-Performance observation on the Apple M4 with the user's separate native editor preview still rendering: Arctic with 80 ripe beds, Balanced at 1920×1199, eight seconds after warmup: current build 40.8 FPS (median 24.2 ms, p95 26.5 ms); previous commit 27e015a under the same running-editor setup 39.4 FPS (median 25.0 ms, p95 28.4 ms). Current Smooth at 1600×999 measured 42.0 FPS. No 60 FPS claim is made for this concurrent-load session; the comparison does not indicate a new slowdown. Earlier 60 FPS observations above came from a different session. The local labs expose measurements for repeatable checking on the player's device.
-
+Run `tools/run_tests.sh -j 1 test_playability_audit test_debug_recovery` to check these flows.
 
 ### Touch and fullscreen verification (v1.0.2)
 
 `TouchControls` owns finger IDs separately from keyboard actions. The stick supports simultaneous actions, an outer sprint ring and focus/resize cancellation. Farm taps commit on release; a second finger or drag cancels tapping until the gesture ends. Pinch distance changes the same bounded camera zoom used by the wheel; moving the two-finger center pans the map. Tools provides zoom buttons and Recenter. Desktop right/middle drag and two-finger trackpad scroll pan while Home restores the camera.
 
-Touch uses at least 600 and at most 900 logical units on the short screen edge, with at least 68-unit buttons (44 CSS pixels on a 390px phone). Flexible menu rows stack when needed; scroll containers keep all activities, profession choices and equipment reachable. The browser shell owns fullscreen requests in a trusted DOM gesture and fits its canvas inside safe-area insets. Native and browser controls draw an expand icon or exit cross on a transparent background; the visible mark is compact while the invisible hit target remains accessible. Browser fullscreen and F11 work independently of game menus. The fallback explains Home Screen installation when the browser rejects or lacks fullscreen.
+Touch uses at least 600 and at most 900 logical units on the short screen edge, with at least 68-unit buttons (44 CSS pixels on a 390px phone). Flexible menu rows stack when needed; scroll containers keep all activities and equipment reachable. The browser shell owns fullscreen requests in a trusted DOM gesture and fits its canvas inside safe-area insets. Native and browser controls draw an expand icon or exit cross on a transparent background; the visible mark is compact while the invisible hit target remains accessible. Browser fullscreen and F11 work independently of game menus. The fallback explains Home Screen installation when the browser rejects or lacks fullscreen.
 
-Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It checks phone portrait/landscape, iPad portrait/landscape and laptop sizes, all menus, all five profession pages, multitouch movement and pinch cancellation. `tools/export_browser_benchmark.py --fixture mobile --label mobile --godot PATH` creates a disposable browser test build with a QA bridge; the bridge and test scene are excluded from the public export. Browser input checks use actual touch events, screenshots and enter/exit fullscreen at 390×844, 844×390, 768×1024, 1024×768 and 1366×768. These are emulated viewport checks, not claims of physical iPhone/iPad performance testing.
+Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It checks phone portrait/landscape, iPad portrait/landscape and laptop sizes, all menus, multitouch movement and pinch cancellation. `tools/export_browser_benchmark.py --fixture mobile --label mobile --godot PATH` creates a disposable browser test build with a QA bridge; the bridge and test scene are excluded from the public export. Browser input checks use actual touch events, screenshots and enter/exit fullscreen at 390×844, 844×390, 768×1024, 1024×768 and 1366×768. These are emulated viewport checks, not claims of physical iPhone/iPad performance testing.
 
 `tests/test_mobile_browser.cjs` automates the browser matrix with Playwright. Set `TATER_QA_URL` to the disposable mobile fixture URL and provide Playwright through `NODE_PATH` or a local installation. Captures and logs go to ignored `artifacts/mobile-qa/`.
 
@@ -332,30 +329,30 @@ Run `tools/run_tests.sh -j 1 test_seed_market test_placeholder_market test_disas
 
 Balance note: base yields remain Russet 3, Giant 8, Golden 2, Radioactive 4, Sunburst 3 and Icecap 4. At an unchanged quote this yields about 2.67–10.67 times the seed spend before combos, mastery or island bonuses. Those remaining multipliers and harvest yields have not been rebalanced.
 
-`test_market_dialogue.gd -- --integration-test` verifies first meetings, repeated tab switches, saved memory and deliberate Mara revisits. `test_build_overview.gd -- --integration-test` checks all five previews, real locks, free selection, saved selection, the introduction guide and responsive layouts. Add `--capture` in native mode (optionally `--touch-controls`) for `artifacts/build-polish/` screenshots. All scene tests use isolated state. Builds browsing is a HUD-only action; only explicit selection changes `PlayerBuilds.active`.
+`test_market_dialogue.gd -- --integration-test` verifies first meetings, repeated tab switches, saved memory and deliberate Mara revisits. All scene tests use isolated state.
 
 ### Village identity and harvest feedback (source)
 
-`harvest_feedback.gd` animates committed harvest snapshots without owning inventory: a short resistant pull, release, soil scatter and a weighted landing. It caps concurrent receipts at 12 and soil clods at 64; repeat partial harvests replace the same bed's visual receipt, and travel clears the effects. `farm_audio.gd` creates original cached PCM foley for the five tools, compost and normal/giant harvests, using four bounded playback voices. Every seed type uses the intro's single potato model and smooth growth tied to actual crop progress; dry or frozen crops do not animate extra growth. The same model and mature size carry into the harvest pull. Ordinary crops retain their colours, variety tints and Sunburst/Icecap blooms; composted crops alone gain the larger size, measuring stake and bonus yield. Live plot references refresh after save loading, and growth scales only the plant rather than its soil and pest parent. The existing eight-step first lesson spends one starter compost on the first planting through the real Farmer transaction, using the saved cultivated flag to prevent repeat spending.
+`harvest_feedback.gd` animates committed harvest snapshots without owning inventory: a short pull, release, soil scatter and landing. It caps concurrent receipts at 12 and soil clods at 64; repeat partial harvests replace the same bed’s receipt, and travel clears effects. `farm_audio.gd` creates cached PCM foley for five tools and ordinary/Giant harvests. Every crop uses the same potato model with growth tied to actual crop progress. Dry or frozen crops do not grow visually. Live plot references refresh after loading; growth scales the plant alone. The first lesson plants and harvests an ordinary Russet.
 
-`village_details.gd` shares the world's materials and compiled geometry for Mara's stitched sacks, patched awning and potato-supported crate. The mud shortcut was removed after visual review. Stallholders have deliberate positions and headings: Ada looks along the conveyor, Pip faces the ducks, and the other keepers turn toward their counters, entrances and pier. `profession_world.gd` uses pooled workshop loads and a buyer tied to the actual local reserved contract. `exchange_surface.gd` supplies the timber counter and chalk board; crop portraits share the same inked specimens and palette as `item_icon.gd` and `build_illustration.gd`. Builds uses notebook folios; Help uses ruled barn notes.
+`village_details.gd` shares the world’s materials and compiled geometry for Mara’s stitched sacks, patched awning and potato-supported crate. Villagers retain deliberate positions and headings at their counters, entrances and pier. `exchange_surface.gd` supplies the timber counter and chalk board; crop portraits share the palette of `item_icon.gd`. Help uses ruled barn notes.
 
 `shop_pages.gd` extends the seed counter's timber trays, item illustrations and button styles to Bram's workbench and Nell's barn. Tool upgrades retain their live costs and readiness; Barn offers Crops and Tools tabs, showing its crop ledger on Crops and keeping capacity expansion available on both shelves. Desktop trays become single-column phone shelves. Purchase receipts wrap in the remaining desktop margin, keeping the wider counters' controls clear.
 
 Shop filler quotes and all-island duck-limit lists are removed. `duck_pond_view.gd` draws the local flock on an animated pond; hiring and training keep their existing actions. Full storage shows a persistent red banner with a Sell crops action, and blocking farm reminders use red on desktop and touch. `test_farm_alerts.gd -- --integration-test` checks the full/sell/clear flow; add `--touch-controls` to cover portrait and landscape bounds and touch targets. Normal harvesting again plays the escalating streak chime alongside the pull/pop foley.
 
-Run `test_harvest_identity.gd` and `test_village_identity.gd` with `-- --integration-test`; native `--capture` writes `artifacts/identity-*.png`. These cover real first-giant yield and compost accounting, save/reload, partial/full barns, visible growth, animation cleanup and budgets, audio samples, buyer arrival/expiry/delivery, queued crates and bed/shop picking across islands. `test_crop_growth.gd` checks every ordinary and composted variety across watering, continuous growth, paused elapsed time, same-stage reloads and matching harvest models; native `--capture` writes `artifacts/crop-growth-all-varieties.png`. Regression passes also cover tutorial, simulation, touch controls, market and build pages. This source pass does not replace `docs/` or `dist/` web exports.
+Run `tools/run_tests.sh -j 1 test_harvest_identity test_village_identity test_crop_growth` for first-harvest yield, save/reload, partial/full barns, continuous growth, matching harvest models, animation cleanup and budgets, audio samples and bed/shop picking across islands. Native `--capture` records screenshots in `artifacts/`.
 
 
 ### Farm credit and weather console
 
 `GameState.can_purchase()` validates finite costs against the existing bankruptcy boundary. Seeds, tools, barn/field expansion, duck hiring/training and climate equipment share this check; their HUD buttons use the same predicate and mark borrowed purchases. The tutorial keeps cash-only purchases. No save schema changes are required: the existing signed balance persists credit normally.
 
-Recovery orders consume ordinary stored potatoes from lowest base price upward, paying 1% of the current tax-tier debt limit per potato, capped at outstanding debt. They neither generate positive cash nor count as market sales/quest sales. Profession inventory reservations are reconciled when crops are consumed. Free recovery seeds require an active indebted farm with no seeds, ordinary crops or growing plants. Bankruptcy remains final for ordinary actions.
+Recovery orders consume ordinary stored potatoes from lowest base price upward, paying 1% of the current tax-tier debt limit per potato, capped at outstanding debt. They neither generate positive cash nor count as market sales/quest sales. Free recovery seeds require an active indebted farm with no seeds, ordinary crops or growing plants. Bankruptcy remains final for ordinary actions.
 
 `weather_pages.gd` owns the navy/cyan station dashboard; `weather_display.gd` draws the live radar and equipment schematics without raster assets or illustration captions. Protection values, water, costs and timers come from the existing climate state. `weather_station.gd` keeps its interaction footprint while adding photovoltaic fins, emissive instrument lines and a scanning dish. The Tools hotbar footer and contract partial-delivery footer have been removed.
 
-`test_debt_credit.gd` covers real shop actions, exact credit limits, atomic rejection, free-seed farming through repayment, all tax tiers, save/load and ended runs. `test_weather_dashboard.gd` covers live telemetry, pointer checkout, warnings and desktop/phone layout; native `--capture` writes isolated previews. Existing purchase/climate fixtures now test exhausted credit instead of empty cash. Legacy receipt assertions for removed scouting/market-call services were retired; profession transactions have their own suite.
+`test_debt_credit.gd` covers real shop actions, exact credit limits, atomic rejection, free-seed farming through repayment, all tax tiers, save/load and ended runs. `test_weather_dashboard.gd` covers live telemetry, pointer checkout, warnings and desktop/phone layout; native `--capture` writes isolated previews. Existing purchase/climate fixtures now test exhausted credit instead of empty cash. Legacy receipt assertions for removed scouting/market-call services were retired..
 
 
 ### Island surfaces and camera movement
@@ -381,11 +378,7 @@ Browser verification uses an isolated QA export, real Chromium mouse/touch event
 
 Mechanics revision 22 removes random reward purchases, their UI and world building, Rook, reward-only effects and save validation. Save loading retains understood fields and drops retired NPC history. Saved optional tours retain their place after the removed stop. Surviving farm data still passes strict validation before state changes. Save backups and rejected-file protection remain intact.
 
-Build schema 5 omits reward charges and crate ownership. All builds start at level one; old levels and XP survive. Shared NPC voice recordings remain because other villagers use them.
-
-The source-word audit has no Roll House, luck, jackpot or trophy systems. Remaining `roll`/`crate` matches describe scrolling, physical produce containers and the harvest-stake profession (Segment 5). Those systems remain within the staged plan.
-
-`test_gacha_removal.gd` covers migration from revision 21, retained farm/quest progress, discarded fields, build availability, the menu, the R key and all three island rebuilds. Pest audio retains its own coverage. Run the full baseline with `tools/run_tests.sh -j 1`.
+`test_gacha_removal.gd` covers migration from revision 21, retained farm/quest progress, discarded fields, the menu, the R key and all three island rebuilds. Pest audio retains its own coverage. Run the full baseline with `tools/run_tests.sh -j 1`.
 
 
 ### Item and special-crop removal
@@ -406,3 +399,12 @@ Mechanics revision 24 drops the old saved market quotes/history, temporary price
 `price_sparkline.gd` is restored for each Buy Seeds and Sell Potatoes card. Each variety’s history contains up to 12 quotes: prior 15-second sample boundaries plus the current quote. The deterministic price curve reconstructs these samples from saved elapsed time, so reloads retain the same history without a new save field or frame-rate-dependent sampling. A fresh farm starts with one quote. The shared percentage is `round((price / base - 1) × 100)`, with an explicit sign; only the comparison text is green above base or red below. Sparklines use neutral ink and no animation; card bounce tweens are removed.
 
 The stock countdown, tracked-price tray, full chart page, market aura, launch presentation, launch audio and audio baker are removed. The main audio generator retains short action tones; farm foley and storm shake remain. Starter seed-buying and potato-selling quests now count ordinary transactions under their original save IDs. Their rewards and all other quest scaling remain for Segment 6.
+
+
+### Profession removal (Segment 5)
+
+Mechanics revision 25 removes the five builds, XP and levels, compost bonuses, seed-bank traits, processing, reserved buyers and harvest stakes. Old saves drop the entire `builds` block, including its queued/processed inventory; ordinary stored crops, coins, quests and island progress remain. Per-bed cultivation/trait fields, Ada’s dialogue memory and the Builds tip are removed before validation. Old optional tours retain their next surviving stop; current saves never shift twice. The first-harvest lesson now uses an ordinary Russet.
+
+The Builds menu, C shortcut, workshop, lab, exchange desk, stake table, profession-only effects and Ada are gone. Shared NPC voices, the farmer, other villagers, crop varieties, climate, quest boards and island activities remain. Furnace heat affects crop growth only. Modal height measurement now belongs to `GameHUD`, shared by shops and touch help.
+
+`test_profession_removal.gd` checks legacy loading, dropped fields, retained progress, ordinary yield/growth/tool coverage, missing world targets, the menu and the C key. Run it and the boot check through `tools/run_tests.sh -j 1 test_profession_removal test_game`.

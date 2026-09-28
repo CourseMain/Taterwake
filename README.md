@@ -18,7 +18,6 @@ The opening tutorial teaches one harvest and ends at your first sale. Then farm 
 
 Mara patches the seed sacks. Bram patches your tools. The produce exchange makes no promises.
 
-Five illustrated profession pages offer giant potatoes, F–SSS production batches, a permanent seed bank, reserved-price shipments and explicit harvest stakes. Each explains its cost and readiness, with optional bonus details. The Farmer guides planted crop → compost → water → giant harvest. See [profession details](docs/BUILD_PROFESSIONS.md).
 
 Climate disasters begin on **Island 2**, with warnings, rain, wind, storm clouds and camera shake. Learn the visible **rain → tank → can → crop** loop on Island 1, then connect sprinklers, open drainage and protect harvests on later islands. A visiting tax collector arrives after every third major stock; the forecast shows bills and recovery costs. Debt is playable until the bankruptcy limit. See the [water-loop guide](docs/CLIMATE_WATER_LOOP.md).
 
@@ -26,7 +25,6 @@ A 3D potato farming game about growing crops, riding wild markets and building y
 
 - Work your fields with five manual tools; train ducks to chase pests.
 - Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+35,000%–100,000% Stock Rocket**.
-- Choose from **five player builds** with farming, trade, research and processing activities.
 - Take buyer contracts and fire up a winter furnace.
 - Farm through a **60-second day–night cycle** across three islands.
 - Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
@@ -75,7 +73,7 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 
 Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith on each island for larger tool areas.
 
-See the [gameplay guide](docs/GAMEPLAY.md) for builds, prices, local activities and Debug controls.
+See the [gameplay guide](docs/GAMEPLAY.md) for prices, local activities and Debug controls.
 
 ## Build the browser edition
 
