@@ -34,6 +34,16 @@ func _run() -> void:
 			if not geometry is MeshInstance3D and not geometry is MultiMeshInstance3D:
 				continue
 			var bounds: AABB = geometry.get_aabb()
+			# Coastal water deliberately continues beyond the far plane to fill the horizon.
+			if geometry == world.coast.water:
+				var nearest := INF
+				var farthest := -INF
+				for index in range(8):
+					var corner: Vector3 = world.camera.global_transform.affine_inverse() * (geometry.global_transform * bounds.get_endpoint(index))
+					nearest = minf(nearest, -corner.z)
+					farthest = maxf(farthest, -corner.z)
+				check(nearest < world.camera.far and farthest > world.camera.near, "horizon water intersects the visible depth interval")
+				continue
 			for index: int in range(8):
 				var point: Vector3 = world.camera.global_transform.affine_inverse() * (geometry.global_transform * bounds.get_endpoint(index))
 				contained = contained and -point.z < world.camera.far

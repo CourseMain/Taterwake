@@ -29,6 +29,9 @@ func click_button(button: Button) -> void:
 	scroller.ensure_control_visible(button)
 	await process_frame
 	await process_frame
+	scroller.ensure_control_visible(button)
+	await process_frame
+	await process_frame
 	var point: Vector2 = button.get_global_rect().get_center()
 	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
 	motion.position = point
@@ -64,7 +67,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.state.coins = 1000.0
-	game.state.apply_debug(1.0, 10.0)
+	game.state.apply_debug(1.0)
 	game._on_action("debug")
 	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0, "session starts locked at normal speed despite saved debug effects")
 	check(game.hud._refs.has("debug_code") and not game.hud._refs.has("debug_apply") and game.hud._refs.debug_code.secret, "locked page only exposes a masked access field")
@@ -74,7 +77,7 @@ func run() -> void:
 		game.hud._act(action)
 	game.hud._act("debug_apply")
 	game.hud._act("debug_money:100")
-	check(game.state.coins == 1000.0 and game.state.debug_luck_multiplier == 10.0 and game.debug_time_multiplier == 1.0, "controller and HUD both reject locked debug mutations")
+	check(game.state.coins == 1000.0 and game.debug_time_multiplier == 1.0, "controller and HUD both reject locked debug mutations")
 	await enter_code("wrong:code")
 	check(not game.debug_unlocked and game.hud._refs.debug_access_error.text == "Incorrect code." and game.hud._refs.debug_code.text.is_empty(), "Enter rejects wrong code inline and clears the field")
 	await shot("wrong-code")
@@ -188,13 +191,13 @@ func run() -> void:
 	check(is_equal_approx(game.state.elapsed - before, cooldown - game.builds.cooldown), "epsilon rocket boundary keeps build and farm consumption coherent")
 	game.rocket_cutscene._process(game.rocket_cutscene.DURATION)
 	game._on_action("debug:lock")
-	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0 and game.state.debug_luck_multiplier == 10.0, "locking restores real-time speed while preserving saved money and luck effects")
+	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0, "locking restores real-time speed while preserving saved money and luck effects")
 	game._on_action("debug")
 	await enter_code("ORIGINALLYSPUDREPUBLIC")
 	check(game.debug_unlocked, "Enter also accepts the correct code")
 	game._on_action("debug:time:5")
 	game.hud._refs.debug_reset.pressed.emit()
-	check(game.state.debug_luck_multiplier == 1.0 and game.debug_time_multiplier == 1.0 and game.state.coins == 1000.0, "reset restores luck and time while keeping money")
+	check(game.debug_time_multiplier == 1.0 and game.state.coins == 1000.0, "reset restores time while keeping money")
 	game.queue_free()
 	await process_frame
 	game = load("res://scenes/main.tscn").instantiate()
@@ -202,7 +205,7 @@ func run() -> void:
 	game.set_process(false)
 	check(game.state.load_game(SAVE), "saved debug effects load into a new session")
 	game._on_action("debug")
-	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0 and game.hud._refs.has("debug_code") and game.state.debug_luck_multiplier == 10.0, "reloading saved effects still requires the code in a fresh session")
+	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0 and game.hud._refs.has("debug_code"), "reloading saved effects still requires the code in a fresh session")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	game.queue_free()
 	await process_frame

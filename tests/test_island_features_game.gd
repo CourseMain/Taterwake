@@ -25,6 +25,7 @@ func press(action: String) -> void:
 	check(target != null and not target.disabled, "usable button " + action)
 	if target != null and not target.disabled:
 		target.pressed.emit()
+		if game.conversation.visible: game.conversation.choose(0)
 
 func shot(name: String) -> void:
 	if not capture:
@@ -49,14 +50,14 @@ func run() -> void:
 	press("activities")
 	check(game.hud._modal_title.text.to_lower().contains("duck"), "starter menu opens duck patrol")
 	press("activity:duck")
-	check(int(game.activities.save_data().get("duck_level", 0)) == 1, "duck purchase reaches persistent simulation")
+	check(game.activities.duck_count() == 1, "duck purchase reaches persistent simulation")
 	await shot("ducks-panel")
 	game.hud.close_panel()
 	var plot: Dictionary = game.state.plots[0]
 	plot.pests = true
 	plot.pest_elapsed = 0.0
 	game._on_state_changed()
-	game._process(4.1)
+	game._advance_simulation(4.1)
 	check(not plot.pests and int(plot.stage) > 0, "live duck patrol clears a crop before destruction")
 	await shot("ducks-world")
 	game.state.coins = 2.0e14
@@ -70,12 +71,12 @@ func run() -> void:
 	await shot("contracts")
 	game.hud.close_panel()
 	game.state._grant_item("traders_visor")
-	game.state._grant_item("lucky_cap")
+	game.state._grant_item("patchwork_cap")
 	game.state._grant_item("harvest_gloves")
 	game._on_action("inventory")
 	press("inventory_tab:gear")
-	game._on_action("gear:equip:lucky_cap")
-	check(game.state.effective_luck() > game.state.luck, "gear changes effective luck")
+	game._on_action("gear:equip:patchwork_cap")
+	check(game.state.equipment.head == "patchwork_cap", "chosen cosmetic gear equips")
 	game._on_action("gear:equip:traders_visor")
 	check(game.state.item_stock_factor() > 1.0, "gear changes permanent stock value")
 	await shot("gear")
@@ -87,6 +88,7 @@ func run() -> void:
 	game.state.storage.icecap = 125
 	game.builds.levels.industrialist = 1
 	game.builds.select_build("industrialist")
+	game.builds.professions.action("batch", "100")
 	game.builds.use_ability()
 	game._on_action("activities")
 	press("activity:furnace:icecap")
@@ -100,28 +102,6 @@ func run() -> void:
 	check(is_equal_approx(float(game.builds.processing.get("elapsed", 0)), 5.0), "processing integrates only remaining half-second of heat")
 	game.hud.close_panel()
 	game.state.coins = 1.0e16
-	game._on_action("roll")
-	await shot("winter-rolls")
-	var count_before: int = game.state.roll_count
-	game._on_action("roll_batch:normal:5")
-	check(game.hud.is_roll_animating() and game.state.roll_count == count_before + 5, "winter five-roll request grants five actual results")
-	var paid_balance: float = game.state.coins
-	game._on_action("roll_batch:normal:5")
-	game._on_action("travel:1")
-	check(game.state.roll_count == count_before + 5 and game.state.coins == paid_balance and game.state.current_island == 3, "reel blocks overlapping charges and island travel")
-	await shot("batch-reel")
-	game.hud._spinner._process(5.0)
-	check(not game.hud.is_roll_animating(), "batch reveal unlocks controls")
-	await shot("batch-results")
-	game.hud.close_panel()
-	game.state.travel_to(1)
-	game.state.climate.acknowledge(game.state)
-	game._on_action("roll_batch:normal:3")
-	check(game.state.roll_count == count_before + 5 and not game.hud.is_roll_animating(), "batch requests on a retired island cannot roll or lock HUD")
-	if capture:
-		root.size = Vector2i(960, 600)
-		game._on_action("activities")
-		await shot("compact-activities")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.15).timeout

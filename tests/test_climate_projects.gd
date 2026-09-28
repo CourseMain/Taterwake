@@ -34,6 +34,7 @@ func run() -> void:
 		game.state.coins = game.state.bankruptcy_limit()
 		game._on_action("climate_fund:rainwater")
 		check(game.world._project_nodes.has("rainwater") and not game.world._project_nodes.has("drainage"), "starter tank exists before purchases")
+		game.hud._purchase_review.hide()
 		game.state.coins = 1e18
 		for level: int in [1, 2]:
 			for id: String in game.state.ClimateSystem.PROJECTS:

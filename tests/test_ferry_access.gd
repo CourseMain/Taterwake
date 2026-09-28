@@ -79,8 +79,11 @@ func run() -> void:
 		check(game.world.pick(event.position).get("station", "") == "island", "island %d dock can be clicked" % island)
 		event.position *= root.get_visible_rect().size / Vector2(game.farm_viewport.size)
 		game._unhandled_input(event)
+		event.pressed = false
+		game._input(event)
 		check(game.walking and game.pending_ferry and not game.hud.is_panel_open(), "clicking ferry walks over before opening travel")
 		finish_walk()
+		if game.conversation.visible: game.conversation.choose(0)
 		check(game.hud.is_panel_open() and game.world.player.position.distance_to(boarding) < 0.4, "arrival opens travel at the boarding area")
 		game.hud.close_panel()
 		game.world.set_day_time(0.0)
@@ -91,6 +94,7 @@ func run() -> void:
 		interact.physical_keycode = KEY_E
 		interact.pressed = true
 		game._unhandled_input(interact)
+		if game.conversation.visible: game.conversation.choose(0)
 		check(game.hud.is_panel_open(), "E at the ferry opens travel")
 		game.hud.close_panel()
 		game._cancel_walk()
@@ -126,6 +130,7 @@ func run() -> void:
 					Input.action_release(action)
 		check(game.world.player.position.distance_to(boarding) < 0.2, "WASD can follow the entire ferry path")
 		game._unhandled_input(interact)
+		if game.conversation.visible: game.conversation.choose(0)
 		check(game.hud.is_panel_open(), "keyboard-only ferry visit works")
 		if island == 1:
 			game._on_action("travel:2")
@@ -136,13 +141,13 @@ func run() -> void:
 	game.hud.close_panel()
 	check(game._clamp_destination(game.world.layout_point(Vector3(-12, 0, -20))).z >= -5 * game.world.LAND_SPACING - 0.001, "northern sea remains out of bounds away from path")
 	check(game._clamp_destination(game.world.layout_point(Vector3(11.5, 0, -50))).z >= game.world.ferry_position().z - 0.651, "cannot walk off the end of the boarding area")
-	check(game._clamp_destination(game.world.layout_point(Vector3(10, 0, -8))).distance_to(game.world.layout_point(Vector3(10, 0, -8))) > 2, "path extension does not open a route through Roll House")
+	check(game._clamp_destination(game.world.layout_point(Vector3(10, 0, -8))).distance_to(game.world.layout_point(Vector3(10, 0, -8))) > 2, "path extension keeps the northern farm edge bounded")
 	game.tutorial.start()
 	game.queue_ferry()
 	check(not game.walking and not game.hud.is_panel_open(), "early tutorial still blocks ferry actions")
 	game.tutorial.finish()
 	game.tutorial.start(true)
-	game.state.tutorial_progress.step = 9
+	game.state.tutorial_progress.step = 8
 	game.tutorial._enter_step()
 	game.world.set_player_position(Vector3(7, 0, -4.7))
 	game.world.animate(0.1, false)

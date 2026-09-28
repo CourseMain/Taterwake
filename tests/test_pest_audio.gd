@@ -65,28 +65,6 @@ func run() -> void:
 	if "--capture" in OS.get_cmdline_user_args():
 		check(game.pest_alert.attack_sound.save_to_wav("res://artifacts/pest-attack-alert.wav") == OK, "attack warning exports as a playable sound")
 		check(game.pest_alert.lost_sound.save_to_wav("res://artifacts/pest-crop-lost.wav") == OK, "crop-loss warning exports as a playable sound")
-	# Drive the real reel and its HUD/main callbacks with deterministic outcomes.
-	game.world.animate(5.0, false)
-	for tier in ["common", "rare", "build", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]:
-		game.hud.close_panel()
-		game.hud._market_impact._reward_remaining = 0.0
-		game.hud._market_impact._process(10.0)
-		game.world.animate(5.0, false)
-		check(game.hud.begin_roll("build_crate" if tier == "build" else "normal"), "reel begins for " + tier)
-		game.hud.spin_roll({"tier": tier, "title": "Test reward", "detail": "Held in inventory", "build_id": "farmer"})
-		game.hud._spinner._process(5.0)
-		check(not game.hud.is_roll_animating() and game.hud._revealed_roll.tier == tier, "actual reward reveal completes for " + tier)
-		if tier in ["common", "rare", "build"]:
-			check(game.hud._market_impact._reward_remaining == 0.0 and game.hud._spinner._flash == 0.0 and game.world._effect_particles.is_empty(), "quiet result triggers no mist, flash or world celebration: " + tier)
-			check(not game.sparkle_tone and game.tone_length <= 0.15, "quiet result has only a short confirmation tone: " + tier)
-		else:
-			check(game.hud._market_impact._reward_remaining > 0.0 and game.hud._spinner._flash > 0.0 and not game.world._effect_particles.is_empty(), "higher-tier reward retains its full celebration: " + tier)
-			check(game.sparkle_tone and game.tone_length > 0.8, "higher-tier reward retains celebration audio: " + tier)
-		if "--capture" in OS.get_cmdline_user_args() and tier in ["rare", "build", "epic"]:
-			await process_frame
-			await process_frame
-			await RenderingServer.frame_post_draw
-			check(root.get_texture().get_image().save_png("res://artifacts/quiet-roll-" + tier + ".png") == OK, "render reward feedback " + tier)
 	# Release the test's own PCM reference before checking scene shutdown.
 	var attack_reference: WeakRef = weakref(game.pest_alert.attack_sound)
 	var loss_reference: WeakRef = weakref(game.pest_alert.lost_sound)
@@ -101,5 +79,5 @@ func run() -> void:
 			break
 		await create_timer(0.05).timeout
 	check(attack_reference.get_ref() == null and loss_reference.get_ref() == null, "scene shutdown releases warning sounds and their mixer playback references")
-	print("PEST AUDIO AND REWARD FEEDBACK: %d checks, %d failures" % [checks, failures])
+	print("PEST AUDIO: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

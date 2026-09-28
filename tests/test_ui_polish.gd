@@ -48,7 +48,7 @@ func run() -> void:
 	game.hud.show_panel("builds", game.state)
 	check(game.hud._refs.build_equip.text.contains("Selected") and game.hud._refs.build_equip.disabled, "active profession is identified on its detail page")
 	game.hud._act("build:inspect:scientist")
-	check(game.hud._refs.build_equip.disabled, "locked build cannot be selected")
+	check(not game.hud._refs.build_equip.disabled, "build is selectable without a random unlock")
 	game.hud._act("build:inspect:investor")
 	check(game.hud._refs.build_equip.text == "Select build · Free" and not game.hud._refs.build_equip.disabled, "owned profession can be equipped from its detail page")
 	await inspect("builds")
@@ -62,7 +62,7 @@ func run() -> void:
 	await inspect("quests")
 	var before: float = game.state.coins
 	game.hud._refs["quest:starter_crash"].pressed.emit()
-	check(game.state.coins == before + 750 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
+	check(game.state.coins == before + 5000 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
 	game.hud.show_panel("tracked_prices", game.state)
 	game.hud._refs["tracked:golden:toggle"].button_pressed = false

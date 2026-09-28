@@ -31,11 +31,9 @@ func _run() -> void:
 		check(world.find_children("*", "MeshInstance3D", true, false).size() == meshes, "unchanged plots reuse their geometry")
 		world.set_processing(true, 0.5)
 		world.set_export_state(true, 10.0)
-		world.set_roll_available(false)
 		world.animate(0.5, false)
 		check(world._processing_light.material_override.albedo_color.is_equal_approx(Color("bade87").srgb_to_linear()), "processing light retains its mutable mesh")
 		check(world._processing_potatoes[0].visible and world._processing_steam[0].visible, "moving conveyor produce and steam remain available")
-		check(not world._rare_gem.visible and world._roll_gate.visible, "batched child geometry still follows gate and gem visibility")
 		for collection: Array in [world._soil_meshes, world._snowflakes, world._processing_potatoes, world._processing_steam, world._furnace_steam, world._export_flags]:
 			for node: Node3D in collection:
 				check(is_instance_valid(node) and node.is_inside_tree(), "runtime mesh reference remains live")

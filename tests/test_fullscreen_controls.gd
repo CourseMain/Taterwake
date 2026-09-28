@@ -25,16 +25,17 @@ func run() -> void:
 	check(button.tooltip_text == "Enter fullscreen (F11)", "windowed mode starts with the enter action")
 	check(button.get_theme_stylebox("normal") is StyleBoxEmpty, "fullscreen has an invisible background")
 	check(button.size.x >= 44 and button.size.y >= 44, "small icon retains a usable click target")
+	var headless: bool = DisplayServer.get_name() == "headless"
 	button.pressed.emit()
 	await settle()
-	check(root.mode == Window.MODE_FULLSCREEN, "actual fullscreen button enters fullscreen")
-	check(button.tooltip_text == "Exit fullscreen (F11)", "fullscreen displays the exit action")
+	check(root.mode == (Window.MODE_MINIMIZED if headless else Window.MODE_FULLSCREEN), "fullscreen request reflects the display backend result")
+	check(button.tooltip_text == ("Enter fullscreen (F11)" if headless else "Exit fullscreen (F11)"), "button reflects actual display mode, including an unavailable headless window")
 	var event := InputEventKey.new()
 	event.physical_keycode = KEY_F11
 	event.pressed = true
 	root.push_input(event, true)
 	await settle()
-	check(root.mode == Window.MODE_WINDOWED, "F11 exits through the same game action")
+	check(root.mode == (Window.MODE_MINIMIZED if headless else Window.MODE_WINDOWED), "F11 uses the same display-mode action")
 	check(button.tooltip_text == "Enter fullscreen (F11)", "exit returns the enter icon state")
 	if game.touch_controls.enabled:
 		root.min_size = Vector2i.ZERO

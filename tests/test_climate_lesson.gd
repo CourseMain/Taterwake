@@ -105,6 +105,10 @@ func run() -> void:
 	for level in [1, 2]:
 		farm.climate.data.projects["2"].irrigation = level
 		for index in [34, 35, 36]:
+			# Weather and pests may already have damaged these crops.
+			# Start fresh planted beds for each connected-sprinkler check.
+			farm._clear_crop(farm.plots[index])
+			farm.plots[index].merge({"unlocked": true, "tilled": true, "stage": 2, "crop": "russet", "watered": true}, true)
 			farm.climate.data.operations.stress[str(index)] = 0.6
 			farm.climate.data.operations.wet[str(index)] = 0.0
 		water = farm.climate.Operations.local(farm).water
@@ -158,6 +162,8 @@ func run() -> void:
 	# Old saves should not force a lesson or retain invisible ration mode.
 	var legacy: Dictionary = farm._save_data()
 	legacy.mechanics_revision = 16
+	for island in ["2", "3"]:
+		for bed in legacy.island_plots[island]: bed.unlocked = bool(legacy["island" + island + "_unlocked"])
 	legacy.climate.erase("lesson")
 	legacy.climate.operations.islands["2"].mode = 2
 	var file := FileAccess.open(SAVE, FileAccess.WRITE)

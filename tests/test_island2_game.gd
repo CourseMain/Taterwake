@@ -63,6 +63,7 @@ func _run() -> void:
 	press("island_unlock")
 	check(game.state.island2_unlocked and game.state.coins == 300000.0, "unlock button charges exactly \uE000 1M once")
 	press("travel:2")
+	game.state.climate.acknowledge(game.state)
 	await settle_world()
 	check(game.world.current_island == 2 and game.state.current_island == 2, "travel button switches scene and state together")
 	check(game.world.plot_positions.size() == 48 and game.state.plots.size() == 48, "Golden Shores has all 48 playable plots")
@@ -73,10 +74,12 @@ func _run() -> void:
 	for index in range(48):
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.plot_positions[index]))
 		check(int(hit.get("plot_index", -1)) == index, "tropical plot is clickable: %d" % index)
-	for station in {"barn": Vector3(-15, 2, -10), "market": Vector3(-1, 1.8, -11), "roll": Vector3(13, 2, -10), "quests": Vector3(-12, 1.5, 11), "island": Vector3(16, 1.2, 7)}:
-		var locations: Dictionary = {"barn": Vector3(-15, 2, -10), "market": Vector3(-1, 1.8, -11), "roll": Vector3(13, 2, -10), "quests": Vector3(-12, 1.5, 11), "island": Vector3(16, 1.2, 7)}
-		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(locations[station]))
+	for station in {"barn": Vector3(-15, 2, -10), "market": Vector3(-1, 1.8, -11), "quests": Vector3(-12, 1.5, 11), "island": Vector3(16, 1.2, 7)}:
+		var locations: Dictionary = {"barn": Vector3(-15, 2, -10), "market": Vector3(-1, 1.8, -11), "quests": Vector3(-12, 1.5, 11), "island": Vector3(16, 1.2, 7)}
+		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(locations[station])))
 		check(str(hit.get("station", "")) == station, "tropical building can be clicked: " + station)
+	game.state.coins = 1e18
+	game.state.expand_field()
 	await shot("golden-shores-arrival")
 	for index in range(48):
 		game.perform_plot(index, "hoe")
@@ -84,10 +87,12 @@ func _run() -> void:
 	var event: InputEventKey = InputEventKey.new()
 	event.pressed = true
 	event.physical_keycode = KEY_Q
+	var before_ground: float = game.state.coins
 	game._unhandled_input(event)
+	if game.conversation.visible: game.conversation.choose(0)
 	check(game.hud.is_panel_open(), "Q opens the quest board")
 	press("quest:ground")
-	check(game.state.coins == 400000.0 and game.state.seed_inventory.sunburst == 5, "claim button pays \uE000 100K and five Sunburst seeds")
+	check(game.state.coins == before_ground + 200000000.0 and game.state.seed_inventory.sunburst == 5, "claim button pays the advertised 200M and five Sunburst seeds")
 	check(button("quest:ground") == null or button("quest:ground").disabled, "claimed reward cannot be collected twice")
 	game.hud.close_panel()
 	press("crop:sunburst")
@@ -95,41 +100,44 @@ func _run() -> void:
 	for index in range(5):
 		game.perform_plot(index, "plant")
 		game.perform_plot(index, "water")
-	game._process(45.1)
+	game._advance_simulation(55.1)
 	check(game.state.plots[4].stage == 3, "new crop matures only after manual planting and watering")
 	for index in range(5):
 		game.perform_plot(index, "harvest")
 	check(game.state.quest_progress.sunburst > 0 and game.state.quest_progress.sunburst < 10000, "first harvest progresses a longer farming quest")
 	check(game.state.quest_progress.mutation == 1 and game.state.shores_first_mutation, "first manual Sunburst harvest produces the Golden discovery")
-	check(game.state.coins == 400000.0, "one discovery no longer grants an immediate eight-figure windfall")
+	check(game.state.coins == before_ground + 200000000.0, "one discovery no longer grants an immediate eight-figure windfall")
 	game._on_action("quests")
 	check((button("quest:sunburst") == null or button("quest:sunburst").disabled) and (button("quest:mutation") == null or button("quest:mutation").disabled), "larger quest goals cannot be claimed from one starter harvest")
 	await shot("golden-shores-quests")
 	await process_frame
-	check(game.hud._reward_box.size.y < 240.0, "reward notices remain compact")
+	check(game.hud._reward_box.size.x <= game.hud.root.size.x * 0.25 and game.hud.root.get_global_rect().encloses(game.hud._reward_box.get_global_rect()), "reward notices remain compact")
 	game.hud.close_panel()
 	# A late-game inventory fixture exercises a full-size export sale through the real UI.
 	game.state.coins = 20000000000.0
 	for upgrade in range(7):
 		game.state.upgrade_barn()
 	game.state.storage.sunburst = 1000000
-	game._on_action("market")
-	check(button("buy:sunburst:1") != null and button("sell:sunburst:-1") != null, "exclusive crop has live buy and sell controls")
+	game.state.select_crop("sunburst")
+	game._on_action("sell_potatoes")
+	check(game.hud._refs.market_page.sell_button != null, "exclusive crop has live buy and sell controls")
 	var seed_price: float = game.state.market.sunburst.seed
 	game.state.export_timer = 0.05
-	game._process(0.06)
+	game._advance_simulation(0.06)
 	check(game.state.export_active and game.world._export_active, "randomly timed export arrival updates simulation and boat")
 	check(game.state.export_timer <= 5.0 and game.state.export_factor >= 2.0 and game.state.export_factor <= 6.0, "export gives a five-second varied opportunity")
 	check(is_equal_approx(game.state.market.sunburst.sell, game.state._market_core.sunburst.sell * game.state.export_factor), "displayed export factor controls the real quote")
 	check(game.state.market.sunburst.seed > seed_price, "seed prices rise with the export sale quote")
 	await shot("golden-shores-export-market")
 	await process_frame
-	var scroll: ScrollContainer = game.hud._body.get_parent() as ScrollContainer
-	check(button("sell:sunburst:-1").get_global_rect().end.y <= scroll.get_global_rect().end.y, "Sunburst export sell button fits without scrolling")
+	await process_frame
+	await process_frame
+	check(game.hud._modal_card.get_global_rect().grow(1).encloses(game.hud._refs.market_page.sell_button.get_global_rect()), "Sunburst sale remains reachable in the fixed trade footer")
 	var before_coins: float = game.state.coins
 	var held: int = game.state.storage.sunburst
 	var sale_price: float = game.state.market.sunburst.sell
-	press("sell:sunburst:-1")
+	game.hud._refs.market_page.quantity.value = game.state.storage.sunburst
+	game.hud._refs.market_page.sell_button.pressed.emit()
 	check(is_equal_approx(game.state.coins, before_coins + held * sale_price), "large sale pays the exact displayed export quote")
 	check(game.state.quest_progress.export == 1.0, "real export sale supplies one distinct ship")
 	for shipment in range(2):
@@ -137,7 +145,8 @@ func _run() -> void:
 		game.state._toggle_export()
 		game.state.storage.sunburst = 100
 		game._on_state_changed()
-		press("sell:sunburst:-1")
+		game.hud._refs.market_page.quantity.value = game.state.storage.sunburst
+		game.hud._refs.market_page.sell_button.pressed.emit()
 	check(game.state.quest_progress.export == 3.0, "three distinct shipments complete the island activity")
 	game.hud.close_panel()
 	game.state.tools.harvest = 2
@@ -171,7 +180,7 @@ func _run() -> void:
 	check(not game.walking and game.pending_plot == -1, "travel cancels work queued on another island")
 	check(game.state.export_timer == export_time, "ferry cannot reset export countdown")
 	check(game.state.selected_crop == "russet" and button("crop:sunburst") == null, "returning safely selects a starter crop")
-	game._process(45.1)
+	game._advance_simulation(55.1)
 	check(game.state.island_plots["2"][47].stage == 3, "watered Sunburst keeps growing while visiting starter farm")
 	check(not game.state.export_active, "export boat departs while away")
 	game._on_action("travel:2")
@@ -191,5 +200,6 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	game.queue_free()
 	await process_frame
+	await create_timer(0.3).timeout
 	print("GOLDEN SHORES INTEGRATION: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

@@ -42,11 +42,7 @@ func run() -> void:
 	await shot("stock-rocket-countdown-hud")
 	game.state.rocket_timer = 0.1
 	game.state.surge_timer = 0.1
-	game.hud.begin_roll("normal")
 	game._process(0.1)
-	check(game.state.rocket_pending and not game.rocket_cutscene.active, "rocket waits for an existing paid roll reveal")
-	game.hud.cancel_roll()
-	game._process(0.01)
 	game.rocket_cutscene.set_process(false)
 	check(game.rocket_cutscene.active and not game.hud.is_panel_open(), "pending rocket starts full-screen launch and closes menus")
 	check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED, "opaque rocket film suspends hidden farm rendering")

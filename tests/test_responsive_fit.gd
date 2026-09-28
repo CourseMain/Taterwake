@@ -51,7 +51,6 @@ func run() -> void:
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
 	game.state.surge_timer = 8.0
-	game.state.debug_luck_multiplier = 3000.0
 	game.hud.update_state(game.state)
 	game.hud._toast_box.hide()
 	game.hud._reward_box.hide()
@@ -90,7 +89,7 @@ func run() -> void:
 		game.hud._purchase_box.hide()
 	# Every menu uses the same fixed canvas, but each can have its own minimum
 	# width. Check the actual content after container layout, not a mock panel.
-	for kind: String in ["inventory", "tools", "roll", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help"]:
+	for kind: String in ["inventory", "tools", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help"]:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)

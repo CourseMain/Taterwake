@@ -73,15 +73,14 @@ func run() -> void:
 	var coins: float = farm.coins
 	for id in Pages.ORDER:
 		check(h._refs.has("build_preview:" + id), id + " has an illustrated preview")
-		check(h._refs["build_status:" + id].text.contains("Selected" if id == "farmer" else "Locked"), id + " has its true selection/unlock state")
+		check(h._refs["build_status:" + id].text.contains("Selected" if id == "farmer" else "Lv.1"), id + " has its true selection/unlock state")
 		h._refs["build_explore:" + id].pressed.emit()
 		await frames()
 		check(h._build_selection == id and b.save_data() == saved and farm.coins == coins, id + " browsing changes no gameplay or save state")
-		check(h._refs.build_equip.disabled, id + " cannot be selected while already active or locked")
+		check(h._refs.build_equip.disabled == (id == "farmer"), id + " selection is disabled only while active")
 		check(h._refs.has("build_art") and h._refs.build_art.kind == id, id + " detail shows its own appearance")
 		if game.touch_controls.enabled:
 			check(h._modal_card.size.y <= Pages.content_height(h) + 1, id + " touch panel fits remaining content")
-		if id != "farmer": check(h._refs.build_selection_note.text.contains("10%") and h._refs.build_selection_note.text.contains("Inventory"), "locked " + id + " states the real crate route")
 		h._refs["build_details:toggle"].pressed.emit()
 		await frames()
 		var copy: String = labels(h._refs.build_details)

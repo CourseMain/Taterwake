@@ -35,14 +35,14 @@ func run() -> void:
 	game.state.mastery.russet = 30000
 	game.state.unlock_island2()
 	game.state.unlock_island3()
-	for id in ["straw_hat", "lucky_cap", "farmer_shirt", "farmer_pants", "farmer_boots", "harvest_gloves", "market_monocle", "investor_shirt", "scientist_coat", "gambler_shirt", "industrialist_overalls", "industrialist_pants", "industrialist_boots"]:
+	for id in ["straw_hat", "patchwork_cap", "farmer_shirt", "farmer_pants", "farmer_boots", "harvest_gloves", "market_monocle", "investor_shirt", "scientist_coat", "gambler_shirt", "industrialist_overalls", "industrialist_pants", "industrialist_boots"]:
 		game.state._grant_item(id)
 	game._on_action("gear:equip:straw_hat")
 	game._on_action("gear:equip:farmer_shirt")
 	game._on_state_changed()
 	check(game.world._player_body.loadout == game.state.equipment_loadout(), "field farmer uses actual equipped items")
-	game._on_action("gear:equip:lucky_cap")
-	check(game.world._gear_hat_id == "lucky_cap" and game.state.equipment_loadout().head == "lucky_cap", "equipping another hat replaces the first in world and simulation")
+	game._on_action("gear:equip:patchwork_cap")
+	check(game.world._gear_hat_id == "patchwork_cap" and game.state.equipment_loadout().head == "patchwork_cap", "equipping another hat replaces the first in world and simulation")
 	game._on_action("gear:unequip:head")
 	check(game.world._gear_hat == null and not game.world._player_body.gear_parts.has("head"), "removing a hat removes its model")
 	game._on_action("gear:equip:straw_hat")

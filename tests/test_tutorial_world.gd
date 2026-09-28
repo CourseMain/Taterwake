@@ -34,8 +34,8 @@ func _run() -> void:
 	var hidden_signs: int = 0
 	for layer: Node3D in world._tutorial_label_layers:
 		hidden_signs += int(not layer.is_visible_in_tree())
-	check(hidden_signs == visible_signs and not world._tutorial_marker.visible, "opening tutorial hides station clutter without an extra marker")
-	for station: String in ["market", "barn", "tools", "roll", "builds", "duck_patrol", "quests", "island"]:
+	check(hidden_signs == world._tutorial_label_layers.size() and not world._tutorial_marker.visible, "opening tutorial hides station clutter without an extra marker")
+	for station: String in ["market", "barn", "tools", "builds", "duck_patrol", "quests", "island"]:
 		world.set_tutorial_focus(station)
 		check(world._tutorial_marker.visible and world._tutorial_marker.text.length() > 1, "%s gets one named destination marker" % station)
 		var point: Vector3 = world.station_position(station)
@@ -62,9 +62,9 @@ func _run() -> void:
 	world.set_tutorial_focus("duck_patrol")
 	world.set_activity_state({"unlocked": true, "active": true})
 	check(not world._duck_label.is_visible_in_tree(), "live station status refresh cannot restore distracting signs")
-	world._roll_label.visible = false
+	world._dock_label.visible = false
 	world.set_tutorial_focus("", true)
-	check(world._duck_label.is_visible_in_tree() and not world._roll_label.is_visible_in_tree(), "ending tutorial restores labels without overriding their own visibility")
+	check(world._duck_label.is_visible_in_tree() and not world._dock_label.is_visible_in_tree(), "ending tutorial restores labels without overriding their own visibility")
 	check(not world._tutorial_marker.visible and not world._tutorial_plot_outline.visible, "ending tutorial removes guide marker and target outline")
 	world.set_tutorial_focus("market")
 	world.build_world(1)

@@ -32,6 +32,7 @@ func key(code: int) -> void:
 	event.physical_keycode = code
 	event.pressed = true
 	game._unhandled_input(event)
+	if game.conversation.visible: game.conversation.choose(0)
 
 func settle() -> void:
 	await process_frame
@@ -93,9 +94,6 @@ func _run() -> void:
 	press("quest:starter_crash")
 	check(game.state.quest_claimed.has("starter_crash"), "starter island activity reward is actually claimable")
 	game.hud.close_panel()
-	var no_crate_rng: int = game.state.rng.state
-	game._on_action("build:open_crate")
-	check(not game.hud.is_roll_animating() and game.state.rng.state == no_crate_rng, "empty crate UI request cannot start RNG or reward reel")
 	game.world.set_player_position(game.world.plot_positions[4] + Vector3(0, 0, 0.65))
 	key(KEY_1)
 	key(KEY_E)
@@ -135,60 +133,33 @@ func _run() -> void:
 	game.state._grant_item("aurora")
 	game.state._grant_item("sunstone")
 	game.state.storage.russet = 20
-	game.builds.build_crates = 1
 	game._on_action("inventory")
 	await shot("illustrated-inventory-crops")
 	press("inventory_tab:items")
 	await shot("illustrated-inventory-items")
-	var before: float = game.state.coins
-	var total_before: int = 0
-	for value in game.builds.levels.values():
-		total_before += int(value)
-	press("inventory_tab:builds")
-	await shot("illustrated-inventory-builds")
-	press("build:open_crate")
-	check(game.hud.is_roll_animating() and game.builds.build_crates == 0, "opening a build crate starts the reward reel and consumes it")
-	check(game.state.coins == before, "build crate does not charge an extra wager")
-	await create_timer(0.45).timeout
-	await shot("build-crate-reel")
-	var deadline: int = Time.get_ticks_msec() + 10000
-	while game.hud.is_roll_animating() and Time.get_ticks_msec() < deadline:
-		await process_frame
-	check(not game.hud.is_roll_animating(), "build-only reel reaches its result")
-	var total_after: int = 0
-	for value in game.builds.levels.values():
-		total_after += int(value)
-	check(total_after == total_before + 1, "crate reveal grants exactly one build level")
-	await shot("build-crate-result")
-	game.hud.close_panel()
-	key(KEY_R)
-	check(button("roll:normal") != null, "opening paid Roll House after a crate restores wager controls")
-	game.hud.close_panel()
 	for id in game.builds.IDS:
 		game.builds.levels[id] = 8
 	key(KEY_C)
 	check(game.hud.is_panel_open(), "C opens all five build choices")
 	await shot("player-builds")
+	press("build:inspect:scientist")
 	press("build:select:scientist")
 	check(game.builds.active == "scientist", "build panel equips the chosen gameplay specialization")
 	game.hud.close_panel()
 	game.state.coins = 200000000000.0
 	game.state.mastery.russet = 25000
 	game.state.unlock_island2()
-	check(not game.state.roll_available(), "starter Roll House retires when the second island is unlocked")
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)
 	await settle()
 	spike(1200.0)
 	await shot("market-golden-flash")
 	game.state.unlock_island3()
-	check(not game.state.roll_available(), "second Roll House retires when the winter island is unlocked")
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
 	await settle()
 	spike(1400.0)
 	await shot("market-winter-flash")
-	check(game.state.roll_available(), "newest island remains open for its appropriately priced wagers")
 	game.state.surge_timer = 0.01
 	game._process(0.01)
 	check(game.state.surge_remaining > 0.0 and game.hud._top.surge.text.contains("SELL"), "countdown activates a real sale opportunity in the HUD")

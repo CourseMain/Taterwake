@@ -108,5 +108,5 @@ func run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	print("MARKET DIALOGUE: %d checks, %d failures" % [checks, failures])
 	game.queue_free()
-	await settle()
+	await create_timer(0.3).timeout
 	quit(1 if failures else 0)

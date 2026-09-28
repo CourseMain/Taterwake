@@ -1,5 +1,5 @@
 extends SceneTree
-## Numeric text input, one-shot money changes, and honest all-in receipts.
+## Numeric text input, one-shot money changes, and precise balances.
 var game
 var checks: int = 0
 var failures: int = 0
@@ -33,15 +33,6 @@ func shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	check(root.get_texture().get_image().save_png("res://artifacts/debug-money-" + name + ".png") == OK, "render " + name)
 
-func refund_seed() -> int:
-	var common: float = float(game.state.roll_odds("all_in")[0].chance) / 100.0
-	var predictor: RandomNumberGenerator = RandomNumberGenerator.new()
-	for candidate: int in range(1, 200000):
-		predictor.seed = candidate
-		if predictor.randf() < common and predictor.randf() >= 0.70:
-			return candidate
-	return -1
-
 func run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	if not capture and not "--integration-test" in OS.get_cmdline_user_args():
@@ -73,7 +64,7 @@ func run() -> void:
 		check(game.hud._refs.debug_preview.text.contains("× 1e-20 → \uE000 1"), "tiny multiplier previews the true one-dollar result")
 		await shot("tiny-input")
 		game.hud._refs.debug_apply.pressed.emit()
-		check(game.state.coins == 1.0 and sent_action.contains(":1e-20:"), "scientific and long decimal input both scale 1e20 to exactly1")
+		check(game.state.coins == 1.0 and sent_action.ends_with(":1e-20"), "scientific and long decimal input both scale 1e20 to exactly1")
 	game.state.coins = 240.0
 	type_money("1e-3")
 	check(game.hud._refs.debug_preview.text.contains("\uE000 0.24"), "fractional-dollar preview does not round to zero")
@@ -107,45 +98,15 @@ func run() -> void:
 	check(game.state.coins == 0.0, "neutral repeated Apply leaves an empty purse unchanged")
 	for raw: String in ["bad", "", "1e-999"]:
 		game.state.coins = 240.0
-		game._on_action("debug:apply:" + raw + ":1")
+		game._on_action("debug:apply:" + raw)
 		check(game.state.coins == 240.0, "main action path rejects malformed or underflow text: " + raw)
 	game.state.coins = 1e20
-	game._on_action("debug:apply:0.00000000000000000001:1")
+	game._on_action("debug:apply:0.00000000000000000001")
 	check(game.state.coins == 1.0, "main action parser also handles raw tiny decimal without wiping")
 	game.state.coins = 1e20
 	type_money("0.1")
 	await shot("decimal-controls")
 	game.hud.close_panel()
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
-	game.state.travel_to(3)
-	game.state.climate.acknowledge(game.state)
-	game.state.coins = 1e20
-	game.state.reset_debug()
-	game.state.equipment = game.state._empty_equipment()
-	game.state.rng.seed = refund_seed()
-	game._on_action("roll")
-	game.hud._act("roll:all_in")
-	check(game.state.coins == 1e20 and game.hud._all_in_pending, "first all-in press remains a confirmation with no payment")
-	game.hud._act("roll:all_in")
-	check(game.state.coins == 1e19 and not game.hud._refs.roll_accounting.visible, "full all-in is charged then a real10percent refund remains hidden during the reel")
-	game.hud._refs.roll_luck_meter._process(5)
-	game.hud._spinner._process(5)
-	var receipt: String = game.hud._refs.roll_accounting.text
-	check(game.hud._refs.roll_accounting.visible and receipt.contains("Spent \uE000 100Qi") and receipt.contains("Returned \uE000 10.0Qi") and receipt.contains("Balance \uE000 10.0Qi"), "receipt distinguishes full payment from the later10percent return")
-	check(receipt.contains("10% stake refunds") and game.hud._refs.roll_accounting.tooltip_text.contains("Net change: -\uE000 " + String.num_scientific(9e19)), "refund source and net change are explained")
-	await shot("all-in-refund")
-	game.state._grant_item("aurora_crown")
-	game.state.coins = 1e20
-	game.hud._act("roll:normal")
-	check(not game.hud._refs.roll_accounting.visible, "new purchase hides the previous receipt until reveal")
-	game.hud._refs.roll_luck_meter._process(5)
-	game.hud._spinner._process(5)
-	check(game.hud._batch_results.size() == 2 and game.hud._refs.batch_results.get_child_count() == 2, "Crown still presents both actual outcomes")
-	check(game.hud._refs.roll_accounting.text.contains("Spent \uE000 20.0T") and game.state.roll_accounting_info().paid_count == 1, "Crown receipt charges only the one purchased roll")
-	game.hud.close_panel()
-	game._on_action("roll")
-	check(not game.hud._refs.roll_accounting.visible, "reopening an idle reel does not pretend a prior receipt is a new reward")
 	if capture:
 		root.size = Vector2i(960, 600)
 		game._on_action("debug")

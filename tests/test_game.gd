@@ -39,12 +39,6 @@ func shot(filename: String) -> void:
 	await RenderingServer.frame_post_draw
 	check(root.get_texture().get_image().save_png("res://artifacts/" + filename + ".png") == OK, "rendered " + filename)
 
-func finish_spin() -> void:
-	var deadline: int = Time.get_ticks_msec() + 10000
-	while game.hud.is_roll_animating() and Time.get_ticks_msec() < deadline:
-		await process_frame
-	check(not game.hud.is_roll_animating(), "reward reel reaches its result and unlocks controls")
-
 func _run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	if not capture and not "--integration-test" in OS.get_cmdline_user_args():
@@ -62,8 +56,8 @@ func _run() -> void:
 	check(not game.hud.is_panel_open(), "farm available immediately")
 	check(game.state.available_crops().size() == 4, "four crop varieties available")
 	await shot("spud-valley")
-	for station in {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9), "roll": Vector3(10, 2, -8)}:
-		var location: Vector3 = {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9), "roll": Vector3(10, 2, -8)}[station]
+	for station in {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}:
+		var location: Vector3 = {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}[station]
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(location))
 		check(str(hit.get("station", "")) == station, "click reaches " + station + " building")
 	var plot_hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.plot_positions[5]))
@@ -141,35 +135,6 @@ func _run() -> void:
 	check(cleared == 6, "one manual scythe action clears an entire row")
 	check(game.state.combo_multiplier == 16, "row harvest builds an x16 combo")
 	await shot("harvest-combo")
-	game._on_action("roll")
-	await shot("roll-house")
-	var odds_total: float = 0.0
-	for tier in game.state.roll_odds():
-		odds_total += float(tier.get("chance", tier.get("probability", tier.get("percent", 0.0))))
-	check(is_equal_approx(odds_total, 100.0), "displayed roll tier odds total exactly 100 percent")
-	# The scene verifies that all-in needs two separate presses, then resolves once.
-	var prior_all_in_rolls: int = game.state.roll_count
-	var prior_all_in_coins: float = game.state.coins
-	press("roll:all_in")
-	check(game.state.roll_count == prior_all_in_rolls and game.state.coins == prior_all_in_coins, "all-in first press only asks for confirmation")
-	press("roll:all_in")
-	check(game.state.roll_count == prior_all_in_rolls + 1, "all-in confirmation resolves exactly one roll")
-	check(game.hud.is_roll_animating(), "real reward is revealed by the animated reel")
-	game._on_action("roll:normal")
-	game._on_action("reset")
-	check(game.state.roll_count == prior_all_in_rolls + 1, "spinning blocks duplicate wagers and reset")
-	await create_timer(0.4).timeout
-	await shot("roll-spinner")
-	await finish_spin()
-	game.state.coins = 500.0
-	game.hud.update_state(game.state)
-	var previous_rolls: int = game.state.roll_count
-	var expected_pulls: int = 1 + int(game.state.crown_bonus_active())
-	press("roll:normal")
-	check(game.state.roll_count == previous_rolls + expected_pulls, "Roll House button resolves its real roll and any equipped crown bonus")
-	check(game.state.coins >= 0.0, "roll balance never becomes negative")
-	await finish_spin()
-	game.hud.close_panel()
 	game.state._try_mutation("russet", true)
 	check(not game.state.mutations.is_empty() and not game.state.dex.is_empty(), "rare harvest enters held mutation storage and PotatoDex")
 	await shot("mutation")

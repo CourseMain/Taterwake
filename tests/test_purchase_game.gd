@@ -31,6 +31,8 @@ func click_station(point: Vector3, expected: String) -> void:
 	check(game.world.pick(event.position).get("station", "") == expected, "ray hits " + expected)
 	event.position *= root.get_visible_rect().size / Vector2(game.farm_viewport.size)
 	game._unhandled_input(event)
+	event.pressed = false
+	game._input(event)
 	if game.conversation.visible: game.conversation.choose(0)
 	check(game.hud._panel_kind == expected, "world click opens " + expected)
 
@@ -68,9 +70,9 @@ func run() -> void:
 	game.hud._process(game.hud.PURCHASE_SECONDS + 0.1)
 	game.state.coins = game.state.bankruptcy_limit()
 	game._on_action("buy:russet:5")
-	check(not game.hud._purchase_box.visible and game.hud._toast_box.visible, "rejected purchase shows explanation without success popup")
+	check(not game.hud._purchase_box.visible and game.hud._purchase_review.visible, "rejected purchase shows explanation without success popup")
 	check(game.state.seed_inventory.russet == starting_seeds + 6, "rejection preserves inventory")
-	game.hud._toast_box.hide()
+	game.hud._purchase_review.hide()
 	game.state.coins = 1e15
 	var shop_points: Array[Vector3] = [Vector3(-6.4, 1.5, -8.5), Vector3(-8, 1.5, -10.6), Vector3(18, 1.9, 2)]
 	for island: int in [1, 2, 3]:
@@ -98,6 +100,6 @@ func run() -> void:
 			click_station(game.world.get_node("FrostFurnace").global_position + Vector3(0, 1.8, 0), "activities")
 			check(game.hud._refs.has("activity:furnace:icecap") and not game.hud._refs.has("activity:duck"), "furnace still has its own page")
 	game.queue_free()
-	await process_frame
+	await create_timer(0.3).timeout
 	print("PURCHASE GAME: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

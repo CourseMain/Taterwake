@@ -44,7 +44,7 @@ func run() -> void:
 		avatar.set_equipment({}, State.ITEM_CATALOG)
 		check(old.get_ref() == null and avatar.gear_parts.is_empty() and avatar._followers.is_empty(), "unequipping frees the whole garment and its limb attachments: " + id)
 	check(gear_count == 23, "all23 catalog gear items are represented")
-	check(head_shapes.size() == 5 and head_shapes.aurora_crown > head_shapes.straw_hat and head_shapes.lucky_cap != head_shapes.traders_visor, "crown, brimmed hat, cap and visor have distinct model silhouettes")
+	check(head_shapes.size() == 5 and head_shapes.aurora_crown > head_shapes.straw_hat and head_shapes.patchwork_cap != head_shapes.traders_visor, "crown, brimmed hat, cap and visor have distinct model silhouettes")
 	var outfit: Dictionary = {"head": "aurora_crown", "body": "scientist_coat", "legs": "farmer_pants", "feet": "industrialist_boots", "hands": "harvest_gloves", "charm": "market_monocle"}
 	avatar.set_equipment(outfit, State.ITEM_CATALOG)
 	check(avatar.gear_parts.size() == 6 and avatar.hat == avatar.gear_parts.head and avatar._aurora_materials.size() == 8, "all six slots coexist with an eight-jewel luminous crown")

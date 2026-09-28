@@ -50,16 +50,14 @@ func run() -> void:
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
 	game.state.coins = 223e15
-	game.state.luck = 2.0
 	for id: String in game.state.ITEM_CATALOG: game.state._grant_item(id)
 	for crop: String in game.state.CROP_IDS:
 		game.state.seed_inventory[crop] = 30
 		game.state.storage[crop] = 10
 	for id: String in game.builds.levels: game.builds.levels[id] = 5
-	game.builds.build_crates = 4
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
-	for kind: String in ["market", "inventory", "tools", "roll", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
+	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
 		await page(kind)
 	for tab: String in ["gear", "items", "builds"]:
 		game.hud.show_panel("inventory", game.state)
@@ -70,7 +68,7 @@ func run() -> void:
 	game.hud._act("dex_tab:crops")
 	await shot("dex-crops-top")
 	await shot("dex-crops-bottom", true)
-	for pair: Array in [["taxes", "tax_details"], ["climate", "climate_details"], ["roll", "roll_math_section"]]:
+	for pair: Array in [["taxes", "tax_details"], ["climate", "climate_details"]]:
 		game.hud.show_panel(pair[0], game.state)
 		var scroller: ScrollContainer = game.hud._body.get_parent()
 		await settle()
@@ -79,42 +77,6 @@ func run() -> void:
 		await settle()
 		check(game.hud._refs[pair[1]].visible and scroller.get_global_rect().intersects(game.hud._refs[pair[1]].get_global_rect()), pair[1] + " reveals after expansion")
 		await shot(pair[1] + "-bottom", true)
-	game.hud._preview_stake("stupid")
-	check(game.hud._refs.roll_quality.text.contains("4.00×"), "300% stake is shown as 4x quality")
-	var scroll: ScrollContainer = game.hud._body.get_parent()
-	await settle()
-	scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
-	check(game.hud._modal_card.get_global_rect().encloses(game.hud._refs.roll_luck_meter.get_global_rect()), "calculation remains visible at the bottom")
-	game.hud.begin_roll("stupid")
-	check(scroll.scroll_vertical == 0, "starting a roll returns to the intact reel")
-	check(game.hud._refs.roll_luck_meter.playing and game.hud._refs.roll_luck_meter.values.stake_bonus == 300, "purchased stake is visibly calculated")
-	var frozen: Dictionary = game.hud._refs.roll_luck_meter.values.duplicate(true)
-	game.state.coins = 1e14
-	game.hud.update_state(game.state)
-	check(game.hud._refs.roll_luck_meter.values == frozen, "spending coins does not change purchased calculation")
-	var results: Array = []
-	for item: String in ["straw_hat", "farmer_shirt", "market_monocle", "aurora_crown", "loaded_dice", "harvest_gloves"]:
-		results.append({"tier": game.state.ITEM_CATALOG[item].rarity, "title": game.state.ITEM_CATALOG[item].name, "item_id": item, "detail": game.state.ITEM_CATALOG[item].effect, "bet": 1e12})
-	game.hud.spin_batch(results)
-	await shot("roll-spinning")
-	game.hud._refs.roll_luck_meter._process(5)
-	game.hud._spinner._process(5)
-	check(game.hud._refs.batch_results.get_child_count() == 6, "six real batch results render as six cards")
-	await settle()
-	await shot("roll-batch-cards", false, game.hud._refs.batch_results)
-	await shot("roll-results-top")
-	await shot("roll-results-bottom", true)
-	game.hud._act("toggle_trophies")
-	await shot("trophies-empty-bottom", true)
-	game.hud.close_panel()
-	game.state.coins = 223e15
-	for _i: int in range(35): game.state.roll("normal")
-	game.hud.show_panel("roll", game.state)
-	game.hud._trophies_open = false
-	game.hud._act("toggle_trophies")
-	await shot("trophies-filled-bottom", true)
-	game.hud.show_panel("roll", game.state, true)
-	await shot("build-crate")
 	for island: int in [1, 2]:
 		game.state.travel_to(island)
 		game.state.climate.acknowledge(game.state)
@@ -126,7 +88,7 @@ func run() -> void:
 	await page("climate", "climate-disaster")
 	check(game.hud._export_title.text.contains("CRASH") and game.hud._export_detail.text.contains("Booms paused"), "HUD explains the crash and stopped booms")
 	root.size = Vector2i(960, 600)
-	for kind: String in ["roll", "dex", "taxes", "climate", "help", "debug"]:
+	for kind: String in ["dex", "taxes", "climate", "help", "debug"]:
 		await page(kind, "compact-" + kind)
 	game.queue_free()
 	await process_frame

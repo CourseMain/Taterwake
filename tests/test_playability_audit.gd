@@ -89,17 +89,12 @@ func run() -> void:
 	game._close_equipment()
 	game.hud._build_selection = "farmer"
 	game._on_action("builds")
-	check("Tax" in game.hud._blind_modal_warning.text and "Cash" in game.hud._blind_modal_warning.text and " / " not in game.hud._blind_modal_warning.text, "imminent tax warning distinguishes cash from the coming bill")
+	check("Tax" in game.hud._blind_modal_warning.text and "Spudions" in game.hud._blind_modal_warning.text and " / " not in game.hud._blind_modal_warning.text, "imminent tax warning distinguishes cash from the coming bill")
 	game.state.blind_cycle.due_in = 0
 	game.state.blind_cycle.booms = 2
 	game.hud.update_state(game.state)
 	check("Debt" in game.hud._blind_modal_warning.text and "after 1 more stock" in game.hud._blind_modal_warning.text, "debt warning names the balance and next collection separately")
 	await shot("farmer-debt")
-	game._on_action("roll")
-	game.hud.show_toast("A long test notification that should fit below the taller roll window without covering any of its controls.")
-	await settle()
-	check(not game.hud._toast_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), "notification clears the taller roll panel")
-	check(game.hud.root.get_global_rect().encloses(game.hud._toast_box.get_global_rect()), "single-line notification fits below the taller roll panel")
 	game.queue_free()
 	await settle()
 	print("PLAYABILITY AUDIT: %d checks, %d failures" % [checks, failures])

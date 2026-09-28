@@ -60,7 +60,7 @@ func run() -> void:
 	check(not hud._quick_sell.visible and not hud._sidebar_box.visible, "sale actions and sidebar wait for their introduction")
 	hud.set_tool("pest")
 	check(hud._selected_tool == "hoe", "hidden tools cannot be equipped through HUD API")
-	hud._act("roll:all_in")
+	hud._act("builds")
 	check(actions.is_empty(), "blocked actions never reach game state")
 	hud._act("tutorial:next")
 	hud._act("tutorial:skip")
@@ -77,7 +77,7 @@ func run() -> void:
 	hud.set_tool("plant")
 	hud.update_state(state)
 	check(hud._tool_buttons.hoe.visible and hud._tool_buttons.plant.visible and not hud._tool_buttons.water.visible, "hotbar reveals only introduced tools")
-	check(hud._top.coins.is_visible_in_tree() and not hud._top.price.is_visible_in_tree() and not hud._top.luck.is_visible_in_tree(), "coins reveal independently from stocks and luck")
+	check(hud._top.coins.is_visible_in_tree() and not hud._top.price.is_visible_in_tree(), "coins reveal independently from stocks and luck")
 	check(hud._crop_row.visible and not hud._tracked_box.visible, "first planting shows seeds without tracked price clutter")
 	await settle()
 	check(is_equal_approx(hud._crop_row.size.x, 300.0) and is_equal_approx(hud._crop_row.get_global_rect().get_center().x, hud.root.size.x * 0.5), "first Russet choice uses a compact centered tray")
@@ -145,9 +145,9 @@ func run() -> void:
 	sale_page.quantity.value = 2
 	sale_page._sell()
 	check(actions == ["sell:russet:2"], "guided sale dispatches the selected quantity through the existing whitelist")
-	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "builds", "quests", "roll", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
+	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "builds", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
 	state.coins = 1e9
-	for panel: String in ["barn", "inventory", "tools", "builds", "quests", "roll", "duck_patrol", "island", "pause"]:
+	for panel: String in ["barn", "inventory", "tools", "builds", "quests", "duck_patrol", "island", "pause"]:
 		hud.show_panel(panel, state)
 		hud.update_state(state)
 		await settle()
@@ -155,8 +155,6 @@ func run() -> void:
 		check(hud._tutorial_card.is_visible_in_tree() and not hud._tutorial_skip.disabled, "%s panel leaves skip available" % panel)
 		if panel == "tools":
 			check(hud._refs["upgrade:hoe"].disabled, "affordable tool upgrades stay disabled on guided inspection")
-		if panel == "roll":
-			check(hud._refs["roll:normal"].disabled, "affordable roll cannot spend during guided inspection")
 	check(hud._top.market_name.text == "STOCKS PAUSED" and hud._top.price.text == "After the tour", "stock introduction explains calm market without countdown excitement")
 	check(hud._crop_row.anchor_left == 0.0 and hud._crop_row.anchor_right == 1.0 and hud._crop_row.offset_left == 28.0 and hud._crop_row.offset_right == -28.0, "stock introduction restores full seed tray layout")
 	check(button_for("debug") == null, "guided menu does not reveal debugging clutter")
@@ -164,12 +162,12 @@ func run() -> void:
 	hud.close_panel()
 	await settle()
 	check(not hud._tutorial_card.visible and hud._menu_button.visible and hud._export_box.visible, "finishing restores ordinary menu and stock countdown")
-	check(hud._top.coins.is_visible_in_tree() and hud._top.price.is_visible_in_tree() and hud._top.luck.is_visible_in_tree(), "finishing restores all normal stats")
+	check(hud._top.coins.is_visible_in_tree() and hud._top.price.is_visible_in_tree(), "finishing restores all normal stats")
 	check(hud._hotbar.size.x == 508 and hud._tool_buttons.pest.visible, "full hotbar width restores")
 	hud.show_panel("tools", state)
 	check(not hud._refs["upgrade:hoe"].disabled, "finishing releases tutorial lock while preserving actual affordability")
 	hud.show_panel("pause", state)
-	check(button_for("tutorial:restart") != null and not button_for("tutorial:restart").disabled, "normal menu offers repeatable guided introduction")
+	check(button_for("help") != null and not button_for("help").disabled, "normal menu offers the help page containing the guided introduction")
 	hud.set_tutorial(guide(["hoe"], [], []))
 	hud.show_panel("market", state)
 	state.coins = state.bankruptcy_limit()

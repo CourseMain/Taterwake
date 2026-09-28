@@ -139,7 +139,7 @@ func run() -> void:
 		check(game.hud._body.get_global_rect().end.y <= scroll.get_global_rect().end.y + 1, "Debug last action reachable " + str(dimensions))
 	game.hud.close_panel()
 	farm.coins = -4e9
-	farm.apply_debug(2.5, 1.0)
+	farm.apply_debug(2.5)
 	await settle()
 	check(farm.coins == -10e9 and collapse._calculation.text == "No tax was collected at this moment." and not farm.blind_cycle.last_result.is_empty(), "Debug bankruptcy matching an old receipt is not misreported as new tax; receipt is kept")
 	for node: Node in collapse.find_children("*", "Button", true, false):

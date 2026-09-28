@@ -23,6 +23,18 @@ func drag(id: int, point: Vector2) -> void:
 	root.push_input(event, true)
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
+	# Exercise the complete touch-only UI through its normal startup flag.
+	if "--touch-controls" not in OS.get_cmdline_user_args():
+		var arguments := PackedStringArray(["--path", ProjectSettings.globalize_path("res://"), "--script", "res://tests/test_touch_controls.gd"])
+		if DisplayServer.get_name() == "headless": arguments.insert(0, "--headless")
+		arguments.append("--")
+		arguments.append_array(OS.get_cmdline_user_args())
+		arguments.append("--touch-controls")
+		var output: Array = []
+		var status := OS.execute(OS.get_executable_path(), arguments, output, true)
+		for line in output: print(line)
+		quit(status)
+		return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
 	await frames()
@@ -47,7 +59,7 @@ func run() -> void:
 		for control in [touch.stick,touch.tools_button,touch.menu_button,touch.use_button,touch.sell_button]:
 			check(bounds.encloses(control.get_global_rect()), "%s control inside %s" % [control.name,size])
 			check(control.size.y * size.y / bounds.size.y >= 43, "touch target at least 44px (rounding) at %s" % size)
-		for kind in ["menu","market","inventory","tools","roll","builds","climate","taxes","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
+		for kind in ["menu","market","inventory","tools","builds","climate","taxes","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
 			game.hud.show_panel(kind, game.state)
 			touch._process(0.3)
 			await frames()

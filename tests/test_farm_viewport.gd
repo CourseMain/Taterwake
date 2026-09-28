@@ -48,6 +48,8 @@ func run() -> void:
 				event.button_index = MOUSE_BUTTON_LEFT
 				event.pressed = true
 				game._unhandled_input(event)
+				event.pressed = false
+				game._input(event)
 				check(game.pending_plot == 4, "scaled screen click queues exact plot on island%d / %s" % [island,mode])
 				game._cancel_walk()
 	game.queue_free()

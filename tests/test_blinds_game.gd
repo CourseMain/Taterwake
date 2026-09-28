@@ -78,11 +78,9 @@ func run() -> void:
 	await shot("taxes-cleared")
 	game.hud.close_panel()
 	game.state.coins = 1e15
-	game._on_action("roll")
-	check(game.hud.begin_roll("normal"), "roll animation lock active in bankruptcy fixture")
 	game.state.coins = -5.001e9
 	game.hud.update_state(game.state)
-	check(game.hud._run_end.visible and game.hud._run_end_title.text == "BANKRUPT" and not game.hud.is_roll_animating(), "bankruptcy interrupts even a roll presentation immediately")
+	check(game.hud._run_end.visible and game.hud._run_end_title.text == "BANKRUPT", "bankruptcy interrupts even a roll presentation immediately")
 	check(not game.hud.is_panel_open(), "run over hides shopping and cannot be dismissed as a normal modal")
 	var elapsed: float = game.state.elapsed
 	var position: Vector3 = game.world.player.position

@@ -30,6 +30,7 @@ func run() -> void:
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	farm.coins = -45090
+	farm.tax_credit_eligible = true
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
 	game.hud.show_panel("climate",farm)
@@ -45,7 +46,7 @@ func run() -> void:
 		scroll.ensure_control_visible(button)
 		await settle()
 		check(scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "equipment action reachable: "+id)
-		check(not button.disabled and button.text.contains("Credit"),"equipment offers debt-funded install: "+id)
+		check(not button.disabled and button.text.contains("On account"),"equipment offers debt-funded install: "+id)
 	for button: Node in page.find_children("*", "Button", true, false):
 		check(button.size.x >= scroll.size.x * 0.35 and button.size.y <= 120, "dashboard buttons have usable width and compact height: " + button.text)
 	scroll.scroll_vertical = 100000

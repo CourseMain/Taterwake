@@ -54,7 +54,7 @@ func run() -> void:
 	lesson("welcome")
 	check(game.tutorial.STEPS.size() == 8, "eight compact stages replace the twenty-step tour")
 	await shot("welcome")
-	game._on_action("roll")
+	game._on_action("builds")
 	check(not game.hud.is_panel_open() and not game.hud._tutorial_body.text.is_empty(), "blocked keyboard action explains current task")
 	press("tutorial:next")
 	lesson("market")
@@ -104,8 +104,9 @@ func run() -> void:
 	game._on_action("quick_sell")
 	check(game.state.farm_help.data.independent == 4, "second crop was planted, watered, harvested and sold independently")
 	check(not game.tutorial.active and not game.world._tutorial_plot_outline.visible, "independent crop has no tutorial lock or target arrow")
+	# Cover the full 15–90 second ripe-crop delay and 40 second minimum age.
 	# The first natural pest group stays safe until dealt with.
-	game.state.update(30.0)
+	game.state.update(100.0)
 	game.hud.update_state(game.state)
 	await shot("first-pests")
 	check(game.state.farm_help.data.pest_phase == 1, "first natural infestation is protected")
@@ -132,8 +133,6 @@ func run() -> void:
 	lesson("market")
 	press("tutorial:next")
 	lesson("sell")
-	game._on_action("roll:all_in")
-	check(game.state.roll_count == 0, "optional tour cannot spend coins")
 	game._on_action("builds")
 	await settle()
 	check(not button("build:inspect:scientist").disabled, "tour still allows build previews without the removed help guide")
