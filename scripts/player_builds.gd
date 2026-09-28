@@ -2,7 +2,6 @@ extends Node
 ## Persistent, selectable farming specializations. Processing needs a loaded batch.
 const IDS: Array[String] = ["farmer", "gambler", "investor", "scientist", "industrialist"]
 const MAX_LEVEL: int = 30
-const CRATE_DROP_CHANCE: float = 0.10
 const XP_SOURCES: Dictionary = {
 	"farmer": "Harvest a patch: +4 XP",
 	"industrialist": "Finish a batch: +1 XP per crop",
@@ -20,27 +19,21 @@ const DESCRIPTIONS: Dictionary = {
 var state
 var professions = preload("res://scripts/build_professions.gd").new(self)
 var active: String = "farmer"
-var levels: Dictionary = {"farmer": 1, "gambler": 0, "investor": 0, "scientist": 0, "industrialist": 0}
+var levels: Dictionary = {"farmer": 1, "gambler": 1, "investor": 1, "scientist": 1, "industrialist": 1}
 var xp: Dictionary = {"farmer": 0, "gambler": 0, "investor": 0, "scientist": 0, "industrialist": 0}
-var build_crates: int = 0
-var _crate_opening: bool = false
 var research: int = 0
 var cooldown: float = 0.0
 var fertilizer: float = 0.0
-var next_roll_charge: float = 0.0
 var processing: Dictionary = {}
 var processed: Dictionary = {}
 
 func reset_builds() -> void:
 	active = "farmer"
-	levels = {"farmer": 1, "gambler": 0, "investor": 0, "scientist": 0, "industrialist": 0}
+	levels = {"farmer": 1, "gambler": 1, "investor": 1, "scientist": 1, "industrialist": 1}
 	for id in IDS: xp[id] = 0
-	build_crates = 0
-	_crate_opening = false
 	research = 0
 	cooldown = 0.0
 	fertilizer = 0.0
-	next_roll_charge = 0.0
 	processing = {}
 	processed = {}
 	professions.reset()
@@ -81,9 +74,6 @@ func mutation_factor() -> float:
 		return 1.0 + level() * 0.15 + minf(0.5, research * 0.005)
 	return 1.0
 
-func roll_quality_factor() -> float:
-	return 1.0 + level() * 0.08 + next_roll_charge if active == "gambler" else 1.0
-
 func event_chance_bonus() -> float:
 	return level() * 0.012 if active == "investor" else 0.0
 
@@ -98,7 +88,7 @@ func select_build(id: String) -> String:
 	if state.run_over:
 		return "Run over. Start a new farm."
 	if not levels.has(id) or int(levels[id]) < 1:
-		return state._finish("Open a Build Crate to unlock this build.")
+		return state._finish("Choose an available build.")
 	active = id
 	state._refresh_market(false)
 	return state._finish("%s build equipped, level %d." % [active.capitalize(), level()])
@@ -107,10 +97,10 @@ func build_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for id in IDS:
 		var rank: int = int(levels[id])
-		var benefits: String = "Open a Build Crate to find a build card."
+		var benefits: String = "Choose a build to begin."
 		match id:
 			"farmer": benefits = "+%d%% yield · +%.1f%% growth speed%s" % [rank * 5, maxf(0, rank - 1) * 2.5, " · wider tools" if rank >= 3 else " · wider tools at level 3"]
-			"gambler": benefits = "+%d%% Roll House reward quality · a rechargeable harvest-stake charm" % [rank * 8]
+			"gambler": benefits = "A rechargeable harvest-stake charm"
 			"investor": benefits = "+%.1f points positive-event chance · reserved-price deliveries" % [rank * 1.2]
 			"scientist": benefits = "+%d%% mutation chance · %d research completed" % [rank * 15 + mini(50, research / 2), research]
 			"industrialist": benefits = "Machine grade improves at levels 3, 10 and 20 · larger levels process faster"
@@ -193,8 +183,6 @@ func saved_storage_count(data: Dictionary) -> int:
 
 func inventory_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
-	if build_crates > 0:
-		entries.append({"id": "build_crate", "kind": "build_crate", "name": "Build Crate", "count": build_crates, "rarity": "relic", "description": "A sealed collection of farming styles. Drops on 10% of paid rolls.", "effect": "Open for a build-only reward reel", "active": false, "action": "build:open_crate"})
 	for id in IDS:
 		if int(levels[id]) > 0:
 			entries.append({"id": "build:" + id, "kind": "build", "name": id.capitalize() + " Build", "count": int(levels[id]), "rarity": "build", "description": DESCRIPTIONS[id], "effect": "Level %d / 30%s" % [int(levels[id]), " · equipped" if active == id else ""], "active": active == id, "action": "build:select:" + id})
@@ -207,56 +195,16 @@ func inventory_info() -> Array[Dictionary]:
 		entries.append({"id": "queued:" + str(index), "kind": "processed", "name": "Queued " + job.crop, "count": job.quantity, "rarity": "processed", "description": "Loaded at the workshop. Still occupies barn space.", "effect": "Grade " + job.grade, "active": true, "action": "build:inspect:industrialist"})
 	if not professions.data.wager.is_empty():
 		var wager: Dictionary = professions.data.wager
-		entries.append({"id":"harvest_stake", "kind":"processed", "name":"Harvest stake at the Roll House", "count":wager.quantity, "rarity":"processed", "description":"Reserved until you claim the result in Gambler details.", "effect":"Claim " + state.money(wager.quantity * wager.quote * wager.factor), "active":true, "action":"build:inspect:gambler"})
+		entries.append({"id":"harvest_stake", "kind":"processed", "name":"Reserved harvest stake", "count":wager.quantity, "rarity":"processed", "description":"Reserved until you claim the result in Gambler details.", "effect":"Claim " + state.money(wager.quantity * wager.quote * wager.factor), "active":true, "action":"build:inspect:gambler"})
 	return entries
 
-func grant_roll_build(_tier: String) -> String:
-	# A paid roll may award the sealed item, never an unowned build reward.
-	next_roll_charge = 0.0
-	if state.rng.randf() < CRATE_DROP_CHANCE and build_crates < 1000000:
-		build_crates = maxi(0, build_crates) + 1
-		return "BUILD CRATE! Open it in Inventory [I] for a build-only roll."
-	return ""
-
-func open_crate() -> Dictionary:
-	if state.run_over:
-		return {}
-	# Ownership and the in-flight guard live in the simulation, not in the button.
-	# Rejecting a request must not advance RNG or mutate any build level.
-	if _crate_opening:
-		return {}
-	if build_crates <= 0:
-		build_crates = 0
-		state._finish("You need a Build Crate.")
-		return {}
-	var available: Array[String] = []
-	for id in IDS:
-		if int(levels[id]) < 30:
-			available.append(id)
-	if available.is_empty():
-		state._finish("All builds are level 30. Your Build Crate stays in inventory.")
-		return {}
-	_crate_opening = true
-	build_crates -= 1
-	var id: String = available[state.rng.randi_range(0, available.size() - 1)]
-	levels[id] = int(levels[id]) + 1
-	if int(levels[id]) >= MAX_LEVEL: xp[id] = 0
-	var result: Dictionary = {"tier": "build", "build_id": id, "title": id.capitalize() + " BUILD", "detail": "Level %d / 30. Equip this build in Builds [C]." % int(levels[id]), "bet": 0.0}
-	state.changed.emit()
-	return result
-
-func finish_crate_reveal() -> void:
-	_crate_opening = false
-
 func save_data() -> Dictionary:
-	return {"version": 4, "xp": xp.duplicate(), "professions": professions.data.duplicate(true), "build_crates": build_crates, "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "next_roll_charge": next_roll_charge, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
+	return {"version": 5, "xp": xp.duplicate(), "professions": professions.data.duplicate(true), "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}
 
 func valid_data(data: Variant) -> bool:
-	if not data is Dictionary or not _number(data.get("version"), 1, 4, true) or not data.get("active") is String or not data.active in IDS:
+	if not data is Dictionary or not _number(data.get("version"), 1, 5, true) or not data.get("active") is String or not data.active in IDS:
 		return false
 	if int(data.version) >= 2 and not professions.valid(data.get("professions"), int(data.version)): return false
-	if not _number(data.get("build_crates", 0), 0, 1000000, true):
-		return false
 	if not data.get("levels") is Dictionary or data.levels.size() != IDS.size():
 		return false
 	for id in IDS:
@@ -268,8 +216,8 @@ func valid_data(data: Variant) -> bool:
 			if not _number(data.xp.get(id), 0, maxi(0, xp_required(int(data.levels[id])) - 1), true): return false
 	if int(data.levels[data.active]) == 0:
 		return false
-	for key in {"research": 10000, "cooldown": 60, "fertilizer": 30, "next_roll_charge": 0.5}:
-		if not _number(data.get(key), 0, {"research": 10000, "cooldown": 60, "fertilizer": 30, "next_roll_charge": 0.5}[key], key == "research"):
+	for key in {"research": 10000, "cooldown": 60, "fertilizer": 30, }:
+		if not _number(data.get(key), 0, {"research": 10000, "cooldown": 60, "fertilizer": 30, }[key], key == "research"):
 			return false
 	if not data.get("processing") is Dictionary or not data.get("processed") is Dictionary or data.processed.size() > state.CROP_IDS.size():
 		return false
@@ -288,15 +236,13 @@ func valid_data(data: Variant) -> bool:
 func load_data(data: Dictionary) -> bool:
 	if not valid_data(data):
 		return false
-	_crate_opening = false
-	build_crates = int(data.get("build_crates", 0))
 	active = str(data.active)
 	levels = data.levels.duplicate()
+	for id in IDS: levels[id] = maxi(1, int(levels[id]))
 	for id in IDS: xp[id] = int(data.xp[id]) if int(data.version) >= 4 else 0
 	research = int(data.research)
 	cooldown = float(data.cooldown)
 	fertilizer = float(data.fertilizer)
-	next_roll_charge = float(data.next_roll_charge)
 	processing = data.processing.duplicate(true)
 	processed = data.processed.duplicate(true)
 	professions.reset()
