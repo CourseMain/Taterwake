@@ -9,6 +9,10 @@
 - `tools/`: portable Web exporter and local preview server.
 - `dist/` and `artifacts/`: generated builds and local verification output, excluded from Git.
 
+## Development release
+
+The redesign source is version `2.0.0-indevelopment`, published as the GitHub prerelease **v2.0.0 (in development) — Game redesign** from the `redesign` branch. It covers Segments 1–8. The public browser build remains v1.0.3.1; this source prerelease does not deploy `docs/index.*` or change `web/`.
+
 ## Saves
 
 Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 28. Saves without the new calendar, including revision 27, are set aside as incompatible. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.

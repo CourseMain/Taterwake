@@ -1,37 +1,25 @@
 # Taterland
 
-**[Play Taterland in your browser — no download needed](https://coursemain.github.io/Taterwake/)**
+**v2.0.0 (in development) — Game redesign**
 
-Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
+Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-indevelopment).
 
-The published browser build is **v1.0.3.1**. Source development is following the [redesign plan](docs/REDESIGN_PLAN.md); Segment 2 removes the Roll House and its random rewards. These source changes have not been published to the browser build. See [release history](CHANGELOG.md#1031).
+Segments 1–8 are implemented:
 
-For the next release stages, follow the [publishing checklist](PUBLISHING.md): browser playtesting, Steamworks setup, desktop testing and release review.
+- One Spud Valley farm, with 12 open beds and 12 available through expansion.
+- Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
+- Spring, Summer and Autumn each last 150 seconds. Winter pauses until you start the next year; the run caps at year 10.
+- Seasonal crop growth, Autumn harvest losses, a year/season strip, changing sunlight and Winter snow.
+- Warned climate disasters, water management and protection projects.
+- Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
-On touch screens, drag the bottom-left stick to move; push it to the edge to sprint. Tap a bed, building or piece of equipment to interact. **Tools** contains all five tools, seed choices, zoom buttons and Cancel task. Drag the farm with two fingers to pan; pinch to zoom. Use **Tools → Recenter** to return to the original view. **Menu** opens every activity; swipe menus to see more. **Use** works beside beds, the tank and the ferry; **Sell** sells your selected crop. Landscape gives phones a wider farm view; portrait is also supported.
+The annual ledger, deeper crop and climate systems, and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
 
-Choose the small **expand icon in the top-left corner** to enter fullscreen; it becomes a transparent **×** to leave, or press **F11** on a laptop. Where iPhone/iPad Safari does not provide fullscreen, the button explains **Share → Add to Home Screen**; launch that icon for an app-sized view. The layout respects screen cutouts and home-indicator safe areas.
+**[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — this is the previous game, not the v2 redesign. The live site and downloadable v1 build remain unchanged. To try v2, use the prerelease source with Godot 4.7.2 as described below.
 
-If Safari feels capped at 30 FPS, check **System Settings → Battery → Low Power Mode**. Chrome/Firefox or [running locally in Godot](#run-the-source) are alternatives; the downloadable Web ZIP still runs through a browser. Close all game tabs and reopen the play link after an update. Keep the same browser profile to retain your farm.
+## Download the previous browser release
 
-The opening tutorial teaches one harvest and ends at your first sale. Then farm freely, with optional help for your first pests, a practice stock boom, taxes and usable upgrades. **H → Optional Valley tour** keeps meeting the NPCs optional.
-
-Mara patches the seed sacks. Bram patches your tools. The produce exchange makes no promises.
-
-
-Climate disasters begin on **Island 2**, with warnings, rain, wind, storm clouds and camera shake. Learn the visible **rain → tank → can → crop** loop on Island 1, then connect sprinklers, open drainage and protect harvests on later islands. A visiting tax collector arrives after every third major stock; the forecast shows bills and recovery costs. Debt is playable until the bankruptcy limit. See the [water-loop guide](docs/CLIMATE_WATER_LOOP.md).
-
-A 3D potato farming game about growing crops, riding wild markets and building your own kind of farmer. Start in Spud Valley, sail to Golden Shores, and chase frozen fortunes in Frosthollow.
-
-- Work your fields with five manual tools; train ducks to chase pests.
-- Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+35,000%–100,000% Stock Rocket**.
-- Take buyer contracts and fire up a winter furnace.
-- Farm through a **60-second day–night cycle** across three islands.
-- Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
-
-## Download and play locally
-
-For a local copy, use **Taterland-Web.zip** from the [latest release](https://github.com/CourseMain/Taterwake/releases/latest), or [build it from source](#build-the-browser-edition) using the steps below. Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+For a local copy of v1.0.3.1, use **Taterland-Web.zip** from its [release](https://github.com/CourseMain/Taterwake/releases/tag/v1.0.3.1). To build the v2 development source, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 
@@ -41,7 +29,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch or the `v2.0.0-indevelopment` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
@@ -59,7 +47,7 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Click a tank | Walk over and refill the watering can |
 | Click a sprinkler / drain / trees | See connected beds and equipment actions |
 | 1 / 2 / 3 / 4 / 5 | Hoe / seeds / water / harvest / pest sprayer |
-| E / Space | Interact with the nearby NPC/shop, use a tool beside a bed, or board the ferry |
+| E / Space | Interact with the nearby NPC/shop, use a tool beside a bed, or use nearby equipment |
 | Mouse drag / two-finger trackpad scroll | Pan the map |
 | One- or two-finger touch drag | Pan the map |
 | Pinch / mouse wheel | Zoom the map |
@@ -71,7 +59,7 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | F | Sell the selected crop |
 | Escape / ☰ | Main menu and remaining activities |
 
-Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith on each island for larger tool areas.
+Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith for larger tool areas. Till and plant during Spring and Summer; bring every crop in before Winter.
 
 See the [gameplay guide](docs/GAMEPLAY.md) for prices, local activities and Debug controls.
 

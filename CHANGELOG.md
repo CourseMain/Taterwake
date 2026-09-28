@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0-indevelopment
+
+**Game redesign — in development.** Source prerelease covering redesign Segments 1–8. The published browser game remains v1.0.3.1.
+
+- Replaced big-number progression with a single Valley farm, small prices and a ten-year seasonal calendar. Working seasons last 150 seconds; Winter waits for the player and year 10 caps the run.
+- Removed the Roll House, luck and random rewards; gear and mutation multipliers; market booms and rockets; professions; tax cycles; and island progression.
+- Kept the potato farmer, villagers, cream UI, ordinary crops, tools, quest boards, water management and climate protection. Prices use a small seasonal drift with twelve-quote sparklines.
+- Rescaled crop growth to 75–225 seconds, limited planting to Spring/Summer, and added visible Autumn crop losses, seasonal daylight and Winter snow.
+- Added rolling save backups, rejected-save isolation and a separate v4 save format. Older farms are not migrated.
+- Added Winter display recovery and a full ten-year regression at 30× debug speed. All 72 headless suites pass, including 118 calendar checks; the boot check passes.
+- The annual ledger and remaining redesign segments are not yet implemented. This is not a finished v2 release.
+
 ## 1.0.3.1
 
 - Builds earn XP from their profession's completed work, with progress bars and short XP instructions in Builds. Existing levels are preserved; crates keep earned XP when adding a level.

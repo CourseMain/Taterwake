@@ -1,6 +1,6 @@
 # Taterland gameplay guide
 
-[Play in your browser](https://coursemain.github.io/Taterwake/) — no download needed.
+This guide describes **v2.0.0 (in development)**, the redesign source prerelease. The [published browser game](https://coursemain.github.io/Taterwake/) still runs the previous v1.0.3.1 rules.
 
 ## Your first farm
 
