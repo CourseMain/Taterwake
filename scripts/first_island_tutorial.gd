@@ -17,8 +17,7 @@ const TOUR: Array[Dictionary] = [
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
-	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
-	{"id": "dock", "title": "The ferry", "body": "Click the ferry to walk to it, or press E nearby. Sailing needs the island unlock.", "focus": "island"},
+	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Up to two ducks can patrol your farm.", "focus": "duck_patrol"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},
 ]
 var game: Node
@@ -31,9 +30,6 @@ func setup(owner_game: Node) -> void:
 	game = owner_game
 
 func start(replay: bool = false) -> void:
-	if game.state.current_island != 1:
-		game.hud.show_toast("Return to the Valley for the optional tour.")
-		return
 	if replay:
 		game.state.tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5, "tour_only": true}
 	else:
@@ -99,13 +95,13 @@ func _tools() -> Array[String]:
 
 func _features() -> Array[String]:
 	if _tour_only():
-		return ["coins", "market", "barn", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"]
+		return ["coins", "market", "barn", "inventory", "tools", "quests", "duck_patrol", "stock", "menu"]
 	return ["coins", "market", "barn"] if _index() >= 1 else []
 
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)

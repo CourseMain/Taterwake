@@ -259,7 +259,6 @@ func show_page(next_page: String, text: String = "") -> void:
 	layout()
 
 func service_label() -> String:
-	if npc_id == "tess" and service == "activities": return "Check delivery contracts"
 	return str(Roster.PEOPLE[npc_id].service_label)
 
 func choose(index: int) -> void:

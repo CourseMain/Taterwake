@@ -26,7 +26,6 @@ static func surface(kind: String, accent: Color = GREEN, selected: bool = false)
 		"upgrade": style.border_width_left = 4
 		"quest": style.border_width_left = 4 if selected else 1
 		"tracked": style.border_width_left = 4 if selected else 1
-		"island": style.border_width_bottom = 3
 	return style
 
 static func modal(dark: bool = false) -> StyleBoxFlat:

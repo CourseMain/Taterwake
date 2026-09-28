@@ -249,7 +249,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		node.vertical = available < 650 or row_width > available
 
 func update_interaction_prompt() -> void:
-	if game.hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending or not game.climate_target.is_empty() or drawer.visible:
+	if game.hud.is_panel_open() or game.state.run_over or not game.climate_target.is_empty() or drawer.visible:
 		interaction_prompt.hide()
 		return
 	var target: Dictionary = game.world.nearby_station()
@@ -286,7 +286,7 @@ func _process(delta: float) -> void:
 	_clock += delta
 	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 
-	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending
+	var blocked: bool = hud.is_panel_open() or game.state.run_over
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):
 		JavaScriptBridge.eval("document.body.classList.toggle('menu-open', %s)" % ("true" if blocked else "false"), true)
@@ -309,7 +309,6 @@ func _process(delta: float) -> void:
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
 		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
-		elif game.world.player.position.distance_to(game.world.ferry_position()) <= 2: use_button.text = "Travel"
 		elif not game.world.nearby_station().is_empty() and game.climate_target.is_empty(): use_button.text = "Interact"
 		sell_button.disabled = hud._quick_sell.disabled
 		if hud.is_panel_open(): fit_modal()

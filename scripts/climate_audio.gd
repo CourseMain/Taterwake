@@ -22,8 +22,8 @@ func _exit_tree() -> void:
 		if is_instance_valid(player):
 			player.stop()
 			player.stream = null
-func set_weather(info: Dictionary, island: int, paused: bool) -> void:
-	strength = 0.0 if paused or info.island != island or island < 2 else (float(info.severity) if info.phase == "active" else (float(info.severity) * 0.35 if info.phase in ["warning", "recovery"] else 0.0))
+func set_weather(info: Dictionary, paused: bool) -> void:
+	strength = 0.0 if paused else (float(info.severity) if info.phase == "active" else (float(info.severity) * 0.35 if info.phase in ["warning", "recovery"] else 0.0))
 	storm = info.event == "storm" and info.phase == "active" and strength > 0.0
 	if strength == 0.0:
 		wind.stop()

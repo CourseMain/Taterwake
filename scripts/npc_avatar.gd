@@ -21,13 +21,13 @@ func configure(id: String) -> void:
 	scale = p.shape
 	_personality = float(Roster.PEOPLE.keys().find(id)) * .71
 	_time = _personality
-	var style: String = "workshop" if id in ["bram", "oren"] else ("vest" if id in ["edwin", "hollis"] else "field")
+	var style: String = "workshop" if id == "bram" else ("vest" if id == "edwin" else "field")
 	dress(style, Color(p.color), str(p.hat))
 	var accessories := _group(_rig, "CharacterDetails")
 	for side: float in [-1.0, 1.0]:
 		var brow := _group(_head, "Brow")
 		brow.position = Vector3(side*.20, 1.515, .35)
-		_bar(brow, Vector3(-.075,0,0), Vector3(.075,.008,0), .023 if id in ["bram","oren"] else .014, Color("69503e"))
+		_bar(brow, Vector3(-.075,0,0), Vector3(.075,.008,0), .023 if id == "bram" else .014, Color("69503e"))
 		_brows.append(brow)
 	match str(p.detail):
 		"glasses", "spectacles":

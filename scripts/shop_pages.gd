@@ -183,7 +183,6 @@ func _build_tools() -> void:
 	links.add_theme_constant_override("separation", 8)
 	add_child(links)
 	links.add_child(_button("PotatoDex  [P]", "dex"))
-	links.add_child(_button("Islands", "island"))
 
 func _build_barn() -> void:
 	var board := _timber(self, "NellStockLedger")

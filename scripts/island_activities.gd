@@ -1,27 +1,19 @@
 extends Node
-## Small island jobs that use the same crops, prices, and pest rules as the farm.
+## One saved flock patrols the farm for pests.
 signal duck_cleared(index: int)
 
-const DUCK_COSTS: Array[float] = [300.0, 800.0, 1500.0]
+const DUCK_TRAINING_COSTS: Array[float] = [800.0, 1500.0]
 const DUCK_INTERVALS: Array[float] = [4.0, 3.0, 2.0]
-const DUCK_HIRE_COSTS: Array[float] = [500.0, 500.0, 500.0]
-const FURNACE_FUEL: int = 25
-const FURNACE_DURATION: float = 20.0
-const FURNACE_COOLDOWN: float = 60.0
-const CONTRACT_COOLDOWN: float = 25.0
 
 var state
-var duck_counts: Dictionary = {}
-var duck_speeds: Dictionary = {}
-# Compatibility for older debug/capture callers. New purchases use the two
-# explicit controls below; both ownership and speed belong to each island.
+var owned_ducks: int = 0
+var patrol_speed: int = 0
+var duck_patrols: Array = []
 var duck_level: int:
 	get: return 1 + duck_speed() if duck_count() > 0 else 0
 	set(value):
-		var key: String = str(_island())
-		duck_counts[key] = duck_capacity() if value > 0 else 0
-		duck_speeds[key] = clampi(value - 1, 0, 2)
-var duck_patrols: Dictionary = {}
+		owned_ducks = 2 if value > 0 else 0
+		patrol_speed = clampi(value - 1, 0, 2)
 # First-duck aliases keep existing callers and saved showcase fixtures working.
 var duck_from: int:
 	get: return int(_current_ducks()[0]["from"])
@@ -36,76 +28,48 @@ var duck_peck: float:
 	get: return float(_current_ducks()[0].peck)
 	set(value): _current_ducks()[0].peck = value
 var duck_clears: int = 0
-var contract: Dictionary = {}
-var contract_completed: int = 0
-var contract_cooldown: float = 0.0
-var furnace_remaining: float = 0.0
-var furnace_cooldown: float = 0.0
-var furnace_burned: int = 0
 
 func setup(farm_state) -> void:
 	state = farm_state
 
 func reset() -> void:
-	duck_counts.clear()
-	duck_speeds.clear()
+	owned_ducks = 0
+	patrol_speed = 0
 	duck_patrols.clear()
 	duck_clears = 0
-	contract = {}
-	contract_completed = 0
-	contract_cooldown = 0.0
-	furnace_remaining = 0.0
-	furnace_cooldown = 0.0
-	furnace_burned = 0
-
-func _island() -> int:
-	return int(state.current_island) if state != null else 1
 
 func duck_capacity() -> int:
-	return _island()
+	return 2
 
 func duck_count() -> int:
-	return int(duck_counts.get(str(_island()), 0))
+	return owned_ducks
 
 func duck_speed() -> int:
-	return int(duck_speeds.get(str(_island()), 0))
+	return patrol_speed
 
 func duck_interval() -> float:
 	return DUCK_INTERVALS[duck_speed()]
 
 func duck_hire_cost() -> float:
-	return DUCK_HIRE_COSTS[mini(2, _island() - 1)] * (duck_count() + 1)
+	return 500.0 * (owned_ducks + 1)
 
 func duck_speed_cost() -> float:
-	return DUCK_COSTS[mini(2, duck_speed() + 1)] * DUCK_HIRE_COSTS[mini(2, _island() - 1)] / DUCK_HIRE_COSTS[0]
+	return DUCK_TRAINING_COSTS[mini(1, patrol_speed)]
 
 func _active_ducks() -> Array:
 	return _current_ducks().slice(0, duck_count())
 
-func _default_flock(island: int) -> Array[Dictionary]:
+func _default_flock() -> Array[Dictionary]:
 	var ducks: Array[Dictionary] = []
-	var field_size: int = state.island_plots[str(island)].size() if state != null and state.island_plots.has(str(island)) else 24
-	for index in range(maxi(1, island)):
-		var origin: int = mini(field_size - 1, index * maxi(1, field_size / maxi(1, island)))
+	var field_size: int = 24
+	for index in range(2):
+		var origin: int = mini(field_size - 1, index * maxi(1, field_size / 2))
 		ducks.append({"from": origin, "target": (origin + 1) % field_size, "elapsed": 0.0, "peck": 0.0, "clears": 0})
 	return ducks
 
-func _flock(island: int) -> Array:
-	var key: String = str(island)
-	if not duck_patrols.has(key):
-		duck_patrols[key] = _default_flock(island)
-	return duck_patrols[key]
-
 func _current_ducks() -> Array:
-	return _flock(int(state.current_island) if state != null else 1)
-
-func _ensure_patrols() -> void:
-	for island in state.island_plots:
-		_flock(int(island))
-		if not duck_counts.has(island):
-			duck_counts[island] = 0
-		if not duck_speeds.has(island):
-			duck_speeds[island] = 0
+	if duck_patrols.is_empty(): duck_patrols = _default_flock()
+	return duck_patrols
 
 func buy_duck() -> String:
 	return hire_duck() if duck_count() == 0 else train_ducks()
@@ -119,9 +83,9 @@ func hire_duck() -> String:
 	if not state.can_purchase(cost):
 		return state._reject_purchase(state.purchase_refusal(cost))
 	state.coins -= cost
-	duck_counts[str(_island())] = duck_count() + 1
-	_ensure_patrols()
-	_assign_targets(_active_ducks(), state.island_plots[str(_island())])
+	owned_ducks += 1
+	_current_ducks()
+	_assign_targets(_active_ducks(), state.plots)
 	return state._complete_purchase({"kind": "duck", "id": "duck_patrol", "name": "Patrol duck", "quantity": 1, "cost": cost, "total": duck_count(), "level": duck_level}, "Duck hired! %d / %d on patrol." % [duck_count(), duck_capacity()])
 
 func train_ducks() -> String:
@@ -136,7 +100,7 @@ func train_ducks() -> String:
 		return state._reject_purchase(state.purchase_refusal(cost))
 	var previous_interval: float = duck_interval()
 	state.coins -= cost
-	duck_speeds[str(_island())] = duck_speed() + 1
+	patrol_speed += 1
 	for duck in _current_ducks():
 		duck.elapsed = float(duck.elapsed) / previous_interval * duck_interval()
 	return state._complete_purchase({"kind": "duck", "id": "duck_speed", "name": "Duck speed", "quantity": 1, "cost": cost, "level": duck_speed(), "interval": duck_interval()}, "Faster flock! %.0fs between beds." % duck_interval())
@@ -192,7 +156,7 @@ func _update_ducks(delta: float) -> bool:
 	if duck_count() == 0:
 		return false
 	var flock: Array = _active_ducks()
-	var field: Array = state.island_plots[str(state.current_island)]
+	var field: Array = state.plots
 	_assign_targets(flock, field)
 	var remaining: float = delta
 	var changed: bool = false
@@ -227,87 +191,8 @@ func _update_ducks(delta: float) -> bool:
 			_assign_targets(flock, field, arrived)
 	return changed
 
-func _contract_crop() -> String:
-	var crop: String = str(state.selected_crop)
-	return crop if crop in ["russet", "golden", "giant", "radioactive", "sunburst"] else "sunburst"
-
-func contract_offer(kind: String) -> Dictionary:
-	if kind != "bulk": return {}
-	var target: int = mini(1600, 400 + (contract_completed / 3) * 100)
-	var crop: String = _contract_crop()
-	return {"target": target, "crop": crop, "held": int(state.storage[crop]), "premium": 25,
-		"base_quote": float(state.market[crop].sell) * target * 1.25}
-
-func choose_contract(kind: String) -> String:
-	if state.run_over:
-		return "Run over. Start a new farm."
-	if int(state.current_island) != 2 or not state.island2_unlocked:
-		return state._finish("Visit the Golden Shores buyer.")
-	if kind != "bulk":
-		return state._finish("Choose a harvest shipment.")
-	if not contract.is_empty():
-		return state._finish("Finish your current order first. No deadline.")
-	if contract_cooldown > 0.0:
-		return state._finish("The next buyer arrives in %.0f seconds." % ceilf(contract_cooldown))
-	var target: int = int(contract_offer(kind).target)
-	contract = {"kind": kind, "crop": _contract_crop(), "target": target, "delivered": 0, "credit": 0.0}
-	return state._finish("Order booked · %s %s · +25%%" % [state.format_number(target), str(state.CROPS[contract.crop].name)])
-
-func _contract_held() -> int:
-	return 0 if contract.is_empty() else int(state.storage[contract.crop])
-
-func deliver_contract() -> String:
-	if state.run_over:
-		return "Run over. Start a new farm."
-	if int(state.current_island) != 2 or not state.island2_unlocked:
-		return state._finish("Visit the Golden Shores buyer to deliver a contract.")
-	if contract.is_empty():
-		return state._finish("Choose a buyer contract first.")
-	var remaining: int = int(contract.target) - int(contract.delivered)
-	var amount: int = mini(remaining, _contract_held())
-	if amount <= 0:
-		return state._finish("Needed: %s. Harvest more first." % str(state.CROPS[contract.crop].name))
-	var value: float = 0.0
-	var crop: String = str(contract.crop)
-	state.storage[crop] -= amount
-	value = float(amount) * float(state.market[crop].sell)
-	contract.delivered = int(contract.delivered) + amount
-	contract.credit = minf(state.MAX_MONEY, float(contract.credit) + value * 1.25)
-	if int(contract.delivered) < int(contract.target):
-		return state._finish("Shipped %s / %s · %s banked" % [state.format_number(contract.delivered), state.format_number(contract.target), state.money(contract.credit)])
-	var earnings: float = float(contract.credit)
-	# Clear the order before any signal callback can request another payment.
-	contract = {}
-	contract_completed = mini(100000, contract_completed + 1)
-	contract_cooldown = CONTRACT_COOLDOWN
-	state.coins = minf(state.MAX_MONEY, float(state.coins) + earnings)
-	state._record_sales(earnings)
-	return state._finish("ORDER COMPLETE! +%s · Next buyer in 25s" % state.money(earnings))
-
-func charge_furnace(crop: String = "icecap") -> String:
-	if state.run_over:
-		return "Run over. Start a new farm."
-	if int(state.current_island) != 3 or not state.island3_unlocked:
-		return state._finish("The potato furnace is in Frosthollow.")
-	if crop != "icecap":
-		return state._finish("The Frosthollow furnace burns 25 Icecap potatoes per burst.")
-	if furnace_remaining > 0.0 or furnace_cooldown > 0.0:
-		return state._finish("The furnace is still hot. It can fire again in %.0f seconds." % ceilf(furnace_cooldown))
-	if int(state.storage.icecap) < FURNACE_FUEL:
-		return state._finish("Hold 25 spare Icecap potatoes to fuel the furnace.")
-	state.storage.icecap -= FURNACE_FUEL
-	furnace_burned = mini(100000, furnace_burned + FURNACE_FUEL)
-	furnace_remaining = FURNACE_DURATION
-	furnace_cooldown = FURNACE_COOLDOWN
-	return state._finish("FURNACE BURST! 20s · 2.5× growth")
-
-func growth_speed_multiplier() -> float:
-	return 2.5 if furnace_remaining > 0.0 and int(state.current_island) == 3 else 1.0
-
 func next_boundary() -> float:
 	var boundary: float = 3600.0
-	if furnace_remaining > 0.0:
-		boundary = minf(boundary, furnace_remaining)
 	if duck_count() > 0:
 		for duck in _active_ducks():
 			boundary = minf(boundary, maxf(0.000001, duck_interval() - float(duck.elapsed)))
@@ -318,24 +203,12 @@ func update(delta: float) -> bool:
 		return false
 	if not is_finite(delta) or delta <= 0.0:
 		return false
-	var was_burning: bool = furnace_remaining > 0.0
-	furnace_remaining = maxf(0.0, furnace_remaining - delta)
-	furnace_cooldown = maxf(0.0, furnace_cooldown - delta)
-	contract_cooldown = maxf(0.0, contract_cooldown - delta)
 	var changed: bool = _update_ducks(delta)
-	changed = changed or (was_burning and furnace_remaining == 0.0)
 	if changed:
 		state.changed.emit()
 	return changed
 
 func info() -> Dictionary:
-	var island: int = int(state.current_island)
-	var title: String = "DUCK PATROL" if island == 1 else ("BUYER CONTRACTS" if island == 2 else "POTATO FURNACE")
-	var description: String = "More ducks. Faster patrols. Fewer pests."
-	if island == 2:
-		description = "Supply a harvest shipment at a 25% premium."
-	elif island == 3:
-		description = "25 Icecaps → 20s of heat. Use it to thaw frozen crops."
 	var ducks: Array[Dictionary] = []
 	var flock: Array = _current_ducks()
 	for index in range(flock.size()):
@@ -344,118 +217,40 @@ func info() -> Dictionary:
 		duck["progress"] = clampf(float(duck.elapsed) / duck_interval(), 0.0, 1.0)
 		duck["trained"] = index < duck_count()
 		ducks.append(duck)
-	var job: Dictionary = contract.duplicate(true)
-	if not job.is_empty():
-		job["crop_name"] = str(state.CROPS[job.crop].name)
-		job["held"] = _contract_held()
-		job["can_deliver"] = island == 2 and int(job.held) > 0
-		job["premium"] = 1.25
-		job["ship_amount"] = mini(int(job.held), int(job.target) - int(job.delivered))
-	return {"island": island, "title": title, "description": description,
+	return {"title": "DUCK PATROL", "description": "More ducks. Faster patrols. Fewer pests.",
 		"duck_level": duck_level, "duck_cost": duck_hire_cost(), "duck_capacity": duck_capacity(),
 		"duck_count": duck_count(), "ducks": ducks, "duck_interval": duck_interval(), "duck_can_buy": duck_count() < duck_capacity() and state.can_purchase(duck_hire_cost()),
 		"duck_speed": duck_speed(), "duck_speed_cost": duck_speed_cost(), "duck_can_train": duck_count() > 0 and duck_speed() < 2 and state.can_purchase(duck_speed_cost()),
-		"duck_from": duck_from, "duck_target": duck_target, "duck_progress": clampf(duck_elapsed / duck_interval(), 0.0, 1.0), "duck_clears": duck_clears, "duck_peck": duck_peck,
-		"contract": job, "contract_completed": contract_completed, "contract_cooldown": contract_cooldown,
-		"contract_crop": _contract_crop(), "contract_crop_name": str(state.CROPS[_contract_crop()].name),
-		"bulk_offer": contract_offer("bulk"),
-		"thaw_heat": float(state.climate.data.operations.islands["3"].get("heat", 0)) if island == 3 else 0.0, "furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown,
-		"furnace_fuel": FURNACE_FUEL, "furnace_crop": "icecap", "furnace_held": int(state.storage.icecap),
-		"can_charge": island == 3 and state.island3_unlocked and furnace_cooldown <= 0.0 and int(state.storage.icecap) >= FURNACE_FUEL,
-		"furnace_growth": 2.5}
+		"duck_from": duck_from, "duck_target": duck_target, "duck_progress": clampf(duck_elapsed / duck_interval(), 0.0, 1.0), "duck_clears": duck_clears, "duck_peck": duck_peck}
+
 
 func save_data() -> Dictionary:
-	_ensure_patrols()
-	return {"version": 3, "duck_level": duck_level, "duck_patrols": duck_patrols.duplicate(true),
-		"duck_counts": duck_counts.duplicate(), "duck_speeds": duck_speeds.duplicate(),
-		"duck_clears": duck_clears, "contract": contract.duplicate(true),
-		"contract_completed": contract_completed, "contract_cooldown": contract_cooldown,
-		"furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown, "furnace_burned": furnace_burned}
+	return {"owned_ducks": owned_ducks, "patrol_speed": patrol_speed, "duck_patrols": _current_ducks().duplicate(true), "duck_clears": duck_clears}
 
 func valid_data(data: Variant) -> bool:
-	if not data is Dictionary or not _number(data.get("version"), 1, 3, true):
-		return false
-	for key in ["duck_level", "duck_clears", "contract_completed", "furnace_burned"]:
-		var limit: int = {"duck_level": 3, "duck_clears": 100000, "contract_completed": 100000, "furnace_burned": 100000}[key]
-		if not _number(data.get(key), 0, limit, true):
-			return false
-	var interval: float = DUCK_INTERVALS[maxi(0, int(data.duck_level) - 1)]
-	if int(data.version) == 3:
-		for key: String in ["duck_counts", "duck_speeds"]:
-			if not data.get(key) is Dictionary or data[key].size() != state.island_plots.size():
-				return false
-		for island in state.island_plots:
-			if not _number(data.duck_counts.get(island), 0, int(island), true) or not _number(data.duck_speeds.get(island), 0, 2, true):
-				return false
-			if int(data.duck_counts[island]) == 0 and int(data.duck_speeds[island]) > 0:
-				return false
-	if int(data.version) == 1:
-		if not _number(data.get("duck_from"), 0, 23, true) or not _number(data.get("duck_target"), 0, 23, true) or not _number(data.get("duck_elapsed"), 0, interval):
-			return false
-	else:
-		if not data.get("duck_patrols") is Dictionary or not data.duck_patrols.has("1") or data.duck_patrols.size() > state.island_plots.size():
-			return false
-		for island in data.duck_patrols:
-			if not state.island_plots.has(island) or not data.duck_patrols[island] is Array or data.duck_patrols[island].size() != int(island):
-				return false
-			var size: int = state.island_plots[island].size()
-			if int(data.version) == 3:
-				interval = DUCK_INTERVALS[int(data.duck_speeds[island])]
-			var targets: Array[int] = []
-			for duck in data.duck_patrols[island]:
-				if not duck is Dictionary or not _number(duck.get("from"), 0, size - 1, true) or not _number(duck.get("target"), 0, size - 1, true):
-					return false
-				if not _number(duck.get("elapsed"), 0, interval) or not _number(duck.get("peck"), 0, 0.65) or not _number(duck.get("clears"), 0, 100000, true):
-					return false
-				var owned: int = int(data.duck_counts[island]) if int(data.version) == 3 else int(island)
-				if targets.size() < owned and targets.has(int(duck.target)):
-					return false
-				targets.append(int(duck.target))
-	for key in {"contract_cooldown": CONTRACT_COOLDOWN, "furnace_remaining": FURNACE_DURATION, "furnace_cooldown": FURNACE_COOLDOWN}:
-		var limit: float = {"contract_cooldown": CONTRACT_COOLDOWN, "furnace_remaining": FURNACE_DURATION, "furnace_cooldown": FURNACE_COOLDOWN}[key]
-		if not _number(data.get(key), 0.0, limit):
-			return false
-	if float(data.furnace_remaining) > float(data.furnace_cooldown):
-		return false
-	if not data.get("contract") is Dictionary:
-		return false
-	var job: Dictionary = data.contract
-	if not job.is_empty():
-		if job.get("kind") != "bulk" or job.get("crop") not in ["russet", "golden", "giant", "radioactive", "sunburst"]:
-			return false
-		if not _number(job.get("target"), 1, 1600, true):
-			return false
-		if not _number(job.get("delivered"), 0, int(job.target) - 1, true) or not _number(job.get("credit"), 0.0, 100000.0):
-			return false
-		if (int(job.delivered) == 0) != (float(job.credit) == 0.0):
-			return false
+	if not data is Dictionary: return false
+	if not _number(data.get("owned_ducks"), 0, 2, true) or not _number(data.get("patrol_speed"), 0, 2, true) or not _number(data.get("duck_clears"), 0, 100000, true): return false
+	if int(data.owned_ducks) == 0 and int(data.patrol_speed) > 0: return false
+	if not data.get("duck_patrols") is Array or data.duck_patrols.size() != 2: return false
+	var targets: Array = []
+	for duck in data.duck_patrols:
+		if not duck is Dictionary: return false
+		for key in ["from", "target"]:
+			if not _number(duck.get(key), 0, 23, true): return false
+		if not _number(duck.get("elapsed"), 0, DUCK_INTERVALS[int(data.patrol_speed)]) or not _number(duck.get("peck"), 0, 0.65) or not _number(duck.get("clears"), 0, 100000, true): return false
+		if targets.size() < int(data.owned_ducks) and targets.has(int(duck.target)): return false
+		targets.append(int(duck.target))
 	return true
 
 func load_data(data: Dictionary) -> bool:
-	if not valid_data(data):
-		return false
-	for key in ["duck_clears", "contract_completed", "furnace_burned"]:
-		set(key, int(data[key]))
-	for key in ["contract_cooldown", "furnace_remaining", "furnace_cooldown"]:
-		set(key, float(data[key]))
-	duck_patrols = data.duck_patrols.duplicate(true) if int(data.version) >= 2 else {}
-	duck_counts = data.duck_counts.duplicate() if int(data.version) == 3 else {}
-	duck_speeds = data.duck_speeds.duplicate() if int(data.version) == 3 else {}
-	_ensure_patrols()
-	if int(data.version) < 3:
-		# Existing players keep every duck and the speed they already paid for.
-		for island in state.island_plots:
-			duck_counts[island] = int(island) if int(data.duck_level) > 0 else 0
-			duck_speeds[island] = maxi(0, int(data.duck_level) - 1)
-	for flock in duck_patrols.values():
-		for duck in flock:
-			for key in ["from", "target", "clears"]:
-				duck[key] = int(duck[key])
-			for key in ["elapsed", "peck"]:
-				duck[key] = float(duck[key])
-	if int(data.version) == 1:
-		duck_patrols["1"][0] = {"from": int(data.duck_from), "target": int(data.duck_target), "elapsed": float(data.duck_elapsed), "peck": 0.0, "clears": int(data.duck_clears)}
-	contract = data.contract.duplicate(true)
+	if not valid_data(data): return false
+	owned_ducks = int(data.owned_ducks)
+	patrol_speed = int(data.patrol_speed)
+	duck_clears = int(data.duck_clears)
+	duck_patrols = data.duck_patrols.duplicate(true)
+	for duck in duck_patrols:
+		for key in ["from", "target", "clears"]: duck[key] = int(duck[key])
+		for key in ["elapsed", "peck"]: duck[key] = float(duck[key])
 	return true
 
 func _number(value: Variant, minimum: float, maximum: float, integer_only: bool = false) -> bool:

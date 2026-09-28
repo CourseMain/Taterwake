@@ -15,7 +15,7 @@ func _ready() -> void:
 	hide()
 	set_process(false)
 
-func set_weather(info: Dictionary, island: int, paused: bool) -> void:
+func set_weather(info: Dictionary, paused: bool) -> void:
 	strike_flash = float(info.get("operations", {}).get("flash", 0.0))
 	event = str(info.event)
 	phase = str(info.phase)
@@ -23,7 +23,7 @@ func set_weather(info: Dictionary, island: int, paused: bool) -> void:
 	if phase == "warning": target_strength = float(info.severity) * lerpf(0.18, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
 	if phase == "active": target_strength = float(info.severity)
 	if phase == "recovery": target_strength = float(info.severity) * float(info.timer) / Climate.RECOVERY_SECONDS
-	if int(info.island) != island or island < Climate.FIRST_ISLAND or paused:
+	if paused:
 		target_strength = 0.0
 		strength = 0.0
 	visible = target_strength > 0.0 or strength > 0.005

@@ -5,7 +5,7 @@ var data: Dictionary = fresh()
 
 static func fresh() -> Dictionary:
 	return {"enabled": false, "hidden": false, "dismissed": [], "independent": 0,
-		"island": 1, "plot": -1, "crop": "russet", "pest_phase": 0, "protected": []}
+		"plot": -1, "crop": "russet", "pest_phase": 0, "protected": []}
 
 func enable() -> void:
 	data.enabled = true
@@ -19,14 +19,13 @@ func unseen(id: String) -> bool:
 func observe_plot(farm: Node, index: int, action: String, harvested: int = 0) -> void:
 	if not data.enabled or farm.tutorial_active or int(data.independent) >= 4: return
 	if action == "plant" and int(data.independent) < 3:
-		if int(data.independent) > 0 and (int(data.island) != farm.current_island or int(data.plot) != index):
-			var tracked: Dictionary = farm.island_plots[str(int(data.island))][int(data.plot)]
+		if int(data.independent) > 0 and int(data.plot) != index:
+			var tracked: Dictionary = farm.plots[int(data.plot)]
 			if int(tracked.stage) > 0: return
 		data.independent = 1
-		data.island = farm.current_island
 		data.plot = index
 		data.crop = farm.selected_crop
-	elif int(data.island) == farm.current_island and int(data.plot) == index:
+	elif int(data.plot) == index:
 		if action == "water" and int(data.independent) == 1: data.independent = 2
 		elif action == "harvest" and harvested > 0 and int(data.independent) == 2: data.independent = 3
 
@@ -41,25 +40,24 @@ func can_infest() -> bool:
 
 func capture_pests(farm: Node) -> void:
 	if not data.enabled or farm.tutorial_active or int(data.pest_phase) != 0: return
-	for island: String in farm.island_plots:
-		var field: Array = farm.island_plots[island]
-		for index: int in range(field.size()):
-			if field[index].pests and int(field[index].stage) > 0:
-				data.protected.append("%s:%d" % [island, index])
+	var field: Array = farm.plots
+	for index: int in range(field.size()):
+		if field[index].pests and int(field[index].stage) > 0:
+			data.protected.append(str(index))
 	if not data.protected.is_empty(): data.pest_phase = 1
 
 func protected_pest(farm: Node, plot: Dictionary) -> bool:
 	if int(data.pest_phase) != 1: return false
 	for key: String in data.protected:
-		var field: Array = farm.island_plots[key.get_slice(":", 0)]
-		if is_same(field[int(key.get_slice(":", 1))], plot): return true
+		var field: Array = farm.plots
+		if is_same(field[int(key)], plot): return true
 	return false
 
 func refresh_pests(farm: Node) -> void:
 	if int(data.pest_phase) != 1: return
 	var remaining: Array = []
 	for key: String in data.protected:
-		var plot: Dictionary = farm.island_plots[key.get_slice(":", 0)][int(key.get_slice(":", 1))]
+		var plot: Dictionary = farm.plots[int(key)]
 		if plot.pests and int(plot.stage) > 0: remaining.append(key)
 	data.protected = remaining
 	if remaining.is_empty():
@@ -67,7 +65,7 @@ func refresh_pests(farm: Node) -> void:
 		dismiss("pests")
 
 func tip(farm: Node) -> Dictionary:
-	if not data.enabled or data.hidden or farm.tutorial_active or farm.run_over or farm.climate.data.intro_pending: return {}
+	if not data.enabled or data.hidden or farm.tutorial_active or farm.run_over: return {}
 	if int(data.pest_phase) == 1 and unseen("pests"):
 		return _tip("pests", "Pests on your potatoes", "Press 5, then click an infested bed. This first group cannot damage crops. Later pests eat a third every 5 seconds.", "Equip sprayer [5]", "tool:pest")
 
@@ -80,7 +78,7 @@ func tip(farm: Node) -> Dictionary:
 	if unseen("tools"):
 		for tool: String in ["hoe", "water", "harvest"]:
 			var rank: int = int(farm.tools[tool])
-			if rank < 3 and (rank < 2 or farm.current_island == 3) and farm.coins >= float(farm.TOOL_COSTS[tool][rank]):
+			if rank < 3 and farm.coins >= float(farm.TOOL_COSTS[tool][rank]):
 				return _tip("tools", "Work more beds per click", "A %s upgrade is within reach at %s. Click the toolsmith or press U to compare its area and cost." % [tool, farm.money(farm.TOOL_COSTS[tool][rank])], "Browse upgrades [U]", "tools")
 	return {}
 
@@ -91,7 +89,7 @@ static func valid(raw: Variant) -> bool:
 	if not raw is Dictionary: return false
 	for key: String in ["enabled", "hidden"]:
 		if not raw.get(key) is bool: return false
-	for entry: Array in [["independent", 0, 4], ["island", 1, 3], ["plot", -1, 79], ["pest_phase", 0, 2]]:
+	for entry: Array in [["independent", 0, 4], ["plot", -1, 23], ["pest_phase", 0, 2]]:
 		var value: Variant = raw.get(entry[0])
 		if not (value is float or value is int) or not is_finite(float(value)) or float(value) < entry[1] or float(value) > entry[2]: return false
 		if float(value) != floor(float(value)): return false
@@ -100,10 +98,7 @@ static func valid(raw: Variant) -> bool:
 	if not raw.get("dismissed") is Array or raw.dismissed.size() > TIP_IDS.size(): return false
 	for id: Variant in raw.dismissed:
 		if id not in TIP_IDS: return false
-	if not raw.get("protected") is Array or raw.protected.size() > 152: return false
+	if not raw.get("protected") is Array or raw.protected.size() > 24: return false
 	for key: Variant in raw.protected:
-		if not key is String or key.get_slice_count(":") != 2: return false
-		var island: String = key.get_slice(":", 0)
-		var plot: String = key.get_slice(":", 1)
-		if island not in ["1", "2", "3"] or not plot.is_valid_int() or int(plot) < 0 or int(plot) >= int({"1": 24, "2": 48, "3": 80}[island]): return false
+		if not key is String or not key.is_valid_int() or int(key) < 0 or int(key) >= 24: return false
 	return true

@@ -34,30 +34,18 @@ const PEOPLE := {
 		"daily":["I counted six ducks and seven shadows. Took me a minute to realise one was mine.", "Button's decided that's his path. We all go round now."],
 		"topic":"What's Button been doing?", "story":"Following Nell into the barn. He waits until she's swept, then walks straight through the pile. I think he likes the attention.",
 		"reply":"He sounds like a handful.", "answer":"He is. Wouldn't swap him, though. He found more beetles than the rest yesterday.",
-		"help":"How do patrol ducks help?", "advice":"They clear pests from planted beds on the island you're visiting. Hire them here, then give them room to work.",
+		"help":"How do patrol ducks help?", "advice":"They clear pests from planted beds on your farm. Hire them here, then give them room to work.",
 		"thanks":"Button remembers you. That's a good thing. Usually.", "weather":"I've counted them three times. Button keeps walking behind me."},
 
-	"hollis": {"name":"Captain Hollis", "role":"Ferry captain", "service":"island", "service_label":"Plan a crossing", "color":"52798c", "skin":"d5aa7b", "shape":Vector3(1.03,1.04,1.0), "hat":"", "detail":"captain",
-		"first":"Hollis. First crossing? Sit where you can see the horizon. Helps with the swell.",
-		"daily":["There you are. How's the farm holding up?", "Left my tea on the pier again. It'll be cold by now."],
-		"topic":"Have you sailed here long?", "story":"Long enough to know every sound this boat makes. Used to know the weather that well, too. Lately I check the readings before each crossing.",
-		"reply":"That must feel strange.", "answer":"It does. No shame in checking what you thought you knew. Especially with passengers aboard.",
-		"help":"Tell me about the islands.", "advice":"Spud Valley's home. Golden Shores has Sunburst crops and a weather station. Frosthollow has Icecaps—and a furnace you'll be glad to see.",
-		"thanks":"Welcome back. I've checked the readings. Old habits can change.", "weather":"I don't like those clouds. Check the forecast before you settle into your fields."},
+
 	"iris": {"name":"Iris", "role":"Weather observer · radio link", "service":"climate", "service_label":"See weather & protection", "color":"6b9daa", "skin":"b9825c", "shape":Vector3(.94,1.02,.98), "hat":"", "detail":"headset",
 		"first":"Can you hear me? Good. I'm Iris. This station sends me your local weather readings.",
-		"daily":["Clear for now. I'm checking the next reading.", "Hollis called twice this morning. He says he's only checking the radio works."],
+		"daily":["Clear for now. I'm checking the next reading.", "Bram called twice this morning. He says he's only checking the radio works."],
 		"topic":"What do the readings show?", "story":"The changes used to be gradual enough to plan around. Now the gaps between bad spells are harder to predict. I check twice before sending a warning.",
 		"reply":"Thanks for keeping watch.", "answer":"Thanks for listening. A warning only helps if someone has time to act on it.",
-		"help":"How do I protect the farm?", "advice":"The station shows your protection stats and sells upgrades. Sprinklers and irrigation are one purchase that carries across islands. You'll still need water in the tank.",
+		"help":"How do I protect the farm?", "advice":"The station shows your protection stats and sells upgrades. Sprinklers and irrigation are one purchase for the farm. You'll still need water in the tank.",
 		"thanks":"Good to hear your voice again. I've got the latest readings here.", "weather":"The readings are changing quickly. Check your protection while there's time."},
-	"oren": {"name":"Oren", "role":"Frosthollow furnace keeper", "service":"activities", "service_label":"Open the furnace", "color":"967061", "skin":"c58e62", "shape":Vector3(1.15,1.0,1.10), "hat":"", "detail":"beanie",
-		"first":"Come closer. You're letting all that warmth go to waste. Oren, by the way.",
-		"daily":["Cold hands? Don't pretend they aren't. I can hear your teeth.", "Bram sent another box of handles. Good wood. He always picks good wood."],
-		"topic":"Do you ever leave the furnace?", "story":"For supper. Sometimes. I used to shut it down earlier, but the cold's been catching people out. I'd rather someone found a light on.",
-		"reply":"I'm glad you're here.", "answer":"Well. Someone has to be. Warm yourself up before you go.",
-		"help":"How do I thaw frozen crops?", "advice":"Open the furnace and heat your hoe. Then use the Hoe on frozen beds before its heat runs out. I'll heat it again for free if you need another trip.",
-		"thanks":"Saved you a spot by the fire. Don't make a fuss about it.", "weather":"Beds iced over? Heat your hoe here, then get back to them before it cools."},
+
 	"edwin": {"name":"Edwin", "role":"Village clerk", "service":"quests", "service_label":"Visit the quest board", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
 		"first":"Afternoon. Edwin. I've brought the figures. Shall we go through them?",
 		"daily":["I hope I'm not catching you at a bad time. I do seem to have a talent for it.", "Nell lent me a dry folder. I'd like to return it in the same condition."],
@@ -67,21 +55,21 @@ const PEOPLE := {
 		"thanks":"Afternoon. How's your day been? See—I'm learning.", "weather":"I saw the damage coming in. I'm sorry. Let's see who needs help."}
 }
 
-static func for_station(station: String, island: int) -> String:
-	if station == "activities": return "oren" if island == 3 else "tess" if island == 2 else "pip"
+static func for_station(station: String) -> String:
+	if station == "activities": return "pip"
 	for id: String in PEOPLE:
 		if PEOPLE[id].service == station: return id
 	return ""
 
-static func available(id: String, island: int) -> bool:
-	return PEOPLE.has(id) and (id != "iris" or island >= 2) and (id != "oren" or island == 3)
+static func available(id: String) -> bool:
+	return PEOPLE.has(id)
 
 static func greeting(id: String, state, record: bool = false) -> String:
 	var p: Dictionary = PEOPLE[id]
 	var memory: Dictionary = state.npc_history.get(id, {})
 	var visits: int = int(memory.get("visits", 0))
 	var pool: Array = p.daily.duplicate()
-	var weather: bool = state.current_island == int(state.climate.data.island) and state.climate.data.phase in ["warning", "active", "recovery"]
+	var weather: bool = state.climate.data.phase in ["warning", "active", "recovery"]
 	var line: String = p.first if visits == 0 else str(pool[visits % pool.size()])
 	if bool(memory.get("kind", false)): line = p.thanks
 	if id == "nell" and state.barn_level == 0 and visits > 0 and not bool(memory.get("kind", false)): line = "Getting tight in here. We can expand the barn whenever you're ready."
@@ -93,13 +81,10 @@ static func greeting(id: String, state, record: bool = false) -> String:
 
 static func weather_line(id: String, state) -> String:
 	var event: String = str(state.climate.data.event)
-	var local: bool = state.current_island == int(state.climate.data.island)
-	if local and state.climate.data.phase in ["warning", "active"]:
-		var advice: String = {"freeze":"Frozen beds need a heated hoe. Oren can heat yours at the furnace.", "drought":"Fill the tank and keep the beds watered. The weather station shows your protection.", "flood":"Check the drains and open the gates before the water builds up.", "storm":"Get ripe crops in before lightning hits. Check your protection at the station."}.get(event, "Check the latest forecast at the weather station.")
-		if id == "oren" and event == "freeze": advice = "I can heat it again for free if it cools. Save as many beds as you can, then come back and warm your hands."
+	if state.climate.data.phase in ["warning", "active"]:
+		var advice: String = {"freeze":"Use your hoe to clear ice from frozen beds.", "drought":"Fill the tank and keep the beds watered. The weather station shows your protection.", "flood":"Check the drains and open the gates before the water builds up.", "storm":"Get ripe crops in before lightning hits. Check your protection at the station."}.get(event, "Check the latest forecast at the weather station.")
 		return str(PEOPLE[id].weather) + "\n\n" + advice
-	if local and state.climate.data.phase == "recovery": return "It's easing off. There's still a bit of clearing up to do. How did your farm get through it?"
-	if state.current_island == 1: return "Quiet here today. Hollis says the weather over Golden Shores has been less settled. Ask at the station when you get there."
+	if state.climate.data.phase == "recovery": return "It's easing off. There's still a bit of clearing up to do. How did your farm get through it?"
 	return "It's calm for now. I wouldn't leave everything until the next warning, though. The weather station has the latest forecast."
 
 static func valid_history(raw: Variant) -> bool:

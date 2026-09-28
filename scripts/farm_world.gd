@@ -63,13 +63,9 @@ var _cylinder_meshes: Dictionary = {}
 var _sphere_mesh: SphereMesh
 var _geometry_batcher := GeometryBatcher.new()
 var graphics_quality: String = "balanced"
-var current_island: int = 1
-var _island2_unlocked: bool = false
-var _island3_unlocked: bool = false
-var _frost_active: bool = false
-var _frost_seconds: float = 0.0
-var _frost_label: Label3D
-var _frost_beacon: Node3D
+## Dormant region builders remain available for future regions. Gameplay uses Valley.
+const REGION: int = 1
+var current_island: int = REGION
 var _ice_roots: Array[Node3D] = []
 var _pest_roots: Array[Node3D] = []
 var _pest_borders: Array[Node3D] = []
@@ -79,25 +75,13 @@ var _pest_focus: int = -1
 var _snowflakes: Array[Node3D] = []
 var _dock_label: Label3D
 var _dock_gate: Node3D
-var _export_boat: Node3D
-var _export_label: Label3D
-var _export_flags: Array[Node3D] = []
-var _export_active: bool = false
-var _export_seconds: float = 0.0
-var _export_particle_clock: float = 0.0
 var _impact_root: Node3D
-var _boat_dock: Vector3 = Vector3(24.5, -0.25, 8.5)
-var _boat_away: Vector3 = Vector3(27.0, -0.1, 1.0)
 var _activity_info: Dictionary = {}
-var _activity_label: Label3D
-var _duck: Node3D
 var _duck_body: Node3D
 var _ducks: Array[Node3D] = []
 var _duck_bodies: Array[Node3D] = []
 var _duck_label: Label3D
 var _duck_home: Vector3 = Vector3.ZERO
-var _furnace_flame: Node3D
-var _furnace_steam: Array[Node3D] = []
 var _tutorial_focus: String = ""
 var _tutorial_show_labels: bool = true
 var _tutorial_station_roots: Dictionary = {}
@@ -118,20 +102,16 @@ const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
 const DAY_CYCLE_SECONDS: float = 60.0
-const FERRY_ROUTES: Dictionary = {
-	1: [Vector3(7, 0, 7.7), Vector3(7, 0, -4.7), Vector3(15, 0, -4.7), Vector3(15, 0, -12), Vector3(11.5, 0, -12), Vector3(11.5, 0, -17.2)],
-	2: [Vector3(10.2, 0, 10.6), Vector3(16, 0, 10.6), Vector3(16, 0, 8.65), Vector3(23.5, 0, 8.65)],
-	3: [Vector3(12.8, 0, 14), Vector3(20.6, 0, 14), Vector3(20.6, 0, 10), Vector3(28.0, 0, 10)],
-}
+
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
 	"duck_patrol": "Ducks",
-	"quests": "Quests", "island": "Ferry", "activities": "Activities",
+	"quests": "Quests", "activities": "Activities",
 }
 
-func build_world(island: int = 1) -> void:
+func build_world() -> void:
 	_clear_world()
-	current_island = island if island in [1, 2, 3] else 1
+	current_island = REGION
 	_rng.seed = 8105 if current_island == 1 else (20482 if current_island == 2 else 31803)
 	_lighting()
 	if current_island == 1:
@@ -152,7 +132,7 @@ func build_world(island: int = 1) -> void:
 		_tool_upgrade_station(Vector3(-8.0, 0.0, -10.6))
 		_tropical_scenery()
 		_quest_board(Vector3(-12.0, 0.0, 11.0))
-		_export_dock()
+		_shores_jetty()
 	else:
 		_build_land(_winter_island)
 		_build_land(_winter_paths)
@@ -160,20 +140,18 @@ func build_world(island: int = 1) -> void:
 		_market(Vector3(-3.0, 0.0, -14.0))
 		_winter_scenery()
 		_quest_board(Vector3(-15.0, 0.0, 14.0))
-		_winter_ferry()
+		_winter_jetty()
 		_ice_forge(Vector3(18.0, 0.0, 2.0))
 	_activity_station()
 	_staff_stalls()
 	_expand_village()
 	_garden()
-	_ferry_path()
 	coast = preload("res://scripts/coastal_world.gd").new()
 	add_child(coast)
 	coast.setup(self)
-	if current_island >= 2:
-		weather_station = preload("res://scripts/weather_station.gd").new()
-		add_child(weather_station)
-		weather_station.setup(self)
+	weather_station = preload("res://scripts/weather_station.gd").new()
+	add_child(weather_station)
+	weather_station.setup(self)
 	player = Node3D.new()
 	player.name = "PotatoFarmer"
 	add_child(player)
@@ -196,10 +174,6 @@ func build_world(island: int = 1) -> void:
 	for z in [-1.03, 1.03]:
 		_box(_selection, Vector3(0.0, 0.20, z), Vector3(2.13, 0.055, 0.085), Color("ffeaa1"))
 	_selection.visible = false
-	set_island2_unlocked(_island2_unlocked)
-	set_island3_unlocked(_island3_unlocked)
-	set_frost_state(_frost_active, _frost_seconds)
-	set_export_state(_export_active, _export_seconds)
 	set_activity_state(_activity_info)
 	_batch_world_geometry()
 	_climate_field = load("res://scripts/climate_field_visuals.gd").new()
@@ -236,26 +210,18 @@ func _expand_village() -> void:
 		# Keep the toolsmith at the same human scale as the player.
 		for smith: Node3D in _toolsmiths:
 			if smith.get_parent() == node: smith.scale /= building_scale
-		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowFerry"] or node.has_meta("layout_stretch"):
+		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowJetty"] or node.has_meta("layout_stretch"):
 			node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
 		for actor in _npc_actors.values():
 			if actor.get_parent() == node:
 				actor.scale = NpcAvatar.Roster.PEOPLE[actor.npc_id].shape / node.scale
 	_duck_home = layout_point(_duck_home)
-	_boat_dock = layout_point(Vector3(24.5, -0.25, 8.5))
-	_boat_away = layout_point(Vector3(27, -0.1, 1))
-
-func ferry_route() -> Array[Vector3]:
-	var result: Array[Vector3] = []
-	for point: Vector3 in FERRY_ROUTES[current_island]: result.append(layout_point(point))
-	return result
-
 
 func _batch_world_geometry() -> void:
 	# These individual meshes change transform, material or visibility at runtime.
 	# All Node3D roots stay intact, including gates, ducks and tutorials.
 	var mutable_meshes: Dictionary = {}
-	for collection: Array in [_soil_meshes, _snowflakes, _furnace_steam, _export_flags]:
+	for collection: Array in [_soil_meshes, _snowflakes]:
 		for node: Node3D in collection:
 			mutable_meshes[node.get_instance_id()] = true
 	_geometry_batcher.batch_tree(self, mutable_meshes)
@@ -308,15 +274,9 @@ func _prepare_tutorial_guidance() -> void:
 
 
 func station_position(station: String) -> Vector3:
-	if station == "island":
-		return ferry_position()
 	# The last target for a station is its main entrance rather than its NPC.
 	var station_roots: Array = _tutorial_station_roots.get(station, [])
 	return (station_roots.back() as Node3D).position if not station_roots.is_empty() else Vector3.ZERO
-
-
-func ferry_position() -> Vector3:
-	return ferry_route().back()
 
 
 func farm_bounds() -> Rect2:
@@ -325,86 +285,11 @@ func farm_bounds() -> Rect2:
 
 
 func clamp_walk_position(point: Vector3) -> Vector3:
-	point.y = 0.0
 	var bounds: Rect2 = farm_bounds()
-	var closest := Vector3(clampf(point.x, bounds.position.x, bounds.end.x), 0, clampf(point.z, bounds.position.y, bounds.end.y))
-	# Only narrow road/pier corridors extend the land bounds into the sea.
-	var route: Array[Vector3] = ferry_route()
-	for index: int in range(2 if current_island == 1 else 1, route.size() - 1):
-		var a: Vector3 = route[index]
-		var b: Vector3 = route[index + 1]
-		var margin: float = 0.65
-		var candidate := Vector3(clampf(point.x, minf(a.x, b.x) - margin, maxf(a.x, b.x) + margin), 0,
-			clampf(point.z, minf(a.z, b.z) - margin, maxf(a.z, b.z) + margin))
-		if point.distance_squared_to(candidate) < point.distance_squared_to(closest):
-			closest = candidate
-	return closest
+	return Vector3(clampf(point.x, bounds.position.x, bounds.end.x), 0, clampf(point.z, bounds.position.y, bounds.end.y))
 
-
-func _route_anchor(point: Vector3) -> Dictionary:
-	var route: Array[Vector3] = ferry_route()
-	var best: Dictionary = {"point": route[0], "distance": INF, "along": 0.0}
-	var along: float = 0.0
-	for index: int in range(route.size() - 1):
-		var a: Vector3 = route[index]
-		var b: Vector3 = route[index + 1]
-		var candidate: Vector3 = Geometry3D.get_closest_point_to_segment(point, a, b)
-		var distance: float = point.distance_squared_to(candidate)
-		if distance < float(best.distance):
-			best = {"point": candidate, "distance": distance, "along": along + a.distance_to(candidate)}
-		along += a.distance_to(b)
-	return best
-
-
-func walk_route(from: Vector3, to: Vector3, follow_ferry: bool = false) -> Array[Vector3]:
-	from.y = 0.0
-	to = clamp_walk_position(to)
-	var outside_land: bool = not farm_bounds().has_point(Vector2(from.x, from.z)) or not farm_bounds().has_point(Vector2(to.x, to.z))
-	if not follow_ferry and not outside_land:
-		return [to]
-	var start: Dictionary = _route_anchor(from)
-	var finish: Dictionary = _route_anchor(to)
-	var route: Array[Vector3] = ferry_route()
-	var result: Array[Vector3] = [start.point]
-	var bends: Array[Vector3] = []
-	var along: float = 0.0
-	for index: int in range(1, route.size()):
-		along += (route[index - 1] as Vector3).distance_to(route[index])
-		if along > minf(start.along, finish.along) and along < maxf(start.along, finish.along):
-			bends.append(route[index])
-	if float(start.along) > float(finish.along):
-		bends.reverse()
-	result.append_array(bends)
-	result.append(finish.point)
-	result.append(to)
-	return result
-
-
-func _ferry_path() -> void:
-	var path := _root("FerryPath", Vector3.ZERO)
-	var route: Array[Vector3] = ferry_route()
-	var color := Color("d4bc82") if current_island == 1 else (Color("e2c78e") if current_island == 2 else Color("a9bbc6"))
-	# Existing village roads lead to these spurs; leave the wooden pier exposed.
-	var first: int = 1 if current_island == 1 else 0
-	for index: int in range(first, route.size() - 1):
-		var a: Vector3 = route[index]
-		var b: Vector3 = route[index + 1]
-		if current_island != 1 and index == route.size() - 2: b.x = (16.6 if current_island == 2 else 21.0) * LAND_SPACING
-		if current_island == 1 and index == route.size() - 2:
-			b.z = -14.0 * LAND_SPACING
-		var length: float = a.distance_to(b)
-		var strip := _box(path, (a + b) * 0.5 + Vector3(0, 0.045, 0), Vector3(2.2, 0.08, length + 0.25), color)
-		strip.rotation.y = atan2(b.x - a.x, b.z - a.z)
-		for step: int in range(int(length / 0.85)):
-			var paver := _box(path, a.move_toward(b, (step + 0.5) * 0.85) + Vector3(0, 0.10, 0), Vector3(0.78, 0.035, 0.43), color.lightened(0.18))
-			paver.rotation.y = strip.rotation.y
-	# Compact signs stay in the world; the tutorial can hide them with other signs.
-	var sign := _root("FerryWayfinder", route[first] + Vector3(1.35, 0, 1.15))
-	_cylinder(sign, Vector3(0, 0.65, 0), 0.08, 0.08, 1.3, Color("8d704f"), 6)
-	_box(sign, Vector3(0, 1.3, 0), Vector3(1.9, 0.65, 0.15), TEAL if current_island != 3 else Color("577c97"))
-	_label(sign, "FERRY →", Vector3(0, 1.32, 0.1), 23, CREAM, false)
-	_target(sign, Vector3(0, 0.85, 0), Vector3(2.0, 1.7, 0.4), "station", "island")
-
+func walk_route(_from: Vector3, to: Vector3) -> Array[Vector3]:
+	return [clamp_walk_position(to)]
 
 func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 	_tutorial_focus = station
@@ -450,13 +335,6 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 	_tutorial_marker.visible = true
 
 
-func switch_island(id: int) -> void:
-	var destination: int = id if id in [1, 2, 3] else 1
-	if destination == current_island and is_instance_valid(camera):
-		return
-	build_world(destination)
-
-
 func _clear_world() -> void:
 	for child in get_children():
 		remove_child(child)
@@ -482,7 +360,6 @@ func _clear_world() -> void:
 	_effect_particles.clear()
 	_crop_tubers.clear()
 	harvest_feedback = null
-	_export_flags.clear()
 	_ice_roots.clear()
 	_pest_roots.clear()
 	_pest_borders.clear()
@@ -490,7 +367,6 @@ func _clear_world() -> void:
 	_pest_visuals.clear()
 	_pest_focus = -1
 	_snowflakes.clear()
-	_furnace_steam.clear()
 	_ducks.clear()
 	_duck_bodies.clear()
 	_materials.clear()
@@ -501,7 +377,6 @@ func _clear_world() -> void:
 	_applied_day_time = -1.0
 	_sun = null
 	_moon = null
-	_export_particle_clock = 0.0
 	coast = null
 	camera = null
 	player = null
@@ -512,16 +387,9 @@ func _clear_world() -> void:
 	_rotor = null
 	_dock_label = null
 	_dock_gate = null
-	_export_boat = null
-	_export_label = null
 	_impact_root = null
-	_frost_label = null
-	_frost_beacon = null
-	_activity_label = null
-	_duck = null
 	_duck_body = null
 	_duck_label = null
-	_furnace_flame = null
 	_tutorial_station_roots.clear()
 	_interaction_targets.clear()
 	_tutorial_label_layers.clear()
@@ -588,7 +456,7 @@ func _apply_graphics_quality() -> void:
 
 
 func set_climate_projects(projects: Dictionary) -> void:
-	var levels: Dictionary = projects.get(str(current_island), {}).duplicate()
+	var levels: Dictionary = projects.duplicate()
 	levels.rainwater = int(levels.get("rainwater", 0)) + 1
 	if levels == _project_levels: return
 	for id: String in Climate.PROJECTS:
@@ -607,17 +475,15 @@ func set_climate_projects(projects: Dictionary) -> void:
 
 
 func set_climate(info: Dictionary) -> void:
-	_climate_ice = info.get("operations", {}).get("ice", {}) if int(info.island) == current_island else {}
-	if current_island == 3:
-		for i in range(_ice_roots.size()):
-			if _climate_ice.has(str(i)): _ice_roots[i].visible = true
+	_climate_ice = info.get("operations", {}).get("ice", {})
+	for i in range(_ice_roots.size()):
+		_ice_roots[i].visible = _climate_ice.has(str(i))
 	set_climate_projects(info.get("projects", {}))
 	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	var strength: float = 0.0
-	if current_island >= 2 and info.island == current_island:
-		if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
-		elif info.phase == "active": strength = float(info.severity)
-		elif info.phase == "recovery": strength = float(info.severity) * float(info.timer) / Climate.RECOVERY_SECONDS
+	if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
+	elif info.phase == "active": strength = float(info.severity)
+	elif info.phase == "recovery": strength = float(info.severity) * float(info.timer) / Climate.RECOVERY_SECONDS
 	var drought: bool = info.event == "drought"
 	if not is_equal_approx(strength, _weather_strength) or drought != _weather_drought:
 		_weather_strength = strength
@@ -729,16 +595,15 @@ func _garden() -> void:
 			root.add_child(crops)
 			_crop_roots.append(crops)
 			var ice := Node3D.new()
-			ice.name = "FrostbreakIce"
+			ice.name = "ClimateIce"
 			root.add_child(ice)
 			_ice_roots.append(ice)
-			if winter:
-				_box(ice, Vector3(0.0, 0.27, 0.0), Vector3(1.88, 0.10, 1.88), Color("aed8e8"))
-				for point in [Vector3(-0.61, 0.52, -0.55), Vector3(0.57, 0.48, 0.50)]:
-					var crystal := _cylinder(ice, point, 0.19, 0.05, 0.52, Color("d2ecf4"), 5)
-					crystal.rotation.z = -0.22
-				_bar(ice, Vector3(-0.76, 0.334, 0.12), Vector3(0.59, 0.334, -0.37), 0.018, Color("eef8fa"))
-				_bar(ice, Vector3(-0.10, 0.335, -0.76), Vector3(0.38, 0.335, 0.67), 0.018, Color("eaf5f8"))
+			_box(ice, Vector3(0.0, 0.27, 0.0), Vector3(1.88, 0.10, 1.88), Color("aed8e8"))
+			for point in [Vector3(-0.61, 0.52, -0.55), Vector3(0.57, 0.48, 0.50)]:
+				var crystal := _cylinder(ice, point, 0.19, 0.05, 0.52, Color("d2ecf4"), 5)
+				crystal.rotation.z = -0.22
+			_bar(ice, Vector3(-0.76, 0.334, 0.12), Vector3(0.59, 0.334, -0.37), 0.018, Color("eef8fa"))
+			_bar(ice, Vector3(-0.10, 0.335, -0.76), Vector3(0.38, 0.335, 0.67), 0.018, Color("eaf5f8"))
 			ice.visible = false
 			var pests := Node3D.new()
 			pests.name = "CropPests"
@@ -777,7 +642,7 @@ func update_plots(plots: Array) -> void:
 		# Loading can replace a plot dictionary without changing its visual key.
 		if _crop_tubers.has(i): _crop_tubers[i].plot = data
 		if i < _ice_roots.size():
-			_ice_roots[i].visible = current_island == 3 and (bool(data.get("frozen", false)) or _climate_ice.has(str(i)))
+			_ice_roots[i].visible = _climate_ice.has(str(i))
 		var unlocked: bool = bool(data.get("unlocked", true))
 		var stage: int = int(data.get("stage", 0))
 		var infested: bool = unlocked and stage > 0 and bool(data.get("pests", false))
@@ -905,13 +770,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 		var direction: Vector3 = destination - origin
 		var distance: float = direction.length()
 		var guide: Curve3D
-		if _tutorial_focus == "island" and distance > 3.0:
-			guide = Curve3D.new()
-			guide.add_point(origin)
-			for point: Vector3 in walk_route(player.position, ferry_position(), true):
-				var raised := Vector3(point.x, 1.15, point.z)
-				if raised.distance_to(guide.get_point_position(guide.point_count - 1)) > 0.01:
-					guide.add_point(raised)
 		for index: int in range(_tutorial_trail.size()):
 			var chevron: Node3D = _tutorial_trail[index]
 			chevron.visible = distance > 3.0
@@ -932,7 +790,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	if is_instance_valid(_rotor):
 		_rotor.rotation.z += delta * 0.38
 	_animate_effects(delta)
-	_animate_export(delta)
 	_animate_winter(delta)
 	_animate_pests(delta)
 	_animate_activities(delta)
@@ -1053,7 +910,7 @@ func _scenery() -> void:
 		_cylinder(self, pos, 0.025, 0.02, 0.32, Color("567e4b"), 4)
 		var flower_color: Color = Color("f8daa2") if i % 3 == 0 else (Color("d8a3a0") if i % 3 == 1 else Color("f7f0cd"))
 		_sphere(self, pos + Vector3(0.0, 0.19, 0.0), Vector3(0.13, 0.07, 0.13), flower_color)
-	# Leave a proper opening where the ferry path crosses the northern fence.
+	# Leave a proper opening beside the northern path.
 	_fence(Vector3(-15.7, 0.0, -13.0), Vector3(10.0, 0.0, -13.0), 12)
 	_fence(Vector3(13.0, 0.0, -13.0), Vector3(14.6, 0.0, -13.0), 1)
 	_fence(Vector3(18.6, 0.0, -11.3), Vector3(18.6, 0.0, 9.0), 10)
@@ -1112,14 +969,6 @@ func _staff_stalls() -> void:
 	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
 	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
 	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
-	var dock: String = "GoldenShoresDock" if current_island == 1 else "GoldenShoresHarbor" if current_island == 2 else "FrosthollowFerry"
-	_place_stallholder("hollis", "island", dock, Vector3(-.62,.28,.95), 145 if current_island == 1 else 65)
-	if current_island == 3: _place_stallholder("oren", "activities", "FrostFurnace", Vector3(-1.65,0,2.0), 100)
-	elif current_island == 2:
-		_place_stallholder("tess", "activities", "BuyerContracts", Vector3(.4,0,1.55), 38)
-		_staff_by_station.erase("quests")
-		for target: StaticBody3D in _interaction_targets:
-			if target.get_parent() == _npc_actors.tess: target.set_meta("station","activities")
 
 func _place_stallholder(id: String, station: String, stall_name: String, at: Vector3, facing_degrees: float) -> void:
 	var stall: Node3D = get_node(stall_name)
@@ -1140,7 +989,7 @@ func _npc_person(parent: Node3D, pos: Vector3, id: String, station: String = "")
 	_npc_actors[id] = person
 	person.position = pos
 	if not station.is_empty():
-		# Preserve the shop entrance used by the tour and ferry pathfinding.
+		# Preserve the shop entrance used by the farm tour.
 		var entrances: Array = _tutorial_station_roots.get(station, []).duplicate()
 		_target(person, Vector3(0,1,0), Vector3(1.4,2,1.15), "station", station)
 		_tutorial_station_roots[station] = entrances
@@ -1240,7 +1089,6 @@ func nearby_station() -> Dictionary:
 		var distance: float = player.global_position.distance_to(body.to_global(edge))
 		# Resolve overlapping shop/NPC hit boxes by their horizontal centers.
 		distance += Vector2(local.x, local.z).length() * 0.001
-		if station == "island": distance = player.position.distance_to(ferry_position())
 		if distance < reach:
 			reach = distance
 			closest = {"station": station, "point": body.to_global(Vector3(0, shape.size.y / 2 + 0.4, 0))}
@@ -1431,7 +1279,7 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 		_bar(_tool, Vector3(0.05, 0.41, 0.0), Vector3(0.42, 0.41, 0.0), 0.075, Color("ffd15c"))
 		_bar(_tool, Vector3(0.16, 0.34, 0.0), Vector3(0.11, 0.20, 0.0), 0.035, Color("263c44"))
 		_box(_tool, Vector3(0.0, 0.05, 0.23), Vector3(0.17, 0.21, 0.025), Color("fff6d5"))
-	elif action == "hoe" or action == "harvest" or action in ["ice", "break_ice", "frostbreak"]:
+	elif action == "hoe" or action == "harvest" or action in ["ice", "break_ice"]:
 		_bar(_tool, Vector3(0.0, -0.4, 0.0), Vector3(0.0, 0.7, 0.0), 0.045, Color("b79461"))
 		_box(_tool, Vector3(0.0, 0.70, 0.14), Vector3(0.46 if action == "harvest" else 0.29, 0.06, 0.26), Color("a8b9b3"))
 	else:
@@ -1449,7 +1297,7 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 		var per_patch: int = 4
 		var particle_count: int = maxi(1, mini(per_patch, int(budget / maxi(1, indices.size()))))
 		for i in range(particle_count):
-			var color: Color = Color("72f4ce") if action == "pest" else (GOLD if action == "harvest" else (Color("bfe9fb") if action in ["ice", "break_ice", "frostbreak"] or (current_island == 3 and action == "hoe") else (Color("8ddbe8") if action == "water" else Color("bc9669"))))
+			var color: Color = Color("72f4ce") if action == "pest" else (GOLD if action == "harvest" else (Color("bfe9fb") if action in ["ice", "break_ice"] or (current_island == 3 and action == "hoe") else (Color("8ddbe8") if action == "water" else Color("bc9669"))))
 			var initial: Vector3 = pos + Vector3(_rng.randf_range(-0.65, 0.65), 1.3 if action in ["water", "pest"] else 0.35, _rng.randf_range(-0.65, 0.65))
 			var particle := _sphere(self, initial, Vector3(0.18, 0.07, 0.18) if action == "pest" else Vector3(0.08, 0.18 if action == "water" else 0.08, 0.08), color)
 			var velocity := Vector3(_rng.randf_range(-1.0, 1.0), -1.3 if action == "water" else (-0.3 if action == "pest" else _rng.randf_range(1.3, 3.0)), _rng.randf_range(-1.0, 1.0))
@@ -1585,7 +1433,7 @@ func _die(parent: Node3D, pos: Vector3, size: float, angle: float) -> void:
 	_sphere(die, Vector3(size * 0.505, 0.0, 0.0), Vector3(0.018, 0.085, 0.085) * size, Color("73607d"))
 
 func _valley_dock() -> void:
-	# The boarding area stays reachable even before the next island unlocks.
+	# Decorative jetty; no boarding route or interaction.
 	var dock := _root("GoldenShoresDock", Vector3(11.5, 0.0, -14.0))
 	for i in range(10):
 		_box(dock, Vector3(0.0, 0.13, -float(i) * 0.44), Vector3(1.9, 0.15, 0.39), Color("b79867"))
@@ -1598,7 +1446,6 @@ func _valley_dock() -> void:
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
 	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 1.85, -0.4))
-	_target(dock, Vector3(0.0, 0.75, -1.4), Vector3(2.6, 2.4, 4.4), "station", "island")
 
 
 func _tropical_island() -> void:
@@ -1640,7 +1487,7 @@ func _tropical_scenery() -> void:
 			leaf.rotation = Vector3(0.0, -angle, 0.6)
 		_sphere(self, point + Vector3(0.0, 0.53, 0.0), Vector3(0.17, 0.15, 0.17), Color("f0a269"))
 	for data in [[Vector3(-12.0, 0.0, -6.4), Color("d3a268"), Color("4baca3")], [Vector3(13.5, 0.0, 4.0), Color("dca76e"), Color("88b194")], [Vector3(-14.0, 0.0, 9.0), Color("bd8f61"), Color("63a9b9")]]:
-		var id: String = "nell" if data[0].x == -12 else "hollis" if data[0].x == 13.5 else "tess"
+		var id: String = "nell" if data[0].x == -12 else "edwin" if data[0].x == 13.5 else "tess"
 		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		villager.rotation.y = _rng.randf_range(-0.8, 0.7)
 		_villagers.append(villager)
@@ -1711,7 +1558,7 @@ func _quest_board(pos: Vector3) -> void:
 	_target(board, Vector3(0.0, 1.35, 0.05), Vector3(2.9, 2.9, 1.05), "station", "quests")
 
 
-func _export_dock() -> void:
+func _shores_jetty() -> void:
 	var dock := _root("GoldenShoresHarbor", Vector3(16.0, 0.0, 7.0))
 	for i in range(14):
 		_box(dock, Vector3(0.0, 0.18, -1.8 + float(i) * 0.46), Vector3(3.3, 0.18, 0.41), Color("bd9c67") if i % 2 == 0 else Color("cba974"))
@@ -1729,8 +1576,6 @@ func _export_dock() -> void:
 	_crate(dock, Vector3(-0.64, 1.14, -0.70), true)
 	_cylinder(dock, Vector3(0.62, 0.49, -0.60), 0.31, 0.31, 0.32, Color("92816a"), 10)
 	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 2.8, 0.8))
-	_target(dock, Vector3(0.0, 0.85, 1.0), Vector3(3.6, 2.5, 6.4), "station", "island")
-	_target(dock, Vector3(4.3, 0.65, 1.65), Vector3(8.6, 1.7, 1.8), "station", "island")
 	for z in [-1.6, 3.8]:
 		var flag_root := Node3D.new()
 		dock.add_child(flag_root)
@@ -1738,73 +1583,6 @@ func _export_dock() -> void:
 		_cylinder(flag_root, Vector3(0.0, 1.75, 0.0), 0.045, 0.045, 3.2, Color("a37d49"), 6)
 		_box(flag_root, Vector3(0.43, 2.7, 0.0), Vector3(0.86, 0.53, 0.055), GOLD)
 		_sphere(flag_root, Vector3(0.44, 2.71, 0.05), Vector3(0.13, 0.16, 0.035), Color("fff2bc"))
-		_export_flags.append(flag_root)
-	_export_boat = _root("GoldenExportBoat", Vector3(27, -0.1, 1))
-	_sphere(_export_boat, Vector3(0.0, 0.05, 0.0), Vector3(1.10, 0.52, 2.17), Color("79614a"))
-	_box(_export_boat, Vector3(0.0, 0.34, 0.0), Vector3(1.85, 0.16, 3.20), Color("d6b47e"))
-	for x in [-0.89, 0.89]:
-		_box(_export_boat, Vector3(x, 0.55, 0.0), Vector3(0.10, 0.35, 3.05), Color("eee0b4"))
-	_box(_export_boat, Vector3(0.0, 0.91, -0.93), Vector3(1.35, 1.04, 0.97), Color("74b9ad"))
-	_box(_export_boat, Vector3(0.0, 1.46, -0.93), Vector3(1.57, 0.15, 1.18), Color("e69573"))
-	_box(_export_boat, Vector3(0.0, 1.10, -0.40), Vector3(0.78, 0.35, 0.055), Color("dcf1dc"))
-	_crate(_export_boat, Vector3(0.0, 0.65, 0.56), true)
-	_cylinder(_export_boat, Vector3(0.0, 1.31, 0.10), 0.045, 0.045, 2.0, Color("ab8859"), 6)
-	_box(_export_boat, Vector3(0.39, 2.15, 0.1), Vector3(0.80, 0.43, 0.05), GOLD)
-	_export_label = _shop_label(_export_boat, "Export", Vector3(0.0, 3.1, 0.0))
-
-
-func set_island2_unlocked(value: bool) -> void:
-	_island2_unlocked = value
-	if current_island == 1:
-		if is_instance_valid(_dock_label):
-			_dock_label.text = "Pier"
-		if is_instance_valid(_dock_gate):
-			_dock_gate.visible = not value
-	elif current_island == 2:
-		if is_instance_valid(_dock_label):
-			_dock_label.text = "Pier"
-
-
-func set_export_state(active: bool, seconds: float) -> void:
-	var was_active: bool = _export_active
-	_export_seconds = maxf(0.0, seconds)
-	_export_active = active and _export_seconds > 0.0
-	for flag in _export_flags:
-		if is_instance_valid(flag):
-			flag.visible = _export_active
-	if is_instance_valid(_export_label):
-		_export_label.visible = _export_active
-		_export_label.text = "Export · %.0fs" % _export_seconds
-	if was_active and not _export_active:
-		for i in range(_effect_particles.size() - 1, -1, -1):
-			if not bool(_effect_particles[i].get("export", false)):
-				continue
-			var particle: Node3D = _effect_particles[i]["node"]
-			if is_instance_valid(particle):
-				remove_child(particle)
-				particle.queue_free()
-			_effect_particles.remove_at(i)
-
-
-func _animate_export(delta: float) -> void:
-	if current_island != 2 or not is_instance_valid(_export_boat):
-		return
-	var target: Vector3 = _boat_dock if _export_active else _boat_away
-	_export_boat.position = _export_boat.position.lerp(target, minf(1.0, delta * (12.0 if _export_active else 1.65)))
-	_export_boat.position.y = target.y + sin(_time * 1.7) * 0.075
-	_export_boat.rotation.z = sin(_time * 1.8) * 0.025
-	_export_boat.rotation.y = lerp_angle(_export_boat.rotation.y, 0.12 if _export_active else 0.75, minf(1.0, delta * 1.5))
-	for i in range(_export_flags.size()):
-		_export_flags[i].rotation.z = sin(_time * 3.2 + float(i)) * 0.025
-	if not _export_active:
-		return
-	_export_particle_clock += delta
-	if _export_particle_clock >= 0.40:
-		_export_particle_clock = 0.0
-		for i in range(3):
-			var particle: Node3D = _gem(self, _boat_dock + Vector3(_rng.randf_range(-1.5, 1.5), _rng.randf_range(1.5, 2.8), _rng.randf_range(-1.7, 1.7)), GOLD, 0.075)
-			_effect_particles.append({"node": particle, "velocity": Vector3(0.0, 0.9, 0.0), "life": 0.7, "total": 0.7, "export": true})
-
 
 func _winter_island() -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
@@ -1861,7 +1639,7 @@ func _winter_scenery() -> void:
 			var pos: Vector3 = point + Vector3(float(i) * 0.68, 0.34, float(i % 2) * 0.35)
 			_sphere(self, pos, Vector3(0.82, 0.65, 0.64) * size, Color("8999a4"))
 			_sphere(self, pos + Vector3(0.0, 0.34 * size, -0.02), Vector3(0.79, 0.31, 0.61) * size, Color("e9f0f1"))
-	# The frozen pond is decorative; the nearby forge is the manual Frostbreak station.
+	# The frozen pond is decorative.
 	_sphere(self, Vector3(19.1, 0.00, -4.6), Vector3(4.0, 0.055, 2.35), Color("accedf"))
 	_sphere(self, Vector3(19.0, 0.045, -4.55), Vector3(3.68, 0.03, 2.06), Color("c6e1ed"))
 	for endpoints in [[Vector3(16.3,0.084,-4.2),Vector3(20.2,0.084,-4.8)],[Vector3(18.4,0.086,-6.2),Vector3(19.7,0.086,-3.2)],[Vector3(19.6,0.087,-3.7),Vector3(21.5,0.087,-4.0)]]:
@@ -1869,7 +1647,7 @@ func _winter_scenery() -> void:
 	for i in range(7):
 		_box(self, Vector3(15.3 + float(i) * 0.40, 0.19, -3.3), Vector3(0.34, 0.16, 1.3), Color("9f8e7a"))
 	for data in [[Vector3(-14,0,-8.2),Color("c89b6c"),Color("926d78")],[Vector3(15,0,11.8),Color("c5976d"),Color("9e8868")],[Vector3(-17,0,11.5),Color("d2a574"),Color("728a91")]]:
-		var id: String = "nell" if data[0].x == -14 else "hollis" if data[0].x == 15 else "tess"
+		var id: String = "nell" if data[0].x == -14 else "edwin" if data[0].x == 15 else "tess"
 		var resident := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		resident.rotation.y = _rng.randf_range(-0.6, 0.65)
 		_villagers.append(resident)
@@ -1916,17 +1694,16 @@ func _icecap_bloom(parent: Node3D, pos: Vector3) -> void:
 		_sphere(parent,pos+Vector3(cos(angle)*0.31,0.02,sin(angle)*0.31),Vector3(0.045,0.045,0.045),Color("b9e6fa"))
 
 
-func _winter_ferry() -> void:
-	var ferry := _root("FrosthollowFerry",Vector3(22.0,0.0,10.0))
+func _winter_jetty() -> void:
+	var jetty := _root("FrosthollowJetty",Vector3(22.0,0.0,10.0))
 	for i in range(19):
-		_box(ferry,Vector3(float(i)*0.42-1.0,0.21,0.0),Vector3(0.37,0.20,2.7),Color("ac9980"))
+		_box(jetty,Vector3(float(i)*0.42-1.0,0.21,0.0),Vector3(0.37,0.20,2.7),Color("ac9980"))
 	for x in [-0.9,2.0,4.9,6.65]:
 		for z in [-1.22,1.22]:
-			_cylinder(ferry,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
-			_sphere(ferry,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
-	_crate(ferry,Vector3(1.1,0.66,-0.75),true)
-	_dock_label = _shop_label(ferry, "Pier", Vector3(0.0,2.35,0.0))
-	_target(ferry,Vector3(2.9,0.95,0.0),Vector3(8.0,2.5,3.2),"station","island")
+			_cylinder(jetty,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
+			_sphere(jetty,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
+	_crate(jetty,Vector3(1.1,0.66,-0.75),true)
+	_dock_label = _shop_label(jetty, "Pier", Vector3(0.0,2.35,0.0))
 
 
 func _toolsmith(parent: Node3D, pos: Vector3) -> void:
@@ -1991,34 +1768,8 @@ func _ice_forge(pos: Vector3) -> void:
 	horn.rotation.z = -PI*0.5
 	_bar(forge,Vector3(0.78,1.15,1.89),Vector3(1.13,1.59,1.89),0.045,Color("c1a274"))
 	_box(forge,Vector3(1.16,1.61,1.89),Vector3(0.45,0.21,0.20),Color("b7cdd8"))
-	_frost_beacon = _gem(forge,Vector3(-1.30,3.12,1.5),Color("a8dff5"),0.29)
-	_frost_beacon.visible = false
 	_toolsmith(forge, Vector3(-1.1, 0.0, 2.1))
-	_frost_label = _shop_label(forge, "Tools", Vector3(0.0,4.75,0.0))
 	_target(forge,Vector3(0.0,1.95,0.4),Vector3(4.6,4.0,4.5),"station","tools")
-
-
-func set_island3_unlocked(value: bool) -> void:
-	_island3_unlocked = value
-	if is_instance_valid(_dock_label) and current_island != 3 and value:
-		_dock_label.text = "Pier"
-
-
-func set_frost_state(active: bool, seconds: float, frozen_indices: Array = []) -> void:
-	_frost_active = active and seconds > 0.0
-	_frost_seconds = maxf(0.0,seconds)
-	if current_island != 3:
-		return
-	if is_instance_valid(_frost_label):
-		_frost_label.text = "Frostbreak · %.0fs" % _frost_seconds if _frost_active else "Tools"
-	if is_instance_valid(_frost_beacon):
-		_frost_beacon.visible = _frost_active
-	if not _frost_active:
-		for i in range(_ice_roots.size()):
-			_ice_roots[i].visible = _climate_ice.has(str(i))
-	elif not frozen_indices.is_empty():
-		for i in range(_ice_roots.size()):
-			_ice_roots[i].visible = frozen_indices.has(i) or _climate_ice.has(str(i))
 
 
 func _animate_winter(delta: float) -> void:
@@ -2030,10 +1781,6 @@ func _animate_winter(delta: float) -> void:
 		snowflake.position.x += delta*sin(_time*0.6+float(i))*0.045
 		if snowflake.position.y < 0.35:
 			snowflake.position.y = 8.0
-	if is_instance_valid(_frost_beacon):
-		_frost_beacon.rotation.y += delta*0.7
-
-
 func _build_pest_swarm(parent: Node3D) -> void:
 	for i in range(3):
 		var bug := Node3D.new()
@@ -2171,8 +1918,8 @@ func _duck_station() -> void:
 		_box(coop, Vector3(x, 0.40, 0.30), Vector3(0.15, 0.8, 0.07), Color("f0d897"))
 	_duck_label = _shop_label(coop, "Ducks", Vector3(0, 2.5, 0))
 	_target(coop, Vector3(0, 0.8, 0.1), Vector3(3.3, 2.5, 3.5), "station", "duck_patrol")
-	for index in range(current_island):
-		var duck: Node3D = _root("PestPatrolDuck%d" % (index + 1), _duck_home + Vector3((index - (current_island - 1) * 0.5) * 1.0, 0.12, 1.6))
+	for index in range(2):
+		var duck: Node3D = _root("PestPatrolDuck%d" % (index + 1), _duck_home + Vector3((index - 0.5) * 1.0, 0.12, 1.6))
 		var body := Node3D.new()
 		duck.add_child(body)
 		_sphere(body, Vector3(0, 0.42, 0), Vector3(0.42, 0.33, 0.55), Color("fff0c7"))
@@ -2187,76 +1934,15 @@ func _duck_station() -> void:
 		duck.scale = Vector3.ONE * 1.25
 		_ducks.append(duck)
 		_duck_bodies.append(body)
-	_duck = _ducks[0]
 	_duck_body = _duck_bodies[0]
 
 func _activity_station() -> void:
 	_duck_station()
-	if current_island == 1:
-		_activity_label = _duck_label
-		return
-	if current_island == 2:
-		var booth: Node3D = _root("BuyerContracts", Vector3(13.5, 0, 2.8))
-		for x: float in [-1.25, 1.25]:
-			_box(booth, Vector3(x, 1.4, 0), Vector3(0.14, 2.8, 0.14), Color("826342"))
-		_box(booth, Vector3(0, 1.72, 0), Vector3(2.75, 1.75, 0.17), Color("87654b"))
-		for x: float in [-0.65, 0.65]:
-			_box(booth, Vector3(x, 1.76, 0.105), Vector3(1.03, 1.22, 0.055), Color("ffebbe"))
-			for y: float in [1.5, 1.7, 1.9]: _box(booth, Vector3(x, y, 0.14), Vector3(0.67, 0.04, 0.02), Color("bfaf7e"))
-		_roof(booth, 3.4, 1.55, 2.7, 0.5, Color("d19c54"))
-		_crate(booth, Vector3(-0.9, 0.35, 0.9), true)
-		_gem(booth, Vector3(0.85, 0.62, 1.0), Color("b4ddec"), 0.30)
-		_activity_label = _shop_label(booth, "Contracts", Vector3(0, 3.6, 0))
-		_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "activities")
-	else:
-		var furnace: Node3D = _root("FrostFurnace", Vector3(17.8, 0, 10))
-		_box(furnace, Vector3(0, 0.22, 0), Vector3(3.3, 0.44, 2.8), Color("7c6050"))
-		_box(furnace, Vector3(0, 1.2, 0), Vector3(2.5, 2.1, 2.2), Color("a2644b"))
-		_box(furnace, Vector3(0, 1.0, 1.15), Vector3(1.8, 1.2, 0.10), Color("261b19"))
-		_box(furnace, Vector3(0.74, 2.8, -0.45), Vector3(0.64, 1.9, 0.68), Color("8a553c"))
-		_box(furnace, Vector3(0.74, 3.81, -0.45), Vector3(0.93, 0.18, 0.94), Color("e2eff1"))
-		_box(furnace, Vector3(-0.3, 2.3, 0), Vector3(2.2, 0.16, 2.3), Color("d9f0f0"))
-		# Copper hood, brick joints, stacked fuel and a permanently warm hearth.
-		for y: float in [0.48, 0.88, 1.28, 1.68, 2.08]:
-			_box(furnace, Vector3(0, y, 1.108), Vector3(2.52, 0.035, 0.025), Color("764c3b"))
-			_box(furnace, Vector3(1.258, y, 0), Vector3(0.025, 0.035, 2.2), Color("764c3b"))
-		_box(furnace, Vector3(0, 1.78, 1.28), Vector3(2.15, 0.2, 0.36), Color("d29459"))
-		_box(furnace, Vector3(0, 0.4, 1.42), Vector3(2.35, 0.18, 0.68), Color("d1a47b"))
-		var embers: MeshInstance3D = _box(furnace, Vector3(0, 0.55, 1.22), Vector3(1.55, 0.15, 0.15), Color("db7436"))
-		embers.material_override = _bright_material(Color("ffad55"))
-		for index in range(5):
-			_box(furnace, Vector3(-1.5, 0.38 + (index / 2) * 0.2, -0.5 + (index % 2) * 0.48), Vector3(0.62, 0.18, 0.4), Color("735039"))
-		_box(furnace, Vector3(1.46, 0.53, 0.68), Vector3(0.6, 0.18, 0.76), Color("bd824a"))
-		_box(furnace, Vector3(1.46, 0.7, 0.68), Vector3(0.5, 0.15, 0.65), Color("663e2e"))
-		_box(furnace, Vector3(1.46, 0.82, 0.68), Vector3(0.6, 0.1, 0.76), Color("bd824a"))
-		_furnace_flame = Node3D.new()
-		furnace.add_child(_furnace_flame)
-		for x: float in [-0.55, 0.0, 0.55]:
-			var flame: MeshInstance3D = _sphere(_furnace_flame, Vector3(x, 0.89, 1.26), Vector3(0.27, 0.44 if x == 0 else 0.28, 0.12), Color("ffb44f"))
-			flame.material_override = _bright_material(Color("ffc05f"))
-		for index: int in range(5):
-			var steam: MeshInstance3D = _sphere(furnace, Vector3(0.74, 4.0, -0.45), Vector3.ONE * 0.2, Color("eaf7ef"))
-			_furnace_steam.append(steam)
-		_activity_label = _shop_label(furnace, "Furnace", Vector3(0, 4.55, 0))
-		_target(furnace, Vector3(0, 1.8, 0), Vector3(3.4, 4.0, 3.3), "station", "activities")
 
 func set_activity_state(info: Dictionary) -> void:
 	_activity_info = info.duplicate(true)
 	if is_instance_valid(_duck_label):
-		_duck_label.text = "Ducks · %d/%d" % [int(info.get("duck_count", 0)), current_island]
-	if not is_instance_valid(_activity_label):
-		return
-	match current_island:
-		1:
-			pass
-		2:
-			var contract: Dictionary = info.get("contract", {})
-			_activity_label.text = "Contracts" if contract.is_empty() else "Order · %d/%d" % [int(contract.get("delivered", 0)), int(contract.get("target", 1))]
-		3:
-			var remaining: float = maxf(float(info.get("furnace_remaining", 0)), float(info.get("thaw_heat", 0)))
-			_activity_label.text = "Furnace · %.0fs" % remaining if remaining > 0 else "Furnace"
-			_furnace_flame.visible = true
-			for steam: Node3D in _furnace_steam: steam.visible = remaining > 0
+		_duck_label.text = "Ducks · %d/2" % int(info.get("duck_count", 0))
 
 func _animate_activities(delta: float) -> void:
 	var patrols: Array = _activity_info.get("ducks", [])
@@ -2279,10 +1965,3 @@ func _animate_activities(delta: float) -> void:
 		body.rotation.z = sin(clock * (11 if active else 2)) * (0.10 if active else 0.03)
 		body.position.y = absf(sin(clock * (11 if active else 2))) * (0.09 if active else 0.015)
 		body.rotation.x = sin(float(patrol.get("peck", 0)) * 18) * 0.35 if float(patrol.get("peck", 0)) > 0 else 0.0
-	if current_island == 3 and is_instance_valid(_furnace_flame) and _furnace_flame.visible:
-		var active: bool = maxf(float(_activity_info.get("furnace_remaining", 0)), float(_activity_info.get("thaw_heat", 0))) > 0
-		_furnace_flame.scale = Vector3(1, (0.95 if active else 0.42) + sin(_time * 8) * 0.06, 1)
-		for index: int in range(_furnace_steam.size()):
-			var phase: float = fmod(_time * 0.5 + float(index) / 5, 1.0)
-			_furnace_steam[index].position = Vector3(0.74 + phase * 0.8, 4.0 + phase * 2.3, -0.45)
-			_furnace_steam[index].scale = Vector3.ONE * (0.4 + sin(phase * PI) * 1.8)

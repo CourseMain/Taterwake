@@ -114,8 +114,8 @@ func animate(data: Dictionary, delta: float) -> void:
 	clock += delta
 	flow_time = maxf(0, flow_time - delta)
 	refill_time = maxf(0, refill_time - delta)
-	var p: Dictionary = info.projects[str(world.current_island)]
-	var local_weather: bool = int(info.island) == world.current_island
+	var p: Dictionary = info.projects
+	var local_weather: bool = true
 	var storm: bool = local_weather and info.event == "storm" and info.phase == "active"
 	var scale_tank: Vector3 = Projects.tank_scale(int(p.get("rainwater", 0)) + 1)
 	if displayed_water < 0: displayed_water = float(info.supply.water)
@@ -155,9 +155,9 @@ func animate(data: Dictionary, delta: float) -> void:
 	can_label.visible = selected == "tank" or refill_time > 0 or world.get_meta("water_tool", false)
 	can_label.modulate = Color("ffe18a") if float(info.supply.can) < 1 else Color("fff0cc")
 	var lesson: String = str(info.lesson.stage)
-	practice_label.visible = world.current_island == 2 and lesson in ["water", "area"] and selected.is_empty()
+	practice_label.visible = lesson in ["water", "area"] and selected.is_empty()
 	if practice_label.visible:
-		var target: Vector3 = world.plot_positions[34] if lesson == "water" else equipment_position("sprinkler2")
+		var target: Vector3 = world.plot_positions[18] if lesson == "water" else equipment_position("sprinkler2")
 		practice_label.position = target + Vector3(0, 2.2 + sin(clock * 2.8) * 0.12, 0)
 		practice_label.text = "Water this bed [3]" if lesson == "water" else "Click this sprinkler"
 	gate.visible = int(p.get("drainage", 0)) > 0
@@ -177,7 +177,7 @@ func animate(data: Dictionary, delta: float) -> void:
 	for i in range(world._crop_roots.size()):
 		var crop: Node3D = world._crop_roots[i]
 		var stress: float = float(info.operations.stress.get(str(i), 0)) if local_weather else 0.0
-		var sheltered: bool = Ops.zone(i, world.current_island) == 0 and int(p.get("windbreaks", 0)) > 0
+		var sheltered: bool = Ops.zone(i) == 0 and int(p.get("windbreaks", 0)) > 0
 		var lean: float = stress * 0.45 if local_weather and info.event == "drought" else 0.0
 		if storm: lean = sin(clock * 5 + i * 0.6) * (0.14 * (1.0 - 0.3 * int(p.get("windbreaks", 0))) if sheltered else 0.14)
 		crop.rotation.z = lerpf(crop.rotation.z, lean, minf(1, delta * 7))
@@ -214,17 +214,17 @@ func _ring(v, center: Vector3, radius: float, color: Color) -> void:
 
 func draw_connections(v) -> void:
 	if info.is_empty(): return
-	var projects: Dictionary = info.projects[str(world.current_island)]
+	var projects: Dictionary = info.projects
 	var scale_tank: Vector3 = Projects.tank_scale(int(projects.get("rainwater", 0)) + 1)
 	var source: Vector3 = tank_position() + Vector3(1.5 * scale_tank.x, 0.39, 0)
 	var left: float = world.plot_positions[0].x - 1.5
-	var local_weather: bool = int(info.island) == world.current_island
+	var local_weather: bool = true
 	var storm: bool = local_weather and info.event == "storm" and info.phase == "active"
 	var choosing_patch: bool = selected.begins_with("sprinkler")
 	if selected == "tank" or choosing_patch:
 		_ring(v, tank_position() + Vector3(0, 0.35, 0), 1.95 * scale_tank.x, Color("e8df9b"))
 	if practice_label.visible:
-		var target: Vector3 = world.plot_positions[34] if info.lesson.stage == "water" else equipment_position("sprinkler2")
+		var target: Vector3 = world.plot_positions[18] if info.lesson.stage == "water" else equipment_position("sprinkler2")
 		_ring(v, target + Vector3(0, 0.32, 0), 0.95, Color("ffe899"))
 		var tip: Vector3 = target + Vector3(0, 1.15 + sin(clock * 2.8) * 0.12, 0)
 		v._line(tip + Vector3(-0.23, 0.3, 0), tip, 0.075, CREAM, true)
@@ -241,7 +241,7 @@ func draw_connections(v) -> void:
 				_ring(v, point + Vector3(0, 0.32, 0), 0.64, Color("d5e4ad"))
 				_flow(v, Vector3(left, 0.39, source.z), point + Vector3(0, 0.39, 0), selected != "")
 			for i in range(world.plot_positions.size()):
-				if Ops.zone(i, world.current_island) != patch: continue
+				if Ops.zone(i) != patch: continue
 				if not highlighted and not active and selected != "tank": continue
 				var pos: Vector3 = world.plot_positions[i]
 				var columns: int = 10 if world.current_island == 3 else (8 if world.current_island == 2 else 6)
@@ -257,7 +257,7 @@ func draw_connections(v) -> void:
 						v._line(pos + Vector3(-0.88 + a * 1.6, 0.4 + sin(a * PI) * 1.2, 0), pos + Vector3(-0.88 + b * 1.6, 0.4 + sin(b * PI) * 1.2, 0), 0.04, Color(0.63, 0.91, 0.96, 0.8), true)
 	if int(projects.get("windbreaks", 0)) > 0 and (selected == "trees" or storm):
 		for i in range(world.plot_positions.size()):
-			if Ops.zone(i, world.current_island) == 0 and selected == "trees":
+			if Ops.zone(i) == 0 and selected == "trees":
 				_bed_outline(v, world.plot_positions[i], Color("c6dfaa"))
 		# Wind streams shorten and soften after crossing the living barrier.
 		var trees: Vector3 = Projects.trees_position(world)

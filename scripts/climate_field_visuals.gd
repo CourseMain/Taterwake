@@ -93,13 +93,13 @@ func _finish_mesh(node: MeshInstance3D) -> void:
 func _refresh() -> void:
 	if info.is_empty() or not visible: return
 	var op: Dictionary = info.operations
-	var local_weather: bool = int(info.island) == world.current_island
+	var local_weather: bool = true
 	var active: bool = info.phase == "active" and local_weather
 	var recovery: float = float(info.timer) / 75.0 if info.phase == "recovery" else 1.0
-	water.visible = world.current_island == int(info.island) and info.event == "flood" and info.phase in ["active", "recovery"]
+	water.visible = info.event == "flood" and info.phase in ["active", "recovery"]
 	var columns: int = 10 if world.current_island == 3 else (8 if world.current_island == 2 else 6)
 	var supply: Dictionary = info.supply
-	var projects: Dictionary = info.projects[str(world.current_island)]
+	var projects: Dictionary = info.projects
 	for i in range(world.plot_positions.size()):
 		var pos: Vector3 = world.plot_positions[i] + Vector3(0, 0.24, 0)
 		var stress: float = float(op.stress.get(str(i), 0.0)) if local_weather else 0.0

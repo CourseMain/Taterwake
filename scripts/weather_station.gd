@@ -11,7 +11,7 @@ const WHITE := Color("c6dcea")
 func setup(w) -> void:
 	world = w
 	name = "WeatherStation"
-	position = world.layout_point(Vector3(18, 0, -5) if world.current_island == 2 else Vector3(22, 0, -7))
+	position = world.layout_point(Vector3(15, 0, -4) if world.current_island == 1 else (Vector3(18, 0, -5) if world.current_island == 2 else Vector3(22, 0, -7)))
 	world._cylinder(self, Vector3(0,0.14,0), 1.9,1.9,0.28,DARK,6)
 	world._cylinder(self, Vector3(0,0.31,0), 1.7,1.7,0.08,STEEL,6)
 	for side in [-1,1]:

@@ -23,7 +23,7 @@ static func trees_position(w) -> Vector3:
 
 static func sprinkler_position(w, patch: int) -> Vector3:
 	for i in range(w.plot_positions.size()):
-		if Ops.zone(i, w.current_island) == patch:
+		if Ops.zone(i) == patch:
 			return Vector3(w.plot_positions[0].x - 1.5, 0, w.plot_positions[i].z)
 	return Vector3.ZERO
 

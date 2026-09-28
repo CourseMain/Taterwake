@@ -31,7 +31,6 @@ var destination: Vector3 = Vector3.ZERO
 var walking: bool = false
 var sprint_blend: float = 0.0
 var pending_plot: int = -1
-var pending_ferry: bool = false
 var walk_waypoints: Array[Vector3] = []
 var pending_tool: String = "hoe"
 var hover_plot: int = -1
@@ -51,7 +50,6 @@ var tone_frequency: float = 440.0
 var tone_remaining: float = 0.0
 var tone_length: float = 0.1
 var sparkle_tone: bool = false
-var last_frost_active: bool = false
 var pest_alert: Node
 var _zoom_target_size: float = 38.0
 var _camera_home_position := Vector3.ZERO
@@ -74,7 +72,6 @@ var climate_audio: Node
 var climate_target: String = ""
 var pending_refill: bool = false
 var empty_can_prompted: bool = false
-var equipment_island: int = 0
 var equipment_prompt_time: float = 0.0
 var climate_shake: float = 0.0
 var farm_viewport: SubViewport
@@ -104,7 +101,7 @@ func _ready() -> void:
 	farm_viewport.name = "FarmViewport"
 	add_child(farm_viewport)
 	farm_viewport.add_child(world)
-	world.build_world(state.current_island)
+	world.build_world()
 	_reset_camera_view()
 	get_tree().root.size_changed.connect(_stop_map_navigation)
 	get_tree().root.focus_exited.connect(_stop_map_navigation)
@@ -132,8 +129,6 @@ func _ready() -> void:
 	state.purchase_completed.connect(_on_purchase_completed)
 	state.purchase_rejected.connect(_on_purchase_rejected)
 	state.reward_received.connect(_on_reward)
-	state.island_changed.connect(_on_island_changed)
-	state.export_changed.connect(_on_export_changed)
 	state.run_ended.connect(_on_run_ended)
 	state.climate_changed.connect(_on_climate_changed)
 	_setup_sound()
@@ -143,13 +138,12 @@ func _ready() -> void:
 	tutorial.name = "FirstIslandTutorial"
 	add_child(tutorial)
 	tutorial.setup(self)
-	state.climate.on_arrival(state)
 	_on_state_changed()
 	hud.set_tool(selected_tool)
 	if not test_mode:
 		if state.run_over:
 			_on_run_ended()
-		elif not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
+		elif not bool(state.tutorial_progress.get("completed", false)):
 			tutorial.start()
 		elif returning:
 			hud.show_toast("Your farm is restored. The market is open!")
@@ -179,12 +173,9 @@ func _process(delta: float) -> void:
 		_pump_audio()
 		return
 	state.ClimateSystem.Lesson.tick(state, delta)
-	if not climate_target.is_empty() and (state.current_island != world.current_island or (not state.ClimateSystem.Lesson.active(state) and (state.climate.data.phase not in ["warning", "active"] or state.current_island != int(state.climate.data.island)))):
+	if not climate_target.is_empty() and (not state.ClimateSystem.Lesson.active(state) and state.climate.data.phase not in ["warning", "active"]):
 		climate_target = ""
 		hud._climate_console.targeting = ""
-	if state.climate.data.intro_pending:
-		_pump_audio()
-		return
 	# Scale only the simulation. A capped accelerated step keeps farming
 	# responsive after a slow frame; presentation stays in real time.
 	var simulation_delta: float = _simulation_delta(delta)
@@ -200,7 +191,7 @@ func _process(delta: float) -> void:
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
 	world.set_day_time(state.elapsed)
-	climate_audio.set_weather(climate_info, state.current_island, state.tutorial_active or state.run_over)
+	climate_audio.set_weather(climate_info, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
 	_update_weather_shake(delta)
 	var infested: int = 0
@@ -219,7 +210,6 @@ func _process(delta: float) -> void:
 			walking = false
 			pending_plot = -1
 			pending_refill = false
-			pending_ferry = false
 			walk_waypoints.clear()
 			var right: Vector3 = world.camera.global_basis.x
 			var forward: Vector3 = world.camera.global_basis.z
@@ -240,10 +230,7 @@ func _process(delta: float) -> void:
 					destination = walk_waypoints.pop_front()
 				else:
 					walking = false
-				if not walking and pending_ferry:
-					pending_ferry = false
-					_on_user_action("island")
-				elif not walking and pending_refill:
+				if not walking and pending_refill:
 					pending_refill = false
 					var before_water: float = float(state.ClimateSystem.Operations.local(state).can)
 					hud.show_farm_hint(state.ClimateSystem.Operations.refill(state))
@@ -270,8 +257,6 @@ func _process(delta: float) -> void:
 		ui_elapsed = 0.0
 		if _hud_update_frame != Engine.get_process_frames():
 			hud.update_state(state)
-		world.set_export_state(state.export_active, state.export_timer)
-		world.set_frost_state(state.frost_active, state.frost_timer)
 		world.set_activity_state(activities.info())
 	save_elapsed += delta
 	if save_elapsed >= 10.0 and not test_mode:
@@ -306,7 +291,7 @@ func _simulation_delta(delta: float) -> float:
 	return step
 
 func _advance_simulation(delta: float) -> void:
-	if state.run_over or state.climate.data.intro_pending or state.ClimateSystem.Lesson.active(state):
+	if state.run_over or state.ClimateSystem.Lesson.active(state):
 		return
 	if _tutorial_active():
 		state.update(delta)
@@ -375,13 +360,9 @@ func _debug_action(parts: PackedStringArray) -> void:
 				hud.show_toast(state.debug_set_balance(float(amount.value)))
 			if not test_mode: state.save_game()
 		"weather":
-			if parts.size() == 3 and parts[2] in ["drought", "flood", "storm"]:
+			if parts.size() == 3 and parts[2] in ["drought", "flood", "storm", "freeze"]:
 				if state.climate.begin_warning(state, parts[2], 1.0): hud.close_panel()
-				else: state._finish("Travel to Island 2 or 3 and wait for calm weather first.")
-		"island":
-			if parts.size() != 3 or not parts[2].is_valid_int(): return
-			hud.show_toast(state.debug_unlock_island(int(parts[2])))
-			if not test_mode: state.save_game()
+				else: state._finish("Finish the current weather or lesson first.")
 		"reset":
 			debug_time_multiplier = 1.0
 			hud.set_debug_session(true, 1.0)
@@ -423,7 +404,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(conversation) and conversation.visible: return
 	if touch_controls.enabled and event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		return
-	if state.climate.data.intro_pending: return
 	if hud == null:
 		return
 	if state.run_over:
@@ -478,8 +458,6 @@ func _interact_station(station: String) -> void:
 	if station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
-	elif station == "island":
-		queue_ferry()
 	elif station == "market" and not _tutorial_active():
 		# Visiting Mara herself is a deliberate conversation, even after her intro.
 		_start_conversation("mara", "market")
@@ -498,14 +476,14 @@ func _on_user_action(action: String) -> void:
 		if browsing_market or met_mara:
 			_on_action(action)
 			return
-	var id: String = state.NpcRoster.for_station(action, state.current_island)
-	if not id.is_empty() and state.NpcRoster.available(id, state.current_island) and not _tutorial_active():
+	var id: String = state.NpcRoster.for_station(action)
+	if not id.is_empty() and state.NpcRoster.available(id) and not _tutorial_active():
 		_start_conversation(id, action)
 	else:
 		_on_action(action)
 
 func _start_conversation(id: String, requested_service: String = "") -> void:
-	if not state.NpcRoster.available(id, state.current_island) or _tutorial_active() or state.run_over or state.climate.data.intro_pending: return
+	if not state.NpcRoster.available(id) or _tutorial_active() or state.run_over: return
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
 	_cancel_walk()
@@ -555,7 +533,7 @@ func _recenter_camera() -> void:
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _map_navigation_allowed() -> bool:
-	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.climate.data.intro_pending and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
+	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
 
 func _stop_map_navigation() -> void:
 	_cancel_map_drag()
@@ -653,23 +631,10 @@ func _update_camera_zoom(delta: float) -> void:
 func _clamp_destination(point: Vector3) -> Vector3:
 	return world.clamp_walk_position(point)
 
-func _start_walk(point: Vector3, follow_ferry: bool = false) -> void:
-	walk_waypoints = world.walk_route(world.player.position, point, follow_ferry)
+func _start_walk(point: Vector3) -> void:
+	walk_waypoints = world.walk_route(world.player.position, point)
 	destination = walk_waypoints.pop_front()
 	walking = true
-
-func queue_ferry() -> void:
-	if state.run_over:
-		return
-	if _tutorial_active() and not tutorial.allows_action("island"):
-		tutorial.explain_block()
-		return
-	_cancel_walk()
-	if world.player.position.distance_to(world.ferry_position()) <= 2.0:
-		_on_user_action("island")
-		return
-	pending_ferry = true
-	_start_walk(world.ferry_position(), true)
 
 func _cancel_walk() -> void:
 	sprint_blend = 0.0
@@ -677,7 +642,6 @@ func _cancel_walk() -> void:
 	pending_refill = false
 	walking = false
 	pending_plot = -1
-	pending_ferry = false
 	walk_waypoints.clear()
 	hover_plot = -1
 	if world != null:
@@ -714,7 +678,6 @@ func queue_plot(index: int) -> void:
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
 		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1,200")
 		return
-	pending_ferry = false
 	pending_plot = index
 	pending_tool = selected_tool
 	_start_walk(world.plot_positions[index] + Vector3(0.0, 0.0, 0.65))
@@ -761,14 +724,10 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		tutorial.update(0.0)
 
 func _interact_nearby() -> void:
-	if hud.is_panel_open() or state.run_over or state.climate.data.intro_pending: return
+	if hud.is_panel_open() or state.run_over: return
 	if world.player.position.distance_to(world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2.0:
 		_select_equipment("tank")
 		_queue_refill()
-		return
-	if world.player.position.distance_to(world.ferry_position()) <= 2.0:
-		_cancel_walk()
-		_on_user_action("island")
 		return
 	var station: Dictionary = world.nearby_station()
 	if not station.is_empty() and climate_target.is_empty():
@@ -796,15 +755,15 @@ func _preview_area(index: int, tool: String) -> void:
 		if id.begins_with("sprinkler") or id == "trees":
 			var patch: int = 0 if id == "trees" else int(id.trim_prefix("sprinkler"))
 			for i in range(state.plots.size()):
-				if state.ClimateSystem.Operations.zone(i, state.current_island) == patch: tiles.append(i)
+				if state.ClimateSystem.Operations.zone(i) == patch: tiles.append(i)
 		world.highlight_tiles(tiles)
 		return
 	if not climate_target.is_empty():
 		var target_index: int = 35 if state.ClimateSystem.Lesson.active(state) or index < 0 else index
-		var chosen: int = state.ClimateSystem.Operations.zone(target_index, state.current_island)
+		var chosen: int = state.ClimateSystem.Operations.zone(target_index)
 		var tiles: Array[int] = []
 		for i in range(state.plots.size()):
-			if state.ClimateSystem.Operations.zone(i, state.current_island) == chosen: tiles.append(i)
+			if state.ClimateSystem.Operations.zone(i) == chosen: tiles.append(i)
 		world.highlight_tiles(tiles)
 		return
 	if state.ClimateSystem.Lesson.active(state):
@@ -830,8 +789,8 @@ func _update_hover() -> void:
 	if hover_plot >= 0:
 		var plot: Dictionary = state.plots[hover_plot]
 		var action: String = selected_tool
-		if state.climate.data.phase == "active" and state.climate.data.island == state.current_island and float(state.climate.data.operations.stress.get(str(hover_plot), 0)) > 0.1:
-			hud.set_context("Danger %d%% · %s" % [roundi(float(state.climate.data.operations.stress[str(hover_plot)]) * 100), "Water [3] rescues this bed" if state.climate.data.event == "drought" else ("Hoe [1] drains this bed" if state.climate.data.event == "flood" else "Heat your hoe at the furnace, then Hoe [1]" if state.climate.data.event == "freeze" else "Harvest ripe crops before the next strike")])
+		if state.climate.data.phase == "active" and float(state.climate.data.operations.stress.get(str(hover_plot), 0)) > 0.1:
+			hud.set_context("Danger %d%% · %s" % [roundi(float(state.climate.data.operations.stress[str(hover_plot)]) * 100), "Water [3] rescues this bed" if state.climate.data.event == "drought" else ("Hoe [1] drains this bed" if state.climate.data.event == "flood" else "Hoe [1] clears ice" if state.climate.data.event == "freeze" else "Harvest ripe crops before the next strike")])
 		elif bool(plot.get("frozen", false)):
 			hud.set_context("Frozen bed · Press 1, then click to break ice")
 		elif bool(plot.get("pests", false)):
@@ -852,14 +811,13 @@ func _update_hover() -> void:
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
-		var travel_hint: String = "Ferry · Click to board"
-		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
-		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
+		descriptions["activities"] = "Ducks · Click to hire pest patrol"
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
 		hud.set_context(descriptions.get(str(hit.station), "TATERLAND"))
 	else:
-		hud.set_context("Ferry · Press E to board" if world.player.position.distance_to(world.ferry_position()) <= 2.0 and (not _tutorial_active() or tutorial.allows_action("island")) else "")
+		hud.set_context("")
 
 func _on_state_changed() -> void:
 	# Activity boundaries and market ticks can signal within the same update.
@@ -874,23 +832,9 @@ func _on_state_changed() -> void:
 		hud.set_tutorial({})
 		world.set_tutorial_focus("", true)
 	if world != null:
-		if world.current_island != state.current_island:
-			_on_island_changed(state.current_island)
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
-		world.set_island2_unlocked(state.island2_unlocked)
-		world.set_island3_unlocked(state.island3_unlocked)
-		world.set_export_state(state.export_active, state.export_timer)
-		world.set_frost_state(state.frost_active, state.frost_timer)
 		world.set_activity_state(activities.info())
-		if state.current_island == 3 and last_frost_active != state.frost_active:
-			if state.frost_active:
-				_play_tone(523.0, 0.2)
-			elif state.frost_cleared == state.frost_target_count:
-				_play_tone(1174.0, 0.7)
-				sparkle_tone = true
-				world.play_reward("legendary")
-	last_frost_active = state.frost_active
 	if hud != null:
 		hud.update_state(state)
 		_hud_update_frame = Engine.get_process_frames()
@@ -900,39 +844,11 @@ func _update_weather_shake(delta: float) -> void:
 	var amplitude: float = 0.0
 	climate_shake = move_toward(climate_shake, 0.0, delta * 0.25)
 	var weather: Dictionary = state.climate_info()
-	if weather.phase == "active" and weather.event == "storm" and weather.island == state.current_island:
+	if weather.phase == "active" and weather.event == "storm":
 		amplitude += float(weather.severity) * 0.075 * (0.2 + 0.8 * pow(maxf(0.0, sin(weather_shake_clock * 1.7)), 3.0))
 	amplitude = minf(0.26, amplitude + climate_shake)
 	world.camera.h_offset = sin(weather_shake_clock * 43.0) * amplitude
 	world.camera.v_offset = sin(weather_shake_clock * 57.0 + 0.8) * amplitude * 0.6
-
-func _on_island_changed(id: int) -> void:
-	climate_target = ""
-	_cancel_walk()
-	if hud != null:
-		hud._climate_console.targeting = ""
-		hud.close_panel()
-	world.switch_island(id)
-	_reset_camera_view()
-	world.set_day_time(state.elapsed)
-	destination = world.player.position
-	world.update_plots(state.plots)
-	world.set_island2_unlocked(state.island2_unlocked)
-	world.set_island3_unlocked(state.island3_unlocked)
-	world.set_export_state(state.export_active, state.export_timer)
-	world.set_frost_state(state.frost_active, state.frost_timer)
-	world.set_activity_state(activities.info())
-	if hud != null:
-		hud.update_state(state)
-		hud.set_context("")
-
-func _on_export_changed(active: bool) -> void:
-	world.set_export_state(active, state.export_timer)
-	if active:
-		if state.current_island == 2:
-			world.play_reward("legendary")
-		_play_tone(1046.0, 0.7)
-		sparkle_tone = true
 
 func _climate_choose(index: int) -> void:
 	var action: String = climate_target
@@ -944,7 +860,7 @@ func _climate_choose(index: int) -> void:
 		if action == "water":
 			var tiles: Array[int] = []
 			for i in range(state.plots.size()):
-				if state.ClimateSystem.Operations.zone(i, state.current_island) == state.ClimateSystem.Operations.zone(index, state.current_island): tiles.append(i)
+				if state.ClimateSystem.Operations.zone(i) == state.ClimateSystem.Operations.zone(index): tiles.append(i)
 			world.play_farm_effect(tiles, "water")
 	world.set_climate(state.climate_info())
 	hud.show_farm_hint(result)
@@ -952,14 +868,6 @@ func _climate_choose(index: int) -> void:
 	_save_checkpoint.call_deferred()
 
 func _climate_action(action: String) -> void:
-	if action == "open_furnace":
-		_on_user_action("activities")
-		return
-	if action == "heat_hoe":
-		state.ClimateSystem.Operations.operate(state, action)
-		_select_tool("hoe")
-		hud.close_panel()
-		return
 	match action:
 		"refill": _queue_refill()
 		"close_equipment": _close_equipment()
@@ -969,7 +877,7 @@ func _climate_action(action: String) -> void:
 		"use_sprinkler":
 			var patch: int = int(hud._climate_console.equipment.trim_prefix("sprinkler"))
 			for i in range(state.plots.size()):
-				if state.ClimateSystem.Operations.zone(i, state.current_island) != patch: continue
+				if state.ClimateSystem.Operations.zone(i) != patch: continue
 				var before: float = float(state.ClimateSystem.Operations.local(state).water)
 				hud.show_farm_hint(state.ClimateSystem.Operations.target(state, i, "water"))
 				if float(state.ClimateSystem.Operations.local(state).water) < before:
@@ -1012,14 +920,6 @@ func _on_action(action: String) -> void:
 		_close_equipment()
 		climate_target = ""
 		hud._climate_console.targeting = ""
-	if state.climate.data.intro_pending and action not in ["reset", "climate_continue"]: return
-	if action == "climate_continue":
-		state.climate.acknowledge(state)
-		hud._climate_alert.dismiss()
-		hud._climate_intro.stop()
-		_on_user_action("climate")
-		_save_checkpoint.call_deferred()
-		return
 	if state.run_over and action not in ["reset", "debug", "close"] and not action.begins_with("debug:"):
 		return
 	if action.begins_with("farm_help:"):
@@ -1044,7 +944,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "climate":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1059,13 +959,6 @@ func _on_action(action: String) -> void:
 						activities.train_ducks()
 					else:
 						activities.hire_duck()
-				"contract":
-					if parts.size() == 3:
-						activities.choose_contract(parts[2])
-				"deliver": activities.deliver_contract()
-				"furnace":
-					if parts.size() == 3:
-						activities.charge_furnace(parts[2])
 			if not test_mode:
 				state.save_game()
 		"climate_operate":
@@ -1077,12 +970,9 @@ func _on_action(action: String) -> void:
 				state.climate.fund(state, parts[1])
 				_save_checkpoint.call_deferred()
 
-		"island_unlock": state.unlock_island2()
-		"island3_unlock": state.unlock_island3()
 		"forge":
 			_cancel_walk()
 			hud.show_panel("tools", state)
-		"travel": state.travel_to(int(parts[1]))
 		"quest": state.claim_quest(parts[1])
 		"close": hud.close_panel()
 		"crop": state.select_crop(parts[1])
@@ -1105,7 +995,7 @@ func _on_action(action: String) -> void:
 				hud.close_panel()
 				var loaded: bool = state.load_game()
 				if loaded:
-					if not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
+					if not bool(state.tutorial_progress.get("completed", false)):
 						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
 		"reset":
@@ -1135,17 +1025,13 @@ func _on_climate_changed(phase: String) -> void:
 		climate_target = ""
 		hud._climate_console.targeting = ""
 	var info: Dictionary = state.climate_info()
-	if phase in ["introduction", "warning", "impact", "recovery"]:
-		if phase == "introduction":
-			_cancel_walk()
-			hud.close_panel()
-		if phase == "introduction": hud._climate_intro.start()
-		else: hud._climate_alert.present(phase, info, state)
+	if phase in ["warning", "impact", "recovery"]:
+		hud._climate_alert.present(phase, info, state)
 		_play_tone(164.81 if phase == "impact" else 220.0, 0.6)
 	if is_instance_valid(climate_audio):
-		climate_audio.set_weather(info, state.current_island, state.run_over)
+		climate_audio.set_weather(info, state.run_over)
 		if phase in ["impact", "strike"]: climate_audio.impact()
-	if phase == "impact" and info.island == state.current_island:
+	if phase == "impact":
 		climate_shake = 0.22 if info.event != "drought" else 0.08
 	world.set_climate(info)
 	_save_checkpoint.call_deferred()
@@ -1154,7 +1040,7 @@ func _on_run_ended() -> void:
 	_cancel_walk()
 	hud._climate_alert.dismiss()
 	climate_shake = 0.0
-	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), state.current_island, true)
+	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), true)
 	pest_alert.update(0.0, 0)
 	world.camera.h_offset = 0.0
 	world.camera.v_offset = 0.0
@@ -1175,7 +1061,7 @@ func _on_notification(message: String) -> void:
 	if _working_plot:
 		# Plot results use one quiet footer slot, never a second central toast.
 		return
-	for marker in ["quest complete", "shores unlocked", "frosthollow unlocked", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "failed", "already collected", "emergency"]:
+	for marker in ["quest complete", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "failed", "already collected", "emergency"]:
 		if lower.contains(marker):
 			hud.show_toast(message)
 			return
@@ -1289,7 +1175,6 @@ func _select_equipment(id: String, brief: bool = false) -> void:
 	_cancel_walk()
 	hud.close_panel()
 	hud._climate_console.equipment = id
-	equipment_island = state.current_island
 	world._climate_field.loop.selected = id
 	hud.update_state(state)
 	_preview_area(-1, selected_tool)
@@ -1304,7 +1189,6 @@ func _update_equipment_card(delta: float = 0.0) -> void:
 		equipment_prompt_time = maxf(0, equipment_prompt_time - delta)
 		if equipment_prompt_time == 0 and not pending_refill: _close_equipment()
 	var card = hud._climate_console
-	if equipment_island != state.current_island: _close_equipment()
 	var supply: Dictionary = state.ClimateSystem.Operations.local(state)
 	if float(supply.can) < 1 and not supply.refilled and not empty_can_prompted and not hud.is_panel_open():
 		empty_can_prompted = true

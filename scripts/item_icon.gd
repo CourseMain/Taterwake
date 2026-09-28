@@ -19,10 +19,6 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 	var id: String = str(data.get("id", "russet"))
 	var kind: String = str(data.get("kind", "crop"))
 	var crop: String = str(data.get("crop", id.get_slice(":", 1) if ":" in id else "russet"))
-	if kind == "island":
-		_island(c, int(data.get("island", 1)))
-		c.draw_set_transform(Vector2.ZERO)
-		return
 	if kind != "metric":
 		var wash: Color = Color(str(data.get("backdrop", "e5dec6")))
 		var paper := PackedVector2Array()
@@ -94,33 +90,6 @@ static func _metric(c: CanvasItem, id: String) -> void:
 			c.draw_circle(Vector2(0, 9), 5, INK)
 			c.draw_line(Vector2(0, 9), Vector2(0, 22), INK, 4, true)
 		_: _spark(c, Vector2.ZERO, Color("c9a147"), 32)
-
-static func _island(c: CanvasItem, island: int) -> void:
-	var sky: Color = [Color("dce9d4"), Color("f4dfb4"), Color("d7e8ed")][clampi(island - 1, 0, 2)]
-	c.draw_style_box(_box(sky, 14), Rect2(-49, -47, 98, 94))
-	c.draw_circle(Vector2(27, -27), 10, Color("fff1bb"))
-	for y: int in [22, 31, 39]:
-		c.draw_line(Vector2(-39, y), Vector2(39, y), Color("96bbc0"), 3, true)
-	_poly(c, [Vector2(-41, 15), Vector2(-29, -1), Vector2(27, -6), Vector2(43, 16), Vector2(24, 26), Vector2(-25, 27)], Color("bca777"))
-	_poly(c, [Vector2(-41, 10), Vector2(-22, -15), Vector2(21, -17), Vector2(43, 11), Vector2(24, 20), Vector2(-24, 20)], Color("78a568") if island == 1 else (Color("e7c984") if island == 2 else Color("f0f6e9")))
-	if island == 1:
-		c.draw_rect(Rect2(-20, -17, 31, 30), Color("bd7051"))
-		_poly(c, [Vector2(-25, -15), Vector2(-5, -33), Vector2(17, -15)], Color("43644a"))
-		c.draw_rect(Rect2(-11, -3, 12, 16), Color("f5dfaa"))
-		for x: int in [22, 31]:
-			c.draw_line(Vector2(x, 13), Vector2(x, -10), LEAF, 3, true)
-			c.draw_circle(Vector2(x, -8), 5, Color("dabb52"))
-	elif island == 2:
-		c.draw_line(Vector2(12, 10), Vector2(9, -26), Color("977347"), 6, true)
-		for tip: Vector2 in [Vector2(-15, -23), Vector2(-4, -36), Vector2(23, -38), Vector2(34, -23)]:
-			_poly(c, [Vector2(9, -26), tip, tip + Vector2(4, 8)], LEAF)
-		_potato(c, "sunburst", Vector2(-20, 2), 0.32)
-	else:
-		_poly(c, [Vector2(-33, 8), Vector2(-11, -36), Vector2(12, 8)], Color("7698a3"))
-		_poly(c, [Vector2(-20, -18), Vector2(-11, -36), Vector2(-1, -17), Vector2(-10, -22)], Color("fffdf2"))
-		for x: int in [18, 31]:
-			c.draw_line(Vector2(x, 14), Vector2(x, -19), Color("5b7765"), 4, true)
-			_poly(c, [Vector2(x - 11, 2), Vector2(x, -26), Vector2(x + 11, 2)], Color("6f9d8b"))
 
 static func _poly(c: CanvasItem, points: Array[Vector2], color: Color) -> void:
 	c.draw_colored_polygon(PackedVector2Array(points), color)
@@ -239,17 +208,4 @@ static func _activity(c: CanvasItem, id: String) -> void:
 			c.draw_circle(Vector2(23, -17), 3, INK)
 			c.draw_arc(Vector2(-4, 6), 17, 0.2, PI * 0.9, 20, Color("d4cbb5"), 5, true)
 			for x: int in [-9, 10]: c.draw_line(Vector2(x, 34), Vector2(x + 10, 34), Color("e8a137"), 7, true)
-		"contract":
-			c.draw_style_box(_box(Color("aa794c"), 4), Rect2(-31, -38, 62, 79))
-			c.draw_rect(Rect2(-24, -29, 48, 59), Color("fff6dd"))
-			c.draw_rect(Rect2(-12, -42, 24, 15), Color("779294"))
-			for y: int in [-12, 1, 14]: c.draw_line(Vector2(-15, y), Vector2(14, y), Color("a7b098"), 3, true)
-			c.draw_circle(Vector2(25, 22), 15, Color("ddb350"))
-			c.draw_polyline(PackedVector2Array([Vector2(17, 22), Vector2(23, 28), Vector2(33, 16)]), INK, 3, true)
-		"furnace":
-			c.draw_rect(Rect2(13, -43, 16, 30), Color("637d8b"))
-			c.draw_style_box(_box(Color("7592a1"), 8), Rect2(-35, -20, 70, 61))
-			c.draw_style_box(_box(Color("253d4b"), 12), Rect2(-23, -7, 46, 38))
-			_poly(c, [Vector2(-16, 22), Vector2(-8, 0), Vector2(0, 9), Vector2(9, -10), Vector2(16, 22)], Color("f3a347"))
-			_poly(c, [Vector2(-7, 23), Vector2(0, 8), Vector2(8, 23)], Color("fff0a9"))
 		_: _spark(c, Vector2.ZERO, Color("d1ac52"), 31)

@@ -31,10 +31,6 @@ func setup(owner_hud) -> void:
 	hud._modal_card.offset_right = 530
 	hud._modal_card.offset_top = -380
 	hud._modal_card.offset_bottom = 380
-	if hud._island_id() < 2:
-		add_child(_label("Available on Golden Shores", 20, WHITE))
-		add_child(_button("Explore islands", "island"))
-		return
 	var hero := _panel(self)
 	var hero_body : VBoxContainer = hud._vbox(9)
 	hero.add_child(hero_body)
@@ -73,7 +69,7 @@ func setup(owner_hud) -> void:
 	protections.add_child(_protection)
 	hud._refs.protection_summary = protection
 	for words: String in ["", "CROPS", "BARN", "TAX"]: _protection.add_child(_label(words, 11, MUTED))
-	for event: String in (["drought","flood","storm","freeze"] if hud._island_id() == 3 else ["drought","flood","storm"]):
+	for event: String in ["drought","flood","storm","freeze"]:
 		_protection.add_child(_label(event.capitalize(), 14, WHITE))
 		for metric: String in ["field", "barn"]:
 			_values[event + metric] = _label("", 14, WHITE)
@@ -109,10 +105,8 @@ func setup(owner_hud) -> void:
 	var actions := VBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	add_child(actions)
-	if hud._island_id() == 2:
-		hud._refs.climate_practice = _button("Water practice", "climate_operate:lesson_start")
-		actions.add_child(hud._refs.climate_practice)
-	else: actions.add_child(_button("Heat thawing hoe", "climate_operate:heat_hoe"))
+	hud._refs.climate_practice = _button("Water practice", "climate_operate:lesson_start")
+	actions.add_child(hud._refs.climate_practice)
 	# Optional reference for the duration of each weather phase.
 	var details: VBoxContainer = hud._details_section("climate_details", "weather timings")
 	hud._refs.climate_details.reparent(self)
@@ -160,22 +154,22 @@ func refresh() -> void:
 	_instrument.phase = info.phase
 	hud._refs.climate_status.text = "Clear skies" if info.phase == "calm" else "%s · %ds" % [str(info.name).capitalize(), ceili(info.timer)]
 	if info.phase == "recovery": hud._refs.climate_status.text = "Recovering · %ds" % ceili(info.timer)
-	var alerts := {"drought":"Water dry beds", "flood":"Open drainage gates", "storm":"Harvest the lightning row", "freeze":"Heat the hoe to thaw crops"}
+	var alerts := {"drought":"Water dry beds", "flood":"Open drainage gates", "storm":"Harvest the lightning row", "freeze":"Hoe clears ice from crops"}
 	hud._refs.climate_market.visible = info.phase != "calm"
 	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Prepare before the next weather warning."
 	_values.water.text = "%d / %d" % [int(info.supply.water), int(info.water_capacity)]
 	for event: String in ["drought", "flood", "storm", "freeze"]:
 		for metric: String in ["field", "barn"]:
-			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event, hud._island_id(), metric)*100)
+			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event, metric)*100)
 	for id: String in farm.ClimateSystem.PROJECTS:
-		var level: int = int(info.projects[str(hud._island_id())].get(id, 0))
+		var level: int = int(info.projects.get(id, 0))
 		var full: bool = level >= farm.ClimateSystem.MAX_PROJECT_LEVEL
 		var cost: float = float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
 		var stats := {"irrigation":"4 water / patch" if full else ("6 → 4 water / patch" if level == 1 else "3 patches · 6 water each"), "rainwater":"%d water capacity" % int(info.water_capacity) if full else "%d → %d water capacity" % [int(info.water_capacity), int(info.water_capacity)+36], "drainage":"Flood: −30% crop damage / level", "barn":"−35% stored crop loss / level", "windbreaks":"Shelters far beds · wind only"}
 		hud._refs["climate_effect:" + id].text = stats[id]
 		hud._set_purchase_button("climate_fund:" + id, "Fully upgraded" if full else (("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost)), cost, full)
 	if hud._refs.has("climate_practice"):
-		hud._refs.climate_practice.disabled = int(info.projects["2"].get("irrigation", 0)) == 0
+		hud._refs.climate_practice.disabled = int(info.projects.get("irrigation", 0)) == 0
 func _layout() -> void:
 	if not is_instance_valid(_grid): return
 	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled

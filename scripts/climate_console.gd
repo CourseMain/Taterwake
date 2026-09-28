@@ -115,10 +115,10 @@ func _label(font_size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	return label
 
-func refresh(info: Dictionary, island: int, blocked: bool) -> void:
+func refresh(info: Dictionary, blocked: bool) -> void:
 	var lesson: String = str(info.lesson.stage)
-	var teaching: bool = island == 2 and lesson in ["offer", "water", "area", "success"]
-	visible = not blocked and (not equipment.is_empty() or teaching or (island >= 2 and info.island == island and info.phase != "calm"))
+	var teaching: bool = lesson in ["offer", "water", "area", "success"]
+	visible = not blocked and (not equipment.is_empty() or teaching or info.phase != "calm")
 	if not visible: return
 	# Do not hide live buttons during refresh: doing so cancels a held mouse press.
 	primary_action = ""
@@ -132,7 +132,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 	reserves.hide()
 	meter.hide()
 	var s: Dictionary = info.supply
-	var p: Dictionary = info.projects[str(island)]
+	var p: Dictionary = info.projects
 	story.visible = not compact_layout and (not equipment.is_empty() or teaching)
 	if not equipment.is_empty():
 		story.concept = equipment
@@ -141,7 +141,7 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			title.text = "Rainwater tank"
 			_water(s, info.water_capacity)
 			reserves.text += "   ·   Can %d / %d" % [floori(s.can), int(info.can_capacity)]
-			var drought: bool = info.event == "drought" and info.phase == "active" and int(info.island) == island
+			var drought: bool = info.event == "drought" and info.phase == "active"
 			if drought: hint.text = "No rain during drought."
 			_primary("Refill watering can", "refill")
 			if float(s.can) >= float(info.can_capacity):
@@ -189,19 +189,17 @@ func refresh(info: Dictionary, island: int, blocked: bool) -> void:
 			meter.value = s.can
 	elif info.phase == "recovery":
 		title.text = "WEATHER CLEARING"
-		hint.text = "Markets recover in %ds." % ceili(info.timer)
+		hint.text = "Crops recover in %ds." % ceili(info.timer)
 		if info.event == "freeze" and int(info.get("frozen_crops", 0)) > 0:
-			hint.text = "Hoe [1] thaws ice while hot."
-			_primary("Open furnace", "open_furnace")
+			hint.text = "Hoe [1] clears remaining ice."
 		more.hide()
 	else:
 		title.text = "%s %s%ds" % [info.name, "IN " if info.phase == "warning" else "· ", ceili(info.timer)]
 		match str(info.event):
 			"freeze":
-				hint.text = "Heat hoe → Hoe [1] melts ice."
+				hint.text = "Hoe [1] clears ice from crops."
 				reserves.show()
-				reserves.text = "%d frozen crops · %ds hoe heat" % [int(info.get("frozen_crops", 0)), ceili(float(s.get("heat", 0)))]
-				_primary("Open furnace", "open_furnace")
+				reserves.text = "%d frozen crops" % int(info.get("frozen_crops", 0))
 			"drought":
 				_water(s, info.water_capacity)
 				hint.text = "Refill before drought." if info.phase == "warning" else "Water [3] → dry crops."

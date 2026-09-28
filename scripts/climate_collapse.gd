@@ -182,7 +182,7 @@ func show_report(farm) -> void:
 	var event: String = str(Climate.EVENTS.get(report.event, {}).get("name", ""))
 	if event.is_empty() and not str(report.get("last_event", "")).is_empty():
 		event = "AFTER THE " + str(Climate.EVENTS.get(report.get("last_event", ""), {}).get("name", "DISASTER"))
-	_event.text = "ISLAND %d   /   %s" % [int(report.island), event if not event.is_empty() else "FINAL RECEIPT"]
+	_event.text = "SPUD VALLEY   /   %s" % (event if not event.is_empty() else "FINAL RECEIPT")
 	detail.text = "Your debt crossed the overdraft limit."
 	_threshold.text = "Bankruptcy below " + farm.money(farm.bankruptcy_limit(), true)
 	_calculation.text = "Sales can cover debt while the farm remains above the limit."
@@ -194,8 +194,8 @@ func show_report(farm) -> void:
 		_metrics[pair[0]].note.visible = total > 0.0
 	_metrics["DEBT LIMIT"].caption.text = "OVERDRAFT LIMIT"
 	_metrics["DEBT LIMIT"].value.text = farm.money(farm.bankruptcy_limit())
-	_metrics["DEBT LIMIT"].note.text = "Same on every island"
-	_context.text = "Island %d" % int(report.island)
+	_metrics["DEBT LIMIT"].note.text = "Farm overdraft limit"
+	_context.text = "Spud Valley"
 	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), project_count(report.projects)]
 	_ledger.hide()
 	_scroll.scroll_vertical = 0
@@ -208,6 +208,5 @@ func show_report(farm) -> void:
 
 func project_count(projects: Dictionary) -> int:
 	var total: int = 0
-	for island in projects.values():
-		for value in island.values(): total += int(value)
+	for value in projects.values(): total += int(value)
 	return total
