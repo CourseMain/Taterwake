@@ -81,6 +81,8 @@ Press **2** or click the Seeds hotbar slot to show crop choices. Selecting anoth
 
 **Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Inventory sales and the existing **F** shortcut still work. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
+Every Buy Seeds and Sell Potatoes card includes a small, unanimated sparkline of up to **12 recent sale quotes**. Beside the live sale price, a signed percentage compares it with the variety’s base price: green above base, red below, neutral at base. The top bar shows the same comparison for the selected crop. Seed costs stay fixed; their cards show the sale-price history to help choose what to plant.
+
 Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Radioactive → Sunburst → Icecap**. Buy Seeds retains each island’s available seeds; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
 
 ## Three islands
