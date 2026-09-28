@@ -40,7 +40,7 @@ func _run() -> void:
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
-	state.update(30.0)
+	state.update(float(state.CROPS.russet.grow))
 	check(state.plots[5].stage == 3, "hoe, plant, water and real crop growth remain playable")
 	check(not state.spawn_tutorial_pest(-1) and not state.spawn_tutorial_pest(24) and not state.spawn_tutorial_pest(6), "lesson pest rejects invalid, locked and empty patches")
 	check(state.spawn_tutorial_pest(5) and state.plots[5].pests, "controller can introduce the single demonstration pest")
@@ -70,6 +70,7 @@ func _run() -> void:
 	state.update(3600.0)
 	check(Time.get_ticks_msec() - before < 1000, "frozen expired timers cannot create a million-iteration update stall")
 	state.set_tutorial_active(false)
+	state.rng.seed = 0
 	check(not state.tutorial_active and state.pest_timer >= 25.0, "finishing restarts full surge and safe pest/event countdowns")
 	check(state.plots[0].ripe_age == 0.0 and not state.plots[0].pests, "lesson duration never carries into ripe pest age")
 	check(not state.spawn_tutorial_pest(0), "demo infestation cannot be used in ordinary play")

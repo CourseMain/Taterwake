@@ -61,7 +61,7 @@ func run() -> void:
 	farm.reset_game()
 	farm.coins = 50000.0
 	farm.update(3600.0)
-	check(farm.elapsed == 3600.0 and farm.coins == 50000.0, "ordinary time no longer creates market tax events")
+	check(farm.elapsed == 450.0 and farm.season_clock.winter_menu and farm.coins == 50000.0, "a full working year reaches Winter without market tax events")
 	for path: String in [SAVE, farm.backup_path(SAVE), farm.rejected_path(SAVE)]:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	farm.free()

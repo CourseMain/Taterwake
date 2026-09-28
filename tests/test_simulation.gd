@@ -35,10 +35,10 @@ func _run() -> void:
 	farm.update(12.0)
 	check(farm.plots[4].elapsed == 0.0 and farm.plots[4].stage == 1, "dry crop does not grow with time")
 	farm.interact_plot(4, "water")
-	farm.update(9.0)
+	farm.update(float(farm.CROPS.russet.grow) - 1.0)
 	check(farm.plots[4].stage == 2, "watered crop takes its full growth time")
 	farm.update(1.01)
-	check(farm.plots[4].stage == 3, "watered Russet ripens after ten seconds")
+	check(farm.plots[4].stage == 3, "watered Russet ripens after half a season")
 	farm.interact_plot(4, "harvest")
 	check(farm.storage.russet == 3 and farm.plots[4].stage == 0, "harvest goes to storage, not automatic sales")
 	var coins: float = farm.coins
@@ -89,6 +89,9 @@ func _run() -> void:
 	check(farm.plots[0].stage == 0 and farm.storage.russet == 197, "partial harvest preserves remaining sacks")
 	farm.reset_game()
 	for crop in farm.available_crops():
+		farm.reset_game()
+		farm.rng.seed = 1
+		for plot in farm.plots: farm._clear_crop(plot)
 		farm.plots[4].merge({"stage": 0, "watered": false, "tilled": true, "elapsed": 0.0, "pending": 0}, true)
 		farm.seed_inventory[crop] = 1
 		farm.select_crop(crop)

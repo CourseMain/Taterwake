@@ -47,6 +47,8 @@ func _run() -> void:
 		return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Boot and button wiring use calm weather; dedicated suites exercise disasters.
+	game.state.rng.seed = 6
 	await process_frame
 	await physics_frame
 	await physics_frame
@@ -107,7 +109,7 @@ func _run() -> void:
 	game._process(12.0)
 	check(game.state.plots[5].stage != 3, "unwatered crops do not grow unattended")
 	game.perform_plot(5, "water")
-	game._process(10.1)
+	game._process(game.state.CROPS.russet.grow + 0.1)
 	check(game.state.plots[5].stage == 3, "watered crop matures on continuous time")
 	game.state.coins = 100000.0
 	game._on_action("tools")
@@ -151,5 +153,6 @@ func _run() -> void:
 	game.hud.close_panel()
 	game.queue_free()
 	await process_frame
+	await create_timer(0.1).timeout
 	print("SPUD VALLEY INTEGRATION: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

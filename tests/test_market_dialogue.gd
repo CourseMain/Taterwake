@@ -31,6 +31,8 @@ func run() -> void:
 	root.add_child(game)
 	await settle()
 	game.set_process(false)
+	game.state.climate.reset()
+	game.state.season_clock.seconds = 1.0
 	game.hud.set_process(false)
 	var state = game.state
 	state.tutorial_progress.completed = true

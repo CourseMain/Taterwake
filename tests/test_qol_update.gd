@@ -25,13 +25,13 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	var state = game.state
-	var expected: Array = [10, 25, 40, 50, 55, 60]
+	var expected: Array = [75, 105, 135, 165, 195, 225]
 	for index: int in range(state.CROP_IDS.size()):
 		var crop: String = state.CROP_IDS[index]
-		check(state.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 60.0, crop + " uses balanced base growth")
+		check(state.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 225.0, crop + " uses balanced base growth")
 	game._on_action("dex")
 	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 6, "crop tab illustrates all six varieties")
-	check(game.hud._refs["dex_status:sunburst"].text.contains("55s") and game.hud._refs["dex_status:icecap"].text.contains("60s"), "Dex shows later-island growth and home")
+	check(game.hud._refs["dex_status:sunburst"].text.contains("195s") and game.hud._refs["dex_status:icecap"].text.contains("225s"), "Dex shows seasonal growth times")
 	await shot("dex-crops")
 	for size: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360), Vector2i(600, 900)]:
 		root.min_size = Vector2i.ZERO
@@ -47,7 +47,7 @@ func run() -> void:
 	state.climate.data.phase = "active"
 	state.climate.data.timer = 30.0
 	for crop: String in state.CROP_IDS:
-		check(state.crop_grow_time(crop) <= 60.000001, crop + " weather slowdown is bounded")
+		check(state.crop_grow_time(crop) <= state.MAX_GROW_SECONDS + 0.000001, crop + " weather slowdown is bounded")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.4).timeout

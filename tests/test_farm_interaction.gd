@@ -35,6 +35,8 @@ func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Begin calmly so explicit weather/practice scenarios own the fixture.
+	game.state.rng.seed = 6
 	await frames()
 	game.state.coins = 1e18
 	game.state.climate.fund(game.state, "irrigation")

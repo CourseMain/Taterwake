@@ -12,7 +12,7 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
-	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 27, "new farm format and isolated v4 path")
+	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 28, "new farm format and isolated v4 path")
 	check(World.REGION == 1 and farm.plots.size() == 24 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "Valley starts with twelve open and twelve locked beds")
 	check(farm.field_columns() == 6 and farm.field_rows() == 4, "one six-by-four field")
 	check(farm.available_crops().has("sunburst") and farm.available_crops().has("icecap"), "ordinary varieties have no travel gate")
@@ -42,7 +42,7 @@ func run() -> void:
 	var corrupt: Dictionary = saved.duplicate(true)
 	corrupt.expansion = 0
 	check(not farm._valid_save(corrupt), "upper beds require the single expansion flag")
-	for field in ["operations", "lesson", "season_remaining"]:
+	for field in ["operations", "lesson"]:
 		corrupt = saved.duplicate(true)
 		corrupt.climate.erase(field)
 		check(not farm._valid_save(corrupt), "missing climate component rejects safely: " + field)
@@ -56,9 +56,8 @@ func run() -> void:
 		var expected := RandomNumberGenerator.new()
 		expected.seed = seed_value
 		var event_expected: bool = expected.randf() < 0.15
-		farm.update(Climate.SEASON_SECONDS - 0.25)
-		check(farm.climate.data.phase == "calm", "no early seasonal draw")
 		farm.update(0.25)
+		check(farm.season_clock.season == 0, "first weather draw occurs in Spring")
 		check((farm.climate.data.phase == "warning") == event_expected, "single 15 percent draw at season boundary")
 		if event_expected: hits += 1
 	check(hits > 0 and hits < 100 and Climate.DISASTER_CHANCE == 0.15, "both calm and disaster seasons are reachable")
@@ -66,16 +65,16 @@ func run() -> void:
 	for plot in farm.plots: farm._clear_crop(plot)
 	farm.update(149.5)
 	check(farm.save_game(SAVE), "save just before seasonal draw")
-	farm.update(0.5)
+	farm.update(0.75)
 	var next: Dictionary = farm.climate.data.duplicate(true)
 	var rng_after: String = str(farm.rng.state)
 	check(farm.load_game(SAVE), "restore seasonal checkpoint")
-	farm.update(0.5)
+	farm.update(0.75)
 	check(JSON.parse_string(JSON.stringify(farm.climate.data)) == JSON.parse_string(JSON.stringify(next)) and str(farm.rng.state) == rng_after, "reload preserves the next weather outcome")
 	farm.reset_game()
 	farm.set_tutorial_active(true)
 	farm.update(600)
-	check(farm.climate.data.season_remaining == Climate.SEASON_SECONDS, "farm tour pauses weather draws")
+	check(farm.season_clock.seconds == 0.0, "farm tour pauses weather draws")
 	var subtitles = preload("res://scripts/chapter_subtitles.gd").new()
 	root.add_child(subtitles)
 	var completions: Array = []

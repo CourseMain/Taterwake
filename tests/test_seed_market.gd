@@ -91,6 +91,8 @@ func run() -> void:
 	check(State.crops_by_base_price(State.CROP_IDS) == expected, "fixed ascending base order")
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Begin calmly so explicit weather/practice scenarios own the fixture.
+	game.state.rng.seed = 6
 	await settle()
 	game.set_process(false)
 	game.hud.set_process(false)

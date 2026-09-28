@@ -32,6 +32,8 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.set_process(false)
+	game.state.climate.reset()
+	game.state.season_clock.seconds = 1.0
 	game.hud.close_panel()
 	var farm = game.state
 	var console = game.hud._climate_console

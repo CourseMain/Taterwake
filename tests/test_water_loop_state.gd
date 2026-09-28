@@ -100,7 +100,7 @@ func test_can_and_farming() -> void:
 	farm.interact_plot(5, "hoe")
 	farm.interact_plot(5, "plant")
 	farm.interact_plot(5, "water")
-	farm.update(12.0)
+	farm.update(float(farm.CROPS.russet.grow) + 0.1)
 	check(farm.plots[5].stage == 3 and farm.seed_inventory.russet == seeds - 1, "ordinary hoe, plant, finite water and growth loop remains playable")
 	farm.interact_plot(5, "harvest")
 	check(farm.storage.russet > 0 and farm.plots[5].stage == 0, "ordinary watered crops reach the barn")

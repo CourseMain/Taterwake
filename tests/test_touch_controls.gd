@@ -117,7 +117,7 @@ func run() -> void:
 	finger(4,use_point,true)
 	finger(4,use_point,false)
 	check(not game.state.plots[0].pests, "touch sprayer removes pests")
-	game.state.update(11)
+	game.state.update(float(game.state.CROPS.russet.grow) + 1.0)
 	var stored: int = game.state.storage.russet
 	game._select_tool("harvest")
 	finger(4,use_point,true)

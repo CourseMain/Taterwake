@@ -19,6 +19,8 @@ func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Keep the equipment fixture calm until its explicit freeze scenario.
+	game.state.rng.seed = 6
 	await frames()
 	game.set_process(false)
 	var farm = game.state
@@ -78,6 +80,8 @@ func run() -> void:
 	check(not farm.ClimateSystem.valid(invalid,farm.MAX_MONEY),"invalid frozen-bed save is rejected")
 	game.queue_free()
 	await frames()
+	# Allow the audio mixer to release weather playback before engine shutdown.
+	await create_timer(0.1).timeout
 	if FileAccess.file_exists(SAVE): DirAccess.remove_absolute(SAVE)
 	print("WEATHER STATION: %d checks, %d failures" % [checks,failures])
 	quit(1 if failures else 0)
