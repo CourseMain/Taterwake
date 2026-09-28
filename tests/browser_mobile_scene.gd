@@ -33,7 +33,7 @@ func command(args: Array) -> void:
 		game.state.reset_game()
 		game.state.tutorial_progress = {"version": 2, "step": 7, "completed": false, "plot": 4}
 		game.state.storage.russet = 9
-		game.hud._inventory_tab = "gear"
+		game.hud._inventory_tab = "tools"
 		game.tutorial.start()
 		game._on_action("barn")
 	elif action.begins_with("audit_state:"):

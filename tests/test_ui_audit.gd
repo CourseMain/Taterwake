@@ -50,7 +50,6 @@ func run() -> void:
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
 	game.state.coins = 223e15
-	for id: String in game.state.ITEM_CATALOG: game.state._grant_item(id)
 	for crop: String in game.state.CROP_IDS:
 		game.state.seed_inventory[crop] = 30
 		game.state.storage[crop] = 10
@@ -59,13 +58,12 @@ func run() -> void:
 	game.hud.set_debug_session(true)
 	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
 		await page(kind)
-	for tab: String in ["gear", "items", "builds"]:
+	for tab: String in ["crops", "tools"]:
 		game.hud.show_panel("inventory", game.state)
 		game.hud._act("inventory_tab:" + tab)
 		await shot("inventory-" + tab + "-top")
 		await shot("inventory-" + tab + "-bottom", true)
 	game.hud.show_panel("dex", game.state)
-	game.hud._act("dex_tab:crops")
 	await shot("dex-crops-top")
 	await shot("dex-crops-bottom", true)
 	for pair: Array in [["taxes", "tax_details"], ["climate", "climate_details"]]:

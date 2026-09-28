@@ -96,22 +96,8 @@ func run() -> void:
 	game.hud._refs.island_unlock.pressed.emit()
 	check(game.state.island2_unlocked and not game.hud._refs["travel:2:unlock"].visible and not game.hud._refs["travel:2"].disabled, "unlock replaces requirements with an available travel action")
 	game.hud.show_panel("inventory", game.state)
-	game.hud._act("inventory_tab:gear")
-	await inspect("empty-loadout")
-	for item: String in ["straw_hat", "farmer_shirt", "farmer_pants", "farmer_boots", "harvest_gloves", "market_monocle", "investor_shirt", "scientist_coat", "aurora_crown"]:
-		game.state._grant_item(item)
-	game.builds.active = "farmer"
-	game.hud.show_panel("inventory", game.state)
-	game.hud._act("inventory_tab:gear")
-	check(game.hud._refs.equipment_matching.text.contains("3 matching"), "summary counts matching equipped pieces")
-	await inspect("loadout")
-	check(scroll_rect().encloses(game.hud._refs.equipment_totals.get_global_rect()), "gear totals are visible beside the character without scrolling")
-	game.hud._refs["item:investor_shirt:action"].pressed.emit()
-	check(game.hud._refs.equipment_matching.text.contains("2 matching") and game.hud._refs["item:investor_shirt:status"].text == "Equipped", "gear card action refreshes both loadout summary and owned cards")
-	var scroll: ScrollContainer = game.hud._body.get_parent()
-	await settle()
-	scroll.scroll_vertical = 510
-	await inspect("owned-gear")
+	game.hud._act("inventory_tab:tools")
+	await inspect("tools")
 	root.size = Vector2i(960, 600)
 	for kind: String in ["builds", "quests", "tracked_prices", "duck_patrol", "inventory", "island"]:
 		game.hud.show_panel(kind, game.state)

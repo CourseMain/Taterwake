@@ -75,7 +75,7 @@ func _run() -> void:
 		key(KEY_1 + ((index + 1) % tools.size()))
 		check(game.selected_tool == tools[(index + 1) % tools.size()], "keyboard equips matching numbered slot")
 	for entry in game.state.inventory_info():
-		check(entry.kind != "tool", "tools cannot leak into main inventory")
+		check(entry.kind in ["seed", "crop", "tool"], "inventory contains only crops and tools")
 	game._on_action("tracked_prices")
 	await settle()
 	var tracked_toggle: CheckButton
@@ -130,13 +130,11 @@ func _run() -> void:
 	await shot("market-green-flash")
 	spike(0.0)
 	check(game.surge_band == 0, "effects stop when the selected quote returns to ordinary levels")
-	game.state._grant_item("aurora")
-	game.state._grant_item("sunstone")
 	game.state.storage.russet = 20
 	game._on_action("inventory")
 	await shot("illustrated-inventory-crops")
-	press("inventory_tab:items")
-	await shot("illustrated-inventory-items")
+	press("inventory_tab:tools")
+	await shot("illustrated-inventory-tools")
 	for id in game.builds.IDS:
 		game.builds.levels[id] = 8
 	key(KEY_C)

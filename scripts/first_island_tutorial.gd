@@ -14,7 +14,7 @@ const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
 	{"id": "market", "title": "Seed market", "body": "Click the market to browse. Seeds follow crop prices, so buying during a boom is expensive.", "focus": "market"},
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
-	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect crops, equipment and builds. Clothing helps only while equipped."},
+	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
 	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose a build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},

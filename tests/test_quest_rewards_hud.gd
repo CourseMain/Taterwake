@@ -27,12 +27,9 @@ func run() -> void:
 		for quest: Dictionary in game.state.quest_info():
 			var card: Control = game.hud._refs["quest:"+quest.id+":card"]
 			var cash: Label
-			var artifact_visible := str(quest.item).is_empty()
 			for label: Node in card.find_children("*","Label",true,false):
 				if label.text == game.state.money(quest.coins): cash = label
-				if not str(quest.item).is_empty() and label.text == str(game.state.ITEM_CATALOG[quest.item].name): artifact_visible = true
 			check(is_instance_valid(cash) and cash.size.x >= 120 and cash.size.y < 80,"cash stays a readable amount: "+quest.id)
-			check(artifact_visible,"every advertised artifact appears: "+quest.id)
 			var claim: Button = game.hud._refs["quest:"+quest.id]
 			scroll.ensure_control_visible(claim)
 			await settle()

@@ -4,7 +4,6 @@ var item: Dictionary = {}
 const INK: Color = Color("30463a")
 const LEAF: Color = Color("5e7b50")
 const CROP: Dictionary = {"russet": Color("dfb36f"), "golden": Color("f5cc38"), "giant": Color("d7a37b"), "radioactive": Color("afff48"), "sunburst": Color("ffa629"), "icecap": Color("d8f1ff")}
-const GEAR_CATALOG: Dictionary = preload("res://scripts/game_state.gd").ITEM_CATALOG
 
 func _ready() -> void:
 	if custom_minimum_size == Vector2.ZERO:
@@ -40,10 +39,8 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
 		"metric": _metric(c, id)
-		"tool": _tool(c, str(data.get("tool", id)))
+		"tool": _tool(c, str(data.get("tool", id.trim_prefix("tool:"))))
 		"build": _build(c, str(data.get("build_id", id.trim_prefix("build:"))))
-		"gear": _gear(c, id.trim_prefix("gear:"), data)
-		"slot": _slot(c, id)
 		"activity": _activity(c, id)
 		"empty":
 			_poly(c, [Vector2(-17, -22), Vector2(-30, 18), Vector2(-22, 36), Vector2(22, 36), Vector2(30, 18), Vector2(17, -22)], Color("b5a792"))
@@ -58,28 +55,12 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_rect(Rect2(15, 18, 15, 12), Color("788167"))
 			for y: int in [20, 26]: c.draw_line(Vector2(13, y), Vector2(18, y + 2), Color("f4e6bd"), 1.5, true)
 		"crop": _potato(c, crop, Vector2.ZERO, 1.0)
-		"mutation":
-			_potato(c, crop, Vector2.ZERO, 0.8)
-			match id.get_slice(":", 2):
-				"golden":
-					_poly(c, [Vector2(-29, -19), Vector2(-31, -39), Vector2(-14, -30), Vector2(0, -46), Vector2(14, -30), Vector2(31, -39), Vector2(29, -19)], Color("f3cd51"))
-					_spark(c, Vector2(30, 19), Color("fff1b8"), 10)
-				"crystal":
-					for x: int in [-24, 0, 24]: _poly(c, [Vector2(x - 9, 21), Vector2(x - 11, -13), Vector2(x, -32), Vector2(x + 10, -13), Vector2(x + 7, 21)], Color("a9d4eb") if x != 0 else Color("d6edff"))
-				"rainbow":
-					for index: int in range(5): c.draw_arc(Vector2(0, 14), 25 + index * 4, PI, TAU, 30, [Color("e37674"), Color("e9b657"), Color("98bf73"), Color("69acc7"), Color("a880cd")][index], 4, true)
-				"radioactive":
-					_poly(c, [Vector2(0, -36), Vector2(36, 27), Vector2(-36, 27)], Color("d9e867"))
-					c.draw_circle(Vector2(0, 9), 6, INK)
-					for index: int in range(3):
-						var angle: float = index * TAU / 3.0
-						_poly(c, [Vector2(0, 9) + Vector2.from_angle(angle) * 9, Vector2(0, 9) + Vector2.from_angle(angle + 0.3) * 23, Vector2(0, 9) + Vector2.from_angle(angle + 1.1) * 23], INK)
 		"processed":
 			c.draw_rect(Rect2(-35, -12, 70, 48), Color("ab764d"))
 			for x: int in [-22, 0, 22]: _potato(c, crop, Vector2(x, -13), 0.42)
 			for y: int in [4, 20]: c.draw_line(Vector2(-35, y), Vector2(35, y), Color("d7ad74"), 5, true)
 			_spark(c, Vector2(29, -37), Color("f2bd45"), 7)
-		_: _collectible(c, id)
+		_: _symbol(c, id)
 	c.draw_set_transform(Vector2.ZERO)
 
 static func _box(color: Color, radius: int) -> StyleBoxFlat:
@@ -260,92 +241,29 @@ static func _build(c: CanvasItem, id: String) -> void:
 			for x: int in [-21, -2, 17]: c.draw_rect(Rect2(x, 8, 11, 13), Color("f4d880"))
 			for p: Vector2 in [Vector2(29, -40), Vector2(19, -48)]: c.draw_circle(p, 7, Color("b8bdb0"))
 
-static func _collectible(c: CanvasItem, id: String) -> void:
+static func _symbol(c: CanvasItem, id: String) -> void:
 	match id:
-		"sunstone":
-			for index: int in range(8):
-				var direction: Vector2 = Vector2.from_angle(index * TAU / 8.0)
-				c.draw_line(direction * 29, direction * 40, Color("e7a42f"), 5, true)
-			c.draw_circle(Vector2.ZERO, 26, Color("f2c553"))
-			_spark(c, Vector2.ZERO, Color("fff2b2"), 18)
-		"almanac":
+		"book":
 			c.draw_style_box(_box(Color("5e8b62"), 4), Rect2(-29, -37, 58, 75))
 			c.draw_rect(Rect2(-25, 27, 50, 8), Color("fff3d2"))
 			c.draw_line(Vector2(-18, -33), Vector2(-18, 22), Color("a9bb80"), 3, true)
 			_spark(c, Vector2(5, -5), Color("e3c468"), 20)
-		"lens":
+		"magnify":
 			c.draw_line(Vector2(10, 12), Vector2(33, 37), Color("845a40"), 10, true)
 			c.draw_circle(Vector2(-7, -7), 27, Color("588594"))
 			c.draw_circle(Vector2(-7, -7), 21, Color("99d1d7"))
 			c.draw_arc(Vector2(-7, -7), 14, -2.7, -1.0, 14, Color("e4fcf2"), 4, true)
-		"winter_weave":
-			_poly(c, [Vector2(-30, -25), Vector2(27, -31), Vector2(33, -6), Vector2(5, 2), Vector2(15, 35), Vector2(-10, 38), Vector2(-21, 5)], Color("629cba"))
-			for y: int in [-16, -4, 10, 24]: c.draw_line(Vector2(-16, y), Vector2(8, y - 3), Color("e1f1ee"), 5, true)
-		"trader_token":
+		"market":
 			c.draw_circle(Vector2.ZERO, 34, Color("c49337"))
 			c.draw_circle(Vector2.ZERO, 27, Color("edce73"))
 			c.draw_line(Vector2(-18, 14), Vector2(15, -17), INK, 6, true)
 			_poly(c, [Vector2(3, -17), Vector2(17, -20), Vector2(17, -5)], INK)
-		"aurora":
-			for index: int in range(4): c.draw_arc(Vector2(0, 18), 16 + index * 8, PI, TAU, 28, [Color("78cdbd"), Color("80bedd"), Color("9b8cdd"), Color("dea5d4")][index], 7, true)
-			_spark(c, Vector2(0, 17), Color("fff4cf"), 12)
 		"compass":
 			c.draw_circle(Vector2.ZERO, 34, Color("c59b4a"))
 			c.draw_circle(Vector2.ZERO, 27, Color("ecedd7"))
 			_poly(c, [Vector2(-9, 7), Vector2(13, -25), Vector2(9, -7)], Color("bf6953"))
 			_poly(c, [Vector2(9, -7), Vector2(-13, 25), Vector2(-9, 7)], Color("597d80"))
-		"bottomless_sack":
-			c.draw_circle(Vector2(0, 10), 32, Color("a389ba"))
-			_poly(c, [Vector2(-13, -14), Vector2(-21, -36), Vector2(21, -36), Vector2(13, -14)], Color("a389ba"))
-			c.draw_line(Vector2(-17, -15), Vector2(17, -15), Color("e9c46b"), 5, true)
-			c.draw_arc(Vector2(-9, 10), 11, 0, TAU, 20, Color("f7efc9"), 3, true)
-			c.draw_arc(Vector2(9, 10), 11, 0, TAU, 20, Color("f7efc9"), 3, true)
 		_: _spark(c, Vector2.ZERO, Color("d1ac52"), 31)
-
-static func _gear(c: CanvasItem, id: String, data: Dictionary = {}) -> void:
-	var appearance: Dictionary = GEAR_CATALOG.get(id, {}).duplicate(true)
-	appearance.merge(data, true)
-	if id.ends_with("_shirt") or id.ends_with("_coat") or id.ends_with("_overalls") or id.ends_with("_pants") or id.ends_with("_boots") or id.ends_with("_shoes"):
-		_garment(c, id, appearance)
-		return
-	match id:
-		"straw_hat", "patchwork_cap", "traders_visor", "prospectors_hat", "aurora_crown":
-			var colors: Dictionary = {"straw_hat": Color("e4bd66"), "patchwork_cap": Color("699d70"), "traders_visor": Color("699fba"), "prospectors_hat": Color("df9b42"), "aurora_crown": Color("a2dced")}
-			var color: Color = Color(str(appearance.color)) if appearance.has("color") else colors[id]
-			if id == "aurora_crown":
-				_poly(c, [Vector2(-33, 19), Vector2(-38, -28), Vector2(-19, -9), Vector2(0, -40), Vector2(19, -9), Vector2(38, -28), Vector2(33, 19)], color)
-				c.draw_rect(Rect2(-33, 12, 66, 14), Color("aa8acd"))
-				for x: int in [-20, 0, 20]: _spark(c, Vector2(x, 4), Color("eaffff"), 6)
-			elif id == "traders_visor":
-				c.draw_arc(Vector2(0, 8), 28, PI, TAU, 24, color, 14, true)
-				_poly(c, [Vector2(-30, 0), Vector2(32, 0), Vector2(44, 21), Vector2(-23, 21)], color.lightened(0.15))
-				c.draw_polyline(PackedVector2Array([Vector2(-16, -5), Vector2(-6, -15), Vector2(2, -8), Vector2(17, -23)]), Color("f2dc88"), 4, true)
-			else:
-				c.draw_style_box(_box(color.darkened(0.12), 12), Rect2(-42, 9, 84, 20))
-				c.draw_style_box(_box(color, 12), Rect2(-26, -26, 52, 49))
-				c.draw_rect(Rect2(-26, 6, 52, 10), Color("66583f"))
-				if id == "prospectors_hat":
-					c.draw_circle(Vector2(0, -4), 13, Color("786f67"))
-					c.draw_circle(Vector2(0, -4), 9, Color("fff4b0"))
-				elif id == "patchwork_cap":
-					for offset: Vector2 in [Vector2(-5, -12), Vector2(5, -12), Vector2(-5, -3), Vector2(5, -3)]: c.draw_circle(offset, 6, Color("c4e497"))
-				else:
-					for x: int in [-15, 0, 15]: c.draw_line(Vector2(x, -18), Vector2(x, 1), color.lightened(0.2), 2, true)
-		"harvest_gloves":
-			for side: int in [-1, 1]:
-				c.draw_style_box(_box(Color("ae8057"), 6), Rect2(side * 18 - 14, -6, 28, 39))
-				for finger: int in range(3): c.draw_line(Vector2(side * 18 - 9 + finger * 9, 0), Vector2(side * 18 - 9 + finger * 9, -26 - (4 if finger == 1 else 0)), Color("d2a674"), 8, true)
-				c.draw_line(Vector2(side * 18, 13), Vector2(side * 37, -4), Color("d2a674"), 10, true)
-				c.draw_rect(Rect2(side * 18 - 14, 24, 28, 10), LEAF)
-		"market_monocle":
-			c.draw_arc(Vector2(17, 13), 26, -0.7, PI * 0.75, 28, Color("d9b757"), 3, true)
-			c.draw_circle(Vector2(-6, -10), 27, Color("ddb44f"))
-			c.draw_circle(Vector2(-6, -10), 21, Color("98c9c7"))
-			c.draw_polyline(PackedVector2Array([Vector2(-20, 0), Vector2(-9, -10), Vector2(-2, -5), Vector2(9, -22)]), Color("fff4bf"), 4, true)
-		"loaded_dice":
-			_build(c, "gambler")
-			_spark(c, Vector2(27, -36), Color("efb0f5"), 14)
-		_: _collectible(c, id)
 
 static func _activity(c: CanvasItem, id: String) -> void:
 	match id:
@@ -377,63 +295,3 @@ static func _activity(c: CanvasItem, id: String) -> void:
 			_poly(c, [Vector2(-16, 22), Vector2(-8, 0), Vector2(0, 9), Vector2(9, -10), Vector2(16, 22)], Color("f3a347"))
 			_poly(c, [Vector2(-7, 23), Vector2(0, 8), Vector2(8, 23)], Color("fff0a9"))
 		_: _spark(c, Vector2.ZERO, Color("d1ac52"), 31)
-
-static func _garment(c: CanvasItem, id: String, data: Dictionary = {}) -> void:
-	var role: String = str(data.get("role", id.get_slice("_", 0)))
-	var colors: Dictionary = {"farmer": "75bc60", "gambler": "b776ec", "investor": "ecc15e", "scientist": "6fdbdc", "industrialist": "f39858"}
-	var color: Color = Color(str(data.get("color", colors.get(role, "97aaa1"))))
-	var trim: Color = color.darkened(0.37)
-	if id.ends_with("_pants"):
-		_poly(c, [Vector2(-27, -32), Vector2(27, -32), Vector2(30, 35), Vector2(6, 35), Vector2(0, -2), Vector2(-6, 35), Vector2(-30, 35)], color)
-		c.draw_rect(Rect2(-27, -32, 54, 10), trim)
-		c.draw_rect(Rect2(-5, -31, 10, 8), Color("edcc79"))
-		for side: int in [-1, 1]:
-			c.draw_rect(Rect2(side * 16 - 8, 5, 16, 10), trim.lightened(0.2))
-			c.draw_line(Vector2(side * 22, -18), Vector2(side * 23, 29), color.lightened(0.16), 2, true)
-	elif id.ends_with("_boots") or id.ends_with("_shoes"):
-		for side: int in [-1, 1]:
-			var x: int = side * 21
-			c.draw_style_box(_box(color, 4), Rect2(x - 13, -29 if id.ends_with("_boots") else -12, 24, 54 if id.ends_with("_boots") else 37))
-			c.draw_style_box(_box(color.lightened(0.09), 5), Rect2(x - 17, 7, 34, 25))
-			c.draw_rect(Rect2(x - 17, 29, 34, 7), trim)
-			for y: int in [-4, 3, 10]: c.draw_line(Vector2(x - 6, y), Vector2(x + 6, y), Color("f6e2b8"), 3, true)
-	else:
-		_poly(c, [Vector2(-15, -31), Vector2(-30, -25), Vector2(-44, -2), Vector2(-29, 10), Vector2(-21, -2), Vector2(-23, 35), Vector2(23, 35), Vector2(21, -2), Vector2(29, 10), Vector2(44, -2), Vector2(30, -25), Vector2(15, -31)], color)
-		_poly(c, [Vector2(-15, -31), Vector2(0, -17), Vector2(15, -31)], Color("e6dfcb"))
-		c.draw_line(Vector2(0, -17), Vector2(0, 34), trim, 3, true)
-		for x: int in [-13, 13]: c.draw_rect(Rect2(x - 6, 8, 12, 12), color.darkened(0.13))
-		match role:
-			"farmer":
-				c.draw_line(Vector2(-13, -22), Vector2(-13, 29), Color("edce81"), 5, true)
-				c.draw_line(Vector2(13, -22), Vector2(13, 29), Color("edce81"), 5, true)
-			"gambler": _poly(c, [Vector2(0, -8), Vector2(10, 3), Vector2(0, 14), Vector2(-10, 3)], Color("f4d98b"))
-			"investor":
-				_poly(c, [Vector2(-5, -14), Vector2(5, -14), Vector2(8, 16), Vector2(0, 24), Vector2(-8, 16)], Color("456873"))
-			"scientist":
-				c.draw_rect(Rect2(8, 6, 12, 17), Color("d9faf0"))
-				c.draw_line(Vector2(12, 1), Vector2(12, 15), Color("8c70b2"), 3, true)
-			"industrialist":
-				c.draw_rect(Rect2(-18, 22, 36, 8), Color("536374"))
-				for x: int in [-10, 10]: c.draw_circle(Vector2(x, -2), 3, Color("ffe4a1"))
-
-static func _slot(c: CanvasItem, id: String) -> void:
-	var color: Color = Color("a7b0a4")
-	match id:
-		"head":
-			c.draw_style_box(_box(color, 7), Rect2(-24, -22, 48, 37))
-			c.draw_style_box(_box(color, 7), Rect2(-35, 9, 70, 16))
-		"body":
-			_poly(c, [Vector2(-13, -27), Vector2(-31, -22), Vector2(-39, -3), Vector2(-25, 7), Vector2(-18, -1), Vector2(-18, 31), Vector2(18, 31), Vector2(18, -1), Vector2(25, 7), Vector2(39, -3), Vector2(31, -22), Vector2(13, -27)], color)
-		"legs":
-			_poly(c, [Vector2(-23, -28), Vector2(23, -28), Vector2(25, 32), Vector2(5, 32), Vector2(0, 0), Vector2(-5, 32), Vector2(-25, 32)], color)
-		"feet":
-			for x: int in [-20, 20]:
-				c.draw_style_box(_box(color, 4), Rect2(x - 10, -24, 22, 46))
-				c.draw_style_box(_box(color, 4), Rect2(x - 16, 10, 32, 20))
-		"hands":
-			for x: int in [-18, 18]:
-				c.draw_style_box(_box(color, 6), Rect2(x - 12, -13, 24, 40))
-				for offset: int in [-7, 0, 7]: c.draw_line(Vector2(x + offset, -4), Vector2(x + offset, -27), color, 6, true)
-		"charm":
-			c.draw_arc(Vector2(0, -8), 26, PI, TAU * 1.1, 30, color, 4, true)
-			_spark(c, Vector2(0, 15), color, 23)

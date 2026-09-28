@@ -45,20 +45,10 @@ func run() -> void:
 	check(state.debug_info().active and state.debug_islands_modified, "debug progression records debug access")
 	state.reset_debug()
 	check(state.debug_info().active, "reset debug does not erase debug progression history")
-	state.inventory_items.patchwork_cap = 1
-	state.equipment.head = "patchwork_cap"
 	state.apply_debug(1.0)
 	(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = 520
 	await shot("debug-islands")
 	game._on_action("dex")
-	check(game.hud._dex_tab == "mutations", "Dex starts with special potato illustrations")
-	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 4, "each special mutation has a picture")
-	check(game.hud._refs["dex_status:golden"].text.contains("NOT DISCOVERED"), "preview does not invent discoveries")
-	await shot("dex-mutations")
-	state.dex.append("golden")
-	game.hud.update_state(state)
-	check(game.hud._refs["dex_status:golden"].text == "DISCOVERED", "discovery state refreshes without reopening")
-	game.hud._act("dex_tab:crops")
 	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 6, "crop tab illustrates all six varieties")
 	check(game.hud._refs["dex_status:sunburst"].text.contains("55s") and game.hud._refs["dex_status:icecap"].text.contains("60s"), "Dex shows later-island growth and home")
 	await shot("dex-crops")

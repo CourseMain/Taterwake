@@ -105,10 +105,9 @@ func _run() -> void:
 	for index in range(5):
 		game.perform_plot(index, "harvest")
 	check(game.state.quest_progress.sunburst > 0 and game.state.quest_progress.sunburst < 10000, "first harvest progresses a longer farming quest")
-	check(game.state.quest_progress.mutation == 1 and game.state.shores_first_mutation, "first manual Sunburst harvest produces the Golden discovery")
-	check(game.state.coins == before_ground + 200000000.0, "one discovery no longer grants an immediate eight-figure windfall")
+	check(game.state.coins == before_ground + 200000000.0, "harvesting crops does not grant quest cash before claiming")
 	game._on_action("quests")
-	check((button("quest:sunburst") == null or button("quest:sunburst").disabled) and (button("quest:mutation") == null or button("quest:mutation").disabled), "larger quest goals cannot be claimed from one starter harvest")
+	check((button("quest:sunburst") == null or button("quest:sunburst").disabled), "larger quest goals cannot be claimed from one starter harvest")
 	await shot("golden-shores-quests")
 	await process_frame
 	check(game.hud._reward_box.size.x <= game.hud.root.size.x * 0.25 and game.hud.root.get_global_rect().encloses(game.hud._reward_box.get_global_rect()), "reward notices remain compact")
@@ -163,12 +162,9 @@ func _run() -> void:
 	press("quest:export")
 	# Complete long challenge counters as a fixture; simulation tests verify their accounting.
 	game.state.quest_progress.sunburst = 10000
-	game.state.quest_progress.mutation = 3
 	game._on_state_changed()
 	press("quest:sunburst")
-	press("quest:mutation")
-	check(game.state.quest_claimed.size() == 5, "all five completed quests can be claimed through their buttons")
-	check(game.state.golden_hat and game.world._golden_hat, "claimed cosmetic reaches the visible farmer")
+	check(game.state.quest_claimed.size() == 4, "all four completed quests can be claimed through their buttons")
 	game.hud.close_panel()
 	# Verify away-farm growth, cancellation of queued work, and collision cleanup.
 	game.state.plots[47].merge({"crop": "sunburst", "stage": 1, "watered": true, "tilled": true, "elapsed": 0.0, "pending": 0}, true)
@@ -196,7 +192,7 @@ func _run() -> void:
 	check(game.state.load_game(SAVE), "saved second island reloads")
 	await settle_world()
 	check(game.world.current_island == 2 and game.world.plot_positions.size() == 48, "loading rebuilds the saved island")
-	check(game.state.quest_claimed.size() == 5 and game.state.golden_hat, "reload preserves rewards without duplicating claims")
+	check(game.state.quest_claimed.size() == 4, "reload preserves rewards without duplicating claims")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	game.queue_free()
 	await process_frame

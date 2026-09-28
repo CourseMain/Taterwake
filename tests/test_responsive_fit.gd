@@ -107,10 +107,10 @@ func run() -> void:
 			await settle()
 			check_menu("unlocked debug controls")
 		if kind == "inventory":
-			game.hud._act("inventory_tab:gear")
+			game.hud._act("inventory_tab:tools")
 			await settle()
-			check_menu("equipped gear")
-			await shot("portrait-inventory")
+			check_menu("tool shelf")
+			await shot("tools-inventory")
 	game.queue_free()
 	await process_frame
 	print("RESPONSIVE FIT: %d checks, %d failures" % [checks, failures])

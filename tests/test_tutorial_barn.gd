@@ -33,11 +33,11 @@ func walk_plot(tool: String) -> void:
 		if not game.walking: break
 
 func check_crops() -> void:
-	check(game.hud._inventory_tab == "crops", "lesson opens crops instead of remembered Gear")
+	check(game.hud._inventory_tab == "crops", "lesson opens crops instead of remembered Tools")
 	check(game.hud._inventory_sections.crops.is_visible_in_tree(), "crop crates visible")
-	check(not game.hud._inventory_sections.gear.is_visible_in_tree(), "gear loadout hidden")
+	check(not game.hud._inventory_sections.tools.is_visible_in_tree(), "tools loadout hidden")
 	check(button("inventory_tab:crops") != null and not button("inventory_tab:crops").disabled, "crop tab stays usable")
-	check(button("inventory_tab:gear").disabled, "unrelated gear stays locked during lesson")
+	check(button("inventory_tab:tools").disabled, "unrelated tools stays locked during lesson")
 	check(game.tutorial.allows_action("inventory_tab:crops"), "controller permits crop tab")
 	check(button("sell:russet:-1") != null and not button("sell:russet:-1").disabled, "harvest sale available")
 
@@ -59,10 +59,10 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.hud.show_panel("barn", game.state)
-	press("inventory_tab:gear")
+	press("inventory_tab:tools")
 	game.hud.close_panel()
 	game.hud.show_panel("barn", game.state)
-	check(game.hud._inventory_tab == "gear", "ordinary barn preserves selected Gear")
+	check(game.hud._inventory_tab == "tools", "ordinary barn preserves selected Tools")
 	game.tutorial.start()
 	press("tutorial:next")
 	game._on_action("market")
@@ -79,19 +79,19 @@ func run() -> void:
 	await settle()
 	check_crops()
 	# A previously open/stale tab must also recover when guide state refreshes.
-	game.hud._inventory_tab = "gear"
+	game.hud._inventory_tab = "tools"
 	game.hud._set_inventory_tab()
 	game.tutorial.refresh()
 	check_crops()
 	# The enabled crop tab gives a direct escape without closing the barn.
-	game.hud._inventory_tab = "gear"
+	game.hud._inventory_tab = "tools"
 	game.hud._set_inventory_tab()
 	press("inventory_tab:crops")
 	check_crops()
 	sell_harvest()
 	# Existing saves resume at the sale; no tutorial restart or lost crop.
 	check(game.state.load_game(path), "reload unfinished first sale")
-	game.hud._inventory_tab = "gear"
+	game.hud._inventory_tab = "tools"
 	game.tutorial.start()
 	check(game.tutorial.current_id() == "sell", "saved guide resumes first sale")
 	game._on_action("barn")
@@ -99,10 +99,10 @@ func run() -> void:
 	check_crops()
 	sell_harvest()
 	game.hud.show_panel("barn", game.state)
-	press("inventory_tab:gear")
+	press("inventory_tab:tools")
 	game.tutorial.start(true)
 	game._on_action("barn")
-	check(game.hud._inventory_tab == "gear" and not button("inventory_tab:crops").disabled, "optional tour preserves free tab browsing")
+	check(game.hud._inventory_tab == "tools" and not button("inventory_tab:crops").disabled, "optional tour preserves free tab browsing")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	game.queue_free()
 	await process_frame

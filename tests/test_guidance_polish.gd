@@ -96,10 +96,10 @@ func run() -> void:
 	game._on_action("activities")
 	await shot("buyer-choices")
 	var shop_scroll: Control = game.hud._body.get_parent()
-	for kind: String in ["bulk", "mutation"]:
-		check(shop_scroll.get_global_rect().encloses(game.hud._refs["activity:contract:" + kind].get_global_rect()), "both buyer choice buttons fit without scrolling")
-	check(game.hud._refs.contract_choices.visible and not game.hud._refs.contract_delivery.visible, "buyer starts with two offers, no irrelevant delivery form")
-	check(game.activities.contract_offer("bulk").target == 400 and game.activities.contract_offer("mutation").target == 1, "choices preview their real requirements")
+	for kind: String in ["bulk"]:
+		check(shop_scroll.get_global_rect().encloses(game.hud._refs["activity:contract:" + kind].get_global_rect()), "buyer order button fit without scrolling")
+	check(game.hud._refs.contract_choices.visible and not game.hud._refs.contract_delivery.visible, "buyer starts with an offer, no irrelevant delivery form")
+	check(game.activities.contract_offer("bulk").target == 400, "choices preview their real requirements")
 	press("activity:contract:bulk")
 	check(not game.hud._refs.contract_choices.visible and game.hud._refs.contract_delivery.visible, "accepted offer changes to delivery view")
 	var balance: float = game.state.coins

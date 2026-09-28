@@ -215,14 +215,14 @@ func _build_barn() -> void:
 	_ledger_trade = _button("Sell potatoes", "sell_potatoes", GREEN, true)
 	tally.add_child(_ledger_trade)
 	_tabs = GridContainer.new()
-	_tabs.columns = 4
+	_tabs.columns = 2
 	_tabs.add_theme_constant_override("h_separation", 6)
 	_tabs.add_theme_constant_override("v_separation", 6)
 	add_child(_tabs)
 	hud._panel_crops = hud._known_crops()
 	hud._inventory_sections.clear()
-	var section_names := {"crops": "Crops & seeds", "gear": "Gear", "items": "Items & mutations", "builds": "Builds"}
-	for section: String in ["crops", "gear", "items", "builds"]:
+	var section_names := {"crops": "Crops & seeds", "tools": "Tools"}
+	for section: String in ["crops", "tools"]:
 		var tab := _button(section_names[section], "inventory_tab:" + section)
 		tab.pressed.connect(refresh.call_deferred)
 		_tabs.add_child(tab)
@@ -231,22 +231,16 @@ func _build_barn() -> void:
 		hud._inventory_sections[section] = column
 		add_child(column)
 		column.visibility_changed.connect(refresh.call_deferred)
-	# The familiar equipment controls keep their slots and turnable farmer.
-	hud._build_equipment_header(hud._inventory_sections.gear)
-	var gear_grid := _grid(hud._inventory_sections.gear)
 	var shelves: Dictionary = {}
-	for section: String in ["crops", "items", "builds"]:
+	for section: String in ["crops", "tools"]:
 		var shelf := _timber(hud._inventory_sections[section], section.capitalize() + "BarnShelf", 0, true)
 		shelves[section] = _grid(shelf)
 	var entries: Array[Dictionary] = hud._inventory_data()
 	hud._inventory_signature = hud._inventory_id_string(entries)
 	for entry: Dictionary in entries:
 		var id: String = str(entry.get("id", ""))
-		var kind: String = str(entry.get("kind", "relic"))
-		if kind == "gear":
-			hud._build_gear_card(gear_grid, entry)
-			continue
-		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build"] else "items")
+		var kind: String = str(entry.get("kind", "crop"))
+		var section: String = "tools" if kind == "tool" else "crops"
 		var shelf: GridContainer = shelves[section]
 		var bin := _timber(shelf, "BarnBin" + str(shelf.get_child_count()), shelf.get_child_count())
 		var contents: VBoxContainer = hud._vbox(7)
@@ -280,18 +274,15 @@ func _build_barn() -> void:
 		hud._refs["item:" + id + ":detail"] = detail
 		var action: String = str(entry.get("action", ""))
 		if kind == "crop": action = "sell:" + str(entry.get("crop", "russet")) + ":-1"
-		elif kind == "processed" and action in ["", "sell"]: action = "build:sell_processed"
 		if not action.is_empty():
-			var button := _button("Select", action, GREEN if kind in ["crop", "processed", "mutation"] else HONEY, kind == "crop")
+			var button := _button("Select", action, GREEN if kind in ["crop"] else HONEY, kind == "crop")
 			contents.add_child(button)
 			hud._refs["item:" + id + ":action"] = button
-	for section: String in ["crops", "items", "builds"]:
+	for section: String in ["crops", "tools"]:
 		if shelves[section].get_child_count() == 0:
 			shelves[section].get_parent().hide()
-			var empty: String = {"crops": "No crops or seeds.", "items": "No items.", "builds": "No builds."}[section]
+			var empty: String = {"crops": "No crops or seeds.", "tools": "No tools."}[section]
 			hud._inventory_sections[section].add_child(_label(empty, 14, CHALK))
-	if gear_grid.get_child_count() == 0:
-		hud._inventory_sections.gear.add_child(_label("No spare gear.", 14, CHALK))
 	var upgrade := _timber(self, "BarnExtensionPlan")
 	move_child(upgrade, 1)
 	hud._refs["upgrade:barn:card"] = upgrade
@@ -310,11 +301,6 @@ func _build_barn() -> void:
 	expand.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	extension_row.add_child(expand)
 	hud._refs["upgrade:barn"] = expand
-	var sell_mutations := _button("Sell all mutation crates", "sell_mutations", GREEN, true)
-	hud._inventory_sections.items.add_child(sell_mutations)
-	hud._refs.sell_mutations = sell_mutations
-	hud._set_inventory_tab()
-	_tint_equipment()
 
 func refresh() -> void:
 	if not is_inside_tree() or is_queued_for_deletion() or not is_instance_valid(hud) or not is_instance_valid(hud._state): return
@@ -331,8 +317,7 @@ func refresh() -> void:
 	_ledger.capacity.text = hud._number(float(hud._state.capacity))
 	_capacity.max_value = maxf(1.0, float(hud._state.capacity))
 	_capacity.value = float(hud._state.storage_used())
-	# Gear needs room for the farmer and worn-slot totals. Keep the tally and
-	# expansion nearby, and save the full crop ledger for the crop shelves.
+	# Show the crop ledger beside the crop shelves.
 	var crop_shelves: bool = hud._inventory_tab == "crops"
 	_capacity.visible = crop_shelves
 	_ledger_trade.visible = crop_shelves
@@ -344,31 +329,7 @@ func refresh() -> void:
 		if _item_quantities.has(id):
 			_item_quantities[id].text = hud._number(float(entry.get("count", 0)))
 			hud._refs["item:" + id + ":title"].text = str(entry.get("name", ""))
-		if str(entry.get("kind", "")) != "gear": continue
-		var key: String = "item:" + str(entry.id)
-		var card: PanelContainer = hud._refs.get(key + ":card")
-		if card == null: continue
-		var skin: StyleBoxFlat = hud.Cozy.box(_card_color(), 16, 3, Color("795438"))
-		card.add_theme_stylebox_override("panel", skin)
-		_style_button(hud._refs[key + ":action"], HONEY, not bool(entry.get("equipped", false)))
-	_tint_equipment()
 	_layout.call_deferred()
-
-func _tint_equipment() -> void:
-	var gear: Control = hud._inventory_sections.gear
-	for panel: Node in gear.find_children("*", "PanelContainer", true, false):
-		panel.add_theme_stylebox_override("panel", hud.Cozy.box(_card_color(), 16, 3, Color("795438")))
-	for label: Node in gear.find_children("*", "Label", true, false):
-		var within_card := false
-		var ancestor: Node = label.get_parent()
-		while ancestor != gear:
-			if ancestor is PanelContainer: within_card = true; break
-			ancestor = ancestor.get_parent()
-		label.add_theme_color_override("font_color", INK if within_card else CHALK)
-		if label.has_theme_stylebox_override("normal"):
-			label.add_theme_stylebox_override("normal", hud.Cozy.box(HONEY, 7, 2, Color("9b7445")))
-	for slot: String in ["head", "body", "legs", "feet", "hands", "charm"]:
-		_style_button(hud._refs["equipment:" + slot])
 
 func _layout() -> void:
 	if not is_inside_tree() or is_queued_for_deletion() or not is_instance_valid(hud): return
@@ -376,14 +337,9 @@ func _layout() -> void:
 	for grid: GridContainer in _grids:
 		grid.columns = 1 if grid.get_child_count() <= 1 or size.x < (610 if touch else 560) else 2
 	if barn:
-		_tabs.columns = 2 if size.x < 700 else 4
+		_tabs.columns = 2
 		hud._refs["upgrade:barn:card"].get_child(0).vertical = size.x < 560
 		hud._refs["upgrade:barn"].size_flags_horizontal = Control.SIZE_EXPAND_FILL if size.x < 560 else Control.SIZE_SHRINK_END
-		if touch: hud.get_parent().touch_controls.adapt(hud._inventory_sections.gear, size.x, true)
-		for slot: String in ["head", "body", "legs", "feet", "hands", "charm"]:
-			var equipment_button: Button = hud._refs["equipment:" + slot]
-			var contents: Control = equipment_button.get_child(0)
-			equipment_button.custom_minimum_size.y = maxf(78, contents.get_combined_minimum_size().y + 14)
 	for button: Node in find_children("*", "Button", true, false):
 		button.add_theme_font_override("font", _body_font)
 		button.custom_minimum_size.y = maxf(68 if touch else 46, button.custom_minimum_size.y)

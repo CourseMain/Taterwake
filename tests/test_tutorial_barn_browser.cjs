@@ -17,10 +17,10 @@ const fs = require('node:fs');
   await page.evaluate(() => window.mobileQA('tutorial_sale'));
   await page.waitForTimeout(800);
   const before = await report();
-  assert.equal(before.tutorial.tab, 'crops', 'remembered Gear redirects to crops');
+  assert.equal(before.tutorial.tab, 'crops', 'remembered Tools redirects to crops');
   assert.equal(before.tutorial.active, true);
   assert.equal(before.buttons.find(b => b.action === 'inventory_tab:crops').disabled, false);
-  assert.equal(before.buttons.find(b => b.action === 'inventory_tab:gear').disabled, true);
+  assert.equal(before.buttons.find(b => b.action === 'inventory_tab:tools').disabled, true);
   // The sale button is inside the scrolling crop shelf, below the barn ledger.
   const canvas = await page.locator('#canvas').boundingBox();
   const clickAction = async action => {
@@ -49,7 +49,7 @@ const fs = require('node:fs');
   assert.equal(after.tutorial.completed, true);
   assert.equal(after.tutorial.active, false);
   await page.screenshot({path:`artifacts/tutorial-barn/${name}-complete.png`});
-  console.log(name + ': first sale from remembered Gear completed using ' + (touch ? 'touch' : 'mouse'));
+  console.log(name + ': first sale from remembered Tools completed using ' + (touch ? 'touch' : 'mouse'));
   await context.close();
  }
  await browser.close();

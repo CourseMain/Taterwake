@@ -1027,8 +1027,6 @@ func _on_state_changed() -> void:
 		world.set_island3_unlocked(state.island3_unlocked)
 		world.set_export_state(state.export_active, state.export_timer)
 		world.set_frost_state(state.frost_active, state.frost_timer)
-		world.set_golden_hat(state.golden_hat)
-		world.set_equipment(state.equipment_loadout(), state.ITEM_CATALOG)
 		world.set_activity_state(activities.info())
 		if state.current_island == 3 and last_frost_active != state.frost_active:
 			if state.frost_active:
@@ -1120,8 +1118,6 @@ func _on_island_changed(id: int) -> void:
 	world.set_island3_unlocked(state.island3_unlocked)
 	world.set_export_state(state.export_active, state.export_timer)
 	world.set_frost_state(state.frost_active, state.frost_timer)
-	world.set_golden_hat(state.golden_hat)
-	world.set_equipment(state.equipment_loadout(), state.ITEM_CATALOG)
 	world.set_activity_state(activities.info())
 	surge_live = false
 	surge_band = 0
@@ -1300,15 +1296,7 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			if parts.size() == 2:
 				state.climate.fund(state, parts[1])
 				_save_blind_checkpoint.call_deferred()
-		"gear":
-			if parts.size() != 3:
-				return
-			if parts[1] == "equip":
-				state.equip_gear(parts[2])
-			elif parts[1] == "unequip":
-				state.unequip_gear(parts[2])
-			if not test_mode:
-				state.save_game()
+
 		"island_unlock": state.unlock_island2()
 		"island3_unlock": state.unlock_island3()
 		"forge":
@@ -1346,7 +1334,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 		"buy": state.buy_seeds(parts[1], int(parts[2]))
 		"sell": state.sell_crop(parts[1], int(parts[2]))
 		"quick_sell": state.sell_crop(state.selected_crop)
-		"sell_mutations": state.sell_mutations()
 		"upgrade":
 			match parts[1]:
 				"barn": state.upgrade_barn()
