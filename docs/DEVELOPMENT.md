@@ -36,11 +36,11 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 #### Segment 8 — current
 
-Godot 4.7.2, `tools/run_tests.sh -j 1`: **72 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (65 checks), `test_day_night` (314) and `test_game` (39). No tests are skipped or disabled. The complete serial result is `artifacts/segment8-baseline.txt`.
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **72 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (118 checks), `test_day_night` (314) and `test_game` (39). No tests are skipped or disabled. The latest complete serial result is `artifacts/season-display-baseline.txt`; the initial Segment 8 result remains in `artifacts/segment8-baseline.txt`.
 
 Growth fixtures now use seasonal durations, sky checks follow the moving sun, and market simulation stops at Winter. Fixtures for explicit weather and practice scenarios begin with a deterministic calm Spring; separate state tests still exercise the 15% disaster draw and saved RNG continuity. Scene teardown allows audio playback to finish releasing before engine exit.
 
-The explicit headless boot command passes all 39 checks. Native GL Compatibility and a temporary Web resource pack each pass all 65 calendar checks. The Winter panel and dawn/midday/dusk captures were visually inspected. Packed-resource validation is not a browser runtime test; browser automation was not rerun. Published `docs/index.*` and `web/` remain unchanged.
+The explicit headless boot command passes all 39 checks. Initial Segment 8 native GL Compatibility and temporary Web resource pack checks each passed all 65 calendar checks. The Winter panel and dawn/midday/dusk captures were visually inspected. Packed-resource validation is not a browser runtime test; browser automation was not rerun. Published `docs/index.*` and `web/` remain unchanged.
 
 #### Segment 7 — historical
 
@@ -390,6 +390,9 @@ Weather uses a constant 15% probability at the beginning of each working season,
 
 GameState finishes each boundary, synchronously saves through `boundary_save_path`, then emits `season_changed`. Main assigns the live save path; isolated tests leave it empty or use a disposable path. Thus Winter is persisted before its panel opens. Autumn clearing records the number of lost beds for a persistent, visible Winter notice, preserves barn inventory and resets weather to calm. Save validation checks calendar ranges, Winter's empty fields and calm weather. The next season's probability draw occurs on its first positive update, preserving RNG continuity across boundary saves.
 
-Tilling and planting are limited to Spring and Summer; Autumn still allows harvest, watering, pest treatment and weather rescue. Crop times run from 75 to 225 seconds before weather penalties. The HUD shows year and season without a countdown, and maps the sun from dawn to dusk using calendar seconds. Winter reuses Frosthollow snow materials, roof cover and flakes on the Valley. Escape and the farm menu remain usable, including at the year-10 cap.
+Tilling and planting are limited to Spring and Summer; Autumn still allows harvest, watering, pest treatment and weather rescue. Crop times run from 75 to 225 seconds before weather penalties. The HUD shows year and season without a countdown, and maps the sun from dawn to dusk using calendar seconds. Winter reuses Frosthollow snow materials, roof cover and flakes on the Valley. Escape and the farm menu remain usable, including at the year-10 cap. HUD refreshes reconcile the displayed calendar and open Winter once per transition, so a missed season callback can recover without restarting. The main callback still cancels field actions and dismisses weather alerts.
 
 Run `tools/run_tests.sh -j 1 test_season_clock test_day_night test_game` for the full working year, boundary save ordering, Autumn loss, Winter pause/reload, planting gates, seasonal growth, UI navigation, snow, sky mapping and boot. Older growth fixtures now wait for the selected variety's seasonal duration; calm-weather fixtures use deterministic RNG or an already-started season.
+
+
+The accelerated calendar regression plays all ten years through the real 30× debug control and next-year buttons, checking each boundary save, both year displays, dismissal and completion. It also deliberately misses state notifications to verify recovery on the next regular HUD refresh. A fresh run did not reproduce the reported original display glitch; this test covers the missed-presentation failure mode without assuming its original trigger. After this change, all 72 suites pass serially and the explicit headless boot passes 39 checks. The touch-input harvest fixture now starts in calm weather so a random Spring disaster cannot obscure its input assertions.

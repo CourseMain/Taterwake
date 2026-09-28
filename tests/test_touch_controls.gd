@@ -37,6 +37,8 @@ func run() -> void:
 		return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Touch input checks need a calm crop; weather behavior has separate suites.
+	game.state.rng.seed = 6
 	await frames()
 	game.state.ClimateSystem.Lesson.finish(game.state)
 	game.state.coins = 1e20

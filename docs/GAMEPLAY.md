@@ -62,7 +62,7 @@ The farm keeps its angled orthographic 3D view. Drag anywhere on the island to s
 
 The run lasts **ten years**. Spring, Summer and Autumn each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-**Winter pauses the farm** and opens a review menu. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. Year 10 ends with **Ten years complete**; menus and New farm remain available. Every season boundary saves before its menu opens.
+**Winter pauses the farm** and opens a review menu. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. Year 10 ends with **Ten years complete**; menus and New farm remain available. Every season boundary saves before its menu opens. The year strip and Winter panel follow the current calendar even at accelerated debug speed; dismissing Winter keeps it closed until you reopen it.
 
 Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Radioactive **165s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry or frozen crops wait for water or thawing.
 

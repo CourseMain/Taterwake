@@ -115,6 +115,7 @@ func run() -> void:
 	check(not farm.start_next_year() and farm.season_clock.year == 10 and farm.season_clock.winter_menu, "year ten is the final Winter")
 	farm.free()
 	await scene_checks()
+	await accelerated_run_checks()
 	for suffix in ["", ".bak", ".tmp", ".rejected"]:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
 	print("SEASON CLOCK: %d checks, %d failures" % [checks, failures])
@@ -171,6 +172,56 @@ func scene_checks() -> void:
 	game.state.coins = -5001
 	game._process(10)
 	check(game.state.season_clock.seconds == before, "collapse pauses the calendar")
+	game.queue_free()
+	await process_frame
+	await create_timer(0.1).timeout
+
+func accelerated_run_checks() -> void:
+	var game = load("res://scenes/main.tscn").instantiate()
+	root.add_child(game)
+	game.set_process(false)
+	game.state.rng.seed = 6
+	game.state.boundary_save_path = SAVE
+	game._set_debug_session(true)
+	game._debug_action(PackedStringArray(["debug", "time", "30"]))
+	game.hud.close_panel()
+	await process_frame
+	check(game.debug_time_multiplier == 30, "accelerated regression uses the real 30x debug control")
+	for year in range(1, 11):
+		var frames: int = 0
+		while not game.state.season_clock.winter_menu and frames < 1000:
+			game._process(1.0 / 30.0)
+			frames += 1
+			if frames % 50 == 0: await process_frame
+		check(game.state.season_clock.year == year and game.state.season_clock.winter_menu, "30x reaches Winter in year %d" % year)
+		check(game.hud._top.season.text == "Year %d · Winter" % year and game.hud._modal_title.text == "Winter · Year %d" % year and game.hud._panel_kind == "winter", "30x keeps both year displays current in year %d" % year)
+		check(int(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.year) == year, "30x boundary save agrees with the displayed year")
+		game.hud.close_panel()
+		game._process(0.25)
+		check(not game.hud.is_panel_open(), "regular refresh respects dismissed Winter in year %d" % year)
+		game._on_action("winter")
+		if year < 10:
+			for button in game.hud._body.find_children("*", "Button", true, false):
+				if button.get_meta("action", "") == "next_year":
+					button.pressed.emit()
+					break
+			check(game.hud._top.season.text == "Year %d · Spring" % (year + 1) and not game.hud.is_panel_open(), "next-year button immediately updates the year at 30x")
+		await process_frame
+	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Ten years complete"), "30x run presents the final year-ten message")
+	# A missed transition callback must heal on the next ordinary HUD refresh.
+	game.state.reset_game()
+	game.hud.close_panel()
+	game.state.season_changed.disconnect(game._on_season_changed)
+	game.state.changed.disconnect(game._on_state_changed)
+	game.state.season_clock.year = 10
+	game.state.season_clock.season = 2
+	game.state.season_clock.seconds = 149.75
+	game.state.update(0.25)
+	check(not game.hud.is_panel_open(), "missed callback leaves the presentation stale before polling")
+	await process_frame
+	game.ui_elapsed = 0.21
+	game._process(0.01)
+	check(game.hud._top.season.text == "Year 10 · Winter" and game.hud._panel_kind == "winter" and game.hud._modal_title.text == "Winter · Year 10", "ordinary refresh repairs a missed final Winter transition without reload")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.1).timeout

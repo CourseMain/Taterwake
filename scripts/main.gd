@@ -1049,7 +1049,6 @@ func _on_season_changed() -> void:
 	_close_equipment()
 	if state.season_clock.winter_menu:
 		hud._climate_alert.dismiss()
-		hud.show_panel("winter", state)
 	_on_state_changed()
 
 

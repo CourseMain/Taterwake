@@ -122,6 +122,7 @@ var _modal_market_nav: HBoxContainer
 var _modal_trade_footer: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
+var _displayed_calendar: String = ""
 var _sell_crop: String = ""
 var _refs: Dictionary = {}
 var _reset_pending: bool = false
@@ -1133,7 +1134,15 @@ func update_state(state: Node) -> void:
 	var quote: Dictionary = markets.get(crop, {})
 	var seeds: Dictionary = state.get("seed_inventory")
 	var storage: Dictionary = state.get("storage")
+	var calendar: String = "%d:%d" % [state.season_clock.year, state.season_clock.season]
+	var calendar_changed: bool = calendar != _displayed_calendar
+	_displayed_calendar = calendar
 	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]]
+	# Reconcile from state on ordinary refreshes too, after the boundary save.
+	# Remember the calendar so Escape can dismiss Winter without reopening it.
+	if calendar_changed and not state.run_over:
+		if state.season_clock.winter_menu: show_panel("winter", state)
+		elif _panel_kind == "winter": close_panel()
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
