@@ -26,7 +26,7 @@ A 3D potato farming game about growing crops, riding wild markets and building y
 
 - Work your fields with five manual tools; train ducks to chase pests.
 - Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+35,000%–100,000% Stock Rocket**.
-- Choose from **five player builds** and collect clothing with farming, market and mutation bonuses.
+- Choose from **five player builds** with farming, trade, research and processing activities.
 - Take buyer contracts and fire up a winter furnace.
 - Farm through a **60-second day–night cycle** across three islands.
 - Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
@@ -68,14 +68,14 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Home / Touch Tools → Recenter | Restore the camera |
 | Top-left expand/× icon / F11 | Toggle fullscreen |
 | Touch Tools drawer | Select tools and seeds, zoom +/−, recenter, cancel a task |
-| I | Inventory and clothing |
+| I | Crops and tools |
 | B / U | Market / tool upgrades |
 | F | Sell the selected crop |
 | Escape / ☰ | Main menu and remaining activities |
 
 Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith on each island for larger tool areas.
 
-See the [gameplay guide](docs/GAMEPLAY.md) for builds, gear, prices, local activities and Debug controls.
+See the [gameplay guide](docs/GAMEPLAY.md) for builds, prices, local activities and Debug controls.
 
 ## Build the browser edition
 

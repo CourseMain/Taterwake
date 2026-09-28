@@ -65,7 +65,7 @@ The farm keeps its angled orthographic 3D view. Drag anywhere on the island to s
 
 A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
 
-Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Builds, clothing and furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
+Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Builds and furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
 
 Manual equipment upgrades increase the area of a single action. Fast harvests build ×1, ×2, ×4, ×8 and ×16 chains, with a 3.5-second grace period. A full barn leaves the uncollected part of a harvest on the bed without granting its combo twice.
 
@@ -75,11 +75,11 @@ Pests use independent timers for each bed, rather than farm-wide waves. Each cro
 
 Quotes refresh every **three seconds on Island 1**, with slightly more upward movement, and every **five seconds on Islands 2 and 3**. Brief market events vary their target and strength, then expire. Normal quotes cap at **+2,999%** in the Valley and Shores, **+10,000%** in Frosthollow.
 
-Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher percentages become smoothly rarer all the way to the ceiling. Without bonuses, the four equal quarters of any boom range have approximately **57.8% / 29.7% / 10.9% / 1.6%** of draws, from lowest to highest. Equipped stock gear modestly improves scheduled and rocket draws while preserving that downward trend. These are magnitude odds after a boom triggers, not trigger chances. The timer flashes in the final 10 seconds. Outside active booms and spikes, each eligible fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on gear or builds. Sampled boom quotes are final: export, thaw and flash-offer multipliers do not stack onto them. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
+Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher percentages become smoothly rarer all the way to the ceiling. The four equal quarters of any boom range have approximately **57.8% / 29.7% / 10.9% / 1.6%** of draws, from lowest to highest. These are magnitude odds after a boom triggers, not trigger chances. The timer flashes in the final 10 seconds. Outside active booms and spikes, each eligible fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on builds. Sampled boom quotes are final: export, thaw and flash-offer multipliers do not stack onto them. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
 
 Press **2** or click the Seeds hotbar slot to show crop choices and tracked seed quotes. Selecting another tool hides both strips. Use **Tracked Seed Prices** in the menu to choose which seed quotes appear in this tray. Your choices are saved; price changes show old → new values with green/up or red/down feedback.
 
-**Buy Seeds** uses illustrated cards with the seed price, live selling price per potato, and owned quantities. Seeds cost **75% of one potato’s live selling price**, rounded to the nearest cent. This final rate takes precedence over older seed-only weather premiums, seed events, token discounts and Investor discounts. A huge crop quote also makes seeds expensive. Harvest yields, combos, mastery and mutations are unchanged.
+**Buy Seeds** uses illustrated cards with the seed price, live selling price per potato, and owned quantities. Seeds cost **75% of one potato’s live selling price**, rounded to the nearest cent. This final rate takes precedence over older seed-only weather premiums, seed events, Investor discounts. A huge crop quote also makes seeds expensive. Harvest yields, combos and mastery still apply.
 
 **Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Inventory sales and the existing **F** shortcut still work. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
@@ -97,7 +97,7 @@ The selected crop at the top of the screen controls the market feedback. Mist be
 | Golden Shores | 48 beds | Unlock with $1M and 500 harvested potatoes. Double harvest yields and Sunburst potatoes; build toward hundreds of billions. |
 | Frosthollow | 80 beds | Unlock with $100B and 25K harvested potatoes. Snow, Icecap potatoes, triple yields and expensive manual tools; pursue trillion and quadrillion harvests. |
 
-Your fields persist independently. Coins, crops, tools, collectibles and builds travel with you.
+Your fields persist independently. Coins, crops, tools and builds travel with you.
 
 Golden Shores has randomly arriving export ships, with a warning before a five-second buying window. Prices return to ordinary quotes when the ship leaves. Its shipment challenge rewards supplying separate ships, rather than repeatedly clicking one sale.
 
@@ -108,12 +108,12 @@ Each island has local challenges around its farming and economic events. Claim c
 Open the three-line menu or visit the new island station for these activities:
 
 - **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. First-duck costs are **$1.5K / $25M / $750B**; each additional duck costs another multiple of that base. Speed costs scale with the island too. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
-- **Golden Shores — Buyer contracts.** Pick a crop, then compare two buyer cards: **bulk +25%** or **mutations +50%**. Each shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
+- **Golden Shores — Buyer contracts.** Pick a crop for a **bulk +25%** order. The offer shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
 - **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth and 3× processing for 20 seconds**. Heat affects watered winter crops and a loaded processor while you are on the winter island; it does not plant, harvest or shorten ability cooldowns. The furnace can fire once per minute. Time it against the stock countdown; heat cannot be stacked or refreshed early.
 
 ## Inventory and builds
 
-The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] contains illustrated seeds, raw crops, mutation crates, permanent items, build cards and processed batches, each with distinct artwork. Raw and processed potatoes stay held until you choose to sell them.
+The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] has **Crops** and **Tools** tabs: illustrated seeds and harvested potatoes, plus the five usable farm tools. Raw potatoes stay held until you sell them. Production queues and processed batches remain on the Builds pages.
 
 You begin as **Farmer**. All five specializations are available at level one and develop through **30 levels**. Select one in Builds [C]. Equipped harvest professions and completed build activities earn XP toward the next level. The Builds pages show XP progress; see [XP amounts](BUILD_PROFESSIONS.md#activity-rules-and-tradeoffs).
 
@@ -131,28 +131,15 @@ Prize crops, seed-bank jars, machine additions, shipment carts and the carved ch
 
 For disposable scenarios, open **Play Builds Lab.command**. See the [build activities and testing guide](BUILD_PROFESSIONS.md) for recipes, grades, save compatibility and test steps.
 
-## Quests and equipment
+## Quests and the farmer
 
-Quest rewards scale with the island economy: Valley pays $5K–$30K, Shores $200M–$5B, and Frosthollow $10T–$250T. The Valley combo quest adds an Almanac, the Shores mutation quest adds a Tideglass Lens, and Frostbreaker adds an Aurora Heart. Rewards can be claimed once, including after loading an older save.
+Quest rewards scale with the island economy: Valley pays $5K–$30K, Shores $200M–$5B, and Frosthollow $10T–$250T. Rewards are cash and, for the ground-breaking quests, seeds. Each can be claimed once, including after loading an older save.
 
-
-Inventory [I] has a **Gear** tab with a draggable 3D preview of the same round potato farmer you see in the field. The farmer has a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Clothing fits that body and follows its moving limbs. Wear **one item in each of six slots: hat, shirt, pants, shoes, gloves and charm**. Equip another item to swap that slot, or click an occupied slot to remove it. Removed gear stays in your collection. Only equipped clothing provides its bonuses, and extra copies do not stack. A first drop equips itself if that slot is empty. Existing saves retain their collected gear and start with their highest-rarity owned item in each slot equipped if they have not used the wardrobe before.
-
-The wardrobe preview follows dragging smoothly and eases to a stop after release. Adaptive resolution and 4× antialiasing sharpen the farmer and clothing edges. Hidden previews stop rendering, and releasing the mouse outside the portrait ends the drag normally.
-
-| Clothing family | Bonuses |
-| --- | --- |
-| Farmer | Harvest quantity and crop growth speed |
-| Gambler | Cosmetic clothing and mutation trousers |
-| Investor | Better live stock sale prices |
-| Scientist | Mutation chances and crop growth |
-| Industrialist | Faster processing and a little extra harvest yield |
-
-The original eight keepsakes remain passive collectibles. Stock gear improves ordinary sale quotes and the strength odds of scheduled/rocket booms within their caps, and seeds follow actual sale prices. Equipping gear during a boom cannot inflate its preselected quote. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves field mutations. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
+The round potato farmer keeps a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Villagers retain their fixed outfits and animated conversation portraits.
 
 ## PotatoDex
 
-Press **P** for an illustrated index. **Special mutations** shows Golden, Crystal, Rainbow and Radioactive mutation artwork, descriptions, value multipliers and discovery status. Undiscovered entries are labelled previews. **Crop varieties** shows all six potatoes with their base growth times, home islands and mastery progress. Mutation discoveries remain recorded after selling; a Golden mutation is distinct from the ordinary Golden potato crop.
+Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times, home islands and mastery progress. Golden and Radioactive remain ordinary crop varieties.
 
 ## Graphics
 
@@ -223,4 +210,4 @@ Choose a personal topic, ask about the weather, or open the shop. Replies lead t
 Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, tax, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
 
 
-Mechanics revision 22 removes random reward purchases and luck. Existing farms keep their crops, money, gear, quests and build progress. Former luck-only gear is cosmetic; the Patchwork Cap keeps the same appearance.
+Mechanics revision 23 removes wearable items, passive collectibles and special mutations. Old stored mutation potatoes become ordinary potatoes of the same variety and quantity. Existing money and surviving quest/build progress remain. Barn capacity comes from barn upgrades alone; an older overfull barn keeps every potato but cannot accept another harvest until there is room. Unfinished mutation contracts become ordinary crop orders, keeping completed deliveries and earned credit.

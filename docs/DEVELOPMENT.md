@@ -34,7 +34,15 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 2 — current
+#### Segment 3 — current
+
+2026-09-28, macOS, Godot `4.7.2.stable.official.ed1daf0bf`, branch `redesign`: `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1` completed with **94 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered headless suite passes, including `test_item_removal` (46 checks), `test_save_safety` (28 checks), `test_round_avatar` (12 checks) and the required `test_game` boot check (42 checks). Six dedicated wardrobe/equipment suites were deleted, and the migration/removal suite was added. No tests are skipped or disabled.
+
+The first run exposed stale assertions for gear-adjusted stock distributions, inventory excluding tools, and production links in Inventory. The surviving tests now check base stock distributions, five farming tools and production controls on Builds. All failures and the resulting fixture timeout are resolved in the complete rerun. Logs are in ignored `artifacts/segment3-final-baseline.txt` and `artifacts/test-results/`.
+
+Native GL Compatibility runs passed `test_latest_game` with captures (77 checks) and `test_npc_conversations` (380 checks). Crop/tool shelves and Mara/Bram portraits were visually inspected. The migration suite also passed all 46 checks against a temporary Web resource pack, including its exported legacy-field data. The published `docs/index.*` and `web/` were not changed. Browser fixture tab names were updated; browser automation was not rerun for this segment.
+
+#### Segment 2 — historical
 
 2026-09-28, macOS, Godot `4.7.2.stable.official.ed1daf0bf`, branch `redesign`: the complete `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1` run exited zero with **99 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered headless suite passes, including `test_save_safety` (28 checks), `test_gacha_removal` (27 checks) and the required `test_game` boot check (43 checks). Five dedicated Roll House suites were deleted and the migration/removal suite was added.
 
@@ -140,7 +148,7 @@ Raw local outputs are `artifacts/segment1-baseline.log`, `artifacts/segment1-bas
 | Golden Shores | $100B: Frosthollow unlock | $8B | $5B | $12.5B | −$5B |
 | Frosthollow | $5Qa: virtual late-game baseline | $400T | $250T | $625T | −$250T |
 
-There is no Island 4. The stock reference is a haul-value balancing reference, not an automatic payout or income cap: the stock tooltip and Climate action show how many potatoes at the current quote reach it. Actual earnings still depend on crops, quantity, mutations, processing and selling. Existing decreasing-rarity stock distributions stay intact, including the +35,000%–100,000% Rocket range. Active and recovering disasters apply a final sale-price clamp of 5%–100% of base value on the affected island. Severity and recovery time determine the crash, down to −95%. Scheduled and natural booms are suppressed; existing booms are cancelled and the Rocket clock pauses. Crashes do not count toward tax collection. Warning/stock timer ties resolve weather first; already-due tax collection remains scheduled.
+There is no Island 4. The stock reference is a haul-value balancing reference, not an automatic payout or income cap: the stock tooltip and Climate action show how many potatoes at the current quote reach it. Actual earnings still depend on crops, quantity, processing and selling. Existing decreasing-rarity stock distributions stay intact, including the +35,000%–100,000% Rocket range. Active and recovering disasters apply a final sale-price clamp of 5%–100% of base value on the affected island. Severity and recovery time determine the crash, down to −95%. Scheduled and natural booms are suppressed; existing booms are cancelled and the Rocket clock pauses. Crashes do not count toward tax collection. Warning/stock timer ties resolve weather first; already-due tax collection remains scheduled.
 
 At the first actual major boom, a 20% chance rolls a Tax Boom with a uniform integer increase from 0% through 150%. Disaster recovery adds pressure; combined pressure cannot raise the bill above 2.5× base tax. The third actual scheduled or Rocket price boom starts a full ten-second selling window before collection. Natural spikes, ordinary offers and the Rocket cinematic do not count. With scheduled stocks every three minutes, collection is about every nine minutes. Tutorials pause taxes, weather and stock pressure.
 
@@ -148,7 +156,7 @@ Collection deducts the displayed bill even if cash cannot cover it. Debt is play
 
 A first visit to a harder island starts three fresh stocks at its tax tier. Returning to an earlier island keeps the highest visited tier and existing collection counter, preventing lower-tax travel loops. Last receipts retain actual tax, pre-tax cash, coverage, rank and post-tax debt.
 
-`scripts/climate_system.gd` owns climate timing, losses, market factors and local protection costs. Island 1 is free from weather disasters. First arrival at Island 2 (or an older save already on Island 3) shows a one-time introduction that pauses the simulation until acknowledged. The first warning follows 90 seconds of eligible play. Calm weather clocks pause on Island 1; an already warned disaster continues against its original island and shared barn. Drought, flood and severe storm give 45 seconds to prepare, hit once, last 30 seconds and recover over 75 seconds; another calm interval lasts 210–330 seconds. Warnings preview the estimated bill after impact. Disasters destroy a severity-dependent portion of planted beds and stored potatoes, including mutations, processed stock and processing queues. Floods also require damaged beds to be tilled again. Seed prices follow 75% of the final sale quote, ordinary market volatility increases, and growth slows. Temporary effects taper to normal during recovery; infrastructure pressure remains until the next tax collection.
+`scripts/climate_system.gd` owns climate timing, losses, market factors and local protection costs. Island 1 is free from weather disasters. First arrival at Island 2 (or an older save already on Island 3) shows a one-time introduction that pauses the simulation until acknowledged. The first warning follows 90 seconds of eligible play. Calm weather clocks pause on Island 1; an already warned disaster continues against its original island and shared barn. Drought, flood and severe storm give 45 seconds to prepare, hit once, last 30 seconds and recover over 75 seconds; another calm interval lasts 210–330 seconds. Warnings preview the estimated bill after impact. Disasters destroy a severity-dependent portion of planted beds and stored potatoes, including processed stock and processing queues. Floods also require damaged beds to be tilled again. Seed prices follow 75% of the final sale quote, ordinary market volatility increases, and growth slows. Temporary effects taper to normal during recovery; infrastructure pressure remains until the next tax collection.
 
 Climate action funds two levels each of Rainwater Reserve, Drainage Network, Reinforced Barn and Living Windbreaks, priced relative to the local progression baseline. These reduce the relevant physical losses and recovery tax contributions. Funding during recovery can still lower a pending bill; it cannot restore destroyed crops. Damage remains attached to the warned island, while the shared barn is exposed wherever the player travels. One batched canvas layer draws drifting cloud banks, up to 100 rain streaks, wind ribbons, floodwater and drought dust. Existing 3D clouds accelerate and expand; the sky and sunlight respond. Original looped wind/rain audio and thunder accompany storms. Camera shake is bounded to 0.26 world units. No per-crop particle nodes are created.
 
@@ -167,12 +175,12 @@ These cover every island baseline, tax clearing/borrowing, overkill, negative hu
 The runner handles the initial import. For a focused simulation and boot check:
 
 ```sh
-tools/run_tests.sh -j 1 test_simulation test_gear_rewards test_equipment test_game
+tools/run_tests.sh -j 1 test_simulation test_item_removal test_round_avatar test_game
 ```
 
 Run `node tests/test_web_canvas.js` to verify browser resolution limits and aspect ratios. `test_debug_access_time.gd`, `test_stock_ceiling.gd` and `test_stock_rocket_state.gd` cover the access gate, time controls and market windows.
 
-Additional files in `tests/` cover island activities, purchase receipts, market limits, pests, clothing, camera gestures and responsive layout. Interface and lighting checks may also need a rendered run to inspect their visual output. Read each check's setup before running it. The runner detects Godot errors even when its process exit status is zero; inspect the saved log for details.
+Additional files in `tests/` cover island activities, purchase receipts, market limits, pests, avatar animation, camera gestures and responsive layout. Interface and lighting checks may also need a rendered run to inspect their visual output. Read each check's setup before running it. The runner detects Godot errors even when its process exit status is zero; inspect the saved log for details.
 
 Python and macOS launcher syntax checks:
 
@@ -324,7 +332,7 @@ Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It c
 
 Run `godot --headless --path . --script tests/test_seed_market.gd -- --integration-test`. Repeat without `--headless`, adding `--capture` and optionally `--touch-controls`, to inspect desktop, portrait phone and landscape phone layouts. All saves are isolated. The suite verifies purchases, payouts, rejected quantities, fixed ordering despite reversed live quotes, base percentages, label spacing, retained-history navigation, arrow controls, dispatched touch swipes, disasters and save/load.
 
-Balance note: base yields remain Russet 3, Giant 8, Golden 2, Radioactive 4, Sunburst 3 and Icecap 4. At an unchanged quote this yields about 2.67–10.67 times the seed spend before combos, mastery, equipment, mutations or island bonuses. Those multipliers and harvest yields have not been rebalanced.
+Balance note: base yields remain Russet 3, Giant 8, Golden 2, Radioactive 4, Sunburst 3 and Icecap 4. At an unchanged quote this yields about 2.67–10.67 times the seed spend before combos, mastery or island bonuses. Those remaining multipliers and harvest yields have not been rebalanced.
 
 `test_market_curves.gd` checks interpolation bounds, plateaus and recorded endpoints. `test_market_dialogue.gd -- --integration-test` verifies first meetings, repeated tab switches, saved memory and deliberate Mara revisits. `test_build_overview.gd -- --integration-test` checks all five previews, real locks, free selection, saved selection, the introduction guide and responsive layouts. Add `--capture` in native mode (optionally `--touch-controls`) for `artifacts/build-polish/` screenshots. All scene tests use isolated state. Builds browsing is a HUD-only action; only explicit selection changes `PlayerBuilds.active`.
 
@@ -334,7 +342,7 @@ Balance note: base yields remain Russet 3, Giant 8, Golden 2, Radioactive 4, Sun
 
 `village_details.gd` shares the world's materials and compiled geometry for Mara's stitched sacks, patched awning and potato-supported crate. The mud shortcut was removed after visual review. Stallholders have deliberate positions and headings: Ada looks along the conveyor, Pip faces the ducks, and the other keepers turn toward their counters, entrances and pier. `profession_world.gd` uses pooled workshop loads and a buyer tied to the actual local reserved contract. `exchange_surface.gd` supplies the timber counter and chalk board; crop portraits share the same inked specimens and palette as `item_icon.gd` and `build_illustration.gd`. Builds uses notebook folios; Help uses ruled barn notes.
 
-`shop_pages.gd` extends the seed counter's timber trays, item illustrations and button styles to Bram's workbench and Nell's barn. Tool upgrades retain their live costs and readiness; Barn keeps capacity expansion above every inventory tab and compacts its ledger on Gear, Items and Builds. Desktop trays become single-column phone shelves. Purchase receipts wrap in the remaining desktop margin, keeping the wider counters' controls clear.
+`shop_pages.gd` extends the seed counter's timber trays, item illustrations and button styles to Bram's workbench and Nell's barn. Tool upgrades retain their live costs and readiness; Barn offers Crops and Tools tabs, showing its crop ledger on Crops and keeping capacity expansion available on both shelves. Desktop trays become single-column phone shelves. Purchase receipts wrap in the remaining desktop margin, keeping the wider counters' controls clear.
 
 Shop filler quotes and all-island duck-limit lists are removed. `duck_pond_view.gd` draws the local flock on an animated pond; hiring and training keep their existing actions. Full storage shows a persistent red banner with a Sell crops action, and blocking farm reminders use red on desktop and touch. `test_farm_alerts.gd -- --integration-test` checks the full/sell/clear flow; add `--touch-controls` to cover portrait and landscape bounds and touch targets. Normal harvesting again plays the escalating streak chime alongside the pull/pop foley.
 
@@ -367,16 +375,27 @@ Mouse and single-finger island drags now pan, while short bed/shop taps retain t
 
 The weather footer uses a VBox and expanding buttons so wrapped labels cannot collapse into tall, narrow Grid columns. Furnace UI uses a code-drawn animated hearth; the exterior uses batched brick/copper geometry with persistent embers. The 25-Icecap, 20-second burst, 60-second cooldown and free thawing bellows are unchanged.
 
-Quest cash uses explicit shares of each island’s progression baseline. Valley cash: $5K/$15K/$30K; Shores: $200M/$2.5B/$1B/$5B/$2B; Frosthollow: $10T/$125T/$250T. Starter combo, Shores mutations and Frostbreaker also award an Almanac, Lens and Aurora Heart. All displayed extras are shown separately. Mechanics revision 20 validates old storage using the old artifact coefficients, then recomputes upgraded capacity on load; claimed quests remain claimed.
+Quest cash uses explicit shares of each island’s progression baseline. Valley cash: $5K/$15K/$30K; Shores: $200M/$2.5B/$1B/$5B; Frosthollow: $10T/$125T/$250T. Ground-breaking quests also award seeds. Claims remain one-time across save migration.
 
 Browser verification uses an isolated QA export, real Chromium mouse/touch events and screenshots at desktop/phone sizes. `test_update_browser.cjs` checks motion between input events, lower weather controls, furnace and all three graphics modes. `test_release_browser.cjs` checks the production export, version, fullscreen and absence of the QA bridge; set `TATER_RELEASE_URL` to run it against GitHub Pages. These are browser checks, not physical-device performance claims.
 
 ## Gacha removal
 
-Mechanics revision 22 removes random reward purchases, their UI and world building, Rook, reward-only effects and save validation. Save loading retains understood fields, migrates the cosmetic cap through `assets/item_aliases.json`, and drops retired NPC history. Export presets include the alias file. Saved optional tours retain their place after the removed stop. Surviving farm data still passes strict validation before state changes. Save backups and rejected-file protection remain intact.
+Mechanics revision 22 removes random reward purchases, their UI and world building, Rook, reward-only effects and save validation. Save loading retains understood fields and drops retired NPC history. Saved optional tours retain their place after the removed stop. Surviving farm data still passes strict validation before state changes. Save backups and rejected-file protection remain intact.
 
-Build schema 5 omits reward charges and crate ownership. All builds start at level one; old levels and XP survive. Luck-only gear is cosmetic, while other equipment bonuses and quest rewards remain for their later segments. Shared NPC voice recordings remain because other villagers use them.
+Build schema 5 omits reward charges and crate ownership. All builds start at level one; old levels and XP survive. Shared NPC voice recordings remain because other villagers use them.
 
-The source-word audit has no Roll House, luck, jackpot or trophy systems. Remaining `roll`/`crate` matches describe scrolling, physical produce containers, mutation storage (Segment 3), market draws (Segment 4) and the harvest-stake profession (Segment 5). Those systems remain within the staged plan.
+The source-word audit has no Roll House, luck, jackpot or trophy systems. Remaining `roll`/`crate` matches describe scrolling, physical produce containers, market draws (Segment 4) and the harvest-stake profession (Segment 5). Those systems remain within the staged plan.
 
-`test_gacha_removal.gd` covers migration from revision 21, retained farm/gear/quest progress, discarded fields, build availability, the menu, the R key and all three island rebuilds. Pest audio retains its own coverage. Run the full baseline with `tools/run_tests.sh -j 1`.
+`test_gacha_removal.gd` covers migration from revision 21, retained farm/quest progress, discarded fields, build availability, the menu, the R key and all three island rebuilds. Pest audio retains its own coverage. Run the full baseline with `tools/run_tests.sh -j 1`.
+
+
+### Item and special-crop removal
+
+Mechanics revision 23 drops the item catalogue, wearable slots, passive collectibles, item multipliers and mutation discovery/quest fields. `assets/retired_save_fields.json` names legacy crop-storage and order fields solely for conversion; export presets include it. Stored special potatoes merge into ordinary storage by crop and quantity before validation. Malformed quantities and overflow are rejected through the existing rejected-save path. New saves contain no retired fields.
+
+Barn capacity is recomputed from purchased barn levels alone. Existing crops are preserved even when the removed bonuses leave storage over capacity; further harvesting waits until room is available. Current saves therefore permit stored totals above capacity, bounded by `MAX_INVENTORY`, and overfull farms can save/reload. An unfinished special-crop order becomes a bulk order with its original target, delivered count and earned credit. Remaining shipments use ordinary quotes and the normal 25% premium. New bulk offers still start at 400 potatoes.
+
+Inventory contains crop/seed shelves and five usable tools. Build activities and production queues remain on their own pages. The PotatoDex shows the six crop varieties without a discovery tab. The farmer keeps its base body, face and walk/turn animation. Fixed villager costumes live in `npc_avatar.gd`; `npc_portrait.gd` owns only the conversation viewport, lighting and adaptive resolution. The wardrobe preview, wearable meshes and clothing icon families are deleted.
+
+`test_item_removal.gd` covers crop conversion, retired-field removal, overfull saves, corrupted legacy crops, converted contract accounting, ordinary sale prices, inventory actions and crop references. `test_round_avatar.gd` retains body, geometry and animation checks. Dedicated equipment/wardrobe suites and assertions for removed systems are deleted; ordinary farming, climate machinery, quests and build tests remain.
