@@ -1,6 +1,5 @@
 extends VBoxContainer
-## A lively exchange over the real market, inventory and transaction actions.
-const Chart = preload("res://scripts/market_chart.gd")
+## Seed and crop counters with prices, quantities and transaction confirmation.
 const State = preload("res://scripts/game_state.gd")
 const Quantity = preload("res://scripts/market_quantity.gd")
 const Portrait = preload("res://scripts/market_portrait.gd")
@@ -20,13 +19,10 @@ var hud
 var selling: bool = false
 var crops: Array[String] = []
 var selected: String = ""
-var chart: Control
-var _graph_card: PanelContainer
 var grid: GridContainer
 var tabs: HBoxContainer
 var hero: PanelContainer
 var footer: PanelContainer
-var pager: HBoxContainer
 var quantity: LineEdit
 var sell_button: Button
 var payout: Label
@@ -34,11 +30,7 @@ var status: Label
 var crop_name: Label
 var crop_quote: Label
 var crop_owned: Label
-var crop_change: Label
 var crop_image: Control
-var history_label: Label
-var older: Button
-var newer: Button
 var minus: Button
 var plus: Button
 var maximum: Button
@@ -52,14 +44,12 @@ var _hero_words: VBoxContainer
 var _hero_quote_row: HBoxContainer
 var _hero_badges: HBoxContainer
 var _card_icons: Dictionary = {}
-var _card_badges: Dictionary = {}
 var _finger: int = -1
 var _touch_start := Vector2.ZERO
 var _receipt_left: float = 0.0
 var _receipt: String = ""
 var _selection_tween: Tween
 var _animated_portrait: Control
-var _layout_key: String = ""
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
 var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 
@@ -193,7 +183,6 @@ func _build_buy() -> void:
 		identity.add_child(crop_tab)
 		var badge := _label("%ds to grow" % State.CROPS[crop].grow, 12, MUTED)
 		identity.add_child(badge)
-		_card_badges[crop] = badge
 		var price: Label = _label("", 20, INK)
 		price.add_theme_stylebox_override("normal", hud.Cozy.box(PRICE_TAG, 5, 2, FRAME))
 		identity.add_child(price)
@@ -249,34 +238,11 @@ func _build_sell() -> void:
 	_hero_badges = HBoxContainer.new()
 	_hero_badges.add_theme_constant_override("separation", 8)
 	_hero_words.add_child(_hero_badges)
-	crop_change = _label("", 13, GAIN)
-	crop_change.autowrap_mode = TextServer.AUTOWRAP_OFF
-	crop_change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	crop_change.tooltip_text = "Change from this potato's fixed base price."
-	_hero_badges.add_child(crop_change)
 	crop_owned = _label("", 13, INK)
 	crop_owned.autowrap_mode = TextServer.AUTOWRAP_OFF
 	crop_owned.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hero_badges.add_child(crop_owned)
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
-	_graph_card = hud._card(PAPER, 10)
-	_graph_card.add_theme_stylebox_override("panel", hud.Cozy.box(Color("fffcf3"), 12, 3, FRAME))
-	add_child(_graph_card)
-	chart = Chart.new()
-	chart.custom_minimum_size.y = 300
-	_graph_card.add_child(chart)
-	pager = HBoxContainer.new()
-	pager.add_theme_constant_override("separation", 8)
-	add_child(pager)
-	older = _local_button("‹ Older", "history_older", func() -> void: chart.move_window(1))
-	newer = _local_button("Newer ›", "history_newer", func() -> void: chart.move_window(-1))
-	pager.add_child(older)
-	history_label = _label("", 12, INK)
-	history_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	history_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pager.add_child(history_label)
-	pager.add_child(newer)
-	chart.window_changed.connect(_refresh_history_controls)
 	_build_trade_bar()
 
 func _board_skin() -> StyleBoxFlat:
@@ -357,9 +323,9 @@ func _layout() -> void:
 		var compact: bool = touch and get_viewport_rect().size.y < 700
 		add_theme_constant_override("separation", 6 if compact else 14)
 		# Keep the history buttons clear of the fixed trade bar on short phones.
-		for panel: PanelContainer in [hero, _graph_card, footer]:
+		for panel: PanelContainer in [hero, footer]:
 			var skin: StyleBox = panel.get_theme_stylebox("panel")
-			var inset: int = (12 if compact else 20) if panel == hero else ((8 if compact else 12) if panel == _graph_card else (10 if compact else 14))
+			var inset: int = (12 if compact else 20) if panel == hero else (10 if compact else 14)
 			skin.content_margin_top = inset
 			skin.content_margin_bottom = inset
 		if compact and not narrow and _hero_badges.get_parent() != _hero_quote_row:
@@ -377,8 +343,6 @@ func _layout() -> void:
 		crop_image.custom_minimum_size = Vector2.ONE * (74 if compact or narrow else 104)
 		crop_name.add_theme_font_size_override("font_size", 24 if narrow or compact else 30)
 		crop_quote.add_theme_font_size_override("font_size", 23 if compact else 30)
-		chart.font_size = 19 if touch else 15
-		chart.queue_redraw()
 		for control: Control in [quantity, minus, plus, maximum]: control.custom_minimum_size.y = 68 if touch else 46
 		for control: Control in [minus, plus, maximum]: control.custom_minimum_size.x = 68 if touch else 46
 		quantity.custom_minimum_size.x = 110 if touch else 84
@@ -391,19 +355,6 @@ func _layout() -> void:
 		if touch: button.add_theme_font_size_override("font_size", maxi(20, button.get_theme_font_size("font_size")))
 	for label: Node in find_children("*", "Label", true, false) + hud._modal_trade_footer.find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(18, label.get_theme_font_size("font_size")))
-	if selling: _fit_chart.call_deferred()
-
-func _fit_chart() -> void:
-	if not is_inside_tree() or is_queued_for_deletion() or not is_instance_valid(chart): return
-	# Measure the complete scroll contents after typography and the fixed trade
-	# bar settle. This includes the ledger frame, pager and HUD bottom spacing.
-	# A fixed 220px chart floor used to push the pager behind the trade bar on
-	# tablet-sized windows. The chart itself switches to three ticks below 212px.
-	var scroll: ScrollContainer = hud._body.get_parent()
-	var surrounding: float = hud._body.get_combined_minimum_size().y - chart.get_combined_minimum_size().y
-	var available: float = floorf(scroll.size.y - surrounding - 1.0)
-	chart.custom_minimum_size.y = maxf(140.0, available)
-	chart.queue_redraw()
 
 func refresh() -> void:
 	if not is_instance_valid(hud._state): return
@@ -424,20 +375,15 @@ func refresh() -> void:
 	hud._sell_crop = selected
 	var quote: Dictionary = state.market.get(selected, {})
 	var price: float = float(quote.get("sell", 0.0))
-	var base: float = float(State.CROPS[selected].base)
 	var owned: int = int(state.storage.get(selected, 0))
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
 	crop_name.text = hud._crop_name(selected) + " Potato"
 	crop_quote.text = "%s / potato" % state.market_money(price)
 	crop_owned.text = "%s owned" % state.format_number(owned)
-	crop_change.text = Chart.percent_label(price, base)
-	crop_change.add_theme_color_override("font_color", GAIN if price >= base else LOSS)
-	crop_change.add_theme_stylebox_override("normal", hud.Cozy.box(Color("d9d8a0") if price >= base else Color("e9b68d"), 5, 2, FRAME))
 	crop_image.crop = selected
 	crop_image.accent = ACCENTS[selected]
 	crop_image.queue_redraw()
-	chart.set_history(quote.get("history", []), base, state.market_money)
 	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else "\uE000 0.00"
 	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])
 	minus.disabled = not quantity.valid or amount <= 1
@@ -446,21 +392,12 @@ func refresh() -> void:
 	status.text = "Enter a whole number." if not quantity.valid else (_receipt if _receipt_left > 0 else ("No potatoes to sell." if owned == 0 else ""))
 	status.visible = not status.text.is_empty()
 	status.add_theme_color_override("font_color", LOSS if not quantity.valid else (GAIN if _receipt_left > 0 else MUTED))
-	_refresh_history_controls()
 	_layout.call_deferred()
-
-func _refresh_history_controls() -> void:
-	if not is_instance_valid(chart): return
-	var bounds: Vector2i = chart.window_bounds()
-	older.disabled = bounds.x == 0
-	newer.disabled = chart.history_offset == 0
-	history_label.text = "No price history." if chart.samples.is_empty() else "%d–%d of %d · %s" % [bounds.x + 1, bounds.y, chart.samples.size(), "Live" if chart.history_offset == 0 else "History"]
 
 func navigate(direction: int) -> void:
 	if not selling or crops.size() < 2: return
 	quantity.release_focus()
 	selected = crops[posmod(crops.find(selected) + direction, crops.size())]
-	chart.history_offset = 0
 	quantity.set_available(int(hud._state.storage[selected]))
 	quantity.set_value_no_signal(1)
 	_receipt_left = 0
@@ -515,7 +452,7 @@ func _input(event: InputEvent) -> void:
 			if _finger != -1:
 				_finger = -1
 				return
-			var swipe_rect: Rect2 = hero.get_global_rect().merge(chart.get_global_rect())
+			var swipe_rect: Rect2 = hero.get_global_rect()
 			if swipe_rect.has_point(event.position):
 				_finger = event.index
 				_touch_start = event.position

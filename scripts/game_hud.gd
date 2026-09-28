@@ -56,7 +56,6 @@ class DebugMoneyInput extends LineEdit:
 
 const MarketPages = preload("res://scripts/market_pages.gd")
 const ShopPages = preload("res://scripts/shop_pages.gd")
-const MarketImpact = preload("res://scripts/market_impact.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
 const Cozy = preload("res://scripts/cozy_ui.gd")
 const Type = preload("res://scripts/ui_type.gd")
@@ -136,10 +135,6 @@ var _reset_pending: bool = false
 var _island_button: Button
 var _sidebar_box: PanelContainer
 var _quest_button: Button
-var _export_box: PanelContainer
-var _export_title: Label
-var _export_detail: Label
-var _export_bar: ProgressBar
 var _visual_island: int = 0
 var _panel_crops: Array[String] = []
 var _tool_caption: Label
@@ -155,17 +150,8 @@ var _crop_defs: Dictionary = {}
 var _inventory_sections: Dictionary = {}
 var _inventory_tab: String = "crops"
 var _inventory_signature: String = ""
-var _market_impact: Control
 var _builds_button: Button
-var _tracked_row: BoxContainer
-var _tracked_labels: Dictionary = {}
-var _tracked_prices: Dictionary = {}
 var _price_moves: Dictionary = {}
-var _tracked_signature: String = ""
-var _tracked_box: PanelContainer
-var _surge_style: StyleBoxFlat
-var _surge_urgent: bool = false
-var _surge_active: bool = false
 var _hud_clock: float = 0.0
 var _farm_tip: Dictionary = {}
 var _farm_help_card: PanelContainer
@@ -230,18 +216,6 @@ func _process(delta: float) -> void:
 		_apply_tutorial_visibility()
 		_update_tutorial_pointer()
 		return
-	if not is_instance_valid(_surge_style):
-		return
-	var accent: Color = _island_accent()
-	var pulse: float = pow(0.5 + 0.5 * sin(_hud_clock * TAU * 1.8), 3.0)
-	_surge_style.bg_color = Color("132c29").lerp(accent, (0.14 + pulse * 0.22) if _surge_urgent or _surge_active else 0.025)
-	_surge_style.border_color = accent * (1.0 if _surge_urgent or _surge_active else 0.65)
-	_surge_style.shadow_color = Color(accent, (0.2 + pulse * 0.28) if _surge_urgent or _surge_active else 0.0)
-	_export_title.scale = Vector2.ONE * (1.0 + pulse * 0.022 if _surge_urgent else 1.0)
-	_export_title.pivot_offset = _export_title.size * 0.5
-
-func _island_accent() -> Color:
-	return Color("32ff8c") if _island_id() == 1 else (Color("ffd22b") if _island_id() == 2 else Color("39bcff"))
 
 func _refresh_seed_visibility() -> void:
 	var showing: bool = _selected_tool == "plant" and _plot_action_text.is_empty() and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
@@ -252,8 +226,6 @@ func _refresh_seed_visibility() -> void:
 		_crop_row.anchor_right = 0.5 if first_seed else 1.0
 		_crop_row.offset_left = -150.0 if first_seed else 28.0
 		_crop_row.offset_right = 150.0 if first_seed else -28.0
-	if is_instance_valid(_tracked_box):
-		_tracked_box.hide()
 	if is_instance_valid(_context_box):
 		_context_box.offset_top = -251 if showing else -152
 		_context_box.offset_bottom = -221 if showing else -122
@@ -283,15 +255,12 @@ func build_ui() -> void:
 	theme.default_font_size = 15
 	root.theme = theme
 	add_child(root)
-	_market_impact = MarketImpact.new()
-	root.add_child(_market_impact)
 	_climate_effect = load("res://scripts/climate_effect.gd").new()
 	root.add_child(_climate_effect)
 	_build_top()
 	_build_sidebar()
 	_build_footer()
 	_build_notices()
-	_build_export_strip()
 	_build_blind_card()
 	_build_modal()
 	_climate_console = load("res://scripts/climate_console.gd").new()
@@ -348,7 +317,7 @@ func _update_blind_ui() -> void:
 	_climate_console.refresh(climate, _island_id(), is_panel_open() or bool(info.run_over) or not _tutorial.is_empty() or climate.intro_pending or not _plot_action_text.is_empty())
 	_climate_effect.set_weather(climate, _island_id(), bool(info.run_over) or not _tutorial.is_empty())
 	_blind_card.visible = _tutorial.is_empty() and not is_panel_open() and not bool(info.run_over) and not _state.ClimateSystem.Lesson.active(_state)
-	_blind_labels.title.text = "Tax in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "Tax · %d stocks left" % (int(info.booms_required) - int(info.booms))
+	_blind_labels.title.text = "Tax in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "No tax due"
 	_blind_labels.balance.text = "%s due  ›" % _blind_money(info.target)
 	_blind_labels.title.add_theme_color_override("font_color", Color("ffb85e") if info.tax_boom else GOLD)
 	_blind_labels.balance.add_theme_color_override("font_color", CREAM if info.cleared else Color("ff7777"))
@@ -368,8 +337,7 @@ func _update_blind_ui() -> void:
 	_recovery_link.custom_minimum_size.y = 68 if touch else 42
 	_recovery_link.add_theme_font_size_override("font_size", 20 if touch else 14)
 	_credit_row.vertical = touch and root.size.x < 560
-	var stocks_left: int = int(info.booms_required) - int(info.booms)
-	_blind_modal_warning.text = "Tax %s in %ds · Spudions %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
+	_blind_modal_warning.text = "Tax %s in %ds · Spudions %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · No tax due" % _blind_money(absf(info.current))
 	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["climate", "tools", "barn", "inventory"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
@@ -462,9 +430,9 @@ func _refresh_blinds() -> void:
 	_refs.tax_balance.text = "%s remaining" % _blind_money(info.projected)
 	_refs.tax_balance.add_theme_color_override("font_color", GREEN if info.projected >= 0 else CHERRY)
 	_refs.tax_limit.text = "Current savings %s · Bankruptcy below %s" % [_blind_money(info.current), _blind_money(info.bankruptcy)]
-	_refs.blind_due.text = "Collector arrives in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "%d / %d major stocks until collection" % [int(info.booms), int(info.booms_required)]
+	_refs.blind_due.text = "Collector arrives in %ds" % ceili(info.due_in) if info.due_in > 0.0 else "No tax collection scheduled"
 	_refs.tax_progress.value = float(info.booms) / maxf(1, float(info.booms_required)) * 100
-	_refs.tax_advice.text = "Collection paused until recovery ends." if _state.disaster_market_active() else "Tax follows every third major stock. Unpaid tax becomes debt."
+	_refs.tax_advice.text = "Unpaid tax becomes debt. Outstanding bills remain payable."
 	var last: Dictionary = info.last_result
 	_refs.blind_last.text = "" if last.is_empty() else "Last payment · %s\nBefore collection %s · Bill %s\nRemaining %s · Savings milestone: %s" % ["Paid" if last.cleared else "Borrowed", _blind_money(last.balance), _blind_money(last.tax), _blind_money(last.after), str(_state.call("blind_progress_text", float(last.ratio)))]
 	_refs.blind_last.visible = not last.is_empty()
@@ -619,7 +587,6 @@ func set_tutorial(info: Dictionary) -> void:
 		_hotbar.offset_left = -254
 		_hotbar.offset_right = 254
 		_quick_sell.show()
-		_export_box.show()
 		set_context(_context.text)
 		_refresh_seed_visibility()
 	else:
@@ -643,14 +610,6 @@ func set_tutorial(info: Dictionary) -> void:
 		_tutorial_icon.item = {"kind": "tool", "id": tool} if not tool.is_empty() else ({"kind": "activity", "id": activity} if not activity.is_empty() else {"kind": "crop", "crop": "russet"})
 		_tutorial_icon.queue_redraw()
 		_tutorial_card.show()
-		# Clear a previous surge immediately, including its child process, so a
-		# replay never flashes through the guide or resumes a stale animation.
-		_market_impact.set_quote(_island_id(), 0.0)
-		_market_impact.remaining = 0.0
-		_market_impact._reward_remaining = 0.0
-		_market_impact.set_countdown(_island_id(), 180.0)
-		_market_impact.hide()
-		_market_impact.set_process(false)
 		_toast_timer.stop()
 		_reward_timer.stop()
 		_apply_tutorial_visibility()
@@ -710,8 +669,8 @@ func _apply_tutorial_visibility() -> void:
 	var revealed_stats: int = int("coins" in features) + int("stock" in features)
 	_stats_card.size.x = 763.0 if revealed_stats >= 3 else (510.0 if revealed_stats == 2 else 225.0)
 	if "stock" in features:
-		_top.market_name.text = "STOCKS PAUSED"
-		_top.price.text = "After the tour"
+		_top.market_name.text = "POTATO PRICES"
+		_top.price.text = "Slow seasonal drift"
 	_menu_button.visible = "menu" in features
 	_hotbar.visible = not tools.is_empty()
 	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 92.0 + maxi(0, tools.size() - 1) * 6.0)
@@ -729,8 +688,6 @@ func _apply_tutorial_visibility() -> void:
 	_combo_box.hide()
 	_toast_box.hide()
 	_reward_box.hide()
-	_export_box.hide()
-	_market_impact.hide()
 	_refresh_seed_visibility()
 	var touch = get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
@@ -980,9 +937,6 @@ func _act(action: String) -> void:
 	if action == "menu":
 		show_panel("pause", _state)
 		return
-	if action == "tracked_prices":
-		show_panel("tracked_prices", _state)
-		return
 	if action.begins_with("inventory_tab:"):
 		var tab: String = action.get_slice(":", 1)
 		if tab not in ["crops", "tools"]: return
@@ -1033,7 +987,7 @@ func _build_top() -> void:
 	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(market_box)
 	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
-	_top["price"] = _label("\uE000 38  +0%", 22, GREEN, true)
+	_top["price"] = _label("\uE000 38", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	market_box.add_child(_top["price"])
 	var stats_font: FontVariation = _compact_heading_font()
@@ -1072,24 +1026,6 @@ func _build_top() -> void:
 	_place(save, Rect2(1154, 67, 98, 27))
 	save.hide()
 	island.hide()
-	var tracked: PanelContainer = _card(Color(1, 0.984, 0.929, 0.96), 8)
-	_tracked_box = tracked
-	root.add_child(tracked)
-	tracked.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	tracked.offset_left = 28
-	tracked.offset_right = -28
-	tracked.offset_top = -245
-	tracked.offset_bottom = -195
-	tracked.hide()
-	var tracked_contents: BoxContainer = _hbox(10)
-	tracked.add_child(tracked_contents)
-	var chooser: Button = _button("Track seeds ▾", "tracked_prices")
-	chooser.custom_minimum_size = Vector2(134, 38)
-	chooser.add_theme_font_size_override("font_size", 12)
-	tracked_contents.add_child(chooser)
-	_tracked_row = _hbox(8)
-	_tracked_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tracked_contents.add_child(_tracked_row)
 
 func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> Label:
 	var box: VBoxContainer = _vbox(0)
@@ -1414,12 +1350,11 @@ func update_state(state: Node) -> void:
 	var quote: Dictionary = markets.get(crop, {})
 	var seeds: Dictionary = state.get("seed_inventory")
 	var storage: Dictionary = state.get("storage")
-	var delta: float = float(quote.get("change", 0))
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < float(state.call("blind_info").tax) else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
-	_top.price.text = "%s  %s" % [_money(float(quote.get("sell", 0))), _change_text(delta)]
-	_top.price.add_theme_color_override("font_color", GREEN if delta >= 0 else CHERRY)
+	_top.price.text = _money(float(quote.get("sell", 0)))
+	_top.price.add_theme_color_override("font_color", INK)
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = float(storage.get(crop, 0))
 	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))
@@ -1431,8 +1366,6 @@ func update_state(state: Node) -> void:
 		button.refresh(int(seeds.get(id, 0)), int(storage.get(id, 0)), id == crop)
 	_update_quest_sidebar()
 	_update_builds_badge()
-	_update_export_strip()
-	_update_tracked_prices()
 	_refresh_seed_visibility()
 	var combo_time: float = float(state.get("combo_time"))
 	_combo_box.visible = combo_time > 0 and _purchase_remaining <= 0.0
@@ -1663,7 +1596,6 @@ func show_reward(title: String, detail: String, rarity: String) -> void:
 	_reward_box.show()
 	_reward_box.move_to_front()
 	_reward_timer.start()
-	_market_impact.reward(_island_id(), 6.0)
 
 func is_panel_open() -> bool:
 	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible) or (is_instance_valid(_purchase_review) and _purchase_review.visible)
@@ -1702,8 +1634,8 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind in ["market", "sell_potatoes"]:
 		_modal_card.offset_left = -500
 		_modal_card.offset_right = 500
-		_modal_card.offset_top = -380
-		_modal_card.offset_bottom = 380
+		_modal_card.offset_top = -220 if kind == "sell_potatoes" else -380
+		_modal_card.offset_bottom = 220 if kind == "sell_potatoes" else 380
 	_modal_title.add_theme_color_override("font_color", INK)
 	_modal_title.add_theme_font_override("font", _card_heading_font)
 	_modal_title.add_theme_font_size_override("font_size", 28)
@@ -1741,7 +1673,6 @@ func show_panel(kind: String, state: Node) -> void:
 		"island": _build_island()
 		"quests": _build_quests()
 		"builds": _build_builds()
-		"tracked_prices": _build_tracked_prices()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
@@ -2114,7 +2045,7 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "magnify"], ["Tracked prices", "tracked_prices", "", "investor"]]
+	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "magnify"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	if _tutorial.is_empty():
@@ -2124,8 +2055,8 @@ func _build_pause() -> void:
 		var tutorial_feature: String = str(entry[1])
 		if tutorial_feature == "activities":
 			tutorial_feature = "duck_patrol"
-		elif tutorial_feature in ["tracked_prices", "dex"]:
-			tutorial_feature = "stock" if tutorial_feature == "tracked_prices" else "inventory"
+		elif tutorial_feature == "dex":
+			tutorial_feature = "inventory"
 		if not _tutorial.is_empty() and tutorial_feature not in _tutorial.get("features", []):
 			continue
 		var button: Button = _button("", str(entry[1]))
@@ -2243,8 +2174,6 @@ func _refresh_panel() -> void:
 			_refresh_activities()
 		"duck_patrol":
 			_refresh_duck_patrol()
-		"tracked_prices":
-			_refresh_tracked_prices()
 		"debug":
 			_refresh_debug()
 		"quests":
@@ -2287,27 +2216,6 @@ func _set_purchase_button(key: String, caption: String, cost: float, blocked: bo
 	var button: Button = _refs.get(key) as Button
 	if is_instance_valid(button):
 		button.tooltip_text = str(quote.reason) if not quote.affordable else ("Review bankruptcy warning before buying." if quote.near_limit else "")
-
-func _change_text(change: float) -> String:
-	if absf(change) >= 10000.0:
-		return ("+" if change >= 0 else "−") + _number(absf(change)) + "%"
-	return "%+.0f%%" % change
-
-func _trend(change: float, history: Array = []) -> String:
-	if absf(change) >= 400:
-		return "GOING INSANE"
-	if history.size() >= 2:
-		var reference: float = float(history[maxi(0, history.size() - 5)])
-		change = (float(history[-1]) / reference - 1.0) * 100.0 if reference > 0 else 0.0
-	if change >= 60:
-		return "SURGING"
-	if change <= -40:
-		return "FALLING HARD"
-	if change >= 5:
-		return "RISING"
-	if change <= -5:
-		return "FALLING"
-	return "STABLE"
 
 func _blind_money(value: float) -> String:
 	return str(_state.call("money", value, true))
@@ -2374,53 +2282,11 @@ func _update_quest_sidebar() -> void:
 			ready += 1
 	_quest_button.text = "Claim %d reward%s  [Q]" % [ready, "" if ready == 1 else "s"] if ready > 0 else "Quest board  [Q]"
 
-func _build_export_strip() -> void:
-	_export_box = _card(INK, 12)
-	_export_box.name = "StockCountdown"
-	_place(_export_box, Rect2(28, 688, 302, 86))
-	_export_box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	_export_box.offset_left = 28
-	_export_box.offset_right = 330
-	_export_box.offset_top = -112
-	_export_box.offset_bottom = -26
-	_export_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_surge_style = _style(Color("132c29"), 12, 16, Color("32ff8c"))
-	_surge_style.set_border_width_all(2)
-	_surge_style.shadow_size = 20
-	_export_box.add_theme_stylebox_override("panel", _surge_style)
-	var column: VBoxContainer = _vbox(3)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_export_box.add_child(column)
-	var compact_font: FontVariation = _compact_heading_font()
-	_export_title = _label("NEXT STOCK  3:00", 25, CREAM, true)
-	_export_title.add_theme_font_override("font", compact_font)
-	_export_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(_export_title)
-	_top["surge"] = _export_title
-	_export_detail = _label("+500–2,999% stock boom", 12, Color("8cdaa9"), true)
-	_export_detail.add_theme_font_override("font", compact_font)
-	_export_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(_export_detail)
-	_export_bar = ProgressBar.new()
-	_export_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_export_bar.custom_minimum_size.y = 3
-	_export_bar.show_percentage = false
-	_export_bar.add_theme_stylebox_override("background", _style(Color("284439"), 0, 2))
-	_export_bar.add_theme_stylebox_override("fill", _style(Color("32ff8c"), 0, 2))
-	column.add_child(_export_bar)
-
-func _update_export_strip() -> void:
-	_update_surge_timer()
-
 func handle_island_changed() -> void:
 	if not is_instance_valid(_state):
 		return
 	_visual_island = 0
 	update_state(_state)
-
-func show_export_alert(_active: bool) -> void:
-	if is_instance_valid(_state):
-		_update_export_strip()
 
 func _sync_crop_catalog() -> void:
 	if _crop_defs.is_empty():
@@ -2523,20 +2389,6 @@ func _catalog_number(key: String, fallback: float) -> float:
 	var constants: Dictionary = _state.get_script().get_script_constant_map()
 	return float(constants.get(key, fallback))
 
-func set_market_intensity(island: int, percent: float) -> void:
-	if not _tutorial.is_empty():
-		return
-	if not is_instance_valid(root):
-		build_ui()
-	_market_impact.set_quote(island, percent)
-
-func show_market_surge(island: int, intensity: float, seconds: float) -> void:
-	if not _tutorial.is_empty():
-		return
-	if not is_instance_valid(root):
-		build_ui()
-	_market_impact.surge(island, intensity, seconds)
-
 func _build_system() -> Object:
 	if not is_instance_valid(_state):
 		return null
@@ -2565,166 +2417,6 @@ func _build_builds() -> void:
 
 func _refresh_builds() -> void:
 	BuildPages.refresh(self)
-
-func _build_tracked_prices() -> void:
-	_heading("Tracked Seed Prices", "")
-	var summary := _label("", 14, GREEN, true)
-	_body.add_child(summary)
-	_refs.tracked_summary = summary
-	var checked := Cozy.toggle_texture(true)
-	var unchecked := Cozy.toggle_texture(false)
-	for id: String in _market_crops():
-		var card := _surface("tracked", _crop_color(id), id in _tracked_ids())
-		_body.add_child(card)
-		_refs["tracked:" + id + ":card"] = card
-		var row := _hbox(14)
-		card.add_child(row)
-		row.add_child(_icon({"kind": "seed", "crop": id, "backdrop": _crop_color(id).lerp(CREAM, 0.8).to_html(false)}, 64))
-		var body := _vbox(3)
-		body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(body)
-		body.add_child(_label(_crop_name(id) + " seeds", 19, INK, true))
-		var quote := _wrap("", 14, GREEN, true)
-		body.add_child(quote)
-		_refs["tracked:" + id + ":quote"] = quote
-		body.add_child(_label("%ds to grow" % _crop_grow(id), 12, MUTED))
-		var toggle := CheckButton.new()
-		toggle.custom_minimum_size = Vector2(116, 44)
-		toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		toggle.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		toggle.add_theme_font_override("font", Type.face(Type.BODY, 700))
-		toggle.add_theme_font_size_override("font_size", 13)
-		for color_name: String in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color"]:
-			toggle.add_theme_color_override(color_name, INK)
-		for state: String in ["normal", "hover", "pressed", "hover_pressed"]:
-			toggle.add_theme_stylebox_override(state, Cozy.button_style("hover" if state == "hover_pressed" else state, false))
-		toggle.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
-		for icon_name: String in ["checked", "checked_disabled"]: toggle.add_theme_icon_override(icon_name, checked)
-		for icon_name: String in ["unchecked", "unchecked_disabled"]: toggle.add_theme_icon_override(icon_name, unchecked)
-		toggle.set_meta("tracked_seed", id)
-		toggle.tooltip_text = "Show " + _crop_name(id) + " on this price list."
-		toggle.toggled.connect(func(enabled: bool) -> void:
-			action_requested.emit("tracked_seed:%s:%d" % [id, 1 if enabled else 0])
-			_refresh_tracked_prices())
-		row.add_child(toggle)
-		_refs["tracked:" + id + ":toggle"] = toggle
-	_body.add_child(_button("Back to the farm", "close", true))
-	_refresh_tracked_prices()
-
-func _refresh_tracked_prices() -> void:
-	if not _refs.has("tracked_summary"): return
-	var tracked := _tracked_ids()
-	_refs.tracked_summary.text = "%d of %d seeds tracked" % [tracked.size(), _market_crops().size()] if not tracked.is_empty() else "No seeds tracked"
-	for id: String in _market_crops():
-		var key: String = "tracked:" + id
-		if not _refs.has(key + ":toggle"): continue
-		var enabled: bool = id in tracked
-		var toggle: CheckButton = _refs[key + ":toggle"]
-		toggle.set_pressed_no_signal(enabled)
-		toggle.text = "Tracking" if enabled else "Track"
-		var quote: Dictionary = _state.market.get(id, {})
-		_refs[key + ":quote"].text = "%s / seed" % _money(float(quote.get("seed", 0)))
-		_refs[key + ":card"].add_theme_stylebox_override("panel", Cozy.surface("tracked", _crop_color(id), enabled))
-
-func _tracked_ids() -> Array[String]:
-	var ids: Array[String] = []
-	if is_instance_valid(_state) and _state.has_method("tracked_seed_ids"):
-		for id: Variant in _state.call("tracked_seed_ids"):
-			ids.append(str(id))
-	else:
-		ids = _market_crops()
-	return ids
-
-func _update_tracked_prices() -> void:
-	var ids: Array[String] = _tracked_ids()
-	var signature: String = "|".join(ids)
-	if signature != _tracked_signature or _tracked_row.get_child_count() == 0:
-		_tracked_signature = signature
-		for child: Node in _tracked_row.get_children():
-			_tracked_row.remove_child(child)
-			child.queue_free()
-		_tracked_labels.clear()
-		for id: String in ids:
-			var column: VBoxContainer = _vbox(0)
-			column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			_tracked_row.add_child(column)
-			column.add_child(_label(_crop_name(id).to_upper() + " SEED", 9, MUTED, true))
-			var quote: Label = _label("", 13, INK, true)
-			column.add_child(quote)
-			_tracked_labels[id] = quote
-		if ids.is_empty():
-			_tracked_row.add_child(_label("No prices pinned", 13, MUTED))
-	var now: float = Time.get_ticks_msec() / 1000.0
-	var market: Dictionary = _state.get("market")
-	for id: String in ids:
-		var price: float = float(market.get(id, {}).get("seed", 0))
-		var previous: float = float(_tracked_prices.get(id, price))
-		if not is_equal_approx(price, previous):
-			_price_moves[id] = {"from": previous, "to": price, "until": now + 2.5}
-		_tracked_prices[id] = price
-		var label: Label = _tracked_labels[id]
-		var move: Dictionary = _price_moves.get(id, {})
-		var fresh: bool = float(move.get("until", 0)) > now
-		label.text = "%s → %s %s" % [_money(float(move.get("from", price))), _money(price), "↑" if price > float(move.get("from", price)) else "↓"] if fresh else _money(price)
-		var color: Color = GREEN if price >= float(move.get("from", price)) else CHERRY
-		label.add_theme_color_override("font_color", color if fresh else INK)
-		label.add_theme_color_override("font_shadow_color", Color(color, 0.45 if fresh else 0.0))
-		label.add_theme_constant_override("shadow_outline_size", 3 if fresh else 0)
-
-func _update_surge_timer() -> void:
-	if not _tutorial.is_empty():
-		_surge_active = false
-		_surge_urgent = false
-		return
-	if not _state.has_method("surge_info"):
-		return
-	var info: Dictionary = _state.call("surge_info")
-	if bool(info.get("crash", false)):
-		_surge_active = false
-		_surge_urgent = false
-		_export_title.text = "MARKET RECOVERING" if info.phase == "recovery" else "DISASTER CRASH"
-		_export_title.add_theme_font_size_override("font_size", 22)
-		_export_title.add_theme_color_override("font_color", Color("f4bd9e"))
-		_export_detail.text = "%s %.0f%% · Booms paused" % [_crop_name(str(info.crop)), float(info.percent)]
-		_export_detail.add_theme_color_override("font_color", Color("f4bd9e"))
-		_export_bar.max_value = 75.0 if info.phase == "recovery" else 30.0
-		_export_bar.value = float(info.timer)
-		_export_bar.get_theme_stylebox("fill").bg_color = CHERRY
-		_export_box.tooltip_text = "Disaster prices can fall up to 95%. Positive stocks and the Rocket wait until recovery ends."
-		_market_impact.set_countdown(_island_id(), 180.0)
-		return
-	var seconds: int = ceili(maxf(0.0, float(info.get("timer", 180))))
-	var rocket_seconds: int = ceili(float(info.get("rocket_timer", 1800)))
-	var rocket_soon: bool = _island_id() >= 3 and rocket_seconds <= 10
-	var span: String = "+3,000–10,000%" if _island_id() >= 3 else "+500–2,999%"
-	_surge_active = bool(info.get("active", false))
-	_surge_urgent = not _surge_active and (seconds <= 10 or rocket_soon)
-	var accent: Color = _island_accent()
-	_export_title.text = "BOOM · %ds · SELL [F]" % seconds if _surge_active else "NEXT STOCK  %d:%02d" % [seconds / 60, seconds % 60]
-	if _surge_active and str(info.get("kind", "normal")) == "rocket":
-		_export_title.text = "ROCKET · %ds · SELL [F]" % seconds
-	elif rocket_soon and not _surge_active:
-		_export_title.text = "ROCKET IN  %ds" % rocket_seconds
-	_export_title.add_theme_font_size_override("font_size", 22 if _surge_active else 25)
-	_export_title.add_theme_color_override("font_color", Color.WHITE if _surge_active or _surge_urgent else CREAM)
-	_export_detail.text = "%s  +%.0f%%" % [_crop_name(str(info.get("crop", "russet"))).to_upper(), float(info.get("percent", 500))] if _surge_active else ("GET READY · " + span if _surge_urgent else span + " stock boom")
-	if rocket_soon and not _surge_active:
-		_export_detail.text = "+35,000–100,000% AFTER LIFTOFF"
-	elif _island_id() >= 3 and not _surge_active and not _surge_urgent:
-		_export_detail.text = "3K–10K%% · ROCKET %d:%02d" % [rocket_seconds / 60, rocket_seconds % 60]
-	# Keep only actionable island activities as a single short secondary line.
-	if not _surge_active and not _surge_urgent:
-		if _island_id() == 2 and bool(_state.get("export_active")):
-			_export_detail.text = "Export · %.0fs · Golden / Sunburst" % float(_state.get("export_timer"))
-	var opportunity: Dictionary = _state.call("stock_opportunity")
-	_export_box.tooltip_text = "Haul reference: %s (8%% of progression)\n%s %s at this quote. Grow and sell to earn it." % [_blind_money(opportunity.reference), _number(opportunity.units), _crop_name(opportunity.crop)]
-	_export_detail.add_theme_color_override("font_color", accent)
-	_export_bar.max_value = 10.0 if _surge_active else (10.0 if _surge_urgent else 180.0)
-	_export_bar.value = float(info.get("timer", 180)) if _surge_active or _surge_urgent else 180.0 - float(info.get("timer", 180))
-	if rocket_soon and not _surge_active:
-		_export_bar.value = rocket_seconds
-	_export_bar.get_theme_stylebox("fill").bg_color = accent
-	_market_impact.set_countdown(_island_id(), minf(float(info.get("timer", 180)), float(rocket_seconds) if _island_id() >= 3 else 180.0) if not _surge_active else 180.0)
 
 func _activity_info() -> Dictionary:
 	if not is_instance_valid(_state):

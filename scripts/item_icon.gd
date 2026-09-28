@@ -90,9 +90,6 @@ static func _metric(c: CanvasItem, id: String) -> void:
 			c.draw_circle(Vector2(14, -16), 18, Color("e8bc55"))
 			for p: Vector2 in [Vector2(-20, 1), Vector2(-3, -5), Vector2(14, 3)]: c.draw_circle(p, 16, Color("83aab4"))
 			for x: int in [-16, 0, 16]: c.draw_line(Vector2(x, 22), Vector2(x - 5, 32), Color("548da0"), 5, true)
-		"stock", "price":
-			c.draw_polyline(PackedVector2Array([Vector2(-32, 23), Vector2(-12, 1), Vector2(5, 9), Vector2(30, -25)]), LEAF, 7, true)
-			_poly(c, [Vector2(13, -27), Vector2(32, -28), Vector2(32, -9)], LEAF)
 		"yield", "seed", "crops":
 			c.draw_line(Vector2(0, 31), Vector2(0, -16), LEAF, 6, true)
 			_poly(c, [Vector2(0, 0), Vector2(-31, -9), Vector2(-28, -28), Vector2(-5, -23)], LEAF)

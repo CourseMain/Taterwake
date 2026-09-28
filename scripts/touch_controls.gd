@@ -204,12 +204,12 @@ func fit_modal() -> void:
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
-	var height: float = view.y - (24 if trading else 112)
+	var height: float = minf(view.y - 24, 620.0) if trading else view.y - 112
 	if hud._panel_kind in ["builds", "help"]:
 		height = minf(height, hud.BuildPages.content_height(hud))
 	elif hud._panel_kind in ["barn", "inventory", "tools"]:
 		height = minf(height, maxf(240.0, hud.ShopPages.content_height(hud)))
-	place(hud._modal_card, Rect2((view.x - width) / 2, 12 if trading else 100, width, height))
+	place(hud._modal_card, Rect2((view.x - width) / 2, (view.y - height) / 2 if trading else 100, width, height))
 
 func adapt(node: Node, available: float, stack: bool) -> void:
 	if node.has_meta("market_responsive"):
@@ -249,7 +249,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		node.vertical = available < 650 or row_width > available
 
 func update_interaction_prompt() -> void:
-	if game.hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
+	if game.hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
 		interaction_prompt.hide()
 		return
 	var target: Dictionary = game.world.nearby_station()
@@ -286,7 +286,7 @@ func _process(delta: float) -> void:
 	_clock += delta
 	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 
-	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending
+	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.climate.data.intro_pending
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):
 		JavaScriptBridge.eval("document.body.classList.toggle('menu-open', %s)" % ("true" if blocked else "false"), true)
@@ -300,11 +300,11 @@ func _process(delta: float) -> void:
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._tracked_box, hud._blind_card, hud._export_box, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._blind_card, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
 	if not hud._context_box.get_meta("warning", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
-		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), hud._export_title.text if not game._tutorial_active() else "Drag to move · pinch to zoom"]
+		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), "Drag to move · pinch to zoom"]
 		var weather: Dictionary = game.state.climate_info()
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		elif game.state.blind_info().due_in > 0: status.text += "\nTax %s · %ds" % [game.state.money(game.state.blind_info().tax, true), ceili(game.state.blind_info().due_in)]

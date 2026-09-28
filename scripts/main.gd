@@ -23,8 +23,6 @@ const CAMERA_TRACKPAD_PAN: float = 24.0
 const DEBUG_ACCESS_CODE: String = "ORIGINALLYSPUDREPUBLIC"
 const DEBUG_TIME_SPEEDS: Array[float] = [1.0, 2.0, 5.0, 10.0, 30.0]
 const MAX_ACCELERATED_STEP: float = 1.0
-const FANFARE_NOTES: Array[float] = [523.25, 659.25, 783.99, 1046.5]
-const STOCK_NOTES: Array[float] = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25, 1174.66, 1046.50]
 
 var state
 var world
@@ -58,12 +56,6 @@ var tone_remaining: float = 0.0
 var tone_length: float = 0.1
 var sparkle_tone: bool = false
 var last_frost_active: bool = false
-var surge_live: bool = false
-var surge_band: int = 0
-var fanfare_remaining: float = 0.0
-var fanfare_phase: float = 0.0
-var fanfare_island: int = 1
-var surge_beat_clock: float = 0.0
 var pest_alert: Node
 var _zoom_target_size: float = 38.0
 var _camera_home_position := Vector3.ZERO
@@ -78,9 +70,7 @@ var _map_drag_window_size := Vector2i.ZERO
 var tutorial: Node
 var tutorial_notes: Array[float] = []
 var tutorial_note_clock: float = 0.0
-var rocket_cutscene: Control
-var stock_music_time: float = 0.0
-var stock_shake_clock: float = 0.0
+var weather_shake_clock: float = 0.0
 var debug_unlocked: bool = false
 var debug_time_multiplier: float = 1.0
 var graphics_quality: String = "balanced"
@@ -145,13 +135,6 @@ func _ready() -> void:
 	hud._conversation = conversation
 	conversation.finished.connect(_finish_conversation)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
-	var cinema_layer := CanvasLayer.new()
-	cinema_layer.name = "StockRocketCinema"
-	cinema_layer.layer = 100
-	add_child(cinema_layer)
-	rocket_cutscene = load("res://scripts/stock_rocket_cutscene.gd").new()
-	cinema_layer.add_child(rocket_cutscene)
-	rocket_cutscene.finished.connect(_on_rocket_finished)
 	hud.action_requested.connect(_on_user_action)
 	state.changed.connect(_on_state_changed)
 	state.notified.connect(_on_notification)
@@ -162,7 +145,6 @@ func _ready() -> void:
 	state.island_changed.connect(_on_island_changed)
 	state.export_changed.connect(_on_export_changed)
 	state.blind_resolved.connect(_on_blind_resolved)
-	state.tax_boom_started.connect(_on_tax_boom)
 	state.run_ended.connect(_on_run_ended)
 	state.climate_changed.connect(_on_climate_changed)
 	_setup_sound()
@@ -214,11 +196,8 @@ func _process(delta: float) -> void:
 	if state.climate.data.intro_pending:
 		_pump_audio()
 		return
-	if state.rocket_pending:
-		_start_rocket_if_ready()
-		return
-	# Scale only the simulation. A capped accelerated step keeps short market
-	# windows visible even after a slow frame; presentation stays in real time.
+	# Scale only the simulation. A capped accelerated step keeps farming
+	# responsive after a slow frame; presentation stays in real time.
 	var simulation_delta: float = _simulation_delta(delta)
 	_updating_simulation = true
 	_advance_simulation(simulation_delta)
@@ -227,9 +206,6 @@ func _process(delta: float) -> void:
 		_simulation_changed = false
 		_on_state_changed()
 	if state.run_over:
-		return
-	if state.rocket_pending:
-		_start_rocket_if_ready()
 		return
 	_update_equipment_card(delta)
 	if prize_target:
@@ -242,7 +218,7 @@ func _process(delta: float) -> void:
 	world.set_day_time(state.elapsed)
 	climate_audio.set_weather(climate_info, state.current_island, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
-	_update_stock_shake(delta)
+	_update_weather_shake(delta)
 	var infested: int = 0
 	for plot in state.plots:
 		if bool(plot.get("pests", false)) and int(plot.stage) > 0:
@@ -328,11 +304,6 @@ func _process(delta: float) -> void:
 			_play_tone(tutorial_notes.pop_front(), 0.11)
 			tutorial_note_clock = 0.14
 	_pump_audio()
-	if surge_band > 0 and surge_band < 3 and fanfare_remaining <= 0.0:
-		surge_beat_clock -= delta
-		if surge_beat_clock <= 0.0 and tone_remaining < 0.1:
-			_play_tone(196.0 if state.current_island == 1 else (246.94 if state.current_island == 2 else 329.63), 0.065)
-			surge_beat_clock = 0.45 if surge_band == 1 else 0.30
 
 func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 	if mode not in GraphicsPreferences.MODES:
@@ -353,10 +324,6 @@ func _simulation_delta(delta: float) -> float:
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
 	var step: float = minf(delta * multiplier, MAX_ACCELERATED_STEP if multiplier > 1.0 else 3600.0)
-	# State pauses exactly at a rocket boundary. Feed every simulation system
-	# that same interval, including processing and its furnace heat bonus.
-	if state.current_island >= 3 and not _tutorial_active():
-		step = minf(step, maxf(0.000001, float(state.rocket_timer)))
 	return step
 
 func _advance_simulation(delta: float) -> void:
@@ -381,8 +348,6 @@ func _advance_simulation(delta: float) -> void:
 			return
 		builds.update(step, processing_step)
 		remaining = maxf(0.0, remaining - step)
-		if state.rocket_pending:
-			return
 
 func _set_debug_session(unlocked: bool, error: String = "") -> void:
 	debug_unlocked = unlocked
@@ -492,8 +457,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if state.run_over:
 		return
-	if state.rocket_pending:
-		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE:
@@ -580,7 +543,7 @@ func _on_user_action(action: String) -> void:
 		_on_action(action)
 
 func _start_conversation(id: String, requested_service: String = "") -> void:
-	if not state.NpcRoster.available(id, state.current_island) or _tutorial_active() or state.run_over or state.rocket_pending or state.climate.data.intro_pending: return
+	if not state.NpcRoster.available(id, state.current_island) or _tutorial_active() or state.run_over or state.climate.data.intro_pending: return
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
 	_cancel_walk()
@@ -631,7 +594,7 @@ func _recenter_camera() -> void:
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _map_navigation_allowed() -> bool:
-	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.rocket_pending and not state.climate.data.intro_pending and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
+	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.climate.data.intro_pending and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
 
 func _stop_map_navigation() -> void:
 	_cancel_map_drag()
@@ -881,7 +844,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		tutorial.update(0.0)
 
 func _interact_nearby() -> void:
-	if hud.is_panel_open() or state.run_over or state.rocket_pending or state.climate.data.intro_pending: return
+	if hud.is_panel_open() or state.run_over or state.climate.data.intro_pending: return
 	if prize_target:
 		var eligible: Array = builds.professions.cultivation_info().eligible
 		var nearest_crop: int = -1
@@ -1031,7 +994,7 @@ func _on_state_changed() -> void:
 		if state.current_island == 3 and last_frost_active != state.frost_active:
 			if state.frost_active:
 				_play_tone(523.0, 0.2)
-			elif state.thaw_remaining > 0.0:
+			elif state.frost_cleared == state.frost_target_count:
 				_play_tone(1174.0, 0.7)
 				sparkle_tone = true
 				world.play_reward("legendary")
@@ -1039,68 +1002,17 @@ func _on_state_changed() -> void:
 	if hud != null:
 		hud.update_state(state)
 		_hud_update_frame = Engine.get_process_frames()
-		_update_market_impact()
 
-func _update_market_impact() -> void:
-	if state.run_over or _tutorial_active() or state.rocket_pending:
-		hud.set_market_intensity(state.current_island, 0.0)
-		surge_live = false
-		surge_band = 0
-		fanfare_remaining = 0.0
-		return
-	var peak: float = float(state.market[state.selected_crop].change)
-	var crazy: bool = peak > 300.0
-	var band: int = HudScript.MarketImpact.tier_for_percent(peak)
-	hud.set_market_intensity(state.current_island, peak)
-	if band < surge_band:
-		fanfare_remaining = 0.0
-	if band > surge_band:
-		fanfare_island = state.current_island
-		fanfare_remaining = 1.2
-		fanfare_phase = 0.0
-		stock_music_time = 0.0
-		stock_shake_clock = 0.0
-	surge_live = crazy
-	surge_band = band
-
-
-func _start_rocket_if_ready() -> void:
-	# Simulation pauses during the launch presentation.
-	if rocket_cutscene.active:
-		return
-	_cancel_walk()
-	hud.close_panel()
-	fanfare_remaining = 0.0
-	tone_remaining = 0.0
-	surge_band = 0
-	world.camera.h_offset = 0.0
-	world.camera.v_offset = 0.0
-	hud.set_market_intensity(state.current_island, 0.0)
-	if not test_mode:
-		state.save_game()
-	rocket_cutscene.start(state.current_island)
-	farm_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
-
-
-func _on_rocket_finished() -> void:
-	farm_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	state.complete_rocket_launch()
-	if not test_mode:
-		state.save_game()
-
-
-func _update_stock_shake(delta: float) -> void:
-	stock_shake_clock += delta
+func _update_weather_shake(delta: float) -> void:
+	weather_shake_clock += delta
 	var amplitude: float = 0.0
-	if surge_band >= 3 and not _tutorial_active():
-		amplitude = (0.075 if surge_band == 3 else 0.12) * (0.45 + 0.55 * exp(-fmod(stock_shake_clock, 0.5) * 7.0))
 	climate_shake = move_toward(climate_shake, 0.0, delta * 0.25)
 	var weather: Dictionary = state.climate_info()
 	if weather.phase == "active" and weather.event == "storm" and weather.island == state.current_island:
-		amplitude += float(weather.severity) * 0.075 * (0.2 + 0.8 * pow(maxf(0.0, sin(stock_shake_clock * 1.7)), 3.0))
+		amplitude += float(weather.severity) * 0.075 * (0.2 + 0.8 * pow(maxf(0.0, sin(weather_shake_clock * 1.7)), 3.0))
 	amplitude = minf(0.26, amplitude + climate_shake)
-	world.camera.h_offset = sin(stock_shake_clock * 43.0) * amplitude
-	world.camera.v_offset = sin(stock_shake_clock * 57.0 + 0.8) * amplitude * 0.6
+	world.camera.h_offset = sin(weather_shake_clock * 43.0) * amplitude
+	world.camera.v_offset = sin(weather_shake_clock * 57.0 + 0.8) * amplitude * 0.6
 
 func _on_island_changed(id: int) -> void:
 	_cancel_prize_target()
@@ -1119,17 +1031,13 @@ func _on_island_changed(id: int) -> void:
 	world.set_export_state(state.export_active, state.export_timer)
 	world.set_frost_state(state.frost_active, state.frost_timer)
 	world.set_activity_state(activities.info())
-	surge_live = false
-	surge_band = 0
-	fanfare_remaining = 0.0
-	stock_music_time = 0.0
 	if hud != null:
 		hud.update_state(state)
 		hud.set_context("")
 
 func _on_export_changed(active: bool) -> void:
 	world.set_export_state(active, state.export_timer)
-	if active and not state.disaster_market_active():
+	if active:
 		if state.current_island == 2:
 			world.play_reward("legendary")
 		_play_tone(1046.0, 0.7)
@@ -1224,8 +1132,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 		return
 	if state.run_over and action not in ["reset", "debug", "close"] and not action.begins_with("debug:"):
 		return
-	if state.rocket_pending and action != "reset":
-		return
 	if action.begins_with("farm_help:"):
 		_farm_help_action(action.get_slice(":", 1))
 		return
@@ -1257,7 +1163,7 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "tracked_prices", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1325,11 +1231,7 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 				"sell_processed": builds.sell_processed()
 		"close": hud.close_panel()
 		"crop": state.select_crop(parts[1])
-		"tracked_seed":
-			if parts.size() == 3:
-				state.set_tracked_seed(parts[1], parts[2] == "1")
-				if not test_mode:
-					state.save_game()
+
 		"tool": _select_tool(parts[1])
 		"buy": state.buy_seeds(parts[1], int(parts[2]))
 		"sell": state.sell_crop(parts[1], int(parts[2]))
@@ -1373,11 +1275,6 @@ func _on_purchase_completed(receipt: Dictionary) -> void:
 	if _tutorial_active():
 		tutorial.observe_purchase(receipt)
 
-func _on_tax_boom() -> void:
-	var info: Dictionary = state.blind_info()
-	hud.show_toast("TAX BOOM +%.0f%% · Bill %s\nTwo more major stocks to prepare." % [(float(info.tax_multiplier) - 1.0) * 100.0, state.money(info.tax, true)])
-	_play_tone(196.0, 0.45)
-
 func _on_climate_changed(phase: String) -> void:
 	if phase in ["calm", "recovery"]:
 		climate_target = ""
@@ -1411,8 +1308,6 @@ func _on_run_ended() -> void:
 	climate_shake = 0.0
 	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), state.current_island, true)
 	pest_alert.update(0.0, 0)
-	surge_band = 0
-	fanfare_remaining = 0.0
 	world.camera.h_offset = 0.0
 	world.camera.v_offset = 0.0
 	_play_tone(130.81, 0.65)
@@ -1502,14 +1397,11 @@ func _pump_audio() -> void:
 	if audio_playback == null:
 		return
 	var frames: int = audio_playback.get_frames_available()
-	if tone_remaining <= 0.0 and fanfare_remaining <= 0.0 and (surge_band < 3 or state.rocket_pending):
+	if tone_remaining <= 0.0:
 		# Silence is a bulk transfer, not 22,050 interpreted push_frame calls/sec.
 		_silent_audio.resize(frames)
 		audio_playback.push_buffer(_silent_audio)
 		return
-	var fanfare_pitch: float = 1.0 if fanfare_island == 1 else (1.12246 if fanfare_island == 2 else 1.25992)
-	var stock_pitch: float = 1.0 if state.current_island == 1 else (1.12246 if state.current_island == 2 else 1.25992)
-	var stock_playing: bool = surge_band >= 3 and not state.rocket_pending
 	for frame in range(frames):
 		var sample: float = 0.0
 		if tone_remaining > 0.0:
@@ -1518,22 +1410,6 @@ func _pump_audio() -> void:
 			sample = harmonic * envelope * 0.4
 			audio_phase = fmod(audio_phase + tone_frequency / 22050.0, 1.0)
 			tone_remaining -= 1.0 / 22050.0
-		if fanfare_remaining > 0.0:
-			var age: float = 1.2 - fanfare_remaining
-			var note: int = mini(3, int(age / 0.13))
-			var envelope: float = minf(1.0, age * 65.0) * minf(1.0, fanfare_remaining * 3.0)
-			sample += (sin(fanfare_phase * TAU) + 0.35 * sin(fanfare_phase * TAU * 2.0) + 0.18 * sin(fanfare_phase * TAU * 3.0)) * envelope * 0.28
-			fanfare_phase = fmod(fanfare_phase + FANFARE_NOTES[note] * fanfare_pitch / 22050.0, 1.0)
-			fanfare_remaining -= 1.0 / 22050.0
-		if stock_playing:
-			# An original pentatonic synth groove follows the visual half-second beat.
-			var beat: float = fmod(stock_music_time, 0.25)
-			var bass_beat: float = fmod(stock_music_time, 0.5)
-			var note: float = STOCK_NOTES[int(stock_music_time / 0.25) % STOCK_NOTES.size()] * stock_pitch
-			sample += sin(TAU * note * stock_music_time) * exp(-beat * 14.0) * minf(1.0, beat * 120.0) * 0.22
-			sample += sin(TAU * 130.81 * stock_pitch * stock_music_time) * exp(-bass_beat * 9.0) * 0.18
-			sample += sin(TAU * (48.0 * bass_beat + 1.8 * (1.0 - exp(-bass_beat * 30.0)))) * exp(-bass_beat * 23.0) * 0.32
-			stock_music_time += 1.0 / 22050.0
 		sample = clampf(sample, -0.95, 0.95)
 		audio_playback.push_frame(Vector2(sample, sample))
 
@@ -1550,12 +1426,9 @@ func _farm_help_action(action: String) -> void:
 		if action == "dismiss" or tip.action == "dismiss":
 			help.dismiss(str(tip.id))
 			hud._help_cooldown = 12.0
-		elif tip.action == "practice":
-			if not help.start_practice(state):
-				hud.show_toast("Keep some harvested crops ready. Practice is available between stock booms in the Valley.")
 		else:
 			# Browsing dismisses the suggestion; it never certifies understanding.
-			if tip.id not in ["pests", "stocks"]:
+			if tip.id not in ["pests"]:
 				help.dismiss(str(tip.id))
 				hud._help_cooldown = 12.0
 			_on_action(str(tip.action))

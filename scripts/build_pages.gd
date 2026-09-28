@@ -9,7 +9,7 @@ const BENEFITS: Dictionary = {
 	"farmer": "+5% yield per level. Faster growth from level 2; wider tools at 3, 10 and 20. +1 compost per harvested patch (max 99).",
 	"industrialist": "Grades: F (1.05× sale value) to SSS (8×). Faster processing each level; better machine grades at 3, 10 and 20. Extra queue slots at 10 and 20.",
 	"scientist": "Honeyheart: +50% yield. Sundew: half drought stress. Frostgold: ordinary frost immunity.",
-	"investor": "Quotes start 20% above market. Each delivery adds 3 percentage points, up to 50%. Active bonus: more positive market events.",
+	"investor": "Quotes start 20% above market. Each delivery adds 3 percentage points, up to 50%.",
 	"gambler": "Odds: 20% triple, 55% unchanged, 25% half. Table cooldown: 30s. Charm recharge: 180s.",
 }
 const TRADEOFFS: Dictionary = {

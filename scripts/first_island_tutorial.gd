@@ -12,7 +12,7 @@ const STEPS: Array[Dictionary] = [
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
-	{"id": "market", "title": "Seed market", "body": "Click the market to browse. Seeds follow crop prices, so buying during a boom is expensive.", "focus": "market"},
+	{"id": "market", "title": "Seed market", "body": "Click the market to browse. Seeds cost 75% of each variety’s base price.", "focus": "market"},
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},

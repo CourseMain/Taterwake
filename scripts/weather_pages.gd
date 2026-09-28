@@ -55,7 +55,7 @@ func setup(owner_hud) -> void:
 	_metrics.columns = 3
 	_metrics.add_theme_constant_override("h_separation", 18)
 	status.add_child(_metrics)
-	for entry: Array in [["water","TANK"],["market","SALE PRICES"],["tax","RECOVERY TAX"]]:
+	for entry: Array in [["water","TANK"],["tax","RECOVERY TAX"]]:
 		var col : VBoxContainer = hud._vbox(4)
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_metrics.add_child(col)
@@ -165,7 +165,6 @@ func refresh() -> void:
 	hud._refs.climate_market.visible = info.phase != "calm"
 	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Next tax " + farm.money(farm.blind_info().tax)
 	_values.water.text = "%d / %d" % [int(info.supply.water), int(info.water_capacity)]
-	_values.market.text = "%d%%" % roundi(float(info.sell_factor) * 100.0)
 	_values.tax.text = "+%d%%" % roundi(float(info.pressure) * 100.0)
 	for event: String in ["drought", "flood", "storm", "freeze"]:
 		for metric: String in ["field", "barn", "tax"]:
