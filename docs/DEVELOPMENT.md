@@ -13,11 +13,110 @@
 
 Taterland retains its earlier save names for compatibility: `user://spud_valley_save_v3.json` and the original `spud_valley_save.json` backup. Existing farms retain their coins, crops, builds, equipment and island progress. Browser and native saves remain separate.
 
+Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 path is never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
+
 The native user-data directory is explicitly pinned to the existing **Spud Valley** location under Godot's application data. Renaming the game therefore continues to use the same desktop farm instead of creating a separate Taterland save folder. Browser saves still depend on the host address and browser profile.
 
 Saves, private configuration, local recordings and generated builds do not belong in the source repository. Do not run a scene check against a real player save. Scene checks use `-- --integration-test` to skip normal save loading and automatic saving.
 
 ## Checks
+
+Run the headless suites through `tools/run_tests.sh` (requires Python 3 and Godot 4.7.2):
+
+```sh
+tools/run_tests.sh                         # all suites, four at a time
+tools/run_tests.sh -j 1                    # serial baseline
+GODOT_BIN=/path/to/godot tools/run_tests.sh # select an executable
+tools/run_tests.sh -j 1 test_save_safety test_game
+```
+
+The runner imports once when `.godot/imported` is missing, discovers every `tests/test_*.gd` except `*_browser.*`, and passes `-- --integration-test` to each suite. Optional suite names can include `tests/` and `.gd`. `--timeout 180` sets the per-process timeout in seconds (180 by default, also used for import). Each suite prints one PASS/FAIL/TIMEOUT/ERRORS line with its own check/failure summary, including names containing spaces, slashes and plus signs. Nonzero failure counts or process exits fail; missing summaries and engine/script errors also fail, even with exit code zero. Full logs and `results.json` are in `artifacts/test-results/` and are replaced for the suites run. The runner exits nonzero unless every selected suite passes.
+
+### Baseline
+
+Segment 1, 2026-09-28: macOS, Godot `4.7.2.stable.official.ed1daf0bf`, source branch `redesign` from `e85f746`. Ran all 103 discovered suites with `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1`, using the default 180-second timeout. The full run returned nonzero: **72 PASS, 24 FAIL, 5 TIMEOUT, 2 ERRORS**. A subsequent serial recheck of `test_climate_operations` and `test_water_loop_state` passed after completing their field-access fixture repairs. The reconciled result below is **74 PASS, 22 FAIL, 5 TIMEOUT, 2 ERRORS**; this is not a green baseline.
+
+`test_save_safety` passes all 28 checks, including malformed/invalid/oversized saves, rejected-file replacement and preservation, rolling backup contents/recovery, aborted backup moves and the legacy-path guard. `test_game` passes all 59 boot/integration checks. The runner was also smoke-tested with an isolated fake engine for all four statuses, missing summaries, names with spaces/slashes/plus signs, browser exclusion, suite selection, integration arguments, `GODOT_BIN` and one-time import.
+
+The requested fixtures now record field expansion beside their bed unlocks. The operations/water fixtures open all islands needed by their simulated old saves; the water migration check also verifies that revision 21 reclaims empty upper beds while preserving real crops and other progress. The legacy fixture in `test_tax_credit_land.gd` is unchanged. All suites changed for this segment pass **except `test_stock_rarity`**, whose nine existing Investor outfit-bonus assertions are unrelated to field access. Those assertions remain intact under the instruction to leave unrelated failures for later segments; the acceptance condition that every touched suite passes is therefore not fully met.
+
+Passing suites (all assertions passed and no engine/script errors were reported):
+
+```text
+test_blinds.gd                            test_blinds_game.gd
+test_branding.gd                          test_build_overview.gd
+test_build_professions.gd                 test_build_professions_game.gd
+test_build_transactions.gd                test_build_xp.gd
+test_builds.gd                            test_clarity.gd
+test_climate.gd                           test_climate_game.gd
+test_climate_operations.gd                test_climate_visuals.gd
+test_crop_growth.gd                       test_day_night.gd
+test_debt_credit.gd                       test_debug_money.gd
+test_debug_money_ui.gd                    test_debug_recovery.gd
+test_debug_trophies.gd                    test_debug_trophies_ui.gd
+test_disaster_markets.gd                  test_equipment.gd
+test_equipment_preview_motion.gd          test_farm_alerts.gd
+test_farm_clarity.gd                      test_farm_help.gd
+test_farm_interaction.gd                  test_furnace_warmth.gd
+test_game.gd                              test_gear_rewards.gd
+test_graphics_preferences.gd              test_guidance_polish.gd
+test_harvest_identity.gd                  test_hud_layout.gd
+test_island_activities.gd                 test_island_rewards.gd
+test_map_pan.gd                           test_map_zoom.gd
+test_market_curves.gd                     test_npc_conversations.gd
+test_npc_prompts.gd                       test_pest_schedule.gd
+test_profession_clarity_ui.gd             test_purchase_activity_hud.gd
+test_purchase_review.gd                   test_purchase_world.gd
+test_qol_state.gd                         test_quest_rewards_hud.gd
+test_responsive_fit.gd                    test_roll_balance.gd
+test_roll_clarity_ui.gd                   test_roll_luck_meter.gd
+test_round_avatar.gd                      test_save_safety.gd
+test_seed_market.gd                       test_simulation.gd
+test_static_mesh_compiler.gd              test_stock_ceiling.gd
+test_stock_impact_tiers.gd                test_stock_rocket_cutscene.gd
+test_stock_rocket_game.gd                 test_stock_rocket_state.gd
+test_tax_credit_land.gd                   test_tutorial_barn.gd
+test_tutorial_game.gd                     test_ui_audit.gd
+test_village_identity.gd                  test_wardrobe_world.gd
+test_water_loop_game.gd                   test_water_loop_state.gd
+test_world_feedback.gd                    test_world_rendering_optimization.gd
+```
+
+Remaining failures are recorded below without disabling assertions or changing the covered systems. TIMEOUT means the process failed to finish within 180 seconds; these five logs contain script errors before the timeout. ERRORS distinguishes engine errors or a missing conforming summary from assertion failures.
+
+| Suite | Result | Observed reason |
+| --- | --- | --- |
+| `test_climate_lesson.gd` | FAIL | Irrigation coverage/resource assertions and the old-save lesson migration assertion fail. |
+| `test_climate_projects.gd` | TIMEOUT | Irrigation purchase does not create the expected project node; accessing its missing dictionary key raises a script error, then the suite times out. |
+| `test_clothing_abilities.gd` | FAIL | Scientist experiment description and mutation outcomes disagree with the fixture's clothing/ability expectations. |
+| `test_debug_access_time.gd` | FAIL | 2×/5×/10×/30× button selection and subsequent simulation-speed assertions fail. |
+| `test_equipment_ui.gd` | FAIL | Passive-item tab, build-linked bonus header and unequip-total assertions fail. |
+| `test_farm_viewport.gd` | FAIL | Scaled screen clicks fail to queue the expected plots across islands and graphics modes in headless runs. |
+| `test_feature_ui.gd` | TIMEOUT | Activity picking fails, then the unfinished reel has no revealed title; the script errors and times out. |
+| `test_ferry_access.gd` | FAIL | Click-to-board, arrival travel panel and E-at-ferry assertions fail on all islands. |
+| `test_fullscreen_controls.gd` | FAIL | The headless display does not enter native fullscreen or show the corresponding exit action. |
+| `test_island2.gd` | FAIL | Assumes fully open Shores fields and older quests/rewards; field-work, save and migration assertions fail. |
+| `test_island2_game.gd` | TIMEOUT | Island picking, quest/crop/export controls fail; a missing button causes a null get_global_rect() call and timeout. |
+| `test_island_features_game.gd` | FAIL | Duck purchase/patrol, furnace fuel/processing and batch-reveal/retired-counter assertions fail. |
+| `test_latest_game.gd` | FAIL | Paid Roll House controls and Scientist build selection are not available as expected after a crate. |
+| `test_market_dialogue.gd` | ERRORS | All 27 assertions pass, but Godot reports one resource still in use at exit. |
+| `test_pest_audio.gd` | FAIL | Reward reels do not finish as expected, cascading into later reel and higher-tier celebration/audio assertions; pest checks pass. |
+| `test_playability_audit.gd` | FAIL | Tax-warning wording and notification clearance above the roll panel fail. |
+| `test_purchase_game.gd` | TIMEOUT | Rejected-purchase feedback/tool-shop clicks fail; an absent receipt kind raises a script error, then the suite times out. |
+| `test_purchase_receipts.gd` | FAIL | Barn capacity/upgrade receipt expectations and all-48/all-80-bed island-unlock receipt expectations fail. |
+| `test_qol_update.gd` | FAIL | Expects debug island unlocks to open entire fields; the synthetic pre-rebalance save is rejected, so crop-growth migration assertions also fail. |
+| `test_stock_rarity.gd` | FAIL | Nine repetitions of the Investor outfit stock-bonus assertion fail; save/bed validation passes after the fixture repair. This is an unrelated remaining failure in a touched suite. |
+| `test_touch_controls.gd` | TIMEOUT | The standard headless invocation does not enable touch controls; target-size and UI assertions fail, then a missing control causes get_global_rect() on Nil and timeout. |
+| `test_tutorial_hud.gd` | FAIL | Normal-menu repeatable guided-introduction assertion fails. |
+| `test_tutorial_state.gd` | ERRORS | All 55 checks report zero failures, but the suite emits a nonstandard summary (Tutorial state checks: 55; failures: 0) that does not match the required runner pattern. |
+| `test_tutorial_world.gd` | FAIL | Opening the tutorial does not hide station clutter as expected. |
+| `test_ui_polish.gd` | FAIL | Quest claim payout/status assertion fails. |
+| `test_weather_dashboard.gd` | FAIL | Debt-funded equipment installation and resulting water-tank telemetry assertions fail. |
+| `test_weather_station.gd` | FAIL | Revision-18 equipment migration is rejected, and the expected shared highest sprinkler level is not restored. |
+| `test_winter.gd` | FAIL | Winter quest control/seed reward, crop maturation/harvest and full-field tool-area assertions fail. |
+| `test_world_graphics_quality.gd` | FAIL | Camera depth bounds do not contain all island/offshore geometry in three assertions. |
+
+Raw local outputs are `artifacts/segment1-baseline.log`, `artifacts/segment1-baseline-results.json`, the per-suite logs in `artifacts/test-results/`, and `artifacts/segment1-final-results.json` with the two successful rechecks reconciled. Artifacts are ignored by Git; this section is the committed baseline record.
 
 ### Climate economy and taxes (v1.0.2)
 
@@ -48,27 +147,20 @@ Mechanics revision 14 retains the introduction flags alongside weather timers, a
 Focused checks (all isolated from real saves):
 
 ```sh
-godot --headless --path . --script tests/test_blinds.gd -- --integration-test
-godot --headless --path . --script tests/test_blinds_game.gd -- --integration-test
-godot --headless --path . --script tests/test_climate.gd -- --integration-test
-godot --headless --path . --script tests/test_climate_game.gd -- --integration-test
+tools/run_tests.sh -j 1 test_blinds test_blinds_game test_climate test_climate_game
 ```
 
 These cover every island baseline, tax clearing/borrowing, overkill, negative huge numbers, exact bankruptcy boundaries, tax-caused collapse, caps, full selling windows, event counting, travel, old-save migration, every weather phase, initiative benefits, processing losses, corrupted saves, warning/deadline/death reloads, controller actions, responsive composition and restart. Omit `--headless` and add `--capture` to a scene check for screenshots under `artifacts/`.
 
-Import the project once before running tests. Substitute your Godot executable for `godot` if needed:
+The runner handles the initial import. For a focused simulation and boot check:
 
 ```sh
-godot --headless --path . --editor --quit
-godot --headless --path . --script res://tests/test_simulation.gd
-godot --headless --path . --script res://tests/test_gear_rewards.gd
-godot --headless --path . --script res://tests/test_equipment.gd
-godot --headless --path . --script res://tests/test_game.gd -- --integration-test
+tools/run_tests.sh -j 1 test_simulation test_gear_rewards test_equipment test_game
 ```
 
 Run `node tests/test_web_canvas.js` to verify browser resolution limits and aspect ratios. `test_debug_access_time.gd`, `test_stock_ceiling.gd` and `test_stock_rocket_state.gd` cover the access gate, time controls and market windows.
 
-Additional files in `tests/` cover island activities, purchase receipts, market limits, pests, clothing, camera gestures and responsive layout. Interface and lighting checks may also need a rendered run to inspect their visual output. Read each check's setup before running it. Godot can print script errors even when its process exit status is zero; inspect the output as well.
+Additional files in `tests/` cover island activities, purchase receipts, market limits, pests, clothing, camera gestures and responsive layout. Interface and lighting checks may also need a rendered run to inspect their visual output. Read each check's setup before running it. The runner detects Godot errors even when its process exit status is zero; inspect the saved log for details.
 
 Python and macOS launcher syntax checks:
 
