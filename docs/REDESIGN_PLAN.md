@@ -2,8 +2,19 @@
 
 Design plan for turning Taterland from a big-number market game into a hard,
 legible farming survival game where climate change is the antagonist. Written
-as a handoff for implementation. Sections marked **DECISION** need the owner's
-call before the phase that depends on them starts.
+as a handoff for implementation.
+
+## 0. Locked decisions
+
+- **Real-time seasons.** Each working season is a short real-time phase with
+  the avatar and tools; winter is a menu phase.
+- **Ten-year run.** Foreclosure is game over. The run ends with the ten-year
+  ledger and then the **fifty-year epilogue** (§4b).
+- **One farm.** The climate shifts in place on a single farm. Other islands
+  may return later as selectable regions at new-run time, not as progression.
+- **Professions are cut.** The five builds, their activities, levels, XP and
+  bonuses are removed. A mild run-start "farming style" with ±10–25% tilts
+  may be revisited after the core is tuned. The Gambler does not return.
 
 ## 1. The pitch
 
@@ -85,22 +96,63 @@ have saved about 60%.` Hard is fine. Unexplained is not.
 - Each working season is a real-time phase of about **2 to 3 minutes**. The
   season length is the labour budget: you cannot water, hoe and harvest every
   bed if the farm is big. Hiring a hand costs money and buys time. Sprint stays.
-  **DECISION:** real-time seasons (recommended, keeps the action-farming feel)
-  versus fully turn-based seasons (simpler to tune, loses the avatar play).
 - **Winter** is a menu phase: the ledger, the forecast for next year, the shop.
 - A run is **ten years**, roughly 90 minutes of play across sessions, saved
-  every season. **DECISION:** run-based with foreclosure as game over
-  (recommended: gives an ending, a score and replay) versus endless.
+  every season. Foreclosure is game over.
 - Foreclosure happens when the overdraft passes the bank's limit. The bank is
   the second antagonist and is polite about it.
-- End of run: a ten-year ledger, the climate record, and a title for how you
-  farmed (Adapter, Gambler, Shopkeeper, Stubborn).
+- End of run: a ten-year ledger, the climate record, a title for how you
+  farmed (Adapter, Shopkeeper, Stubborn, Sold Up), then the epilogue.
 
-Islands: **DECISION.** Recommended: one farm whose climate shifts in place over
-the ten years, because "the villain is coming to your farm" is the story.
-Later, the other two islands become selectable **regions** at new-run time
-(Shores = heat and flood, Frosthollow = cold and storm) with their own climate
-curve, rather than progression tiers.
+Islands: one farm whose climate shifts in place over the ten years, because
+"the villain is coming to your farm" is the story. Later, the other two islands
+can become selectable **regions** at new-run time (Shores = heat and flood,
+Frosthollow = cold and storm) with their own climate curve.
+
+## 4b. The fifty-year epilogue
+
+After the ten-year ledger, the game fast-forwards forty more years with no
+player input and shows what the farm became. This is the villain's ending and
+the reason the run mattered.
+
+How it is decided. The epilogue runs the same simulation the player just
+played, on the player's final state, with the climate curve continuing to
+climb, and with a simple caretaker policy: keep doing what the player was doing
+(same crops, same protections, same diversification, repairs when affordable).
+The player never sees a dice roll; the outcome is earned by the final state.
+Four axes decide the picture:
+
+- **Solvency**: cash and debt at year 10, and the caretaker's net trend.
+- **Adaptation**: which protections exist and at what level versus the
+  disasters the curve will bring.
+- **Diversification**: how much income does not depend on the weather.
+- **Land health**: soil stress carried over from repeated disasters, tank and
+  drainage condition, tree cover.
+
+Possible futures, rendered on the same 3D map with new visual states:
+
+- **Dust**: cracked pale soil, dead furrows, empty tank, collapsed roof, the
+  sea pulled back. Drought-heavy curve, no water protection.
+- **Drowned**: beds under standing water, silted paths, the ferry jetty gone.
+  Flood-heavy curve, no drainage.
+- **Deserted**: sound farm, nobody home, sign reads "For sale". Solvent but
+  no diversification and the caretaker went under around year 25.
+- **Sold to the estate**: beds replaced by one giant monoculture field, the
+  village buildings turned into storage, potatoes gone. Foreclosed early with
+  land still healthy.
+- **Holding on**: smaller farm, windbreaks grown tall, tanks and drains
+  everywhere, a few beds, a modest ledger. Adapted, not rich.
+- **The shop village**: farm shop, lodgings, a market square, fields half
+  wild. Diversified, weather nearly irrelevant to income.
+- **Thriving**: rare. Every axis strong. Full fields under cover, the NPCs
+  older, a plaque with the player's name.
+
+Presentation: the ten-year climate strip extends to fifty with the front-page
+headlines of the intervening decades, then the camera fades up on the future
+farm and slowly pans. A final ledger line: `Farm value, 50 years on`. Reuse the
+existing flood, ice, snowbank and sand visuals; add dust, standing water,
+overgrowth, abandoned and estate variants for buildings and beds. One
+screenshot button on this screen.
 
 ## 5. Climate as the villain
 
@@ -158,8 +210,7 @@ its disaster's loss by 50 to 60%. Insurance: 400 premium, pays 40% of loss.
 - Delete booms, rocket, Roll House, luck, mutations, gear bonuses, crates,
   trophies, combo multipliers, large-number formatting, the boom-count tax.
 - Replace the three island economies with one small-number price table.
-- Remove or stub the professions system; keep the data shape only if a
-  later "farming style" perk is wanted. Result: the game still runs, you can
+- Remove the professions system. Result: the game still runs, you can
   farm and sell, money is small.
 
 **Phase 2: Year and ledger skeleton**
@@ -193,6 +244,12 @@ its disaster's loss by 50 to 60%. Insurance: 400 premium, pays 40% of loss.
 **Phase 6: Diversification and endings**
 - Farm shop, contract growing, lodging, each with labour cost and steady
   income. Run titles.
+- Epilogue simulation: caretaker policy, forty-year headless run on the final
+  state, the four axes, the outcome table. Add it to the Phase 5 bot: each
+  strategy should land in a distinct, explainable future, and no run should
+  reach "Thriving" without all four axes strong.
+- Epilogue visuals: future states for beds, buildings and water; the fifty-year
+  strip; the pan and final ledger line.
 
 **Phase 7: Presentation and onboarding**
 - Rewrite NPC dialogue for the new cast roles: the accountant who reads the
