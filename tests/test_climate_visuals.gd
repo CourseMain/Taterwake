@@ -15,6 +15,7 @@ func run() -> void:
 	await frames()
 	game.set_process(false)
 	game.state.debug_unlock_island(3)
+	game.state.field_expansions["2"] = true
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)
 	game.state.coins = 1e18

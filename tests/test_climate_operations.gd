@@ -13,6 +13,10 @@ func check(ok: bool, message: String) -> void:
 func fresh() -> void:
 	farm.reset_game()
 	farm.debug_unlock_island(3)
+	# Fully expanded fields also match the pre-revision-21 migration fixture.
+	for id in ["2", "3"]:
+		farm.field_expansions[id] = true
+		for plot in farm.island_plots[id]: plot.unlocked = true
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	farm.coins = 1e18

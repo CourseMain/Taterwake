@@ -18,10 +18,12 @@ func check(condition: bool, message: String) -> void:
 func enter_island(state, island: int) -> void:
 	if island >= 2:
 		state.island2_unlocked = true
+		state.field_expansions["2"] = true
 		for plot in state.island_plots["2"]:
 			plot.unlocked = true
 	if island == 3:
 		state.island3_unlocked = true
+		state.field_expansions["3"] = true
 		for plot in state.island_plots["3"]:
 			plot.unlocked = true
 	state.travel_to(island)

@@ -27,6 +27,7 @@ func fresh(island: int = 2) -> void:
 		state.island2_unlocked = true
 		state.island3_unlocked = island == 3
 		for id in range(2, island + 1):
+			state.field_expansions[str(id)] = true
 			for plot in state.island_plots[str(id)]: plot.unlocked = true
 		state.travel_to(island)
 		state.climate.acknowledge(state)
@@ -80,6 +81,7 @@ func run() -> void:
 	state.update(1200.0)
 	check(not state.climate.data.introduced and state.climate.data.history.is_empty() and state.climate.data.timer == Climate.FIRST_WARNING, "Valley play never advances weather or damages crops through climate")
 	state.island2_unlocked = true
+	state.field_expansions["2"] = true
 	for plot in state.island_plots["2"]: plot.unlocked = true
 	state.travel_to(2)
 	check(state.climate.data.intro_pending and state.climate.data.introduced, "arrival queues climate cinematic")

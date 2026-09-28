@@ -55,6 +55,7 @@ func winter(state) -> void:
 	state.island2_unlocked = true
 	state.island3_unlocked = true
 	for id in ["2", "3"]:
+		state.field_expansions[id] = true
 		for plot in state.island_plots[id]:
 			plot.unlocked = true
 	state.travel_to(3)

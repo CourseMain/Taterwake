@@ -30,6 +30,7 @@ func run() -> void:
 	game._advance_simulation(300.0)
 	check(game.state.climate.data.phase == "calm" and not game.state.climate.data.introduced, "Island 1 never starts climate disasters")
 	game.state.island2_unlocked = true
+	game.state.field_expansions["2"] = true
 	for plot in game.state.island_plots["2"]: plot.unlocked = true
 	game.state.travel_to(2)
 	check(game.state.climate.data.intro_pending and game.hud._climate_intro.visible, "first arrival plays paused Island 2 cinematic")
@@ -118,6 +119,7 @@ func run() -> void:
 	check(game.hud._blind_card.visible and not game.hud._climate_effect.visible and game.hud._tool_buttons.hoe.is_visible_in_tree(), "normal farming controls and tone return after collapse")
 	game.state.coins = 1e12
 	game.state.island2_unlocked = true
+	game.state.field_expansions["2"] = true
 	for plot in game.state.island_plots["2"]: plot.unlocked = true
 	game.state.travel_to(2)
 	game.hud._climate_alert.action.pressed.emit()

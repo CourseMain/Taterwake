@@ -38,6 +38,9 @@ func fresh(island: int = 1) -> void:
 	for plot in farm.plots: plot.unlocked = true
 	if island > 1:
 		farm.debug_unlock_island(island)
+		for id in range(2, island + 1):
+			farm.field_expansions[str(id)] = true
+			for plot in farm.island_plots[str(id)]: plot.unlocked = true
 		farm.travel_to(island)
 		farm.climate.acknowledge(farm)
 		farm.climate.fund(farm,"irrigation")
@@ -276,6 +279,12 @@ func test_save_migration_and_validation() -> void:
 	check(farm._valid_save(before), "connected water checkpoint is valid before writing")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "can, tank and equipment round-trip through a disposable save")
 	check(same(farm.climate.data, before.climate) and same(farm.island_plots, before.island_plots), "round-trip preserves all resource levels and planted crops")
+	# Revision 21 reclaims empty upper beds when loading an older farm.
+	# Only bed 7 is planted here; its crop and every other field value survive.
+	var migrated_fields: Dictionary = before.island_plots.duplicate(true)
+	for id in ["2", "3"]:
+		for index in range(migrated_fields[id].size() / 2, migrated_fields[id].size()):
+			migrated_fields[id][index].unlocked = false
 	var legacy: Dictionary = before.duplicate(true)
 	legacy.mechanics_revision = 17
 	for supply in legacy.climate.operations.islands.values():
@@ -289,7 +298,7 @@ func test_save_migration_and_validation() -> void:
 	check(farm.tools.water == 3 and Ops.local(farm).can == Ops.can_capacity(farm), "migration sizes a new full can from saved upgrades rather than pre-load state")
 	check(Ops.local(farm).water == 51 and Ops.local(farm).mode == 0 and Ops.local(farm).shelter == 0, "migration retains reserve and removes obsolete automatic/movable controls")
 	check(int(farm.climate.data.projects["3"].get("irrigation", 0)) >= 1, "legacy tank area-watering ability survives as an explicit connected sprinkler")
-	check(farm.coins == 1234567890 and farm.storage.russet == 21 and farm.seed_inventory.icecap == 9 and farm.quest_progress.winter_ground == 4 and same(farm.island_plots, before.island_plots), "migration preserves money, barn stock, seeds, quests, islands and every real crop")
+	check(farm.coins == 1234567890 and farm.storage.russet == 21 and farm.seed_inventory.icecap == 9 and farm.quest_progress.winter_ground == 4 and same(farm.island_plots, migrated_fields), "migration preserves money, barn stock, seeds, quests and every real crop while reclaiming empty expansion beds")
 	legacy.mechanics_revision = 15
 	legacy.climate.erase("operations")
 	write_save(legacy)
