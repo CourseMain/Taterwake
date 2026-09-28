@@ -375,7 +375,7 @@ Remove:
   market events (seed_panic, seed_fair and the rest), the 40-quote history,
   _valid_stock_events, _saved_stock_cap, stock_opportunity(), surge_info().
 - scripts/stock_rocket_cutscene.gd, market_impact.gd, market_aura.gdshader,
-  market_chart.gd, price_sparkline.gd; assets/audio/stock-rocket-launch.wav;
+  market_chart.gd (the full chart page); assets/audio/stock-rocket-launch.wav;
   the stock groove and fanfare synthesis in main.gd's _pump_audio (keep tool
   and harvest foley from farm_audio.gd).
 - HUD: the stock countdown, mist and pulse tiers, the market feedback
@@ -387,6 +387,20 @@ Remove:
 - Placeholder price model: each variety has a base price; the live price
   is base × a slow seasonal drift in [0.85, 1.15] with no spikes. Seeds
   cost 75% of base, not of the live quote.
+
+KEEP the price information the player needs to decide when to sell:
+- scripts/price_sparkline.gd and a short per-variety price history (the
+  last 12 quotes is enough). Show the sparkline on each Sell Potatoes card
+  and each Buy Seeds card.
+- The signed percentage against the variety's base price, next to the
+  price, e.g. "39 · −8%", green above base, red below. The top bar's crop
+  quote keeps the same percentage.
+- These stay small and quiet: no colours beyond the sign, no animation, no
+  mist. Segment 11 extends the same sparkline to show last Spring's stored
+  price so the sell-or-store choice is visible on the card.
+If an earlier session already deleted price_sparkline.gd, restore it from
+the commit before Segment 4 with `git checkout <that commit> --
+scripts/price_sparkline.gd` and re-wire it.
 - Tests: test_stock_ceiling.gd, test_stock_rarity.gd, test_stock_rocket_*.gd,
   test_stock_impact_tiers.gd, test_seed_market.gd checks about quotes,
   test_disaster_markets.gd (rewrite the climate price-collapse checks against
@@ -610,8 +624,10 @@ price per sack (base × 1.1) for a quantity due at Autumn; a shortfall costs
 5 per sack. One contract at a time.
 
 UI: the Sell Potatoes page shows per variety: sell now at X, or store; the
-Winter accounts show storage cost and spoilage; a Contracts panel on the
-buyer board (reuse the Golden Shores board visuals).
+card's sparkline (kept in Segment 4) gains a dashed marker for the expected
+Spring storage price and the signed percentage against base stays beside
+the live price; the Winter accounts show storage cost and spoilage; a
+Contracts panel on the buyer board (reuse the Golden Shores board visuals).
 
 Ledger: sales, storage, contracts categories.
 
