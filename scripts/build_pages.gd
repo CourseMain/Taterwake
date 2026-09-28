@@ -10,7 +10,7 @@ const BENEFITS: Dictionary = {
 	"industrialist": "Grades: F (1.05× sale value) to SSS (8×). Faster processing each level; better machine grades at 3, 10 and 20. Extra queue slots at 10 and 20.",
 	"scientist": "Honeyheart: +50% yield. Sundew: half drought stress. Frostgold: ordinary frost immunity. Active bonus: more mutations.",
 	"investor": "Quotes start 20% above market. Each delivery adds 3 percentage points, up to 50%. Active bonus: more positive market events.",
-	"gambler": "+8% Roll House reward quality per level. Odds: 20% triple, 55% unchanged, 25% half. Table cooldown: 30s. Charm recharge: 180s.",
+	"gambler": "Odds: 20% triple, 55% unchanged, 25% half. Table cooldown: 30s. Charm recharge: 180s.",
 }
 const TRADEOFFS: Dictionary = {
 	"farmer": "Compost: once per crop, before ripe; frozen crops must be thawed. The 3× harvest stays after switching builds; active bonuses do not.",
@@ -19,7 +19,7 @@ const TRADEOFFS: Dictionary = {
 	"investor": "The locked quote cannot rise. Expired offers pay nothing; crops stay in your barn. Switching builds keeps the deadline running.",
 	"gambler": "Staked crops are consumed. Half-value results lose half the stake. Charms can lower the payout. Pending results remain claimable after switching.",
 }
-const UNLOCK_NOTE: String = "Build Crates: 10% drop chance from paid Roll House rolls. Open in Inventory."
+const UNLOCK_NOTE: String = "Choose any build. Farming activities earn its levels."
 const PURPOSE: Dictionary = {
 	"farmer": "3× harvest · 1 compost",
 	"industrialist": "Grade crops for higher prices",
@@ -382,7 +382,7 @@ static func refresh(h) -> void:
 	var id: String = h._build_selection
 	var equipped: bool = b.active == id
 	var unlocked: bool = int(b.levels[id]) > 0
-	h._refs.build_equip.text = "Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Locked · Build Crate")
+	h._refs.build_equip.text = "Selected · Lv.%d" % b.levels[id] if equipped else ("Select build · Free" if unlocked else "Unavailable")
 	h._refs.build_selection_note.visible = not unlocked or int(b.levels[id]) < b.MAX_LEVEL
 	h._refs.build_selection_note.text = UNLOCK_NOTE if not unlocked else str(b.XP_SOURCES[id])
 	h._refs.build_equip.tooltip_text = "Replaces %s bonuses" % b.active.capitalize() if unlocked and not equipped else ""

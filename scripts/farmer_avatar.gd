@@ -84,7 +84,7 @@ static func colors_for(id: String, data: Dictionary = {}) -> Dictionary:
 	var role: String = str(data.get("role", data.get("build", data.get("specialty", id.get_slice("_", 0)))))
 	var color: Color = {"farmer": Color("669653"), "gambler": Color("875bad"), "investor": Color("347e8e"), "scientist": Color("d3e8e4"), "industrialist": Color("d58b45")}.get(role, Color("7ba39b"))
 	var accents: Dictionary = {"farmer": Color("ebcb7b"), "gambler": Color("e9bf6b"), "investor": Color("edc671"), "scientist": Color("51aea9"), "industrialist": Color("484f58")}
-	var special: Dictionary = {"straw_hat": Color("e8c06c"), "lucky_cap": Color("6da067"), "traders_visor": Color("73aec6"), "prospectors_hat": Color("e0a34f"), "aurora_crown": Color("93dce7"), "harvest_gloves": Color("b47b45"), "market_monocle": Color("e7c45d"), "loaded_dice": Color("caa2ed")}
+	var special: Dictionary = {"straw_hat": Color("e8c06c"), "patchwork_cap": Color("6da067"), "traders_visor": Color("73aec6"), "prospectors_hat": Color("e0a34f"), "aurora_crown": Color("93dce7"), "harvest_gloves": Color("b47b45"), "market_monocle": Color("e7c45d"), "loaded_dice": Color("caa2ed")}
 	color = special.get(id, color)
 	if data.has("color"):
 		color = Color(str(data.color))
@@ -246,7 +246,7 @@ func _build_hat(parent: Node3D, id: String, color: Color, trim: Color) -> void:
 		_sphere(parent, Vector3(0, 1.65, 0.29), Vector3(0.43, 0.038, 0.285), color)
 		_sphere(parent, Vector3(0, 1.66, 0.44), Vector3(0.35, 0.020, 0.115), trim)
 		return
-	if id == "lucky_cap":
+	if id == "patchwork_cap":
 		_sphere(parent, Vector3(0, 1.755, -0.045), Vector3(0.43, 0.218, 0.36), color)
 		_sphere(parent, Vector3(0, 1.695, 0.30), Vector3(0.36, 0.035, 0.29), color.darkened(0.09))
 		_sphere(parent, Vector3(0, 1.825, 0.293), Vector3(0.089, 0.070, 0.016), trim)

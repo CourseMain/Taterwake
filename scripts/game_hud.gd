@@ -2,7 +2,6 @@ class_name GameHUD
 extends CanvasLayer
 
 signal action_requested(action: String)
-signal roll_revealed(title: String, detail: String, rarity: String)
 
 class DebugMoneyInput extends LineEdit:
 	# Range/SpinBox displays tiny positive values as zero. Keep the original
@@ -57,8 +56,6 @@ class DebugMoneyInput extends LineEdit:
 
 const MarketPages = preload("res://scripts/market_pages.gd")
 const ShopPages = preload("res://scripts/shop_pages.gd")
-const RollReel = preload("res://scripts/roll_spinner.gd")
-const RollLuckMeter = preload("res://scripts/roll_luck_meter.gd")
 const MarketImpact = preload("res://scripts/market_impact.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
 const Cozy = preload("res://scripts/cozy_ui.gd")
@@ -68,10 +65,7 @@ const ClimateIcon = preload("res://scripts/climate_icon.gd")
 const UI_FONT = preload("res://assets/fonts/NunitoSans.ttf")
 const UI_SYMBOLS = preload("res://assets/fonts/NotoSansSymbols.ttf")
 const UI_SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
-const RewardFeedback = preload("res://scripts/reward_feedback.gd")
 const BlindRules = preload("res://scripts/blind_rules.gd")
-const CASINO: Color = Color("2b1d40")
-const CASINO_LIGHT: Color = Color("bca5da")
 const INK: Color = Color("17382d")
 const MUTED: Color = Color("667569")
 const CREAM: Color = Color("fffbed")
@@ -140,7 +134,6 @@ const BuildPages = preload("res://scripts/build_pages.gd")
 var _panel_island: int = 0
 var _refs: Dictionary = {}
 var _reset_pending: bool = false
-var _all_in_pending: bool = false
 var _island_button: Button
 var _sidebar_box: PanelContainer
 var _quest_button: Button
@@ -158,19 +151,8 @@ var _farm_hint_remaining: float = 0.0
 var _farm_busy_remaining: float = 0.0
 var _quick_sell: Button
 var _modal_card: PanelContainer
-var _spinner: Control
-var _rolling: bool = false
-var _frozen_coins: float = 0.0
-var _revealed_roll: Dictionary = {}
 var _crop_row: BoxContainer
 var _crop_defs: Dictionary = {}
-var _stake_kind: String = "normal"
-var _frozen_odds: Array = []
-var _frozen_luck: float = 1.0
-var _frozen_luck_math: String = ""
-var _frozen_luck_breakdown: Dictionary = {}
-var _frozen_build_quality: float = 1.0
-var _frozen_stake_bonus: float = 0.0
 var _inventory_sections: Dictionary = {}
 var _inventory_tab: String = "crops"
 var _dex_tab: String = "mutations"
@@ -182,17 +164,11 @@ var _tracked_labels: Dictionary = {}
 var _tracked_prices: Dictionary = {}
 var _price_moves: Dictionary = {}
 var _tracked_signature: String = ""
-var _crate_reel: bool = false
 var _tracked_box: PanelContainer
 var _surge_style: StyleBoxFlat
 var _surge_urgent: bool = false
 var _surge_active: bool = false
 var _hud_clock: float = 0.0
-var _batch_results: Array = []
-var _batch_kind: String = "normal"
-var _trophies_open: bool = false
-var _trophy_signature: String = ""
-var _frozen_crown: bool = false
 var _farm_tip: Dictionary = {}
 var _farm_help_card: PanelContainer
 var _farm_help_action: Button
@@ -396,7 +372,7 @@ func _update_blind_ui() -> void:
 	_credit_row.vertical = touch and root.size.x < 560
 	var stocks_left: int = int(info.booms_required) - int(info.booms)
 	_blind_modal_warning.text = "Tax %s in %ds · Spudions %s" % [_blind_money(info.target), ceili(info.due_in), _blind_money(info.current)] if info.due_in > 0 else "Debt %s · Tax %s after %d more stock%s" % [_blind_money(absf(info.current)), _blind_money(info.target), stocks_left, "" if stocks_left == 1 else "s"]
-	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["roll", "climate", "tools", "barn", "inventory"] else (GREEN if info.cleared else Color("bb4334")))
+	_blind_modal_warning.add_theme_color_override("font_color", (Color("edb96d") if info.cleared else Color("ff7777")) if _panel_kind in ["climate", "tools", "barn", "inventory"] else (GREEN if info.cleared else Color("bb4334")))
 	if not climate.intro_pending and _climate_alert.introduction: _climate_alert.dismiss()
 	if climate.intro_pending and not info.run_over: _climate_intro.start()
 	elif _climate_intro.visible: _climate_intro.stop()
@@ -404,7 +380,6 @@ func _update_blind_ui() -> void:
 		var debug_open: bool = is_panel_open() and _panel_kind == "debug"
 		_modal.z_index = 210 if debug_open else 0
 		if not _run_end.visible and not debug_open:
-			cancel_roll()
 			close_panel()
 			_toast_box.hide()
 			_purchase_box.hide()
@@ -637,7 +612,7 @@ func set_tutorial(info: Dictionary) -> void:
 		_tutorial_pointer.hide()
 		_stats_card.show()
 		_stats_card.size.x = 763.0
-		for key: String in ["coins", "market_name", "luck"]:
+		for key: String in ["coins", "market_name"]:
 			_top[key].get_parent().show()
 		_menu_button.show()
 		_hotbar.show()
@@ -671,7 +646,7 @@ func set_tutorial(info: Dictionary) -> void:
 		_tutorial_icon.queue_redraw()
 		_tutorial_card.show()
 		# Clear a previous surge immediately, including its child process, so a
-		# replay never flashes through the guide or resumes a stale jackpot.
+		# replay never flashes through the guide or resumes a stale animation.
 		_market_impact.set_quote(_island_id(), 0.0)
 		_market_impact.remaining = 0.0
 		_market_impact._reward_remaining = 0.0
@@ -731,11 +706,10 @@ func _apply_tutorial_visibility() -> void:
 		return
 	var features: Array = _tutorial.get("features", [])
 	var tools: Array = _tutorial.get("tools", [])
-	_stats_card.visible = "coins" in features or "stock" in features or "roll" in features
+	_stats_card.visible = "coins" in features or "stock" in features
 	_top.coins.get_parent().visible = "coins" in features
 	_top.market_name.get_parent().visible = "stock" in features
-	_top.luck.get_parent().visible = "roll" in features
-	var revealed_stats: int = int("coins" in features) + int("stock" in features) + int("roll" in features)
+	var revealed_stats: int = int("coins" in features) + int("stock" in features)
 	_stats_card.size.x = 763.0 if revealed_stats >= 3 else (510.0 if revealed_stats == 2 else 225.0)
 	if "stock" in features:
 		_top.market_name.text = "STOCKS PAUSED"
@@ -773,7 +747,6 @@ func _apply_tutorial_visibility() -> void:
 		_modal_card.position.x = maxf(_modal_card.position.x, minf(264.0, root.size.x - _modal_card.size.x - 16.0))
 	var available_width: float = _modal_card.position.x - 44.0 if is_panel_open() else 219.0
 	var card_width: float = minf(219.0, maxf(138.0, available_width))
-	# Roll House is wider than other shops. Stack its guide heading so the
 	# progress label and exit controls cannot force a 214px overlap.
 	(_tutorial_progress.get_parent() as BoxContainer).vertical = card_width < 210
 	_tutorial_card.position = Vector2(28.0, 108.0)
@@ -938,7 +911,7 @@ func _act(action: String) -> void:
 		show_panel("builds", _state)
 		return
 	if action == "farm_help:details":
-		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _rolling and not _state.run_over:
+		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _state.run_over:
 			_opened_farm_tip = _farm_tip.duplicate(true)
 			show_panel("farm_tip", _state)
 		return
@@ -975,17 +948,6 @@ func _act(action: String) -> void:
 			action = "inventory"
 		else:
 			return
-	if _rolling:
-		return
-	if action.begins_with("batch:"):
-		action_requested.emit("roll_batch:%s:%s" % [_batch_kind, action.get_slice(":", 1)])
-		return
-	if action == "toggle_trophies":
-		_trophies_open = not _trophies_open
-		_refresh_trophies()
-		_polish_card_typography(_refs.trophy_gallery)
-		if _trophies_open: _reveal_details(_refs.trophy_gallery)
-		return
 	if action == "debug_unlock":
 		if _refs.has("debug_code"):
 			var code: String = _refs.debug_code.text
@@ -1008,8 +970,8 @@ func _act(action: String) -> void:
 		action_requested.emit("debug:%s:%s" % ["recover" if action == "debug_recover" else "set_balance", str(balance.canonical)])
 		_refresh_debug()
 		return
-	if action.begins_with("debug_money:") or action.begins_with("debug_luck:"):
-		var field: String = "debug_money" if action.begins_with("debug_money:") else "debug_luck"
+	if action.begins_with("debug_money:"):
+		var field: String = "debug_money"
 		_refs[field].value = float(action.get_slice(":", 1))
 		_refresh_debug()
 		return
@@ -1018,12 +980,10 @@ func _act(action: String) -> void:
 		if multiplier.has("error"):
 			_refresh_debug()
 			return
-		action_requested.emit("debug:apply:%s:%s" % [str(multiplier.canonical), String.num_scientific(float(_refs.debug_luck.value))])
+		action_requested.emit("debug:apply:" + str(multiplier.canonical))
 		_refs.debug_money.value = 1.0
 		_refresh_debug()
 		return
-	if action == "debug:reset" and _refs.has("debug_luck"):
-		_refs.debug_luck.value = 1.0
 	if action == "menu":
 		show_panel("pause", _state)
 		return
@@ -1036,8 +996,6 @@ func _act(action: String) -> void:
 		if is_instance_valid(_refs.get("shop_page")): _refs.shop_page.refresh()
 		(_body.get_parent() as ScrollContainer).scroll_vertical = 0
 		return
-	if action.begins_with("roll:"):
-		_stake_kind = action.get_slice(":", 1)
 	if action == "close":
 		close_panel()
 	elif action == "request_reset":
@@ -1046,17 +1004,9 @@ func _act(action: String) -> void:
 	elif action == "cancel_reset":
 		_reset_pending = false
 		show_panel("pause", _state)
-	elif action == "roll:all_in" and not _all_in_pending:
-		_all_in_pending = true
-		_refresh_panel()
-	elif action == "cancel_all_in":
-		_all_in_pending = false
-		_refresh_panel()
 	else:
 		if action.begins_with("tool:"):
 			set_tool(action.get_slice(":", 1))
-		if action.begins_with("roll:"):
-			_all_in_pending = false
 		action_requested.emit(action)
 
 func _place(control: Control, rect: Rect2) -> void:
@@ -1091,8 +1041,6 @@ func _build_top() -> void:
 	_top["price"] = _label("\uE000 38  +0%", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	market_box.add_child(_top["price"])
-	_top["luck"] = _stat(row, "LUCK · +0%", "1.0×", GREEN)
-	_top["luck_percent"] = _top.luck.get_parent().get_child(0)
 	var stats_font: FontVariation = _compact_heading_font()
 	for label: Node in stats.find_children("*", "Label", true, false):
 		label.add_theme_font_override("font", stats_font)
@@ -1107,7 +1055,7 @@ func _build_top() -> void:
 	var menu_button: Button = _button("", "menu")
 	_menu_button = menu_button
 	menu_button.name = "MainMenuButton"
-	menu_button.tooltip_text = "Farm menu · Debug money & luck · Esc"
+	menu_button.tooltip_text = "Farm menu · Debug money · Esc"
 	_place(menu_button, Rect2(1174, 21, 78, 72))
 	var menu_icon: VBoxContainer = _vbox(5)
 	menu_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1250,7 +1198,7 @@ func _build_footer() -> void:
 	nav_grid.offset_right = 326
 	nav_grid.offset_top = -106
 	nav_grid.offset_bottom = -21
-	for nav: Array in [["Buy Seeds [B]", "market"], ["Inventory [I]", "inventory"], ["Upgrades [U]", "tools"], ["Roll House [R]", "roll"]]:
+	for nav: Array in [["Buy Seeds [B]", "market"], ["Inventory [I]", "inventory"], ["Upgrades [U]", "tools"]]:
 		var button: Button = _button(nav[0], nav[1], nav[1] == "market")
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nav_grid.add_child(button)
@@ -1472,19 +1420,15 @@ func update_state(state: Node) -> void:
 	var seeds: Dictionary = state.get("seed_inventory")
 	var storage: Dictionary = state.get("storage")
 	var delta: float = float(quote.get("change", 0))
-	_top.coins.text = _money(_frozen_coins if _rolling else float(state.get("coins")))
+	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < float(state.call("blind_info").tax) else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
 	_top.price.text = "%s  %s" % [_money(float(quote.get("sell", 0))), _change_text(delta)]
 	_top.price.add_theme_color_override("font_color", GREEN if delta >= 0 else CHERRY)
-	var displayed_luck: float = _frozen_luck if _rolling else _effective_luck()
-	_top.luck.text = String.num(displayed_luck, 3) + "×"
-	_top.luck_percent.text = "LUCK · +%s%%" % _number((displayed_luck - 1.0) * 100.0)
-	_top.luck.tooltip_text = _frozen_luck_math if _rolling else _luck_math()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = float(storage.get(crop, 0))
 	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))
-	_quick_sell.disabled = held <= 0 or _rolling
+	_quick_sell.disabled = held <= 0
 	var available: Array[String] = _market_crops()
 	for id: String in _all_crop_ids():
 		var button: Button = _crop_buttons[id]
@@ -1544,7 +1488,7 @@ func note_farm_action() -> void:
 	if is_instance_valid(_farm_help_card): _farm_help_card.hide()
 
 func show_farm_hint(text: String) -> void:
-	if _rolling or not _tutorial.is_empty(): return
+	if not _tutorial.is_empty(): return
 	note_farm_action()
 	# Repeated input shares one slot and cannot keep extending the same notice.
 	if text == _farm_hint and _farm_hint_remaining > 0.0: return
@@ -1561,7 +1505,7 @@ func _update_context() -> void:
 	_update_barn_full_alert()
 	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
 	if is_instance_valid(_plot_action_box):
-		_plot_action_box.visible = not _plot_action_text.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
+		_plot_action_box.visible = not _plot_action_text.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
 	var warning: bool = _notice_is_warning(text)
 	var skin: StyleBoxFlat = _context_box.get_theme_stylebox("panel")
@@ -1570,7 +1514,7 @@ func _update_context() -> void:
 	skin.set_border_width_all(1)
 	_context_box.set_meta("warning", warning)
 	_context.text = text
-	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not _rolling and not (is_instance_valid(_state) and _state.run_over)
+	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _plot_action_text.is_empty() and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
 	# Hug the single line instead of spanning the farm. Input passes through.
 	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
 	_context_box.offset_left = -width * 0.5
@@ -1592,7 +1536,7 @@ func _notice_is_warning(text: String) -> bool:
 
 func _update_barn_full_alert() -> void:
 	if not is_instance_valid(_barn_full_alert): return
-	_barn_full_alert.visible = is_instance_valid(_state) and _state.storage_used() >= _state.capacity and not _state.run_over and _tutorial.is_empty() and not is_panel_open() and not _rolling
+	_barn_full_alert.visible = is_instance_valid(_state) and _state.storage_used() >= _state.capacity and not _state.run_over and _tutorial.is_empty() and not is_panel_open()
 	if not _barn_full_alert.visible: return
 	_barn_full_detail.text = "%s stored · Sell crops to keep harvesting." % _number(_state.storage_used())
 	var width: float = minf(520, root.size.x - 36)
@@ -1610,7 +1554,7 @@ func _update_barn_full_alert() -> void:
 	_barn_full_alert.size.y = 0
 
 func show_toast(text: String) -> void:
-	if _rolling or not _tutorial.is_empty():
+	if not _tutorial.is_empty():
 		return
 	if not is_instance_valid(root):
 		build_ui()
@@ -1710,7 +1654,7 @@ func show_purchase(receipt: Dictionary) -> void:
 	_purchase_box.show()
 
 func show_reward(title: String, detail: String, rarity: String) -> void:
-	if _rolling or not _tutorial.is_empty():
+	if not _tutorial.is_empty():
 		return
 	if not is_instance_valid(root):
 		build_ui()
@@ -1739,38 +1683,27 @@ func close_panel() -> void:
 	if is_instance_valid(_purchase_review): _purchase_review.hide()
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
 	if is_instance_valid(_conversation) and _conversation.visible: _conversation.finish()
-	if _rolling:
-		return
 	if is_instance_valid(_modal):
 		_modal.hide()
 	_panel_kind = ""
 	_refresh_seed_visibility()
-	_crate_reel = false
-	_stake_kind = "normal"
 	_reset_pending = false
-	_all_in_pending = false
 	_apply_tutorial_visibility()
 	_layout_purchase()
 
-func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
-	if _rolling:
-		return
+func show_panel(kind: String, state: Node) -> void:
 	_state = state
 	if not is_instance_valid(root):
 		build_ui()
 	if kind != _panel_kind:
 		_reset_pending = false
-		_all_in_pending = false
 	_panel_kind = kind
 	_panel_island = _island_id()
-	_crate_reel = kind == "roll" and crate_mode
-	if not _crate_reel and _stake_kind == "build_crate":
-		_stake_kind = "normal"
 	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
-	_modal_card.offset_left = -452 if kind == "roll" else -376
-	_modal_card.offset_right = 452 if kind == "roll" else 376
-	_modal_card.offset_top = -354 if kind == "roll" else -317
-	_modal_card.offset_bottom = 354 if kind == "roll" else 317
+	_modal_card.offset_left = -376
+	_modal_card.offset_right = 376
+	_modal_card.offset_top = -317
+	_modal_card.offset_bottom = 317
 	if kind in ["market", "sell_potatoes"]:
 		_modal_card.offset_left = -500
 		_modal_card.offset_right = 500
@@ -1808,7 +1741,6 @@ func show_panel(kind: String, state: Node, crate_mode: bool = false) -> void:
 		"sell_potatoes": _build_market(true)
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
-		"roll": _build_roll()
 		"pause", "menu": _build_pause()
 		"dex": _build_dex()
 		"island": _build_island()
@@ -1994,190 +1926,6 @@ func _build_tools() -> void:
 	_refs.shop_page = page
 	page.setup(self, false)
 
-func _casino_button(button: Button, color: Color = Color("942b3b")) -> void:
-	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = color.lightened(.12) if state == "hover" else (color.darkened(.15) if state == "pressed" else color)
-		if state == "disabled": fill = Color("334d42")
-		var style: StyleBoxFlat = Cozy.box(fill, 10, 12, Color("edc665") if state != "disabled" else Color("6a7961"))
-		style.border_width_bottom = 4 if state not in ["pressed", "disabled"] else 1
-		button.add_theme_stylebox_override(state, style)
-	for key: String in ["font_color", "font_hover_color", "font_pressed_color"]:
-		button.add_theme_color_override(key, Color("302b21") if color.get_luminance() > .45 else Color("fff5d7"))
-	button.add_theme_color_override("font_disabled_color", Color("a7b4a4"))
-	button.add_theme_stylebox_override("focus", Cozy.box(Color.TRANSPARENT, 10, 12, Color("fff0b2")))
-
-func _build_roll() -> void:
-	_heading("Build crate" if _crate_reel else "Roll House", "")
-	var casino_skin: StyleBoxFlat = Cozy.modal()
-	casino_skin.bg_color = Color("103c2e")
-	casino_skin.border_color = Color("d5a848")
-	casino_skin.set_border_width_all(4)
-	_modal_card.add_theme_stylebox_override("panel", casino_skin)
-	_modal_title.add_theme_color_override("font_color", Color("ffe6a0"))
-	_modal_subtitle.add_theme_color_override("font_color", Color("d8e3c6"))
-	_modal_card.offset_left = -530
-	_modal_card.offset_right = 530
-	_modal_card.offset_top = -380
-	_modal_card.offset_bottom = 380
-	_refs.roll_purse = _modal_subtitle
-	_modal_subtitle.visible = not _crate_reel
-	if not _crate_reel:
-		_modal_fixed.show()
-		var meter := RollLuckMeter.new()
-		_modal_fixed.add_child(meter)
-		_refs.roll_luck_meter = meter
-		meter.completed.connect(_start_pending_spin)
-		var quality := _label("", 12, Color("decd91"))
-		quality.add_theme_font_override("font", _card_button_font)
-		_modal_fixed.add_child(quality)
-		_refs.roll_quality = quality
-		meter.explanation_changed.connect(func(text: String): quality.text = text)
-	var core := _hbox(18)
-	_body.add_child(core)
-	var play_column := _vbox(8)
-	play_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	core.add_child(play_column)
-	var odds_column := _vbox(10)
-	odds_column.custom_minimum_size.x = 234
-	odds_column.visible = not _crate_reel
-	core.add_child(odds_column)
-	var reel_card := preload("res://scripts/casino_surface.gd").new()
-	reel_card.configure("reel")
-	play_column.add_child(reel_card)
-	_spinner = RollReel.new()
-	_spinner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	reel_card.add_child(_spinner)
-	_spinner.finished.connect(_on_roll_finished)
-	_spinner.set_build_deck(_crate_reel)
-	var result_box := _vbox(4)
-	play_column.add_child(result_box)
-	var result_title := _wrap("Choose your stake", 17, Color("ffe6a0"), true)
-	result_box.add_child(result_title)
-	_refs.roll_result_title = result_title
-	var result_detail := _wrap("", 12, Color("e1e8d3"))
-	result_box.add_child(result_detail)
-	result_detail.hide()
-	_refs.roll_result_detail = result_detail
-	var receipt := _wrap("", 12, Color("ffe6a0"))
-	result_box.add_child(receipt)
-	receipt.hide()
-	_refs.roll_accounting = receipt
-	if _crate_reel:
-		result_title.text = "+1 build level"
-		var open_button := _button("Open another Build Crate", "build:open_crate", true)
-		_casino_button(open_button, Color("e7b84f"))
-		play_column.add_child(open_button)
-		_refs["build:open_crate"] = open_button
-		return
-	var stakes := GridContainer.new()
-	stakes.columns = 2
-	stakes.add_theme_constant_override("h_separation", 10)
-	stakes.add_theme_constant_override("v_separation", 7)
-	play_column.add_child(stakes)
-	for kind: String in ["normal", "big", "stupid", "all_in"]:
-		var button := _button("Roll", "roll:" + kind, kind == "normal")
-		_casino_button(button, Color("e7b84f") if kind == "normal" else (Color("282d29") if kind == "all_in" else Color("a62f40")))
-		button.custom_minimum_size.y = 39
-		button.mouse_entered.connect(_preview_stake.bind(kind))
-		button.focus_entered.connect(_preview_stake.bind(kind))
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		stakes.add_child(button)
-		_refs["roll:" + kind] = button
-	if _island_id() == 3:
-		var batches := _hbox(8)
-		play_column.add_child(batches)
-		var batch_stake := OptionButton.new()
-		for label: String in ["Normal stake", "Big stake", "Stupid stake"]:
-			batch_stake.add_item(label)
-		batch_stake.selected = ["normal", "big", "stupid"].find(_batch_kind)
-		batch_stake.item_selected.connect(func(index: int) -> void:
-			if not _rolling:
-				_batch_kind = ["normal", "big", "stupid"][index]
-				_preview_stake(_batch_kind)
-				_refresh_panel())
-		_style_choice(batch_stake)
-		_casino_button(batch_stake, Color("245840"))
-		batches.add_child(batch_stake)
-		_refs.batch_stake = batch_stake
-		for count: int in [3, 5]:
-			var batch := _button("Roll ×%d" % count, "batch:" + str(count))
-			_casino_button(batch, Color("8f293b"))
-			batch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			batches.add_child(batch)
-			_refs["batch:" + str(count)] = batch
-	_info("all_in_warning", "", Color("ffb9a0"), 13)
-	var cancel := _button("Keep my Spudions · cancel all-in", "cancel_all_in")
-	_casino_button(cancel, Color("275b43"))
-	play_column.add_child(cancel)
-	_refs.cancel_all_in = cancel
-	_info("crown_offer", "Aurora Crown · One free same-stake roll with every purchase.", Color("ffe6a0"), 12)
-	_info("roll_minimum", "", Color("c5d4bc"), 11)
-	for key: String in ["all_in_warning", "crown_offer", "roll_minimum"]:
-		_refs[key].reparent(play_column)
-	play_column.move_child(cancel, _refs.all_in_warning.get_index() + 1)
-	var batch_results := GridContainer.new()
-	batch_results.columns = 3
-	batch_results.add_theme_constant_override("h_separation", 8)
-	batch_results.add_theme_constant_override("v_separation", 8)
-	play_column.add_child(batch_results)
-	batch_results.hide()
-	_refs.batch_results = batch_results
-	var odds_card := preload("res://scripts/casino_surface.gd").new()
-	odds_card.configure("felt")
-	odds_column.add_child(odds_card)
-	var odds_body := _vbox(9)
-	odds_card.add_child(odds_body)
-	odds_body.add_child(_label("LIVE ODDS", 17, Color("ffe6a0"), true))
-	var odds := GridContainer.new()
-	odds.columns = 1
-	odds.add_theme_constant_override("h_separation", 10)
-	odds.add_theme_constant_override("v_separation", 4)
-	odds_body.add_child(odds)
-	for entry: Dictionary in _state.call("roll_odds", _stake_kind):
-		var tier: String = str(entry.get("tier", "common"))
-		var label := _label("", 13, Color("fff5d7"))
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		label.tooltip_text = str(entry.get("description", ""))
-		label.mouse_filter = Control.MOUSE_FILTER_PASS
-		var odds_style := _style(Color("215e46"), 8, 7, RollReel.COLORS.get(tier, GOLD))
-		odds_style.border_width_left = 3
-		odds_style.content_margin_top = 3
-		odds_style.content_margin_bottom = 3
-		label.add_theme_stylebox_override("normal", odds_style)
-		odds.add_child(label)
-		_refs["odds:" + tier] = label
-	_refs.roll_luck_total = _wrap("", 12, Color("d1ddbf"))
-	odds_column.add_child(_refs.roll_luck_total)
-	odds_column.add_child(_wrap("Odds include empty sacks.", 12, Color("c5d4bc")))
-	var math_body := _details_section("roll_math_section", "roll calculation")
-	_section_title(math_body, "How this roll is calculated")
-	var math := _wrap("", 14, INK)
-	math_body.add_child(math)
-	_refs.roll_luck_math = math
-	var trophies := _button("Show trophy cabinet", "toggle_trophies")
-	_casino_button(trophies, Color("245840"))
-	_casino_button(_refs["roll_math_section:toggle"], Color("245840"))
-	_body.add_child(trophies)
-	_refs.trophy_toggle = trophies
-	var utilities := _hbox(10)
-	_body.add_child(utilities)
-	_refs["roll_math_section:toggle"].reparent(utilities)
-	trophies.reparent(utilities)
-	_body.move_child(utilities, _refs.roll_math_section.get_index())
-	for utility: Control in utilities.get_children(): utility.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var gallery := _vbox(8)
-	_body.add_child(gallery)
-	_refs.trophy_gallery = gallery
-	_trophy_signature = ""
-	_refresh_trophies()
-
-func _roll_chance(chance: float) -> String:
-	# Do not round a possible rare outcome down to an impossible-looking 0%.
-	if chance == 0.0 or chance >= 0.001: return "%.3f" % chance
-	var exponent: int = int(floor(log(chance) / log(10.0)))
-	if exponent >= -7: return String.num(chance, 2 - exponent)
-	return "%.3fe%d" % [chance / pow(10.0, exponent), exponent]
-
 func _style_choice(choice: OptionButton) -> void:
 	choice.custom_minimum_size.y = 39
 	choice.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -2258,7 +2006,6 @@ func _refresh_dex() -> void:
 			var home: String = "Golden Shores" if id == "sunburst" else ("Frosthollow" if id == "icecap" else "Spud Valley onward")
 			_refs["dex_status:" + id].text = "%ds base growth · %s" % [_crop_grow(id), home]
 			_refs["dex_detail:" + id].text = "Lv.%d · %s harvested · +%d%% mastery yield" % [int(_state.mastery_level(id)), _number(_state.mastery[id]), mini(1000, 2 * int(_state.mastery_level(id)))]
-	_refs.dex_bonus.text = "Permanent harvest bonus +%s%% · Total luck %s× (+%s%%)" % [_number(_state.permanent_yield * 100.0), String.num(_effective_luck(), 3), _number((_effective_luck() - 1.0) * 100.0)]
 
 func _build_island() -> void:
 	_heading("Set sail", "")
@@ -2437,7 +2184,7 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
 	var activity_name: String = "Duck patrol" if _island_id() == 1 else ("Buyer contracts" if _island_id() == 2 else "Frost furnace")
-	var entries: Array = [["Inventory", "inventory", "I", "build_crate"], ["Buy Seeds", "market", "B", "trader_token"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Roll House", "roll", "R", "gambler"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
+	var entries: Array = [["Inventory", "inventory", "I", "relic"], ["Buy Seeds", "market", "B", "trader_token"], ["Sell Potatoes", "sell_potatoes", "", "investor"], ["Debug", "debug", "", "debug"], ["Player builds", "builds", "C", "farmer"], [activity_name, "activities", "", "duck" if _island_id() == 1 else ("contract" if _island_id() == 2 else "furnace")], ["Quests", "quests", "Q", "almanac"], ["Tool upgrades", "tools", "U", "hoe"], ["Travel islands", "island", "", "compass"], ["PotatoDex", "dex", "P", "lens"], ["Tracked prices", "tracked_prices", "", "investor"]]
 	if _island_id() > 1:
 		entries.insert(5, ["Duck patrol", "duck_patrol", "", "duck"])
 	if _tutorial.is_empty():
@@ -2463,7 +2210,7 @@ func _build_pause() -> void:
 		row.offset_right = -8
 		row.offset_top = 8
 		row.offset_bottom = -8
-		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("build" if str(entry[3]) in ["farmer", "gambler", "investor"] else ("tool" if entry[3] == "hoe" else ("build_crate" if entry[3] == "build_crate" else "relic")))
+		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("build" if str(entry[3]) in ["farmer", "gambler", "investor"] else ("tool" if entry[3] == "hoe" else "relic"))
 		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 36))
 		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2528,13 +2275,6 @@ func _refresh_panel() -> void:
 		return
 	_restore_tutorial_buttons()
 	var coins: float = float(_state.get("coins"))
-	if _panel_kind == "roll" and _crate_reel:
-		var system: Object = _build_system()
-		var crates: int = int(system.get("build_crates")) if system != null else 0
-		_refs.roll_purse.text = "BUILD-ONLY REEL · %d crate%s remaining" % [crates, "" if crates == 1 else "s"]
-		_set_button("build:open_crate", "Opening crate…" if _rolling else ("Open another · %d owned" % crates if crates > 0 else "You need a Build Crate"), _rolling or crates <= 0)
-		_apply_tutorial_buttons()
-		return
 	var markets: Dictionary = _state.get("market")
 	var storage: Dictionary = _state.get("storage")
 	match _panel_kind:
@@ -2563,53 +2303,6 @@ func _refresh_panel() -> void:
 			_refs["upgrade:expansion:detail"].text = "All %d beds open" % int(land.total) if land.complete else "%d beds open · Unlock +%d" % [int(land.opened), int(land.remaining)]
 			_set_purchase_button("upgrade:expansion", "Open ✓" if land.complete else _state.purchase_caption("Open beds · " + _money(float(land.cost)), float(land.cost)), float(land.cost), land.complete)
 			_refs.shop_page.refresh()
-		"roll":
-			_refresh_trophies()
-			_refs.crown_offer.visible = _frozen_crown if _rolling else _wears_crown()
-			_refs.trophy_toggle.disabled = _rolling
-			var stall_open: bool = bool(_state.call("roll_available")) if _state.has_method("roll_available") else true
-			if not stall_open and not _rolling:
-				_refs.roll_result_title.text = "THIS TABLE IS CLOSED"
-				_refs.roll_result_detail.text = "Use the Roll House on your newest unlocked island."
-				_refs.roll_result_detail.show()
-			_refs.roll_purse.text = "Purse %s  ·  %s stake +%.0f%% quality" % [_money(_frozen_coins if _rolling else coins), _stake_kind.replace("_", " ").capitalize(), _frozen_stake_bonus if _rolling else float(_state.call("stake_luck_bonus", _stake_kind))]
-			var all_in_floor: float = _minimum_roll_stake("all_in")
-			_refs.roll_minimum.text = "Single roll %s  ·  All-in requires more than %s" % [_money(float(_state.call("roll_cost", "normal"))), _money(all_in_floor)]
-			var labels: Dictionary = {"normal": "Roll", "big": "Big roll", "stupid": "Stupid roll", "all_in": "Confirm all-in" if _all_in_pending else "All-in"}
-			for kind: String in ["normal", "big", "stupid", "all_in"]:
-				var cost: float = _frozen_coins if kind == "all_in" and _rolling else float(_state.call("roll_cost", kind))
-				var caption: String = "%s · %s" % [labels[kind], _money(cost)]
-				if kind == "all_in" and coins <= all_in_floor and not _rolling:
-					caption = "All-in · Need > " + _money(all_in_floor)
-				_set_button("roll:" + kind, caption, _rolling or not _can_roll_stake(kind))
-				_refs["roll:" + kind].tooltip_text = "Your entire purse must be greater than " + _money(all_in_floor) + "." if kind == "all_in" else "One roll costs " + _money(cost) + "."
-			for count: int in [3, 5]:
-				var batch_kind: String = _batch_kind
-				var batch_cost: float = float(_state.call("roll_cost", batch_kind)) * count
-				_set_button("batch:" + str(count), "%s ×%d · %s" % [batch_kind.capitalize(), count, _money(batch_cost)], _rolling or not stall_open or coins < batch_cost)
-			if _refs.has("batch_stake"):
-				_refs.batch_stake.disabled = _rolling or not stall_open
-			_refs.all_in_warning.visible = _all_in_pending
-			_refs.all_in_warning.text = "Risk every Spudion? Click CONFIRM ALL-IN to commit this stake."
-			_refs.cancel_all_in.visible = _all_in_pending and not _rolling
-			var stake_bonus: float = _frozen_stake_bonus if _rolling else float(_state.stake_luck_bonus(_stake_kind))
-			var build_quality: float = _frozen_build_quality if _rolling else float(_state._build_bonus("roll_quality_factor", 1.0))
-			var tally: Dictionary = (_frozen_luck_breakdown if _rolling else _state.luck_breakdown()).duplicate(true)
-			tally["stake_bonus"] = stake_bonus
-			tally["build_quality"] = build_quality
-			_refs.roll_luck_meter.set_values(tally)
-			var quality: float = (1.0 + stake_bonus / 100.0) * build_quality
-			var luck_quality: float = 1.0 + ((_frozen_luck if _rolling else _effective_luck()) - 1.0) * 0.12
-			_refs.roll_quality.text = "Roll quality %.2f×  ·  Luck +%s%%  ·  Final luck %s×" % [quality, RollLuckMeter.number(float(tally.total_percent)), RollLuckMeter.number(float(tally.total))]
-			_refs.roll_luck_total.text = "Earned +%s%% · Gear +%s%%\nNormal cap: +900%% (10×)\nLuck boost ×%s %s" % [RollLuckMeter.number(float(tally.earned) * 100.0), RollLuckMeter.number(float(tally.gear) * 100.0), RollLuckMeter.number(float(tally.multiplier)), "active" if float(tally.multiplier) > 1.0 else "(base)"]
-			if _refs.roll_luck_meter.playing: _refs.roll_quality.text = _refs.roll_luck_meter.description
-			_refs.roll_luck_math.text = (_frozen_luck_math if _rolling else _luck_math()) + "\n\nStake: 1 + %.0f%% = %.2f×\nBuild quality: %.2f×\nCombined roll quality: %.2f×\nLuck quality: 1 + (total luck − 1) × 0.12 = %.3f×\nHigh-luck rarity factor: max(1, total luck / 10) = %s×" % [stake_bonus, 1.0 + stake_bonus / 100.0, build_quality, quality, luck_quality, RollLuckMeter.number(maxf(1.0, float(tally.total) / 10.0))]
-			var odds: Array = _frozen_odds if _rolling else _state.call("roll_odds", _stake_kind)
-			_spinner.set_odds(odds)
-			for entry: Dictionary in odds:
-				var key: String = "odds:" + str(entry.get("tier", "common"))
-				if _refs.has(key):
-					_refs[key].text = "%s   %s%%" % ["Mystery" if str(entry.tier) == "mystery" else str(entry.tier).capitalize(), _roll_chance(float(entry.get("chance", 0)))]
 		"dex": _refresh_dex()
 
 		"island":
@@ -2799,104 +2492,6 @@ func show_export_alert(_active: bool) -> void:
 	if is_instance_valid(_state):
 		_update_export_strip()
 
-func is_roll_animating() -> bool:
-	return _rolling
-
-func begin_roll(kind: String = "") -> bool:
-	if _rolling or not is_instance_valid(_state):
-		return false
-	var needs_build_deck: bool = kind == "build_crate"
-	var rebuild: bool = _panel_kind != "roll" or _crate_reel != needs_build_deck
-	_crate_reel = needs_build_deck
-	if rebuild:
-		show_panel("roll", _state, needs_build_deck)
-	if not kind.is_empty():
-		_stake_kind = kind
-	_rolling = true
-	_frozen_odds = [] if _crate_reel else _state.call("roll_odds", _stake_kind)
-	_frozen_luck = _effective_luck()
-	_frozen_luck_math = _luck_math()
-	_frozen_luck_breakdown = _state.luck_breakdown().duplicate(true)
-	_frozen_build_quality = float(_state._build_bonus("roll_quality_factor", 1.0))
-	_frozen_crown = _wears_crown()
-	_frozen_stake_bonus = 0.0 if _crate_reel else float(_state.call("stake_luck_bonus", _stake_kind))
-	_frozen_coins = float(_state.get("coins"))
-	_all_in_pending = false
-	_batch_results.clear()
-	if _refs.has("batch_results"):
-		_refs.batch_results.hide()
-		for child: Node in _refs.batch_results.get_children():
-			_refs.batch_results.remove_child(child)
-			child.queue_free()
-	_refs.roll_result_title.text = "Rolling…"
-	_refs.roll_result_detail.text = ""
-	_refs.roll_result_detail.hide()
-	_refs.roll_accounting.hide()
-	_toast_box.hide()
-	_reward_box.hide()
-	_refresh_panel()
-	(_body.get_parent() as ScrollContainer).scroll_vertical = 0
-	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.play()
-	return true
-
-var _pending_spin: Dictionary = {}
-
-func _start_pending_spin() -> void:
-	if not _rolling or _pending_spin.is_empty() or not is_instance_valid(_spinner): return
-	_spinner.spin_to(_pending_spin)
-	_pending_spin = {}
-	_refs.roll_result_title.text = "Rolling…"
-
-func spin_roll(result: Dictionary) -> void:
-	if not _rolling:
-		return
-	if result.is_empty() or not is_instance_valid(_spinner):
-		cancel_roll()
-		return
-	_pending_spin = result.duplicate(true)
-	if not _refs.has("roll_luck_meter") or not _refs.roll_luck_meter.playing:
-		_start_pending_spin()
-
-func cancel_roll() -> void:
-	_pending_spin = {}
-	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.finish()
-	_rolling = false
-	_batch_results.clear()
-	if is_instance_valid(_spinner):
-		_spinner.spinning = false
-		_spinner.set_process(false)
-	if _panel_kind == "roll":
-		_refs.roll_result_title.text = "Choose stake"
-		_refs.roll_result_detail.text = ""
-		_refs.roll_result_detail.hide()
-		_refs.roll_accounting.hide()
-		_refresh_panel()
-
-func _on_roll_finished(result: Dictionary) -> void:
-	if not _rolling:
-		return
-	_rolling = false
-	if _refs.has("roll_luck_meter"): _refs.roll_luck_meter.finish()
-	_revealed_roll = result.duplicate(true)
-	var title: String = str(result.get("title", "Roll complete"))
-	var detail: String = str(result.get("detail", ""))
-	var tier: String = str(result.get("tier", "common"))
-	_refs.roll_result_title.text = "%s · %s" % [tier.to_upper(), title]
-	_refs.roll_result_detail.text = detail
-	_refs.roll_result_detail.show()
-	if not _batch_results.is_empty():
-		var bonus_count: int = _batch_bonus_count()
-		_refs.roll_result_title.text = "%d PAID + AURORA BONUS · %s" % [_batch_results.size() - bonus_count, title] if bonus_count > 0 else "%d ROLLS · %s" % [_batch_results.size(), title]
-		_refs.roll_result_detail.text = "Aurora bonus: +1 free roll" if bonus_count > 0 else ""
-		_refs.roll_result_detail.visible = not _refs.roll_result_detail.text.is_empty()
-		_show_batch_results()
-	_show_roll_accounting()
-	_refresh_panel()
-	_top.coins.text = _money(float(_state.get("coins")))
-	if RewardFeedback.celebrates(tier) and _tutorial.is_empty():
-		_market_impact.reward(_island_id(), 6.0)
-	roll_revealed.emit(title, detail, tier)
-
 func _sync_crop_catalog() -> void:
 	if _crop_defs.is_empty():
 		var constants: Dictionary = _state.get_script().get_script_constant_map()
@@ -2940,13 +2535,6 @@ func _tool_costs() -> Dictionary:
 
 func _flag(key: String) -> bool:
 	return bool(_state.get(key)) if is_instance_valid(_state) else false
-
-func _preview_stake(kind: String) -> void:
-	if _rolling:
-		return
-	_stake_kind = kind
-	if _panel_kind == "roll":
-		_refresh_panel()
 
 func _inventory_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -3012,11 +2600,6 @@ func _refresh_inventory() -> void:
 				if is_instance_valid(button):
 					button.text = "Selected" if str(_state.get("selected_crop")) == crop else "Select seeds"
 					button.disabled = crop not in available or str(_state.get("selected_crop")) == crop
-			"build_crate":
-				detail = "+1 build level per crate"
-				if is_instance_valid(button):
-					button.text = "Open crate"
-					button.disabled = int(entry.get("count", 0)) <= 0
 			"gear":
 				var equipped: bool = bool(entry.get("equipped", false))
 				var specialty: String = str(entry.get("role", "all"))
@@ -3222,7 +2805,7 @@ func _update_surge_timer() -> void:
 	_surge_active = bool(info.get("active", false))
 	_surge_urgent = not _surge_active and (seconds <= 10 or rocket_soon)
 	var accent: Color = _island_accent()
-	_export_title.text = "JACKPOT · %ds · SELL [F]" % seconds if _surge_active else "NEXT STOCK  %d:%02d" % [seconds / 60, seconds % 60]
+	_export_title.text = "BOOM · %ds · SELL [F]" % seconds if _surge_active else "NEXT STOCK  %d:%02d" % [seconds / 60, seconds % 60]
 	if _surge_active and str(info.get("kind", "normal")) == "rocket":
 		_export_title.text = "ROCKET · %ds · SELL [F]" % seconds
 	elif rocket_soon and not _surge_active:
@@ -3247,60 +2830,6 @@ func _update_surge_timer() -> void:
 		_export_bar.value = rocket_seconds
 	_export_bar.get_theme_stylebox("fill").bg_color = accent
 	_market_impact.set_countdown(_island_id(), minf(float(info.get("timer", 180)), float(rocket_seconds) if _island_id() >= 3 else 180.0) if not _surge_active else 180.0)
-
-func _effective_luck() -> float:
-	return float(_state.call("effective_luck")) if is_instance_valid(_state) and _state.has_method("effective_luck") else float(_state.get("luck"))
-
-func spin_batch(results: Array) -> void:
-	if not _rolling:
-		return
-	if results.is_empty():
-		cancel_roll()
-		return
-	_batch_results = results.duplicate(true)
-	var order: Array[String] = ["common", "rare", "build", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]
-	var best: Dictionary = results[0]
-	for result: Dictionary in results:
-		if order.find(str(result.get("tier", "common"))) > order.find(str(best.get("tier", "common"))):
-			best = result
-	_refs.roll_result_title.text = "Rolling ×%d…" % results.size()
-	_refs.roll_result_detail.text = "%d paid + 1 Aurora bonus" % (results.size() - 1) if _batch_bonus_count() > 0 else ""
-	spin_roll(best)
-
-func _show_batch_results() -> void:
-	if not _refs.has("batch_results"):
-		return
-	var row: GridContainer = _refs.batch_results
-	row.show()
-	for result: Dictionary in _batch_results:
-		var tier: String = str(result.get("tier", "common"))
-		var accent: Color = RollReel.COLORS.get(tier, Color("b8a3ce"))
-		var card: PanelContainer = _surface("gear", accent)
-		card.set_meta("result", result.duplicate(true))
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(card)
-		var column: VBoxContainer = _vbox(3)
-		card.add_child(column)
-		var item_id: String = str(result.get("item_id", ""))
-		var result_title: String = str(result.get("title", "")).to_lower()
-		var icon_kind: String = "gear" if not item_id.is_empty() else ("build_crate" if "build crate" in result_title else ("empty" if "empty" in result_title or "nothing" in result_title else "relic"))
-		var icon: Control = _icon({"kind": icon_kind, "id": item_id if not item_id.is_empty() else "trader_token"}, 44)
-		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		column.add_child(icon)
-		var title: Label = _wrap(str(result.get("title", "Reward")), 14, INK, true)
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.custom_minimum_size.x = 95
-		column.add_child(title)
-		var rarity: Label = _badge(tier.capitalize())
-		rarity.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		column.add_child(rarity)
-		if _batch_bonus_count() > 0:
-			var bonus_label: Label = _label("AURORA BONUS" if bool(result.get("bonus_roll", false)) else "PAID ROLL", 10, GREEN if bool(result.get("bonus_roll", false)) else MUTED)
-			bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			column.add_child(bonus_label)
-		card.tooltip_text = ("Aurora bonus roll · No extra stake\n" if bool(result.get("bonus_roll", false)) else "") + str(result.get("detail", ""))
-		card.mouse_filter = Control.MOUSE_FILTER_PASS
-	_polish_card_typography(row)
 
 func _activity_info() -> Dictionary:
 	if not is_instance_valid(_state):
@@ -3598,15 +3127,13 @@ func _refresh_equipment() -> void:
 		if bool(build.get("active", false)):
 			_refs.equipment_build_bonus.text = "%s Lv.%d · %s" % [build.get("name", "Farmer"), int(build.get("level", 1)), str(build.get("bonuses", ""))]
 	var total_parts: Array[String] = []
-	for stat: String in ["yield", "growth", "stock", "luck", "mutation", "processing"]:
+	for stat: String in ["yield", "growth", "stock", "mutation", "processing"]:
 		var value: float = float(_state.call("equipment_bonus", stat))
 		if value <= 0.000001:
 			continue
-		var names: Dictionary = {"yield": "Yield", "growth": "Growth", "stock": "Stocks", "luck": "Luck", "mutation": "Mutations", "processing": "Processing"}
-		var number: String = ("%.2f" % (value if stat == "luck" else value * 100.0)).trim_suffix("0").trim_suffix("0").trim_suffix(".")
-		total_parts.append("%s +%s%s" % [names[stat], number, "×" if stat == "luck" else "%"])
-	if _wears_crown():
-		total_parts.append("Bonus roll +1 / purchase")
+		var names: Dictionary = {"yield": "Yield", "growth": "Growth", "stock": "Stocks", "mutation": "Mutations", "processing": "Processing"}
+		var number: String = ("%.2f" % (value * 100.0)).trim_suffix("0").trim_suffix("0").trim_suffix(".")
+		total_parts.append("%s +%s%s" % [names[stat], number, "%"])
 	_refs.equipment_totals.text = "Gear total · " + " · ".join(total_parts) if not total_parts.is_empty() else ""
 	_refs.equipment_totals.visible = not total_parts.is_empty()
 	var entries: Array = _state.call("equipment_info")
@@ -3630,7 +3157,8 @@ func _refresh_equipment() -> void:
 		button.add_theme_stylebox_override("disabled", _style(Color("f2f2e7"), 8, 10, Color("c6ccba")))
 
 func _debug_info() -> Dictionary:
-	return _state.call("debug_info") if is_instance_valid(_state) and _state.has_method("debug_info") else {"luck_multiplier": 1.0, "normal_luck": _effective_luck(), "effective_luck": _effective_luck(), "money_limit": 1e6, "luck_limit": 1000.0}
+	return _state.debug_info()
+
 
 func set_debug_session(unlocked: bool, speed: float = 1.0, error: String = "") -> void:
 	var changed_access: bool = _debug_unlocked != unlocked
@@ -3673,7 +3201,7 @@ func _build_debug() -> void:
 		_refs["debug_unlock"] = unlock
 		call_deferred("_focus_debug_code")
 		return
-	_heading("Debug workshop", "Changes save to this farm. Future trophies stay marked DEBUG.")
+	_heading("Debug workshop", "Changes save to this farm. Progress and taxes remain active.")
 	var data: Dictionary = _debug_info()
 	_info("debug_balance", "", INK, 20)
 	var funding := _card(PAPER, 14)
@@ -3755,65 +3283,28 @@ func _build_debug() -> void:
 	_refs.debug_weather_note = _wrap("", 13, MUTED)
 	access_body.add_child(_refs.debug_weather_note)
 
-	var advanced: VBoxContainer = _details_section("debug_advanced", "money multiplier & luck")
-	_refs.debug_luck_status = _wrap("", 15, GREEN)
-	advanced.add_child(_refs.debug_luck_status)
-	for field: String in ["money", "luck"]:
-		var card: PanelContainer = _card(PAPER, 14)
-		advanced.add_child(card)
-		var column: VBoxContainer = _vbox(8)
-		card.add_child(column)
-		column.add_child(_label("MONEY · MULTIPLY ONCE" if field == "money" else "LUCK · STAYS UNTIL RESET", 15, INK, true))
-		var number: Control
-		var input: LineEdit
-		if field == "money":
-			var money_input: DebugMoneyInput = DebugMoneyInput.new()
-			money_input.max_value = float(data.get("money_limit", 1e6))
-			money_input.value = 1.0
-			money_input.placeholder_text = "0.1 or 1e-20"
-			money_input.tooltip_text = "Multiply current money once. Set balance above can fund a zero or negative purse."
-			money_input.text_changed.connect(func(_text: String) -> void: _refresh_debug())
-			number = money_input
-			input = money_input
-		else:
-			var luck_input: SpinBox = SpinBox.new()
-			luck_input.min_value = 1.0
-			luck_input.max_value = float(data.get("luck_limit", 1000.0))
-			luck_input.step = 0.25
-			luck_input.value = float(data.get("luck_multiplier", 1.0))
-			luck_input.suffix = "×"
-			luck_input.value_changed.connect(func(_value: float) -> void: _refresh_debug())
-			number = luck_input
-			input = luck_input.get_line_edit()
-		number.custom_minimum_size = Vector2(0, 40)
-		column.add_child(number)
-		input.add_theme_color_override("font_color", INK)
-		input.add_theme_font_size_override("font_size", 16)
-		input.add_theme_stylebox_override("normal", _style(CREAM, 10, 8, Color("c6d3bd")))
-		input.add_theme_stylebox_override("focus", _style(CREAM, 10, 8, GREEN))
-		_refs["debug_" + field] = number
-		var choices := HFlowContainer.new()
-		choices.add_theme_constant_override("h_separation", 6)
-		choices.add_theme_constant_override("v_separation", 6)
-		column.add_child(choices)
-		var multipliers: Array = ["0.01", "0.1", "1", "10", "100", "1000"] if field == "money" else ["1", "10", "100", "1000"]
-		for value: String in multipliers:
-			var preset: Button = _button("×" + value, "debug_%s:%s" % [field, value])
-			preset.add_theme_stylebox_override("normal", _style(CREAM, 10, 8, Color("c6d3bd")))
-			choices.add_child(preset)
-	advanced.add_child(_button("Luck calculation", "toggle_details:debug_luck_math"))
-	_refs.debug_luck_math = _wrap("", 13, GREEN)
-	advanced.add_child(_refs.debug_luck_math)
-	_refs.debug_luck_math.hide()
+	var advanced: VBoxContainer = _details_section("debug_advanced", "money multiplier")
+	var number: DebugMoneyInput = DebugMoneyInput.new()
+	number.max_value = float(data.get("money_limit", 1e6))
+	number.value = 1.0
+	number.placeholder_text = "0.1 or 1e-20"
+	number.custom_minimum_size = Vector2(0, 40)
+	number.text_changed.connect(func(_text: String) -> void: _refresh_debug())
+	advanced.add_child(number)
+	_refs.debug_money = number
+	var choices := HFlowContainer.new()
+	advanced.add_child(choices)
+	for value: String in ["0.01", "0.1", "1", "10", "100", "1000"]:
+		choices.add_child(_button("×" + value, "debug_money:" + value))
 	_refs.debug_preview = _wrap("", 14, GREEN)
 	advanced.add_child(_refs.debug_preview)
 	var actions := HFlowContainer.new()
 	actions.add_theme_constant_override("h_separation", 9)
 	actions.add_theme_constant_override("v_separation", 9)
 	advanced.add_child(actions)
-	_refs.debug_apply = _button("Apply money once + set luck", "debug_apply", true)
+	_refs.debug_apply = _button("Apply money once", "debug_apply", true)
 	actions.add_child(_refs.debug_apply)
-	_refs.debug_reset = _button("Reset luck + time", "debug:reset")
+	_refs.debug_reset = _button("Reset time", "debug:reset")
 	actions.add_child(_refs.debug_reset)
 	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps Spudions and all Debug history.", 13, MUTED))
 	_body.add_child(_button("Lock debug · restore 1× time", "debug:lock"))
@@ -3829,7 +3320,7 @@ func _debug_money_value() -> Dictionary:
 	return parsed
 
 func _refresh_debug() -> void:
-	if not _refs.has("debug_luck") or not _refs.has("debug_preview"):
+	if not _refs.has("debug_money") or not _refs.has("debug_preview"):
 		return
 	var data: Dictionary = _debug_info()
 	var coins: float = float(_state.get("coins"))
@@ -3849,8 +3340,6 @@ func _refresh_debug() -> void:
 		_refs.debug_balance_preview.add_theme_color_override("font_color", CHERRY if not valid or (ended and float(balance.get("value", 0)) <= 0) else GREEN)
 	_refs.debug_balance.text = "CURRENT MONEY  " + _blind_money(coins)
 	_refs.debug_balance.tooltip_text = _precise_money(coins)
-	_refs.debug_luck_status.text = "Normal %.2f× (+%s%%) · Debug ×%.2f · Total %.2f×" % [float(data.normal_luck), _number((float(data.normal_luck) - 1.0) * 100.0), float(data.luck_multiplier), float(data.effective_luck)]
-	_refs.debug_luck_math.text = _luck_math()
 	var parsed: Dictionary = _debug_money_value()
 	_refs.debug_apply.disabled = parsed.has("error") or ended
 	if parsed.has("error"):
@@ -3859,10 +3348,10 @@ func _refresh_debug() -> void:
 	else:
 		var multiplier: float = float(parsed.value)
 		var after: float = minf(1e300, coins * multiplier)
-		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s\nLuck %.2f× × %.2f = %.2f× (+%s%%)" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after), float(data.normal_luck), float(_refs.debug_luck.value), float(data.normal_luck) * float(_refs.debug_luck.value), _number((float(data.normal_luck) * float(_refs.debug_luck.value) - 1.0) * 100.0)]
+		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s" % [_precise_money(coins), String.num_scientific(multiplier), _precise_money(after)]
 		_refs.debug_preview.add_theme_color_override("font_color", CHERRY if after < float(_state.call("bankruptcy_limit")) else GREEN)
 		if after < float(_state.call("bankruptcy_limit")): _refs.debug_preview.text += "\nThis crosses bankruptcy. Use exact test funds above to clear debt."
-	_refs.debug_reset.disabled = is_equal_approx(float(data.get("luck_multiplier", 1)), 1.0) and is_equal_approx(_debug_time_multiplier, 1.0)
+	_refs.debug_reset.disabled = is_equal_approx(_debug_time_multiplier, 1.0)
 	for island: int in [2, 3]:
 		var unlocked: bool = _flag("island2_unlocked" if island == 2 else "island3_unlocked")
 		var label: String = "Golden Shores" if island == 2 else "Frosthollow + Shores"
@@ -3879,93 +3368,6 @@ func _refresh_debug() -> void:
 
 func _precise_money(amount: float) -> String:
 	return ("-\uE000 " if amount < 0.0 else "\uE000 ") + String.num_scientific(absf(amount))
-
-func _show_roll_accounting() -> void:
-	if _crate_reel or not _refs.has("roll_accounting") or not _state.has_method("roll_accounting_info"):
-		return
-	var receipt: Dictionary = _state.call("roll_accounting_info")
-	if receipt.is_empty():
-		return
-	var details: Array[String] = []
-	for entry: Array in [["refunds", "10% stake refunds"], ["duplicate_returns", "duplicate trade-ins"], ["jackpot_returns", "jackpots"]]:
-		if float(receipt.get(entry[0], 0)) > 0.0:
-			details.append("%s from %s" % [_money(float(receipt[entry[0]])), str(entry[1])])
-	_refs.roll_accounting.text = "Spent %s · Returned %s · Balance %s" % [_money(float(receipt.get("paid_total", 0))), _money(float(receipt.get("cash_returned", 0))), _money(float(receipt.get("balance_after", 0)))]
-	if not details.is_empty():
-		_refs.roll_accounting.text += "\nReturned: " + "; ".join(details) + "."
-	_refs.roll_accounting.tooltip_text = "Before: %s\nPaid upfront: %s\nCash returned: %s\nNet change: %s\nBalance after this roll: %s" % [_precise_money(float(receipt.get("balance_before", 0))), _precise_money(float(receipt.get("paid_total", 0))), _precise_money(float(receipt.get("cash_returned", 0))), _precise_money(float(receipt.get("net_change", 0))), _precise_money(float(receipt.get("balance_after", 0)))]
-	_refs.roll_accounting.show()
-
-func _refresh_trophies() -> void:
-	if not _refs.has("trophy_gallery") or _rolling:
-		return
-	var trophies: Array = _state.call("trophy_info") if _state.has_method("trophy_info") else []
-	_refs.trophy_toggle.text = "%s trophy cabinet · %d rare discoveries" % ["Hide" if _trophies_open else "Show", trophies.size()]
-	_refs.trophy_gallery.visible = _trophies_open
-	var signature: String = JSON.stringify(trophies)
-	if signature == _trophy_signature:
-		return
-	_trophy_signature = signature
-	var gallery: VBoxContainer = _refs.trophy_gallery
-	for child: Node in gallery.get_children():
-		gallery.remove_child(child)
-		child.queue_free()
-	if trophies.is_empty():
-		var empty := _surface("quest", GOLD)
-		gallery.add_child(empty)
-		empty.add_child(_wrap("No trophies yet", 14, MUTED))
-		return
-	var grid: GridContainer = GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 8)
-	grid.add_theme_constant_override("v_separation", 8)
-	gallery.add_child(grid)
-	for trophy: Dictionary in trophies:
-		var tier: String = str(trophy.get("tier", "rare"))
-		var accent: Color = RollReel.COLORS.get(tier, Color("c1a4df"))
-		var card: PanelContainer = _surface("gear", Cozy.RARITY_COLORS.get(tier, GREEN))
-		card.set_meta("trophy", trophy.duplicate(true))
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(card)
-		var row: BoxContainer = _hbox(8)
-		card.add_child(row)
-		var item_id: String = str(trophy.get("item_id", ""))
-		var title: String = str(trophy.get("title", "Rare drop"))
-		var kind: String = "gear" if not item_id.is_empty() else ("build_crate" if "build crate" in title.to_lower() else "relic")
-		row.add_child(_icon({"kind": kind, "id": item_id if not item_id.is_empty() else "trader_token"}, 50))
-		var labels: VBoxContainer = _vbox(3)
-		labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(labels)
-		labels.add_child(_wrap(title, 15, INK, true))
-		labels.add_child(_wrap("%s · ×%d%s" % [tier.to_upper(), int(trophy.get("count", 1)), " · DEBUG" if bool(trophy.get("debug", false)) else ""], 11, Cozy.RARITY_COLORS.get(tier, GREEN), true))
-		labels.add_child(_wrap("Tier odds %.4f%%\nIsland %d · roll #%d" % [float(trophy.get("best_probability", 0)), int(trophy.get("island", 1)), int(trophy.get("roll_number", 0))], 12, MUTED))
-		card.tooltip_text = "Recorded rarity-tier odds, including the luck and stake used on that roll."
-		card.mouse_filter = Control.MOUSE_FILTER_PASS
-
-func _wears_crown() -> bool:
-	if not is_instance_valid(_state) or not _state.has_method("equipment_loadout"):
-		return false
-	var equipment: Dictionary = _state.call("equipment_loadout")
-	return str(equipment.get("head", "")) == "aurora_crown"
-
-func _batch_bonus_count() -> int:
-	var count: int = 0
-	for result: Dictionary in _batch_results:
-		if bool(result.get("bonus_roll", false)):
-			count += 1
-	return count
-
-func _minimum_roll_stake(kind: String) -> float:
-	return float(_state.call("roll_minimum_stake", kind)) if _state.has_method("roll_minimum_stake") else float(_state.call("roll_cost", "normal"))
-
-func _can_roll_stake(kind: String) -> bool:
-	if _state.has_method("can_roll"):
-		return bool(_state.call("can_roll", kind))
-	var cost: float = float(_state.call("roll_cost", kind))
-	var coins: float = float(_state.get("coins"))
-	if not bool(_state.call("roll_available")) or not is_finite(cost) or coins < cost:
-		return false
-	return cost > _minimum_roll_stake(kind) if kind == "all_in" else cost >= _minimum_roll_stake(kind)
 
 func show_tutorial_feedback(message: String) -> void:
 	if not _tutorial.is_empty():
@@ -4017,8 +3419,3 @@ func _build_farm_tip() -> void:
 	_info("farm_tip_body", str(_opened_farm_tip.body), INK, 16)
 	_body.add_child(_button(str(_opened_farm_tip.label), "farm_help:act", true))
 	_body.add_child(_button("Back to help", "help"))
-
-func _luck_math() -> String:
-	if not is_instance_valid(_state): return ""
-	var info: Dictionary = _state.luck_breakdown()
-	return "1 base + %s earned + %s equipped = %s× (+%s%%)%s\n%s× normal × %s debug = %s× total (+%s%%)" % [String.num(info.earned, 3), String.num(info.gear, 3), String.num(info.normal, 3), _number(info.normal_percent), " · capped at 10×" if float(info.uncapped) > 10.0 else "", String.num(info.normal, 3), String.num(info.multiplier, 3), String.num(info.total, 3), _number(info.total_percent)]

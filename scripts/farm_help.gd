@@ -119,8 +119,6 @@ func tip(farm: Node) -> Dictionary:
 			if rank < 3 and (rank < 2 or farm.current_island == 3) and farm.coins >= float(farm.TOOL_COSTS[tool][rank]):
 				return _tip("tools", "Work more beds per click", "A %s upgrade is within reach at %s. Click the toolsmith or press U to compare its area and cost." % [tool, farm.money(farm.TOOL_COSTS[tool][rank])], "Browse upgrades [U]", "tools")
 	if unseen("builds") and is_instance_valid(farm.build_system):
-		if farm.build_system.build_crates > 0:
-			return _tip("builds", "You found a Build Crate", "Open it from Inventory for a build card. Then compare your unlocked builds with C. Opening a shop does not spend Spudions.", "Open inventory [I]", "inventory")
 		if farm.build_system.active == "farmer" and farm.build_system.professions.data.compost > 0:
 			for plot in farm.plots:
 				if plot.unlocked and int(plot.stage) in [1, 2] and not plot.get("cultivated", false):

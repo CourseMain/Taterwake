@@ -17,7 +17,7 @@ float mist(vec2 p) { return noise(p) * 0.64 + noise(p * 2.03) * 0.26 + noise(p *
 void fragment() {
 	vec2 edge = min(UV, vec2(1.0) - UV);
 	float distance_to_edge = min(edge.x, edge.y);
-	float jackpot = step(2.5, tier);
+	float peak = step(2.5, tier);
 	float rocket = step(3.5, tier);
 	float corners = (1.0 - smoothstep(0.0, 0.24, edge.x)) * (1.0 - smoothstep(0.0, 0.28, edge.y));
 	float width = 0.027 + tier * 0.020 + corners * (0.035 + tier * 0.009);
@@ -27,10 +27,10 @@ void fragment() {
 	float vapor = smoothstep(0.24, 0.78, curl);
 	float veins = pow(max(0.0, 1.0 - abs(curl - 0.56) * 20.0), 3.0);
 	float coverage = border * (0.18 + vapor * 0.69 + veins * 0.24) + corners * vapor * tier * 0.035;
-	coverage *= 1.0 + jackpot * beat * 0.14 + arrival * 0.18;
+	coverage *= 1.0 + peak * beat * 0.14 + arrival * 0.18;
 	// The center receives at most a faint 3–6% island-colour wash. The energy is at the edges.
-	float wash = jackpot * (0.035 + rocket * 0.025) * (0.78 + beat * 0.22);
+	float wash = peak * (0.035 + rocket * 0.025) * (0.78 + beat * 0.22);
 	vec3 color = mix(aura_color.rgb * 0.62, aura_color.rgb, vapor);
-	color = mix(color, mix(aura_color.rgb, vec3(1.0), 0.73), veins * (0.20 + jackpot * 0.22));
+	color = mix(color, mix(aura_color.rgb, vec3(1.0), 0.73), veins * (0.20 + peak * 0.22));
 	COLOR = vec4(color, min(0.76, (coverage + wash) * energy));
 }

@@ -14,11 +14,10 @@ const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
 	{"id": "market", "title": "Seed market", "body": "Click the market to browse. Seeds follow crop prices, so buying during a boom is expensive.", "focus": "market"},
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
-	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect crops, equipment and Build Crates. Clothing helps only while equipped."},
+	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect crops, equipment and builds. Clothing helps only while equipped."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose an unlocked build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
+	{"id": "builds", "title": "The village field guide", "body": "Farmer is your starter: bigger harvests and compost-grown giants. Click Builds to preview all five paths; browsing never selects one. Choose a build for free, or open the Builds guide for the tradeoffs.", "focus": "builds"},
 	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
-	{"id": "roll", "title": "Roll House", "body": "Click the Roll House to inspect odds. Rolls spend earned Spudions and can return little. Keep seed money.", "focus": "roll"},
 	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Ducks work on the island you visit.", "focus": "duck_patrol"},
 	{"id": "dock", "title": "The ferry", "body": "Click the ferry to walk to it, or press E nearby. Sailing needs the island unlock.", "focus": "island"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},
@@ -108,13 +107,13 @@ func _tools() -> Array[String]:
 
 func _features() -> Array[String]:
 	if _tour_only():
-		return ["coins", "market", "barn", "inventory", "tools", "builds", "quests", "roll", "duck_patrol", "stock", "island", "menu"]
+		return ["coins", "market", "barn", "inventory", "tools", "builds", "quests", "duck_patrol", "stock", "island", "menu"]
 	return ["coins", "market", "barn"] if _index() >= 1 else []
 
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "builds", "build_guide", "build:inspect:", "quests", "roll", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "builds", "build_guide", "build:inspect:", "quests", "duck_patrol", "island", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)

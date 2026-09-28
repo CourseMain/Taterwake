@@ -31,7 +31,6 @@ var _crop_tubers: Dictionary = {}
 var _area_selection: Node3D
 var _area_key: String = ""
 var _furrow_roots: Array[Node3D] = []
-var _rare_gem: Node3D
 var _ripe_sparkles: Array[Node3D] = []
 var _rotor: Node3D
 var _clouds: Array[Node3D] = []
@@ -79,9 +78,6 @@ var _pest_labels: Array[Label3D] = []
 var _pest_visuals: Array[Dictionary] = []
 var _pest_focus: int = -1
 var _snowflakes: Array[Node3D] = []
-var _roll_available: bool = true
-var _roll_label: Label3D
-var _roll_gate: Node3D
 var _processing_active: bool = false
 var _processing_progress: float = 0.0
 var _processing_rotors: Array[Node3D] = []
@@ -143,7 +139,7 @@ const FERRY_ROUTES: Dictionary = {
 }
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
-	"roll": "Roll House", "builds": "Builds", "duck_patrol": "Ducks",
+	"builds": "Builds", "duck_patrol": "Ducks",
 	"quests": "Quests", "island": "Ferry", "activities": "Activities",
 }
 
@@ -158,7 +154,6 @@ func build_world(island: int = 1) -> void:
 		_barn(Vector3(-12.0, 0.0, -8.0))
 		_market(Vector3(0.0, 0.0, -9.0))
 		_tool_upgrade_station(Vector3(-6.4, 0.0, -8.5))
-		_roll_house(Vector3(10.0, 0.0, -8.0))
 		_windmill(Vector3(-13.2, 0.0, 4.0))
 		_scenery()
 		_valley_dock()
@@ -169,7 +164,6 @@ func build_world(island: int = 1) -> void:
 		_barn(Vector3(-15.0, 0.0, -10.0))
 		_market(Vector3(-1.0, 0.0, -11.0))
 		_tool_upgrade_station(Vector3(-8.0, 0.0, -10.6))
-		_roll_house(Vector3(13.0, 0.0, -10.0))
 		_tropical_scenery()
 		_quest_board(Vector3(-12.0, 0.0, 11.0))
 		_export_dock()
@@ -178,7 +172,6 @@ func build_world(island: int = 1) -> void:
 		_build_land(_winter_paths)
 		_barn(Vector3(-18.0, 0.0, -12.0))
 		_market(Vector3(-3.0, 0.0, -14.0))
-		_roll_house(Vector3(15.0, 0.0, -12.0))
 		_winter_scenery()
 		_quest_board(Vector3(-15.0, 0.0, 14.0))
 		_winter_ferry()
@@ -227,7 +220,6 @@ func build_world(island: int = 1) -> void:
 	set_golden_hat(_golden_hat)
 	set_equipment(_equipped_loadout, _gear_catalog)
 	set_export_state(_export_active, _export_seconds)
-	set_roll_available(_roll_available)
 	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
 	_batch_world_geometry()
@@ -260,7 +252,7 @@ func _expand_village() -> void:
 		if not node is Node3D or node is Camera3D or node is Light3D or node is WorldEnvironment or node.has_meta("land_layout"):
 			continue
 		node.position = layout_point(node.position)
-		var building_scale: float = {"MarketStall": 1.16, "ToolUpgradeWorkshop": 1.14, "RollHouse": 1.12, "Windmill": 1.12, "IceForge": 1.16, "WashAndSortWorkshop": 1.10}.get(str(node.name), 1.0)
+		var building_scale: float = {"MarketStall": 1.16, "ToolUpgradeWorkshop": 1.14, "Windmill": 1.12, "IceForge": 1.16, "WashAndSortWorkshop": 1.10}.get(str(node.name), 1.0)
 		node.scale *= building_scale
 		# Keep the toolsmith at the same human scale as the player.
 		for smith: Node3D in _toolsmiths:
@@ -545,7 +537,6 @@ func _clear_world() -> void:
 	_tool = null
 	_selection = null
 	_area_selection = null
-	_rare_gem = null
 	_rotor = null
 	_dock_label = null
 	_dock_gate = null
@@ -555,8 +546,6 @@ func _clear_world() -> void:
 	_impact_root = null
 	_frost_label = null
 	_frost_beacon = null
-	_roll_label = null
-	_roll_gate = null
 	_processing_label = null
 	_processing_light = null
 	_activity_label = null
@@ -995,9 +984,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_animate_processing(delta)
 	_animate_pests(delta)
 	_animate_activities(delta)
-	if is_instance_valid(_rare_gem):
-		_rare_gem.rotation.y += delta * 0.75
-		_rare_gem.position.y = 1.65 + sin(_time * 2.1) * 0.09
 	for i in range(_ripe_sparkles.size() - 1, -1, -1):
 		if not is_instance_valid(_ripe_sparkles[i]):
 			_ripe_sparkles.remove_at(i)
@@ -1082,81 +1068,6 @@ func _market(pos: Vector3) -> void:
 	_shop_label(root, "Seeds", Vector3(0.0, 4.45, 0.0))
 	_target(root, Vector3(0.0, 1.8, 0.0), Vector3(5.3, 3.6, 4.0), "station", "market")
 
-func _roll_house(pos: Vector3) -> void:
-	var root := _root("RollHouse", pos)
-	_box(root, Vector3(0.0, 0.16, 0.0), Vector3(5.5, 0.35, 4.5), Color("aaa58e"))
-	_box(root, Vector3(0.0, 1.88, 0.0), Vector3(4.7, 3.45, 3.6), Color("e3b355"))
-	_box(root, Vector3(0.0, 0.21, 2.35), Vector3(5.65, 0.35, 1.0), Color("c4c1a6"))
-	_box(root, Vector3(0.0, 0.12, 2.89), Vector3(6.0, 0.2, 0.55), Color("d5ceb2"))
-	_roof(root, 5.55, 4.45, 3.68, 1.25, Color("a6293c"))
-	if current_island == 3:
-		_snow_roof(root, 5.55, 4.45, 3.68, 1.25)
-	_box(root, Vector3(0.0, 1.34, 1.88), Vector3(1.25, 2.4, 0.18), Color("713039"))
-	_box(root, Vector3(0.0, 1.38, 1.99), Vector3(0.96, 2.1, 0.06), Color("281f2d"))
-	_sphere(root, Vector3(0.29, 1.32, 2.05), Vector3(0.065, 0.065, 0.065), GOLD)
-	for x in [-1.66, 1.66]:
-		_box(root, Vector3(x, 2.27, 1.87), Vector3(0.81, 1.28, 0.14), CREAM)
-		_box(root, Vector3(x, 2.27, 1.97), Vector3(0.6, 1.03, 0.07), Color("ffd778"))
-		_box(root, Vector3(x, 2.27, 2.03), Vector3(0.07, 1.05, 0.07), CREAM)
-		_box(root, Vector3(x, 2.27, 2.03), Vector3(0.6, 0.07, 0.07), CREAM)
-	for x in [-2.1, 2.1]:
-		_cylinder(root, Vector3(x, 1.96, 2.1), 0.16, 0.14, 3.3, CREAM, 8)
-		_box(root, Vector3(x, 0.39, 2.1), Vector3(0.46, 0.3, 0.43), Color("e8d8b8"))
-	_box(root, Vector3(0.0, 3.55, 2.12), Vector3(5.1, 0.36, 0.35), CREAM)
-	_cylinder(root, Vector3(0.0, 5.3, 0.0), 0.045, 0.045, 1.6, Color("8b704c"), 6)
-	_box(root, Vector3(0.58, 5.75, 0.0), Vector3(1.15, 0.57, 0.06), Color("be3345"))
-	_sphere(root, Vector3(0.58, 5.77, 0.065), Vector3(0.17, 0.22, 0.04), Color("ffda71"))
-	# The gem display and dice identify the high-stakes Roll House.
-	_box(root, Vector3(3.4, 0.52, 1.7), Vector3(0.94, 1.02, 0.78), Color("922f42"))
-	_box(root, Vector3(3.4, 1.07, 1.7), Vector3(1.02, 0.11, 0.88), Color("e2b44d"))
-	_box(root, Vector3(3.4, 1.14, 1.7), Vector3(0.5, 0.025, 0.065), Color("302432"))
-	_box(root, Vector3(3.4, 0.62, 2.10), Vector3(0.40, 0.45, 0.035), CREAM)
-	_label(root, "ROLL", Vector3(3.4, 0.64, 2.15), 20, Color("8c2438"), false)
-	_rare_gem = _gem(root, Vector3(3.4, 1.65, 1.7), Color("ffe17e"), 0.43)
-	_die(root, Vector3(-3.1, 0.64, 2.0), 0.72, 0.3)
-	_die(root, Vector3(-2.9, 1.23, 2.0), 0.5, -0.2)
-	_roll_label = _shop_label(root, "Roll House", Vector3(0.0, 6.50, 0.0))
-	_target(root, Vector3(0.55, 2.6, 0.4), Vector3(6.4, 5.2, 4.7), "station", "roll")
-	_roll_gate = Node3D.new()
-	root.add_child(_roll_gate)
-	for side in [-1.0, 1.0]:
-		var board := _box(_roll_gate, Vector3(0.0, 1.38, 2.13), Vector3(1.58, 0.22, 0.12), Color("af9470"))
-		board.rotation.z = side * 0.50
-	_box(_roll_gate, Vector3(0.0, 1.39, 2.24), Vector3(0.23, 0.28, 0.08), Color("d3b06d"))
-	_roll_gate.visible = false
-	# Velvet folds and tied curtains turn the entrance into a little stage.
-	var curtains := Node3D.new()
-	curtains.name = "RollHouseCurtains"
-	root.add_child(curtains)
-	for side: float in [-1, 1]:
-		for fold in range(4):
-			var x: float = side * (.53 + fold * .13)
-			var tint := Color("bb3546") if fold % 2 == 0 else Color("8f2436")
-			_bar(curtains, Vector3(x, 3.26, 2.2), Vector3(side * .93, 1.65, 2.23 + fold * .025), .14, tint)
-			_bar(curtains, Vector3(side * .93, 1.65, 2.23 + fold * .025), Vector3(x, .52, 2.24), .14, tint)
-		_box(curtains, Vector3(side * .94, 1.65, 2.37), Vector3(.38, .12, .1), GOLD)
-		_bar(curtains, Vector3(side * 1.02, 1.63, 2.39), Vector3(side * 1.11, 1.24, 2.4), .04, GOLD)
-		_sphere(curtains, Vector3(side * 1.11, 1.2, 2.4), Vector3(.08,.13,.06), GOLD)
-		for fold in range(3):
-			_box(root, Vector3(side * (1.42 + fold * .16), 2.27, 2.07), Vector3(.12, 1.05, .10), Color("aa3243") if fold % 2 == 0 else Color("cf4e51"))
-	# Gold-trimmed red carpet stays flat and clear of the station's hit targets.
-	_box(root, Vector3(0, .24, 2.9), Vector3(1.85, .04, 1.8), GOLD)
-	_box(root, Vector3(0, .27, 2.9), Vector3(1.64, .045, 1.76), Color("aa273b"))
-	var marquee := Node3D.new()
-	marquee.name = "RollHouseMarquee"
-	root.add_child(marquee)
-	_box(marquee, Vector3(0, 3.54, 2.37), Vector3(4.95, .70, .32), Color("e6b646"))
-	_box(marquee, Vector3(0, 3.54, 2.56), Vector3(4.61, .44, .08), Color("822938"))
-	var sign := _label(marquee, "ROLL HOUSE", Vector3(0, 3.55, 2.63), 35, Color("ffe7a2"), false)
-	sign.outline_size = 2
-	for i in range(13):
-		var x: float = -2.27 + i * .378
-		for y: float in [3.23, 3.85]:
-			var bulb := _sphere(marquee, Vector3(x, y, 2.59), Vector3(.065,.065,.06), Color("fff0b0"))
-			bulb.material_override = _bright_material(Color("ffe398"))
-	for side: float in [-1, 1]:
-		_bar(root, Vector3(side * 2.5, 3.78, 2.27), Vector3(0, 4.93, 2.27), .075, GOLD)
-
 func _windmill(pos: Vector3) -> void:
 	var root := _root("Windmill", pos)
 	_cylinder(root, Vector3(0.0, 1.75, 0.0), 1.03, 0.67, 3.5, Color("eadab5"), 8)
@@ -1209,8 +1120,8 @@ func _scenery() -> void:
 	for x in [-0.9, 0.9]:
 		_box(bench, Vector3(x, 0.29, 0.0), Vector3(0.14, 0.59, 0.55), Color("486f62"))
 	_box(bench, Vector3(0.0, 1.04, -0.35), Vector3(2.4, 0.44, 0.12), Color("b58a5b"))
-	for data in [[Vector3(5.9, 0, -4.5), Color("b88355"), Color("a07885")], [Vector3(9.2, 0, 1.2), Color("d8ab74"), Color("dba464")], [Vector3(-4.8, 0, -5.0), Color("bd8e60"), Color("68928a")]]:
-		var id: String = "rook" if is_equal_approx(data[0].x, 5.9) else "pip" if is_equal_approx(data[0].x, 9.2) else "nell"
+	for data in [[Vector3(9.2, 0, 1.2), Color("d8ab74"), Color("dba464")], [Vector3(-4.8, 0, -5.0), Color("bd8e60"), Color("68928a")]]:
+		var id: String = "pip" if is_equal_approx(data[0].x, 9.2) else "nell"
 		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		villager.rotation.y = _rng.randf_range(-0.5, 0.7)
 		_villagers.append(villager)
@@ -1247,7 +1158,6 @@ func _staff_stalls() -> void:
 	# doorway, inspect the belt or watch the ducks. Leave their approaches open.
 	_place_stallholder("mara", "market", "MarketStall", Vector3(-.25,.18,.68), -12)
 	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
-	_place_stallholder("rook", "roll", "RollHouse", Vector3(1.1,.25,3.15), -32)
 	_place_stallholder("ada", "builds", "WashAndSortWorkshop", Vector3(2.65,0,1.05), -108)
 	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
 	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
@@ -1607,22 +1517,19 @@ func play_reward(rarity: String) -> void:
 	if not is_instance_valid(player):
 		return
 	var tier: String = rarity.to_lower()
-	if tier not in ["rare", "epic", "legendary", "mythic", "mutation", "jackpot", "relic", "mystery", "build"]:
+	if tier not in ["legendary", "mythic"]:
 		return
-	var major: bool = tier in ["legendary", "mythic", "mutation", "jackpot", "relic", "mystery", "build"]
 	var island_color: Color = Color("62ffa0") if current_island == 1 else (Color("ffdb62") if current_island == 2 else Color("8ee7ff"))
-	var color: Color = island_color if major else (Color("c4a3ff") if tier == "epic" else GOLD)
-	var count: int = 42 if tier in ["jackpot", "mystery"] else (34 if tier == "relic" else (28 if major else 12))
-	var lifetime: float = 3.6 if major else 1.6
+	var count: int = 28
+	var lifetime: float = 3.6
 	for i in range(count):
 		var angle: float = float(i) * TAU / float(count)
 		var pos: Vector3 = player.position + Vector3(cos(angle) * 0.45, 1.1, sin(angle) * 0.45)
-		var particle: Node3D = _gem(self, pos, color if i % 3 else Color("fff2ba"), 0.17 if major else 0.095)
-		var velocity := Vector3(cos(angle) * (1.45 if major else 0.9), _rng.randf_range(1.4, 2.3), sin(angle) * (1.45 if major else 0.9))
-		_effect_particles.append({"node": particle, "velocity": velocity, "life": lifetime, "total": lifetime, "gravity": 0.75 if major else 2.0})
-	if major:
-		_reward_halo(island_color, lifetime)
-		_show_impact(tier.to_upper() + "!", player.position + Vector3(0.0, 2.5, 0.0), color, 39 if tier == "jackpot" else 34, 3.0)
+		var particle: Node3D = _gem(self, pos, island_color if i % 3 else Color("fff2ba"), 0.17)
+		var velocity := Vector3(cos(angle) * 1.45, _rng.randf_range(1.4, 2.3), sin(angle) * 1.45)
+		_effect_particles.append({"node": particle, "velocity": velocity, "life": lifetime, "total": lifetime, "gravity": 0.75})
+	_reward_halo(island_color, lifetime)
+	_show_impact(tier.to_upper() + "!", player.position + Vector3(0.0, 2.5, 0.0), island_color, 34, 3.0)
 
 
 func _reward_halo(color: Color, lifetime: float) -> void:
@@ -1654,7 +1561,7 @@ func _bright_material(color: Color) -> StandardMaterial3D:
 
 
 func _show_impact(text: String, pos: Vector3, color: Color, font_size: int, lifetime: float) -> void:
-	# A new highlight replaces the last one; reward reels and routine feedback live in the HUD.
+	# A new highlight replaces the last one; routine feedback lives in the HUD.
 	if is_instance_valid(_impact_root):
 		for i in range(_effect_particles.size() - 1, -1, -1):
 			if _effect_particles[i]["node"] == _impact_root:
@@ -1791,8 +1698,8 @@ func _tropical_scenery() -> void:
 			var leaf := _sphere(self, point + Vector3(cos(angle) * 0.35, 0.40, sin(angle) * 0.3), Vector3(0.70, 0.12, 0.28), Color("78a76e"))
 			leaf.rotation = Vector3(0.0, -angle, 0.6)
 		_sphere(self, point + Vector3(0.0, 0.53, 0.0), Vector3(0.17, 0.15, 0.17), Color("f0a269"))
-	for data in [[Vector3(-12.0, 0.0, -6.4), Color("d3a268"), Color("4baca3")], [Vector3(8.8, 0.0, -6.6), Color("c29161"), Color("e99a7c")], [Vector3(13.5, 0.0, 4.0), Color("dca76e"), Color("88b194")], [Vector3(-14.0, 0.0, 9.0), Color("bd8f61"), Color("63a9b9")]]:
-		var id: String = "nell" if data[0].x == -12 else "rook" if is_equal_approx(data[0].x, 8.8) else "hollis" if data[0].x == 13.5 else "tess"
+	for data in [[Vector3(-12.0, 0.0, -6.4), Color("d3a268"), Color("4baca3")], [Vector3(13.5, 0.0, 4.0), Color("dca76e"), Color("88b194")], [Vector3(-14.0, 0.0, 9.0), Color("bd8f61"), Color("63a9b9")]]:
+		var id: String = "nell" if data[0].x == -12 else "hollis" if data[0].x == 13.5 else "tess"
 		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		villager.rotation.y = _rng.randf_range(-0.8, 0.7)
 		_villagers.append(villager)
@@ -2037,8 +1944,8 @@ func _winter_scenery() -> void:
 		_bar(self, endpoints[0], endpoints[1], 0.025, Color("94bbcf"))
 	for i in range(7):
 		_box(self, Vector3(15.3 + float(i) * 0.40, 0.19, -3.3), Vector3(0.34, 0.16, 1.3), Color("9f8e7a"))
-	for data in [[Vector3(-14,0,-8.2),Color("c89b6c"),Color("926d78")],[Vector3(9,0,-8.3),Color("d9b47b"),Color("73929e")],[Vector3(15,0,11.8),Color("c5976d"),Color("9e8868")],[Vector3(-17,0,11.5),Color("d2a574"),Color("728a91")]]:
-		var id: String = "nell" if data[0].x == -14 else "rook" if data[0].x == 9 else "hollis" if data[0].x == 15 else "tess"
+	for data in [[Vector3(-14,0,-8.2),Color("c89b6c"),Color("926d78")],[Vector3(15,0,11.8),Color("c5976d"),Color("9e8868")],[Vector3(-17,0,11.5),Color("d2a574"),Color("728a91")]]:
+		var id: String = "nell" if data[0].x == -14 else "hollis" if data[0].x == 15 else "tess"
 		var resident := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
 		resident.rotation.y = _rng.randf_range(-0.6, 0.65)
 		_villagers.append(resident)
@@ -2284,16 +2191,6 @@ func _animate_processing(delta: float) -> void:
 		var travel: float = fmod(_time*0.65+float(i)*0.25,1.0)
 		steam.position = Vector3(-1.95+sin(travel*3.0+float(i))*0.10,2.06+travel*0.88,-0.58)
 		steam.scale = Vector3.ONE*(0.07+travel*0.09)
-
-
-func set_roll_available(value: bool) -> void:
-	_roll_available = value
-	if is_instance_valid(_roll_label):
-		_roll_label.text = "Roll House" if value else "Rolls closed"
-	if is_instance_valid(_roll_gate):
-		_roll_gate.visible = not value
-	if is_instance_valid(_rare_gem):
-		_rare_gem.visible = value
 
 
 func _build_pest_swarm(parent: Node3D) -> void:

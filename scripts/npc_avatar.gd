@@ -19,7 +19,7 @@ func configure(id: String) -> void:
 	scale = p.shape
 	_personality = float(Roster.PEOPLE.keys().find(id)) * .71
 	_time = _personality
-	var body: String = "industrialist_overalls" if id in ["bram", "ada", "oren"] else ("investor_shirt" if id in ["edwin", "hollis"] else "gambler_shirt" if id == "rook" else "farmer_shirt")
+	var body: String = "industrialist_overalls" if id in ["bram", "ada", "oren"] else ("investor_shirt" if id in ["edwin", "hollis"] else "farmer_shirt")
 	set_equipment({"head":p.hat, "body":body, "legs":"farmer_pants", "feet":"farmer_boots"}, {body:{"color":p.color}, "farmer_pants":{"color":"454f50"}, "farmer_boots":{"color":"695347"}})
 	var accessories := _group(_rig, "CharacterDetails")
 	for side: float in [-1.0, 1.0]:

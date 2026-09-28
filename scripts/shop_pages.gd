@@ -221,7 +221,7 @@ func _build_barn() -> void:
 	add_child(_tabs)
 	hud._panel_crops = hud._known_crops()
 	hud._inventory_sections.clear()
-	var section_names := {"crops": "Crops & seeds", "gear": "Gear", "items": "Items & mutations", "builds": "Builds & crates"}
+	var section_names := {"crops": "Crops & seeds", "gear": "Gear", "items": "Items & mutations", "builds": "Builds"}
 	for section: String in ["crops", "gear", "items", "builds"]:
 		var tab := _button(section_names[section], "inventory_tab:" + section)
 		tab.pressed.connect(refresh.call_deferred)
@@ -246,7 +246,7 @@ func _build_barn() -> void:
 		if kind == "gear":
 			hud._build_gear_card(gear_grid, entry)
 			continue
-		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build", "build_crate"] else "items")
+		var section: String = "crops" if kind in ["seed", "crop"] else ("builds" if kind in ["build"] else "items")
 		var shelf: GridContainer = shelves[section]
 		var bin := _timber(shelf, "BarnBin" + str(shelf.get_child_count()), shelf.get_child_count())
 		var contents: VBoxContainer = hud._vbox(7)
@@ -288,7 +288,7 @@ func _build_barn() -> void:
 	for section: String in ["crops", "items", "builds"]:
 		if shelves[section].get_child_count() == 0:
 			shelves[section].get_parent().hide()
-			var empty: String = {"crops": "No crops or seeds.", "items": "No items.", "builds": "No builds or crates."}[section]
+			var empty: String = {"crops": "No crops or seeds.", "items": "No items.", "builds": "No builds."}[section]
 			hud._inventory_sections[section].add_child(_label(empty, 14, CHALK))
 	if gear_grid.get_child_count() == 0:
 		hud._inventory_sections.gear.add_child(_label("No spare gear.", 14, CHALK))

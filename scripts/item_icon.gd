@@ -74,15 +74,6 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 					for index: int in range(3):
 						var angle: float = index * TAU / 3.0
 						_poly(c, [Vector2(0, 9) + Vector2.from_angle(angle) * 9, Vector2(0, 9) + Vector2.from_angle(angle + 0.3) * 23, Vector2(0, 9) + Vector2.from_angle(angle + 1.1) * 23], INK)
-		"build_crate":
-			c.draw_style_box(_box(Color("759ebc"), 5), Rect2(-35, -25, 70, 62))
-			c.draw_rect(Rect2(-39, -32, 78, 16), Color("c2d7e4"))
-			c.draw_line(Vector2(-28, -14), Vector2(28, 32), Color("436780"), 6, true)
-			c.draw_line(Vector2(28, -14), Vector2(-28, 32), Color("436780"), 6, true)
-			c.draw_circle(Vector2(0, 5), 15, Color("f4cb59"))
-			c.draw_line(Vector2(-7, 10), Vector2(8, -6), INK, 5, true)
-			c.draw_circle(Vector2(9, -7), 6, INK)
-			_spark(c, Vector2(30, -40), Color("e9b833"), 7)
 		"processed":
 			c.draw_rect(Rect2(-35, -12, 70, 48), Color("ab764d"))
 			for x: int in [-22, 0, 22]: _potato(c, crop, Vector2(x, -13), 0.42)
@@ -318,8 +309,8 @@ static func _gear(c: CanvasItem, id: String, data: Dictionary = {}) -> void:
 		_garment(c, id, appearance)
 		return
 	match id:
-		"straw_hat", "lucky_cap", "traders_visor", "prospectors_hat", "aurora_crown":
-			var colors: Dictionary = {"straw_hat": Color("e4bd66"), "lucky_cap": Color("699d70"), "traders_visor": Color("699fba"), "prospectors_hat": Color("df9b42"), "aurora_crown": Color("a2dced")}
+		"straw_hat", "patchwork_cap", "traders_visor", "prospectors_hat", "aurora_crown":
+			var colors: Dictionary = {"straw_hat": Color("e4bd66"), "patchwork_cap": Color("699d70"), "traders_visor": Color("699fba"), "prospectors_hat": Color("df9b42"), "aurora_crown": Color("a2dced")}
 			var color: Color = Color(str(appearance.color)) if appearance.has("color") else colors[id]
 			if id == "aurora_crown":
 				_poly(c, [Vector2(-33, 19), Vector2(-38, -28), Vector2(-19, -9), Vector2(0, -40), Vector2(19, -9), Vector2(38, -28), Vector2(33, 19)], color)
@@ -336,7 +327,7 @@ static func _gear(c: CanvasItem, id: String, data: Dictionary = {}) -> void:
 				if id == "prospectors_hat":
 					c.draw_circle(Vector2(0, -4), 13, Color("786f67"))
 					c.draw_circle(Vector2(0, -4), 9, Color("fff4b0"))
-				elif id == "lucky_cap":
+				elif id == "patchwork_cap":
 					for offset: Vector2 in [Vector2(-5, -12), Vector2(5, -12), Vector2(-5, -3), Vector2(5, -3)]: c.draw_circle(offset, 6, Color("c4e497"))
 				else:
 					for x: int in [-15, 0, 15]: c.draw_line(Vector2(x, -18), Vector2(x, 1), color.lightened(0.2), 2, true)

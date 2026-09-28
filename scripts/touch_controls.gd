@@ -249,7 +249,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		node.vertical = available < 650 or row_width > available
 
 func update_interaction_prompt() -> void:
-	if game.hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or game.hud.is_roll_animating() or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
+	if game.hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or game.prize_target or not game.climate_target.is_empty() or drawer.visible:
 		interaction_prompt.hide()
 		return
 	var target: Dictionary = game.world.nearby_station()
@@ -286,7 +286,7 @@ func _process(delta: float) -> void:
 	_clock += delta
 	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 
-	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending or hud.is_roll_animating()
+	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.state.rocket_pending or game.state.climate.data.intro_pending
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):
 		JavaScriptBridge.eval("document.body.classList.toggle('menu-open', %s)" % ("true" if blocked else "false"), true)

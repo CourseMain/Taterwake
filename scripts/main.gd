@@ -1,5 +1,5 @@
 extends Node3D
-## Hands-on farming, a live fictional crop exchange, and local earned-currency rolls.
+## Hands-on farming, a live fictional crop exchange, and changing weather.
 
 const StateScript = preload("res://scripts/game_state.gd")
 const WorldScript = preload("res://scripts/farm_world.gd")
@@ -7,7 +7,6 @@ const HudScript = preload("res://scripts/game_hud.gd")
 const BuildsScript = preload("res://scripts/player_builds.gd")
 const ActivitiesScript = preload("res://scripts/island_activities.gd")
 const PestAlert = preload("res://scripts/pest_alert.gd")
-const RewardFeedback = preload("res://scripts/reward_feedback.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
 const FarmViewport = preload("res://scripts/farm_viewport.gd")
@@ -58,9 +57,6 @@ var tone_frequency: float = 440.0
 var tone_remaining: float = 0.0
 var tone_length: float = 0.1
 var sparkle_tone: bool = false
-var rolling_request: bool = false
-var roll_sound_elapsed: float = 0.0
-var roll_sound_clock: float = 0.0
 var last_frost_active: bool = false
 var surge_live: bool = false
 var surge_band: int = 0
@@ -157,7 +153,6 @@ func _ready() -> void:
 	cinema_layer.add_child(rocket_cutscene)
 	rocket_cutscene.finished.connect(_on_rocket_finished)
 	hud.action_requested.connect(_on_user_action)
-	hud.roll_revealed.connect(_on_roll_revealed)
 	state.changed.connect(_on_state_changed)
 	state.notified.connect(_on_notification)
 	state.purchase_completed.connect(_on_purchase_completed)
@@ -179,7 +174,6 @@ func _ready() -> void:
 	tutorial.setup(self)
 	state.climate.on_arrival(state)
 	_on_state_changed()
-	state.activate_roll_boost()
 	hud.set_tool(selected_tool)
 	if not test_mode:
 		if state.run_over:
@@ -334,13 +328,7 @@ func _process(delta: float) -> void:
 			_play_tone(tutorial_notes.pop_front(), 0.11)
 			tutorial_note_clock = 0.14
 	_pump_audio()
-	if hud.is_roll_animating():
-		roll_sound_elapsed += delta
-		roll_sound_clock -= delta
-		if roll_sound_clock <= 0.0:
-			_play_tone(270.0 + minf(3.0, roll_sound_elapsed) * 135.0, 0.025)
-			roll_sound_clock = lerpf(0.055, 0.24, minf(1.0, roll_sound_elapsed / 3.0))
-	elif surge_band > 0 and surge_band < 3 and fanfare_remaining <= 0.0:
+	if surge_band > 0 and surge_band < 3 and fanfare_remaining <= 0.0:
 		surge_beat_clock -= delta
 		if surge_beat_clock <= 0.0 and tone_remaining < 0.1:
 			_play_tone(196.0 if state.current_island == 1 else (246.94 if state.current_island == 2 else 329.63), 0.065)
@@ -423,14 +411,14 @@ func _debug_action(parts: PackedStringArray) -> void:
 			debug_time_multiplier = speed
 			hud.set_debug_session(true, speed)
 		"apply":
-			if parts.size() != 4:
+			if parts.size() != 3:
 				return
 			# Invalid text must not silently become a zero-money multiplier.
 			var parsed_money: Dictionary = HudScript.DebugMoneyInput.parse_number(parts[2])
-			if parsed_money.has("error") or not parts[3].is_valid_float():
-				hud.show_toast(str(parsed_money.get("error", "Enter a valid luck multiplier.")))
+			if parsed_money.has("error"):
+				hud.show_toast(str(parsed_money.get("error", "Enter a valid money multiplier.")))
 				return
-			state.apply_debug(float(parsed_money["value"]), float(parts[3]))
+			state.apply_debug(float(parsed_money["value"]))
 			if not test_mode:
 				state.save_game()
 		"set_balance", "recover":
@@ -506,8 +494,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if state.rocket_pending:
 		return
-	if hud.is_roll_animating():
-		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE:
@@ -526,7 +512,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_I: _on_user_action("inventory")
 			KEY_C: _on_user_action("builds")
 			KEY_U: _on_user_action("tools")
-			KEY_R: _on_user_action("roll")
 			KEY_P: _on_user_action("dex")
 			KEY_Q: _on_user_action("quests")
 			KEY_F: _on_user_action("quick_sell")
@@ -595,7 +580,7 @@ func _on_user_action(action: String) -> void:
 		_on_action(action)
 
 func _start_conversation(id: String, requested_service: String = "") -> void:
-	if not state.NpcRoster.available(id, state.current_island) or _tutorial_active() or state.run_over or state.rocket_pending or state.climate.data.intro_pending or hud.is_roll_animating(): return
+	if not state.NpcRoster.available(id, state.current_island) or _tutorial_active() or state.run_over or state.rocket_pending or state.climate.data.intro_pending: return
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
 	_cancel_walk()
@@ -646,7 +631,7 @@ func _recenter_camera() -> void:
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _map_navigation_allowed() -> bool:
-	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.rocket_pending and not state.climate.data.intro_pending and not hud.is_roll_animating() and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
+	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not state.rocket_pending and not state.climate.data.intro_pending and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
 
 func _stop_map_navigation() -> void:
 	_cancel_map_drag()
@@ -896,7 +881,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		tutorial.update(0.0)
 
 func _interact_nearby() -> void:
-	if hud.is_panel_open() or state.run_over or state.rocket_pending or state.climate.data.intro_pending or hud.is_roll_animating(): return
+	if hud.is_panel_open() or state.run_over or state.rocket_pending or state.climate.data.intro_pending: return
 	if prize_target:
 		var eligible: Array = builds.professions.cultivation_info().eligible
 		var nearest_crop: int = -1
@@ -1012,7 +997,7 @@ func _update_hover() -> void:
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
 		var travel_hint: String = "Ferry · Click to board"
-		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "roll": "Roll House · Click to view odds" if state.roll_available() else "Rolls closed · Travel to your newest island", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities", "climate": "Farm protection · Click to view upgrades"}
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "island": travel_hint, "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "builds": "Builds · Click for abilities", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol" if state.current_island == 1 else ("Contracts · Click to supply a buyer" if state.current_island == 2 else "Furnace · Click to boost growth")
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
@@ -1043,7 +1028,6 @@ func _on_state_changed() -> void:
 		world.set_export_state(state.export_active, state.export_timer)
 		world.set_frost_state(state.frost_active, state.frost_timer)
 		world.set_golden_hat(state.golden_hat)
-		world.set_roll_available(state.roll_available())
 		world.set_equipment(state.equipment_loadout(), state.ITEM_CATALOG)
 		world.set_activity_state(activities.info())
 		if state.current_island == 3 and last_frost_active != state.frost_active:
@@ -1083,9 +1067,8 @@ func _update_market_impact() -> void:
 
 
 func _start_rocket_if_ready() -> void:
-	# Finish a paid roll's reveal first; its HUD animates independently while
-	# simulation is paused. No purchase or harvest is interrupted mid-transaction.
-	if hud.is_roll_animating() or rocket_cutscene.active:
+	# Simulation pauses during the launch presentation.
+	if rocket_cutscene.active:
 		return
 	_cancel_walk()
 	hud.close_panel()
@@ -1138,7 +1121,6 @@ func _on_island_changed(id: int) -> void:
 	world.set_export_state(state.export_active, state.export_timer)
 	world.set_frost_state(state.frost_active, state.frost_timer)
 	world.set_golden_hat(state.golden_hat)
-	world.set_roll_available(state.roll_available())
 	world.set_equipment(state.equipment_loadout(), state.ITEM_CATALOG)
 	world.set_activity_state(activities.info())
 	surge_live = false
@@ -1248,8 +1230,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 		return
 	if state.rocket_pending and action != "reset":
 		return
-	if hud.is_roll_animating():
-		return
 	if action.begins_with("farm_help:"):
 		_farm_help_action(action.get_slice(":", 1))
 		return
@@ -1281,47 +1261,14 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "tracked_prices", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "roll", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
+		"menu", "tracked_prices", "market", "sell_potatoes", "barn", "inventory", "builds", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
-			if parts[0] == "roll" and parts.size() > 1:
-				if not hud.begin_roll(parts[1]):
-					return
-				var previous_roll_count: int = state.roll_count
-				rolling_request = true
-				roll_sound_elapsed = 0.0
-				roll_sound_clock = 0.0
-				state.roll(parts[1])
-				rolling_request = false
-				if state.roll_count > previous_roll_count:
-					if not test_mode:
-						state.save_game()
-					if state.last_roll_results.size() > 1:
-						hud.spin_batch(state.last_roll_results.duplicate(true))
-					else:
-						hud.spin_roll(state.last_roll.duplicate(true))
-				else:
-					hud.cancel_roll()
-			else:
-				_cancel_prize_target()
-				_cancel_walk()
-				if parts[0] == "builds": hud._build_selection = ""
-				hud.show_panel(parts[0], state)
-		"roll_batch":
-			if parts.size() != 3 or not hud.begin_roll(parts[1]):
-				return
-			rolling_request = true
-			roll_sound_elapsed = 0.0
-			roll_sound_clock = 0.0
-			var results: Array = state.roll_batch(parts[1], int(parts[2]))
-			rolling_request = false
-			if results.is_empty():
-				hud.cancel_roll()
-			else:
-				if not test_mode:
-					state.save_game()
-				hud.spin_batch(results)
+			_cancel_prize_target()
+			_cancel_walk()
+			if parts[0] == "builds": hud._build_selection = ""
+			hud.show_panel(parts[0], state)
 		"activity":
 			if parts.size() < 2:
 				return
@@ -1388,17 +1335,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 					builds.select_build(parts[2])
 				"ability": builds.use_ability()
 				"sell_processed": builds.sell_processed()
-				"open_crate":
-					var result: Dictionary = builds.open_crate()
-					if not result.is_empty():
-						if not test_mode:
-							state.save_game()
-						if hud.begin_roll("build_crate"):
-							roll_sound_elapsed = 0.0
-							roll_sound_clock = 0.0
-							hud.spin_roll(result)
-						else:
-							builds.finish_crate_reveal()
 		"close": hud.close_panel()
 		"crop": state.select_crop(parts[1])
 		"tracked_seed":
@@ -1425,7 +1361,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 				hud.close_panel()
 				var loaded: bool = state.load_game()
 				if loaded:
-					state.activate_roll_boost()
 					if not bool(state.tutorial_progress.get("completed", false)) and state.current_island == 1:
 						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
@@ -1464,7 +1399,6 @@ func _on_climate_changed(phase: String) -> void:
 	if phase in ["introduction", "warning", "impact", "recovery"]:
 		if phase == "introduction":
 			_cancel_walk()
-			hud.cancel_roll()
 			hud.close_panel()
 		if phase == "introduction": hud._climate_intro.start()
 		else: hud._climate_alert.present(phase, info, state)
@@ -1486,11 +1420,9 @@ func _on_blind_resolved(result: Dictionary) -> void:
 
 func _on_run_ended() -> void:
 	_cancel_walk()
-	hud.cancel_roll()
 	hud._climate_alert.dismiss()
 	climate_shake = 0.0
 	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), state.current_island, true)
-	builds.finish_crate_reveal()
 	pest_alert.update(0.0, 0)
 	surge_band = 0
 	fanfare_remaining = 0.0
@@ -1507,8 +1439,6 @@ func _on_purchase_rejected(message: String) -> void:
 	hud.show_toast(message)
 
 func _on_notification(message: String) -> void:
-	if rolling_request or hud.is_roll_animating():
-		return
 	# Routine work, quotes and shipments are already visible in the field and HUD.
 	# Keep interruptions for problems and milestones that need the player's attention.
 	var lower: String = message.to_lower()
@@ -1521,21 +1451,12 @@ func _on_notification(message: String) -> void:
 			return
 
 func _on_reward(title: String, detail: String, rarity: String) -> void:
-	if rolling_request or _tutorial_active():
+	if _tutorial_active():
 		return
 	hud.show_reward(title, detail, rarity)
 	world.play_reward(rarity)
-	_play_tone(660.0 if rarity in ["common", "rare"] else 880.0, 0.85)
+	_play_tone(880.0, 0.85)
 	sparkle_tone = true
-
-func _on_roll_revealed(_title: String, _detail: String, rarity: String) -> void:
-	builds.finish_crate_reveal()
-	state.activate_roll_boost()
-	var celebrate: bool = RewardFeedback.celebrates(rarity)
-	if celebrate:
-		world.play_reward(rarity)
-	_play_tone(1046.0 if celebrate else (660.0 if rarity == "rare" else 440.0), 0.95 if celebrate else 0.14)
-	sparkle_tone = celebrate
 
 func _on_pest_warning(_index: int, destroyed: bool) -> void:
 	if _tutorial_active():
@@ -1552,7 +1473,7 @@ func _tutorial_active() -> bool:
 	return is_instance_valid(tutorial) and tutorial.active
 
 func play_tutorial_cue(kind: String) -> void:
-	# Short, warm notes guide progress without borrowing the jackpot fanfare.
+	# Short, warm notes guide progress without interrupting the field audio.
 	match kind:
 		"pest": tutorial_notes.assign([329.63, 220.0, 329.63])
 		"visit": tutorial_notes.assign([587.33, 783.99])
@@ -1572,7 +1493,7 @@ func _setup_sound() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	sound_player = AudioStreamPlayer.new()
-	# Generated jackpot/tool audio must use the streaming mixer on Web too.
+	# Generated tool audio must use the streaming mixer on Web too.
 	# The browser's sample playback path cannot play AudioStreamGenerator.
 	sound_player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	var stream: AudioStreamGenerator = AudioStreamGenerator.new()

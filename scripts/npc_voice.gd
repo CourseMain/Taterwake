@@ -1,5 +1,5 @@
 extends Node
-## Cosmetic chatter uses its own RNG, so talking never changes farm/roll odds.
+## Cosmetic chatter uses its own RNG, so talking never changes farm outcomes.
 const CLIPS: Array[AudioStream] = [
 	preload("res://assets/audio/npc-potato-1.wav"),
 	preload("res://assets/audio/npc-potato-2.wav"),
@@ -10,7 +10,7 @@ const PROFILES: Dictionary = {
 	"mara": Vector2(1.12, .28), "bram": Vector2(.90, .42),
 	"nell": Vector2(1.04, .38), "tess": Vector2(1.18, .24),
 	"pip": Vector2(1.30, .20), "ada": Vector2(1.08, .23),
-	"rook": Vector2(.98, .32), "hollis": Vector2(.94, .45),
+	"hollis": Vector2(.94, .45),
 	"iris": Vector2(1.20, .35), "oren": Vector2(.86, .46),
 	"edwin": Vector2(1.02, .40),
 }
