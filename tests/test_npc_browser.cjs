@@ -81,7 +81,7 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       await click('Leave  ×');
       assert.equal((await command('status')).conversation.visible, false);
       if (name === 'laptop') {
-        for (const [id, action] of [['bram','tools'],['nell','barn'],['pip','duck_patrol'],['hollis','island'],['tess','quests'],['edwin','taxes']]) {
+        for (const [id, action] of [['bram','tools'],['nell','barn'],['pip','duck_patrol'],['hollis','island'],['tess','quests'],['edwin','talk:edwin']]) {
           await command('user:' + action);
           assert.equal((await command('status')).conversation.npc, id);
           await page.keyboard.press('Space');

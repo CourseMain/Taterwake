@@ -65,7 +65,7 @@ func run() -> void:
 			if aid not in ["equipment:tank","duck_patrol","climate"]: continue
 			for b in game.world._interaction_targets:
 				var bid: String = str(b.get_meta("station"))
-				if a==b or aid==bid or bid in ["island","equipment:barn","taxes"]: continue
+				if a==b or aid==bid or bid in ["island","equipment:barn"]: continue
 				check(not footprint(a).grow(0.3).intersects(footprint(b)),"clear interaction space island %d: %s / %s" % [island,aid,bid])
 		# Shared irrigation must also work back on the Valley's six-column rows.
 		farm.plots[0].merge({"stage":1,"tilled":true,"watered":false,"crop":"russet"},true)

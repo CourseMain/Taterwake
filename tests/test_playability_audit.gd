@@ -32,9 +32,6 @@ func run() -> void:
 	game.state.debug_unlock_island(2)
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)
-	game.state.coins = -game.state.blind_info().tax
-	game.state.blind_cycle.booms = 3
-	game.state.blind_cycle.due_in = 5.0
 	game.state.farm_help.enable()
 	game.state.farm_help.data.pest_phase = 1
 	game.state.farm_help.data.dismissed.clear()
@@ -43,7 +40,6 @@ func run() -> void:
 	await settle()
 	game._update_equipment_card()
 	check(not game.hud._farm_help_card.visible, "pest tip cannot cover an equipment card")
-	check(not game.hud._climate_console.get_global_rect().intersects(game.hud._blind_card.get_global_rect()), "tank card avoids expanded debt/tax forecast")
 	check(not game.hud._climate_console.get_global_rect().intersects(game.hud.root.get_node("ToolHotbar").get_global_rect()), "tank card clears the farming hotbar")
 	game.hud.show_toast("Tank selected. Your watering can is full.")
 	await settle()
@@ -51,11 +47,7 @@ func run() -> void:
 	await shot("tank-debt")
 	game._close_equipment()
 	game._on_action("tools")
-	check("Tax" in game.hud._blind_modal_warning.text and "Spudions" in game.hud._blind_modal_warning.text and " / " not in game.hud._blind_modal_warning.text, "imminent tax warning distinguishes cash from the coming bill")
-	game.state.blind_cycle.due_in = 0
-	game.state.blind_cycle.booms = 2
 	game.hud.update_state(game.state)
-	check("Debt" in game.hud._blind_modal_warning.text and "No tax due" in game.hud._blind_modal_warning.text, "debt warning distinguishes the balance from collection status")
 	await shot("tools-debt")
 	game.queue_free()
 	await settle()

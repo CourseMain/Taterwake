@@ -58,7 +58,7 @@ func _run() -> void:
 	game.state.climate.acknowledge(game.state)
 	check(game.state.current_island == 1, "winter farm is earned before travel")
 	game.state.coins = 151000000000.0
-	game.state.mastery.russet = 25000
+	game.state.harvested_total = 25000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)
@@ -152,9 +152,9 @@ func _run() -> void:
 	check(game.state.affected_tiles(34, "harvest").size() == 50, "winter scythe handles five full rows")
 	await shot("winter-workshop")
 	game.hud.close_panel()
-	game.state.coins = 2.5e15
+	game.state.coins = 25000
 	game._on_state_changed()
-	check(game.hud._top.coins.text.contains("Qa"), "winter fortunes display in quadrillions")
+	check(game.hud._top.coins.text == "\uE000 25,000", "winter balances use grouped integers")
 	game.state.frost_timer = 0.05
 	game._process(0.06)
 	check(game.state.save_game(SAVE), "winter field and active challenge save")

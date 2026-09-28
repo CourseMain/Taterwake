@@ -30,7 +30,7 @@ func run() -> void:
 		var crop: String = state.CROP_IDS[index]
 		check(state.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 60.0, crop + " uses balanced base growth")
 	var coins: float = state.coins
-	var harvests: int = state.total_mastery()
+	var harvests: int = state.harvested_total
 	game._on_action("debug:island:3")
 	game.hud._act("debug:island:2")
 	check(not state.island2_unlocked and not state.island3_unlocked, "locked debug rejects island unlocks through both routes")
@@ -41,7 +41,7 @@ func run() -> void:
 	check(game.hud._refs.debug_island_2.disabled, "already unlocked button disables")
 	game.hud._refs.debug_island_3.pressed.emit()
 	check(state.island3_unlocked and state.island_plots["3"].filter(func(p): return p.unlocked).size() == 40, "debug unlocks winter field")
-	check(state.coins == coins and state.total_mastery() == harvests and state.current_island == 1 and state.blind_cycle.island == 1, "unlock preserves money, mastery, location and current tax tier")
+	check(state.coins == coins and state.harvested_total == harvests and state.current_island == 1, "unlock preserves money, mastery, location and current tax tier")
 	check(state.debug_info().active and state.debug_islands_modified, "debug progression records debug access")
 	state.reset_debug()
 	check(state.debug_info().active, "reset debug does not erase debug progression history")

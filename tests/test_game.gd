@@ -132,7 +132,6 @@ func _run() -> void:
 		if game.state.plots[index].stage == 0:
 			cleared += 1
 	check(cleared == 6, "one manual scythe action clears an entire row")
-	check(game.state.combo_multiplier == 16, "row harvest builds an x16 combo")
 	await shot("harvest-combo")
 	game._on_action("dex")
 	check(game.hud.is_panel_open(), "PotatoDex opens")

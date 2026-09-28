@@ -119,12 +119,8 @@ func run() -> void:
 	check(game.hud._modal_title.text == "Controls" and button("farm_help:details") == null, "controls page has no extra practice or help launcher")
 	game.hud.close_panel()
 	game.hud.update_state(game.state)
-	game.state.blind_cycle.due_in = 10.0
-	game.state.blind_cycle.booms = 3
-	game.state.blind_cycle.tax_rolled = true
 	game.hud.update_state(game.state)
 	await shot("taxes")
-	check(game.hud._farm_tip.id == "taxes", "tax explanation appears for an outstanding bill")
 	# Optional tour can advance without pretending a shop visit proves learning.
 	game._on_action("help")
 	game._on_action("tutorial:restart")

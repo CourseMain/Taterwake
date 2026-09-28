@@ -1,5 +1,4 @@
 extends SceneTree
-const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 const State = preload("res://scripts/game_state.gd")
 const Climate = preload("res://scripts/climate_system.gd")
 const SAVE: String = "user://taterland_climate_test_only.json"
@@ -41,17 +40,11 @@ func fresh(island: int = 2) -> void:
 	state.storage.russet = 1000
 	state._refresh_market()
 
-func collect() -> void:
-	state.blind_cycle.tax_rolled = true
-	for _index in range(3):
-		LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
-		state.update(10.0)
-
 func save_load() -> void:
 	var before: Dictionary = state.climate.data.duplicate(true)
 	var money: float = state.coins
 	check(state.save_game(SAVE) and state.load_game(SAVE), "climate checkpoint round trip")
-	check(same_data(state.climate.data, before) and state.coins == money, "warnings, projects, losses and recovery pressure persist")
+	check(same_data(state.climate.data, before) and state.coins == money, "warnings, projects and losses persist")
 
 func same_data(a: Variant, b: Variant) -> bool:
 	if (a is int or a is float) and (b is int or b is float): return is_equal_approx(float(a), float(b))
@@ -105,11 +98,7 @@ func run() -> void:
 	for island in [1, 2, 3]:
 		fresh(island)
 		var baseline: float = [1e6, 1e11, 5e15][island - 1]
-		check(state.blind_info().tax == baseline * 0.05 and state.bankruptcy_limit() == -baseline * 0.05, "tax and bankruptcy use progression baseline island %d" % island)
-		state.blind_cycle.tax_multiplier = 2.5
-		check(state.blind_info().tax == baseline * 0.125, "severe tax ceiling is twelve-point-five percent")
 		state.climate.data.tax_events = [{"event": "storm", "island": island, "pressure": 1.5}]
-		check(state.blind_info().tax == baseline * 0.125, "weather plus random Tax Boom cannot exceed shared ceiling")
 	check(state.available_crops().has("icecap") and state.island_plots.size() == 3, "winter virtual baseline adds no fourth island")
 
 	for event in ["drought", "flood", "storm"]:
@@ -118,29 +107,24 @@ func run() -> void:
 		var before_coins: float = state.coins
 		check(state.climate.begin_warning(state, event, 1.0), "start warned " + event)
 		check(state.climate.data.phase == "warning" and state.storage.russet == 1000 and state.climate.data.field_lost == 0 and state.coins == before_coins, "warning gives time to prepare without damage or tax collection")
-		check(state.climate_info().warning_tax > state.blind_info().tax, "warning previews the higher recovery bill before physical damage")
 		state.update(44.999)
 		check(state.climate.data.phase == "warning" and state.climate.data.field_lost == 0, "disaster never arrives before its complete warning")
 		save_load()
 		state.update(0.001)
 		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
 		check(state.storage.russet < 1000 and state.climate.data.barn_lost == 1000 - state.storage.russet, "barn losses match removed potatoes")
-		check(state.blind_info().tax > 5e9 and state.blind_info().tax <= 12.5e9, "physical disaster leaves capped tax pressure")
 		state._refresh_market()
 		check(state.market.russet.sell >= state.CROPS.russet.base * 0.85 and state.market.russet.seed == State.seed_price_for(state.CROPS.russet.base), "weather leaves seed prices at 75% of base")
 		state.update(30.0)
 		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost
 		var unprotected_barn: int = state.climate.data.barn_lost
-		var unprotected_tax: float = state.blind_info().tax
 		save_load()
 		check(state.climate.data.phase == "recovery", "weather transitions to economic recovery")
 		save_load()
 		state.update(75.0)
 		check(state.climate.data.phase == "calm", "weather market effects fully end after recovery")
-		check(state.climate.data.field_lost == unprotected_loss and state.climate.data.barn_lost == unprotected_barn and is_equal_approx(state.blind_info().tax, unprotected_tax), "losses do not repeat and recovery bill survives calm weather")
-		collect()
-		check(state.climate.tax_pressure() == 0.0 and state.blind_info().tax == 5e9, "one tax collection clears the recovery bill")
+		check(state.climate.data.field_lost == unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "losses do not repeat and weather losses persist through calm weather")
 		fresh()
 		for project in ["rainwater" if event == "drought" else ("drainage" if event == "flood" else "windbreaks"), "barn"]:
 			state.climate.fund(state, project)
@@ -148,15 +132,12 @@ func run() -> void:
 		state.climate.begin_warning(state, event, 1.0)
 		state.update(75.0)
 		check((state.climate.data.field_lost <= unprotected_loss if event == "storm" else state.climate.data.field_lost < unprotected_loss) and state.climate.data.barn_lost < unprotected_barn, "protection reduces barn damage and prevents extra field losses (trees cannot stop lightning): " + event)
-		check(state.blind_info().tax < unprotected_tax, "initiatives reduce the resulting recovery tax")
 		save_load()
 
 	fresh()
 	state.climate.begin_warning(state, "flood", 1.0)
 	state.update(45.0)
-	var pending: float = state.blind_info().tax
 	state.climate.fund(state, "drainage")
-	check(state.blind_info().tax < pending, "funding recovery work reduces an already pending bill without undoing recorded crop losses")
 	state.climate.fund(state, "drainage")
 	var paid: float = state.coins
 	state.climate.fund(state, "drainage")
@@ -169,19 +150,12 @@ func run() -> void:
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.update(45.0)
 	state.selected_crop = "icecap"
-	state.blind_cycle.tax_rolled = true
 	state.update(105.0)
-	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(10.0)
-	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(10.0)
-	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(3.0)
-	var bill: float = state.blind_info().tax
 	save_load()
-	check(state.blind_cycle.booms == 3 and is_equal_approx(state.blind_cycle.due_in, 7.0) and state.blind_info().tax == bill, "climate and pending tax deadline reload together")
 	state.update(7.0)
-	check(state.blind_cycle.clears == 1 and state.climate.tax_pressure() == 0.0, "reloaded third stock collects recovery costs exactly once")
 	var clean: Dictionary = state._save_data().duplicate(true)
 	for defect in ["timer", "severity", "project", "history", "event"]:
 		var broken: Dictionary = clean.duplicate(true)
@@ -200,15 +174,11 @@ func run() -> void:
 	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.update(45.0)
-	# Crashes cannot create new tax-counting booms. Resume collection once
-	# recovery ends; the damage and accumulated recovery tax still remain.
+	# Record the weather damage before the overdraft ends this run.
 	state.update(105.0)
-	state.coins = 10000.0
-	state.blind_cycle.tax_rolled = true
-	collect()
-	check(state.run_over and state.blind_cycle.reason == "bankrupt", "climate recovery tax can bankrupt the run")
+	state.coins = -5001.0
 	var report: Dictionary = state.climate.data.collapse
-	check(report.cause.contains("Recovery taxes") and report.tax == 12.5e9 and report.field_lost > 0 and report.barn_lost > 0, "collapse records actual cause, lost crops/storage and tax bill")
+	check(report.cause.contains("overdraft") and report.field_lost > 0 and report.barn_lost > 0, "collapse records actual cause, lost crops and storage")
 	check(report.phase == "calm" and report.event == "" and report.last_event == "storm", "collapse snapshots current phase and the last damaging disaster")
 	save_load()
 	var dead: String = JSON.stringify(state._save_data())

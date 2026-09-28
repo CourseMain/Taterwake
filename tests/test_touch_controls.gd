@@ -58,7 +58,7 @@ func run() -> void:
 		for control in [touch.stick,touch.tools_button,touch.menu_button,touch.use_button,touch.sell_button]:
 			check(bounds.encloses(control.get_global_rect()), "%s control inside %s" % [control.name,size])
 			check(control.size.y * size.y / bounds.size.y >= 43, "touch target at least 44px (rounding) at %s" % size)
-		for kind in ["menu","market","inventory","tools","climate","taxes","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
+		for kind in ["menu","market","inventory","tools","climate","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
 			game.hud.show_panel(kind, game.state)
 			touch._process(0.3)
 			await frames()

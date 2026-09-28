@@ -56,11 +56,11 @@ func _run() -> void:
 	check(game.test_mode, "test cannot load or overwrite player save")
 	game._on_action("island")
 	check(button("island_unlock") != null and button("island_unlock").disabled, "new farms see actual gated travel requirements")
-	game.state.mastery.russet = 500
-	game.state.coins = 1300000.0
+	game.state.harvested_total = 500
+	game.state.coins = 8000.0
 	game._on_state_changed()
 	press("island_unlock")
-	check(game.state.island2_unlocked and game.state.coins == 300000.0, "unlock button charges exactly \uE000 1M once")
+	check(game.state.island2_unlocked and game.state.coins == 3000.0, "unlock button charges exactly \uE000 5,000 once")
 	press("travel:2")
 	game.state.climate.acknowledge(game.state)
 	await settle_world()
@@ -77,7 +77,7 @@ func _run() -> void:
 		var locations: Dictionary = {"barn": Vector3(-15, 2, -10), "market": Vector3(-1, 1.8, -11), "quests": Vector3(-12, 1.5, 11), "island": Vector3(16, 1.2, 7)}
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(locations[station])))
 		check(str(hit.get("station", "")) == station, "tropical building can be clicked: " + station)
-	game.state.coins = 1e18
+	game.state.coins = 10000.0
 	game.state.expand_field()
 	await shot("golden-shores-arrival")
 	for index in range(48):
@@ -91,7 +91,7 @@ func _run() -> void:
 	if game.conversation.visible: game.conversation.choose(0)
 	check(game.hud.is_panel_open(), "Q opens the quest board")
 	press("quest:ground")
-	check(game.state.coins == before_ground + 200000000.0 and game.state.seed_inventory.sunburst == 5, "claim button pays the advertised 200M and five Sunburst seeds")
+	check(game.state.coins == before_ground + 100.0 and game.state.seed_inventory.sunburst == 5, "claim button pays the advertised 100 Spudions and five Sunburst seeds")
 	check(button("quest:ground") == null or button("quest:ground").disabled, "claimed reward cannot be collected twice")
 	game.hud.close_panel()
 	press("crop:sunburst")
@@ -104,7 +104,7 @@ func _run() -> void:
 	for index in range(5):
 		game.perform_plot(index, "harvest")
 	check(game.state.quest_progress.sunburst > 0 and game.state.quest_progress.sunburst < 10000, "first harvest progresses a longer farming quest")
-	check(game.state.coins == before_ground + 200000000.0, "harvesting crops does not grant quest cash before claiming")
+	check(game.state.coins == before_ground + 100.0, "harvesting crops does not grant quest cash before claiming")
 	game._on_action("quests")
 	check((button("quest:sunburst") == null or button("quest:sunburst").disabled), "larger quest goals cannot be claimed from one starter harvest")
 	await shot("golden-shores-quests")
@@ -115,7 +115,7 @@ func _run() -> void:
 	game.state.coins = 20000000000.0
 	for upgrade in range(7):
 		game.state.upgrade_barn()
-	game.state.storage.sunburst = 1000000
+	game.state.storage.sunburst = 100
 	game.state.select_crop("sunburst")
 	game._on_action("sell_potatoes")
 	check(game.hud._refs.market_page.sell_button != null, "exclusive crop has live buy and sell controls")
@@ -180,9 +180,9 @@ func _run() -> void:
 	game._on_action("travel:2")
 	await settle_world()
 	check(game.state.plots[47].stage == 3, "returning preserves the remote harvest")
-	game.state.coins = 8.4e71
+	game.state.coins = 84000
 	game._on_state_changed()
-	check(game.hud._top.coins.text == "\uE000 8.4e71", "second-island HUD can show astronomical balances")
+	check(game.hud._top.coins.text == "\uE000 84,000", "second-island HUD can show astronomical balances")
 	check(game.state.save_game(SAVE), "complete island progress saves")
 	game._on_action("reset")
 	check(game.state.current_island == 1 and game.world.current_island == 1, "reset synchronizes both scene and farm")

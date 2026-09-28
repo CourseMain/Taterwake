@@ -71,11 +71,7 @@ func run() -> void:
 	state.update(float(state.plots[5].pest_delay) + 5.0)
 	check(state.plots[5].pest_ticks == 1, "later pests deal normal damage")
 	reset()
-	state.blind_cycle.due_in = 10.0
-	check(state.farm_help.tip(state).id == "taxes", "tax help appears before first major stock even without independent success")
-	state.farm_help.dismiss("taxes")
 	state.coins = -1.0
-	check(state.farm_help.tip(state).id == "debt", "first debt explains recovery and actual bankruptcy boundary")
 	state.farm_help.data.hidden = true
 	check(state.farm_help.tip(state).is_empty(), "hide tips respects player choice even for debt")
 	reset()

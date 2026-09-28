@@ -38,7 +38,7 @@ func run() -> void:
 	check(not farm.npc_history.has("rook"), "retired resident history is dropped")
 	check(farm.save_game(SAVE), "migrated farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	check(saved.mechanics_revision == 25, "save records mechanics revision 25")
+	check(saved.mechanics_revision == 26, "save records mechanics revision 25")
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		check(not saved.has(field), "new saves omit " + field)
 	var bad: Dictionary = saved.duplicate(true)

@@ -55,7 +55,7 @@ func run() -> void:
 		game.state.storage[crop] = 10
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
-	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
+	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help", "climate"]:
 		await page(kind)
 	for tab: String in ["crops", "tools"]:
 		game.hud.show_panel("inventory", game.state)
@@ -65,7 +65,7 @@ func run() -> void:
 	game.hud.show_panel("dex", game.state)
 	await shot("dex-crops-top")
 	await shot("dex-crops-bottom", true)
-	for pair: Array in [["taxes", "tax_details"], ["climate", "climate_details"]]:
+	for pair: Array in [["climate", "climate_details"]]:
 		game.hud.show_panel(pair[0], game.state)
 		var scroller: ScrollContainer = game.hud._body.get_parent()
 		await settle()
@@ -84,7 +84,7 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	await page("climate", "climate-disaster")
 	root.size = Vector2i(960, 600)
-	for kind: String in ["dex", "taxes", "climate", "help", "debug"]:
+	for kind: String in ["dex", "climate", "help", "debug"]:
 		await page(kind, "compact-" + kind)
 	game.queue_free()
 	await process_frame

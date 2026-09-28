@@ -34,7 +34,6 @@ func run() -> void:
 	state.farm_help.dismiss("repeat")
 	hud.update_state(state)
 	await settle()
-	check(not hud._farm_help_card.get_global_rect().intersects(hud._blind_card.get_global_rect()), "tax tip does not overlap tax clock")
 	check(not hud._farm_help_card.visible, "optional tax advice never floats over the farm")
 	hud.show_panel("help", state)
 	check(hud._modal_title.text == "Controls", "help contains only controls")
@@ -42,7 +41,6 @@ func run() -> void:
 	check(not hud._farm_help_card.visible, "controls never add a floating help launcher")
 	hud.close_panel()
 	state.coins = 240.0
-	state.farm_help.data.dismissed.erase("taxes")
 	hud._help_cooldown = 0.0
 	game._select_tool("water")
 	state.plots[4].tilled = true
@@ -117,8 +115,6 @@ func run() -> void:
 	state.climate.data.timer = 22.0
 	hud._climate_alert.dismiss()
 	hud.update_state(state)
-	check(state.blind_progress_text(215e6 / 250e12) == "<0.01%", "tiny winter coverage never becomes a scientific percentage")
-	check(state.blind_progress_text(0.0) == "0%" and state.blind_progress_text(0.0001) == "0.01%" and state.blind_progress_text(0.84) == "84%", "coverage rounding preserves zero and normal values")
 	await shot("winter-warning")
 	game.queue_free()
 	await process_frame

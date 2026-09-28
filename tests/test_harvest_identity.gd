@@ -73,7 +73,6 @@ func run() -> void:
 	game.tone_remaining = 0
 	ready_plot(6)
 	game.perform_plot(6, "harvest")
-	check(game.tone_remaining > 0 and is_equal_approx(game.tone_frequency, 400.0 + game.state.combo_multiplier * 40.0), "ordinary harvest restores the rising streak chime alongside potato foley")
 	fx.animate(2)
 	game.state.storage.russet = game.state.capacity-1
 	ready_plot(5,true)

@@ -17,7 +17,7 @@ func check(value: bool, description: String) -> void:
 
 func enter_shores() -> void:
 	farm.coins = State.ISLAND2_UNLOCK_COST
-	farm.mastery.russet = State.ISLAND2_UNLOCK_HARVEST
+	farm.harvested_total = State.ISLAND2_UNLOCK_HARVEST
 	farm.unlock_island2()
 	farm.field_expansions["2"] = true
 	for bed in farm.island_plots["2"]: bed.unlocked = true
@@ -35,7 +35,7 @@ func write_save(data: Variant) -> void:
 func legacy_data(schema: int = 3) -> Dictionary:
 	var data: Dictionary = farm._save_data().duplicate(true)
 	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "lifetime_sales", "island_sales", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
-	for key in ["seed_inventory", "storage", "mastery"]: data[key].erase("icecap")
+	for key in ["seed_inventory", "storage"]: data[key].erase("icecap")
 	data.island_plots.erase("3")
 	for field in data.island_plots.values():
 		for plot in field: plot.erase("frozen")
@@ -45,10 +45,10 @@ func legacy_data(schema: int = 3) -> Dictionary:
 	data.export_timer = 25.0 if data.export_active else 75.0
 	data.market_clock = 2.5
 	data.event_in = 45.0
-	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0}
+	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 100000.0}
 	for id in old_targets: data.quest_progress[id] = float(old_targets[id]) if data.quest_claimed.has(id) else minf(float(data.quest_progress[id]), float(old_targets[id]))
 	if schema == 2:
-		for key in ["seed_inventory", "storage", "mastery"]: data[key].erase("sunburst")
+		for key in ["seed_inventory", "storage"]: data[key].erase("sunburst")
 		for key in ["current_island", "island2_unlocked", "island_plots", "shores_first_mutation", "export_timer", "export_active", "export_cycles", "quest_progress", "quest_claimed", "golden_hat"]: data.erase(key)
 	for island in ["2", "3"]:
 		if data.has("island_plots") and data.island_plots.has(island):
@@ -69,27 +69,27 @@ func _run() -> void:
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	check(farm.current_island == 1, "locked ferry cannot be bypassed")
-	farm.coins = 1000000.0
-	farm.mastery.russet = 499
+	farm.coins = 5000.0
+	farm.harvested_total = 499
 	farm.unlock_island2()
 	farm.field_expansions["2"] = true
 	for bed in farm.island_plots["2"]: bed.unlocked = true
-	check(not farm.island2_unlocked and farm.coins == 1000000.0, "ferry needs five hundred potatoes actually harvested")
-	farm.mastery.russet = 500
-	farm.coins = 999999.0
+	check(not farm.island2_unlocked and farm.coins == 5000.0, "ferry needs five hundred potatoes actually harvested")
+	farm.harvested_total = 500
+	farm.coins = 4999.0
 	farm.unlock_island2()
 	farm.field_expansions["2"] = true
 	for bed in farm.island_plots["2"]: bed.unlocked = true
-	check(not farm.island2_unlocked and farm.coins == 999999.0, "second island starts after reaching the million-coin gate")
-	farm.coins = 1100000.0
+	check(not farm.island2_unlocked and farm.coins == 4999.0, "second island starts after reaching the 5,000-Spudion gate")
+	farm.coins = 6000.0
 	farm.unlock_island2()
 	farm.field_expansions["2"] = true
 	for bed in farm.island_plots["2"]: bed.unlocked = true
-	check(farm.island2_unlocked and farm.coins == 100000.0, "unlock charges one million exactly once")
+	check(farm.island2_unlocked and farm.coins == 1000.0, "unlock charges 5,000 exactly once")
 	farm.unlock_island2()
 	farm.field_expansions["2"] = true
 	for bed in farm.island_plots["2"]: bed.unlocked = true
-	check(farm.coins == 100000.0, "repeated unlock does not charge twice")
+	check(farm.coins == 1000.0, "repeated unlock does not charge twice")
 	check(farm.export_timer >= 75.0 and farm.export_timer <= 180.0, "first export delay is a randomized seventy-five to one-hundred-eighty seconds")
 	var old_market: Dictionary = farm.market.duplicate(true)
 	var old_rng: int = farm.rng.state
@@ -106,10 +106,10 @@ func _run() -> void:
 	# This scenario isolates simultaneous growth. Random infestations have
 	# separate coverage and must not destroy a crop before its growth check.
 	farm.pest_timer = 100.0
-	farm.coins = 1000000.0
+	farm.coins = 5000.0
 	var seed_price: float = farm.market.sunburst.seed
 	farm.buy_seeds("sunburst", 1)
-	check(is_equal_approx(seed_price, 67500.0) and farm.seed_inventory.sunburst == 1 and is_equal_approx(farm.coins, 1000000.0 - seed_price), "Sunburst seeds are meaningfully priced against ninety-thousand crop quotes")
+	check(is_equal_approx(seed_price, 20.25) and farm.seed_inventory.sunburst == 1 and is_equal_approx(farm.coins, 5000.0 - seed_price), "Sunburst seeds are meaningfully priced against 27-Spudion crop quotes")
 	farm.select_crop("sunburst")
 	farm.interact_plot(0, "hoe")
 	farm.interact_plot(0, "plant")
@@ -148,14 +148,13 @@ func _run() -> void:
 	enter_shores()
 	ready_crop(0, "sunburst")
 	farm.interact_plot(0, "harvest")
-	check(farm.storage_used() == 6 and farm.mastery.sunburst == 6, "Shores soil doubles base manual harvest yield")
+	check(farm.storage_used() == 3 and farm.harvested_total == 503, "Shores uses the same base manual harvest yield")
 	farm.update(3.51)
 	farm.rng.seed = 88
 	ready_crop(1, "sunburst")
 	farm.interact_plot(1, "harvest")
 	farm.travel_to(1)
 	farm.climate.acknowledge(farm)
-	check(farm.combo_count == 0 and farm.combo_time == 0.0, "travel breaks combo instead of carrying starter harvest into Shores quest")
 	var balance: float = farm.coins
 	farm.sell_crop("sunburst")
 	check(farm.storage.sunburst == 0 and farm.coins > balance and farm.lifetime_sales > 0.0 and farm.island_sales["1"] > 0.0, "held Sunburst sells anywhere and lifetime sale progress records the selling island")
@@ -164,14 +163,14 @@ func _run() -> void:
 	farm.storage.russet = 199
 	ready_crop(0, "sunburst")
 	farm.interact_plot(0, "harvest")
-	check(farm.plots[0].pending == 5 and farm.storage_used() == 200, "partial harvest preserves uncollected crop at barn capacity")
+	check(farm.plots[0].pending == 2 and farm.storage_used() == 200, "partial harvest preserves uncollected crop at barn capacity")
 	farm.travel_to(1)
 	farm.climate.acknowledge(farm)
 	farm.sell_crop("russet")
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	farm.interact_plot(0, "harvest")
-	check(farm.plots[0].pending == 0 and farm.combo_count == 0 and farm.mastery.sunburst == 6, "partial harvest after travel cannot duplicate yield or chain bonus")
+	check(farm.plots[0].pending == 0 and farm.harvested_total == 503, "partial harvest after travel cannot duplicate yield or chain bonus")
 	farm.reset_game()
 	enter_shores()
 	farm.export_timer = 15.1
@@ -190,11 +189,12 @@ func _run() -> void:
 	for index in range(48): farm.interact_plot(index, "hoe")
 	check(farm.quest_progress.ground == 48 and farm.quest_claimed.is_empty(), "ground quest covers the whole island and requires a deliberate claim")
 	farm.claim_quest("ground")
-	check(farm.coins == 200000000.0 and farm.seed_inventory.sunburst == 5, "ground quest provides a modest starting fund and five Sunburst seeds")
+	check(farm.coins == 100.0 and farm.seed_inventory.sunburst == 5, "ground quest provides a modest starting fund and five Sunburst seeds")
 	farm.claim_quest("ground")
-	check(farm.coins == 200000000.0 and farm.seed_inventory.sunburst == 5, "quest rewards cannot be collected twice")
-	farm.coins = 1.0e9
+	check(farm.coins == 100.0 and farm.seed_inventory.sunburst == 5, "quest rewards cannot be collected twice")
+	farm.coins = 10000.0
 	for _index in range(6): farm.upgrade_barn()
+	farm.quest_progress.sunburst = 10000 - 3 * 48 * 3
 	for _field in range(3):
 		for index in range(48):
 			ready_crop(index, "sunburst")
@@ -219,7 +219,7 @@ func _run() -> void:
 	check(farm.quest_progress.export == 3 and farm.export_qualified_cycles.size() == 3, "shipment challenge requires three distinct export cycles")
 	balance = farm.coins
 	farm.claim_quest("export")
-	check(farm.coins == balance + 5.0e9 and farm.quest_claimed.size() == 4, "completed shipment activity quest pays five billion exactly once")
+	check(farm.coins == balance + 100.0 and farm.quest_claimed.size() == 4, "completed shipment activity quest pays 100 Spudions exactly once")
 	farm._refresh_market()
 	check(farm.save_game(SAVE), "complete current economy and both farms save")
 	var snapshot: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
@@ -260,12 +260,12 @@ func _run() -> void:
 	farm.interact_plot(4, "plant")
 	farm.interact_plot(4, "water")
 	farm.update(4.0)
-	farm.coins = 8.4e71
+	farm.coins = 84000
 	var old_v2: Dictionary = legacy_data(2)
 	write_save(old_v2)
 	farm.reset_game()
 	check(farm.load_game(SAVE), "old four-crop version-two farm also migrates")
-	check(farm.coins == 8.4e71 and farm.plots[4].elapsed == 4.0 and str(farm.rng.state) == old_v2.rng_state, "migration preserves old wealth, precise crop growth, and RNG state")
+	check(farm.coins == 84000 and farm.plots[4].elapsed == 4.0 and str(farm.rng.state) == old_v2.rng_state, "migration preserves old wealth, precise crop growth, and RNG state")
 	check(farm.current_island == 1 and not farm.island2_unlocked and farm.seed_inventory.sunburst == 0 and farm.export_timer == 120.0, "old farm receives locked new content without resets")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "migrated version-two save remains valid after resaving")
 	check(not farm.save_game(State.LEGACY_SAVE_PATH), "original save backup cannot be overwritten")
@@ -306,7 +306,7 @@ func _run() -> void:
 	for index in range(12):
 		ready_crop(index)
 		farm.interact_plot(index, "harvest")
-	check(farm.quest_progress.starter_combo == 12, "starter combo quest needs twelve linked manual harvests")
+	check(farm.quest_progress.starter_combo == 12, "starter harvest quest counts twelve beds")
 	farm.claim_quest("starter_crash")
 	farm.claim_quest("starter_spike")
 	farm.claim_quest("starter_combo")
@@ -318,7 +318,7 @@ func _run() -> void:
 	var revision_two: Dictionary = farm._save_data().duplicate(true)
 	revision_two.economy_revision = 2
 	for key in ["mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "inventory_items", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining"]: revision_two.erase(key)
-	for key in ["seed_inventory", "storage", "mastery"]: revision_two[key].erase("icecap")
+	for key in ["seed_inventory", "storage"]: revision_two[key].erase("icecap")
 	revision_two.island_plots.erase("3")
 	revision_two.island_sales.erase("3")
 	for field in revision_two.island_plots.values():
@@ -326,7 +326,7 @@ func _run() -> void:
 	revision_two.plots = revision_two.island_plots["2"]
 	for id in ["winter_ground", "winter_harvest", "winter_frost", "starter_crash", "starter_spike", "starter_combo"]: revision_two.quest_progress.erase(id)
 	write_save(revision_two)
-	check(farm.load_game(SAVE) and farm.mastery.sunburst == 6 and not farm.island3_unlocked, "economy-revision-two saves migrate to winter without resetting harvested crops ")
+	check(farm.load_game(SAVE) and farm.harvested_total == 503 and not farm.island3_unlocked, "economy-revision-two saves migrate to winter without resetting harvested crops ")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "migrated revision-two economy round-trips through current strict validation")
 	var pre_activity: Dictionary = farm._save_data().duplicate(true)
 	for key in ["mechanics_revision", "export_cycle_sold", "export_qualified_cycles"]: pre_activity.erase(key)
@@ -377,7 +377,7 @@ func _run() -> void:
 	farm.plots[4].pest_ticks = 1
 	farm.interact_plot(4, "pest")
 	farm.interact_plot(4, "harvest")
-	check(farm.mastery.giant == 5 and farm.plots[4].pest_damage == 0.0 and not farm.plots[4].pests, "harvest applies existing damage once then clears pest state for the next crop")
+	check(farm.harvested_total == 3 and farm.plots[4].pest_damage == 0.0 and not farm.plots[4].pests, "harvest applies existing damage once then clears pest state for the next crop")
 	farm.reset_game()
 	farm.farm_help.data.enabled = false
 	for index in range(3): ready_crop(index)

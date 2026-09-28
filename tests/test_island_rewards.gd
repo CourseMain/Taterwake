@@ -14,7 +14,7 @@ func run() -> void:
 	for island in [1,2,3]:
 		farm.current_island = island
 		for entry: Dictionary in farm.quest_info():
-			check(entry.coins >= float(farm.BlindRules.PROGRESSION_BASELINES[island]) * 0.002, "quest reward is useful at the local economy")
+			check(entry.coins == 100.0, "quest reward is a flat hundred Spudions on every island")
 			check(entry.reward_text.begins_with(farm.money(entry.coins)), "displayed quest cash matches payout")
 			farm.quest_progress[entry.id] = entry.target
 			var balance: float = farm.coins

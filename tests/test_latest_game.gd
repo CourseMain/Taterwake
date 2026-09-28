@@ -104,7 +104,7 @@ func _run() -> void:
 	await shot("illustrated-inventory-tools")
 	game.hud.close_panel()
 	game.state.coins = 200000000000.0
-	game.state.mastery.russet = 25000
+	game.state.harvested_total = 25000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)

@@ -98,11 +98,10 @@ func run() -> void:
 	hud.show_purchase({"kind": "seeds", "id": "russet", "name": "Russet", "quantity": 1, "cost": 20.0, "total": 13})
 	hud.show_toast("An unrelated farm notification")
 	hud.show_reward("A surprise", "Another distraction", "legendary")
-	state.combo_time = 2.0
 	hud.update_state(state)
 	hud._process(0.1)
 	check(hud._purchase_box.visible, "actual purchase quantity remains visible during tutorial")
-	check(not hud._toast_box.visible and not hud._reward_box.visible and not hud._combo_box.visible, "ordinary notifications and streaks cannot cover the introduction")
+	check(not hud._toast_box.visible and not hud._reward_box.visible, "ordinary notifications and streaks cannot cover the introduction")
 	check(not hud._crop_row.visible, "open shop keeps seed tray closed")
 	check(hud._tutorial_card.get_index() > hud._modal.get_index(), "guide keeps mouse priority above modal backdrop")
 	for size: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360), Vector2i(600, 900)]:

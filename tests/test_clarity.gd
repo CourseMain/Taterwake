@@ -86,7 +86,7 @@ func run() -> void:
 	game._on_state_changed()
 	check(not game.world._pest_labels[4].visible and game.world._pest_labels[4].text.is_empty(), "destroyed crop never leaves persistent zero-yield text")
 	game.state.coins = 2.0e11
-	game.state.mastery.russet = 25000
+	game.state.harvested_total = 25000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)

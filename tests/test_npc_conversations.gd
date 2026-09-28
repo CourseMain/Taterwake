@@ -32,7 +32,7 @@ func run() -> void:
 		farm.climate.acknowledge(farm)
 		farm.climate.data.phase = "calm"
 		var service: String = Roster.PEOPLE[id].service
-		game._on_user_action(service)
+		game._on_user_action("talk:edwin" if id == "edwin" else service)
 		check(talk.visible and talk.npc_id == id,"conversation before service at " + service)
 		await frames()
 		check(talk.visible and game.hud.is_panel_open(),"conversation is modal " + id)

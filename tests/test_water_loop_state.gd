@@ -267,7 +267,7 @@ func test_weather_equipment() -> void:
 func test_save_migration_and_validation() -> void:
 	fresh(3)
 	farm.tools.water = 3
-	farm.coins = 1234567890
+	farm.coins = 12345
 	farm.storage.russet = 21
 	farm.seed_inventory.icecap = 9
 	farm.quest_progress.winter_ground = 4
@@ -298,7 +298,7 @@ func test_save_migration_and_validation() -> void:
 	check(farm.tools.water == 3 and Ops.local(farm).can == Ops.can_capacity(farm), "migration sizes a new full can from saved upgrades rather than pre-load state")
 	check(Ops.local(farm).water == 51 and Ops.local(farm).mode == 0 and Ops.local(farm).shelter == 0, "migration retains reserve and removes obsolete automatic/movable controls")
 	check(int(farm.climate.data.projects["3"].get("irrigation", 0)) >= 1, "legacy tank area-watering ability survives as an explicit connected sprinkler")
-	check(farm.coins == 1234567890 and farm.storage.russet == 21 and farm.seed_inventory.icecap == 9 and farm.quest_progress.winter_ground == 4 and same(farm.island_plots, migrated_fields), "migration preserves money, barn stock, seeds, quests and every real crop while reclaiming empty expansion beds")
+	check(farm.coins == 12345 and farm.storage.russet == 21 and farm.seed_inventory.icecap == 9 and farm.quest_progress.winter_ground == 4 and same(farm.island_plots, migrated_fields), "migration preserves money, barn stock, seeds, quests and every real crop while reclaiming empty expansion beds")
 	legacy.mechanics_revision = 15
 	legacy.climate.erase("operations")
 	write_save(legacy)
@@ -335,10 +335,9 @@ func test_practice_isolation() -> void:
 	var real_crops: Dictionary = farm.island_plots.duplicate(true)
 	var money: float = farm.coins
 	var clock: float = farm.elapsed
-	var bills: Dictionary = farm.blind_cycle.duplicate(true)
 	farm.climate.Lesson.start(farm)
 	farm.update(200)
-	check(farm.elapsed == clock and farm.coins == money and same(farm.blind_cycle, bills) and same(farm.island_plots, real_crops), "safe practice freezes clocks and bills without changing real crops")
+	check(farm.elapsed == clock and farm.coins == money and same(farm.island_plots, real_crops), "safe practice freezes clocks and bills without changing real crops")
 	var supply: Dictionary = Ops.local(farm)
 	supply.can = 0
 	farm.interact_plot(34, "water")

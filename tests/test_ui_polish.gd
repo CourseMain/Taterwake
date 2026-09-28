@@ -51,7 +51,7 @@ func run() -> void:
 	await inspect("quests")
 	var before: float = game.state.coins
 	game.hud._refs["quest:starter_crash"].pressed.emit()
-	check(game.state.coins == before + 5000 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
+	check(game.state.coins == before + 100 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
 	game.state.coins = 0
 	game.hud.show_panel("duck_patrol", game.state)
@@ -66,13 +66,13 @@ func run() -> void:
 	game.hud._refs["activity:duck:speed"].pressed.emit()
 	check(game.hud._refs["activity:duck:speed:value"].text.begins_with("3s → 2s"), "training advances the current-to-next value")
 	await inspect("ducks-trained")
-	game.state.coins = 500000
-	game.state.mastery.russet = 250
+	game.state.coins = 2500
+	game.state.harvested_total = 250
 	game.hud.show_panel("island", game.state)
 	check(game.hud._refs["travel:2:harvest:bar"].value == 50 and game.hud._refs["travel:2:coins:bar"].value == 50, "passage shows independent harvest and money progress")
 	check(game.hud._refs.island_unlock.disabled and game.hud._refs.island3_unlock.disabled, "incomplete passage requirements keep both destinations locked")
 	await inspect("islands")
-	game.state.mastery.russet = 500
+	game.state.harvested_total = 500
 	game.state.coins = 1e6
 	game.hud.update_state(game.state)
 	game.hud._refs.island_unlock.pressed.emit()

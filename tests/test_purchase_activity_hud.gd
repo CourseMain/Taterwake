@@ -82,9 +82,7 @@ func run() -> void:
 	hud.show_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": 200, "cost": 800.0, "total": 300, "level": 2})
 	check(hud._purchase_title.text == "+200 barn spaces" and hud._purchase_detail.text == "Capacity 300 · −\uE000 800", "barn receipt identifies exact added spaces and resulting capacity")
 	hud._process(HUD.PURCHASE_SECONDS + 0.1)
-	state.combo_time = 2.0
 	hud.update_state(state)
-	check(hud._combo_box.visible, "harvest chain becomes visible again after purchase feedback ends")
 	for island: int in [1, 2, 3]:
 		state.current_island = island
 		hud.update_state(state)

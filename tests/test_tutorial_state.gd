@@ -105,7 +105,7 @@ func _run() -> void:
 	# Repeat tours pause an established farm instead of cleansing pests or
 	# farming free crops while stock and decay clocks stand still.
 	restored.coins = 1.0e12
-	restored.mastery.russet = 100000
+	restored.harvested_total = 100000
 	restored.unlock_island2()
 	restored.unlock_island3()
 	restored._toggle_export()

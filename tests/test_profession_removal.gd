@@ -42,7 +42,7 @@ func run() -> void:
 		check(not field[0].has("cultivated") and not field[0].has("variety"), "bed traits removed on every island")
 	check(farm.save_game(SAVE), "migrated farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	check(saved.mechanics_revision == 25 and not saved.has("builds"), "new saves omit all build inventory and progression")
+	check(saved.mechanics_revision == 26 and not saved.has("builds"), "new saves omit all build inventory and progression")
 	check(farm.load_game(SAVE) and farm.tutorial_progress.step == 5, "current saves do not shift the tour twice")
 	legacy.builds = "invalid retired data"
 	legacy.tutorial_progress.step = 5

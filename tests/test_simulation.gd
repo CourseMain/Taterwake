@@ -27,7 +27,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	check(farm.plots.size() == 24 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
-	check(farm.CROPS.size() == 6 and farm.available_crops().size() == 4 and farm.coins == 240.0, "four crop economy starts with earned-currency budget")
+	check(farm.CROPS.size() == 6 and farm.available_crops().size() == 4 and farm.coins == 2000.0, "four crop economy starts with earned-currency budget")
 	farm.interact_plot(4, "hoe")
 	check(farm.plots[4].tilled and farm.seed_inventory.russet == 12, "hoe is a separate manual action")
 	farm.interact_plot(4, "plant")
@@ -77,21 +77,16 @@ func _run() -> void:
 	check(farm.capacity == 400 and farm.barn_level == 1, "storage upgrade changes real capacity")
 	for index in range(6): ready_crop(index)
 	farm.interact_plot(0, "harvest")
-	check(farm.combo_count == 6 and farm.combo_multiplier == 16, "manual row harvest builds a capped x16 chain")
-	# The first four beds yield 45; mastery adds 0.96 to each of the two
-	# x16 harvests. Those fractions now combine into one extra potato.
-	check(farm.storage.russet == 142 and is_equal_approx(farm.harvest_fraction.russet, 0.92), "combo x1 x2 x4 x8 x16 x16 retains small mastery yield bonuses")
+	check(farm.storage.russet == 18, "six healthy beds yield eighteen sacks without multipliers")
 	farm.update(3.51)
-	check(farm.combo_count == 0 and farm.combo_multiplier == 1, "combo bonus expires in real time")
 	farm.reset_game()
 	farm.storage.russet = 199
 	ready_crop(0)
 	farm.interact_plot(0, "harvest")
 	check(farm.storage_used() == 200 and farm.plots[0].pending == 2, "full barn preserves uncollected crop on the plant")
-	var combo: int = farm.combo_count
 	farm.sell_crop("russet", 5)
 	farm.interact_plot(0, "harvest")
-	check(farm.combo_count == combo and farm.plots[0].stage == 0 and farm.storage.russet == 197, "remaining harvest cannot multiply its bonus a second time")
+	check(farm.plots[0].stage == 0 and farm.storage.russet == 197, "partial harvest preserves remaining sacks")
 	farm.reset_game()
 	for crop in farm.available_crops():
 		farm.plots[4].merge({"stage": 0, "watered": false, "tilled": true, "elapsed": 0.0, "pending": 0}, true)
@@ -105,31 +100,29 @@ func _run() -> void:
 		farm.update(0.11)
 		check(farm.plots[4].stage == 3, crop + " matures at its own timer")
 	farm.reset_game()
-	farm.mastery.russet = 100
-	check(farm.mastery_level("russet") == 2, "mastery grows from farming")
+	farm.harvested_total = 100
 	farm.reset_game()
 	farm.interact_plot(4, "hoe")
 	farm.interact_plot(4, "plant")
 	farm.interact_plot(4, "water")
 	farm.update(4.0)
-	farm.coins = 8.4e71
-	check(farm.money(farm.coins) == "\uE000 8.4e71" and farm.money(4200000.0) == "\uE000 4.2M", "large balances use magnitude suffixes and scientific notation")
+	farm.coins = 84000
 	check(farm.save_game(SAVE), "valid farm saves atomically")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
 	check(farm.load_game(SAVE), "valid farm reloads")
-	check(is_equal_approx(farm.coins, 8.4e71) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves huge coins, exact growth and active events")
+	check(is_equal_approx(farm.coins, 84000) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves cash, exact growth and active events")
 	var snapshot: float = farm.elapsed
 	check(farm.elapsed == snapshot, "load does not add offline growth")
 	for key in ["coins", "selected_crop", "capacity", "tools", "plots", "schema_version"]:
 		var bad: Dictionary = saved.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
-		check(not farm.load_game(SAVE) and farm.coins == 8.4e71, "missing " + key + " is rejected without mutating farm")
+		check(not farm.load_game(SAVE) and farm.coins == 84000, "missing " + key + " is rejected without mutating farm")
 	var bad: Dictionary = saved.duplicate(true)
-	bad.coins = -1
+	bad.coins = -5001
 	write_save(bad)
-	check(not farm.load_game(SAVE), "negative balance rejected")
+	check(not farm.load_game(SAVE), "unreported overdraft rejected")
 	bad = saved.duplicate(true)
 	bad.schema_version = 1
 	write_save(bad)

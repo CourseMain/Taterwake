@@ -29,8 +29,7 @@ func run() -> void:
 	farm.debug_unlock_island(3)
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
-	farm.coins = -45090
-	farm.tax_credit_eligible = true
+	farm.coins = 10000
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
 	game.hud.show_panel("climate",farm)
@@ -46,7 +45,7 @@ func run() -> void:
 		scroll.ensure_control_visible(button)
 		await settle()
 		check(scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "equipment action reachable: "+id)
-		check(not button.disabled and button.text.contains("On account"),"equipment offers debt-funded install: "+id)
+		check(not button.disabled and button.text.begins_with("Install"),"equipment offers cash purchase: "+id)
 	for button: Node in page.find_children("*", "Button", true, false):
 		check(button.size.x >= scroll.size.x * 0.35 and button.size.y <= 120, "dashboard buttons have usable width and compact height: " + button.text)
 	scroll.scroll_vertical = 100000
@@ -91,11 +90,6 @@ func run() -> void:
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()),"station fits "+str(resolution))
 		check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x+1,"no horizontal station overflow "+str(resolution))
 	root.size = Vector2i(390,844) if phone else Vector2i(1280,800)
-	farm.storage.russet = 10
-	game.hud.show_panel("debt",farm)
-	await settle()
-	await shot("recovery")
-	check(not game.hud._refs.recovery_deliver.disabled,"stored starter crops can repay debt")
 	for panel: String in ["tools","activities","climate"]:
 		game.hud.show_panel(panel,farm)
 		await settle()

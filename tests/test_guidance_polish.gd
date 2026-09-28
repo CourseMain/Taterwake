@@ -66,7 +66,7 @@ func run() -> void:
 	game.tutorial.finish()
 	check(game.world._tutorial_trail.all(func(node: Node3D): return not node.visible), "finishing hides all trail markers")
 	game.state.coins = 1e16
-	game.state.mastery.russet = 30000
+	game.state.harvested_total = 30000
 	game.state.unlock_island2()
 	game.state.unlock_island3()
 	for island: int in [1, 2, 3]:

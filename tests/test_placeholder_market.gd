@@ -26,10 +26,10 @@ func run() -> void:
 	check(absf(farm.market.russet.sell / State.CROPS.russet.base - 1.0) < 0.002, "one second changes prices by less than 0.2 percent")
 	farm.elapsed = 150.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 43.7), "quarter-cycle reaches upper bound")
+	check(is_equal_approx(farm.market.russet.sell, 17.25), "quarter-cycle reaches upper bound")
 	farm.elapsed = 450.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 32.3), "three-quarter-cycle reaches lower bound")
+	check(is_equal_approx(farm.market.russet.sell, 12.75), "three-quarter-cycle reaches lower bound")
 	for crop: String in State.CROP_IDS:
 		var history: Array = farm.market[crop].history
 		check(history.size() == 12, crop + " retains the last twelve quotes")
@@ -69,9 +69,9 @@ func run() -> void:
 	for index: int in range(52): farm.update(0.25)
 	check(farm.market == partial, "history is independent of simulation step size")
 	farm.reset_game()
-	farm.coins = 1000000.0
+	farm.coins = 50000.0
 	farm.update(3600.0)
-	check(farm.elapsed == 3600.0 and farm.blind_cycle.booms == 0 and farm.coins == 1000000.0, "ordinary time no longer creates market tax events")
+	check(farm.elapsed == 3600.0 and farm.coins == 50000.0, "ordinary time no longer creates market tax events")
 	for path: String in [SAVE, farm.backup_path(SAVE), farm.rejected_path(SAVE)]:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	farm.free()

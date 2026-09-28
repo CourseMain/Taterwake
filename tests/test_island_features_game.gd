@@ -61,7 +61,7 @@ func run() -> void:
 	check(not plot.pests and int(plot.stage) > 0, "live duck patrol clears a crop before destruction")
 	await shot("ducks-world")
 	game.state.coins = 2.0e14
-	game.state.mastery.russet = 30000
+	game.state.harvested_total = 30000
 	game.state.unlock_island2()
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)

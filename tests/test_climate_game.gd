@@ -1,5 +1,4 @@
 extends SceneTree
-const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -38,7 +37,7 @@ func run() -> void:
 
 	var intro_elapsed: float = game.state.elapsed
 	game._advance_simulation(120.0)
-	check(game.state.elapsed == intro_elapsed, "introduction pauses taxes, crops and weather")
+	check(game.state.elapsed == intro_elapsed, "introduction pauses crops and weather")
 	await shot("climate-introduction")
 	game.hud._climate_intro.skip.pressed.emit()
 	check(game.conversation.visible and game.conversation.npc_id == "iris", "arrival retains Iris's station introduction")
@@ -72,7 +71,7 @@ func run() -> void:
 	for id in ["rainwater", "drainage", "barn", "windbreaks"]:
 		check(game.hud._refs["climate_fund:"+id].is_visible_in_tree(), "protection purchases remain reachable in scrollable equipment panel")
 	game.hud._refs["climate_fund:drainage"].pressed.emit()
-	check(game.state.climate.data.projects["2"].get("drainage") == 1 and game.state.coins == 998500000000.0, "initiative button buys exactly one local level")
+	check(game.state.climate.data.projects["2"].get("drainage") == 1 and game.state.coins == 99250.0, "initiative button buys exactly one local level")
 	game.hud.close_panel()
 	game._advance_simulation(45.0)
 	game.hud.update_state(game.state)
@@ -80,23 +79,20 @@ func run() -> void:
 	check(game.hud._weather_button.visible and game.hud._weather_button.text.to_upper().contains("FLOOD"), "dedicated weather shortcut carries the warning")
 	await shot("climate-flood")
 	game._on_action("climate")
-	check(game.hud._refs.climate_market.text.contains("\uE000 9.4B"), "protection-adjusted recovery costs appear")
 	game.hud.close_panel()
-	# Crashes no longer advance tax collection; let the market recover first.
+	# Finish the weather cycle before crossing the overdraft limit.
 	game._advance_simulation(105.0)
-	game.state.coins = 10000.0
-	game.state.blind_cycle.tax_rolled = true
+	game.state.coins = -5001.0
 	for _i in range(3):
-		LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 		game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	var page: Control = game.hud._run_end
 	await create_timer(0.75).timeout
-	check(page.visible and page.headline.text == "BANKRUPT", "climate recovery bankruptcy opens the editorial page")
-	check(page.detail.text.contains("tax bill") and page._event.text.to_upper().contains("FLOOD") and page._calculation.text.contains(" tax = "), "collapse shows the tax-caused debt calculation and actual climate event")
+	check(page.visible and page.headline.text == "BANKRUPT", "overdraft bankruptcy opens the editorial page")
+	check(page.detail.text.contains("overdraft") and page._event.text.to_upper().contains("FLOOD") and page._threshold.text.contains("5,000"), "collapse shows the overdraft boundary and actual climate event")
 	check(page._metrics["FIELD LOST"].note.text.contains("48") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
 	check(page._context.text.contains("Island 2"), "collapse identifies the affected island")
-	check(not game.hud._blind_card.visible and not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
+	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
 	check(page._summary.is_visible_in_tree() and page._summary.text.contains("1 protection upgrades"), "view run summary reveals recorded projects and run totals")
@@ -107,17 +103,17 @@ func run() -> void:
 		var screen: Rect2 = game.hud.root.get_global_rect().grow(1.0)
 		for item in [page.headline, page._balance, page._summary, page._summary_button, page.find_child("TryAgain", true, false)]:
 			check(screen.encloses(item.get_global_rect()), "editorial content and actions fit " + str(dimensions))
-	# Long scientific balances must fit the same authored composition.
-	game.state.climate.data.collapse.balance = -8.4e103
+	# Grouped balances must fit the same authored composition.
+	game.state.climate.data.collapse.balance = -12345
 	page.show_report(game.state)
 	await frames()
-	check(page._balance.text == "-\uE000 8.4e103" and game.hud.root.get_global_rect().encloses(page._balance.get_global_rect()), "huge negative balance remains legible")
+	check(page._balance.text == "-\uE000 12,345" and game.hud.root.get_global_rect().encloses(page._balance.get_global_rect()), "negative balance remains legible")
 	page.find_child("TryAgain", true, false).pressed.emit()
 	await frames()
 	check(not game.state.run_over and not page.visible and game.tutorial.active, "Try Again returns to a clean tutorial")
 	game.tutorial.finish()
 	game.hud.update_state(game.state)
-	check(game.hud._blind_card.visible and not game.hud._climate_effect.visible and game.hud._tool_buttons.hoe.is_visible_in_tree(), "normal farming controls and tone return after collapse")
+	check(not game.hud._climate_effect.visible and game.hud._tool_buttons.hoe.is_visible_in_tree(), "normal farming controls and tone return after collapse")
 	game.state.coins = 1e12
 	game.state.island2_unlocked = true
 	game.state.field_expansions["2"] = true
@@ -137,8 +133,8 @@ func run() -> void:
 	game._on_action("menu")
 	await shot("climate-menu")
 	game.hud.close_panel()
-	game._on_action("taxes")
-	await shot("climate-taxes")
+	game._on_action("climate")
+	await shot("climate-protection")
 	game.queue_free()
 	await frames()
 	# Headless frames can finish before the audio mixer releases stopped voices.

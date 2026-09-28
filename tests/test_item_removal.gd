@@ -28,7 +28,7 @@ func run() -> void:
 	farm.debug_unlock_island(2)
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
-	farm.coins = 123456.0
+	farm.coins = 12345.0
 	farm.storage.russet = 195
 	farm.quest_progress.ground = 48
 	farm.quest_claimed.append("ground")
@@ -54,7 +54,7 @@ func run() -> void:
 	check(farm.load_game(path), "revision 22 farm loads after removing item fields")
 	check(farm.storage.russet == 198 and farm.storage.golden == 3 and farm.storage.sunburst == 4 and farm.storage.radioactive == 5, "all special batches become plain crops of the same variety and quantity")
 	check(farm.capacity == 200 and farm.storage_used() == 210, "retired capacity bonuses disappear without discarding overfull crops")
-	check(farm.coins == 123456 and farm.quest_claimed == ["ground"] and farm.quest_progress.ground == 48, "money and surviving quest claims are preserved")
+	check(farm.coins == 12345 and farm.quest_claimed == ["ground"] and farm.quest_progress.ground == 48, "money and surviving quest claims are preserved")
 	check(not farm.quest_progress.has("mutation"), "retired quest progress is dropped")
 	check(game.activities.contract.kind == "bulk" and game.activities.contract.crop == "sunburst" and game.activities.contract.target == 3 and game.activities.contract.delivered == 1 and game.activities.contract.credit == 1234.0, "old order keeps deliveries and earned credit as an ordinary crop order")
 	farm.plots[0].merge({"tilled": true, "stage": 3, "crop": "sunburst", "watered": true, "elapsed": 55.0}, true)
@@ -62,14 +62,14 @@ func run() -> void:
 	check(farm.storage_used() == 210 and farm.plots[0].stage == 3, "overfull migrated barn blocks additional harvests")
 	check(farm.save_game(path) and farm.load_game(path) and farm.storage_used() == 210, "overfull migrated farm round-trips without converting twice")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
-	check(saved.mechanics_revision == 25, "new save records revision 24")
+	check(saved.mechanics_revision == 26, "new save records revision 24")
 	for field: String in ["inventory_items", "equipment", "mutations", "dex", "golden_hat", "shores_first_mutation"]:
 		check(not saved.has(field), "new save omits " + field)
 	check(farm.capacity == 200, "reload cannot restore a removed capacity bonus")
 	var quote: float = farm.market.sunburst.sell
 	game.activities.deliver_contract()
 	check(game.activities.contract.is_empty() and farm.storage.sunburst == 2, "converted order consumes only its remaining ordinary crops")
-	check(is_equal_approx(farm.coins, 123456 + 1234 + quote * 2 * 1.25), "converted order pays prior credit and ordinary future shipments exactly once")
+	check(is_equal_approx(farm.coins, 12345 + 1234 + quote * 2 * 1.25), "converted order pays prior credit and ordinary future shipments exactly once")
 	var balance: float = farm.coins
 	var crop_quote: float = farm.market.golden.sell
 	farm.sell_crop("golden")

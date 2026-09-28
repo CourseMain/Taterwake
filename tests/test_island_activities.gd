@@ -27,9 +27,9 @@ func _run() -> void:
 	state.coins = state.bankruptcy_limit() + 1499.0
 	activities.buy_duck()
 	check(activities.duck_level == 0 and state.coins == state.bankruptcy_limit() + 1499.0, "unaffordable patrol cannot be hired")
-	state.coins = 1000000.0
+	state.coins = 50000.0
 	activities.buy_duck()
-	check(activities.duck_level == 1 and state.coins == 998500.0, "first patrol charges exactly the displayed price")
+	check(activities.duck_level == 1 and state.coins == 49500.0, "first patrol charges exactly the displayed price")
 	var plot: Dictionary = state.plots[2]
 	plot.stage = 3
 	plot.pests = true
@@ -57,10 +57,11 @@ func _run() -> void:
 	activities.update(10)
 	check(plot.pests and activities.duck_clears == 1, "unvisited first-island patrol stays paused")
 	activities.buy_duck()
-	check(state.coins == balance, "fully trained flock cannot be charged again on other islands")
+	check(state.coins == balance - 500.0, "new island hires a separate local duck")
+	balance = state.coins
 	state.island2_unlocked = true
 	state.selected_crop = "sunburst"
-	state.market.sunburst.sell = 90000.0
+	state.market.sunburst.sell = 27.0
 	activities.choose_contract("bulk")
 	check(activities.contract.kind == "bulk" and activities.contract.target == 400, "bulk contract asks for a real large harvest")
 	check(activities.contract.crop == "sunburst", "buyer targets the player's selected crop")
@@ -69,13 +70,13 @@ func _run() -> void:
 	state.storage.sunburst = 100
 	activities.deliver_contract()
 	check(state.storage.sunburst == 0 and activities.contract.delivered == 100, "partial shipment removes only delivered ordinary crops")
-	check(state.coins == balance and activities.contract.credit == 11250000.0, "partial credit includes25percent bonus without premature cash")
-	state.market.sunburst.sell = 180000.0
+	check(state.coins == balance and activities.contract.credit == 3375.0, "partial credit includes25percent bonus without premature cash")
+	state.market.sunburst.sell = 30.0
 	state.storage.sunburst = 500
 	activities.deliver_contract()
 	check(activities.contract.is_empty() and state.storage.sunburst == 200, "completion consumes exact remaining quantity and retains surplus")
-	check(is_equal_approx(state.coins - balance, 78750000.0), "each shipment uses its own real quote and pays the accumulated sum once")
-	check(is_equal_approx(state.lifetime_sales, 78750000.0) and is_equal_approx(state.island_sales["2"], 78750000.0), "contract earnings count toward actual island sales")
+	check(is_equal_approx(state.coins - balance, 14625.0), "each shipment uses its own real quote and pays the accumulated sum once")
+	check(is_equal_approx(state.lifetime_sales, 14625.0) and is_equal_approx(state.island_sales["2"], 14625.0), "contract earnings count toward actual island sales")
 	balance = state.coins
 	activities.deliver_contract()
 	check(state.coins == balance, "completed order cannot be paid twice")
@@ -141,7 +142,7 @@ func _run() -> void:
 	state.activity_system = activities
 	state.reset_game()
 	state.coins = 10000000000000.0
-	state.mastery.russet = 30000
+	state.harvested_total = 30000
 	state.unlock_island2()
 	state.unlock_island3()
 	state.travel_to(3)
@@ -187,7 +188,7 @@ func _run() -> void:
 func _test_flocks() -> void:
 	state.reset_game()
 	state.coins = 10000000000000.0
-	state.mastery.russet = 30000
+	state.harvested_total = 30000
 	state.unlock_island2()
 	state.unlock_island3()
 	state.pest_timer = 100.0
@@ -208,9 +209,9 @@ func _test_flocks() -> void:
 	check(state.plots[3].pests and state.plots[8].pests and activities.duck_clears == 0, "idle untrained ducks cannot secretly remove pests")
 	var balance: float = state.coins
 	activities.hire_duck()
-	check(activities.duck_count() == 1 and is_equal_approx(balance - state.coins, 25000000.0), "first Shores duck charges its own island price")
+	check(activities.duck_count() == 1 and is_equal_approx(balance - state.coins, 500.0), "first Shores duck charges its own island price")
 	activities.hire_duck()
-	check(activities.duck_count() == 2 and is_equal_approx(balance - state.coins, 75000000.0), "second duck is a separate purchase")
+	check(activities.duck_count() == 2 and is_equal_approx(balance - state.coins, 1500.0), "second duck is a separate purchase")
 	var full_balance: float = state.coins
 	activities.hire_duck()
 	check(activities.duck_count() == 2 and state.coins == full_balance, "Shores capacity blocks a third duck without charge")

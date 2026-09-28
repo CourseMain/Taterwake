@@ -101,7 +101,7 @@ func run() -> void:
 	await settle()
 	var empty_page = game.hud._refs.market_page
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
-	state.coins = 100000
+	state.coins = 10000
 	for crop: String in State.CROP_IDS:
 		check(State.CROPS[crop].seed == State.CROPS[crop].base * 0.75, "base seed " + crop)
 		check(state.market[crop].seed == State.seed_price_for(State.CROPS[crop].base), "initial seed ratio " + crop)
@@ -113,14 +113,14 @@ func run() -> void:
 	var seeds: int = state.seed_inventory.russet
 	press(page, "buy:russet:1")
 	press(page, "buy:russet:5")
-	check(state.seed_inventory.russet == seeds + 6 and state.coins == cash - 171, "buy controls add seeds and spend live currency")
+	check(state.seed_inventory.russet == seeds + 6 and state.coins == cash - 67.5, "buy controls add seeds and spend live currency")
 	check(game.hud._purchase_receipt.quantity == 6, "purchase receipt and inventory retained")
 	state.coins = state.bankruptcy_limit()
 	game.hud.update_state(state)
 	check(game.hud._refs["buy:russet:1"].disabled, "unaffordable purchase disabled")
 	state.buy_seeds("russet", 1)
 	check(state.seed_inventory.russet == seeds + 6 and state.coins == state.bankruptcy_limit(), "exhausted credit do not mutate inventory")
-	state.coins = 100000
+	state.coins = 10000
 	state._refresh_market()
 	game.hud.update_state(state)
 	game.hud._purchase_box.hide()
@@ -134,13 +134,13 @@ func run() -> void:
 	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
 	check(page.crops == expected.slice(0, 4), "buy and sell share base order")
 	page.quantity.value = 3
-	check(page.payout.text == "\uE000 114.00", "quantity previews actual expected payout")
+	check(page.payout.text == "\uE000 45", "quantity previews actual expected payout")
 	cash = state.coins
 	press(page, "market_sell")
-	check(state.storage.russet == 9 and state.coins == cash + 114, "sell commits chosen quantity at live price")
-	check(page.status.text.contains("sold") and page.status.text.contains("114.00"), "successful sale confirms committed payout")
+	check(state.storage.russet == 9 and state.coins == cash + 45, "sell commits chosen quantity at live price")
+	check(page.status.text.contains("sold") and page.status.text.contains("45"), "successful sale confirms committed payout")
 	page.quantity.value = 10
-	check(page.quantity.value == 9 and page.payout.text == "\uE000 342.00", "quantity is bounded by owned stock")
+	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "quantity is bounded by owned stock")
 	page.quantity.text = "2.5"
 	page.quantity.text_changed.emit("2.5")
 	check(page.sell_button.disabled and page.status.text.contains("whole number"), "invalid text blocks selling with clear guidance")
@@ -153,18 +153,18 @@ func run() -> void:
 	press(page, "quantity_minus")
 	check(page.quantity.value == 1 and page.minus.disabled, "minus stops at one")
 	state.sell_crop("russet", 10)
-	check(state.storage.russet == 9 and state.coins == cash + 114, "insufficient direct sale is rejected without partial payout")
+	check(state.storage.russet == 9 and state.coins == cash + 45, "insufficient direct sale is rejected without partial payout")
 	press(page, "market_all")
-	check(page.quantity.value == 9 and page.payout.text == "\uE000 342.00", "Max selects available stock and previews its value")
+	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "Max selects available stock and previews its value")
 	page.quantity.get_line_edit().grab_focus()
 	page.quantity.get_line_edit().text = "4"
 	cash = state.coins
 	page._sell()
-	check(state.storage.russet == 5 and state.coins == cash + 152, "typed quantity commits before selling")
+	check(state.storage.russet == 5 and state.coins == cash + 60, "typed quantity commits before selling")
 	press(page, "market_next")
 	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 owned", "arrow updates variety, chart, quantity and inventory together")
 	page.quantity.value = 2
-	check(page.payout.text == "\uE000 360.00", "navigated payout uses new crop")
+	check(page.payout.text == "\uE000 36", "navigated payout uses new crop")
 	press(page, "market_previous")
 	check(page.selected == "russet", "previous returns to Russet")
 	await settle()
@@ -206,9 +206,9 @@ func run() -> void:
 	state.elapsed = 150.0
 	state._refresh_market()
 	game.hud.update_state(state)
-	check(page.quantity.value == 2 and page.payout.text == "\uE000 87.40" and page.crops == expected.slice(0, 4), "live refresh updates payout and preserves selection/order")
+	check(page.quantity.value == 2 and page.payout.text == "\uE000 35" and page.crops == expected.slice(0, 4), "live refresh updates payout and preserves selection/order")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "new market and bounded history round-trip saves")
-	check(is_equal_approx(state.market.russet.seed, 28.5), "load recomputes 75% seed price")
+	check(is_equal_approx(state.market.russet.seed, 11.25), "load recomputes 75% seed price")
 	if FileAccess.file_exists(SAVE): DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	state.island2_unlocked = true
 	state.island3_unlocked = true
