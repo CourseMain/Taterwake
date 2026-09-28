@@ -34,6 +34,18 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
+#### Segment 2 — current
+
+2026-09-28, macOS, Godot `4.7.2.stable.official.ed1daf0bf`, branch `redesign`: the complete `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1` run exited zero with **99 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered headless suite passes, including `test_save_safety` (28 checks), `test_gacha_removal` (27 checks) and the required `test_game` boot check (43 checks). Five dedicated Roll House suites were deleted and the migration/removal suite was added.
+
+The remaining tests now use valid current and historical field-access fixtures, current quest/gear/capacity values, mouse release events and NPC conversation flows. Sprinkler checks supply living crops after weather/pest damage; the first-pest tutorial check waits through the full scheduling range. Scene teardown allows audio resources to finish releasing. These fixture changes resolve the earlier baseline failures without changing the surviving gameplay systems.
+
+The touch suite launches with `--touch-controls` and preserves native/capture arguments. Headless fullscreen checks assert the dummy display's actual response; a separate native Compatibility run passed all eight fullscreen checks. The ocean test checks that horizon water intersects the camera's depth interval, while retaining complete depth containment for other geometry. A temporary Web resource pack also passed a saved-cap migration check with the exported alias file. No published browser build was replaced.
+
+Local logs are `artifacts/segment2-baseline.log`, `artifacts/segment2-baseline-results.json` and the per-suite files in `artifacts/test-results/`. These ignored artifacts supplement this committed baseline record.
+
+#### Segment 1 — historical
+
 Segment 1, 2026-09-28: macOS, Godot `4.7.2.stable.official.ed1daf0bf`, source branch `redesign` from `e85f746`. Ran all 103 discovered suites with `GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 1`, using the default 180-second timeout. The full run returned nonzero: **72 PASS, 24 FAIL, 5 TIMEOUT, 2 ERRORS**. A subsequent serial recheck of `test_climate_operations` and `test_water_loop_state` passed after completing their field-access fixture repairs. The reconciled result below is **74 PASS, 22 FAIL, 5 TIMEOUT, 2 ERRORS**; this is not a green baseline.
 
 `test_save_safety` passes all 28 checks, including malformed/invalid/oversized saves, rejected-file replacement and preservation, rolling backup contents/recovery, aborted backup moves and the legacy-path guard. `test_game` passes all 59 boot/integration checks. The runner was also smoke-tested with an isolated fake engine for all four statuses, missing summaries, names with spaces/slashes/plus signs, browser exclusion, suite selection, integration arguments, `GODOT_BIN` and one-time import.
@@ -222,16 +234,7 @@ Contextual advice is available only through Help → Current farm help. The form
 
 Validation: `test_tutorial_game.gd` walks the real first lesson and an unmarked second crop, then checks pests, practice sales, optional tour and migration. `test_farm_help.gd` covers persistence, timing, normal later pest damage, affordability, real-boom priority and corrupt saves. `test_tutorial_hud.gd` checks small/portrait layout and preserves stock, tax and farming controls. Run scene checks with `-- --integration-test`; add `--capture` without `--headless` for `artifacts/guide-*.png`. The local Web ZIP is rebuilt; published `docs/index.*` files remain unchanged.
 
-
-### Growth, luck display and PotatoDex QoL
-
 Base crop times are 10/25/40/50/55/60 seconds for Russet/Golden/Giant/Radioactive/Sunburst/Icecap. Each crop's active growth speed is bounded by `base_time / 60`, including weather penalties, while positive growth bonuses can still shorten the duration. Field updates and hover timers use that same bound. Dry/frozen crops and paused simulations do not consume growth time. Revision 14 validates older plots against `OLD_GROW_TIMES` before converting elapsed time by completion percentage; mature potatoes remain mature.
-
-`luck_breakdown()` reports earned and equipped additions, normal capped luck, percentage above 1×, the debug multiplier and effective total. The HUD shows both multiplier and percentage. Debug previews the result before applying changes; optional calculation sections in Debug and the Roll House show the arithmetic, with wager/build roll-quality factors separate. Roll presentation freezes its displayed breakdown with the other wager information. The rarity-selection math is unchanged.
-
-Authenticated `debug:island:2` / `debug:island:3` actions unlock island flags and fields without spending money, fabricating mastery or traveling. Winter also unlocks Shores. Tax promotion and the climate introduction still happen on arrival. `debug_islands_modified` persists and marks subsequent trophies DEBUG; a new farm clears it. Normal paid island unlocks remain unchanged.
-
-PotatoDex defaults to a two-column mutation gallery and offers a separate six-variety crop gallery. Both reuse crisp `item_icon.gd` artwork. Pictures are explicitly previews until discovered; cards refresh discovery/mastery data without claiming new discoveries. `test_qol_update.gd -- --integration-test` checks migration, growth caps, luck arithmetic, authenticated unlocks, persistence and gallery layout; a native `--capture` run writes `artifacts/qol-*.png`.
 
 ### Quiet farming feedback and shop signs
 
@@ -243,17 +246,7 @@ Optional help is one compact row below the tax card and hides for three seconds 
 
 `test_farm_clarity.gd -- --integration-test` checks rapid repeated actions, feedback expiry, duplicate suppression, full-barn feedback, help action stability, responsive layout, percentage formatting and all-island typography. A native `--capture` run writes `artifacts/clarity-watering.png`, `clarity-island-1.png` through `clarity-island-3.png`, and `clarity-winter-warning.png`.
 
-
-### Roll House layout and visible climate projects
-
-The Roll House uses a wider two-column layout: reel and stakes on the left, all eight live rarity percentages on the right (including Mystery). The fixed luck strip has three 0.65-second stages: roll quality, additive normal luck percentage, then the debug multiplier. The full weighting calculation remains expandable. Purchased luck and odds stay frozen throughout the animation; the backend result remains authoritative. Shop headers, buttons and signs use the bundled Fredoka font at restrained sizes.
-
 `climate_projects.gd` builds an island-local tank, perimeter drainage, braces on the existing barn, and a rear tree windbreak from the saved project levels. Second levels add visible infrastructure. `FarmWorld.set_climate_projects()` creates/batches geometry only when local levels change, and clears it on reset or island rebuild. The controller applies purchases immediately. Structures occupy gaps and field edges, keeping existing map dimensions and all crop targets accessible.
-
-Validation: `test_roll_luck_meter.gd` covers the three stages, frozen state, cancellation, exact visible odds, maximum luck, long rewards and four viewport sizes. `test_climate_projects.gd` checks every purchase level on both climate islands, travel, reset, geometry reuse and all 128 plot targets. Both support `-- --integration-test --capture` for native screenshots under `artifacts/`.
-
-
-High-luck weighting now multiplies each non-common weight by `max(1, effective_luck / 10) ^ (0.35 * steps_above_rare)`. Ordinary 1–10× luck keeps its prior probabilities; larger debug boosts increasingly favor top collectibles instead of retaining roughly 26% Rare at 1,000×. The calculation panel explains this factor, and the three-step strip distinguishes earned/gear additions from the active boost. `test_roll_balance.gd` reproduces the reported all-in configuration, checks cumulative rarity improvement, and samples 20,000 actual paid rolls each at 1×, 1,000× and 3,000× against the displayed probabilities using binomial sampling tolerance.
 
 
 ### v1.0.2 operational climate implementation
@@ -322,8 +315,6 @@ Touch uses at least 600 and at most 900 logical units on the short screen edge, 
 
 Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It checks phone portrait/landscape, iPad portrait/landscape and laptop sizes, all menus, all five profession pages, multitouch movement and pinch cancellation. `tools/export_browser_benchmark.py --fixture mobile --label mobile --godot PATH` creates a disposable browser test build with a QA bridge; the bridge and test scene are excluded from the public export. Browser input checks use actual touch events, screenshots and enter/exit fullscreen at 390×844, 844×390, 768×1024, 1024×768 and 1366×768. These are emulated viewport checks, not claims of physical iPhone/iPad performance testing.
 
-The release check also corrected outdated fixtures: revision-3 saves must contain their historical crop growth durations, and the collapse screen now displays the concrete tax/debt calculation. The UI-polish check now follows profession detail pages instead of removed build-card references. The optional desktop tutorial's Roll House overlap was fixed by stacking the guide heading in its narrow margin.
-
 `tests/test_mobile_browser.cjs` automates the browser matrix with Playwright. Set `TATER_QA_URL` to the disposable mobile fixture URL and provide Playwright through `NODE_PATH` or a local installation. Captures and logs go to ignored `artifacts/mobile-qa/`.
 
 
@@ -346,8 +337,6 @@ Balance note: base yields remain Russet 3, Giant 8, Golden 2, Radioactive 4, Sun
 `shop_pages.gd` extends the seed counter's timber trays, item illustrations and button styles to Bram's workbench and Nell's barn. Tool upgrades retain their live costs and readiness; Barn keeps capacity expansion above every inventory tab and compacts its ledger on Gear, Items and Builds. Desktop trays become single-column phone shelves. Purchase receipts wrap in the remaining desktop margin, keeping the wider counters' controls clear.
 
 Shop filler quotes and all-island duck-limit lists are removed. `duck_pond_view.gd` draws the local flock on an animated pond; hiring and training keep their existing actions. Full storage shows a persistent red banner with a Sell crops action, and blocking farm reminders use red on desktop and touch. `test_farm_alerts.gd -- --integration-test` checks the full/sell/clear flow; add `--touch-controls` to cover portrait and landscape bounds and touch targets. Normal harvesting again plays the escalating streak chime alongside the pull/pop foley.
-
-Roll Houses use red roofs, tied curtains, gold trim, marquee bulbs and a carpet across all islands. The interior uses green felt, red and gold controls and `casino_surface.gd` for the animated reel lights. Calculation captions omit numbered steps; odds, payouts, confirmation and reward selection are unchanged. `test_roll_luck_meter.gd`, `test_roll_clarity_ui.gd` and the touch/responsive checks cover the actual controls and frozen outcomes.
 
 Run `test_harvest_identity.gd` and `test_village_identity.gd` with `-- --integration-test`; native `--capture` writes `artifacts/identity-*.png`. These cover real first-giant yield and compost accounting, save/reload, partial/full barns, visible growth, animation cleanup and budgets, audio samples, buyer arrival/expiry/delivery, queued crates and bed/shop picking across islands. `test_crop_growth.gd` checks every ordinary and composted variety across watering, continuous growth, paused elapsed time, same-stage reloads and matching harvest models; native `--capture` writes `artifacts/crop-growth-all-varieties.png`. Regression passes also cover tutorial, simulation, touch controls, market and build pages. This source pass does not replace `docs/` or `dist/` web exports.
 
@@ -378,8 +367,16 @@ Mouse and single-finger island drags now pan, while short bed/shop taps retain t
 
 The weather footer uses a VBox and expanding buttons so wrapped labels cannot collapse into tall, narrow Grid columns. Furnace UI uses a code-drawn animated hearth; the exterior uses batched brick/copper geometry with persistent embers. The 25-Icecap, 20-second burst, 60-second cooldown and free thawing bellows are unchanged.
 
-Artifact pools vary by island. Relic yield/mastery/mutation/storage bonuses are 10%/20%/35%/20% per copy; the Trader Token raises sale quotes 5% per copy while retaining the 75% seed-price link. Mystery yield/mutation/storage bonuses are 30%/100%/60%; the Monocle and Dice now give 25% stock quotes and 2.5× added luck when equipped. Incomplete local collections are preferred; completed pools return 2× (relic) or 5× (mystery) the actual stake. Draw probabilities are unchanged.
-
 Quest cash uses explicit shares of each island’s progression baseline. Valley cash: $5K/$15K/$30K; Shores: $200M/$2.5B/$1B/$5B/$2B; Frosthollow: $10T/$125T/$250T. Starter combo, Shores mutations and Frostbreaker also award an Almanac, Lens and Aurora Heart. All displayed extras are shown separately. Mechanics revision 20 validates old storage using the old artifact coefficients, then recomputes upgraded capacity on load; claimed quests remain claimed.
 
 Browser verification uses an isolated QA export, real Chromium mouse/touch events and screenshots at desktop/phone sizes. `test_update_browser.cjs` checks motion between input events, lower weather controls, furnace and all three graphics modes. `test_release_browser.cjs` checks the production export, version, fullscreen and absence of the QA bridge; set `TATER_RELEASE_URL` to run it against GitHub Pages. These are browser checks, not physical-device performance claims.
+
+## Gacha removal
+
+Mechanics revision 22 removes random reward purchases, their UI and world building, Rook, reward-only effects and save validation. Save loading retains understood fields, migrates the cosmetic cap through `assets/item_aliases.json`, and drops retired NPC history. Export presets include the alias file. Saved optional tours retain their place after the removed stop. Surviving farm data still passes strict validation before state changes. Save backups and rejected-file protection remain intact.
+
+Build schema 5 omits reward charges and crate ownership. All builds start at level one; old levels and XP survive. Luck-only gear is cosmetic, while other equipment bonuses and quest rewards remain for their later segments. Shared NPC voice recordings remain because other villagers use them.
+
+The source-word audit has no Roll House, luck, jackpot or trophy systems. Remaining `roll`/`crate` matches describe scrolling, physical produce containers, mutation storage (Segment 3), market draws (Segment 4) and the harvest-stake profession (Segment 5). Those systems remain within the staged plan.
+
+`test_gacha_removal.gd` covers migration from revision 21, retained farm/gear/quest progress, discarded fields, build availability, the menu, the R key and all three island rebuilds. Pest audio retains its own coverage. Run the full baseline with `tools/run_tests.sh -j 1`.

@@ -25,13 +25,13 @@ Return to the [project README](../README.md) for downloads and setup. Spud Valle
 
 ## Farming and controls
 
-The three-line menu opens the market, inventory, builds, quests, upgrades, Roll House, travel, collection, price tracking, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
+The three-line menu opens the market, inventory, builds, quests, upgrades, travel, collection, price tracking, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
 
 Farming is manual. Select a tool, then click a bed to walk over and work it, or press E beside it. Tools never choose the next task automatically.
 
 Each island has a **Tool Upgrades** shop with a potato toolsmith. On Spud Valley and Golden Shores, look between the barn and market; Frosthollow's toolsmith works at the winter forge. Click the NPC, shop or sign to buy the same upgrades available through **U** or the menu. Rank 3 tools still require Frosthollow.
 
-Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Builds**, **Quests**, **Ducks**, **Roll House** and **Ferry**. The tax card shows the next bill and stocks remaining; click it for your full forecast and bankruptcy limit.
+Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Builds**, **Quests**, **Ducks** and **Ferry**. The tax card shows the next bill and stocks remaining; click it for your full forecast and bankruptcy limit.
 
 Purchases show a short dark-and-gold confirmation card, matching the harvest-chain style. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 
@@ -47,7 +47,6 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | B | Buy Seeds |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
-| R | Roll House |
 | C | Player builds and abilities |
 | Q | Local challenges |
 | P | PotatoDex |
@@ -76,7 +75,7 @@ Pests use independent timers for each bed, rather than farm-wide waves. Each cro
 
 Quotes refresh every **three seconds on Island 1**, with slightly more upward movement, and every **five seconds on Islands 2 and 3**. Brief market events vary their target and strength, then expire. Normal quotes cap at **+2,999%** in the Valley and Shores, **+10,000%** in Frosthollow.
 
-Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher percentages become smoothly rarer all the way to the ceiling. Without bonuses, the four equal quarters of any boom range have approximately **57.8% / 29.7% / 10.9% / 1.6%** of rolls, from lowest to highest. Luck and equipped stock gear modestly improve scheduled and rocket rolls while preserving that downward trend. These are magnitude odds after a boom triggers, not trigger chances. The timer flashes in the final 10 seconds. Outside active booms and spikes, each eligible fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on luck, gear, builds or debug luck. Sampled boom quotes are final: export, thaw, roll and flash-offer multipliers do not stack onto them. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
+Every **3 minutes**, the selected crop gets a **10-second stock boom**: **+500–2,999%** in the Valley and Shores, **+3,000–10,000%** in Frosthollow. Higher percentages become smoothly rarer all the way to the ceiling. Without bonuses, the four equal quarters of any boom range have approximately **57.8% / 29.7% / 10.9% / 1.6%** of draws, from lowest to highest. Equipped stock gear modestly improves scheduled and rocket draws while preserving that downward trend. These are magnitude odds after a boom triggers, not trigger chances. The timer flashes in the final 10 seconds. Outside active booms and spikes, each eligible fresh quote has a **1.5% chance** of a ten-second selected-crop spike: **+2,000–2,999%** early, **+7,000–10,000%** in winter. Natural spike chance and strength do not depend on gear or builds. Sampled boom quotes are final: export, thaw and flash-offer multipliers do not stack onto them. Seeds track the final sell quote, and every temporary boost expires. Timers and active quotes survive saving.
 
 Press **2** or click the Seeds hotbar slot to show crop choices and tracked seed quotes. Selecting another tool hides both strips. Use **Tracked Seed Prices** in the menu to choose which seed quotes appear in this tray. Your choices are saved; price changes show old → new values with green/up or red/down feedback.
 
@@ -88,7 +87,7 @@ Both pages order varieties by their fixed base selling price: **Russet → Giant
 
 The sell chart labels every visible price-change point relative to that variety’s fixed base: `((price / base) - 1) × 100`, rounded to whole percentages. Smooth curves pass through the recorded prices without adding peaks. Teal gains and berry losses also have signed labels. A dashed line marks base / 0%; actual currency prices appear only on the right axis. **Older / Newer** browses the retained 40 quotes, with fewer visible points on narrow screens to keep labels readable. Missing history does not prevent selling at the current quote.
 
-The selected crop at the top of the screen controls the market feedback. Mist begins above **+300%**, bigger rhythmic effects at **+500%**, and a musical jackpot at **+3,000%**. Green belongs to Spud Valley, gold to Golden Shores, and icy blue to Frosthollow. The center stays readable for farming and trading.
+The selected crop at the top of the screen controls the market feedback. Mist begins above **+300%**, bigger rhythmic effects at **+500%**, and a musical stock celebration at **+3,000%**. Green belongs to Spud Valley, gold to Golden Shores, and icy blue to Frosthollow. The center stays readable for farming and trading.
 
 ## Three islands
 
@@ -114,9 +113,9 @@ Open the three-line menu or visit the new island station for these activities:
 
 ## Inventory and builds
 
-The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] contains illustrated seeds, raw crops, mutation crates, permanent items, build cards, build crates and processed batches, each with distinct artwork. Raw and processed potatoes stay held until you choose to sell them.
+The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] contains illustrated seeds, raw crops, mutation crates, permanent items, build cards and processed batches, each with distinct artwork. Raw and processed potatoes stay held until you choose to sell them.
 
-You begin as **Farmer**. Opening owned Build Crates can unlock and develop five specializations, each with **30 levels**. Paid rolls only award sealed crates, never build levels directly. Select one in Builds [C]. Equipped harvest professions and completed build activities earn XP toward the next level. The Builds pages show XP progress; see [XP amounts](BUILD_PROFESSIONS.md#activity-rules-and-tradeoffs).
+You begin as **Farmer**. All five specializations are available at level one and develop through **30 levels**. Select one in Builds [C]. Equipped harvest professions and completed build activities earn XP toward the next level. The Builds pages show XP progress; see [XP amounts](BUILD_PROFESSIONS.md#activity-rules-and-tradeoffs).
 
 | Build | Focus and active ability |
 | --- | --- |
@@ -126,33 +125,13 @@ You begin as **Farmer**. Opening owned Build Crates can unlock and develop five 
 | Scientist | Cross two crops into Honeyheart, Sundew or Frostgold. Keep discovered seed traits for every build. |
 | Industrialist | Load 20 or 100 crops, match their process and stamp F–SSS export batches. Larger machines unlock queue slots. |
 
-Builds opens an illustrated overview of all five paths, with your current build marked **Selected** and real locks shown. Click **Explore** to preview its appearance, controls, benefits and tradeoffs; browsing never changes your saved build. **Select build · Free** explicitly changes the active build. The introduction's **Meet the five builds** guide explains each path, unlocking and switching. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
+Builds opens an illustrated overview of all five paths, with your current build marked **Selected** and every build available. Click **Explore** to preview its appearance, controls, benefits and tradeoffs; browsing never changes your saved build. **Select build · Free** explicitly changes the active build. The introduction's **Meet the five builds** guide explains each path and switching. Exact passive bonuses and progression are folded into optional details. Switching is free; loaded production, reserved buyers and discovered varieties stay with you. Processing jobs, finished batches and unclaimed harvest stakes still occupy storage. Machines never plant, water or harvest the field for you.
 
-Prize crops, seed-bank jars, machine additions, shipment carts and the lucky charm appear on the farm. After every third major stock, the tax collector walks from the ferry along the island path during the familiar ten-second selling window, collects automatically, then leaves with a receipt. Clicking the visitor opens your tax information.
+Prize crops, seed-bank jars, machine additions, shipment carts and the carved charm appear on the farm. After every third major stock, the tax collector walks from the ferry along the island path during the familiar ten-second selling window, collects automatically, then leaves with a receipt. Clicking the visitor opens your tax information.
 
 For disposable scenarios, open **Play Builds Lab.command**. See the [build activities and testing guide](BUILD_PROFESSIONS.md) for recipes, grades, save compatibility and test steps.
 
-Every paid roll also has an independent **10% chance of a Build Crate**. Open it from Inventory for a separate, build-only illustrated reward reel. Ownership is checked by the game simulation before RNG runs. The crate is consumed before its single reward is granted, overlapping requests are blocked, and its result is saved immediately. Requests without a crate show “You need a Build Crate.” Fully developed builds preserve unused crates.
-
-## Roll House
-
-Only earned fictional coins are used. There are no purchases, deposits, cash-outs or real-money connections.
-
-| Newest unlocked island | Normal | Big | Stupid |
-| --- | ---: | ---: | ---: |
-| Spud Valley | $200 | $2K | $20K |
-| Golden Shores | $2M | $20M | $200M |
-| Frosthollow | $20T | $200T | $2Qa |
-
-All-in uses your current purse and needs two deliberate presses. It requires **more than $200 on Spud Valley, more than $2M on Golden Shores, and more than $60T on Frosthollow**. Exactly $60T still buys three normal winter rolls, but cannot be used for All In. The button and the game simulation enforce the same minimum, including the confirmation press. Unlocking a new island retires the previous Roll Houses. Larger wagers increase reward quality by a displayed logarithmic percentage with no fixed cap. Permanent luck is capped at 10× outside explicit debug controls.
-
-After the reveal, a receipt shows **Spent, Returned and Balance**, including consolation refunds, duplicate trade-ins and jackpots. All In charges the entire purse before rewards: a `$1e20` wager followed by the 10% consolation refund leaves `$1e19`. Free Crown pulls can also return coins; the receipt includes every result in that purchase.
-
-Luck shifts probability toward higher rarity tiers, rather than increasing every non-common tier equally. The displayed odds, actual reward selection and reel previews use the same current tier probabilities. Decorative cards do not grant rewards: the reel lands on the actual single result, or the best result in a batch whose full results appear below. Ordinary cash-jackpot odds stay capped at 2.25%, with excess probability going to rare collectibles; explicit debug luck can bypass that cap. Above the normal 10× cap, boosted luck applies an additional increasing weight for each rarity step above Rare. For example, 1,000× effective luck gives approximately **84.5% combined Relic/Mystery** odds at a normal stake; 3,000× gives about **95.7%**. High luck makes rare results more likely, not guaranteed.
-
-Eight reward tiers include collectible gear, tools, farming bonuses, mutations, jackpots, **Relic items with a 0.1% starting chance**, and a mysterious rarer tier. **Gacha never awards seeds**, including when a collection is full. Starter supplies, emergency help and quest seed rewards still work.
-
-Relic and Mystery pools match the island: Valley farming keepsakes, Shores trading and mutation artifacts, and Frosthollow storage, Aurora and luck artifacts. Collectibles are permanently active across islands; wearable charms must be equipped. Unfinished local collections are preferred. A full Relic collection trades a duplicate for **2× your stake**; Mystery pays **5×**. The Trader Token raises crop quotes by 5% per copy, and seed quotes stay at 75% of sale prices.
+## Quests and equipment
 
 Quest rewards scale with the island economy: Valley pays $5K–$30K, Shores $200M–$5B, and Frosthollow $10T–$250T. The Valley combo quest adds an Almanac, the Shores mutation quest adds a Tideglass Lens, and Frostbreaker adds an Aurora Heart. Rewards can be claimed once, including after loading an older save.
 
@@ -161,27 +140,15 @@ Inventory [I] has a **Gear** tab with a draggable 3D preview of the same round p
 
 The wardrobe preview follows dragging smoothly and eases to a stop after release. Adaptive resolution and 4× antialiasing sharpen the farmer and clothing edges. Hidden previews stop rendering, and releasing the mouse outside the portrait ends the drag normally.
 
-Gacha now contains **23 wearable items**, including the previous hats, gloves and charms plus **15 new shirts, pants and shoes**. Mix pieces freely to shape your build. A garment matching your active player build has **25% stronger item bonuses**:
-
 | Clothing family | Bonuses |
 | --- | --- |
 | Farmer | Harvest quantity and crop growth speed |
-| Gambler | Luck and mutation chances |
+| Gambler | Cosmetic clothing and mutation trousers |
 | Investor | Better live stock sale prices |
 | Scientist | Mutation chances and crop growth |
 | Industrialist | Faster processing and a little extra harvest yield |
 
-The original eight keepsakes remain passive collectibles. Normal effective luck stays capped at 10×, stock gear improves ordinary sale quotes and the strength odds of scheduled/rocket booms within their caps, and seeds follow actual sale prices. Equipping gear during a boom cannot inflate its preselected quote. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves Scientist experiments as well as field mutations; the experiment panel shows its actual chance. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
-
-An equipped **Aurora Crown grants one free extra roll per paid purchase**, at the same stake value, in addition to its +1 luck. A single purchase gives two results; a winter ×3 or ×5 purchase gives four or six. The Crown must be equipped before buying, so winning one activates its bonus for your next purchase. Free rolls cannot trigger more free rolls, and the result cards identify the **AURORA BONUS**.
-
-Frosthollow also offers **×3 and ×5 multi-rolls** at normal, big or stupid stakes. The full price is required and charged upfront; all-in stays a single roll. One reel reveals the best actual pull, then cards show every result. Rewards are granted once and saved before the reveal, and overlapping roll requests are blocked.
-
-The Roll House keeps all eight rarity percentages beside the reel, including Mystery. Its three-step display shows roll quality, added earned/gear luck %, then the active luck multiplier; the full calculation remains available below.
-
-The illustrated horizontal reel lands on the actual reward. Common, Rare and build results use a short confirmation tone with no reward flash, screen mist or world celebration. Epic and higher tiers keep the big effects; Relic and mysterious discoveries get a longer reveal. A market reward starts after the reel ends so its window is usable.
-
-The Roll House's collapsible **Trophy cabinet** records your 16 rarest distinct Rare-or-better discoveries, including free Crown rolls. Each trophy shows its artwork, tier, repeat count, island, roll number and the actual chance of that tier on its recorded roll. These are tier odds, not the odds of a particular item. History starts with rolls made after this update; past results are not invented. Debug-assisted discoveries are marked **DEBUG** and recorded separately from normal discoveries.
+The original eight keepsakes remain passive collectibles. Stock gear improves ordinary sale quotes and the strength odds of scheduled/rocket booms within their caps, and seeds follow actual sale prices. Equipping gear during a boom cannot inflate its preselected quote. The inventory shows equipment, owned counts and the combined active bonuses. Small yield bonuses accumulate between harvests of the same crop instead of being rounded away. Mutation clothing improves field mutations. Clothing processing bonuses also work with furnace heat, without speeding up ability cooldowns.
 
 ## PotatoDex
 
@@ -197,23 +164,15 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 ## Debug controls
 
-Open **☰ → Debug: money, luck & time** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
-
-**Set balance** sets an exact nonnegative amount, so it also works when the purse is zero or in debt. Presets prepare an amount; **Set balance** commits it. This is an explicit Debug operation and marks trophies DEBUG.
-
-The optional **Multiply current balance** section multiplies your current purse **once** (×0–×1,000,000); the money control then returns to ×1. Decimals and scientific notation work: `0.1` keeps 10%, `0.01` keeps 1%, and `1e-20` turns a `$1e20` purse into `$1`. Explicit `0` clears your coins. The preview shows the resulting balance before applying; invalid input or a positive multiplier that would underflow to zero is rejected. Debug luck is a persistent ×1–×1,000 multiplier on normal effective luck, so it can deliberately exceed the normal 10× cap. The HUD shows the final luck multiplier and its percentage increase above 1×. **Luck calculation** in Debug or the Roll House shows base + earned + equipped luck, the normal 10× cap, then the debug multiplier and final total. For example, 2× earned-base luck + 0.25× equipped gives 2.25× (+125%); debug ×3 produces 6.75× (+575%). Wager and build roll-quality bonuses are shown separately from general luck. Money changes and debug luck are saved with the farm.
-
-Choose **1×, 2×, 5×, 10× or 30×** simulation speed to test crops, markets, pests, abilities and processing. Movement, interface animations, sounds, reward reels and the rocket film stay at normal speed. The simulation advances at most one second per rendered frame, so the highest setting depends on frame rate. Time speed starts at **1×** each session and is not saved. All farm simulation pauses while the Debug workshop is open, so a 30× test cannot collect taxes while you configure it.
-
-**Reset luck + time** returns both to ×1 and keeps your current coins. **Lock debug · restore 1× time** closes access and restores normal time while preserving money and luck. Changing money, including reducing it, marks subsequent trophies as DEBUG even after luck is reset. The debug menu also unlocks **Golden Shores** or **Frosthollow + Shores** without charging coins or changing harvest totals. It opens their fields but leaves you on the current island; use the ferry to travel. Unlocks persist, and future trophies stay marked DEBUG. Stock price limits still apply. Unlocking a later island does not fund its much larger tax bill; the workshop displays that warning.
+Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
 After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory, builds and progression, and restarts the tax/stock countdown at 1× time. It preserves the previous receipt. **Try Again** instead starts a new farm.
 
 ### Stock Rocket
 
-Every **30 minutes spent on Island 3**, a rocket packed with potato passengers blasts into the night sky, with yellow, blue, red, orange and pink money trails and an original rising jackpot score. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +35,000–100,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
+Every **30 minutes spent on Island 3**, a rocket packed with potato passengers blasts into the night sky, with yellow, blue, red, orange and pink money trails and an original rising score. Its countdown pauses on earlier islands and during the tutorial. Farming, pests, processing, and stock clocks pause during the launch cinematic. After liftoff, the selected crop gets **ten full seconds at +35,000–100,000%**. A rocket replaces a simultaneous normal boom, and its clock, pending launch reward, and active selling window survive saving. Leaving winter ends its active premium.
 
-Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical jackpot with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +35,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.
+Stock feedback has four levels: small mist above +300%; stronger pulses from +500%; a musical stock celebration with floating coins, music notes, island colour and gentle camera shake from +3,000%; and the rocket launch followed by the strongest celebration from +35,000%. The farm remains readable during selling. Colours stay green / gold / blue by island. Big balances use **Qa, Qi, Sx, Sp, Oc, No, Dc** before falling back to scientific notation.
 
 
 ### Climate action and taxes (v1.0.2)
@@ -228,7 +187,7 @@ Climate disasters begin on **Island 2**, introduced by a skippable changing-sky 
 | 2 | $5B | $12.5B | −$5B |
 | 3 | $250T | $625T | −$250T |
 
-Seeds, tools, barn space, extra beds, ducks and weather equipment can be bought on **credit**, even with a negative balance. Buttons mark borrowed purchases with **Credit**. Purchases cannot cross the current bankruptcy limit; Roll House bets and new-island passage still require cash.
+Seeds, tools, barn space, extra beds, ducks and weather equipment can be bought on **credit**, even with a negative balance. Buttons mark eligible tax-debt purchases with **On account**. Purchases cannot cross the current bankruptcy limit; new-island passage still requires cash.
 
 Use **Repay debt** in a shop, or **Taxes → Recovery orders**, to exchange ordinary potatoes for debt repayment. Each potato repays 1% of your current debt limit, so 100 clear a fully used credit line. Deliveries start with Russets, keep surplus potatoes, and stop at zero debt. Market sales also repay debt normally. If you have no seeds, ordinary stored crops or growing crops, collect three free recovery seeds from the order page. Taxes and bankruptcy still apply.
 
@@ -257,8 +216,11 @@ Double-click **Play Builds Lab.command** for a disposable farm with all five bui
 
 ## NPC conversations
 
-Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Ada, Rook, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
+Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Ada, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
 
 Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current island and event.
 
 Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, tax, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
+
+
+Mechanics revision 22 removes random reward purchases and luck. Existing farms keep their crops, money, gear, quests and build progress. Former luck-only gear is cosmetic; the Patchwork Cap keeps the same appearance.

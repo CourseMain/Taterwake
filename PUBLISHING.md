@@ -16,22 +16,7 @@ prices and save data retain their values.
 5. Fix blockers before setting a commercial release date. Check an existing
    save as well as a fresh farm after every save-related fix.
 
-## 2. Choose the intended audience
-
-The current Roll House includes stakes, losses and chance-based payouts.
-Australia classifies games containing simulated gambling R18+. Roblox
-prohibits playable simulated gambling. Renaming dollars to Spudions does
-not change the underlying mechanic or settle its classification.
-
-For a broad farming-game audience, the recommended design change is to
-replace wagering with skill challenges or quest-earned artifact rewards.
-If retaining the Roll House, assess its classification and disclose it
-accurately before deciding which territories and audiences to support.
-
-Sources: [Australian Classification](https://www.classification.gov.au/about-us/media-and-news/news/new-classifications-for-gambling-content-video-games),
-[Roblox Community Standards](https://about.roblox.com/community-standards).
-
-## 3. Open Steamworks and register the game
+## 2. Open Steamworks and register the game
 
 1. Go to https://partner.steamgames.com/steamdirect and sign in with the
    account that will publish Taterland.
@@ -50,7 +35,7 @@ Allow additional time for review and fixes.
 Sources: [Steam onboarding](https://partner.steamgames.com/doc/gettingstarted/onboarding),
 [Steam Direct fee](https://partner.steamgames.com/doc/gettingstarted/appfee).
 
-## 4. Prepare the store page
+## 3. Prepare the store page
 
 1. Open the game's Steamworks landing page, then **Edit Store Page**.
 2. Add a short description, supported languages and only features the build
@@ -69,7 +54,7 @@ Sources: [Store page](https://partner.steamgames.com/doc/store),
 [Graphical assets](https://partner.steamgames.com/doc/store/assets),
 [Content Survey](https://partner.steamgames.com/doc/gettingstarted/contentsurvey).
 
-## 5. Prepare and test a desktop build
+## 4. Prepare and test a desktop build
 
 1. Start with Windows. In Godot, open **Project → Export**, add a
    **Windows Desktop** preset and install matching export templates if asked.
@@ -86,7 +71,7 @@ Sources: [Store page](https://partner.steamgames.com/doc/store),
 Sources: [Godot Windows export](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_windows.html),
 [SteamPipe](https://partner.steamgames.com/doc/sdk/uploading).
 
-## 6. Review, price and release
+## 5. Review, price and release
 
 1. Choose a one-time purchase price after playtesting the game's length and
    quality. US$4.99–7.99 is a provisional design suggestion, not a revenue
@@ -100,6 +85,4 @@ Sources: [Godot Windows export](https://docs.godotengine.org/en/stable/tutorials
 
 Source: [Steam release process](https://partner.steamgames.com/doc/store/releasing).
 
-An itch.io demo or playtest is optional alongside this process. Roblox would
-require a separate implementation in Roblox Studio and changes to the
-current Roll House, so it is not the recommended next port.
+An itch.io demo or playtest is optional alongside this process.

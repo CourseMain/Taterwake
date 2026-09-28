@@ -20,10 +20,10 @@ Expand **Builds & sea lab · scenarios**:
 
 ## Activity rules and tradeoffs
 
-Builds earn activity XP as well as levels from crates. Open **Builds [C]**
+All five builds start at level 1 and earn activity XP. Open **Builds [C]**
 to see the level, XP bar and next target. Level 1 needs 40 XP; each following
-level needs 10 more XP, up to the level-30 cap. Crates still unlock builds or
-add one level; they preserve earned XP unless that level reaches the cap.
+level needs 10 more XP, up to the level-30 cap. Existing higher levels and XP
+are preserved when loading older saves.
 
 | Build | XP earned |
 | --- | --- |
@@ -35,8 +35,6 @@ add one level; they preserve earned XP unless that level reaches the cap.
 
 Committed batches, shipments and stakes credit their owning build even after
 switching. Failed actions, full-barn clicks and repeated claims award no XP.
-Build Crates have an independent 10% chance on each paid Roll House roll;
-free Crown bonus rewards add no crate attempt.
 
 | Build | Player action | Persistent result |
 | --- | --- | --- |

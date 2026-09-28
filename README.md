@@ -4,7 +4,7 @@
 
 Open the link on a phone, tablet, or computer. Allow the first load to finish, then start farming. Your browser saves your farm automatically; return with the same browser and address to continue.
 
-**v1.0.3.1:** Builds now earn XP from completed profession activities. The Builds pages show your progress, and Build Crates now have a 10% drop chance per paid Roll House roll. Existing farms, Spudions, build levels and unopened crates are preserved. See [all changes](CHANGELOG.md#1031).
+The published browser build is **v1.0.3.1**. Source development is following the [redesign plan](docs/REDESIGN_PLAN.md); Segment 2 removes the Roll House and its random rewards. These source changes have not been published to the browser build. See [release history](CHANGELOG.md#1031).
 
 For the next release stages, follow the [publishing checklist](PUBLISHING.md): browser playtesting, Steamworks setup, desktop testing and release review.
 
@@ -27,11 +27,9 @@ A 3D potato farming game about growing crops, riding wild markets and building y
 - Work your fields with five manual tools; train ducks to chase pests.
 - Catch island stock booms up to **+10,000%**, then ride Frosthollow's **+35,000%–100,000% Stock Rocket**.
 - Choose from **five player builds** and collect clothing with farming, market and mutation bonuses.
-- Take buyer contracts, fire up a winter furnace, and discover rare rewards at the Roll House.
+- Take buyer contracts and fire up a winter furnace.
 - Farm through a **60-second day–night cycle** across three islands.
 - Fund rainwater reserves, drainage, reinforced barns and windbreaks to protect harvests and reduce recovery taxes.
-
-The Roll House uses Spudions earned in the game. There are no real-money purchases.
 
 ## Download and play locally
 
@@ -71,7 +69,7 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Top-left expand/× icon / F11 | Toggle fullscreen |
 | Touch Tools drawer | Select tools and seeds, zoom +/−, recenter, cancel a task |
 | I | Inventory and clothing |
-| B / U / R | Market / tool upgrades / Roll House |
+| B / U | Market / tool upgrades |
 | F | Sell the selected crop |
 | Escape / ☰ | Main menu and remaining activities |
 
