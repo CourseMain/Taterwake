@@ -25,6 +25,8 @@ const ECONOMY_REVISION: int = 3
 const MECHANICS_REVISION: int = 24
 const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
 const PRICE_CYCLE_SECONDS: float = 600.0
+const PRICE_HISTORY_LIMIT: int = 12
+const PRICE_QUOTE_SECONDS: float = 15.0
 const PEST_TICK_SECONDS: float = 5.0
 const ISLAND2_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[1]
 const ISLAND2_UNLOCK_HARVEST: int = 500
@@ -1299,14 +1301,34 @@ func mastery_level(id: String) -> int:
 
 func seasonal_price_factor() -> float:
 	# Placeholder four-season cycle until the season clock owns this phase.
-	return 1.0 + 0.15 * sin(TAU * fposmod(elapsed, PRICE_CYCLE_SECONDS) / PRICE_CYCLE_SECONDS)
+	return _price_factor_at(elapsed)
+
+
+func _price_factor_at(seconds: float) -> float:
+	return 1.0 + 0.15 * sin(TAU * fposmod(seconds, PRICE_CYCLE_SECONDS) / PRICE_CYCLE_SECONDS)
 
 
 func _refresh_market() -> void:
 	var drift: float = seasonal_price_factor()
 	for id in CROP_IDS:
 		var base: float = float(CROPS[id].base)
-		market[id] = {"seed": seed_price_for(base), "sell": base * drift}
+		# The deterministic curve lets us reconstruct real past quotes after loading,
+		# independent of frame rate. Keep the live quote as the final sample.
+		var history: Array = []
+		var end: int = ceili(elapsed / PRICE_QUOTE_SECONDS)
+		for index: int in range(maxi(0, end - PRICE_HISTORY_LIMIT + 1), end):
+			history.append(base * _price_factor_at(index * PRICE_QUOTE_SECONDS))
+		history.append(base * drift)
+		market[id] = {"seed": seed_price_for(base), "sell": base * drift, "history": history}
+
+
+func price_percent(id: String) -> int:
+	return roundi((float(market[id].sell) / float(CROPS[id].base) - 1.0) * 100.0)
+
+
+func price_percent_text(id: String) -> String:
+	var percent: int = price_percent(id)
+	return ("+" if percent >= 0 else "−") + str(absi(percent)) + "%"
 
 
 func _seed_relief() -> bool:
