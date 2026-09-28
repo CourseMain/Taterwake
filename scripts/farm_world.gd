@@ -101,7 +101,10 @@ const LEAF := Color("517e43")
 const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
-const DAY_CYCLE_SECONDS: float = 60.0
+const DAY_CYCLE_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
+var _winter_visible: bool = false
+var _winter_cover: Node3D
+var _winter_roofs: Array[Node3D] = []
 
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
@@ -367,6 +370,8 @@ func _clear_world() -> void:
 	_pest_visuals.clear()
 	_pest_focus = -1
 	_snowflakes.clear()
+	_winter_cover = null
+	_winter_roofs.clear()
 	_ducks.clear()
 	_duck_bodies.clear()
 	_materials.clear()
@@ -418,7 +423,7 @@ func _lighting() -> void:
 	_moon.light_color = Color("b8d4ff") if current_island == 3 else Color("b6caf0")
 	_moon.shadow_enabled = false
 	add_child(_moon)
-	set_day_time(_day_elapsed)
+	set_day_time(_day_elapsed, _winter_visible)
 	camera = Camera3D.new()
 	camera.name = "DioramaCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -449,9 +454,7 @@ func _apply_graphics_quality() -> void:
 	_sun.directional_shadow_pancake_size = 0.0
 	_sun.shadow_bias = 0.04
 	_sun.shadow_opacity = 0.68
-	# Daylight intensity and colour still complete the full 60-second cycle.
-	# Stable, steeper light avoids long crawling palm/roof silhouettes.
-	_sun.rotation_degrees = Vector3(-60.0, -35.0, 0.0)
+	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"
 
 
@@ -489,24 +492,27 @@ func set_climate(info: Dictionary) -> void:
 		_weather_strength = strength
 		_weather_drought = drought
 		_applied_day_time = -1.0
-		set_day_time(_day_elapsed)
+		set_day_time(_day_elapsed, _winter_visible)
 
-func set_day_time(elapsed: float) -> void:
-	# The farm's saved elapsed time owns this clock: travelling and loading a
-	# save preserve the same sky, and paused gameplay cannot advance it twice.
+func set_day_time(elapsed: float, winter: bool = false) -> void:
+	# The calendar supplies time within this season: dawn to dusk, never a daily loop.
 	if not is_finite(elapsed) or elapsed < 0.0:
 		return
-	_day_elapsed = fposmod(elapsed, DAY_CYCLE_SECONDS)
+	var winter_changed: bool = _winter_visible != winter
+	_winter_visible = winter
+	_day_elapsed = clampf(elapsed, 0.0, DAY_CYCLE_SECONDS)
+	if winter: _day_elapsed = DAY_CYCLE_SECONDS
+	if is_instance_valid(player): _set_winter_cover(winter)
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
-	if _day_elapsed == _applied_day_time:
+	if _day_elapsed == _applied_day_time and not winter_changed:
 		return
 	_applied_day_time = _day_elapsed
 	var phase: float = _day_elapsed / DAY_CYCLE_SECONDS
-	var orbit: float = phase * TAU
-	var height: float = cos(orbit)
-	var daylight: float = smoothstep(0.0, 1.0, (height + 1.0) * 0.5)
-	var twilight: float = pow(1.0 - absf(height), 3.0)
+	var height: float = sin(phase * PI)
+	var daylight: float = 0.25 + 0.75 * height
+	var twilight: float = pow(1.0 - height, 3.0)
+	_sun.rotation_degrees = Vector3(-lerpf(25.0, 70.0, height), lerpf(-70.0, 70.0, phase), 0)
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
@@ -532,7 +538,7 @@ func set_day_time(elapsed: float) -> void:
 func day_cycle_info() -> Dictionary:
 	var phase: float = _day_elapsed / DAY_CYCLE_SECONDS
 	return {"seconds": _day_elapsed, "duration": DAY_CYCLE_SECONDS, "phase": phase,
-		"daylight": smoothstep(0.0, 1.0, (cos(phase * TAU) + 1.0) * 0.5)}
+		"daylight": 0.25 + 0.75 * sin(phase * PI)}
 
 func _island() -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 39.5, 30.0, 1.7, Color("8a6346"))
@@ -1657,10 +1663,30 @@ func _winter_scenery() -> void:
 	for point in [Vector3(-13.8,0,-7.9),Vector3(12.6,0,12.4),Vector3(-16.2,0,14.4)]:
 		_winter_lantern(point)
 	_sign(Vector3(-4.0,0.0,16.0), "FROSTHOLLOW", Color("627d8d"))
+	_falling_snow(self, Vector2(25, 18))
+
+
+func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 	for i in range(28):
-		var snowflake := _sphere(self, Vector3(_rng.randf_range(-25,25), _rng.randf_range(1.5,8.0), _rng.randf_range(-17,18)), Vector3.ONE * 0.035, Color("f1f7f8"))
+		var snowflake := _sphere(parent, Vector3(_rng.randf_range(-extent.x, extent.x), _rng.randf_range(1.5, 8.0), _rng.randf_range(-extent.y, extent.y)), Vector3.ONE * 0.035, Color("f1f7f8"))
 		snowflake.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_snowflakes.append(snowflake)
+
+func _set_winter_cover(enabled: bool) -> void:
+	if enabled and not is_instance_valid(_winter_cover):
+		_winter_cover = _root("WinterSnow", Vector3.ZERO)
+		var snow := _prism(_winter_cover, Vector3(0, 0.0, 0), 40.3 * LAND_SPACING, 30.7 * LAND_SPACING, 0.03, Color("e6eef0"))
+		snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(40.3, 30.7) * LAND_SPACING)
+		snow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_falling_snow(_winter_cover, Vector2(19, 14) * LAND_SPACING)
+		var barn: Node3D = get_node_or_null("RedBarn")
+		if is_instance_valid(barn):
+			var roof := Node3D.new()
+			barn.add_child(roof)
+			_snow_roof(roof, 6.0, 5.0, 3.85, 1.4)
+			_winter_roofs.append(roof)
+	if is_instance_valid(_winter_cover): _winter_cover.visible = enabled
+	for roof in _winter_roofs: roof.visible = enabled
 
 
 func _snow_pine(pos: Vector3, size: float) -> void:
@@ -1773,7 +1799,7 @@ func _ice_forge(pos: Vector3) -> void:
 
 
 func _animate_winter(delta: float) -> void:
-	if current_island != 3:
+	if current_island != 3 and not _winter_visible:
 		return
 	for i in range(_snowflakes.size()):
 		var snowflake: Node3D = _snowflakes[i]

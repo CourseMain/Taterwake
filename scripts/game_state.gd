@@ -10,13 +10,18 @@ signal sale_completed(receipt: Dictionary)
 signal purchase_rejected(message: String)
 signal run_ended
 signal climate_changed(phase: String)
+signal season_changed
+const SeasonClock = preload("res://scripts/season_clock.gd")
+var season_clock = SeasonClock.new()
+# Standalone fixtures never write a player save. Main assigns the live path.
+var boundary_save_path: String = ""
 
 const NpcRoster = preload("res://scripts/npc_roster.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 27
+const MECHANICS_REVISION: int = 28
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -28,14 +33,14 @@ const DEFAULT_SAVE_PATH: String = "user://taterland_save_v4.json"
 const PROTECTED_SAVE_PATHS: Array[String] = ["user://spud_valley_save.json", "user://spud_valley_save_v3.json"]
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
 const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 11.25, "base": 15.0, "grow": 10.0, "yield": 3, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 15.75, "base": 21.0, "grow": 25.0, "yield": 4, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 13.5, "base": 18.0, "grow": 40.0, "yield": 5, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 18.0, "base": 24.0, "grow": 50.0, "yield": 4, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 20.25, "base": 27.0, "grow": 55.0, "yield": 3, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "grow": 60.0, "yield": 3, "color": "aeeaff"},
+	"russet": {"name": "Russet Potato", "seed": 11.25, "base": 15.0, "grow": 75.0, "yield": 3, "color": "a87b45"},
+	"golden": {"name": "Golden Potato", "seed": 15.75, "base": 21.0, "grow": 105.0, "yield": 4, "color": "efc74c"},
+	"giant": {"name": "Giant Potato", "seed": 13.5, "base": 18.0, "grow": 135.0, "yield": 5, "color": "c7855d"},
+	"radioactive": {"name": "Radioactive Potato", "seed": 18.0, "base": 24.0, "grow": 165.0, "yield": 4, "color": "b6f064"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 20.25, "base": 27.0, "grow": 195.0, "yield": 3, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "grow": 225.0, "yield": 3, "color": "aeeaff"},
 }
-const MAX_GROW_SECONDS: float = 60.0
+const MAX_GROW_SECONDS: float = 450.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 600.0, 1200.0], "water": [400.0, 800.0, 1400.0], "harvest": [500.0, 1000.0, 1500.0]}
 const BARN_COSTS: Array[float] = [300.0, 800.0, 2000.0]
 const OVERDRAFT_LIMIT: float = -5000.0
@@ -94,7 +99,7 @@ func _build_starters() -> void:
 	for index in range(24):
 		var stage: int = 3 if index < 2 else (2 if index < 4 else 0)
 		plots.append({"unlocked": index < 12, "stage": stage, "watered": stage > 0,
-			"elapsed": 10.0 if stage == 3 else (5.0 if stage == 2 else 0.0),
+			"elapsed": float(CROPS.russet.grow) if stage == 3 else (float(CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
 			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0})
 	market.clear()
 	_refresh_market()
@@ -334,7 +339,7 @@ func _update_tutorial(delta: float) -> void:
 
 func update(delta: float) -> void:
 	if ClimateSystem.Lesson.active(self): return
-	if run_over or not is_finite(delta) or delta <= 0.0:
+	if run_over or season_clock.winter_menu or not is_finite(delta) or delta <= 0.0:
 		return
 	if tutorial_active:
 		if not bool(tutorial_progress.get("tour_only", false)):
@@ -347,9 +352,10 @@ func update(delta: float) -> void:
 	# Resolve farming and weather boundaries in order.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
-	while remaining >= 0.000001:
+	while remaining >= 0.000001 and not season_clock.winter_menu:
+		if season_clock.seconds == 0.0: climate.start_season(self)
 		farm_help.refresh_pests(self)
-		var step: float = remaining
+		var step: float = minf(remaining, season_clock.remaining())
 		if climate.clock_running(self): step = minf(step, minf(climate.next_boundary(), 0.25))
 		step = minf(step, 15.0 - _relief_clock)
 		if is_instance_valid(activity_system) and activity_system.has_method("next_boundary"):
@@ -410,8 +416,36 @@ func update(delta: float) -> void:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
+		if season_clock.advance(step): _season_boundary()
 	if dirty:
 		changed.emit()
+
+
+func _season_boundary() -> void:
+	if season_clock.winter_menu:
+		season_clock.autumn_loss = 0
+		for plot in plots:
+			if int(plot.stage) > 0: season_clock.autumn_loss += 1
+			_clear_crop(plot)
+			plot.tilled = false
+		climate.end_working_year()
+		farm_help.refresh_pests(self)
+		news = winter_notice()
+	else:
+		news = "Year %d · %s" % [season_clock.year, SeasonClock.NAMES[season_clock.season]]
+	# The persisted state is complete before any listener opens the Winter UI.
+	if not boundary_save_path.is_empty(): save_game(boundary_save_path)
+	season_changed.emit()
+	if season_clock.winter_menu: notified.emit(news)
+
+func winter_notice() -> String:
+	return "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. All your crops were brought in."
+
+func start_next_year() -> bool:
+	if run_over or not season_clock.start_next_year(): return false
+	_season_boundary()
+	_finish("Year %d · Spring. Tilling and planting are open." % season_clock.year)
+	return true
 
 
 func _pest_damage_tick(plot: Dictionary) -> void:
@@ -492,6 +526,8 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 
 
 func interact_plot(index: int, tool: String = "hoe") -> String:
+	if season_clock.winter_menu: return _finish("The fields rest in Winter. Start next year from the Winter menu.")
+	if tool == "plant" and not season_clock.can_plant(): return _finish("Planting is open in Spring and Summer. Bring in your crops before Winter.")
 	if ClimateSystem.Lesson.active(self): return ClimateSystem.Lesson.water(self, index, tool)
 	if run_over:
 		return "Run over. Start a new farm."
@@ -527,7 +563,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				plot["pest_delay"] = 0.0
 				affected += 1
 			continue
-		if action == "hoe" and int(plot["stage"]) == 0 and not plot["tilled"]:
+		if action == "hoe" and season_clock.can_plant() and int(plot["stage"]) == 0 and not plot["tilled"]:
 			plot["tilled"] = true
 			affected += 1
 		elif action == "plant" and int(plot["stage"]) == 0 and plot["tilled"] and int(seed_inventory[selected_crop]) > 0:
@@ -559,6 +595,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		return _finish("Frozen crops · Use Hoe [1] to clear the ice.")
 
 	if affected == 0:
+		if action == "hoe" and not season_clock.can_plant(): return _finish("Tilling is open in Spring and Summer. Harvest before Winter.")
 		if action == "water" and float(ClimateSystem.Operations.local(self).can) < 1.0:
 			return _finish("Can empty · Click the tank to walk over and refill.")
 		if ClimateSystem.Operations.scarce(self) and action == "pest" and float(ClimateSystem.Operations.local(self).spray) < 1.0:
@@ -843,6 +880,7 @@ func _reject_purchase(message: String) -> String:
 
 
 func reset_game() -> void:
+	season_clock = SeasonClock.new()
 	npc_history.clear()
 	run_over = false
 	harvested_total = 0
@@ -874,7 +912,7 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
-		"climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
+		"season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
 		"pest_timer": pest_timer, "coins": coins, "selected_crop": selected_crop,
@@ -905,6 +943,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	var data: Dictionary = json.data
 	_restoring_balance = true
 	climate.data = data.climate.duplicate(true)
+	season_clock.load_data(data.season_clock)
 	run_over = data.run_over
 	tutorial_progress = data.tutorial_progress.duplicate(true)
 	tutorial_active = false
@@ -991,6 +1030,7 @@ func _valid_save(raw: Variant) -> bool:
 	if not NpcRoster.valid_history(data.get("npc_history")) or not FarmHelp.valid(data.get("farm_help")): return false
 	var progress: Variant = data.get("tutorial_progress")
 	if not progress is Dictionary or progress.get("version") != 2 or not _number(progress.get("step"), 0, 100, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0, 23, true): return false
+	if not SeasonClock.valid(data.get("season_clock")): return false
 	if not ClimateSystem.valid(data.get("climate"), MAX_MONEY): return false
 	if not data.get("run_over") is bool or not data.get("debug_money_modified") is bool: return false
 	var ranges: Dictionary = {"coins": [-MAX_MONEY, MAX_MONEY, false], "elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "pest_timer": [0.000001, 100, false], "relief_clock": [0, 15, false]}
@@ -1012,6 +1052,10 @@ func _valid_save(raw: Variant) -> bool:
 		if not _number(data.tools.get(key), 0, 3, true): return false
 	if float(data.climate.operations.supply.can) > 16.0 + 16.0 * int(data.tools.water): return false
 	if not _valid_plots(data.get("plots"), data): return false
+	if data.season_clock.winter_menu:
+		if data.climate.phase != "calm": return false
+		for plot in data.plots:
+			if int(plot.stage) != 0 or plot.tilled: return false
 	if not data.get("quest_progress") is Dictionary or data.quest_progress.size() != QUEST_TARGETS.size(): return false
 	for id in QUEST_TARGETS:
 		if not _number(data.quest_progress.get(id), 0, QUEST_TARGETS[id], true): return false

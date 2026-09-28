@@ -76,7 +76,7 @@ const SHORES_PAPER: Color = Color("fff0d8")
 const CORAL: Color = Color("bf7058")
 const CROP_NAMES: Dictionary = {"russet": "Russet", "golden": "Golden", "giant": "Giant", "radioactive": "Radioactive", "sunburst": "Sunburst"}
 const CROP_COLORS: Dictionary = {"russet": Color("b48a52"), "golden": GOLD, "giant": Color("b16f50"), "radioactive": Color("71a557"), "sunburst": Color("da9334")}
-const GROW_TIMES: Dictionary = {"russet": 10, "golden": 25, "giant": 40, "radioactive": 50, "sunburst": 55, "icecap": 60}
+const GROW_TIMES: Dictionary = {"russet": 75, "golden": 105, "giant": 135, "radioactive": 165, "sunburst": 195, "icecap": 225}
 const TOOL_COSTS: Dictionary = {"hoe": [300, 12000], "water": [450, 15000], "harvest": [600, 20000]}
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
@@ -776,6 +776,8 @@ func _build_top() -> void:
 	wordmark.add_child(_label("TATER", 32, INK, true))
 	wordmark.add_child(_label("/", 32, GOLD, true))
 	wordmark.add_child(_label("LAND", 32, INK, true))
+	_top["season"] = _label("Year 1 · Spring", 16, INK, true)
+	_place(_top.season, Rect2(88, 76, 290, 24))
 
 	var stats: PanelContainer = _card(CREAM, 12)
 	_stats_card = stats
@@ -1131,6 +1133,7 @@ func update_state(state: Node) -> void:
 	var quote: Dictionary = markets.get(crop, {})
 	var seeds: Dictionary = state.get("seed_inventory")
 	var storage: Dictionary = state.get("storage")
+	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]]
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
@@ -1433,6 +1436,7 @@ func show_panel(kind: String, state: Node) -> void:
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
+		"winter": _build_winter()
 		"dex": _build_dex()
 		"quests": _build_quests()
 		"activities": _build_activities()
@@ -1704,8 +1708,22 @@ func _build_help() -> void:
 		row.add_child(title)
 		row.add_child(_label(entry[1], 16, INK))
 
+func _build_winter() -> void:
+	var clock = _state.season_clock
+	_heading("Winter · Year %d" % clock.year, "The fields are resting.")
+	_body.add_child(_wrap(_state.winter_notice(), 21, INK, true))
+	_body.add_child(_wrap("Time is paused. Visit the shops or use the farm menu whenever you like." + (" Spring begins only when you are ready." if clock.year < clock.LAST_YEAR else ""), 18, MUTED))
+	if clock.year < clock.LAST_YEAR:
+		_body.add_child(_button("Start next year", "next_year", true))
+	else:
+		_body.add_child(_wrap("Ten years complete", 26, GREEN, true))
+		_body.add_child(_wrap("Your ten-year farm remains here. Open Settings & saves in the farm menu to start a new farm.", 18, MUTED))
+	_body.add_child(_button("Farm menu", "menu"))
+
+
 func _build_pause() -> void:
 	_heading("Your farm", "")
+	if _state.season_clock.winter_menu: _body.add_child(_button("Winter · Ten years complete" if _state.season_clock.year == 10 else "Winter · Review & start next year", "winter", true))
 	var menu: GridContainer = GridContainer.new()
 	menu.columns = 3
 	menu.add_theme_constant_override("h_separation", 10)

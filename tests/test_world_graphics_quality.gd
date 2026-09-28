@@ -17,11 +17,11 @@ func _run() -> void:
 	var world := World.new()
 	root.add_child(world)
 	world.set_graphics_quality("smooth")
-	world.set_day_time(15.0)
+	world.set_day_time(75.0)
 	for island in [1]:
 		world.build_world()
 		check(world.graphics_quality == "smooth" and not world._sun.shadow_enabled, "chosen quality survives island construction")
-		check(is_equal_approx(world.day_cycle_info().seconds, 15.0), "graphics construction preserves elapsed daylight")
+		check(is_equal_approx(world.day_cycle_info().seconds, 75.0), "graphics construction preserves elapsed daylight")
 		var camera_id: int = world.camera.get_instance_id()
 		var light_id: int = world._sun.get_instance_id()
 		var node_count: int = world.find_children("*", "", true, false).size()
@@ -51,14 +51,14 @@ func _run() -> void:
 		world.set_graphics_quality("balanced")
 		check(world._sun.shadow_enabled and world._sun.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL, "balanced uses one orthographic shadow map")
 		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and world._sun.shadow_opacity < 0.8, "balanced removes shadow pancaking and softens silhouette contrast")
-		var rotation: Vector3 = world._sun.rotation
 		world.set_day_time(0.0)
+		var rotation: Vector3 = world._sun.rotation
 		var daylight: Color = world._day_environment.background_color
-		world.set_day_time(15.0)
-		check(not world._day_environment.background_color.is_equal_approx(daylight) and world._sun.rotation.is_equal_approx(rotation), "dusk colours evolve without sweeping shadow geometry")
-		world.set_day_time(30.0)
-		check(is_zero_approx(world._sun.light_energy) and world._moon.light_energy >= 0.3, "night still fades daylight into readable moonlight")
-		world.set_day_time(15.0)
+		world.set_day_time(75.0)
+		check(not world._day_environment.background_color.is_equal_approx(daylight) and not world._sun.rotation.is_equal_approx(rotation), "seasonal light and direction advance toward noon")
+		world.set_day_time(150.0)
+		check(world._sun.light_energy > 0 and world._moon.light_energy >= 0.3, "season-end dusk retains readable fill light")
+		world.set_day_time(75.0)
 		var plots: Array = []
 		for index: int in range(world.plot_positions.size()):
 			plots.append({"unlocked": true, "tilled": true, "watered": true, "stage": 3, "pests": index == 4})

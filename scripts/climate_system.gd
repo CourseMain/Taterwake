@@ -3,8 +3,8 @@ extends RefCounted
 const Lesson = preload("res://scripts/climate_lesson.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
 const Rules = preload("res://scripts/save_validation.gd")
-## Provisional season length until the calendar arrives in Segment 8.
-const SEASON_SECONDS: float = 150.0
+## The farm calendar owns seasonal boundaries; this clock times weather phases.
+const SEASON_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
 const DISASTER_CHANCE: float = 0.15
 const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
@@ -29,7 +29,7 @@ const EDUCATION_SOURCE: String = "https://www.fao.org/publications/fao-flagship-
 var data: Dictionary = fresh_data()
 
 static func fresh_data() -> Dictionary:
-	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": SEASON_SECONDS, "season_remaining": SEASON_SECONDS, "event": "",
+	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": SEASON_SECONDS, "event": "",
 		"severity": 0.0, "projects": {},
 		"last": {}, "history": [], "field_lost": 0, "barn_lost": 0, "collapse": {}}
 
@@ -37,7 +37,7 @@ func reset() -> void:
 	data = fresh_data()
 
 func clock_running(farm) -> bool:
-	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over
+	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over and not farm.season_clock.winter_menu
 
 func protection(event: String, kind: String) -> float:
 	var reduction: float = 0.0
@@ -56,7 +56,7 @@ func factor(kind: String) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.run_over or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
+	if farm.run_over or farm.season_clock.winter_menu or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
 		return false
 	var ids: Array = EVENTS.keys()
 	if event.is_empty():
@@ -74,8 +74,7 @@ func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
 func update(farm, delta: float) -> bool:
 	if not clock_running(farm): return false
 	var operated: bool = Operations.update(farm, delta)
-	data.season_remaining = maxf(0.0, float(data.season_remaining) - delta)
-	data.timer = maxf(0.0, float(data.timer) - delta)
+	if data.phase != "calm": data.timer = maxf(0.0, float(data.timer) - delta)
 	# Resolve existing weather before the next season's single probability draw.
 	if float(data.timer) <= 0.000001:
 		match str(data.phase):
@@ -89,18 +88,26 @@ func update(farm, delta: float) -> bool:
 				data.phase = "calm"
 				data.event = ""
 				data.severity = 0.0
+				data.timer = SEASON_SECONDS
 				farm.climate_changed.emit("calm")
 		operated = true
-	if float(data.season_remaining) <= 0.000001:
-		data.season_remaining = SEASON_SECONDS
-		var disaster: bool = farm.rng.randf() < DISASTER_CHANCE
-		if disaster and data.phase == "calm": begin_warning(farm)
-		operated = true
-	if data.phase == "calm": data.timer = data.season_remaining
 	return operated
 
+func start_season(farm) -> void:
+	if data.phase == "calm" and farm.rng.randf() < DISASTER_CHANCE: begin_warning(farm)
+
+func end_working_year() -> void:
+	data.phase = "calm"
+	data.event = ""
+	data.timer = SEASON_SECONDS
+	data.severity = 0.0
+	for key in ["ice", "stress", "wet", "scars", "rescued"]: data.operations[key].clear()
+	data.operations.flash = 0.0
+	data.operations.strike_row = -1
+
+
 func next_boundary() -> float:
-	return minf(float(data.timer), float(data.season_remaining))
+	return float(data.timer) if data.phase != "calm" else SEASON_SECONDS
 
 func _impact(farm) -> void:
 	data.phase = "active"
@@ -184,7 +191,6 @@ static func valid(raw: Variant, maximum: float) -> bool:
 	if not raw.get("projects") is Dictionary: return false
 	for id in raw.projects:
 		if not PROJECTS.has(id) or not Rules.number(raw.projects[id], 0, MAX_PROJECT_LEVEL, true): return false
-	if not Rules.number(raw.get("season_remaining"), 0.000001, SEASON_SECONDS): return false
 	if raw.has("lesson") and raw.lesson.stage in ["water", "area", "success"] and raw.phase != "calm": return false
 	if raw.has("operations"):
 		var limit: int = 24

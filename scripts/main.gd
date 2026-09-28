@@ -83,6 +83,7 @@ func _ready() -> void:
 	_register_inputs()
 	state = StateScript.new()
 	state.name = "FarmState"
+	if not test_mode: state.boundary_save_path = StateScript.DEFAULT_SAVE_PATH
 	add_child(state)
 	activities = ActivitiesScript.new()
 	activities.name = "IslandActivities"
@@ -105,7 +106,7 @@ func _ready() -> void:
 	_reset_camera_view()
 	get_tree().root.size_changed.connect(_stop_map_navigation)
 	get_tree().root.focus_exited.connect(_stop_map_navigation)
-	world.set_day_time(state.elapsed)
+	world.set_day_time(state.season_clock.seconds, state.season_clock.winter_menu)
 	world.pest_warning.connect(_on_pest_warning)
 	hud = HudScript.new()
 	hud.name = "GameHUD"
@@ -131,6 +132,7 @@ func _ready() -> void:
 	state.reward_received.connect(_on_reward)
 	state.run_ended.connect(_on_run_ended)
 	state.climate_changed.connect(_on_climate_changed)
+	state.season_changed.connect(_on_season_changed)
 	_setup_sound()
 	climate_audio = load("res://scripts/climate_audio.gd").new()
 	add_child(climate_audio)
@@ -143,6 +145,8 @@ func _ready() -> void:
 	if not test_mode:
 		if state.run_over:
 			_on_run_ended()
+		elif state.season_clock.winter_menu:
+			hud.show_panel("winter", state)
 		elif not bool(state.tutorial_progress.get("completed", false)):
 			tutorial.start()
 		elif returning:
@@ -190,7 +194,7 @@ func _process(delta: float) -> void:
 	_update_equipment_card(delta)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
-	world.set_day_time(state.elapsed)
+	world.set_day_time(state.season_clock.seconds, state.season_clock.winter_menu)
 	climate_audio.set_weather(climate_info, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
 	_update_weather_shake(delta)
@@ -291,7 +295,7 @@ func _simulation_delta(delta: float) -> float:
 	return step
 
 func _advance_simulation(delta: float) -> void:
-	if state.run_over or state.ClimateSystem.Lesson.active(state):
+	if state.run_over or state.season_clock.winter_menu or state.ClimateSystem.Lesson.active(state):
 		return
 	if _tutorial_active():
 		state.update(delta)
@@ -301,7 +305,7 @@ func _advance_simulation(delta: float) -> void:
 		var step: float = remaining
 		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
 		state.update(step)
-		if state.run_over:
+		if state.run_over or state.season_clock.winter_menu:
 			return
 		remaining = maxf(0.0, remaining - step)
 
@@ -801,7 +805,7 @@ func _update_hover() -> void:
 		elif int(plot.stage) == 3:
 			hud.set_context("%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action])
 		elif int(plot.stage) > 0 and bool(plot.watered):
-			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(0, str(plot.crop)))
+			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
 			hud.set_context("%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds])
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()
@@ -835,6 +839,7 @@ func _on_state_changed() -> void:
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
+		world.set_day_time(state.season_clock.seconds, state.season_clock.winter_menu)
 	if hud != null:
 		hud.update_state(state)
 		_hud_update_frame = Engine.get_process_frames()
@@ -944,7 +949,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "winter":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -986,6 +991,8 @@ func _on_action(action: String) -> void:
 				"barn": state.upgrade_barn()
 				"expansion": state.expand_field()
 				_: state.upgrade_tool(parts[1])
+		"next_year":
+			if state.start_next_year(): hud.close_panel()
 		"save":
 			if not test_mode:
 				hud.show_toast("Farm saved. Your crops are tucked away." if state.save_game() else "Could not save. Check the available disk space.")
@@ -995,7 +1002,8 @@ func _on_action(action: String) -> void:
 				hud.close_panel()
 				var loaded: bool = state.load_game()
 				if loaded:
-					if not bool(state.tutorial_progress.get("completed", false)):
+					if state.season_clock.winter_menu: hud.show_panel("winter", state)
+					elif not bool(state.tutorial_progress.get("completed", false)):
 						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
 		"reset":
@@ -1035,6 +1043,15 @@ func _on_climate_changed(phase: String) -> void:
 		climate_shake = 0.22 if info.event != "drought" else 0.08
 	world.set_climate(info)
 	_save_checkpoint.call_deferred()
+
+func _on_season_changed() -> void:
+	_cancel_walk()
+	_close_equipment()
+	if state.season_clock.winter_menu:
+		hud._climate_alert.dismiss()
+		hud.show_panel("winter", state)
+	_on_state_changed()
+
 
 func _on_run_ended() -> void:
 	_cancel_walk()
