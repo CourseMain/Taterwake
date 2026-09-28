@@ -4,46 +4,44 @@
 
 ## Your first farm
 
-New farms start with **2,000 Spudions** and one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
+Spud Valley is the only playable farm: **12 open beds and 12 locked beds** in one six-by-four field. New farms start with **2,000 Spudions** and one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
 Plant Mara’s Russet seed, water it and pull the ripe crop into your barn. Harvests tug, pop and scatter soil; the ordinary Giant variety lands with a heavier thump.
 
 Mara's seed counter has patched sacks and mismatched crates. Sell Potatoes uses the exchange's chalk buying board, with price, quantity and a sale confirmation. Help is Nell’s pinned barn notes.
 
-The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. E also works at the ferry. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
+The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
 
 Afterwards, help stays in **H → Help** instead of floating over the farm. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage.
 
 Automatic reminders to upgrade tools, hire ducks or recover debt no longer appear over the field. Open **H** for controls, farming instructions and current task help. Brief action feedback and red warnings still explain blocked actions, full storage or unavailable supplies.
 
-Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. Sailing requires the normal island unlocks.
-
 The first lesson pauses random pests and weather; finishing starts fresh countdowns. **H → Optional Valley tour** lets you meet the NPCs whenever you choose. You may skip any stop or leave at any time. This informational tour pauses and preserves your existing farm, including pests and weather.
 
 
-Return to the [project README](../README.md) for downloads and setup. Spud Valley is the name of your first island.
+Return to the [project README](../README.md) for downloads and setup. Spud Valley is your farm.
 
 ## Farming and controls
 
-The three-line menu opens the market, inventory, quests, upgrades, travel, collection, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
+The three-line menu opens the market, inventory, quests, upgrades, collection, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
 
 Farming is manual. Select a tool, then click a bed to walk over and work it, or press E beside it. Tools never choose the next task automatically.
 
-Each island has a **Tool Upgrades** shop with a potato toolsmith. On Spud Valley and Golden Shores, look between the barn and market; Frosthollow's toolsmith works at the winter forge. Click the NPC, shop or sign to buy the same upgrades available through **U** or the menu. Rank 3 tools still require Frosthollow.
+Spud Valley’s **Tool Upgrades** shop sits between the barn and market. Click Bram, his shop or its sign, or press **U**. All three upgrade ranks are available on the farm.
 
-Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Ferry**.
+Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Weather**.
 
 Purchases show a short dark-and-gold confirmation card. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 
 | Key | Action |
 | --- | --- |
 | WASD / arrows | Move |
-| 1 | Hoe / break winter ice |
+| 1 | Hoe / clear crop ice |
 | 2 | Select seeds and open seed choices |
 | 3 | Water |
 | 4 | Harvest |
 | 5 | Bug sprayer |
-| E / Space | Interact with nearby NPC/shop, use selected tool beside a bed, or board the ferry |
+| E / Space | Interact with nearby NPC/shop, use selected tool beside a bed |
 | B | Buy Seeds |
 | I / V | Illustrated inventory |
 | U | Equipment upgrades |
@@ -58,17 +56,17 @@ Purchases show a short dark-and-gold confirmation card. Seed receipts show how m
 | Escape | Close panel / open main menu |
 | F5 / F9 | Save / load |
 
-Saving keeps one previous farm in a `.bak` file. If a save is damaged or incompatible, the game sets it aside as `.rejected` and tells you; starting and saving a fresh farm leaves that rejected file intact. Each later rejected load replaces the older rejected file. The original legacy farm file remains untouched.
+New farms use `user://taterland_save_v4.json`. Older farms are not loaded or migrated, and the original v2/v3 files stay untouched. Saving keeps one previous v4 farm in `.bak`. Damaged or incompatible candidates are set aside as `.rejected`; a fresh farm’s autosave leaves that rejected file intact. Each later rejected load replaces the older rejected file.
 
 The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
-A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth.
+A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on the farm. Nights stay readable for farming. It follows saved play time, keeps its phase after loading, and does not alter crop growth.
 
-Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
+Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Menus do not pause crops or quotes; closing the game adds no offline farming.
 
-Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**, with the same yield on every island. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
+Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
-Pests use independent timers for each bed, rather than farm-wide waves. Each crop is protected for its first 40 seconds after planting. On becoming harvest-ready, it receives a uniformly random 15–90-second pest delay; pests appear only after both the crop-age protection and that delay have elapsed. Sprayers and ducks reset the bed’s delay, and saved games preserve the timers. Each 5-second attack removes one third of the crop’s original maximum yield: 3/3 → 2/3 → 1/3 → destroyed at 15 seconds. Spraying cannot restore eaten potatoes. Visible insects, bite particles, shaking crops, yield labels and warning sounds make attacks clear. Use the bug sprayer on the affected bed to stop further damage; clearing pests gives a fresh grace period. A separate three-chirp alarm warns about pests, repeats every six seconds while they remain, and stops when you clear them. Simultaneous attacks share one alarm; crop loss has its own descending sound. Tool audio cannot cut these warnings off. Insects remain clickable through the same bed target. A destroyed crop shows a brief “Crop lost” notice, then clears its label completely; revisiting the island does not resurrect old notices.
+Pests use independent timers for each bed, rather than farm-wide waves. Each crop is protected for its first 40 seconds after planting. On becoming harvest-ready, it receives a uniformly random 15–90-second pest delay; pests appear only after both the crop-age protection and that delay have elapsed. Sprayers and ducks reset the bed’s delay, and saved games preserve the timers. Each 5-second attack removes one third of the crop’s original maximum yield: 3/3 → 2/3 → 1/3 → destroyed at 15 seconds. Spraying cannot restore eaten potatoes. Visible insects, bite particles, shaking crops, yield labels and warning sounds make attacks clear. Use the bug sprayer on the affected bed to stop further damage; clearing pests gives a fresh grace period. A separate three-chirp alarm warns about pests, repeats every six seconds while they remain, and stops when you clear them. Simultaneous attacks share one alarm; crop loss has its own descending sound. Tool audio cannot cut these warnings off. Insects remain clickable through the same bed target. A destroyed crop shows a brief “Crop lost” notice, then clears its label completely; reloading does not resurrect old notices.
 
 ## The live crop market
 
@@ -81,9 +79,9 @@ Pests use independent timers for each bed, rather than farm-wide waves. Each cro
 | Sunburst | 27 | 3 |
 | Icecap | 30 | 3 |
 
-Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** on each island. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
+Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** once. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
 
-Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle between **85% and 115% of base**. This is a placeholder until the later sell/store redesign. Weather, export ships and Frostbreak rewards do not change these prices.
+Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle between **85% and 115% of base**. This is a placeholder until the later sell/store redesign. Weather does not change these prices.
 
 Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
 
@@ -93,29 +91,15 @@ Press **2** or click the Seeds hotbar slot to show crop choices. Selecting anoth
 
 Every Buy Seeds and Sell Potatoes card includes a small, unanimated sparkline of up to **12 recent sale quotes**. Beside the live sale price, a signed percentage compares it with the variety’s base price: green above base, red below, neutral at base. The top bar shows the same comparison for the selected crop. Seed costs stay fixed; their cards show the sale-price history to help choose what to plant.
 
-Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Radioactive → Sunburst → Icecap**. Buy Seeds retains each island’s available seeds; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
+Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Radioactive → Sunburst → Icecap**. Buy Seeds offers all six varieties; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
 
-## Three islands
+## The Valley farm
 
-| Island | Field | Progression |
-| --- | --- | --- |
-| Spud Valley | 24 beds; 12 initially open | Original farm. Learn manual tools and crop sales. |
-| Golden Shores | 48 beds | Unlock with 5,000 Spudions and 500 harvested sacks. Adds Sunburst potatoes. |
-| Frosthollow | 80 beds | Unlock with 10,000 Spudions and 25,000 harvested sacks. Adds snow, Icecap potatoes and rank 3 tools. |
+A single **1,200-Spudion expansion** opens the twelve locked beds. Coins, crops, tools, water supplies and protection belong to this one farm. Sunburst and Icecap are ordinary varieties available at the seed counter.
 
-Your fields persist independently. Coins, crops, tools travel with you.
+Visit Pip’s **Duck patrol** to hire up to **two ducks**. The first costs **500 Spudions**, the second **1,000**. Train the flock for **800** and **1,500** to reduce time per bed from **4s → 3s → 2s**. Ducks patrol distinct infested beds; their routes survive saving and loading.
 
-Golden Shores has randomly arriving export ships, with a warning before a five-second buying window. Ships use the ordinary selling price. Its shipment challenge rewards supplying separate ships, rather than repeatedly clicking one sale.
-
-Frosthollow's **Frostbreak** freezes 12 beds for 20 seconds. Hoe all of them before time runs out to earn an Icecap seed. Waiting awards nothing; remaining ice melts without destroying crops. Winter challenges pause while you are away. Rank 3 tools cost 1,200 / 1,400 / 1,500 Spudions and work 5×5 hoe areas, 7×7 watering areas and five full harvest rows.
-
-Each island has local challenges around its farming and economic events. Claim completed rewards at its board.
-
-Open the three-line menu or visit the new island station for these activities:
-
-- **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. The first duck costs **500 Spudions** on every island; each additional duck costs another multiple of that base. Speed training costs remain visible at the counter. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
-- **Golden Shores — Buyer contracts.** Pick a crop for a **bulk +25%** order. The offer shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
-- **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth for 20 seconds**. Heat affects watered winter crops while you are on the winter island; it does not plant, harvest. The furnace can fire once per minute. Heat cannot be stacked or refreshed early.
+The quest board rewards buying ten seeds, selling ten potatoes and harvesting twelve beds. Claim each completed task once.
 
 ## Inventory
 
@@ -123,13 +107,13 @@ The bottom-center five-slot hotbar contains usable tools only. Click a slot or p
 
 ## Quests and the farmer
 
-Every quest pays a flat **100 Spudions**, with seeds for the ground-breaking quests. Each reward can be claimed once, including after loading an older save. Harvest-bed quests count cumulative manual harvests without a timing requirement.
+Each of the three quest-board tasks pays a flat **100 Spudions**. Each reward can be claimed once, including after reloading. Harvest-bed quests count cumulative manual harvests without a timing requirement.
 
 The round potato farmer keeps a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Villagers retain their fixed outfits and animated conversation portraits.
 
 ## PotatoDex
 
-Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times, home islands and yield per bed. Golden and Radioactive remain ordinary crop varieties.
+Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times and yield per bed. Golden and Radioactive remain ordinary crop varieties.
 
 ## Graphics
 
@@ -147,9 +131,9 @@ After bankruptcy, **Debug access** still accepts the session code. **Recover tes
 
 ### Climate action and bankruptcy
 
-Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds and protect storage. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** before calm weather. Protection reduces crop losses.
+Weather can threaten Spud Valley from the first season. For now, each **150-second season has a 15% chance** of a disaster; the calendar redesign will replace this temporary clock. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
 
-Purchases require enough cash. A balance **strictly below −5,000 Spudions** ends the run on every island; equality remains playable. Ordinary crop sales can cover debt. This temporary overdraft rule will be replaced by the annual ledger.
+Purchases require enough cash. A balance **strictly below −5,000 Spudions** ends the run; equality remains playable. Ordinary crop sales can cover debt. This temporary overdraft rule will be replaced by the annual ledger.
 
 The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
 
@@ -158,11 +142,11 @@ A collapse shows the cause, debt limit, weather losses and the final balance. **
 
 ### Connected equipment and isolated testing
 
-The water loop is **rain → tank → can or pipes → crops**. A starter can waters 16 beds; can upgrades carry more between trips. Click the tank, then **Refill watering can** to walk over and transfer water. Island 1 refills its reserve quickly and has no disasters. The tank and sprinklers share the same reserve. On Island 2, sprinklers water a fixed connected patch in ordinary weather; drought stops the tank replenishing. Select equipment to see its source, pipes and affected beds. See [the water-loop guide](CLIMATE_WATER_LOOP.md) for exact capacities and costs.
+The water loop is **rain → tank → can or pipes → crops**. A starter can waters 16 beds; upgrades increase its capacity. Click the tank, then **Refill watering can** to walk over and transfer water. Sprinklers and the can share the same reserve. Sprinklers water their fixed connected patch, while drought stops rain replenishment. Select equipment to see its source, pipes and affected beds.
 
-First arrival at Island 2 plays a 12-second changing-sky cutscene with subtitles; skip it at any time. After purchasing irrigation, optional water practice is available at the weather station. Practice pauses the real farm and uses temporary crops. It never grants free sprinklers.
+After purchasing irrigation, optional water practice is available at the weather station. It pauses the real farm and uses temporary crop visuals; it does not give free irrigation.
 
-On Island 3, **Deep Freeze** stops affected crops from growing, being watered or harvested. Open the furnace, choose **Heat thawing hoe**, then use **Hoe [1]** to melt crop ice. The bellows provide 60 seconds of heat without needing potatoes as fuel. Frostgold crops resist ice. Rescuing frozen crops prevents cold-stress losses; remaining ice melts after recovery. The separate Frostbreak challenge pauses during disasters.
+**Deep Freeze** stops affected crops from growing, being watered or harvested. Use **Hoe [1]** to clear crop ice directly. Rescue prevents cold-stress losses; remaining ice melts after recovery.
 
 - **Drought:** water dry crops; the shared tank reserve now matters.
 - **Flood:** open purchased drains to send water through channels toward the sea; Hoe [1] drains individual planted beds.
@@ -172,11 +156,8 @@ Double-click **Play Climate Lab.command** for disposable water practice, ordinar
 
 ## NPC conversations
 
-Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Captain Hollis, Iris, Oren and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link, and Oren is available at Frosthollow's furnace.
+Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Iris and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link.
 
-Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current island and event.
+Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current weather event.
 
-Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
-
-
-Mechanics revision 23 removes wearable items, passive collectibles and special mutations. Old stored mutation potatoes become ordinary potatoes of the same variety and quantity. Surviving quest progress remains. Segment 6 caps old money at 100,000 Spudions and barn upgrades at level three. Barn capacity comes from barn upgrades alone; an older overfull barn keeps every potato but cannot accept another harvest until there is room. Unfinished mutation contracts become ordinary crop orders, keeping completed deliveries and earned credit.
+Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market and weather timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
