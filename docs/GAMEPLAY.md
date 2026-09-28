@@ -4,7 +4,7 @@
 
 ## Your first farm
 
-New farms start with one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
+New farms start with **2,000 Spudions** and one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
 
 Plant Mara’s Russet seed, water it and pull the ripe crop into your barn. Harvests tug, pop and scatter soil; the ordinary Giant variety lands with a heavier thump.
 
@@ -14,11 +14,11 @@ The lesson selects each tool for you and points at the bed. Click the gold bed t
 
 Afterwards, help stays in **H → Help** instead of floating over the farm. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage.
 
-Automatic reminders to upgrade tools, hire ducks or recover debt no longer appear over the field. Open **H** for controls, farming instructions and current task help. Recovery orders remain available through **Repay debt** in shops and the Taxes page. Brief action feedback and red warnings still explain blocked actions, full storage or unavailable supplies.
+Automatic reminders to upgrade tools, hire ducks or recover debt no longer appear over the field. Open **H** for controls, farming instructions and current task help. Brief action feedback and red warnings still explain blocked actions, full storage or unavailable supplies.
 
 Every island has a connected path to its ferry. Click the ferry or its sign to walk to the boarding area, or walk there with WASD and press **E**. Sailing requires the normal island unlocks.
 
-The first lesson pauses random pests, taxes and weather; finishing starts fresh countdowns. **H → Optional Valley tour** lets you meet the NPCs whenever you choose. You may skip any stop or leave at any time. This informational tour pauses and preserves your existing farm, including pests and weather.
+The first lesson pauses random pests and weather; finishing starts fresh countdowns. **H → Optional Valley tour** lets you meet the NPCs whenever you choose. You may skip any stop or leave at any time. This informational tour pauses and preserves your existing farm, including pests and weather.
 
 
 Return to the [project README](../README.md) for downloads and setup. Spud Valley is the name of your first island.
@@ -31,15 +31,15 @@ Farming is manual. Select a tool, then click a bed to walk over and work it, or 
 
 Each island has a **Tool Upgrades** shop with a potato toolsmith. On Spud Valley and Golden Shores, look between the barn and market; Frosthollow's toolsmith works at the winter forge. Click the NPC, shop or sign to buy the same upgrades available through **U** or the menu. Rank 3 tools still require Frosthollow.
 
-Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Ferry**. The tax card shows any pending tax bill; click it for your full forecast and bankruptcy limit.
+Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Ferry**.
 
-Purchases show a short dark-and-gold confirmation card, matching the harvest-chain style. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
+Purchases show a short dark-and-gold confirmation card. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 
 | Key | Action |
 | --- | --- |
 | WASD / arrows | Move |
 | 1 | Hoe / break winter ice |
-| 2 | Equip seeds and open seed choices / tracked prices |
+| 2 | Select seeds and open seed choices |
 | 3 | Water |
 | 4 | Harvest |
 | 5 | Bug sprayer |
@@ -66,17 +66,28 @@ A smooth **60-second day–night–day cycle** changes the sky, sunlight and amb
 
 Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Furnace heat can make growth faster. Existing crops retain their percentage of growth when loading an older farm. Menus do not pause crops or quotes; closing the game adds no offline farming.
 
-Manual equipment upgrades increase the area of a single action. Fast harvests build ×1, ×2, ×4, ×8 and ×16 chains, with a 3.5-second grace period. A full barn leaves the uncollected part of a harvest on the bed without granting its combo twice.
+Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**, with the same yield on every island. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
 Pests use independent timers for each bed, rather than farm-wide waves. Each crop is protected for its first 40 seconds after planting. On becoming harvest-ready, it receives a uniformly random 15–90-second pest delay; pests appear only after both the crop-age protection and that delay have elapsed. Sprayers and ducks reset the bed’s delay, and saved games preserve the timers. Each 5-second attack removes one third of the crop’s original maximum yield: 3/3 → 2/3 → 1/3 → destroyed at 15 seconds. Spraying cannot restore eaten potatoes. Visible insects, bite particles, shaking crops, yield labels and warning sounds make attacks clear. Use the bug sprayer on the affected bed to stop further damage; clearing pests gives a fresh grace period. A separate three-chirp alarm warns about pests, repeats every six seconds while they remain, and stops when you clear them. Simultaneous attacks share one alarm; crop loss has its own descending sound. Tool audio cannot cut these warnings off. Insects remain clickable through the same bed target. A destroyed crop shows a brief “Crop lost” notice, then clears its label completely; revisiting the island does not resurrect old notices.
 
 ## The live crop market
 
+| Variety | Base Spudions per sack | Sacks per healthy bed |
+| --- | ---: | ---: |
+| Russet | 15 | 3 |
+| Giant | 18 | 5 |
+| Golden | 21 | 4 |
+| Radioactive | 24 | 4 |
+| Sunburst | 27 | 3 |
+| Icecap | 30 | 3 |
+
+Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** on each island. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
+
 Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle between **85% and 115% of base**. This is a placeholder until the later sell/store redesign. Weather, export ships and Frostbreak rewards do not change these prices.
 
 Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
 
-**Buy Seeds** shows each seed price, the sale price per potato and owned quantities. Seeds cost **75% of the variety’s base price**, rounded to cents, throughout the cycle. Choose **Buy 1** or **Buy 5** to confirm a purchase.
+**Buy Seeds** shows each seed price, the sale price per potato and owned quantities. Seeds cost **75% of the variety’s base price**, calculated to cents, throughout the cycle. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
 
 **Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Inventory sales and the existing **F** shortcut still work. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
@@ -88,21 +99,21 @@ Both pages order varieties by their fixed base selling price: **Russet → Giant
 
 | Island | Field | Progression |
 | --- | --- | --- |
-| Spud Valley | 24 beds; 12 initially open | Original farm. Learn manual tools and crop sales; grow toward millions. |
-| Golden Shores | 48 beds | Unlock with $1M and 500 harvested potatoes. Double harvest yields and Sunburst potatoes; build toward hundreds of billions. |
-| Frosthollow | 80 beds | Unlock with $100B and 25K harvested potatoes. Snow, Icecap potatoes, triple yields and expensive manual tools; pursue trillion and quadrillion harvests. |
+| Spud Valley | 24 beds; 12 initially open | Original farm. Learn manual tools and crop sales. |
+| Golden Shores | 48 beds | Unlock with 5,000 Spudions and 500 harvested sacks. Adds Sunburst potatoes. |
+| Frosthollow | 80 beds | Unlock with 10,000 Spudions and 25,000 harvested sacks. Adds snow, Icecap potatoes and rank 3 tools. |
 
 Your fields persist independently. Coins, crops, tools travel with you.
 
 Golden Shores has randomly arriving export ships, with a warning before a five-second buying window. Ships use the ordinary selling price. Its shipment challenge rewards supplying separate ships, rather than repeatedly clicking one sale.
 
-Frosthollow's **Frostbreak** freezes 12 beds for 20 seconds. Hoe all of them before time runs out to earn an Icecap seed. Waiting awards nothing; remaining ice melts without destroying crops. Winter challenges pause while you are away. Rank 3 tools cost $250B/$400B/$600B and work 5×5hoe areas, 7×7watering areas and five full harvest rows, before build bonuses.
+Frosthollow's **Frostbreak** freezes 12 beds for 20 seconds. Hoe all of them before time runs out to earn an Icecap seed. Waiting awards nothing; remaining ice melts without destroying crops. Winter challenges pause while you are away. Rank 3 tools cost 1,200 / 1,400 / 1,500 Spudions and work 5×5 hoe areas, 7×7 watering areas and five full harvest rows.
 
 Each island has local challenges around its farming and economic events. Claim completed rewards at its board.
 
 Open the three-line menu or visit the new island station for these activities:
 
-- **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. First-duck costs are **$1.5K / $25M / $750B**; each additional duck costs another multiple of that base. Speed costs scale with the island too. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
+- **Every island — Duck patrol.** Two controls: **Flock size** hires one duck; **Patrol speed** trains that island's flock from **4s → 3s → 2s** per bed. Caps are **1 / 2 / 3 ducks** in the Valley / Shores / Frosthollow. The first duck costs **500 Spudions** on every island; each additional duck costs another multiple of that base. Speed training costs remain visible at the counter. Ducks chase separate pests while you visit and resume their routes when you return. Older saves keep every previously trained duck.
 - **Golden Shores — Buyer contracts.** Pick a crop for a **bulk +25%** order. The offer shows the quantity needed and how much you hold. Accepting opens a shipment progress bar and a button showing the exact amount to deliver. Each shipment locks its live quote; finish the order to collect payment. No deadline. New buyer after 25 seconds.
 - **Frosthollow — Potato furnace.** Burn **25 Icecaps** to get **2.5× winter growth for 20 seconds**. Heat affects watered winter crops while you are on the winter island; it does not plant, harvest. The furnace can fire once per minute. Heat cannot be stacked or refreshed early.
 
@@ -112,13 +123,13 @@ The bottom-center five-slot hotbar contains usable tools only. Click a slot or p
 
 ## Quests and the farmer
 
-Quest rewards scale with the island economy: Valley pays $5K–$30K, Shores $200M–$5B, and Frosthollow $10T–$250T. Rewards are cash and, for the ground-breaking quests, seeds. Each can be claimed once, including after loading an older save.
+Every quest pays a flat **100 Spudions**, with seeds for the ground-breaking quests. Each reward can be claimed once, including after loading an older save. Harvest-bed quests count cumulative manual harvests without a timing requirement.
 
 The round potato farmer keeps a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Villagers retain their fixed outfits and animated conversation portraits.
 
 ## PotatoDex
 
-Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times, home islands and mastery progress. Golden and Radioactive remain ordinary crop varieties.
+Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times, home islands and yield per bed. Golden and Radioactive remain ordinary crop varieties.
 
 ## Graphics
 
@@ -132,29 +143,17 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory and progression, and clears pending tax collection at 1× time. It preserves the previous receipt. **Try Again** instead starts a new farm.
+After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory and progression, and clears the final receipt at 1× time. **Try Again** instead starts a new farm.
 
-### Climate action and taxes (v1.0.2)
+### Climate action and bankruptcy
 
-Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds, protect storage and check the recovery-tax estimate. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** before calm weather. Protection reduces crop losses and the recovery bill.
+Climate disasters begin on **Island 2**, introduced by a skippable changing-sky cutscene. Open the scanning **Weather & protection** station, the desktop weather shortcut, or **☰ → Weather & protection** for forecasts, visible protection stats and purchases. Buy sprinklers and irrigation once to carry them across all islands. Other protection purchases appear on their own island: a large rainwater tank, drainage around the beds, steel barn reinforcements and a living tree windbreak. Level two visibly improves each project. Every disaster gives **45 seconds of warning**, with a central alert and gathering clouds. Rain, wind and storm shake show the danger. Harvest exposed beds and protect storage. Droughts, floods, severe storms and Island 3 deep freezes damage crops and stored potatoes. The disaster lasts **30 seconds**, followed by **75 seconds of recovery** before calm weather. Protection reduces crop losses.
 
-The old tax rules remain temporarily for existing saves. Already-due bills finish collecting; removed market events no longer advance the tax counter. Base tax is 5% of the island progression baseline, with saved tax multipliers and weather pressure capped at 2.5× base. The annual ledger will replace this system in Segment 6.
+Purchases require enough cash. A balance **strictly below −5,000 Spudions** ends the run on every island; equality remains playable. Ordinary crop sales can cover debt. This temporary overdraft rule will be replaced by the annual ledger.
 
-| Island | Base tax | Maximum tax | Bankruptcy below |
-| --- | --- | --- | --- |
-| 1 | $50K | $125K | −$50K |
-| 2 | $5B | $12.5B | −$5B |
-| 3 | $250T | $625T | −$250T |
+The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
 
-Seeds, tools, barn space, extra beds, ducks and weather equipment can be bought on **credit**, even with a negative balance. Buttons mark eligible tax-debt purchases with **On account**. Purchases cannot cross the current bankruptcy limit; new-island passage still requires cash.
-
-Use **Repay debt** in a shop, or **Taxes → Recovery orders**, to exchange ordinary potatoes for debt repayment. Each potato repays 1% of your current debt limit, so 100 clear a fully used credit line. Deliveries start with Russets, keep surplus potatoes, and stop at zero debt. Market sales also repay debt normally. If you have no seeds, ordinary stored crops or growing crops, collect three free recovery seeds from the order page. Taxes and bankruptcy still apply.
-
-The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels, recovery tax and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
-
-Cash below the bill turns red. Unpaid taxes become debt; **only crossing bankruptcy ends the run**. Having 2× the bill earns OVERKILL, then larger reserves reach ULTRA KILL, GODLIKE, OMNIPOTENT and RULER. **☰ → Taxes** shows your forecast, projected balance and latest receipt. Returning to an easier island keeps the highest tax tier you have visited.
-
-A collapse shows the cause, debt limit, losses and exact tax subtraction when tax caused the bankruptcy. **View Run Summary** reveals the run totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather and tax pressure.
+A collapse shows the cause, debt limit, weather losses and the final balance. **View Run Summary** reveals the run totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather pressure.
 
 
 ### Connected equipment and isolated testing
@@ -177,7 +176,7 @@ Interact with a staffed shop or station to greet its keeper in a close-up conver
 
 Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current island and event.
 
-Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, tax, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
+Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market, weather and furnace timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
 
 
-Mechanics revision 23 removes wearable items, passive collectibles and special mutations. Old stored mutation potatoes become ordinary potatoes of the same variety and quantity. Existing money and surviving quest/build progress remain. Barn capacity comes from barn upgrades alone; an older overfull barn keeps every potato but cannot accept another harvest until there is room. Unfinished mutation contracts become ordinary crop orders, keeping completed deliveries and earned credit.
+Mechanics revision 23 removes wearable items, passive collectibles and special mutations. Old stored mutation potatoes become ordinary potatoes of the same variety and quantity. Surviving quest progress remains. Segment 6 caps old money at 100,000 Spudions and barn upgrades at level three. Barn capacity comes from barn upgrades alone; an older overfull barn keeps every potato but cannot accept another harvest until there is room. Unfinished mutation contracts become ordinary crop orders, keeping completed deliveries and earned credit.
