@@ -2647,6 +2647,30 @@ func _save_data() -> Dictionary:
 	return data
 
 
+func backup_path(path: String = DEFAULT_SAVE_PATH) -> String:
+	return path + ".bak"
+
+
+func rejected_path(path: String = DEFAULT_SAVE_PATH) -> String:
+	return path + ".rejected"
+
+
+func _move_save(source: String, destination: String) -> bool:
+	var target: String = ProjectSettings.globalize_path(destination)
+	if FileAccess.file_exists(destination) and DirAccess.remove_absolute(target) != OK:
+		return false
+	return DirAccess.rename_absolute(ProjectSettings.globalize_path(source), target) == OK
+
+
+func _reject_save(path: String) -> void:
+	if path == LEGACY_SAVE_PATH:
+		notified.emit("The original farm save is damaged or incompatible. It was left untouched.")
+	elif _move_save(path, rejected_path(path)):
+		notified.emit("This save is damaged or incompatible and was set aside at %s. Your current farm is unchanged." % rejected_path(path))
+	else:
+		notified.emit("Could not set aside the damaged or incompatible save. Your current farm is unchanged.")
+
+
 func save_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	if path == LEGACY_SAVE_PATH:
 		notified.emit("The original farm save is preserved as a backup. Save to the current version instead.")
@@ -2660,7 +2684,17 @@ func save_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	file.flush()
 	var write_error: Error = file.get_error()
 	file.close()
-	if write_error != OK or DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary_path), ProjectSettings.globalize_path(path)) != OK:
+	if write_error != OK:
+		notified.emit("Saving failed. Your previous save is preserved.")
+		return false
+	var had_previous: bool = FileAccess.file_exists(path)
+	if had_previous and not _move_save(path, backup_path(path)):
+		notified.emit("Could not back up the farm. Saving stopped to preserve your previous save.")
+		return false
+	if DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary_path), ProjectSettings.globalize_path(path)) != OK:
+		if had_previous:
+			# If restoration fails, the previous farm remains at the backup path.
+			DirAccess.rename_absolute(ProjectSettings.globalize_path(backup_path(path)), ProjectSettings.globalize_path(path))
 		notified.emit("Saving failed. Your previous save is preserved.")
 		return false
 	return true
@@ -2671,16 +2705,16 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	if path == DEFAULT_SAVE_PATH:
 		candidates.append(LEGACY_SAVE_PATH)
 	var data: Dictionary = {}
-	var found_save: bool = false
 	for candidate in candidates:
 		if not FileAccess.file_exists(candidate):
 			continue
-		found_save = true
 		var file: FileAccess = FileAccess.open(candidate, FileAccess.READ)
 		if file == null:
+			notified.emit("Could not read the farm save. Your current farm is unchanged.")
 			continue
 		if file.get_length() > 2000000:
 			file.close()
+			_reject_save(candidate)
 			continue
 		var json: JSON = JSON.new()
 		var parse_error: Error = json.parse(file.get_as_text())
@@ -2688,9 +2722,8 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		if parse_error == OK and _valid_save(json.data):
 			data = json.data
 			break
+		_reject_save(candidate)
 	if data.is_empty():
-		if found_save:
-			notified.emit("This save is damaged or from an incompatible version. Your current farm is unchanged.")
 		return false
 	var migrated: bool = int(data["schema_version"]) == 2
 	if migrated:

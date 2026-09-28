@@ -60,6 +60,8 @@ Purchases show a short dark-and-gold confirmation card, matching the harvest-cha
 | Escape | Close panel / open main menu |
 | F5 / F9 | Save / load |
 
+Saving keeps one previous farm in a `.bak` file. If a save is damaged or incompatible, the game sets it aside as `.rejected` and tells you; starting and saving a fresh farm leaves that rejected file intact. Each later rejected load replaces the older rejected file. The original legacy farm file remains untouched.
+
 The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
 A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on all three islands. Nights stay readable for farming. It follows saved play time, keeps its phase when travelling, and does not alter crop growth or stock timing.
