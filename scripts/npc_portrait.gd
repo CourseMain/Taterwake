@@ -1,20 +1,101 @@
-extends "res://scripts/equipment_preview.gd"
+extends Control
+const MAX_RENDER_EDGE: int = 896
+const MAX_RENDER_PIXELS: int = 600000
+var viewport: SubViewport
+var avatar: Node3D
+var _background: StyleBoxFlat
+var _resolution_clock: float = 0.0
 const NpcAvatar = preload("res://scripts/npc_avatar.gd")
 var camera: Camera3D
 var _entrance: float = 0.0
 
 func _ready() -> void:
-	super._ready()
-	custom_minimum_size = Vector2.ZERO
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	mouse_default_cursor_shape = Control.CURSOR_ARROW
-	tooltip_text = ""
-	for child in viewport.get_children():
-		if child is Camera3D: camera = child
-		if child is MeshInstance3D: child.hide()
+	_background = StyleBoxFlat.new()
+	_background.bg_color = Color("253b42")
+	_background.set_corner_radius_all(13)
+	viewport = SubViewport.new()
+	viewport.name = "VillagePortraitViewport"
+	viewport.size = Vector2i(300, 390)
+	viewport.own_world_3d = true
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	viewport.msaa_3d = Viewport.MSAA_4X
+	add_child(viewport)
+	# A TextureRect lets the portrait render above its logical UI resolution.
+	# SubViewportContainer.stretch would overwrite the HiDPI viewport size.
+	var image: TextureRect = TextureRect.new()
+	image.name = "VillagePortraitImage"
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_SCALE
+	image.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	image.texture = viewport.get_texture()
+	add_child(image)
+	image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var world_environment: WorldEnvironment = WorldEnvironment.new()
+	var environment: Environment = Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color("253b42")
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color("e2f0e8")
+	environment.ambient_light_energy = 0.58
+	environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	world_environment.environment = environment
+	viewport.add_child(world_environment)
+	var sunlight: DirectionalLight3D = DirectionalLight3D.new()
+	sunlight.rotation_degrees = Vector3(-32, -40, 0)
+	sunlight.light_color = Color("fff0d2")
+	sunlight.light_energy = 0.95
+	viewport.add_child(sunlight)
+	var fill: DirectionalLight3D = DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-15, 145, 0)
+	fill.light_color = Color("a5d6e6")
+	fill.light_energy = 0.38
+	viewport.add_child(fill)
+	camera = Camera3D.new()
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	viewport.add_child(camera)
+	camera.current = true
 	camera.size = 2.35
 	camera.position = Vector3(.15,1.45,4.4)
 	camera.look_at(Vector3(0,1.18,0))
+	resized.connect(queue_redraw)
+	resized.connect(_sync_resolution)
+	visibility_changed.connect(_sync_visibility)
+	_sync_visibility()
+
+func _draw() -> void:
+	if _background != null:
+		draw_style_box(_background, Rect2(Vector2.ZERO, size))
+
+func _sync_visibility() -> void:
+	var showing: bool = is_visible_in_tree()
+	set_process(showing)
+	if is_instance_valid(viewport):
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if showing else SubViewport.UPDATE_DISABLED
+	if showing:
+		_sync_resolution()
+
+static func render_size(logical_size: Vector2, pixel_density: float) -> Vector2i:
+	var scale_factor: float = clampf(pixel_density * 1.15, 1.5, 2.0)
+	var desired: Vector2 = logical_size.max(Vector2(32, 32)) * scale_factor
+	var edge_scale: float = minf(1.0, float(MAX_RENDER_EDGE) / maxf(desired.x, desired.y))
+	desired *= edge_scale
+	var pixel_scale: float = minf(1.0, sqrt(float(MAX_RENDER_PIXELS) / (desired.x * desired.y)))
+	desired *= pixel_scale
+	return Vector2i(maxi(1, int(floorf(desired.x))), maxi(1, int(floorf(desired.y))))
+
+func _sync_resolution() -> void:
+	if not is_instance_valid(viewport) or not is_visible_in_tree():
+		return
+	var screen_scale: Vector2 = get_screen_transform().get_scale().abs()
+	var density: float = maxf(screen_scale.x, screen_scale.y)
+	if DisplayServer.get_name() != "headless":
+		density = maxf(density, DisplayServer.screen_get_scale())
+	var desired: Vector2i = render_size(size.max(custom_minimum_size), density)
+	if viewport.size != desired:
+		viewport.size = desired
 
 func show_person(id: String) -> void:
 	if is_instance_valid(avatar):

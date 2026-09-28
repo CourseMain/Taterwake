@@ -74,9 +74,9 @@ func _run() -> void:
 	check(not world._pest_labels[25].visible, "replanting clears destroyed marker")
 	for island in [1, 2, 3]:
 		world.switch_island(island)
-		world.play_reward("legendary" if island == 1 else "mythic")
+		world.play_reward("legendary")
 		world.animate(2.0, false)
-		check(world._effect_particles.size() == 30, "quest/mutation reward on island %d remains visible for longer than two seconds" % island)
+		check(world._effect_particles.size() == 30, "quest reward on island %d remains visible for longer than two seconds" % island)
 		await shot("world-reward-island-%d" % island)
 		world.animate(2.0, false)
 		await process_frame

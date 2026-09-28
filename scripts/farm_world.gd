@@ -93,8 +93,6 @@ var _export_flags: Array[Node3D] = []
 var _export_active: bool = false
 var _export_seconds: float = 0.0
 var _export_particle_clock: float = 0.0
-var _golden_hat: bool = false
-var _hat_decoration: Node3D
 var _impact_root: Node3D
 var _boat_dock: Vector3 = Vector3(24.5, -0.25, 8.5)
 var _boat_away: Vector3 = Vector3(27.0, -0.1, 1.0)
@@ -108,10 +106,6 @@ var _duck_label: Label3D
 var _duck_home: Vector3 = Vector3.ZERO
 var _furnace_flame: Node3D
 var _furnace_steam: Array[Node3D] = []
-var _gear_hat_id: String = ""
-var _gear_hat: Node3D
-var _equipped_loadout: Dictionary = {}
-var _gear_catalog: Dictionary = {}
 var _tutorial_focus: String = ""
 var _tutorial_show_labels: bool = true
 var _tutorial_station_roots: Dictionary = {}
@@ -217,8 +211,6 @@ func build_world(island: int = 1) -> void:
 	set_island2_unlocked(_island2_unlocked)
 	set_island3_unlocked(_island3_unlocked)
 	set_frost_state(_frost_active, _frost_seconds)
-	set_golden_hat(_golden_hat)
-	set_equipment(_equipped_loadout, _gear_catalog)
 	set_export_state(_export_active, _export_seconds)
 	set_processing(_processing_active, _processing_progress)
 	set_activity_state(_activity_info)
@@ -542,7 +534,6 @@ func _clear_world() -> void:
 	_dock_gate = null
 	_export_boat = null
 	_export_label = null
-	_hat_decoration = null
 	_impact_root = null
 	_frost_label = null
 	_frost_beacon = null
@@ -553,7 +544,6 @@ func _clear_world() -> void:
 	_duck_body = null
 	_duck_label = null
 	_furnace_flame = null
-	_gear_hat = null
 	_tutorial_station_roots.clear()
 	_interaction_targets.clear()
 	_tutorial_label_layers.clear()
@@ -1517,7 +1507,7 @@ func play_reward(rarity: String) -> void:
 	if not is_instance_valid(player):
 		return
 	var tier: String = rarity.to_lower()
-	if tier not in ["legendary", "mythic"]:
+	if tier not in ["legendary"]:
 		return
 	var island_color: Color = Color("62ffa0") if current_island == 1 else (Color("ffdb62") if current_island == 2 else Color("8ee7ff"))
 	var count: int = 28
@@ -1746,16 +1736,6 @@ func _palm(parent: Node3D, pos: Vector3, size: float) -> void:
 		_sphere(palm, offset + Vector3(0.25, 0.0, 0.0), Vector3(0.22, 0.25, 0.23), Color("a17b4b"))
 
 
-func _tropical_hat(body: Node3D) -> void:
-	_cylinder(body, Vector3(0.0, 1.53, 0.0), 0.67, 0.67, 0.10, Color("ead091"), 12)
-	_cylinder(body, Vector3(0.0, 1.70, 0.0), 0.36, 0.31, 0.32, Color("f0dca3"), 10)
-	_cylinder(body, Vector3(0.0, 1.61, 0.0), 0.37, 0.36, 0.08, Color("57a99b"), 10)
-	for petal in range(5):
-		var angle: float = float(petal) * TAU / 5.0
-		_sphere(body, Vector3(0.30 + cos(angle) * 0.08, 1.62 + sin(angle) * 0.08, 0.29), Vector3(0.075, 0.07, 0.025), Color("f0a085"))
-	_sphere(body, Vector3(0.30, 1.62, 0.32), Vector3(0.04, 0.04, 0.02), GOLD)
-
-
 func _sunburst_bloom(parent: Node3D, pos: Vector3) -> void:
 	_sphere(parent, pos + Vector3(0.0, 0.02, 0.0), Vector3(0.14, 0.09, 0.14), Color("dd802a"))
 	for petal in range(8):
@@ -1875,13 +1855,6 @@ func _animate_export(delta: float) -> void:
 			_effect_particles.append({"node": particle, "velocity": Vector3(0.0, 0.9, 0.0), "life": 0.7, "total": 0.7, "export": true})
 
 
-func set_golden_hat(value: bool) -> void:
-	_golden_hat = value
-	if is_instance_valid(_player_body):
-		_player_body.set_golden_hat(value)
-		_gear_hat = _player_body.hat
-
-
 func _winter_island() -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
 	_prism(self, Vector3(0.0, -0.59, 0.0), 55.8, 43.8, 0.57, Color("b4c4ca"))
@@ -1971,14 +1944,6 @@ func _snow_pine(pos: Vector3, size: float) -> void:
 		_cylinder(tree,Vector3(0.0,height,0.0),width,0.05,2.10,Color("597d79"),8)
 		_cylinder(tree,Vector3(0.0,height+0.20,0.0),width*0.87,0.0,1.88,Color("e5eff1"),8)
 	_sphere(tree,Vector3(0.0,0.10,0.0),Vector3(0.95,0.17,0.85),Color("edf3f3"))
-
-
-func _winter_hat(body: Node3D, color: Color) -> void:
-	_sphere(body,Vector3(0.0,1.52,-0.02),Vector3(0.49,0.30,0.43),color)
-	_cylinder(body,Vector3(0.0,1.48,-0.02),0.51,0.50,0.16,color.lightened(0.12),12)
-	_sphere(body,Vector3(0.0,1.84,-0.02),Vector3(0.13,0.13,0.13),Color("f1ebdb"))
-	_box(body,Vector3(0.0,0.98,0.41),Vector3(0.69,0.14,0.09),Color("dfb082"))
-	_box(body,Vector3(0.25,0.78,0.46),Vector3(0.13,0.43,0.055),Color("dfb082"))
 
 
 func _winter_lantern(pos: Vector3) -> void:
@@ -2445,17 +2410,3 @@ func _animate_activities(delta: float) -> void:
 			var phase: float = fmod(_time * 0.5 + float(index) / 5, 1.0)
 			_furnace_steam[index].position = Vector3(0.74 + phase * 0.8, 4.0 + phase * 2.3, -0.45)
 			_furnace_steam[index].scale = Vector3.ONE * (0.4 + sin(phase * PI) * 1.8)
-
-func set_gear_hat(id: String) -> void:
-	# Compatibility for captures and tools; gameplay passes the entire loadout.
-	var loadout: Dictionary = _equipped_loadout.duplicate(true)
-	loadout["head"] = id
-	set_equipment(loadout, _gear_catalog)
-
-func set_equipment(loadout: Dictionary, catalog: Dictionary) -> void:
-	_equipped_loadout = loadout.duplicate(true)
-	_gear_catalog = catalog
-	_gear_hat_id = str(loadout.get("head", ""))
-	if is_instance_valid(_player_body):
-		_player_body.set_equipment(loadout, catalog)
-		_gear_hat = _player_body.hat

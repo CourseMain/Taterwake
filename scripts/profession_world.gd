@@ -139,11 +139,11 @@ func _setup_buyer(investor: Node3D) -> void:
 	add_child(buyer)
 	# A local produce buyer uses the same articulated potato silhouette as the
 	# player and shopkeepers, with an earthy waistcoat and a battered tally pad.
-	buyer_avatar = world.FarmerAvatar.new()
+	buyer_avatar = preload("res://scripts/npc_avatar.gd").new()
 	buyer.add_child(buyer_avatar)
 	buyer_avatar.skin_color = Color("cda576")
 	buyer_avatar.setup()
-	buyer_avatar.set_equipment({"head":"traders_visor", "body":"investor_shirt", "legs":"farmer_pants", "feet":"farmer_boots"}, {"investor_shirt":{"color":"92745f"}, "farmer_pants":{"color":"454f50"}, "farmer_boots":{"color":"695347"}})
+	buyer_avatar.dress("vest", Color("92745f"), "visor")
 	world._geometry_batcher.batch_tree(buyer_avatar,{})
 	world._box(buyer,Vector3(.64,.70,.20),Vector3(.40,.54,.12),Color("769078"))
 	world._box(buyer,Vector3(.64,.73,.28),Vector3(.31,.37,.025),Color("e4d1a1"))
