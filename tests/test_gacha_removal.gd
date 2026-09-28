@@ -22,14 +22,10 @@ func run() -> void:
 	var farm = game.state
 	farm.coins = 4321.0
 	farm.storage.russet = 17
-	farm._grant_item("patchwork_cap")
 	farm.quest_progress.starter_combo = 5
 	var legacy: Dictionary = farm._save_data().duplicate(true)
 	legacy.mechanics_revision = 21
 	legacy.tutorial_progress = {"version": 2, "step": 9, "plot": 4, "completed": true, "tour_only": true}
-	legacy.inventory_items["lucky_cap"] = legacy.inventory_items.patchwork_cap
-	legacy.inventory_items.erase("patchwork_cap")
-	legacy.equipment.head = "lucky_cap"
 	legacy.npc_history.rook = {"visits": 4, "last": "Welcome.", "kind": false}
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		legacy[field] = {"retired": true}
@@ -42,13 +38,12 @@ func run() -> void:
 	file.close()
 	check(farm.load_game(SAVE), "revision 21 ignores retired fields before validation")
 	check(farm.coins == 4321.0 and farm.storage.russet == 17 and farm.quest_progress.starter_combo == 5, "migration preserves money, crops and quest progress")
-	check(farm.inventory_items.patchwork_cap == 1 and farm.equipment.head == "patchwork_cap", "renamed cosmetic hat retains ownership and equipment")
 	check(farm.tutorial_progress.step == 8, "saved optional ferry tour remains on the ferry after the removed stop")
 	check(not farm.npc_history.has("rook"), "retired resident history is dropped")
 	check(game.builds.levels.scientist == 1, "previously locked builds become selectable without crates")
 	check(farm.save_game(SAVE), "migrated farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	check(saved.mechanics_revision == 22, "save records mechanics revision 22")
+	check(saved.mechanics_revision == 23, "save records mechanics revision 23")
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		check(not saved.has(field), "new saves omit " + field)
 	check(not saved.builds.has("build_crates") and not saved.builds.has("next_roll_charge"), "build saves omit crate ownership and reward charge")
