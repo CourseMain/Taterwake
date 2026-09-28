@@ -60,11 +60,9 @@ func run() -> void:
 			var before: float = game.world.weather_station.dish.rotation.y
 			game.world.weather_station._process(0.5)
 			check(game.world.weather_station.dish.rotation.y != before,"dish scans back and forth")
-		for id in game.builds.IDS: game.builds.levels[id] = 1
-		game.world.profession_world.refresh(game.builds,farm)
 		for a in game.world._interaction_targets:
 			var aid: String = str(a.get_meta("station"))
-			if aid not in ["profession:farmer","equipment:tank","duck_patrol","profession:investor","climate"]: continue
+			if aid not in ["equipment:tank","duck_patrol","climate"]: continue
 			for b in game.world._interaction_targets:
 				var bid: String = str(b.get_meta("station"))
 				if a==b or aid==bid or bid in ["island","equipment:barn","taxes"]: continue
@@ -79,10 +77,9 @@ func run() -> void:
 	check(not farm.climate.begin_warning(farm,"freeze",1),"freeze unavailable on Shores")
 	farm.travel_to(3)
 	for i in range(12): farm.plots[i].merge({"stage":2,"crop":"icecap","tilled":true,"watered":true,"elapsed":0.0,"frozen":false},true)
-	farm.plots[11].variety = "frost"
 	check(farm.climate.begin_warning(farm,"freeze",1),"Winter freeze warning starts")
 	farm.climate._impact(farm)
-	check(Ops.frozen(farm,0) and not Ops.frozen(farm,11),"freeze affects crops; Frostgold resists ice")
+	check(Ops.frozen(farm,0) and Ops.frozen(farm,11),"freeze affects all planted crops")
 	var growth: float = farm.plots[0].elapsed
 	farm.update(1)
 	check(farm.plots[0].elapsed == growth,"frozen crop growth stops")

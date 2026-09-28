@@ -110,7 +110,7 @@ func run() -> void:
 			if not label.get_meta("shop_label", false): continue
 			signs += 1
 			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size > 0, "shared outlined shop typography: " + label.text)
-		check(signs >= 8, "island %d retains discoverable shop signs" % island)
+		check(signs >= 7, "island %d retains discoverable shop signs" % island)
 		await shot("island-%d" % island)
 	state.coins = 215e6
 	state.climate.begin_warning(state, "storm", 1.0)

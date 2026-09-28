@@ -58,12 +58,6 @@ const assert = require('node:assert/strict');
   };
   await page.mouse.click(600,350); // Unlock browser audio through real input.
   await command('layout:1');
-  const compost = await command('compost');
-  assert.equal(compost.panel,'builds');
-  assert.equal(compost.build_selection,'farmer');
-  assert.ok(compost.labels.includes('Compost · Farmer perk'));
-  assert.ok(compost.buttons.some(button=>button.text.includes('1 compost → 3× harvest')));
-  await command('close');
   const pitches = [];
   for (const id of ['mara','bram','pip']) {
    await page.evaluate(()=>{window.voicePeaks=[];});
@@ -82,6 +76,6 @@ const assert = require('node:assert/strict');
   }
   assert.ok(pitches[1]<pitches[0] && pitches[2]>pitches[0],'villagers have different vocal pitches');
   assert.deepEqual(errors,[]);
-  console.log('NPC VOICE BROWSER: direct compost, audible potato clips, varied villagers and immediate stop passed');
+  console.log('NPC VOICE BROWSER: audible potato clips, varied villagers and immediate stop passed');
  } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

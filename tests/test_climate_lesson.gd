@@ -54,9 +54,8 @@ func run() -> void:
 	check(farm.climate.Operations.capacity(farm, 2) == 36, "practice uses the familiar starter tank without an extra upgrade")
 	clock = farm.elapsed
 	var bill: Dictionary = farm.blind_cycle.duplicate(true)
-	var build_clock: float = game.builds.cooldown
 	game._advance_simulation(200)
-	check(farm.elapsed == clock and farm.blind_cycle == bill and game.builds.cooldown == build_clock, "practice freezes all simulation clocks and bills")
+	check(farm.elapsed == clock and farm.blind_cycle == bill, "practice freezes all simulation clocks and bills")
 	check(same_crops(farm.plots, crops), "practice crop visuals never replace actual saved crops")
 	check(not game.hud._blind_card.visible, "unrelated tax panel stays out of practice")
 	await shot("water")

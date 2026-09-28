@@ -81,8 +81,6 @@ func run() -> void:
 	check(hud._purchase_title.text == "Watering can" and hud._purchase_detail.text == "Level 2 · −\uE000 450", "tool purchase replaces seeds with actual upgrade level and cost")
 	hud.show_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": 200, "cost": 800.0, "total": 300, "level": 2})
 	check(hud._purchase_title.text == "+200 barn spaces" and hud._purchase_detail.text == "Capacity 300 · −\uE000 800", "barn receipt identifies exact added spaces and resulting capacity")
-	hud.show_purchase({"kind": "service", "id": "scouting", "name": "Roll scouting", "quantity": 1, "cost": 1500.0})
-	check(hud._purchase_title.text == "Roll scouting" and hud._purchase_detail.text == "Purchased · −\uE000 1.5K", "paid build service uses the same purchase feedback")
 	hud._process(HUD.PURCHASE_SECONDS + 0.1)
 	state.combo_time = 2.0
 	hud.update_state(state)

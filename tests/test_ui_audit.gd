@@ -53,10 +53,9 @@ func run() -> void:
 	for crop: String in game.state.CROP_IDS:
 		game.state.seed_inventory[crop] = 30
 		game.state.storage[crop] = 10
-	for id: String in game.builds.levels: game.builds.levels[id] = 5
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
-	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "builds", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
+	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
 		await page(kind)
 	for tab: String in ["crops", "tools"]:
 		game.hud.show_panel("inventory", game.state)

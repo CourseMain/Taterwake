@@ -1,11 +1,9 @@
 extends SceneTree
 const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 const State = preload("res://scripts/game_state.gd")
-const Builds = preload("res://scripts/player_builds.gd")
 const Climate = preload("res://scripts/climate_system.gd")
 const SAVE: String = "user://taterland_climate_test_only.json"
 var state
-var builds
 var checks: int = 0
 var failures: int = 0
 
@@ -72,10 +70,6 @@ func same_data(a: Variant, b: Variant) -> bool:
 func run() -> void:
 	state = State.new()
 	root.add_child(state)
-	builds = Builds.new()
-	builds.state = state
-	state.build_system = builds
-	root.add_child(builds)
 	fresh(1)
 	state.update(1200.0)
 	check(not state.climate.data.introduced and state.climate.data.history.is_empty() and state.climate.data.timer == Climate.FIRST_WARNING, "Valley play never advances weather or damages crops through climate")
@@ -204,18 +198,6 @@ func run() -> void:
 		check(not state.load_game(SAVE) and state._save_data() == clean, "invalid climate save leaves current farm unchanged")
 
 	fresh()
-	builds.active = "industrialist"
-	builds.levels.industrialist = 1
-	builds.processed = {"russet": {"count": 100, "multiplier": 2.0}}
-	builds.processing = {"crop": "russet", "quantity": 100, "remaining": 20.0, "duration": 20.0}
-	state.climate.begin_warning(state, "flood", 1.0)
-	state.update(45.0)
-	check(builds.processed.russet.count == 70 and builds.processing.quantity == 70, "processing queues cannot hide potatoes from barn losses")
-	# Exact processing fixture format is covered separately by the builds suite.
-	builds.processing.clear()
-	builds.processed.clear()
-
-	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.update(45.0)
 	# Crashes cannot create new tax-counting booms. Resume collection once
@@ -227,7 +209,7 @@ func run() -> void:
 	check(state.run_over and state.blind_cycle.reason == "bankrupt", "climate recovery tax can bankrupt the run")
 	var report: Dictionary = state.climate.data.collapse
 	check(report.cause.contains("Recovery taxes") and report.tax == 12.5e9 and report.field_lost > 0 and report.barn_lost > 0, "collapse records actual cause, lost crops/storage and tax bill")
-	check(report.build == "Farmer" and report.phase == "calm" and report.event == "" and report.last_event == "storm", "collapse snapshots build, current phase and the last damaging disaster")
+	check(report.phase == "calm" and report.event == "" and report.last_event == "storm", "collapse snapshots current phase and the last damaging disaster")
 	save_load()
 	var dead: String = JSON.stringify(state._save_data())
 	state.update(3600.0)
@@ -243,6 +225,5 @@ func run() -> void:
 	check(state.climate.data == Climate.fresh_data() and not state.run_over, "new run clears climate history, projects and pressures")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	state.queue_free()
-	builds.queue_free()
 	print("CLIMATE: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

@@ -95,7 +95,7 @@ func run() -> void:
 		var cast: Array = []
 		for actor in game.world._villagers: cast.append(actor.npc_id)
 		check("mara" in cast and "nell" in cast,"world residents keep distinct identities on island " + str(island))
-		for pair in [["mara","MarketStall"],["nell","RedBarn"],["ada","WashAndSortWorkshop"],["pip","DuckPatrolHouse"],["tess","FarmingQuestBoard"]]:
+		for pair in [["mara","MarketStall"],["nell","RedBarn"],["pip","DuckPatrolHouse"],["tess","FarmingQuestBoard"]]:
 			check(str(game.world._npc_actors[pair[0]].get_parent().name) == ("BuyerContracts" if pair[0] == "tess" and island == 2 else pair[1]),"stallholder at their service: " + pair[0])
 		check(game.world._npc_actors.mara.position.z > .15,"seed vendor stands in front of awning")
 	game.hud.close_panel()

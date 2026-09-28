@@ -52,7 +52,6 @@ func run() -> void:
 	farm.seed_inventory.russet = 37
 	farm.storage.russet = 40
 	farm.tools.water = 1
-	game.builds.levels.farmer = 3
 	farm.coins = 0.0
 	farm._resolve_blind()
 	check(farm.coins == -5e9 and not farm.run_over, "exact debt boundary survives first unpaid bill")
@@ -94,7 +93,6 @@ func run() -> void:
 	var seeds: Dictionary = farm.seed_inventory.duplicate(true)
 	var storage: Dictionary = farm.storage.duplicate(true)
 	var tools_before: Dictionary = farm.tools.duplicate(true)
-	var builds_before: Dictionary = game.builds.save_data().duplicate(true)
 	var activities_before: Dictionary = game.activities.save_data().duplicate(true)
 	game._on_action("debug:time:30")
 	game.hud._refs.debug_balance_input.text = "15e9"
@@ -102,7 +100,7 @@ func run() -> void:
 	await settle()
 	check(not farm.run_over and farm.coins == 15e9 and farm.debug_money_modified, "explicit action restores funded test farm and provenance")
 	check(farm.island_plots == plots and farm.seed_inventory == seeds and farm.storage == storage and farm.tools == tools_before and farm.current_island == 2 and farm.island2_unlocked, "recovery preserves field, seeds, inventory, tools and island progress")
-	check(game.builds.save_data() == builds_before and game.activities.save_data() == activities_before, "recovery keeps actual build levels, profession tasks and island activities")
+	check(game.activities.save_data() == activities_before, "recovery keeps island activities")
 	check(farm.blind_cycle.booms == 0 and farm.blind_cycle.due_in == 0 and game.debug_time_multiplier == 1.0, "recovery resets tax and stock countdown at normal speed")
 	check(not collapse.visible and not game.hud.is_panel_open() and game.hud._top.coins.is_visible_in_tree(), "farm HUD returns and collapse Debug closes after recovery")
 	check(farm.climate.data.collapse.is_empty() and not farm.blind_cycle.last_result.is_empty(), "past tax receipt kept without a stale collapse")
@@ -123,9 +121,8 @@ func run() -> void:
 		check(farm.coins == 15e9, "state rejects nonfinite/negative exact balance")
 	game._on_action("debug:time:30")
 	var before: Dictionary = farm._save_data().duplicate(true)
-	var cooldown: float = game.builds.cooldown
 	game._process(1.0)
-	check(farm._save_data() == before and game.builds.cooldown == cooldown, "Debug editing pauses all saved simulation at30x")
+	check(farm._save_data() == before, "Debug editing pauses all saved simulation at30x")
 	await shot("healthy-workshop")
 	for dimensions: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360)]:
 		root.min_size = Vector2i.ZERO

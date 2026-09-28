@@ -43,17 +43,6 @@ func run() -> void:
 	game.set_process(false)
 	game.hud.set_process(false)
 	game.state.coins = 1200
-	game.builds.levels.investor = 2
-	game.hud._build_selection = "farmer"
-	game.hud.show_panel("builds", game.state)
-	check(game.hud._refs.build_equip.text.contains("Selected") and game.hud._refs.build_equip.disabled, "active profession is identified on its detail page")
-	game.hud._act("build:inspect:scientist")
-	check(not game.hud._refs.build_equip.disabled, "build is selectable without a random unlock")
-	game.hud._act("build:inspect:investor")
-	check(game.hud._refs.build_equip.text == "Select build · Free" and not game.hud._refs.build_equip.disabled, "owned profession can be equipped from its detail page")
-	await inspect("builds")
-	game.hud._refs.build_equip.pressed.emit()
-	check(game.builds.active == "investor" and game.hud._refs.build_equip.text.contains("Selected"), "selecting a build refreshes the live card states")
 	game.state.quest_progress.starter_crash = 10
 	game.state.quest_progress.starter_spike = 4
 	game.hud.show_panel("quests", game.state)
@@ -92,7 +81,7 @@ func run() -> void:
 	game.hud._act("inventory_tab:tools")
 	await inspect("tools")
 	root.size = Vector2i(960, 600)
-	for kind: String in ["builds", "quests", "duck_patrol", "inventory", "island"]:
+	for kind: String in ["quests", "duck_patrol", "inventory", "island"]:
 		game.hud.show_panel(kind, game.state)
 		await inspect("compact-" + kind)
 	game.state.island3_unlocked = true

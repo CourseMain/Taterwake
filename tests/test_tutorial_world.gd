@@ -29,13 +29,13 @@ func _run() -> void:
 	var visible_signs: int = 0
 	for layer: Node3D in world._tutorial_label_layers:
 		visible_signs += int(layer.is_visible_in_tree())
-	check(visible_signs >= 9, "normal farm retains its station and island signs")
+	check(visible_signs >= 7, "normal farm retains its station and island signs")
 	world.set_tutorial_focus("")
 	var hidden_signs: int = 0
 	for layer: Node3D in world._tutorial_label_layers:
 		hidden_signs += int(not layer.is_visible_in_tree())
 	check(hidden_signs == world._tutorial_label_layers.size() and not world._tutorial_marker.visible, "opening tutorial hides station clutter without an extra marker")
-	for station: String in ["market", "barn", "tools", "builds", "duck_patrol", "quests", "island"]:
+	for station: String in ["market", "barn", "tools", "duck_patrol", "quests", "island"]:
 		world.set_tutorial_focus(station)
 		check(world._tutorial_marker.visible and world._tutorial_marker.text.length() > 1, "%s gets one named destination marker" % station)
 		var point: Vector3 = world.station_position(station)

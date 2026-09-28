@@ -3,11 +3,9 @@ extends SceneTree
 const State = preload("res://scripts/game_state.gd")
 const HUD = preload("res://scripts/game_hud.gd")
 const Activities = preload("res://scripts/island_activities.gd")
-const Builds = preload("res://scripts/player_builds.gd")
 var state
 var hud
 var activities
-var builds
 var checks: int = 0
 var failures: int = 0
 var actions: Array[String] = []
@@ -41,10 +39,6 @@ func run() -> void:
 	activities.setup(state)
 	state.activity_system = activities
 	root.add_child(activities)
-	builds = Builds.new()
-	builds.state = state
-	state.build_system = builds
-	root.add_child(builds)
 	hud = HUD.new()
 	root.add_child(hud)
 	hud.action_requested.connect(func(action: String) -> void: actions.append(action))
@@ -57,7 +51,7 @@ func run() -> void:
 	check(not hud._quick_sell.visible and not hud._sidebar_box.visible, "sale actions and sidebar wait for their introduction")
 	hud.set_tool("pest")
 	check(hud._selected_tool == "hoe", "hidden tools cannot be equipped through HUD API")
-	hud._act("builds")
+	hud._act("tools")
 	check(actions.is_empty(), "blocked actions never reach game state")
 	hud._act("tutorial:next")
 	hud._act("tutorial:skip")
@@ -138,9 +132,9 @@ func run() -> void:
 	sale_page.quantity.value = 2
 	sale_page._sell()
 	check(actions == ["sell:russet:2"], "guided sale dispatches the selected quantity through the existing whitelist")
-	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "builds", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
+	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
 	state.coins = 1e9
-	for panel: String in ["barn", "inventory", "tools", "builds", "quests", "duck_patrol", "island", "pause"]:
+	for panel: String in ["barn", "inventory", "tools", "quests", "duck_patrol", "island", "pause"]:
 		hud.show_panel(panel, state)
 		hud.update_state(state)
 		await settle()
@@ -196,7 +190,6 @@ func run() -> void:
 	hud.queue_free()
 	state.queue_free()
 	activities.queue_free()
-	builds.queue_free()
 	await process_frame
 	print("TUTORIAL HUD: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

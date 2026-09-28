@@ -13,11 +13,10 @@ func check(ok: bool, note: String) -> void:
 		failures += 1
 		push_error(note)
 
-func plot_for(crop: String, cultivated: bool = false) -> Dictionary:
+func plot_for(crop: String) -> Dictionary:
 	var plot: Dictionary = {"unlocked":true, "tilled":true, "stage":1,
 		"watered":false, "crop":crop, "elapsed":0.0, "frozen":false,
 		"pending":0, "yield_total":0, "yield_taken":0}
-	if cultivated: plot.cultivated = true
 	return plot
 
 func size_at(world, index: int) -> float:
@@ -31,10 +30,10 @@ func shape_bounds(tuber: Node3D) -> Array[AABB]:
 
 func shot(world, plots: Array) -> void:
 	if "--capture" not in OS.get_cmdline_user_args(): return
-	# Each row compares the same six varieties: planted, halfway, ripe, composted.
-	for row in range(4):
+	# Each row compares the same six varieties: planted, halfway and ripe.
+	for row in range(3):
 		for column in range(6):
-			var plot: Dictionary = plot_for(State.CROP_IDS[column], row == 3)
+			var plot: Dictionary = plot_for(State.CROP_IDS[column])
 			plot.stage = 1 if row == 0 else (2 if row == 1 else 3)
 			plot.watered = row > 0
 			plot.elapsed = float(State.CROPS[plot.crop].grow) * (0.0 if row == 0 else (.5 if row == 1 else 1.0))
@@ -48,19 +47,18 @@ func shot(world, plots: Array) -> void:
 	await process_frame
 	await process_frame
 	await RenderingServer.frame_post_draw
-	check(root.get_texture().get_image().save_png("res://artifacts/crop-growth-all-varieties.png") == OK, "capture the four growth rows")
+	check(root.get_texture().get_image().save_png("res://artifacts/crop-growth-all-varieties.png") == OK, "capture the three growth rows")
 
 func run() -> void:
 	var world = World.new()
 	root.add_child(world)
 	world.build_world(1)
 	var plots: Array = []
-	for cultivated: bool in [false, true]:
-		for crop: String in State.CROP_IDS: plots.append(plot_for(crop, cultivated))
+	for crop: String in State.CROP_IDS: plots.append(plot_for(crop))
 	world.update_plots(plots)
 	var planted: Array[float] = []
 	for i in range(plots.size()):
-		var description: String = "%s %s" % ["composted" if i >= 6 else "ordinary", plots[i].crop]
+		var description: String = str(plots[i].crop)
 		check(world._crop_tubers.has(i), description + " starts with a visible growing tuber")
 		if not world._crop_tubers.has(i):
 			world.queue_free()
@@ -89,7 +87,7 @@ func run() -> void:
 	world.animate(30.0, false)
 	for i in range(plots.size()):
 		check(is_equal_approx(size_at(world, i), midpoint[i]), "plot %d stays still when simulation elapsed time stays still" % i)
-	check(plots == unchanged, "visual updates preserve cultivation flags, elapsed time and harvest accounting")
+	check(plots == unchanged, "visual updates preserve elapsed time and harvest accounting")
 	# A loaded save supplies new dictionaries without necessarily changing stage.
 	var previous: Array = plots
 	plots = plots.duplicate(true)
@@ -115,22 +113,20 @@ func run() -> void:
 	var snapshots: Dictionary = {}
 	for i in range(plots.size()):
 		check(is_equal_approx(size_at(world, i), world._crop_tuber_size(plots[i])) and absf(size_at(world, i) - nearly_ripe[i]) < .01, "plot %d reaches ripeness without a size jump" % i)
-		if i < 6:
-			check(not plots[i].has("cultivated") and size_at(world, i) < size_at(world, i + 6), "ordinary %s keeps ordinary crop rules and a smaller mature size" % plots[i].crop)
 		snapshots[i] = plots[i].duplicate(true)
 	var fx = world.harvest_feedback
 	var before_harvest: Dictionary = snapshots.duplicate(true)
 	fx.harvest(snapshots)
 	for receipt: Dictionary in fx.active:
 		var index: int = int(receipt.index)
-		var tuber: Node3D = receipt.node.get_node_or_null("GiantTuber" if index >= 6 else "PotatoTuber")
+		var tuber: Node3D = receipt.node.get_node_or_null("PotatoTuber")
 		check(is_instance_valid(tuber), "harvest %d preserves its planted tuber identity" % index)
 		if is_instance_valid(tuber):
 			check(tuber.scale.is_equal_approx(world._crop_tubers[index].node.scale), "harvest %d preserves mature size" % index)
 			check(shape_bounds(tuber) == shape_bounds(world._crop_tubers[index].node), "harvest %d preserves the planted silhouette" % index)
 	check(snapshots == before_harvest and plots == before_harvest.values(), "harvest visuals leave crop state unchanged")
 	fx.harvest(snapshots)
-	check(fx.active.size() == 12, "repeated harvest receipts replace each plot instead of duplicating it")
+	check(fx.active.size() == State.CROP_IDS.size(), "repeated harvest receipts replace each plot instead of duplicating it")
 	fx.animate(.4)
 	check(fx.clods.size() <= fx.MAX_CLODS, "a full row of pop animations respects the soil-particle budget")
 	fx.animate(2.0)

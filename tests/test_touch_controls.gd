@@ -58,7 +58,7 @@ func run() -> void:
 		for control in [touch.stick,touch.tools_button,touch.menu_button,touch.use_button,touch.sell_button]:
 			check(bounds.encloses(control.get_global_rect()), "%s control inside %s" % [control.name,size])
 			check(control.size.y * size.y / bounds.size.y >= 43, "touch target at least 44px (rounding) at %s" % size)
-		for kind in ["menu","market","inventory","tools","builds","climate","taxes","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
+		for kind in ["menu","market","inventory","tools","climate","taxes","island","quests","activities","duck_patrol","dex","help","graphics","debug"]:
 			game.hud.show_panel(kind, game.state)
 			touch._process(0.3)
 			await frames()
@@ -66,12 +66,6 @@ func run() -> void:
 			var scroll: ScrollContainer = game.hud._body.get_parent()
 			check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1, "%s content fits %s: %s > %s" % [kind,size,game.hud._body.get_combined_minimum_size().x,scroll.size.x])
 			check(not touch.stick.visible, "menus suppress movement")
-		for id in game.builds.IDS:
-			game.hud._build_selection = id
-			game.hud.show_panel("builds", game.state)
-			touch._process(0.3)
-			await frames()
-			check(bounds.grow(1).encloses(game.hud._modal_card.get_global_rect()), "%s profession fits %s" % [id,size])
 		game.hud.close_panel()
 		if "--capture" in OS.get_cmdline_user_args():
 			touch._process(0.3)

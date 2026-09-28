@@ -92,9 +92,8 @@ func run() -> void:
 		check(game.debug_time_multiplier == speed and game.hud._refs["debug_time_%d" % speed].disabled, "%dx selected speed is shown by the active button" % speed)
 		var elapsed: float = game.state.elapsed
 		var taxes: Dictionary = game.state.blind_cycle.duplicate(true)
-		var cooldown: float = game.builds.cooldown
 		game._process(1.0)
-		check(game.state.elapsed == elapsed and game.state.blind_cycle == taxes and game.builds.cooldown == cooldown, "%dx Debug pauses crops, taxes and builds while editing" % speed)
+		check(game.state.elapsed == elapsed and game.state.blind_cycle == taxes, "%dx Debug pauses crops and taxes while editing" % speed)
 		game.hud.close_panel()
 		game._process(0.02)
 		check(is_equal_approx(game.state.elapsed - elapsed, 0.02 * speed), "%dx advances simulation after closing Debug" % speed)
@@ -111,15 +110,6 @@ func run() -> void:
 	var before: float = game.state.elapsed
 	game._process(50.0)
 	check(is_equal_approx(game.state.elapsed - before, 1.0), "large accelerated frame cannot skip a ten-second stock boom")
-	game.builds.fertilizer = 0.1
-	var fertilized: Dictionary = game.state.plots[0]
-	fertilized.crop = "russet"
-	fertilized.stage = 2
-	fertilized.elapsed = 0.0
-	fertilized.watered = true
-	before = game.state.elapsed
-	game._process(1.0)
-	check(is_equal_approx(game.state.elapsed - before, 1.0) and is_equal_approx(float(fertilized.elapsed), 1.02) and game.builds.fertilizer == 0.0, "fertilizer expiry splits crop growth without discarding accelerated time")
 	game.state.island2_unlocked = true
 	game.state.island3_unlocked = true
 	game.state.travel_to(3)
@@ -129,9 +119,6 @@ func run() -> void:
 	game.state.export_timer = 100.0
 	game.activities.furnace_remaining = 0.15
 	game.activities.furnace_cooldown = 50.0
-	game.builds.cooldown = 50.0
-	game.builds.fertilizer = 50.0
-	game.builds.processing = {"crop": "icecap", "quantity": 100, "elapsed": 0.0, "duration": 10.0, "multiplier": 1.2}
 	var plot: Dictionary = game.state.plots[0]
 	plot.unlocked = true
 	plot.tilled = true
@@ -142,8 +129,7 @@ func run() -> void:
 	plot.elapsed = 0.0
 	game._process(0.01)
 	check(is_equal_approx(float(plot.plant_age), 0.3) and is_equal_approx(game.state.frost_timer, 99.7) and is_equal_approx(game.state.export_timer, 99.7), "crop pest age, winter and export clocks use the same scaled interval")
-	check(is_equal_approx(game.activities.furnace_cooldown, 49.7) and is_equal_approx(game.builds.cooldown, 49.7) and is_equal_approx(game.builds.fertilizer, 49.7), "activities and build abilities share simulation time")
-	check(is_equal_approx(float(game.builds.processing.elapsed), 0.6), "processing integrates furnace heat before the scaled interval consumes it")
+	check(is_equal_approx(game.activities.furnace_cooldown, 49.7), "activities share simulation time")
 	check(float(plot.elapsed) > 0.3, "crop growth uses scaled time and its active furnace bonus")
 	game.hud.close_panel()
 	game.world.set_player_position(Vector3(0.0, 0.0, 9.0))

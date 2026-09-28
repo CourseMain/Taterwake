@@ -102,14 +102,6 @@ func _run() -> void:
 	await shot("illustrated-inventory-crops")
 	press("inventory_tab:tools")
 	await shot("illustrated-inventory-tools")
-	for id in game.builds.IDS:
-		game.builds.levels[id] = 8
-	key(KEY_C)
-	check(game.hud.is_panel_open(), "C opens all five build choices")
-	await shot("player-builds")
-	press("build:inspect:scientist")
-	press("build:select:scientist")
-	check(game.builds.active == "scientist", "build panel equips the chosen gameplay specialization")
 	game.hud.close_panel()
 	game.state.coins = 200000000000.0
 	game.state.mastery.russet = 25000

@@ -29,24 +29,18 @@ func run() -> void:
 	legacy.npc_history.rook = {"visits": 4, "last": "Welcome.", "kind": false}
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		legacy[field] = {"retired": true}
-	legacy.builds.version = 4
-	legacy.builds.build_crates = 100
-	legacy.builds.next_roll_charge = 0.5
-	legacy.builds.levels.scientist = 0
 	var file := FileAccess.open(SAVE, FileAccess.WRITE)
 	file.store_string(JSON.stringify(legacy))
 	file.close()
 	check(farm.load_game(SAVE), "revision 21 ignores retired fields before validation")
 	check(farm.coins == 4321.0 and farm.storage.russet == 17 and farm.quest_progress.starter_combo == 5, "migration preserves money, crops and quest progress")
-	check(farm.tutorial_progress.step == 8, "saved optional ferry tour remains on the ferry after the removed stop")
+	check(farm.tutorial_progress.step == 7, "saved optional ferry tour remains on the ferry after the removed stop")
 	check(not farm.npc_history.has("rook"), "retired resident history is dropped")
-	check(game.builds.levels.scientist == 1, "previously locked builds become selectable without crates")
 	check(farm.save_game(SAVE), "migrated farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	check(saved.mechanics_revision == 24, "save records mechanics revision 24")
+	check(saved.mechanics_revision == 25, "save records mechanics revision 25")
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		check(not saved.has(field), "new saves omit " + field)
-	check(not saved.builds.has("build_crates") and not saved.builds.has("next_roll_charge"), "build saves omit crate ownership and reward charge")
 	var bad: Dictionary = saved.duplicate(true)
 	bad.storage.russet = -1
 	check(not farm._valid_save(bad), "surviving farm data still validates strictly")

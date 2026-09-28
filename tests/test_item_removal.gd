@@ -62,7 +62,7 @@ func run() -> void:
 	check(farm.storage_used() == 210 and farm.plots[0].stage == 3, "overfull migrated barn blocks additional harvests")
 	check(farm.save_game(path) and farm.load_game(path) and farm.storage_used() == 210, "overfull migrated farm round-trips without converting twice")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
-	check(saved.mechanics_revision == 24, "new save records revision 24")
+	check(saved.mechanics_revision == 25, "new save records revision 24")
 	for field: String in ["inventory_items", "equipment", "mutations", "dex", "golden_hat", "shores_first_mutation"]:
 		check(not saved.has(field), "new save omits " + field)
 	check(farm.capacity == 200, "reload cannot restore a removed capacity bonus")

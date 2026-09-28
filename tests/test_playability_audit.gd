@@ -1,5 +1,5 @@
 extends SceneTree
-## Real input and layout checks for ambiguous Farmer targeting and overlapping help.
+## Real input and layout checks for farm guidance and overlapping help.
 var game
 var checks := 0
 var failures := 0
@@ -23,47 +23,11 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.set_process_unhandled_input(false)
-	for plot in game.state.plots: game.state._clear_crop(plot)
-	game._on_action("profession:giant")
-	check(not game.prize_target, "empty field never enters an unusable targeting mode")
-	game.state.plots[0].stage = 1
-	game.state.plots[1].stage = 2
-	game.state.plots[2].stage = 3
-	game.state.plots[3].stage = 1
-	game.state.plots[3].frozen = true
-	game._on_state_changed()
-	game.hud._build_selection = "farmer"
-	game._on_action("builds")
-	game.hud.show_toast("Plant a crop first. Use compost on one growing patch, then water and harvest normally.")
+	game._on_action("tools")
+	game.hud.show_toast("Upgrade a tool to work more beds.")
 	await settle()
 	check(not game.hud._toast_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), "notifications stay clear of modal content and its close button")
 	check(game.hud.root.get_global_rect().encloses(game.hud._toast_box.get_global_rect()), "docked notification remains within the game view")
-	await shot("farmer-ready")
-	game._on_action("profession:giant")
-	check(game.prize_target and game.world._area_key == str([0, 1]), "only eligible planted crop patches glow before any hover")
-	game.hud._process(3)
-	check(game.hud._plot_action_box.visible and "1 compost" in game.hud._plot_action_label.text, "action instruction persists beyond the old 1.4-second hint")
-	check(not game.hud._farm_help_card.visible and not game.hud._crop_row.visible, "target instruction suppresses unrelated guidance and seed tray")
-	var compost: int = game.builds.professions.data.compost
-	game.queue_plot(2)
-	check(game.prize_target and not game.walking and "ripe" in game.hud._plot_action_label.text and game.builds.professions.data.compost == compost, "invalid ripe click explains itself without walking, spending or losing selection")
-	await shot("farmer-target")
-	game.queue_plot(0)
-	game._on_action("profession:cancel")
-	check(not game.walking and not game.prize_target and not game.hud._plot_action_box.visible and game.builds.professions.data.compost == compost, "visible Cancel button path cancels the queued action without spending")
-	game._on_action("profession:giant")
-	game.world.set_player_position(game.world.plot_positions[0])
-	game._interact_nearby()
-	check(game.state.plots[0].get("cultivated",false) and game.builds.professions.data.compost == compost - 1, "E feeds a nearby eligible crop while targeting rather than using the ordinary tool")
-	check(not game.prize_target and not game.hud._plot_action_box.visible, "successful compost use ends selection and clears guidance")
-	game._on_action("profession:giant")
-	game._select_equipment("tank")
-	check(not game.prize_target, "selecting equipment cancels Farmer targeting")
-	game._close_equipment()
-	game._on_action("profession:giant")
-	game._on_action("inventory")
-	check(not game.prize_target, "opening another activity cancels hidden Farmer targeting")
-	game.hud.close_panel()
 	# Reproduce the supplied screenshot: Island2, debt, pest tip, selected tank.
 	game.state.debug_unlock_island(2)
 	game.state.travel_to(2)
@@ -86,14 +50,13 @@ func run() -> void:
 	check(game.hud._toast_label.get_visible_line_count() > 0 and game.hud._toast_label.size.y >= 16, "world notifications retain visible text after leaving a compact modal")
 	await shot("tank-debt")
 	game._close_equipment()
-	game.hud._build_selection = "farmer"
-	game._on_action("builds")
+	game._on_action("tools")
 	check("Tax" in game.hud._blind_modal_warning.text and "Spudions" in game.hud._blind_modal_warning.text and " / " not in game.hud._blind_modal_warning.text, "imminent tax warning distinguishes cash from the coming bill")
 	game.state.blind_cycle.due_in = 0
 	game.state.blind_cycle.booms = 2
 	game.hud.update_state(game.state)
 	check("Debt" in game.hud._blind_modal_warning.text and "No tax due" in game.hud._blind_modal_warning.text, "debt warning distinguishes the balance from collection status")
-	await shot("farmer-debt")
+	await shot("tools-debt")
 	game.queue_free()
 	await settle()
 	print("PLAYABILITY AUDIT: %d checks, %d failures" % [checks, failures])

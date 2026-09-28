@@ -13,7 +13,6 @@ func _ready() -> void:
 	game.state.capacity = 100000
 	game.state.pest_timer = 1000
 	game.state.surge_timer = 1000
-	for id in game.builds.IDS: game.builds.levels[id] = 20
 	for id in game.state.CROP_IDS:
 		game.state.storage[id] = 500
 		game.state.seed_inventory[id] = 100
@@ -49,14 +48,12 @@ func command(args: Array) -> void:
 		var stocked: bool = action.get_slice(":", 1) == "stocked"
 		game.state.coins = 1e18 if stocked else -1000.0
 		game.state.capacity = 100000 if stocked else 200
-		for id in game.builds.IDS: game.builds.levels[id] = 20 if stocked else (1 if id == "farmer" else 0)
 		for id in game.state.CROP_IDS:
 			game.state.storage[id] = 500 if stocked else 0
 			game.state.seed_inventory[id] = 100 if stocked else 0
 		game._on_state_changed()
 	elif action.begins_with("build:"):
 		game.hud._act("build:inspect:" + action.get_slice(":",1))
-	elif action == "compost": game._interact_station("profession:farmer")
 	elif action == "island2":
 		game.state.travel_to(2)
 		game.state.climate.acknowledge(game.state)
@@ -118,7 +115,6 @@ func command(args: Array) -> void:
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
 	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":game.state.storage.russet,"coins":game.state.coins}
-	report.build_selection = game.hud._build_selection
 	report.labels = []
 	collect_labels(game.hud._modal_card, report.labels)
 	collect_labels(game.conversation, report.labels)

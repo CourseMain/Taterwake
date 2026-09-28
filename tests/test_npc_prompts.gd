@@ -18,7 +18,6 @@ func run() -> void:
 	game.state.tutorial_progress.completed = true
 	game.state.debug_unlock_island(3)
 	game.state.coins = 1e18
-	for id in game.builds.IDS: game.builds.levels[id] = 20
 	game.set_process(false)
 	for island in [1, 2, 3]:
 		game.state.travel_to(island)
@@ -27,7 +26,7 @@ func run() -> void:
 		game._on_state_changed()
 		await frames()
 		game.hud.close_panel()
-		for station in ["market", "barn", "tools", "quests", "builds", "activities", "duck_patrol", "profession:investor"]:
+		for station in ["market", "barn", "tools", "quests", "activities", "duck_patrol"]:
 			if station == "activities" and island == 1: continue
 			var body: StaticBody3D
 			for target in game.world._interaction_targets:

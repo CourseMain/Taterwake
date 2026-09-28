@@ -95,7 +95,7 @@ func run() -> void:
 	check(page.visible and page.headline.text == "BANKRUPT", "climate recovery bankruptcy opens the editorial page")
 	check(page.detail.text.contains("tax bill") and page._event.text.to_upper().contains("FLOOD") and page._calculation.text.contains(" tax = "), "collapse shows the tax-caused debt calculation and actual climate event")
 	check(page._metrics["FIELD LOST"].note.text.contains("48") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
-	check(page._context.text.contains("Farmer build"), "collapse includes build context")
+	check(page._context.text.contains("Island 2"), "collapse identifies the affected island")
 	check(not game.hud._blind_card.visible and not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()

@@ -2,12 +2,10 @@ extends SceneTree
 ## Optional help changes real mechanics: protect first pests, preserve quote timing,
 ## count independent farming, and never manufacture a major stock/tax event.
 const State = preload("res://scripts/game_state.gd")
-const Builds = preload("res://scripts/player_builds.gd")
 const Activities = preload("res://scripts/island_activities.gd")
 var checks: int = 0
 var failures: int = 0
 var state
-var builds
 var activities
 
 func _initialize() -> void: call_deferred("run")
@@ -31,10 +29,6 @@ func reset() -> void:
 func run() -> void:
 	state = State.new()
 	root.add_child(state)
-	builds = Builds.new()
-	builds.state = state
-	state.build_system = builds
-	root.add_child(builds)
 	activities = Activities.new()
 	activities.setup(state)
 	state.activity_system = activities
@@ -112,7 +106,6 @@ func run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	restored.free()
 	activities.free()
-	builds.free()
 	state.free()
 	print("FARM HELP: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

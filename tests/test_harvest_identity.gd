@@ -1,5 +1,5 @@
 extends SceneTree
-## Committed harvests, interrupted receipts, real compost and safe reloads.
+## Committed harvests, interrupted receipts, ordinary crops and safe reloads.
 var game
 var checks: int = 0
 var failures: int = 0
@@ -23,7 +23,7 @@ func shot(label: String) -> void:
 
 func ready_plot(index: int, giant: bool = false) -> void:
 	game.state._clear_crop(game.state.plots[index])
-	game.state.plots[index].merge({"unlocked":true, "tilled":true, "stage":3, "crop":"russet", "watered":true, "elapsed":10.0, "cultivated":giant}, true)
+	game.state.plots[index].merge({"unlocked":true, "tilled":true, "stage":3, "crop":"giant" if giant else "russet", "watered":true, "elapsed":40.0 if giant else 10.0}, true)
 	game._on_state_changed()
 
 func run() -> void:
@@ -40,28 +40,23 @@ func run() -> void:
 	game.state.tutorial_progress.step = 3
 	game.state.plots[4].tilled = true
 	game.tutorial._enter_step()
-	var compost_before: int = game.builds.professions.data.compost
 	game.perform_plot(4, "plant")
-	check(game.tutorial.current_id() == "water" and game.state.plots[4].cultivated, "first planted Russet becomes a real cultivated giant")
-	check(game.builds.professions.data.compost == compost_before-1, "Mara's lesson spends exactly one starter compost")
 	game.tutorial._enter_step()
-	check(game.builds.professions.data.compost == compost_before-1, "entering the saved water step cannot spend compost twice")
 	var path: String = "user://identity-%d.json" % OS.get_process_id()
-	check(game.state.save_game(path) and game.state.load_game(path), "giant lesson round-trips through a disposable save")
+	check(game.state.save_game(path) and game.state.load_game(path), "planting lesson round-trips through a disposable save")
 	game.tutorial.start()
-	check(game.state.plots[4].cultivated and game.builds.professions.data.compost == compost_before-1, "reload keeps giant and exact compost balance")
 	game.perform_plot(4,"water")
-	var tuber: Node3D = game.world._crop_roots[4].get_node("GiantTuber")
+	var tuber: Node3D = game.world._crop_roots[4].get_node("PotatoTuber")
 	var start_size: float = tuber.scale.x
 	game._process(5)
-	check(tuber.scale.x > start_size, "composted plant visibly expands before it becomes ripe")
+	check(tuber.scale.x > start_size, "plant visibly expands before it becomes ripe")
 	var midway_size: float = tuber.scale.x
-	check(game.state.save_game(path) and game.state.load_game(path), "same-stage growing giant reloads")
+	check(game.state.save_game(path) and game.state.load_game(path), "same-stage growing crop reloads")
 	game.tutorial.start()
 	game._process(1)
-	check(tuber.scale.x > midway_size, "reloaded giant follows the new live plot dictionary")
+	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
 	game._process(4.1)
-	check(game.tutorial.current_id() == "harvest", "giant requires ordinary watering and growing time")
+	check(game.tutorial.current_id() == "harvest", "crop requires ordinary watering and growing time")
 	game.world.camera.size = 17
 	game.world.camera.position = game.world.plot_positions[4] + Vector3(11,15,17)
 	game.world.camera.look_at(game.world.plot_positions[4] + Vector3(0,1,0))
@@ -69,20 +64,9 @@ func run() -> void:
 	var stored: int = game.state.storage_used()
 	game.perform_plot(4,"harvest")
 	var fx = game.world.harvest_feedback
-	check(game.state.storage_used()-stored >= 9, "early giant grants actual triple Russet yield")
-	check(fx.active.size() == 1 and fx.active[0].heavy, "committed giant starts one heavy visual receipt")
-	check(fx.audio.last_kind == "giant", "giant uses its own scratch/pop/low landing foley")
-	var receipt: Dictionary = fx.active[0]
-	var origin: Vector3 = receipt.origin
-	fx.animate(.16)
-	check(receipt.node.scale.y > 1 and receipt.node.position.y < origin.y+.2, "giant resists in the soil before release")
-	await shot("giant-tug")
-	fx.animate(.36)
-	check(receipt.node.position.y > origin.y+1 and not fx.clods.is_empty(), "release lifts giant with soil scatter")
-	await shot("giant-pop")
-	fx.animate(.35)
-	check(receipt.landed and receipt.node.scale.y < 1, "heavy landing squashes potato")
-	await shot("giant-land")
+	check(game.state.storage_used()-stored == 3, "first Russet harvest has its ordinary yield")
+	check(fx.active.size() == 1 and not fx.active[0].heavy, "committed Russet starts one visual receipt")
+	check(fx.audio.last_kind == "harvest", "ordinary crop uses harvest foley")
 	fx.animate(2)
 	check(fx.active.is_empty() and fx.clods.is_empty(), "harvest cleans up without leaving props")
 	game.tutorial.finish()
@@ -104,7 +88,7 @@ func run() -> void:
 	game.perform_plot(5,"harvest")
 	check(fx.active.size() == 1, "partial harvest can resume while receipts remain cosmetic")
 	var batch: Dictionary = {}
-	for i in range(24): batch[i] = {"stage":3,"crop":"russet","cultivated":i%2==0}
+	for i in range(24): batch[i] = {"stage":3,"crop":"giant" if i%2==0 else "russet"}
 	fx.harvest(batch)
 	check(fx.active.size() <= fx.MAX_HARVESTS, "large tools respect hard receipt budget")
 	fx.animate(.4)

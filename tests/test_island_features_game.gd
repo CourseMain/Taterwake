@@ -75,20 +75,14 @@ func run() -> void:
 	game.state.climate.acknowledge(game.state)
 	game.state.select_crop("icecap")
 	game.state.storage.icecap = 125
-	game.builds.levels.industrialist = 1
-	game.builds.select_build("industrialist")
-	game.builds.professions.action("batch", "100")
-	game.builds.use_ability()
 	game._on_action("activities")
 	press("activity:furnace:icecap")
-	check(game.state.storage.icecap == 0, "furnace consumes exactly its fuel alongside loaded processor")
+	check(game.state.storage.icecap == 100, "furnace consumes exactly its 25 Icecaps of fuel")
 	check(game.activities.furnace_remaining > 0, "furnace action starts heat")
 	game._process(1.0)
-	check(is_equal_approx(float(game.builds.processing.get("elapsed", 0)), 3.0), "main loop applies furnace processing speed exactly once")
 	await shot("furnace-panel")
 	game.activities.furnace_remaining = 0.5
 	game._process(1.0)
-	check(is_equal_approx(float(game.builds.processing.get("elapsed", 0)), 5.0), "processing integrates only remaining half-second of heat")
 	game.hud.close_panel()
 	game.state.coins = 1.0e16
 	game.queue_free()

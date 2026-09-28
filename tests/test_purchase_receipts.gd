@@ -2,12 +2,10 @@ extends SceneTree
 ## Transaction-level receipt checks. Creates fresh farms; never reads or writes saves.
 const State = preload("res://scripts/game_state.gd")
 const Activities = preload("res://scripts/island_activities.gd")
-const Builds = preload("res://scripts/player_builds.gd")
 var checks: int = 0
 var failures: int = 0
 var state
 var activities
-var builds
 var receipts: Array[Dictionary] = []
 var rejected: Array[String] = []
 var notices: Array[String] = []
@@ -26,19 +24,14 @@ func check(ok: bool, message: String) -> void:
 
 func _fresh() -> void:
 	if is_instance_valid(state):
-		builds.free()
 		activities.free()
 		state.free()
 	state = State.new()
 	activities = Activities.new()
 	activities.setup(state)
-	builds = Builds.new()
-	builds.state = state
-	state.build_system = builds
 	state.activity_system = activities
 	root.add_child(state)
 	root.add_child(activities)
-	root.add_child(builds)
 	state.rng.seed = 6103
 	state.purchase_completed.connect(_on_purchase)
 	state.purchase_rejected.connect(func(message: String): rejected.append(message); order.append("rejected"))
@@ -51,8 +44,7 @@ func _snapshot() -> Dictionary:
 		"tools": state.tools.duplicate(true), "storage": state.storage.duplicate(true),
 		"capacity": state.capacity, "barn": state.barn_level, "expansion": state.expansion,
 		"island2": state.island2_unlocked, "island3": state.island3_unlocked,
-		"plots": state.island_plots.duplicate(true), "duck_level": activities.duck_level,
-		"cooldown": builds.cooldown}
+		"plots": state.island_plots.duplicate(true), "duck_level": activities.duck_level}
 
 func _clear_signals() -> void:
 	receipts.clear()
@@ -128,8 +120,6 @@ func _test_seeds() -> void:
 		state.travel_to(island)
 		state.climate.acknowledge(state)
 		state.coins = 1.0e18
-		builds.active = "investor"
-		builds.levels.investor = 9
 		var crop: String = "russet" if island == 1 else ("sunburst" if island == 2 else "icecap")
 		var old_quote: float = float(state.market[crop].seed)
 		cost = float(state.market[crop].seed) * 17
@@ -220,8 +210,6 @@ func _test_ducks_and_services() -> void:
 	_failure(func(): return activities.train_ducks(), "maximum duck speed")
 	state.current_island = 2
 	_failure(func(): return activities.train_ducks(), "empty Shores flock cannot train")
-	# Profession actions now trade crops; covered by test_build_transactions.
-	# The retired scouting/market-call services no longer issue purchases.
 	_fresh()
 	_clear_signals()
 	state.storage.russet = 1
@@ -234,7 +222,6 @@ func _run() -> void:
 	_test_tools_and_space()
 	_test_islands()
 	_test_ducks_and_services()
-	builds.free()
 	activities.free()
 	state.free()
 	print("PURCHASE RECEIPTS: %d checks, %d failures" % [checks, failures])

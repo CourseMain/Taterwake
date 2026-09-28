@@ -96,10 +96,9 @@ func _run() -> void:
 	check(activities.furnace_remaining == 0 and state.storage.russet == 100, "cheap previous-island crops cannot fuel the winter furnace")
 	activities.charge_furnace()
 	check(state.storage.icecap == 75 and activities.furnace_remaining == 20, "furnace consumes exactly25 held Icecaps and starts20seconds")
-	check(activities.growth_speed_multiplier() == 2.5 and activities.processing_speed_multiplier() == 3.0, "furnace exposes real crop and processing boosts")
+	check(activities.growth_speed_multiplier() == 2.5, "furnace exposes real crop growth boost")
 	activities.charge_furnace()
 	check(state.storage.icecap == 75 and activities.furnace_remaining == 20, "active furnace cannot be stacked or charged twice")
-	check(is_equal_approx(activities.processing_time(25), 65.0), "processing integrates only the actual20 boosted seconds across expiry")
 	check(activities.next_boundary() <= 20.0, "simulation cannot step across furnace expiration")
 	activities.update(10)
 	var saved: Dictionary = activities.save_data()
@@ -108,7 +107,7 @@ func _run() -> void:
 	check(activities.duck_level == 0 and activities.furnace_remaining == 0, "reset clears purchased activities and running boosts")
 	check(activities.load_data(saved) and activities.furnace_remaining == 10 and activities.furnace_cooldown == 50 and activities.duck_speeds["1"] == 2 and activities.duck_counts["1"] == 1 and activities.duck_count() == 0, "saved activity state resumes timers and separate island purchases")
 	state.current_island = 2
-	check(activities.growth_speed_multiplier() == 1 and activities.processing_speed_multiplier() == 1, "winter heat never buffs other islands")
+	check(activities.growth_speed_multiplier() == 1, "winter heat never buffs other islands")
 	activities.update(10)
 	state.current_island = 3
 	check(activities.furnace_remaining == 0 and activities.growth_speed_multiplier() == 1 and activities.furnace_cooldown == 40, "furnace heat expires while traveling without retaining boost")

@@ -92,7 +92,6 @@ func run() -> void:
 	game._on_action("debug:apply:100:100")
 	game.perform_plot(0)
 	game.activities.hire_duck()
-	game.builds.use_ability()
 	check(game.state._save_data() == snapshot and game.state.elapsed == elapsed and game.world.player.position == position, "run end blocks simulation, movement, debug, farming and economy")
 	await shot("taxes-bankrupt")
 	for dimensions: Vector2i in [Vector2i(1024, 600), Vector2i(1280, 800), Vector2i(1920, 1080)]:
