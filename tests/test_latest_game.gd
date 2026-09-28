@@ -47,11 +47,6 @@ func shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	check(root.get_texture().get_image().save_png("res://artifacts/" + name + ".png") == OK, "rendered " + name)
 
-func spike(percent: float) -> void:
-	game.state.market.russet.change = percent
-	game.state.market.russet.sell = game.state.CROPS.russet.base * (1 + percent / 100.0)
-	game._on_state_changed()
-
 func _run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	if not capture and not "--integration-test" in OS.get_cmdline_user_args():
@@ -76,19 +71,6 @@ func _run() -> void:
 		check(game.selected_tool == tools[(index + 1) % tools.size()], "keyboard equips matching numbered slot")
 	for entry in game.state.inventory_info():
 		check(entry.kind in ["seed", "crop", "tool"], "inventory contains only crops and tools")
-	game._on_action("tracked_prices")
-	await settle()
-	var tracked_toggle: CheckButton
-	for toggle in game.hud.find_children("*", "CheckButton", true, false):
-		if toggle.get_meta("tracked_seed", "") == "golden":
-			tracked_toggle = toggle
-	check(tracked_toggle != null and tracked_toggle.button_pressed, "seed tracking menu exposes saved checkboxes")
-	if tracked_toggle != null:
-		tracked_toggle.button_pressed = false
-	check(not game.state.tracked_seeds.has("golden") and not game.hud._tracked_labels.has("golden"), "checkbox removes exactly that seed from top HUD")
-	await shot("tracked-prices-menu")
-	game.hud.close_panel()
-	check(game.hud._top.surge.text.contains("3:00"), "visible surge timer begins at three minutes")
 	game.state.quest_progress.starter_crash = 10
 	game._on_action("quests")
 	press("quest:starter_crash")
@@ -115,21 +97,6 @@ func _run() -> void:
 	check(game.selected_tool == "pest" and not game.state.plots[4].pests, "fifth hotbar tool walks over and removes pests")
 	check(is_equal_approx(game.state.plots[4].pest_damage, 1.0 / 3.0), "brushing stops further decay without duplicating lost yield")
 	await shot("tools-hotbar")
-	# Only the selected ticker may trigger its island-colored overlay.
-	game.state.select_crop("russet")
-	game.state.market.golden.change = 1600.0
-	spike(100.0)
-	check(game.surge_band == 0, "an unselected booming crop does not activate screen effects")
-	spike(300.0)
-	check(game.surge_band == 0, "300 percent itself remains below the effect threshold")
-	spike(350.0)
-	check(game.surge_band == 1 and game.fanfare_remaining > 0.0, "selected crop above300 triggers rhythmic edges and a fanfare")
-	await shot("market-green-pulse")
-	spike(1100.0)
-	check(game.surge_band == 2, "selected crop above1000 triggers the stronger flash mode")
-	await shot("market-green-flash")
-	spike(0.0)
-	check(game.surge_band == 0, "effects stop when the selected quote returns to ordinary levels")
 	game.state.storage.russet = 20
 	game._on_action("inventory")
 	await shot("illustrated-inventory-crops")
@@ -150,19 +117,12 @@ func _run() -> void:
 	game.state.travel_to(2)
 	game.state.climate.acknowledge(game.state)
 	await settle()
-	spike(1200.0)
-	await shot("market-golden-flash")
 	game.state.unlock_island3()
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
 	await settle()
-	spike(1400.0)
-	await shot("market-winter-flash")
-	game.state.surge_timer = 0.01
 	game._process(0.01)
-	check(game.state.surge_remaining > 0.0 and game.hud._top.surge.text.contains("SELL"), "countdown activates a real sale opportunity in the HUD")
 	await create_timer(0.35).timeout
-	await shot("guaranteed-stock-surge")
 	game._on_action("menu")
 	await settle()
 	check(game.hud.is_panel_open() and button("inventory") != null and button("market") != null, "three-line menu contains inventory and market navigation")

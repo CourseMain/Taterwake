@@ -24,25 +24,9 @@ func reset() -> void:
 	state.farm_help.enable()
 	state.farm_help.dismiss("repeat")
 	state.pest_timer = 100.0
-	state._event_in = 11.0
 	for field: Array in state.island_plots.values():
 		for plot: Dictionary in field: state._clear_crop(plot)
 	state.changed.emit()
-
-func prepare_practice() -> void:
-	state.farm_help.data.independent = 4
-	state.selected_crop = "russet"
-	state.storage.russet = 20
-	state.natural_remaining = 0.0
-	state.natural_factor = 1.0
-	state.surge_remaining = 0.0
-	state.surge_factor = 1.0
-	state.surge_timer = 180.0
-	state.current_event = ""
-	state.event_remaining = 0.0
-	state.event_strength = 1.0
-	state._market_core.russet.sell = State.CROPS.russet.base
-	state._refresh_market(false)
 
 func run() -> void:
 	state = State.new()
@@ -93,42 +77,7 @@ func run() -> void:
 	state.update(float(state.plots[5].pest_delay) + 5.0)
 	check(state.plots[5].pest_ticks == 1, "later pests deal normal damage")
 	reset()
-	prepare_practice()
-	check(state.farm_help.tip(state).id == "stocks", "held harvest offers practical stock lesson")
-	var before: float = state.coins
-	check(state.farm_help.start_practice(state), "opt-in practice starts")
-	check(state.market.russet.change == 100.0 and state.market.russet.seed == State.seed_price_for(state.market.russet.sell), "practice has fixed +100% quote and matching seed cost")
-	check(state.blind_cycle.booms == 0 and state.surge_timer == 180.0, "practice neither counts a major boom nor resets its schedule")
-	state.update(4.25)
-	check(is_equal_approx(state.farm_help.data.practice_remaining, 5.75) and state.market.russet.change == 100.0, "price holds while ordinary market ticks continue")
-	check(state.save_game(path) and restored.load_game(path), "active practice saves and reloads")
-	check(is_equal_approx(restored.farm_help.data.practice_remaining, 5.75) and restored.market.russet.change == 100.0, "reload retains remaining time, not a fresh ten seconds")
-	state.update(5.75)
-	check(state.farm_help.data.practice_remaining == 0.0 and state.blind_cycle.booms == 0 and is_equal_approx(state.surge_timer, 170.0), "expiry is exact and major timer advances normally")
-	check(state.farm_help.unseen("stocks") and state.coins == before, "missing window grants no money and permits another attempt")
-	prepare_practice()
-	state.farm_help.start_practice(state)
-	var quote: float = state.market.russet.sell
-	state.sell_crop("russet", 1)
-	check(is_equal_approx(state.coins - before, quote) and state.farm_help.data.dismissed.has("stocks"), "actual sale uses practice quote and records success")
-	check(not state.farm_help.start_practice(state), "completed practice cannot be replayed for bonus money")
-	check(state.save_game(path) and restored.load_game(path) and not restored.farm_help.start_practice(restored), "completed practice remains completed after reload")
-	reset()
-	prepare_practice()
-	state._start_surge()
-	var real_quote: float = state.market.russet.sell
-	check(not state.farm_help.start_practice(state) and state.market.russet.sell == real_quote, "practice cannot replace an actual boom")
-	prepare_practice()
-	state.farm_help.start_practice(state)
-	state.update(0.5)
-	state.tutorial_progress.tour_only = true
-	state.set_tutorial_active(true)
-	var saved_help: Dictionary = state.farm_help.data.duplicate(true)
-	state.update(50.0)
-	state.set_tutorial_active(false)
-	check(state.farm_help.data == saved_help and state.market.russet.change == 100.0, "optional tour pauses and preserves practice")
-	reset()
-	state.surge_timer = 30.0
+	state.blind_cycle.due_in = 10.0
 	check(state.farm_help.tip(state).id == "taxes", "tax help appears before first major stock even without independent success")
 	state.farm_help.dismiss("taxes")
 	state.coins = -1.0
@@ -150,7 +99,7 @@ func run() -> void:
 		var corrupt: Dictionary = saved.duplicate(true)
 		corrupt.farm_help = invalid
 		check(not state._valid_save(corrupt), "malformed help data is rejected")
-	for pair: Array in [["practice_remaining", -1], ["independent", 4.5], ["protected", ["3:80"]], ["dismissed", ["unknown"]], ["crop", "bad"]]:
+	for pair: Array in [["independent", 4.5], ["protected", ["3:80"]], ["dismissed", ["unknown"]], ["crop", "bad"]]:
 		var corrupt: Dictionary = saved.duplicate(true)
 		corrupt.farm_help[pair[0]] = pair[1]
 		check(not state._valid_save(corrupt), "out-of-range help field rejected: " + str(pair[0]))

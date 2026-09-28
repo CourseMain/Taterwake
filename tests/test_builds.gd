@@ -40,7 +40,6 @@ func _run() -> void:
 	var before: float = state.coins
 	builds.use_ability()
 	check(state.coins == before and not builds.professions.data.contract.is_empty(), "Investor reserves a real locked-price contract")
-	state._end_event()
 	builds.cooldown = 0.0
 	builds.select_build("gambler")
 	state.storage.russet = 30

@@ -1,4 +1,5 @@
 extends SceneTree
+const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -49,7 +50,7 @@ func run() -> void:
 	check(game.hud._blind_card.tooltip_text.contains("After tax \uE000 8.8B"), "tax forecast shows correct projected wallet")
 	game.state.blind_cycle.tax_multiplier = 2.5
 	game.state.blind_cycle.tax_rolled = true
-	game.state._start_surge()
+	LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 	game.state.update(10.0)
 	game.hud.update_state(game.state)
 	check(game.hud._blind_labels.balance.text == "\uE000 12.5B due  ›" and game.hud._blind_labels.title.get_theme_color("font_color") == Color("ffb85e"), "Tax Boom remains prominently warned on farm")
@@ -66,10 +67,10 @@ func run() -> void:
 	await shot("taxes-debt")
 	game.state.coins = 18e9
 	game.state.blind_cycle.tax_multiplier = 1.0
-	game.state._start_surge()
+	LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 	game._advance_simulation(10.0)
 	check(game.state.blind_cycle.clears == 0, "second stock does not collect early")
-	game.state._start_surge()
+	LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 	game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	check(not game.state.run_over and game.state.blind_cycle.last_result.cleared, "controller pays tax after third full selling window")
@@ -106,7 +107,7 @@ func run() -> void:
 	game.tutorial.finish()
 	game.state.blind_cycle.tax_rolled = true
 	for event in range(3):
-		game.state._start_surge()
+		LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 		game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	check(not game.state.run_over and not game.hud._run_end.visible and game.state.coins < 0.0, "unfunded third stock incurs playable debt rather than a failed-blind screen")
@@ -117,7 +118,7 @@ func run() -> void:
 	game.hud.close_panel()
 	game.state.blind_cycle.tax_rolled = true
 	for event in range(3):
-		game.state._start_surge()
+		LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 		game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	check(game.state.run_over and game.hud._run_end_title.text == "BANKRUPT", "a subsequent unpaid bill ends the run only after crossing bankruptcy")

@@ -38,11 +38,10 @@ func run() -> void:
 	await physics_frame
 	game.set_process(false)
 	game.hud.set_process(false)
-	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "seed choices and prices are absent from normal farming view")
-	check(game.hud._export_box.visible and game.hud._top.surge.text.contains("3:00"), "one prominent stock countdown occupies the banner")
+	check(not game.hud._crop_row.visible, "seed choices and prices are absent from normal farming view")
 	await shot("clarity-farm")
 	key(KEY_2)
-	check(game.selected_tool == "plant" and game.hud._crop_row.visible and not game.hud._tracked_box.visible, "2 equips seeds and reveals seed choices without a second tracked-price strip")
+	check(game.selected_tool == "plant" and game.hud._crop_row.visible, "2 equips seeds and reveals seed choices without a second tracked-price strip")
 	var russet = game.hud._crop_buttons.russet
 	var old_seeds: int = game.state.seed_inventory.russet
 	var old_held: int = game.state.storage.russet
@@ -60,37 +59,14 @@ func run() -> void:
 	check(game.state.selected_crop == "golden" and game.selected_tool == "plant" and game.hud._crop_buttons.golden.selected and not russet.selected, "seed tray selects the actual planting crop and marks the active packet")
 	await shot("clarity-seeds")
 	key(KEY_3)
-	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "switching tools immediately clears seed tray")
+	check(not game.hud._crop_row.visible, "switching tools immediately clears seed tray")
 	game.hud._tool_buttons.plant.pressed.emit()
 	check(game.hud._crop_row.visible, "mouse seed slot opens the same tray")
 	key(KEY_I)
-	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "seed tray does not stack behind a menu")
+	check(not game.hud._crop_row.visible, "seed tray does not stack behind a menu")
 	game.hud.close_panel()
 	check(game.hud._crop_row.visible, "closing menu restores tray when seeds are equipped")
 	key(KEY_1)
-	for event in ["seed_fair", "crash"]:
-		game.state._start_event(event)
-		game._on_state_changed()
-		check(game.hud._top.surge.text.begins_with("NEXT STOCK"), "routine market event cannot replace the stock countdown: " + event)
-	game.state._end_event()
-	game.state.surge_timer = 10.01
-	game._on_state_changed()
-	check(not game.hud._surge_urgent, "countdown does not flash before last ten seconds")
-	game.state.surge_timer = 10.0
-	game._on_state_changed()
-	check(game.hud._surge_urgent and game.hud._market_impact._anticipation > 0.0, "ten-second threshold starts flashing and energy buildup")
-	game.hud._hud_clock = 0.0
-	game.hud._process(0.01)
-	var before: Color = game.hud._surge_style.bg_color
-	game.hud._process(0.13)
-	check(before != game.hud._surge_style.bg_color, "warning background animates instead of only changing a label")
-	await shot("clarity-countdown-10")
-	game.hud.set_process(true)
-	game.state.surge_timer = 0.01
-	game._process(0.01)
-	check(game.state.surge_remaining > 0.0 and game.hud._surge_active and game.hud._top.surge.text.contains("SELL"), "countdown opens a real bounded market surge")
-	game.state.update(10.0)
-	check(not game.hud._surge_active and not game.hud._surge_urgent, "expired surge returns to calm countdown")
 	game.state.select_crop("russet")
 	game.state.pest_timer = 100.0
 	var plot: Dictionary = game.state.plots[4]
@@ -121,13 +97,7 @@ func run() -> void:
 		game.hud._toast_box.hide()
 		game.hud._reward_box.hide()
 		game.hud._context_box.hide()
-		game.state.market.russet.change = 1700.0
-		game.state.market.russet.sell = game.state.CROPS.russet.base * 18.0
 		game._on_state_changed()
-		game.hud._market_impact._process(0.7)
-		check(game.hud._market_impact._strong and game.hud._market_impact.island == island, "jackpot aura activates in island palette " + str(island))
-		check(game.hud._market_impact.mouse_filter == Control.MOUSE_FILTER_IGNORE and game.hud._market_impact._mist.mouse_filter == Control.MOUSE_FILTER_IGNORE, "aura and mist cannot intercept field input")
-		await shot("clarity-jackpot-island-" + str(island))
 	if capture:
 		root.size = Vector2i(960, 600)
 		await shot("clarity-compact")

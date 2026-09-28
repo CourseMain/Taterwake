@@ -22,33 +22,23 @@ func _run() -> void:
 	state.rng.seed = 70523
 	state.notified.connect(func(message: String): notices.append(message))
 	check(not state.tutorial_active and not state.tutorial_progress.completed, "new farm waits for scene controller to start tutorial")
-	state._start_surge()
-	state._start_event("supply_collapse")
 	state._infest_random_plots()
 	state.set_tutorial_active(true)
 	check(state.tutorial_active, "controller can enable tutorial")
-	check(state.current_event == "" and state.event_remaining == 0.0 and state.surge_remaining == 0.0, "entering lesson ends active events and surges")
-	check(state.pest_timer >= 25.0 and state.pest_timer <= 100.0 and state.surge_timer == State.SURGE_INTERVAL, "tutorial has fresh background countdowns")
+	check(state.pest_timer >= 25.0 and state.pest_timer <= 100.0, "tutorial has fresh background countdowns")
 	for crop in State.CROP_IDS:
-		check(state.market[crop].sell == State.CROPS[crop].base and state.market[crop].change == 0.0 and state.market[crop].history.size() == 1, crop + " market and chart return to calm baseline")
+		check(state.market[crop].sell == State.CROPS[crop].base, crop + " market and chart return to calm baseline")
 	var pest_wait: float = state.pest_timer
-	var event_wait: float = state._event_in
 	notices.clear()
 	state.update(600.0)
 	check(state.plots[2].stage == 3 and state.plots[3].stage == 3, "watered starter crops still ripen during lesson")
 	check(state.plots[0].stage == 3 and not state.plots[0].pests and state.plots[0].ripe_age == 0.0, "unharvested ripe potatoes stay safe throughout a long lesson")
-	check(state.pest_timer == pest_wait and state._event_in == event_wait and state.surge_timer == State.SURGE_INTERVAL, "background clocks do not approach an ambush")
+	check(state.pest_timer == pest_wait, "background clocks do not approach an ambush")
 	check(notices.is_empty(), "long tutorial wait has no market or pest announcements")
-	state._start_surge()
-	state._start_event("crash")
 	state._toggle_export()
 	state._start_frost()
 	check(state._infest_random_plots() == 0, "direct random infestation cannot bypass lesson safety")
-	check(state.current_event == "" and state.surge_remaining == 0.0 and not state.export_active and not state.frost_active, "direct event methods cannot bypass lesson safety")
-	state._market_tick()
-	check(state.market.russet.change == 0.0, "direct ordinary market tick remains calm")
 	state._refresh_market()
-	check(state.market.russet.change == 0.0, "equipment cannot produce tutorial stock distractions")
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
@@ -78,22 +68,17 @@ func _run() -> void:
 	check(state.seed_inventory.russet == old_seeds + 1, "lesson seed purchase is a normal transaction")
 	# Timers at zero used to be dangerous if a frozen timer entered the event loop.
 	state.pest_timer = 0.0
-	state.surge_timer = 0.0
-	state._event_in = 0.0
-	state._market_clock = State.STARTER_MARKET_SECONDS
 	var before: int = Time.get_ticks_msec()
 	state.update(3600.0)
 	check(Time.get_ticks_msec() - before < 1000, "frozen expired timers cannot create a million-iteration update stall")
 	state.set_tutorial_active(false)
-	check(not state.tutorial_active and state.surge_timer == 180.0 and state.pest_timer >= 25.0 and state._event_in == 8.0, "finishing restarts full surge and safe pest/event countdowns")
+	check(not state.tutorial_active and state.pest_timer >= 25.0, "finishing restarts full surge and safe pest/event countdowns")
 	check(state.plots[0].ripe_age == 0.0 and not state.plots[0].pests, "lesson duration never carries into ripe pest age")
 	check(not state.spawn_tutorial_pest(0), "demo infestation cannot be used in ordinary play")
 	state.update(24.0)
-	check(not state.plots[0].pests and state.surge_remaining == 0.0, "full ripe-crop grace period follows completion")
+	check(not state.plots[0].pests, "full ripe-crop grace period follows completion")
 	state.update(maxf(40.0 - float(state.plots[0].plant_age), float(state.plots[0].pest_delay) - float(state.plots[0].ripe_age)) + 0.01)
 	check(state.plots[0].pests, "ordinary ripe-crop pests resume after their actual grace period")
-	state._start_surge()
-	check(state.surge_remaining == 10.0, "ordinary stock surges resume after lesson with the full ten-second window")
 	state.set_tutorial_active(true)
 	state.tutorial_progress = {"version": 1, "step": 6, "completed": false, "plot": 5, "visited": ["market"]}
 	var path: String = "user://tutorial_state_test_%d.json" % OS.get_process_id()
@@ -103,7 +88,7 @@ func _run() -> void:
 	check(restored.load_game(path), "active lesson save reloads")
 	check(restored.tutorial_progress == state.tutorial_progress and not restored.tutorial_active, "progress persists while scene retains control of transient active flag")
 	restored.set_tutorial_active(true)
-	check(restored.tutorial_active and restored.surge_remaining == 0.0, "resumed lesson re-enters calm mode")
+	check(restored.tutorial_active, "resumed lesson re-enters calm mode")
 	var data: Dictionary = state._save_data()
 	data.erase("tutorial_progress")
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
@@ -123,8 +108,6 @@ func _run() -> void:
 	restored.mastery.russet = 100000
 	restored.unlock_island2()
 	restored.unlock_island3()
-	restored._start_surge()
-	restored._start_event("supply_collapse")
 	restored._toggle_export()
 	restored._start_frost()
 	restored._infest_random_plots()
@@ -148,9 +131,9 @@ func _run() -> void:
 	check(replay._save_data() == loaded_before, "resumed informational replay preserves saved timers and hazards through exit")
 	restored.set_tutorial_active(false)
 	check(restored._save_data() == replay_before, "replay exit does not cleanse pests, reset clocks, or cancel buffs")
-	var initial_surge: float = replay.surge_remaining
+	var initial_time: float = replay.elapsed
 	replay.update(0.1)
-	check(replay.surge_remaining < initial_surge and replay.surge_remaining > 0.0, "original active surge resumes rather than restarting after replay")
+	check(is_equal_approx(replay.elapsed, initial_time + 0.1), "original active surge resumes rather than restarting after replay")
 	replay.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	activities.free()

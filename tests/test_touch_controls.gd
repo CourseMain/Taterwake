@@ -43,7 +43,6 @@ func run() -> void:
 	game.state.climate.acknowledge(game.state)
 	game.state.ClimateSystem.Lesson.finish(game.state)
 	game.state.coins = 1e20
-	game.state.surge_timer = 1000
 	game.state.pest_timer = 1000
 	game.hud.close_panel()
 	game.set_process(false)

@@ -52,8 +52,7 @@ func _snapshot() -> Dictionary:
 		"capacity": state.capacity, "barn": state.barn_level, "expansion": state.expansion,
 		"island2": state.island2_unlocked, "island3": state.island3_unlocked,
 		"plots": state.island_plots.duplicate(true), "duck_level": activities.duck_level,
-		"cooldown": builds.cooldown,
-		"event": state.current_event, "event_remaining": state.event_remaining}
+		"cooldown": builds.cooldown}
 
 func _clear_signals() -> void:
 	receipts.clear()
@@ -78,7 +77,9 @@ func _success(action: Callable, kind: String, id: String, quantity: int, cost: f
 	check(not changed_snapshots.is_empty() and changed_snapshots.back() == _snapshot(), label + " refresh listeners see the committed state")
 	check(receipt_snapshots.size() == 1 and receipt_snapshots[0] == _snapshot(), label + " receipt listeners see final inventory and balance")
 	check(order.find("changed") >= 0 and order.find("changed") < order.find("receipt"), label + " refreshes the HUD before showing the receipt")
-	if not permit_notice:
+	if permit_notice:
+		check(notices.size() == 1 and notices[0].begins_with("QUEST COMPLETE"), label + " emits exactly one quest milestone")
+	else:
 		check(notices.is_empty(), label + " does not also emit a duplicate generic notification")
 	if receipts.is_empty():
 		return {}
@@ -104,7 +105,7 @@ func _test_seeds() -> void:
 	var cost: float = float(state.market.russet.seed) * 5
 	var receipt: Dictionary = _success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, cost, "five-seed bundle")
 	check(state.seed_inventory.russet == old_count + 5 and int(receipt.get("total", -1)) == old_count + 5, "seed receipt total includes the seeds already owned")
-	_success(func(): return state.buy_seeds("russet", 50), "seeds", "russet", 50, float(state.market.russet.seed) * 50, "second consecutive seed bundle")
+	_success(func(): return state.buy_seeds("russet", 50), "seeds", "russet", 50, float(state.market.russet.seed) * 50, "second consecutive seed bundle", true)
 	_failure(func(): return state.buy_seeds("unknown", 5), "invalid seed identifier")
 	_failure(func(): return state.buy_seeds("russet", 0), "zero seed quantity")
 	_failure(func(): return state.buy_seeds("russet", -5), "negative seed quantity")
@@ -129,17 +130,14 @@ func _test_seeds() -> void:
 		state.coins = 1.0e18
 		builds.active = "investor"
 		builds.levels.investor = 9
-		state._start_event("seed_fair")
 		var crop: String = "russet" if island == 1 else ("sunburst" if island == 2 else "icecap")
 		var old_quote: float = float(state.market[crop].seed)
-		state._start_event("shortage")
 		cost = float(state.market[crop].seed) * 17
-		check(float(state.market[crop].seed) != old_quote, "island %d live quote changed before checkout" % island)
-		receipt = _success(func(): return state.buy_seeds(crop, 17), "seeds", crop, 17, cost, "island %d discounted live-price seeds" % island)
+		check(float(state.market[crop].seed) == old_quote, "island %d seed cost stays fixed before checkout" % island)
+		receipt = _success(func(): return state.buy_seeds(crop, 17), "seeds", crop, 17, cost, "island %d fixed-price seeds" % island, island == 1)
 		check(int(receipt.get("total", -1)) == state.seed_inventory[crop], "island %d receipt inventory is current" % island)
 	_fresh()
 	state.coins = 100000.0
-	state._start_event("crash")
 	_success(func(): return state.buy_seeds("russet", 10), "seeds", "russet", 10, float(state.market.russet.seed) * 10, "quest-completing seed purchase", true)
 	check(state.quest_progress.starter_crash == 10 and notices.size() == 1 and notices[0].begins_with("QUEST COMPLETE"), "seed quest milestone stays distinct from the single purchase receipt")
 

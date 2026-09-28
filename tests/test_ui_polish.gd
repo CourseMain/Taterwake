@@ -64,13 +64,6 @@ func run() -> void:
 	game.hud._refs["quest:starter_crash"].pressed.emit()
 	check(game.state.coins == before + 5000 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
-	game.hud.show_panel("tracked_prices", game.state)
-	game.hud._refs["tracked:golden:toggle"].button_pressed = false
-	check(not "golden" in game.state.tracked_seeds and game.hud._refs["tracked:golden:toggle"].text == "Track", "switch updates saved tracking and row immediately")
-	game.state.market.russet.seed = 321
-	game.hud.update_state(game.state)
-	check(game.hud._refs["tracked:russet:quote"].text.contains("321"), "seed quote follows current market price")
-	await inspect("tracked-seeds")
 	game.state.coins = 0
 	game.hud.show_panel("duck_patrol", game.state)
 	check(game.hud._refs["activity:duck"].disabled and game.hud._refs["activity:duck:status"].text.begins_with("Need"), "unaffordable duck shows the missing coins")
@@ -99,7 +92,7 @@ func run() -> void:
 	game.hud._act("inventory_tab:tools")
 	await inspect("tools")
 	root.size = Vector2i(960, 600)
-	for kind: String in ["builds", "quests", "tracked_prices", "duck_patrol", "inventory", "island"]:
+	for kind: String in ["builds", "quests", "duck_patrol", "inventory", "island"]:
 		game.hud.show_panel(kind, game.state)
 		await inspect("compact-" + kind)
 	game.state.island3_unlocked = true
@@ -114,7 +107,7 @@ func run() -> void:
 		var first: String = "quest:" + str(game.state.quest_info()[0].id)
 		game.hud._refs[first].pressed.emit()
 		check(game.hud._refs[first + ":status"].text == "Claimed", "island %d quest remains claimable after acknowledging arrival" % island)
-		game.hud.show_panel("tracked_prices", game.state)
+		game.hud.show_panel("market", game.state)
 		await inspect("island-%d-seeds" % island)
 		game.hud.show_panel("island", game.state)
 		var travel_scroll: ScrollContainer = game.hud._body.get_parent()

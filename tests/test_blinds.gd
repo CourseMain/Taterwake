@@ -1,4 +1,5 @@
 extends SceneTree
+const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 const State = preload("res://scripts/game_state.gd")
 const Rules = preload("res://scripts/blind_rules.gd")
 const SAVE: String = "user://taterland_blind_test_only.json"
@@ -31,15 +32,15 @@ func fresh(island: int = 1) -> void:
 
 func third_boom() -> void:
 	for _event in range(2):
-		state._start_surge()
-		state.update(State.SURGE_DURATION)
-	state._start_surge()
+		LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
+		state.update(State.BlindRules.COLLECTION_SECONDS)
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 
 func settle(balance: float, multiplier: float = 1.0) -> void:
 	state.coins = balance
 	state.blind_cycle.tax_multiplier = multiplier
 	third_boom()
-	state.update(State.SURGE_DURATION)
+	state.update(State.BlindRules.COLLECTION_SECONDS)
 
 func roundtrip() -> void:
 	var before: Dictionary = state._save_data().duplicate(true)
@@ -158,14 +159,12 @@ func _run() -> void:
 	state.climate.data.timer = 1e6
 	state.update(179.999)
 	check(state.blind_cycle.booms == 0, "elapsed time and natural spikes do not count as a major boom")
-	state.update(0.001)
-	check(state.blind_cycle.booms == 1 and state.surge_remaining == 10.0, "first actual major boom increments once")
-	state._start_surge()
-	check(state.blind_cycle.booms == 1, "duplicate start during a live event cannot double count")
-	state.update(180.0)
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
+	check(state.blind_cycle.booms == 1, "first actual major boom increments once")
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	check(state.blind_cycle.booms == 2 and state.blind_cycle.due_in == 0.0, "second major stock no longer starts collection")
-	state.update(180.0)
-	check(state.elapsed == 540.0 and state.blind_cycle.booms == 3 and state.blind_cycle.due_in == 10.0, "nine-minute third stock starts the full final selling window")
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
+	check(state.blind_cycle.booms == 3 and state.blind_cycle.due_in == 10.0, "nine-minute third stock starts the full final selling window")
 	state.update(9.75)
 	check(state.blind_cycle.clears == 0 and state.blind_cycle.due_in == 0.25, "no premature tax before the whole selling window")
 	state.climate.data.timer = 240.0
@@ -178,26 +177,16 @@ func _run() -> void:
 
 	fresh(3)
 	state.coins = 1e16
-	state._start_surge()
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(10.0)
-	state._start_surge()
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(10.0)
-	state._prepare_rocket()
-	state.update(60.0)
-	check(state.blind_cycle.booms == 2 and state.blind_cycle.due_in == 0.0, "rocket preparation and cutscene do not count")
-	check(state.rocket_factor >= 351.0 and state.rocket_factor <= 1001.0, "Rocket uses new 35000 to 100000 percent range")
-	state.complete_rocket_launch()
-	check(state.blind_cycle.booms == 3 and state.blind_cycle.due_in == 10.0, "actual rocket price boom counts once after its cinematic")
-	state.update(10.0)
-	check(state.blind_cycle.clears == 1, "rocket gives full window before blind resolution")
-
 	fresh()
 	state.tutorial_active = true
 	state.update(3600.0)
-	state._start_surge()
 	check(state.blind_cycle.booms == 0 and not state.run_over, "tutorial never consumes blind events")
 	fresh(2)
-	state._start_surge()
+	LegacyTax.set_count(state, int(state.blind_cycle.booms) + 1)
 	state.update(10.0)
 	state.travel_to(1)
 	state.climate.acknowledge(state)
@@ -213,16 +202,10 @@ func _run() -> void:
 
 	fresh()
 	state.coins = 1e9
-	var found: bool = false
-	for seed_value in range(100):
-		state.rng.seed = seed_value
-		state.blind_cycle = Rules.new_cycle()
-		state.surge_remaining = 0.0
-		state._start_surge()
-		if state.blind_info().tax_boom:
-			found = true
-			break
-	check(found and state.blind_cycle.booms == 1 and state.blind_cycle.due_in == 0.0, "random Tax Boom is announced a full major event before collection")
+	# An old save can retain a raised tax multiplier.
+	state.blind_cycle.tax_multiplier = 2.5
+	state.blind_cycle.tax_rolled = true
+	state.blind_cycle.booms = 1
 	var promised: float = state.blind_cycle.tax_multiplier
 	roundtrip()
 	check(is_equal_approx(state.blind_cycle.tax_multiplier, promised), "reload cannot reroll a Tax Boom")
@@ -258,20 +241,6 @@ func _run() -> void:
 	for tier in [{"ratio": 2.0, "name": "OVERKILL"}, {"ratio": 5.0, "name": "ULTRA KILL"}, {"ratio": 10.0, "name": "GODLIKE"}, {"ratio": 25.0, "name": "OMNIPOTENT"}, {"ratio": 100.0, "name": "RULER"}, {"ratio": 1000.0, "name": "COSMIC RULER"}, {"ratio": 1e6, "name": "REALITY BREAKER"}]:
 		check(Rules.wealth_rank(tier.ratio) == tier.name and Rules.wealth_rank(tier.ratio - 0.001) != tier.name, "wealth rank activates at exact threshold: " + str(tier.name))
 	fresh()
-	var strongest: float = 1.0
-	var weakest: float = 2.5
-	var tax_booms: int = 0
-	for sample in range(2000):
-		state.blind_cycle = Rules.new_cycle()
-		state.surge_remaining = 0.0
-		state.rng.seed = sample
-		state._start_surge()
-		var factor: float = state.blind_cycle.tax_multiplier
-		strongest = maxf(strongest, factor)
-		weakest = minf(weakest, factor)
-		tax_booms += int(factor > 1.0)
-	check(weakest == 1.0 and strongest == 2.5, "sampled tax increases include zero and 150 percent, never exceed the range")
-	check(tax_booms > 250 and tax_booms < 550, "Tax Booms remain occasional at configured 20-percent frequency")
 	state.reset_game()
 	check(not state.run_over and state.coins == 240.0 and state.blind_cycle == Rules.new_cycle(), "new run fully resets blind/debt state")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

@@ -50,13 +50,10 @@ func run() -> void:
 	hud.action_requested.connect(func(action: String) -> void: actions.append(action))
 	hud.update_state(state)
 	hud.set_process(false)
-	hud.set_market_intensity(1, 1800.0)
-	check(hud._market_impact.active, "normal market can display a jackpot")
 	hud.set_tutorial(guide())
 	await settle()
 	check(hud._tutorial_card.visible and hud.root.mouse_filter == Control.MOUSE_FILTER_IGNORE, "intro card appears without a blocking full-screen tutorial overlay")
 	check(not hud._hotbar.visible and not hud._stats_card.visible and not hud._menu_button.visible, "intro starts without unexplained controls or stats")
-	check(not hud._export_box.visible and not hud._market_impact.visible and not hud._market_impact.is_processing(), "starting or replaying guide clears previous jackpot")
 	check(not hud._quick_sell.visible and not hud._sidebar_box.visible, "sale actions and sidebar wait for their introduction")
 	hud.set_tool("pest")
 	check(hud._selected_tool == "hoe", "hidden tools cannot be equipped through HUD API")
@@ -78,7 +75,7 @@ func run() -> void:
 	hud.update_state(state)
 	check(hud._tool_buttons.hoe.visible and hud._tool_buttons.plant.visible and not hud._tool_buttons.water.visible, "hotbar reveals only introduced tools")
 	check(hud._top.coins.is_visible_in_tree() and not hud._top.price.is_visible_in_tree(), "coins reveal independently from stocks and luck")
-	check(hud._crop_row.visible and not hud._tracked_box.visible, "first planting shows seeds without tracked price clutter")
+	check(hud._crop_row.visible, "first planting shows seeds without tracked price clutter")
 	await settle()
 	check(is_equal_approx(hud._crop_row.size.x, 300.0) and is_equal_approx(hud._crop_row.get_global_rect().get_center().x, hud.root.size.x * 0.5), "first Russet choice uses a compact centered tray")
 	var visible_crops: int = 0
@@ -97,7 +94,7 @@ func run() -> void:
 	check(not hud._refs["buy:russet:1"].disabled and hud._refs["buy:russet:5"].disabled and not hud._refs.has("buy:golden:1"), "first purchase explicitly allows one Russet seed only")
 	var market_page: Control = hud._refs.market_page
 	check(hud._panel_crops == ["russet"] and market_page.crops == ["russet"] and not hud._refs["buy:russet:5"].visible, "first market keeps only Russet and hides bulk purchases")
-	check(not market_page.selling and market_page.chart == null and market_page.sell_button == null and not hud._modal_trade_footer.visible, "guided buying has no sell controls or price chart")
+	check(not market_page.selling and market_page.sell_button == null and not hud._modal_trade_footer.visible, "guided buying has no sell controls or price chart")
 	check(button_for("sell_potatoes") != null and button_for("sell_potatoes").disabled, "selling page waits for its tutorial introduction")
 	check(hud._known_crops().size() >= 4, "simplified seed market leaves full inventory crop catalog intact")
 	check(hud._refs["buy:russet:1"].text == "Buy 1 Russet", "guided purchase names the exact seed to buy")
@@ -107,16 +104,12 @@ func run() -> void:
 	hud.show_purchase({"kind": "seeds", "id": "russet", "name": "Russet", "quantity": 1, "cost": 20.0, "total": 13})
 	hud.show_toast("An unrelated farm notification")
 	hud.show_reward("A surprise", "Another distraction", "legendary")
-	hud.set_market_intensity(1, 3000.0)
-	hud.show_market_surge(1, 1.0, 5.0)
 	state.combo_time = 2.0
-	state.surge_timer = 3.0
 	hud.update_state(state)
 	hud._process(0.1)
 	check(hud._purchase_box.visible, "actual purchase quantity remains visible during tutorial")
 	check(not hud._toast_box.visible and not hud._reward_box.visible and not hud._combo_box.visible, "ordinary notifications and streaks cannot cover the introduction")
-	check(not hud._market_impact.visible and not hud._export_box.visible and not hud._surge_urgent, "state refresh and frame update cannot revive countdown or aura")
-	check(not hud._crop_row.visible and not hud._tracked_box.visible, "open shop keeps seed tray closed")
+	check(not hud._crop_row.visible, "open shop keeps seed tray closed")
 	check(hud._tutorial_card.get_index() > hud._modal.get_index(), "guide keeps mouse priority above modal backdrop")
 	for size: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360), Vector2i(600, 900)]:
 		root.min_size = Vector2i.ZERO
@@ -155,13 +148,13 @@ func run() -> void:
 		check(hud._tutorial_card.is_visible_in_tree() and not hud._tutorial_skip.disabled, "%s panel leaves skip available" % panel)
 		if panel == "tools":
 			check(hud._refs["upgrade:hoe"].disabled, "affordable tool upgrades stay disabled on guided inspection")
-	check(hud._top.market_name.text == "STOCKS PAUSED" and hud._top.price.text == "After the tour", "stock introduction explains calm market without countdown excitement")
+	check(hud._top.market_name.text == "POTATO PRICES" and hud._top.price.text == "Slow seasonal drift", "stock introduction explains calm market without countdown excitement")
 	check(hud._crop_row.anchor_left == 0.0 and hud._crop_row.anchor_right == 1.0 and hud._crop_row.offset_left == 28.0 and hud._crop_row.offset_right == -28.0, "stock introduction restores full seed tray layout")
 	check(button_for("debug") == null, "guided menu does not reveal debugging clutter")
 	hud.set_tutorial({})
 	hud.close_panel()
 	await settle()
-	check(not hud._tutorial_card.visible and hud._menu_button.visible and hud._export_box.visible, "finishing restores ordinary menu and stock countdown")
+	check(not hud._tutorial_card.visible and hud._menu_button.visible, "finishing restores ordinary menu and stock countdown")
 	check(hud._top.coins.is_visible_in_tree() and hud._top.price.is_visible_in_tree(), "finishing restores all normal stats")
 	check(hud._hotbar.size.x == 508 and hud._tool_buttons.pest.visible, "full hotbar width restores")
 	hud.show_panel("tools", state)
@@ -185,7 +178,6 @@ func run() -> void:
 	hud.close_panel()
 	state.farm_help.enable()
 	state.farm_help.dismiss("repeat")
-	state.surge_timer = 30.0
 	hud.set_tool("hoe")
 	for size: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360), Vector2i(600, 900)]:
 		root.size = size

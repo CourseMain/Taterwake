@@ -79,7 +79,6 @@ func _run() -> void:
 	var before_time: float = game.state.elapsed
 	game._process(5.2)
 	check(game.state.elapsed > before_time + 5.0, "world continues while market is open")
-	check(game.state.market.russet.history.size() >= 2, "live graph records market movement")
 	game.hud.close_panel()
 	check(not game.hud.is_panel_open(), "close returns to world")
 	game._select_tool("harvest")
@@ -148,7 +147,6 @@ func _run() -> void:
 	if capture:
 		game.hud.close_panel()
 		game.state.update(21.0)
-		game.state._start_event("shortage")
 		game._on_state_changed()
 		game._on_action("market")
 		await shot("market-spike")

@@ -24,7 +24,6 @@ func run() -> void:
 	game.set_process(false)
 	game.set_process_unhandled_input(false)
 	for plot in game.state.plots: game.state._clear_crop(plot)
-	game.state.surge_timer = 1000
 	game._on_action("profession:giant")
 	check(not game.prize_target, "empty field never enters an unusable targeting mode")
 	game.state.plots[0].stage = 1
@@ -93,7 +92,7 @@ func run() -> void:
 	game.state.blind_cycle.due_in = 0
 	game.state.blind_cycle.booms = 2
 	game.hud.update_state(game.state)
-	check("Debt" in game.hud._blind_modal_warning.text and "after 1 more stock" in game.hud._blind_modal_warning.text, "debt warning names the balance and next collection separately")
+	check("Debt" in game.hud._blind_modal_warning.text and "No tax due" in game.hud._blind_modal_warning.text, "debt warning distinguishes the balance from collection status")
 	await shot("farmer-debt")
 	game.queue_free()
 	await settle()

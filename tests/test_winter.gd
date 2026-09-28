@@ -122,7 +122,7 @@ func _run() -> void:
 	await shot("frosthollow-frostbreak")
 	var coins_before: float = game.state.coins
 	game._process(20.1)
-	check(not game.state.frost_active and game.state.thaw_remaining == 0.0, "waiting out the storm cannot earn its auction")
+	check(not game.state.frost_active, "frost expires without clearing rewards")
 	check(game.state.coins == coins_before, "snowfall does not award passive coins")
 	for round_index in range(3):
 		game.state.frost_timer = 0.05
@@ -133,10 +133,8 @@ func _run() -> void:
 				frozen.append(index)
 		for index in frozen:
 			game.perform_plot(index, "hoe")
-		check(not game.state.frost_active and game.state.thaw_remaining > 0.0, "manual ice breaking opens the thaw auction")
-		check(game.state.thaw_remaining <= 5.0, "thaw sale multiplier is temporary")
+		check(not game.state.frost_active, "manual ice breaking clears frost")
 		game._process(5.1)
-		check(game.state.thaw_remaining == 0.0, "winter auction multiplier is removed after five seconds")
 	game._on_action("quests")
 	press("quest:winter_frost")
 	game.hud.close_panel()

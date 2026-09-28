@@ -53,7 +53,6 @@ func _run() -> void:
 	root.add_child(game)
 	await settle_world()
 	game.set_process(false)
-	game.state._event_in = 100000.0
 	check(game.test_mode, "test cannot load or overwrite player save")
 	game._on_action("island")
 	check(button("island_unlock") != null and button("island_unlock").disabled, "new farms see actual gated travel requirements")
@@ -124,9 +123,8 @@ func _run() -> void:
 	game.state.export_timer = 0.05
 	game._advance_simulation(0.06)
 	check(game.state.export_active and game.world._export_active, "randomly timed export arrival updates simulation and boat")
-	check(game.state.export_timer <= 5.0 and game.state.export_factor >= 2.0 and game.state.export_factor <= 6.0, "export gives a five-second varied opportunity")
-	check(is_equal_approx(game.state.market.sunburst.sell, game.state._market_core.sunburst.sell * game.state.export_factor), "displayed export factor controls the real quote")
-	check(game.state.market.sunburst.seed > seed_price, "seed prices rise with the export sale quote")
+	check(game.state.export_timer <= 5.0, "export gives a five-second varied opportunity")
+	check(game.state.market.sunburst.seed == seed_price, "seed prices stay fixed during export visits")
 	await shot("golden-shores-export-market")
 	await process_frame
 	await process_frame
@@ -183,7 +181,6 @@ func _run() -> void:
 	await settle_world()
 	check(game.state.plots[47].stage == 3, "returning preserves the remote harvest")
 	game.state.coins = 8.4e71
-	game.state._event_in = 8.0
 	game._on_state_changed()
 	check(game.hud._top.coins.text == "\uE000 8.4e71", "second-island HUD can show astronomical balances")
 	check(game.state.save_game(SAVE), "complete island progress saves")

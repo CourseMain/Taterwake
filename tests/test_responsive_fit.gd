@@ -50,7 +50,6 @@ func run() -> void:
 	game.state.island3_unlocked = true
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
-	game.state.surge_timer = 8.0
 	game.hud.update_state(game.state)
 	game.hud._toast_box.hide()
 	game.hud._reward_box.hide()
@@ -69,7 +68,7 @@ func run() -> void:
 		game.hud.set_tool("plant")
 		game.hud._purchase_box.hide()
 		await settle()
-		for item: Control in [game.hud._top.coins.get_parent().get_parent().get_parent(), game.hud.root.get_node("MainMenuButton"), game.hud.root.get_node("ToolHotbar"), game.hud._export_box, game.hud._quick_sell, game.hud._crop_row, game.hud._tracked_box]:
+		for item: Control in [game.hud._top.coins.get_parent().get_parent().get_parent(), game.hud.root.get_node("MainMenuButton"), game.hud.root.get_node("ToolHotbar"), game.hud._quick_sell, game.hud._crop_row]:
 			inside(item, tag + " " + item.name)
 		check(not game.hud.root.get_node("ToolHotbar").get_global_rect().intersects(game.hud._quick_sell.get_global_rect()), tag + " sell button clears the hotbar")
 		for button: Control in game.hud._crop_buttons.values():
@@ -82,14 +81,14 @@ func run() -> void:
 		check_menu(tag + " market")
 		inside(game.hud._purchase_box, tag + " purchase receipt")
 		check(not game.hud._purchase_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), tag + " receipt leaves every market button clear")
-		check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, tag + " open menu hides the seed tray")
+		check(not game.hud._crop_row.visible, tag + " open menu hides the seed tray")
 		await shot(tag + "-market")
 		game.hud._purchase_remaining = 0.0
 		game.hud._purchase_receipt.clear()
 		game.hud._purchase_box.hide()
 	# Every menu uses the same fixed canvas, but each can have its own minimum
 	# width. Check the actual content after container layout, not a mock panel.
-	for kind: String in ["inventory", "tools", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help"]:
+	for kind: String in ["inventory", "tools", "pause", "dex", "island", "quests", "builds", "activities", "duck_patrol", "debug", "graphics", "help"]:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)

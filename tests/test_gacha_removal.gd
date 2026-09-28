@@ -43,7 +43,7 @@ func run() -> void:
 	check(game.builds.levels.scientist == 1, "previously locked builds become selectable without crates")
 	check(farm.save_game(SAVE), "migrated farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	check(saved.mechanics_revision == 23, "save records mechanics revision 23")
+	check(saved.mechanics_revision == 24, "save records mechanics revision 24")
 	for field in ["luck", "debug_luck_multiplier", "trophies", "roll_count", "last_roll", "last_roll_results", "last_roll_accounting", "pending_roll_boost", "boost_remaining", "boost_factor", "permanent_yield"]:
 		check(not saved.has(field), "new saves omit " + field)
 	check(not saved.builds.has("build_crates") and not saved.builds.has("next_roll_charge"), "build saves omit crate ownership and reward charge")

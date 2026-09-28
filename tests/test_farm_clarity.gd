@@ -32,7 +32,6 @@ func run() -> void:
 	var state = game.state
 	state.farm_help.enable()
 	state.farm_help.dismiss("repeat")
-	state.surge_timer = 25.0
 	hud.update_state(state)
 	await settle()
 	check(not hud._farm_help_card.get_global_rect().intersects(hud._blind_card.get_global_rect()), "tax tip does not overlap tax clock")
@@ -45,7 +44,6 @@ func run() -> void:
 	state.coins = 240.0
 	state.farm_help.data.dismissed.erase("taxes")
 	hud._help_cooldown = 0.0
-	state.surge_timer = 25.0
 	game._select_tool("water")
 	state.plots[4].tilled = true
 	state.plots[4].stage = 1

@@ -1,7 +1,6 @@
 extends SceneTree
 ## Structural rendering regression checks. No GameState or player saves.
 const World = preload("res://scripts/farm_world.gd")
-const Rocket = preload("res://scripts/stock_rocket_cutscene.gd")
 var failures: int = 0
 var checks: int = 0
 
@@ -51,12 +50,6 @@ func _run() -> void:
 		world.update_plots(plots)
 		world.animate(0.1, false)
 		check(world._crop_roots[4].rotation.is_zero_approx() and world._pest_labels[4].scale.is_equal_approx(Vector3.ONE), "clearing pests resets animated crop and warning transforms")
-	var sound: AudioStreamWAV = Rocket.LAUNCH_SOUND
-	var hash := HashingContext.new()
-	hash.start(HashingContext.HASH_SHA256)
-	hash.update(sound.data)
-	check(sound.format == AudioStreamWAV.FORMAT_16_BITS and sound.mix_rate == 22050 and sound.stereo, "import keeps original uncompressed stereo PCM")
-	check(hash.finish().hex_encode() == "c401ba3ac808e5b1f399c2da1985a9b0d8df8423ca379e20c5b3aaa92e888918", "baked crowded-spud launch score matches the deterministic offline PCM")
 	world.queue_free()
 	await process_frame
 	print("WORLD RENDERING OPTIMIZATION: %d checks, %d failures" % [checks, failures])

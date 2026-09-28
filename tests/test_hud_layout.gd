@@ -22,12 +22,6 @@ func shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	check(root.get_texture().get_image().save_png("res://artifacts/hud-layout-" + name + ".png") == OK, "render " + name)
 
-func stock_fits(description: String) -> void:
-	var box: Rect2 = game.hud._export_box.get_global_rect()
-	check(box.position.x == 28 and box.end.x <= 340 and box.size.y <= 100 and box.position.y >= 650, description + ": compact stock card stays below the farm")
-	check(not box.intersects(Rect2(350, 100, 560, 140)), description + ": stock card leaves the barn visible")
-	check(game.hud._export_title.get_minimum_size().x <= 278 and game.hud._export_detail.get_minimum_size().x <= 278, description + ": timer and details fit without clipped text")
-
 func noninteractive(node: Node) -> bool:
 	if node is Control and node.mouse_filter != Control.MOUSE_FILTER_IGNORE:
 		return false
@@ -63,7 +57,6 @@ func run() -> void:
 	check(not game.hud._tool_caption.visible, "equipped-tool control hint is absent from the persistent HUD")
 	check(game.hud._tool_buttons.size() == 5 and game.hud.root.get_node("MainMenuButton").visible, "five tools and menu remain available")
 	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree(), "money, selected market and luck remain visible")
-	check(noninteractive(game.hud._export_box), "countdown and all children pass camera gestures through")
 	check(noninteractive(game.hud._top.coins.get_parent().get_parent().get_parent()), "noninteractive stats pass camera gestures through")
 	var hotbar: Control = game.hud.root.get_node("ToolHotbar")
 	await process_frame
@@ -74,52 +67,33 @@ func run() -> void:
 	for island: int in [1, 2, 3]:
 		game.state.travel_to(island)
 		game.state.climate.acknowledge(game.state)
-		game.state.surge_remaining = 0.0
-		game.state.surge_timer = 180.0
 		game.state.export_active = false
 		game.state.frost_active = false
-		game.state.thaw_remaining = 0.0
-		game.state._refresh_market(false)
+		game.state._refresh_market()
 		game.hud.update_state(game.state)
 		game.hud._process(0.01)
-		game.hud._market_impact.set_quote(island, 0.0)
-		game.hud._market_impact._process(6.0)
 		game.hud._toast_box.hide()
 		game.hud._context_box.hide()
 		await process_frame
-		stock_fits("Island%d calm" % island)
-		check(game.hud._export_title.text.contains("3:00") and game.hud._export_detail.text.contains("3K–10K%" if island == 3 else "+500–2,999%"), "calm countdown shows actual new range on island%d" % island)
 		await shot("island-" + str(island))
-		game.state.surge_timer = 10.0
 		game.hud.update_state(game.state)
 		game.hud._process(0.1)
 		await process_frame
-		stock_fits("Island%d last10seconds" % island)
-		check(game.hud._surge_urgent and game.hud._export_detail.text.contains("GET READY"), "last ten seconds keep visual urgency")
-		game.state.surge_timer = 0.01
 		game.state.update(0.02)
 		game.hud.update_state(game.state)
 		game.hud._process(0.1)
 		await process_frame
-		stock_fits("Island%d active" % island)
-		check(game.hud._surge_active and game.hud._export_title.text.contains("SELL [F]"), "active stock keeps the direct sell prompt")
-		await shot("island-" + str(island) + "-surge")
-	game.state.surge_remaining = 0.0
-	game.state.surge_timer = 180.0
-	game.state._refresh_market(false)
+	game.state._refresh_market()
 	game.hud.update_state(game.state)
 	game.hud._process(0.01)
-	game.hud._market_impact.set_quote(3, 0.0)
-	game.hud._market_impact._process(6.0)
 	root.size = Vector2i(960, 600)
 	await process_frame
-	stock_fits("Compact window")
 	await shot("compact")
 	game.hud.set_tool("plant")
-	check(game.hud._crop_row.visible and not game.hud._tracked_box.visible, "seed tool reveals seed controls without the extra tracked-price strip")
+	check(game.hud._crop_row.visible, "seed tool reveals seed controls without the extra tracked-price strip")
 	await shot("compact-seeds")
 	game.hud.set_tool("water")
-	check(not game.hud._crop_row.visible and not game.hud._tracked_box.visible, "leaving seeds returns to the clean farm view")
+	check(not game.hud._crop_row.visible, "leaving seeds returns to the clean farm view")
 	game._on_action("help")
 	var drag_explained: bool = false
 	var zoom_explained: bool = false

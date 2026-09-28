@@ -1,4 +1,5 @@
 extends SceneTree
+const LegacyTax = preload("res://tests/legacy_tax_fixture.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -79,14 +80,14 @@ func run() -> void:
 	check(game.hud._weather_button.visible and game.hud._weather_button.text.to_upper().contains("FLOOD"), "dedicated weather shortcut carries the warning")
 	await shot("climate-flood")
 	game._on_action("climate")
-	check(game.hud._refs.weather_page._values.market.text == "5%" and game.hud._refs.climate_market.text.contains("\uE000 9.4B"), "sale-price disruption and protection-adjusted recovery costs appear together")
+	check(game.hud._refs.climate_market.text.contains("\uE000 9.4B"), "protection-adjusted recovery costs appear")
 	game.hud.close_panel()
 	# Crashes no longer advance tax collection; let the market recover first.
 	game._advance_simulation(105.0)
 	game.state.coins = 10000.0
 	game.state.blind_cycle.tax_rolled = true
 	for _i in range(3):
-		game.state._start_surge()
+		LegacyTax.set_count(game.state, int(game.state.blind_cycle.booms) + 1)
 		game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	var page: Control = game.hud._run_end
@@ -94,7 +95,7 @@ func run() -> void:
 	check(page.visible and page.headline.text == "BANKRUPT", "climate recovery bankruptcy opens the editorial page")
 	check(page.detail.text.contains("tax bill") and page._event.text.to_upper().contains("FLOOD") and page._calculation.text.contains(" tax = "), "collapse shows the tax-caused debt calculation and actual climate event")
 	check(page._metrics["FIELD LOST"].note.text.contains("48") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
-	check(page._context.text.contains("Farmer build") and page._context.text.contains("market"), "collapse includes build and market context")
+	check(page._context.text.contains("Farmer build"), "collapse includes build context")
 	check(not game.hud._blind_card.visible and not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
@@ -129,7 +130,7 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	game.hud._climate_alert.dismiss()
 	await create_timer(1.0).timeout
-	game._update_stock_shake(0.01)
+	game._update_weather_shake(0.01)
 	check(absf(game.world.camera.h_offset) > 0.0 and absf(game.world.camera.h_offset) <= 0.26, "storm impact adds bounded camera shake")
 	check(game.hud._climate_effect.strength > 0.8 and game.climate_audio.wind.playing, "storm uses strong wind, rain and ambient sound")
 	await shot("climate-storm")

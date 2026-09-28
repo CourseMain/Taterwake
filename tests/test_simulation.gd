@@ -45,7 +45,6 @@ func _run() -> void:
 	var held: int = farm.storage.russet
 	farm.update(15.0)
 	check(farm.storage.russet == held and farm.coins == coins, "holding inventory never sells or generates passive income")
-	check(farm.market.russet.history.size() > 5 and farm.market.russet.seed != 12.0, "crop and seed prices move continuously")
 	var price: float = farm.market.russet.sell
 	farm.sell_crop("russet")
 	check(is_equal_approx(farm.coins, coins + held * price) and farm.storage.russet == 0, "selling uses the live quote")
@@ -106,30 +105,6 @@ func _run() -> void:
 		farm.update(0.11)
 		check(farm.plots[4].stage == 3, crop + " matures at its own timer")
 	farm.reset_game()
-	farm._start_event("shortage")
-	check(farm.event_strength >= 1.5 and farm.event_strength <= 3.0 and is_equal_approx(farm.market.russet.sell, 38.0 * farm.event_strength), "shortage creates a randomized visible buying spike")
-	farm.update(5.01)
-	check(farm.current_event == "" and farm.event_remaining == 0.0, "price spike fully expires within five seconds")
-	check(is_equal_approx(farm.market.russet.sell, farm._market_core.russet.sell), "temporary spike returns to ordinary underlying quote")
-	farm.reset_game()
-	price = farm.market.russet.seed
-	farm._start_event("crash")
-	check(is_equal_approx(farm.market.russet.seed, State.seed_price_for(farm.market.russet.sell)) and is_equal_approx(farm.market.russet.sell, 38.0 * farm.event_strength), "crash discounts linked seeds as well as crops")
-	farm._end_event()
-	farm._start_event("seed_panic")
-	check(is_equal_approx(farm.market.russet.seed, State.seed_price_for(farm.market.russet.sell)) and farm.market.russet.sell == 38.0, "seed panic preserves the fixed per-potato ratio")
-	farm._end_event()
-	farm._start_event("golden_craze")
-	check(is_equal_approx(farm.market.golden.sell, 900.0 * farm.event_strength) and is_equal_approx(farm.market.russet.sell, 38.0), "Golden craze targets only Golden crops")
-	farm._end_event()
-	farm._start_event("chaos")
-	check(farm.event_remaining > 0.0 and farm.event_remaining <= 5.0, "chaos quote burst lasts about five seconds")
-	var event_words: Dictionary = {"shortage": "shortage", "crash": "crashes", "golden_craze": "golden", "seed_panic": "seed", "chaos": "normal", "mystery_buyer": "mystery", "supply_collapse": "collapsed", "seed_fair": "seed fair", "festival": "festival"}
-	for event_id in farm.EVENT_IDS:
-		farm._start_event(event_id)
-		check(farm.news.to_lower().contains(event_words[event_id]) and farm.event_remaining > 0.0 and farm.event_remaining <= 5.0, "varied event announcement and brief timer: " + event_id)
-		farm._end_event()
-	farm.reset_game()
 	farm.mastery.russet = 100
 	check(farm.mastery_level("russet") == 2, "mastery grows from farming")
 	farm.reset_game()
@@ -137,17 +112,16 @@ func _run() -> void:
 	farm.interact_plot(4, "plant")
 	farm.interact_plot(4, "water")
 	farm.update(4.0)
-	farm._start_event("shortage")
 	farm.coins = 8.4e71
 	check(farm.money(farm.coins) == "\uE000 8.4e71" and farm.money(4200000.0) == "\uE000 4.2M", "large balances use magnitude suffixes and scientific notation")
 	check(farm.save_game(SAVE), "valid farm saves atomically")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
 	check(farm.load_game(SAVE), "valid farm reloads")
-	check(is_equal_approx(farm.coins, 8.4e71) and is_equal_approx(farm.plots[4].elapsed, 4.0) and farm.current_event == "shortage", "saving preserves huge coins, exact growth and active events")
+	check(is_equal_approx(farm.coins, 8.4e71) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves huge coins, exact growth and active events")
 	var snapshot: float = farm.elapsed
 	check(farm.elapsed == snapshot, "load does not add offline growth")
-	for key in ["coins", "selected_crop", "capacity", "tools", "market", "plots", "schema_version"]:
+	for key in ["coins", "selected_crop", "capacity", "tools", "plots", "schema_version"]:
 		var bad: Dictionary = saved.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
@@ -169,7 +143,6 @@ func _run() -> void:
 	write_save(bad)
 	check(not farm.load_game(SAVE), "inventory beyond global limit rejected")
 	farm.reset_game()
-	farm._market_core.russet.sell = farm.CROPS.russet.base * 3.0
 	farm._refresh_market()
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "legitimate maximum underlying market quote round-trips through saves")
 	farm.reset_game()

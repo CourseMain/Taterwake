@@ -144,7 +144,7 @@ func run() -> void:
 	for plot in farm.plots:
 		plot.stage = 2; plot.variety = "frost"
 	farm._start_frost()
-	check(not farm.frost_active and farm.thaw_remaining > 0, "fully frost-hardy farm safely completes frost without an impossible target")
+	check(not farm.frost_active, "fully frost-hardy farm safely completes frost without an impossible target")
 	farm.travel_to(2); farm.climate.acknowledge(farm)
 	farm.climate.data.phase = "active"; farm.climate.data.event = "drought"; farm.climate.data.island = 2; farm.climate.data.severity = 1
 	farm.plots[0].stage = 2; farm.plots[0].variety = "dry"

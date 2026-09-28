@@ -86,7 +86,6 @@ func run() -> void:
 	press("market_sell")
 	check(not game.tutorial.active and not game.state.tutorial_active and game.state.tutorial_progress.completed, "first sale ends all mandatory guidance")
 	check(game.state.farm_help.data.enabled and game.state.farm_help.data.independent == 0, "first sale enables contextual help, not independent success")
-	check(game.state.surge_timer == 180.0, "normal stock schedule starts fresh")
 	for tool: String in ["hoe", "plant", "water", "harvest", "pest"]:
 		check(button("tool:" + tool) != null, "full control includes " + tool)
 	game.hud._process(3.1)
@@ -119,10 +118,13 @@ func run() -> void:
 	game._on_action("help")
 	check(game.hud._modal_title.text == "Controls" and button("farm_help:details") == null, "controls page has no extra practice or help launcher")
 	game.hud.close_panel()
-	game.state.surge_timer = 30.0
+	game.hud.update_state(game.state)
+	game.state.blind_cycle.due_in = 10.0
+	game.state.blind_cycle.booms = 3
+	game.state.blind_cycle.tax_rolled = true
 	game.hud.update_state(game.state)
 	await shot("taxes")
-	check(game.hud._farm_tip.id == "taxes", "tax explanation appears before first scheduled boom")
+	check(game.hud._farm_tip.id == "taxes", "tax explanation appears for an outstanding bill")
 	# Optional tour can advance without pretending a shop visit proves learning.
 	game._on_action("help")
 	game._on_action("tutorial:restart")

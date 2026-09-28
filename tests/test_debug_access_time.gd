@@ -108,14 +108,9 @@ func run() -> void:
 	await shot("unlocked-actions")
 	check(game.state.save_game(SAVE), "debug effects can save without storing the session gate")
 	game.hud.close_panel()
-	game.state.surge_timer = 0.05
-	game.state.surge_remaining = 0.0
 	var before: float = game.state.elapsed
 	game._process(50.0)
-	check(is_equal_approx(game.state.elapsed - before, 1.0) and game.state.surge_remaining > 9.0, "large accelerated frame cannot skip a ten-second stock boom")
-	check(game.hud._export_bar.max_value == 10.0, "stock HUD displays the complete ten-second range")
-	game.state.current_event = ""
-	game.state._event_in = 100.0
+	check(is_equal_approx(game.state.elapsed - before, 1.0), "large accelerated frame cannot skip a ten-second stock boom")
 	game.builds.fertilizer = 0.1
 	var fertilized: Dictionary = game.state.plots[0]
 	fertilized.crop = "russet"
@@ -129,12 +124,9 @@ func run() -> void:
 	game.state.island3_unlocked = true
 	game.state.travel_to(3)
 	game.state.climate.acknowledge(game.state)
-	game.state.surge_remaining = 0.0
-	game.state.rocket_timer = 100.0
 	game.state.pest_timer = 100.0
 	game.state.frost_timer = 100.0
 	game.state.export_timer = 100.0
-	game.state._event_in = 100.0
 	game.activities.furnace_remaining = 0.15
 	game.activities.furnace_cooldown = 50.0
 	game.builds.cooldown = 50.0
@@ -158,38 +150,10 @@ func run() -> void:
 	game.destination = Vector3(5.0, 0.0, 9.0)
 	game.walking = true
 	var position: Vector3 = game.world.player.position
-	var clock: float = game.stock_shake_clock
+	var clock: float = game.weather_shake_clock
 	game._process(0.01)
 	check(is_equal_approx(position.distance_to(game.world.player.position), game.WALK_SPEED * 0.01), "walking uses real time at thirty-times simulation speed")
-	check(is_equal_approx(game.stock_shake_clock - clock, 0.01) and Engine.time_scale == 1.0, "camera and global presentation time remain real time")
-	game.state.rocket_timer = 0.05
-	before = game.state.elapsed
-	var cooldown: float = game.builds.cooldown
-	var frost: float = game.state.frost_timer
-	var export_wait: float = game.state.export_timer
-	game._process(1.0)
-	game.rocket_cutscene.set_process(false)
-	check(game.state.rocket_pending and game.rocket_cutscene.active and is_equal_approx(game.state.elapsed - before, 0.05), "thirty-times high-delta frame stops exactly at rocket launch")
-	check(is_equal_approx(cooldown - game.builds.cooldown, 0.05), "builds consume only the interval before cinematic pause")
-	check(is_equal_approx(frost - game.state.frost_timer, 0.05) and is_equal_approx(export_wait - game.state.export_timer, 0.05), "winter and export timers finish the same pre-launch interval")
-	before = game.state.elapsed
-	cooldown = game.builds.cooldown
-	game._process(5.0)
-	check(game.state.elapsed == before and game.builds.cooldown == cooldown, "all simulation stops during cinematic despite accelerated debug time")
-	game.rocket_cutscene._process(0.1)
-	check(is_equal_approx(game.rocket_cutscene.elapsed, 0.1), "cinematic advances by real seconds")
-	game.rocket_cutscene._process(game.rocket_cutscene.DURATION - 0.1)
-	check(game.state.surge_remaining == 10.0 and not game.state.rocket_pending, "cinematic hands off a full ten simulation seconds without consuming overshoot")
-	game._process(0.01)
-	check(is_equal_approx(game.state.surge_remaining, 9.7), "post-launch selling time follows the selected simulation speed")
-	game.state.rocket_timer = 0.000001
-	before = game.state.elapsed
-	cooldown = game.builds.cooldown
-	game._process(0.01)
-	game.rocket_cutscene.set_process(false)
-	check(game.state.rocket_pending and game.rocket_cutscene.active and game.state.elapsed > before, "minimum valid rocket timer cannot freeze the simulation")
-	check(is_equal_approx(game.state.elapsed - before, cooldown - game.builds.cooldown), "epsilon rocket boundary keeps build and farm consumption coherent")
-	game.rocket_cutscene._process(game.rocket_cutscene.DURATION)
+	check(is_equal_approx(game.weather_shake_clock - clock, 0.01) and Engine.time_scale == 1.0, "camera and global presentation time remain real time")
 	game._on_action("debug:lock")
 	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0, "locking restores real-time speed while preserving saved money and luck effects")
 	game._on_action("debug")

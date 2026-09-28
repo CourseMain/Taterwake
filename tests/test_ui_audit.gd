@@ -56,7 +56,7 @@ func run() -> void:
 	for id: String in game.builds.levels: game.builds.levels[id] = 5
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
-	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "builds", "tracked_prices", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
+	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "builds", "activities", "duck_patrol", "debug", "graphics", "help", "taxes", "climate"]:
 		await page(kind)
 	for tab: String in ["crops", "tools"]:
 		game.hud.show_panel("inventory", game.state)
@@ -81,10 +81,9 @@ func run() -> void:
 		await page("activities", "activities-island-%d" % island)
 	game.state.climate.begin_warning(game.state, "storm", 1.0)
 	game.state.climate._impact(game.state)
-	game.state._refresh_market(false)
+	game.state._refresh_market()
 	game.hud.update_state(game.state)
 	await page("climate", "climate-disaster")
-	check(game.hud._export_title.text.contains("CRASH") and game.hud._export_detail.text.contains("Booms paused"), "HUD explains the crash and stopped booms")
 	root.size = Vector2i(960, 600)
 	for kind: String in ["dex", "taxes", "climate", "help", "debug"]:
 		await page(kind, "compact-" + kind)

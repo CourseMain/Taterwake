@@ -175,9 +175,9 @@ func run() -> void:
 	game._pan_camera_by(Vector2(60, 30))
 	stopped = camera.global_position
 	game.climate_shake = 0.1
-	game._update_stock_shake(0.01)
+	game._update_weather_shake(0.01)
 	check(camera.global_position == stopped and absf(camera.h_offset) > 0.0, "weather/stock shake layers over the panned camera")
-	game._update_stock_shake(1.0)
+	game._update_weather_shake(1.0)
 	for island in [2, 3, 1]:
 		game.state.current_island = island
 		game._on_island_changed(island)

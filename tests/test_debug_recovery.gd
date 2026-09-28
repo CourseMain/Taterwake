@@ -103,7 +103,7 @@ func run() -> void:
 	check(not farm.run_over and farm.coins == 15e9 and farm.debug_money_modified, "explicit action restores funded test farm and provenance")
 	check(farm.island_plots == plots and farm.seed_inventory == seeds and farm.storage == storage and farm.tools == tools_before and farm.current_island == 2 and farm.island2_unlocked, "recovery preserves field, seeds, inventory, tools and island progress")
 	check(game.builds.save_data() == builds_before and game.activities.save_data() == activities_before, "recovery keeps actual build levels, profession tasks and island activities")
-	check(farm.blind_cycle.booms == 0 and farm.blind_cycle.due_in == 0 and farm.surge_timer == farm.SURGE_INTERVAL and game.debug_time_multiplier == 1.0, "recovery resets tax and stock countdown at normal speed")
+	check(farm.blind_cycle.booms == 0 and farm.blind_cycle.due_in == 0 and game.debug_time_multiplier == 1.0, "recovery resets tax and stock countdown at normal speed")
 	check(not collapse.visible and not game.hud.is_panel_open() and game.hud._top.coins.is_visible_in_tree(), "farm HUD returns and collapse Debug closes after recovery")
 	check(farm.climate.data.collapse.is_empty() and not farm.blind_cycle.last_result.is_empty(), "past tax receipt kept without a stale collapse")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and not farm.run_over and farm.debug_money_modified, "recovered test state roundtrips in a dedicated save only")

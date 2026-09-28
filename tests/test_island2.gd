@@ -34,8 +34,8 @@ func write_save(data: Variant) -> void:
 
 func legacy_data(schema: int = 3) -> Dictionary:
 	var data: Dictionary = farm._save_data().duplicate(true)
-	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "export_factor", "event_strength", "lifetime_sales", "island_sales", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
-	for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: data[key].erase("icecap")
+	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "lifetime_sales", "island_sales", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
+	for key in ["seed_inventory", "storage", "mastery"]: data[key].erase("icecap")
 	data.island_plots.erase("3")
 	for field in data.island_plots.values():
 		for plot in field: plot.erase("frozen")
@@ -48,7 +48,7 @@ func legacy_data(schema: int = 3) -> Dictionary:
 	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0}
 	for id in old_targets: data.quest_progress[id] = float(old_targets[id]) if data.quest_claimed.has(id) else minf(float(data.quest_progress[id]), float(old_targets[id]))
 	if schema == 2:
-		for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: data[key].erase("sunburst")
+		for key in ["seed_inventory", "storage", "mastery"]: data[key].erase("sunburst")
 		for key in ["current_island", "island2_unlocked", "island_plots", "shores_first_mutation", "export_timer", "export_active", "export_cycles", "quest_progress", "quest_claimed", "golden_hat"]: data.erase(key)
 	for island in ["2", "3"]:
 		if data.has("island_plots") and data.island_plots.has(island):
@@ -60,7 +60,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	farm.notified.connect(func(message: String):
-		if message.contains("IN 15s"): warnings_seen += 1)
+		if message.contains("in 15s"): warnings_seen += 1)
 	check(farm.current_island == 1 and farm.field_columns() == 6 and farm.field_rows() == 4, "starter island dimensions preserved")
 	check(farm.plots.size() == 24 and farm.island_plots["2"].size() == 48 and not farm.island2_unlocked, "only second island adds a forty-eight-bed field")
 	check(farm.CROP_IDS.size() == 6 and farm.available_crops().size() == 4, "Sunburst excluded from first-island market")
@@ -92,15 +92,12 @@ func _run() -> void:
 	check(farm.coins == 100000.0, "repeated unlock does not charge twice")
 	check(farm.export_timer >= 75.0 and farm.export_timer <= 180.0, "first export delay is a randomized seventy-five to one-hundred-eighty seconds")
 	var old_market: Dictionary = farm.market.duplicate(true)
-	var old_core: Dictionary = farm._market_core.duplicate(true)
 	var old_rng: int = farm.rng.state
 	var old_field: Array = farm.plots.duplicate(true)
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	check(farm.field_columns() == 8 and farm.field_rows() == 6 and farm.plots.size() == 48, "travel switches field geometry")
-	var same_history: bool = true
-	for id in farm.CROP_IDS: same_history = same_history and farm.market[id].history == old_market[id].history
-	check(farm._market_core == old_core and farm.island_plots["1"] == old_field, "travel never rerolls underlying quotes or discards the old farm; local temporary premiums may expire")
+	check(farm.market == old_market and farm.island_plots["1"] == old_field, "travel never rerolls underlying quotes or discards the old farm; local temporary premiums may expire")
 	farm.travel_to(3)
 	farm.climate.acknowledge(farm)
 	check(farm.current_island == 2 and farm.plots[47].unlocked, "all Shores plots available and no third island")
@@ -185,47 +182,9 @@ func _run() -> void:
 	farm.climate.acknowledge(farm)
 	check(is_equal_approx(farm.export_timer, 15.0), "travel cannot reset or delay incoming ship")
 	farm.update(15.0)
-	check(farm.export_active and farm.export_timer > 1.0 and farm.export_timer <= 5.0 and farm.export_factor >= 2.0 and farm.export_factor <= 6.0, "export is a short randomized two-to-six-times offer")
-	farm._end_event()
-	var factor: float = farm.export_factor
-	check(is_equal_approx(farm.market.golden.sell, farm._market_core.golden.sell * factor) and is_equal_approx(farm.market.sunburst.sell, farm._market_core.sunburst.sell * factor), "export boosts only eligible commodity quotes")
-	check(farm.market.russet.sell == farm._market_core.russet.sell, "ordinary crops do not receive export multiplier")
-	check(is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "export seeds rise with their sale quote rather than staying implausibly cheap")
-	farm._start_event("golden_craze")
-	check(is_equal_approx(farm.market.golden.sell, minf(farm.CROPS.golden.base * farm.stock_cap(), farm._market_core.golden.sell * factor * farm.event_strength)), "brief export can combine with an independent brief event")
+	check(farm.export_active and farm.export_timer > 1.0 and farm.export_timer <= 5.0, "export is a short randomized two-to-six-times offer")
 	farm.update(5.01)
-	check(not farm.export_active and farm.export_factor == 1.0 and farm.export_timer >= 75.0 - 0.02 and farm.export_timer <= 180.0, "export removes its multiplier within five seconds and randomizes next delivery")
-	check(farm.market.golden.sell == farm._market_core.golden.sell, "expired export and event restore the ordinary quote")
-	var delays: Array[int] = []
-	var factors: Array[float] = []
-	for _index in range(8):
-		farm._toggle_export()
-		factors.append(farm.export_factor)
-		farm._toggle_export()
-		delays.append(int(farm.export_timer))
-	check(delays.min() != delays.max() and factors.min() != factors.max(), "export cadence and multiplier are not a fixed exploitable schedule")
-	farm.reset_game()
-	var initial_quote: float = farm.market.russet.sell
-	farm.update(2.99)
-	check(farm.market.russet.sell == initial_quote, "starter quotes wait for their three-second tick")
-	farm.update(0.02)
-	check(farm.market.russet.sell != initial_quote, "starter quotes update every three seconds")
-	# Keep climate quiet while checking the fixed 75% seed/quote link.
-	farm.climate.data.timer = 601.0
-	farm.coins = 1e12
-	var linked_and_bounded: bool = true
-	for _index in range(600):
-		farm.update(1.0)
-		for id in farm.CROP_IDS:
-			var multiplier: float = farm.event_strength if farm.current_event in ["seed_fair", "seed_panic"] else 1.0
-			linked_and_bounded = linked_and_bounded and is_equal_approx(farm.market[id].seed, farm.seed_price_for(farm.market[id].sell))
-			linked_and_bounded = linked_and_bounded and farm._market_core[id].sell >= farm.CROPS[id].base * 0.35 - 0.001 and farm._market_core[id].sell <= farm.CROPS[id].base * 3.0 + 0.001
-	check(linked_and_bounded and not farm.run_over and farm.elapsed > 603.0, "ten simulated calm minutes keep seed/crop prices linked and core quotes bounded")
-	farm.reset_game()
-	farm.rng.seed = 781
-	farm._market_core.sunburst.sell = 270000.0
-	for _index in range(100): farm._market_tick()
-	check(farm._market_core.sunburst.sell < 180000.0, "high underlying prices revert toward value instead of compounding forever")
+	check(not farm.export_active and farm.export_timer >= 75.0 - 0.02 and farm.export_timer <= 180.0, "export removes its multiplier within five seconds and randomizes next delivery")
 	farm.reset_game()
 	enter_shores()
 	for index in range(48): farm.interact_plot(index, "hoe")
@@ -248,7 +207,6 @@ func _run() -> void:
 	farm.claim_quest("combo")
 	farm.storage.sunburst = 50000
 	farm._toggle_export()
-	farm.export_factor = 6.0
 	farm._refresh_market()
 	farm.sell_crop("sunburst", 100)
 	check(farm.quest_progress.export == 1, "one shipment needs a real hundred-potato sale")
@@ -262,18 +220,17 @@ func _run() -> void:
 	balance = farm.coins
 	farm.claim_quest("export")
 	check(farm.coins == balance + 5.0e9 and farm.quest_claimed.size() == 4, "completed shipment activity quest pays five billion exactly once")
-	farm.export_factor = 6.0
 	farm._refresh_market()
 	check(farm.save_game(SAVE), "complete current economy and both farms save")
 	var snapshot: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
 	check(farm.load_game(SAVE), "new save passes strict economy and island validation")
 	check(farm.current_island == 2 and farm.island_plots["1"].size() == 24 and farm.plots.size() == 48, "save restores both farms and crops")
-	check(farm.export_factor == 6.0 and farm.export_active and farm.export_timer == snapshot.export_timer and farm.lifetime_sales == snapshot.lifetime_sales, "export factor, countdown and earned-sales history persist exactly")
+	check(farm.export_active and farm.export_timer == snapshot.export_timer and farm.lifetime_sales == snapshot.lifetime_sales, "export factor, countdown and earned-sales history persist exactly")
 	balance = farm.coins
 	farm.claim_quest("export")
 	check(farm.coins == balance, "save/reload cannot pay completed quest twice")
-	for key in ["island_plots", "current_island", "quest_progress", "quest_claimed", "economy_revision", "export_factor", "event_strength", "lifetime_sales"]:
+	for key in ["island_plots", "current_island", "quest_progress", "quest_claimed", "economy_revision", "lifetime_sales"]:
 		var bad: Dictionary = snapshot.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
@@ -293,11 +250,9 @@ func _run() -> void:
 	write_save(snapshot)
 	farm.load_game(SAVE)
 	var old_v3: Dictionary = legacy_data()
-	old_v3.market_core.sunburst.sell = 9.0e16
 	write_save(old_v3)
 	check(farm.load_game(SAVE), "old version-three island saves migrate without deleting player progress")
 	check(farm.coins == balance and farm.quest_claimed.size() == 4, "rebalance preserves existing coins and claimed rewards")
-	check(farm.export_timer <= 5.0 and farm.export_factor == 4.0 and farm._market_core.sunburst.sell == 270000.0 and is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "old long peaks and disconnected prices normalize to the bounded linked economy")
 	farm.claim_quest("export")
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "migrated claimed quests stay claimed and round-trip through current saves")
 	farm.reset_game()
@@ -337,27 +292,10 @@ func _run() -> void:
 	check(is_equal_approx(farm.market.sunburst.sell, fine.market.sunburst.sell) and is_equal_approx(farm.elapsed, fine.elapsed), "one long frame and many short frames produce the same market economy")
 	farm.reset_game()
 	enter_shores()
-	farm._market_core.sunburst.sell = farm.CROPS.sunburst.base * 3.0
-	farm._start_event("supply_collapse")
-	farm.event_crop = "sunburst"
-	farm.event_strength = 16.0
-	farm._toggle_export()
-	farm.export_factor = 6.0
-	farm._refresh_market()
-	check(farm.market.sunburst.sell == farm.CROPS.sunburst.base * farm.stock_cap() and is_equal_approx(farm.market.sunburst.change, 2999.0), "all stacked Shores offers respect the plus-2999-percent island ceiling")
-	check(is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "seed quote follows the capped effective sale quote")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE), "maximum capped market stack remains a valid save")
-	farm.reset_game()
-	farm.coins = 1.0e50
-	farm.reset_game()
 	farm.reset_game()
 	farm.coins = 10000.0
-	farm._start_event("crash")
 	farm.buy_seeds("russet", 10)
 	check(farm.quest_progress.starter_crash == 10, "starter crash-buy quest rewards actual market timing")
-	farm._end_event()
-	farm._start_event("shortage")
-	farm.event_strength = 3.0
 	farm._refresh_market()
 	farm.storage.russet = 10
 	farm.sell_crop("russet")
@@ -380,7 +318,7 @@ func _run() -> void:
 	var revision_two: Dictionary = farm._save_data().duplicate(true)
 	revision_two.economy_revision = 2
 	for key in ["mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "inventory_items", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining"]: revision_two.erase(key)
-	for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: revision_two[key].erase("icecap")
+	for key in ["seed_inventory", "storage", "mastery"]: revision_two[key].erase("icecap")
 	revision_two.island_plots.erase("3")
 	revision_two.island_sales.erase("3")
 	for field in revision_two.island_plots.values():

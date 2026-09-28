@@ -21,7 +21,7 @@ func run() -> void:
 	game.state.island2_unlocked = true
 	game.state.island3_unlocked = true
 	check(game.world.get_viewport() == game.farm_viewport, "3D world lives in the independent farm viewport")
-	check(game.hud.get_viewport() == root and game.rocket_cutscene.get_viewport() == root, "menus and rocket stay on the sharp root canvas")
+	check(game.hud.get_viewport() == root, "menus stay on the sharp root canvas")
 	for resolution: Vector2i in [Vector2i(1280,800), Vector2i(2560,1600), Vector2i(3840,2160), Vector2i(900,1600)]:
 		root.size = resolution
 		await process_frame
