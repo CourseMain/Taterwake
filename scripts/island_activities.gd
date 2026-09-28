@@ -232,41 +232,29 @@ func _contract_crop() -> String:
 	return crop if crop in ["russet", "golden", "giant", "radioactive", "sunburst"] else "sunburst"
 
 func contract_offer(kind: String) -> Dictionary:
-	var target: int = mini(1600, 400 + (contract_completed / 3) * 100) if kind == "bulk" else mini(3, 1 + contract_completed / 5)
+	if kind != "bulk": return {}
+	var target: int = mini(1600, 400 + (contract_completed / 3) * 100)
 	var crop: String = _contract_crop()
-	var held: int = int(state.storage[crop]) if kind == "bulk" else 0
-	if kind == "mutation":
-		for crate in state.mutations:
-			if str(crate.crop) == crop:
-				held += int(crate.count)
-	return {"target": target, "crop": crop, "held": held, "premium": 50 if kind == "mutation" else 25,
-		"base_quote": float(state.market[crop].sell) * target * (1.5 if kind == "mutation" else 1.25)}
+	return {"target": target, "crop": crop, "held": int(state.storage[crop]), "premium": 25,
+		"base_quote": float(state.market[crop].sell) * target * 1.25}
 
 func choose_contract(kind: String) -> String:
 	if state.run_over:
 		return "Run over. Start a new farm."
 	if int(state.current_island) != 2 or not state.island2_unlocked:
 		return state._finish("Visit the Golden Shores buyer.")
-	if kind not in ["bulk", "mutation"]:
-		return state._finish("Choose a harvest shipment or a mutation commission.")
+	if kind != "bulk":
+		return state._finish("Choose a harvest shipment.")
 	if not contract.is_empty():
 		return state._finish("Finish your current order first. No deadline.")
 	if contract_cooldown > 0.0:
 		return state._finish("The next buyer arrives in %.0f seconds." % ceilf(contract_cooldown))
 	var target: int = int(contract_offer(kind).target)
 	contract = {"kind": kind, "crop": _contract_crop(), "target": target, "delivered": 0, "credit": 0.0}
-	return state._finish("Order booked · %s %s%s · +%d%%" % [state.format_number(target), str(state.CROPS[contract.crop].name), " mutations" if kind == "mutation" else "", 50 if kind == "mutation" else 25])
+	return state._finish("Order booked · %s %s · +25%%" % [state.format_number(target), str(state.CROPS[contract.crop].name)])
 
 func _contract_held() -> int:
-	if contract.is_empty():
-		return 0
-	if str(contract.kind) == "bulk":
-		return int(state.storage[contract.crop])
-	var count: int = 0
-	for crate in state.mutations:
-		if str(crate.crop) == str(contract.crop):
-			count += int(crate.count)
-	return count
+	return 0 if contract.is_empty() else int(state.storage[contract.crop])
 
 func deliver_contract() -> String:
 	if state.run_over:
@@ -278,29 +266,14 @@ func deliver_contract() -> String:
 	var remaining: int = int(contract.target) - int(contract.delivered)
 	var amount: int = mini(remaining, _contract_held())
 	if amount <= 0:
-		return state._finish("Needed: %s%s. Harvest more first." % [str(state.CROPS[contract.crop].name), " mutations" if str(contract.kind) == "mutation" else ""])
+		return state._finish("Needed: %s. Harvest more first." % str(state.CROPS[contract.crop].name))
 	var value: float = 0.0
 	var crop: String = str(contract.crop)
-	if str(contract.kind) == "bulk":
-		state.storage[crop] -= amount
-		if is_instance_valid(state.build_system): state.build_system.professions.consumed(crop, amount)
-		value = float(amount) * float(state.market[crop].sell)
-	else:
-		var left: int = amount
-		# Consume exactly the delivered mutations, retaining each other crate and
-		# its discovery. Rare crops are never recreated as ordinary potatoes.
-		for index in range(state.mutations.size() - 1, -1, -1):
-			var crate: Dictionary = state.mutations[index]
-			if str(crate.crop) != crop or left <= 0:
-				continue
-			var take: int = mini(left, int(crate.count))
-			value += float(take) * float(crate.multiplier) * float(state.market[crop].sell)
-			crate.count = int(crate.count) - take
-			left -= take
-			if int(crate.count) == 0:
-				state.mutations.remove_at(index)
+	state.storage[crop] -= amount
+	if is_instance_valid(state.build_system): state.build_system.professions.consumed(crop, amount)
+	value = float(amount) * float(state.market[crop].sell)
 	contract.delivered = int(contract.delivered) + amount
-	contract.credit = minf(state.MAX_MONEY, float(contract.credit) + value * (1.5 if str(contract.kind) == "mutation" else 1.25))
+	contract.credit = minf(state.MAX_MONEY, float(contract.credit) + value * 1.25)
 	if int(contract.delivered) < int(contract.target):
 		return state._finish("Shipped %s / %s · %s banked" % [state.format_number(contract.delivered), state.format_number(contract.target), state.money(contract.credit)])
 	var earnings: float = float(contract.credit)
@@ -370,7 +343,7 @@ func info() -> Dictionary:
 	var title: String = "DUCK PATROL" if island == 1 else ("BUYER CONTRACTS" if island == 2 else "POTATO FURNACE")
 	var description: String = "More ducks. Faster patrols. Fewer pests."
 	if island == 2:
-		description = "Big harvest or rare finds? Pick your payday."
+		description = "Supply a harvest shipment at a 25% premium."
 	elif island == 3:
 		description = "25 Icecaps → 20s of heat. Time it with a surge."
 	var ducks: Array[Dictionary] = []
@@ -386,7 +359,7 @@ func info() -> Dictionary:
 		job["crop_name"] = str(state.CROPS[job.crop].name)
 		job["held"] = _contract_held()
 		job["can_deliver"] = island == 2 and int(job.held) > 0
-		job["premium"] = 1.5 if str(job.kind) == "mutation" else 1.25
+		job["premium"] = 1.25
 		job["ship_amount"] = mini(int(job.held), int(job.target) - int(job.delivered))
 	return {"island": island, "title": title, "description": description,
 		"duck_level": duck_level, "duck_cost": duck_hire_cost(), "duck_capacity": duck_capacity(),
@@ -395,7 +368,7 @@ func info() -> Dictionary:
 		"duck_from": duck_from, "duck_target": duck_target, "duck_progress": clampf(duck_elapsed / duck_interval(), 0.0, 1.0), "duck_clears": duck_clears, "duck_peck": duck_peck,
 		"contract": job, "contract_completed": contract_completed, "contract_cooldown": contract_cooldown,
 		"contract_crop": _contract_crop(), "contract_crop_name": str(state.CROPS[_contract_crop()].name),
-		"bulk_offer": contract_offer("bulk"), "mutation_offer": contract_offer("mutation"),
+		"bulk_offer": contract_offer("bulk"),
 		"thaw_heat": float(state.climate.data.operations.islands["3"].get("heat", 0)) if island == 3 else 0.0, "furnace_remaining": furnace_remaining, "furnace_cooldown": furnace_cooldown,
 		"furnace_fuel": FURNACE_FUEL, "furnace_crop": "icecap", "furnace_held": int(state.storage.icecap),
 		"can_charge": island == 3 and state.island3_unlocked and furnace_cooldown <= 0.0 and int(state.storage.icecap) >= FURNACE_FUEL,
@@ -458,9 +431,9 @@ func valid_data(data: Variant) -> bool:
 		return false
 	var job: Dictionary = data.contract
 	if not job.is_empty():
-		if job.get("kind") not in ["bulk", "mutation"] or job.get("crop") not in ["russet", "golden", "giant", "radioactive", "sunburst"]:
+		if job.get("kind") != "bulk" or job.get("crop") not in ["russet", "golden", "giant", "radioactive", "sunburst"]:
 			return false
-		if not _number(job.get("target"), 400 if job.kind == "bulk" else 1, 1600 if job.kind == "bulk" else 3, true):
+		if not _number(job.get("target"), 1, 1600, true):
 			return false
 		if not _number(job.get("delivered"), 0, int(job.target) - 1, true) or not _number(job.get("credit"), 0.0, 1.0e300):
 			return false

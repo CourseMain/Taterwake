@@ -23,7 +23,7 @@ const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 22
+const MECHANICS_REVISION: int = 23
 const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
 const ROCKET_MIN_MULTIPLIER: float = 351.0
 const MAX_PRICE_MULTIPLIER: float = 1001.0
@@ -34,7 +34,6 @@ const SURGE_INTERVAL: float = 180.0
 const SURGE_DURATION: float = 10.0
 const NATURAL_STOCK_CHANCE: float = 0.015
 const BOOM_TAIL_SHAPE: float = 3.0
-const MIN_BOOM_TAIL_SHAPE: float = 2.0
 const PEST_TICK_SECONDS: float = 5.0
 const ISLAND2_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[1]
 const ISLAND2_UNLOCK_HARVEST: int = 500
@@ -43,7 +42,7 @@ const ISLAND3_UNLOCK_HARVEST: int = 25000
 const EXPORT_MIN_WAIT: float = 75.0
 const EXPORT_MAX_WAIT: float = 180.0
 const SEED_PRICE_RATIO: float = 0.75
-const QUEST_TARGETS: Dictionary = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 3.0, "mutation": 3.0, "starter_crash": 10.0, "starter_spike": 10.0, "starter_combo": 12.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
+const QUEST_TARGETS: Dictionary = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 3.0, "starter_crash": 10.0, "starter_spike": 10.0, "starter_combo": 12.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
 const DEFAULT_SAVE_PATH: String = "user://spud_valley_save_v3.json"
 const LEGACY_SAVE_PATH: String = "user://spud_valley_save.json"
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
@@ -58,58 +57,21 @@ const CROPS: Dictionary = {
 const OLD_GROW_TIMES: Dictionary = {"russet": 10.0, "golden": 30.0, "giant": 45.0, "radioactive": 90.0, "sunburst": 45.0, "icecap": 60.0}
 const MAX_GROW_SECONDS: float = 60.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 12000.0, 250000000000.0], "water": [450.0, 15000.0, 400000000000.0], "harvest": [600.0, 20000.0, 600000000000.0]}
-const MUTATION_IDS: Array[String] = ["golden", "crystal", "rainbow", "radioactive"]
-const MUTATION_MULTIPLIERS: Dictionary = {"golden": 25.0, "crystal": 75.0, "rainbow": 200.0, "radioactive": 500.0}
 const EVENT_IDS: Array[String] = ["shortage", "crash", "golden_craze", "seed_panic", "chaos", "mystery_buyer", "supply_collapse", "seed_fair", "festival"]
-const EQUIPMENT_SLOTS: Array[String] = ["head", "body", "legs", "feet", "hands", "charm"]
 const DEBUG_MONEY_LIMIT: float = 1000000.0
 const QUEST_REWARDS: Dictionary = {
 	"starter_crash": {"share": 0.005}, "starter_spike": {"share": 0.015},
-	"starter_combo": {"share": 0.03, "item": "almanac"},
+	"starter_combo": {"share": 0.03},
 	"ground": {"share": 0.002}, "sunburst": {"share": 0.025}, "combo": {"share": 0.01},
-	"export": {"share": 0.05}, "mutation": {"share": 0.02, "item": "lens"},
+	"export": {"share": 0.05},
 	"winter_ground": {"share": 0.002}, "winter_harvest": {"share": 0.025},
-	"winter_frost": {"share": 0.05, "item": "aurora"},
+	"winter_frost": {"share": 0.05},
 }
-const ITEM_CATALOG: Dictionary = {
-	"sunstone": {"name": "Sunstone Medallion", "rarity": "relic", "description": "Warmth for every harvest, even in winter.", "effect": "+10% crop yield per copy", "max_count": 10},
-	"almanac": {"name": "Ancient Farmer's Almanac", "rarity": "relic", "description": "Every crop teaches a little more.", "effect": "+20% harvest mastery per copy", "max_count": 5},
-	"lens": {"name": "Tideglass Mutation Lens", "rarity": "relic", "description": "Find unusual potatoes in every climate.", "effect": "+35% mutation chance per copy", "max_count": 10},
-	"winter_weave": {"name": "Winter-Weave Barn Lining", "rarity": "relic", "description": "Store bigger harvests on every island.", "effect": "+20% barn capacity per copy", "max_count": 10},
-	"trader_token": {"name": "Old Trader's Token", "rarity": "relic", "description": "Seed merchants remember this token.", "effect": "+5% crop sale quotes per copy · seed costs follow", "max_count": 5},
-	"aurora": {"name": "Aurora Heart", "rarity": "mystery", "description": "A little northern light grows inside it.", "effect": "+30% crop yield per copy", "max_count": 3},
-	"compass": {"name": "Evergreen Compass", "rarity": "mystery", "description": "Its needle follows rare mutations.", "effect": "+100% mutation chance per copy", "max_count": 3},
-	"bottomless_sack": {"name": "Impossible Potato Sack", "rarity": "mystery", "description": "It has more inside than outside.", "effect": "+60% barn capacity per copy", "max_count": 3},
-	"straw_hat": {"name": "Harvest Straw Hat", "kind": "gear", "slot": "head", "color": "d9b457", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Bigger harvests. One hat at a time.", "effect": "+8% crop yield while equipped", "max_count": 10},
-	"patchwork_cap": {"name": "Patchwork Cap", "kind": "gear", "slot": "head", "color": "ae79df", "rarity": "rare", "bonuses": {}, "description": "A keepsake you can still wear.", "effect": "Cosmetic clothing", "max_count": 10},
-	"traders_visor": {"name": "Trader's Visor", "kind": "gear", "slot": "head", "color": "63b982", "rarity": "epic", "bonuses": {"stock": 0.08}, "description": "Better quotes. Seed costs follow.", "effect": "+8% stock prices while equipped", "max_count": 10},
-	"harvest_gloves": {"name": "Harvest Gauntlets", "kind": "gear", "slot": "hands", "color": "c28349", "rarity": "epic", "bonuses": {"yield": 0.12}, "description": "Bring home a bigger harvest.", "effect": "+12% crop yield while equipped", "max_count": 10},
-	"prospectors_hat": {"name": "Prospector's Gold Hat", "kind": "gear", "slot": "head", "color": "f0c750", "rarity": "legendary", "bonuses": {"stock": 0.15}, "description": "Golden deals. Higher caps in winter.", "effect": "+15% stock prices while equipped", "max_count": 5},
-	"aurora_crown": {"name": "Aurora Crown", "kind": "gear", "slot": "head", "color": "70e9e1", "rarity": "mythic", "bonuses": {}, "description": "A keepsake you can still wear.", "effect": "Cosmetic clothing", "max_count": 5},
-	"market_monocle": {"name": "Bull Market Monocle", "kind": "gear", "slot": "charm", "color": "ead889", "rarity": "relic", "bonuses": {"stock": 0.25}, "description": "Better crop quotes. Seed costs follow.", "effect": "+25% stock prices while equipped", "max_count": 3},
-	"loaded_dice": {"name": "Carved Dice", "kind": "gear", "slot": "charm", "color": "ce8fe8", "rarity": "mystery", "bonuses": {}, "description": "A keepsake you can still wear.", "effect": "Cosmetic clothing", "max_count": 3},
-	"farmer_shirt": {"name": "Fieldwork Shirt", "kind": "gear", "slot": "body", "role": "farmer", "color": "75bc60", "rarity": "rare", "bonuses": {"yield": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop yield while equipped", "max_count": 5},
-	"farmer_pants": {"name": "Grower's Dungarees", "kind": "gear", "slot": "legs", "role": "farmer", "color": "528449", "rarity": "rare", "bonuses": {"growth": 0.08}, "description": "Farmer build: +25% gear bonuses.", "effect": "+8% crop growth speed while equipped", "max_count": 5},
-	"farmer_boots": {"name": "Field Boots", "kind": "gear", "slot": "feet", "role": "farmer", "color": "8b713f", "rarity": "rare", "bonuses": {"growth": 0.06}, "description": "Farmer build: +25% gear bonuses.", "effect": "+6% crop growth speed while equipped", "max_count": 5},
-	"gambler_shirt": {"name": "Purple Jacket", "kind": "gear", "slot": "body", "role": "gambler", "color": "b776ec", "rarity": "epic", "bonuses": {}, "description": "A keepsake you can still wear.", "effect": "Cosmetic clothing", "max_count": 5},
-	"gambler_pants": {"name": "Pocket Trousers", "kind": "gear", "slot": "legs", "role": "gambler", "color": "7750a8", "rarity": "epic", "bonuses": {"mutation": 0.10}, "description": "A keepsake you can still wear.", "effect": "+10% mutation chance while equipped", "max_count": 5},
-	"gambler_boots": {"name": "Seven-League Sneakers", "kind": "gear", "slot": "feet", "role": "gambler", "color": "d398f1", "rarity": "rare", "bonuses": {}, "description": "A keepsake you can still wear.", "effect": "Cosmetic clothing", "max_count": 5},
-	"investor_shirt": {"name": "Market Maker Waistcoat", "kind": "gear", "slot": "body", "role": "investor", "color": "ecc15e", "rarity": "epic", "bonuses": {"stock": 0.10}, "description": "Investor build: +25% gear bonuses.", "effect": "+10% stock prices while equipped", "max_count": 5},
-	"investor_pants": {"name": "Broker's Trousers", "kind": "gear", "slot": "legs", "role": "investor", "color": "98763d", "rarity": "rare", "bonuses": {"stock": 0.05}, "description": "Investor build: +25% gear bonuses.", "effect": "+5% stock prices while equipped", "max_count": 5},
-	"investor_shoes": {"name": "Closing Bell Shoes", "kind": "gear", "slot": "feet", "role": "investor", "color": "d5a946", "rarity": "epic", "bonuses": {"stock": 0.07}, "description": "Investor build: +25% gear bonuses.", "effect": "+7% stock prices while equipped", "max_count": 5},
-	"scientist_coat": {"name": "Mutation Lab Coat", "kind": "gear", "slot": "body", "role": "scientist", "color": "b4eeea", "rarity": "epic", "bonuses": {"mutation": 0.25}, "description": "Scientist build: +25% gear bonuses.", "effect": "+25% mutation chance while equipped", "max_count": 5},
-	"scientist_pants": {"name": "Research Cargo Pants", "kind": "gear", "slot": "legs", "role": "scientist", "color": "4a969a", "rarity": "rare", "bonuses": {"mutation": 0.15}, "description": "Scientist build: +25% gear bonuses.", "effect": "+15% mutation chance while equipped", "max_count": 5},
-	"scientist_boots": {"name": "Growth Lab Boots", "kind": "gear", "slot": "feet", "role": "scientist", "color": "6fdbdc", "rarity": "epic", "bonuses": {"mutation": 0.10, "growth": 0.05}, "description": "Scientist build: +25% gear bonuses.", "effect": "+10% mutation chance and +5% growth speed while equipped", "max_count": 5},
-	"industrialist_overalls": {"name": "Factory Overalls", "kind": "gear", "slot": "body", "role": "industrialist", "color": "f39858", "rarity": "epic", "bonuses": {"processing": 0.25}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+25% processing speed while equipped", "max_count": 5},
-	"industrialist_pants": {"name": "Workshop Workpants", "kind": "gear", "slot": "legs", "role": "industrialist", "color": "a35f3d", "rarity": "rare", "bonuses": {"processing": 0.15}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+15% processing speed while equipped", "max_count": 5},
-	"industrialist_boots": {"name": "Steel-Toe Harvest Boots", "kind": "gear", "slot": "feet", "role": "industrialist", "color": "db8045", "rarity": "epic", "bonuses": {"processing": 0.10, "yield": 0.03}, "description": "Industrialist build: +25% gear bonuses.", "effect": "+10% processing speed and +3% crop yield while equipped", "max_count": 5},
-}
-
 const MAX_MONEY: float = 1.0e300
 const MAX_INVENTORY: int = 1000000000000000
-
 var build_system: Node = null
 var activity_system: Node = null
+
 # Progress is saved; the scene controller decides when to resume the guided lesson.
 const FarmHelp = preload("res://scripts/farm_help.gd")
 var farm_help = FarmHelp.new()
@@ -159,13 +121,10 @@ var frost_active: bool = false
 var frost_cleared: int = 0
 var frost_target_count: int = 12
 var thaw_remaining: float = 0.0
-var inventory_items: Dictionary = {}
-var equipment: Dictionary = {"head": "", "body": "", "legs": "", "feet": "", "hands": "", "charm": ""}
 var island_plots: Dictionary = {}
 var field_expansions: Dictionary = {"2": false, "3": false}
 # Older farms retain access to occupied beds beyond the new starting boundary.
 var retained_beds: Dictionary = {"2": [], "3": []}
-var shores_first_mutation: bool = false
 var export_timer: float = 120.0
 var export_factor: float = 1.0
 var event_strength: float = 1.0
@@ -175,9 +134,8 @@ var export_active: bool = false
 var export_cycles: int = 0
 var export_cycle_sold: int = 0
 var export_qualified_cycles: Array[int] = []
-var quest_progress: Dictionary = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "mutation": 0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
+var quest_progress: Dictionary = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
 var quest_claimed: Array[String] = []
-var golden_hat: bool = false
 var market: Dictionary = {}
 var news: String = "Harvest your Russets. Catch a good price. Sell with F!"
 var event_name: String = "OPEN MARKET"
@@ -190,10 +148,8 @@ var debug_money_modified: bool = false
 var debug_islands_modified: bool = false
 var harvest_fraction: Dictionary = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 var mastery: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
-var dex: Array[String] = []
 var expansion: int = 0
 var barn_level: int = 0
-var mutations: Array[Dictionary] = []
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var current_event: String = ""
 var event_crop: String = "russet"
@@ -205,7 +161,6 @@ var _relief_clock: float = 0.0
 
 func _init() -> void:
 	rng.randomize()
-	inventory_items = _empty_items()
 	pest_timer = rng.randf_range(25.0, 100.0)
 	_build_starters()
 
@@ -317,7 +272,7 @@ func crop_grow_time(id: String) -> float:
 
 
 func _growth_speed(island: int) -> float:
-	var factor: float = maxf(0.1, _build_bonus("growth_factor", 1.0)) * equipment_growth_factor()
+	var factor: float = maxf(0.1, _build_bonus("growth_factor", 1.0))
 	if island == 3 and is_instance_valid(activity_system) and activity_system.has_method("growth_speed_multiplier"):
 		factor *= maxf(1.0, float(activity_system.growth_speed_multiplier()))
 	return factor * (1.0 if tutorial_active else climate.factor("growth", island))
@@ -327,21 +282,6 @@ func crop_growth_speed(island: int = 0, crop: String = "") -> float:
 	var speed: float = _growth_speed(current_island if island == 0 else island)
 	var id: String = selected_crop if crop.is_empty() else crop
 	return maxf(speed, float(CROPS[id].grow) / MAX_GROW_SECONDS)
-
-
-func _empty_items() -> Dictionary:
-	var result: Dictionary = {}
-	for id in ITEM_CATALOG:
-		result[id] = 0
-	return result
-
-
-func item_yield_bonus() -> float:
-	return int(inventory_items.get("sunstone", 0)) * 0.10 + int(inventory_items.get("aurora", 0)) * 0.30 + equipment_bonus("yield")
-
-
-func item_stock_factor() -> float:
-	return 1.0 + equipment_bonus("stock") + int(inventory_items.get("trader_token", 0)) * 0.05
 
 
 func debug_info() -> Dictionary:
@@ -432,145 +372,11 @@ func reset_debug() -> String:
 	return _finish("Debug timing reset. Your current Spudions are unchanged.")
 
 
-func best_gear_hat() -> String:
-	# Kept for callers that used the former auto-worn highest-rarity hat.
-	return str(equipment.get("head", ""))
-
-
-func _empty_equipment() -> Dictionary:
-	var slots: Dictionary = {}
-	for slot in EQUIPMENT_SLOTS:
-		slots[slot] = ""
-	return slots
-
-
-func equipment_loadout() -> Dictionary:
-	return equipment.duplicate()
-
-
-func equipment_synergy(id: String) -> float:
-	if not ITEM_CATALOG.has(id) or not ITEM_CATALOG[id].has("role") or not is_instance_valid(build_system):
-		return 1.0
-	return 1.25 if str(build_system.get("active")) == str(ITEM_CATALOG[id]["role"]) else 1.0
-
-
-func equipment_bonus(stat: String) -> float:
-	var total: float = 0.0
-	for slot in EQUIPMENT_SLOTS:
-		var id: String = str(equipment.get(slot, ""))
-		if not ITEM_CATALOG.has(id) or int(inventory_items.get(id, 0)) <= 0 or str(ITEM_CATALOG[id].get("slot", "")) != slot:
-			continue
-		total += float(ITEM_CATALOG[id].get("bonuses", {}).get(stat, 0.0)) * equipment_synergy(id)
-	return total
-
-
-func equipment_growth_factor() -> float:
-	return 1.0 + equipment_bonus("growth")
-
-
-func equipment_mutation_factor() -> float:
-	return 1.0 + equipment_bonus("mutation")
-
-
-func equipment_processing_factor() -> float:
-	return 1.0 + equipment_bonus("processing")
-
-
-func equipment_info() -> Array[Dictionary]:
-	var entries: Array[Dictionary] = []
-	for slot in EQUIPMENT_SLOTS:
-		var id: String = str(equipment.get(slot, ""))
-		var empty: bool = id.is_empty()
-		var entry: Dictionary = {} if empty else ITEM_CATALOG[id].duplicate(true)
-		entry.merge({"slot": slot, "id": id, "item": id, "kind": "gear", "empty": empty, "equipped": not empty, "active": not empty, "count": int(inventory_items.get(id, 0)), "synergy": equipment_synergy(id)}, true)
-		if empty:
-			entry.merge({"name": "Empty " + slot.capitalize(), "effect": "Equip owned gear in this slot", "description": "One item per slot. Extra copies do not stack.", "stats": {}}, true)
-		else:
-			entry["stats"] = entry["bonuses"].duplicate()
-			entry["action"] = "gear:unequip:" + slot
-		entries.append(entry)
-	return entries
-
-
-func equip_gear(id: String) -> String:
-	if run_over:
-		return "Run over. Start a new farm."
-	if not ITEM_CATALOG.has(id) or str(ITEM_CATALOG[id].get("kind", "")) != "gear" or not EQUIPMENT_SLOTS.has(str(ITEM_CATALOG[id].get("slot", ""))):
-		return _finish("Choose a wearable piece of gear from your inventory.")
-	if int(inventory_items.get(id, 0)) <= 0:
-		return _finish("You do not own this gear yet.")
-	var slot: String = str(ITEM_CATALOG[id]["slot"])
-	if str(equipment[slot]) == id:
-		return _finish("%s is already equipped." % ITEM_CATALOG[id]["name"])
-	equipment[slot] = id
-	_refresh_market(false)
-	return _finish("Equipped %s. %s.%s" % [ITEM_CATALOG[id]["name"], ITEM_CATALOG[id]["effect"], " Matching build: bonuses are 25% stronger." if equipment_synergy(id) > 1.0 else ""])
-
-
-func unequip_gear(slot: String) -> String:
-	if run_over:
-		return "Run over. Start a new farm."
-	if not EQUIPMENT_SLOTS.has(slot):
-		return _finish("Choose a valid equipment slot.")
-	var id: String = str(equipment[slot])
-	if id.is_empty():
-		return _finish("Your %s slot is already empty." % slot)
-	equipment[slot] = ""
-	_refresh_market(false)
-	return _finish("Unequipped %s. It is still in your inventory." % ITEM_CATALOG[id]["name"])
-
-
-func _migrate_equipment() -> void:
-	equipment = _empty_equipment()
-	var rarity_order: Array[String] = ["rare", "epic", "legendary", "mythic", "relic", "mystery"]
-	for id in ITEM_CATALOG:
-		if int(inventory_items.get(id, 0)) <= 0 or not ITEM_CATALOG[id].has("slot"):
-			continue
-		var slot: String = str(ITEM_CATALOG[id]["slot"])
-		var current: String = str(equipment[slot])
-		if current.is_empty() or rarity_order.find(str(ITEM_CATALOG[id]["rarity"])) > rarity_order.find(str(ITEM_CATALOG[current]["rarity"])):
-			equipment[slot] = id
-
-
-func item_mastery_bonus() -> float:
-	return int(inventory_items.get("almanac", 0)) * 0.20
-
-
-func item_mutation_factor() -> float:
-	return (1.0 + int(inventory_items.get("lens", 0)) * 0.35 + int(inventory_items.get("compass", 0)) * 1.0) * equipment_mutation_factor()
-
-
-func item_seed_factor() -> float:
-	return 1.0 - int(inventory_items.get("trader_token", 0)) * 0.02
-
-
-func item_barn_factor() -> float:
-	return 1.0 + int(inventory_items.get("winter_weave", 0)) * 0.20 + int(inventory_items.get("bottomless_sack", 0)) * 0.60
-
-
 func _recompute_capacity() -> void:
 	var base: int = 200
 	for level in range(barn_level):
 		base += int(200.0 * pow(4.0, level))
-	capacity = mini(MAX_INVENTORY, int(floor(base * item_barn_factor() + 0.000001)))
-
-
-func _grant_item(id: String) -> String:
-	if not ITEM_CATALOG.has(id):
-		return "Unknown collectible."
-	var item: Dictionary = ITEM_CATALOG[id]
-	if int(inventory_items.get(id, 0)) >= int(item["max_count"]):
-		return "%s collection complete. You already own the maximum number of copies." % item["name"]
-	inventory_items[id] = int(inventory_items.get(id, 0)) + 1
-	var is_gear: bool = str(item.get("kind", "")) == "gear"
-	var auto_equipped: bool = is_gear and str(equipment.get(str(item.get("slot", "")), "")).is_empty()
-	if auto_equipped:
-		equipment[str(item["slot"])] = id
-	_recompute_capacity()
-	_refresh_market()
-	if is_gear:
-		return "%s collected! %s. %s Extra copies do not stack." % [item["name"], item["effect"], "Equipped in your empty %s slot." % item["slot"] if auto_equipped else "Stored in Inventory."]
-	return "%s collected! %s. Permanently active on every island." % [item["name"], item["effect"]]
+	capacity = mini(MAX_INVENTORY, base)
 
 
 func inventory_info() -> Array[Dictionary]:
@@ -580,21 +386,9 @@ func inventory_info() -> Array[Dictionary]:
 			entries.append({"id": "seed:" + crop, "kind": "seed", "crop": crop, "name": str(CROPS[crop]["name"]) + " Seeds", "count": int(seed_inventory[crop]), "rarity": "seed", "description": "Plant on an island where this crop is available.", "effect": "Select these seeds for planting", "active": selected_crop == crop, "action": "crop:" + crop})
 		if int(storage[crop]) > 0:
 			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CROPS[crop]["name"], "count": int(storage[crop]), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": float(market[crop]["sell"]) * int(storage[crop])})
-	for crate in mutations:
-		entries.append({"id": "mutation:" + str(crate["crop"]) + ":" + str(crate["id"]), "kind": "mutation", "crop": crate["crop"], "name": crate["name"], "count": crate["count"], "rarity": "mutation", "description": "A rare potato stored in your barn.", "effect": "x%s crop market value" % format_number(crate["multiplier"]), "active": true, "sell_value": float(market[crate["crop"]]["sell"]) * float(crate["multiplier"]) * int(crate["count"])})
-	for id in ITEM_CATALOG:
-		if int(inventory_items.get(id, 0)) <= 0:
-			continue
-		var entry: Dictionary = ITEM_CATALOG[id].duplicate(true)
-		entry.merge({"id": id, "item": id, "kind": str(entry.get("kind", "relic")), "count": int(inventory_items[id]), "active": true}, true)
-		if entry["kind"] == "gear":
-			var slot: String = str(entry["slot"])
-			var equipped: bool = str(equipment[slot]) == str(id)
-			entry.merge({"equipped": equipped, "active": equipped, "synergy": equipment_synergy(id), "action": "gear:unequip:" + slot if equipped else "gear:equip:" + str(id)}, true)
-		entries.append(entry)
-	if is_instance_valid(build_system) and build_system.has_method("inventory_info"):
-		for entry in build_system.inventory_info():
-			entries.append(entry)
+	for tool in ["hoe", "plant", "water", "harvest", "pest"]:
+		var title: String = {"hoe": "Hoe", "plant": "Seed pouch", "water": "Watering can", "harvest": "Scythe", "pest": "Pest sprayer"}[tool]
+		entries.append({"id": "tool:" + tool, "kind": "tool", "name": title, "count": 1, "level": int(tools.get(tool, 0)) + 1, "effect": "Use this farming tool", "action": "tool:" + tool})
 	return entries
 
 
@@ -789,13 +583,7 @@ func _natural_boom_roll(low: float, high: float) -> float:
 
 func _boom_roll(low: float, high: float) -> float:
 	# Every higher equal-width band is less likely.
-	# Gear improves this smooth draw instead of clipping many draws to the cap.
-	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / _boom_tail_shape()))
-
-
-func _boom_tail_shape() -> float:
-	var tail_shape: float = BOOM_TAIL_SHAPE
-	return maxf(MIN_BOOM_TAIL_SHAPE, tail_shape / sqrt(clampf(item_stock_factor(), 1.0, 2.0)))
+	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / BOOM_TAIL_SHAPE))
 
 
 func _prepare_rocket() -> void:
@@ -927,7 +715,6 @@ func quest_info() -> Array[Dictionary]:
 		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Harvest 10,000 Sunbursts by hand.", "target": 10000},
 		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest all 48 Shores beds in one combo.", "target": 48},
 		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell 100+ Golden/Sunburst per Export Rush. Do it 3 times.", "target": 3},
-		{"id": "mutation", "title": "STRUCK GOLD", "description": "Harvest 3 mutations on the Shores.", "target": 3},
 	]
 	if current_island == 1:
 		entries = [
@@ -948,9 +735,6 @@ func quest_info() -> Array[Dictionary]:
 		if entry.id == "starter_crash": entry.reward_text += " + 2 Golden seeds"
 		elif entry.id == "ground": entry.reward_text += " + 5 Sunburst seeds"
 		elif entry.id == "winter_ground": entry.reward_text += " + 5 Icecap seeds"
-		elif entry.id == "mutation": entry.reward_text += " + Golden Hat"
-		entry.item = str(reward.get("item", ""))
-		if not entry.item.is_empty(): entry.reward_text += " + " + str(ITEM_CATALOG[entry.item].name)
 		entry["progress"] = quest_progress[entry["id"]]
 		entry["complete"] = float(entry["progress"]) >= float(entry["target"])
 		entry["claimed"] = quest_claimed.has(str(entry["id"]))
@@ -987,11 +771,8 @@ func claim_quest(id: String) -> String:
 			seed_inventory["golden"] = mini(MAX_INVENTORY, int(seed_inventory["golden"]) + 2)
 		if id == "ground":
 			seed_inventory["sunburst"] = mini(MAX_INVENTORY, int(seed_inventory["sunburst"]) + 5)
-		if id == "mutation":
-			golden_hat = true
 		if id == "winter_ground":
 			seed_inventory["icecap"] = mini(MAX_INVENTORY, int(seed_inventory["icecap"]) + 5)
-		if not str(entry.item).is_empty(): _grant_item(entry.item)
 		reward_received.emit("QUEST REWARD!", "%s: %s" % [entry["title"], entry["reward_text"]], "legendary")
 		return _finish("Collected %s!" % entry["reward_text"])
 	return _finish("Choose a quest from this island’s board.")
@@ -1515,7 +1296,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 		combo_count += 1
 		combo_multiplier = mini(16, int(pow(2.0, minf(4.0, float(combo_count - 1)))))
 		combo_time = 3.5
-		var yield_bonus: float = (1.0 + item_yield_bonus() + _build_bonus("yield_bonus", 0.0) + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
+		var yield_bonus: float = (1.0 + _build_bonus("yield_bonus", 0.0) + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
 		# Keep fractional potatoes between harvests so a modest yield item really
 		# earns more crops instead of being floored away on every small plant.
 		if bool(plot.get("cultivated", false)): yield_bonus *= 3.0
@@ -1538,21 +1319,12 @@ func _harvest_plot(plot: Dictionary) -> int:
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	storage[id] = int(storage[id]) + quantity
 	if is_instance_valid(build_system): build_system.professions.harvested(id, first_cut, quantity, str(plot.get("variety", "")))
-	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + int(ceil(quantity * (1.0 + item_mastery_bonus()))))
+	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + quantity)
 	plot["pending"] = int(plot["pending"]) - quantity
 	if current_island == 3:
 		_progress_quest("winter_harvest", float(quantity))
 	if current_island == 2 and id == "sunburst":
 		_progress_quest("sunburst", float(quantity))
-	if first_cut:
-		var mutated: bool = false
-		if current_island == 2 and id == "sunburst" and not shores_first_mutation:
-			mutated = _add_mutation(id, 1, "golden", true) > 0
-			shores_first_mutation = mutated
-		else:
-			mutated = _try_mutation(id)
-		if current_island == 2 and mutated:
-			_progress_quest("mutation", 1.0)
 	if int(plot["pending"]) == 0:
 		_clear_crop(plot)
 	return quantity
@@ -1627,7 +1399,7 @@ func credit_refusal(cost: float = -1.0) -> String:
 
 func recovery_order() -> Dictionary:
 	# A full credit line takes at most 100 ordinary potatoes to repay, on every
-	# tax tier. Relief never produces cash or consumes rare mutation crates.
+	# tax tier. Relief never produces cash.
 	var debt: float = maxf(0.0, -coins)
 	var rate: float = -bankruptcy_limit() / 100.0
 	var needed: int = ceili(debt / rate)
@@ -1715,26 +1487,6 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 	return message
 
 
-func sell_mutations() -> String:
-	if run_over:
-		return "Run over. Start a new farm."
-	if mutations.is_empty():
-		return _finish("No mutation crates yet. Every manual harvest has a rare mutation chance.")
-	var earnings: float = 0.0
-	var quantity: int = 0
-	for crate in mutations:
-		earnings += float(market[crate["crop"]]["sell"]) * float(crate["multiplier"]) * int(crate["count"])
-		quantity += int(crate["count"])
-		if current_island == 2 and export_active and crate["crop"] in ["golden", "sunburst"]:
-			_record_export_sale(int(crate["count"]))
-	coins = minf(MAX_MONEY, coins + earnings)
-	_record_sales(earnings)
-	for crate in mutations:
-		farm_help.observe_sale(self, str(crate.crop))
-	mutations.clear()
-	return _finish("Sold %s rare mutation potatoes for %s. PotatoDex discoveries stay unlocked." % [format_number(quantity), money(earnings)])
-
-
 func _record_export_sale(amount: int) -> void:
 	export_cycle_sold = mini(MAX_INVENTORY, export_cycle_sold + amount)
 	if export_cycle_sold >= 100 and not export_qualified_cycles.has(export_cycles) and export_qualified_cycles.size() < 3:
@@ -1755,8 +1507,6 @@ func storage_used() -> int:
 	var total: int = 0
 	for id in CROP_IDS:
 		total += int(storage[id])
-	for crate in mutations:
-		total += int(crate["count"])
 	if is_instance_valid(build_system) and build_system.has_method("stored_count"):
 		total += int(build_system.stored_count())
 	return total
@@ -1766,8 +1516,6 @@ func barn_value() -> float:
 	var total: float = 0.0
 	for id in CROP_IDS:
 		total += float(market[id]["sell"]) * int(storage[id])
-	for crate in mutations:
-		total += float(market[crate["crop"]]["sell"]) * int(crate["count"]) * float(crate["multiplier"])
 	return minf(MAX_MONEY, total)
 
 
@@ -1844,41 +1592,6 @@ func mastery_level(id: String) -> int:
 	return int(floor(sqrt(float(mastery.get(id, 0)) / 25.0)))
 
 
-func mutation_chance(id: String) -> float:
-	return minf(0.25, (1.0 + minf(1.0, mastery_level(id) * 0.01)) * item_mutation_factor() * _build_bonus("mutation_factor", 1.0) / 2500.0 * (6.0 if current_island == 3 else (4.0 if current_island == 2 else 1.0)))
-
-
-func _try_mutation(id: String, force: bool = false) -> bool:
-	if int(storage.get(id, 0)) < 1 or (not force and rng.randf() >= mutation_chance(id)):
-		return false
-	var kind: String = MUTATION_IDS[rng.randi_range(0, MUTATION_IDS.size() - 1)]
-	return _add_mutation(id, 1, kind, true) > 0
-
-
-func _add_mutation(id: String, count: int, kind: String, replace_normal: bool = false) -> int:
-	if not CROPS.has(id) or not MUTATION_MULTIPLIERS.has(kind) or count <= 0:
-		return 0
-	var quantity: int = mini(count, int(storage[id]) if replace_normal else capacity - storage_used())
-	if quantity <= 0:
-		return 0
-	if replace_normal:
-		storage[id] = int(storage[id]) - quantity
-	var combined: bool = false
-	for crate in mutations:
-		if crate["id"] == kind and crate["crop"] == id:
-			crate["count"] = int(crate["count"]) + quantity
-			combined = true
-			break
-	if not combined:
-		mutations.append({"id": kind, "name": "%s %s" % [kind.capitalize(), CROPS[id]["name"]], "crop": id, "count": quantity, "multiplier": float(MUTATION_MULTIPLIERS[kind])})
-	if not dex.has(kind):
-		dex.append(kind)
-	var bonus_seed: String = "radioactive" if kind == "radioactive" else ("giant" if kind == "rainbow" else "golden")
-	seed_inventory[bonus_seed] = mini(MAX_INVENTORY, int(seed_inventory[bonus_seed]) + 1)
-	reward_received.emit("%s MUTATION!" % kind.to_upper(), "%s rare potatoes stored at x%s market value. +1 %s seed; PotatoDex updated." % [format_number(quantity), format_number(MUTATION_MULTIPLIERS[kind]), CROPS[bonus_seed]["name"]], "mythic")
-	return quantity
-
-
 func _market_tick() -> void:
 	if tutorial_active:
 		return
@@ -1914,7 +1627,7 @@ func _refresh_market(_record_history: bool = true) -> void:
 			sale_factor *= export_factor
 		if id == "icecap" and thaw_remaining > 0.0:
 			sale_factor *= 8.0
-		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor * item_stock_factor())
+		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor)
 		if not tutorial_active:
 			if not crashing: current *= climate.factor("sell", current_island)
 		if natural_remaining > 0.0 and id == natural_crop:
@@ -1930,7 +1643,7 @@ func _refresh_market(_record_history: bool = true) -> void:
 			current = float(CROPS[id]["base"])
 		elif crashing:
 			var base: float = float(CROPS[id].base)
-			# Final authority, after every offer, export, reward and gear multiplier.
+			# Final authority, after every offer and export multiplier.
 			# Recovery eases the crash, but no positive quote returns before calm.
 			current = clampf(minf(current, base) * climate.factor("sell", current_island), base * 0.05, base)
 		# One seed costs 75% of one potato, rounded to the nearest cent.
@@ -1939,7 +1652,7 @@ func _refresh_market(_record_history: bool = true) -> void:
 		market[id]["sell"] = current
 		market[id]["change"] = price_change(current, float(CROPS[id]["base"]))
 		var history: Array = market[id]["history"]
-		# Retain actual price changes, including gear, weather and boom endings.
+		# Retain actual price changes, including weather and boom endings.
 		if history.is_empty() or not is_equal_approx(float(history.back()), current):
 			history.append(current)
 			if market[id]["history"].size() > 40:
@@ -2109,9 +1822,6 @@ func reset_game() -> void:
 	frost_cleared = 0
 	frost_target_count = 12
 	thaw_remaining = 0.0
-	inventory_items = _empty_items()
-	equipment = _empty_equipment()
-	shores_first_mutation = false
 	export_timer = 120.0
 	export_factor = 1.0
 	event_strength = 1.0
@@ -2121,9 +1831,8 @@ func reset_game() -> void:
 	export_cycles = 0
 	export_cycle_sold = 0
 	export_qualified_cycles.clear()
-	quest_progress = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "mutation": 0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
+	quest_progress = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
 	quest_claimed.clear()
-	golden_hat = false
 	coins = 240.0
 	selected_crop = "russet"
 	tracked_seeds = ["russet", "golden", "giant", "radioactive"]
@@ -2154,10 +1863,8 @@ func reset_game() -> void:
 	debug_islands_modified = false
 	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 	mastery = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
-	dex.clear()
 	expansion = 0
 	barn_level = 0
-	mutations.clear()
 	current_event = ""
 	event_crop = "russet"
 	_market_clock = 0.0
@@ -2181,7 +1888,6 @@ func _save_data() -> Dictionary:
 		"export_cycle_sold": export_cycle_sold, "export_qualified_cycles": export_qualified_cycles,
 		"export_factor": export_factor, "event_strength": event_strength,
 		"lifetime_sales": lifetime_sales, "island_sales": island_sales,
-		"inventory_items": inventory_items, "equipment": equipment.duplicate(),
 		"island3_unlocked": island3_unlocked, "frost_timer": frost_timer, "frost_active": frost_active,
 		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "thaw_remaining": thaw_remaining, "pest_timer": pest_timer, "coins": coins, "coins_scientific": String.num_scientific(coins), "selected_crop": selected_crop,
 		"tracked_seeds": tracked_seeds, "surge_timer": surge_timer, "surge_remaining": surge_remaining, "surge_crop": surge_crop, "surge_factor": surge_factor,
@@ -2189,17 +1895,17 @@ func _save_data() -> Dictionary:
 		"natural_remaining": natural_remaining, "natural_factor": natural_factor, "natural_crop": natural_crop,
 		"seed_inventory": seed_inventory, "storage": storage, "capacity": capacity, "tools": tools,
 		"plots": plots, "current_island": current_island, "island2_unlocked": island2_unlocked,
-		"island_plots": island_plots, "shores_first_mutation": shores_first_mutation,
+		"island_plots": island_plots,
 		"export_timer": export_timer, "export_active": export_active, "export_cycles": export_cycles,
-		"quest_progress": quest_progress, "quest_claimed": quest_claimed, "golden_hat": golden_hat,
+		"quest_progress": quest_progress, "quest_claimed": quest_claimed,
 		"market": market, "market_core": _market_core, "news": news,
 		"event_name": event_name, "event_remaining": event_remaining, "elapsed": elapsed,
 		"combo_count": combo_count, "combo_multiplier": combo_multiplier, "combo_time": combo_time,
-		"mastery": mastery, "dex": dex,
+		"mastery": mastery,
 		"debug_money_modified": debug_money_modified, "debug_islands_modified": debug_islands_modified,
 		"harvest_fraction": harvest_fraction.duplicate(),
 		"expansion": expansion, "barn_level": barn_level,
-		"mutations": mutations, "current_event": current_event, "event_crop": event_crop,
+		"current_event": current_event, "event_crop": event_crop,
 		"market_clock": _market_clock,
 		"event_in": _event_in, "relief_clock": _relief_clock,
 		"rng_seed": str(rng.seed), "rng_state": str(rng.state)}
@@ -2373,7 +2079,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		set(key, int(data[key]))
 	for key in ["selected_crop", "news", "event_name", "current_event", "event_crop", "surge_crop"]:
 		set(key, str(data[key]))
-	for key in ["island2_unlocked", "shores_first_mutation", "export_active", "golden_hat", "island3_unlocked", "frost_active"]:
+	for key in ["island2_unlocked", "export_active", "island3_unlocked", "frost_active"]:
 		set(key, bool(data[key]))
 	surge_kind = str(data.get("surge_kind", "normal"))
 	rocket_timer = float(data.get("rocket_timer", ROCKET_INTERVAL))
@@ -2385,12 +2091,8 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	natural_crop = str(data.get("natural_crop", "russet"))
 	if int(data.get("mechanics_revision", 0)) < 8:
 		surge_factor = minf(surge_factor, stock_cap())
-	for key in ["seed_inventory", "storage", "tools", "market", "mastery", "quest_progress", "island_sales", "inventory_items"]:
+	for key in ["seed_inventory", "storage", "tools", "market", "mastery", "quest_progress", "island_sales"]:
 		set(key, data[key].duplicate(true))
-	# Old farms retain every collectible and receive zero owned copies of new gear.
-	for item_id in ITEM_CATALOG:
-		if not inventory_items.has(item_id):
-			inventory_items[item_id] = 0
 	_recompute_capacity()
 	debug_money_modified = bool(data.get("debug_money_modified", false))
 	debug_islands_modified = bool(data.get("debug_islands_modified", false))
@@ -2398,10 +2100,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 	for id in CROP_IDS:
 		harvest_fraction[id] = float(data.get("harvest_fraction", {}).get(id, 0.0))
-	if int(data.get("mechanics_revision", 0)) >= 6:
-		equipment = data["equipment"].duplicate()
-	else:
-		_migrate_equipment()
 	_market_core = data["market_core"].duplicate(true)
 	island_plots = {}
 	for id in ["1", "2", "3"]:
@@ -2422,12 +2120,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	else:
 		_migrate_field_access()
 	plots = island_plots[str(current_island)]
-	mutations.clear()
-	for crate in data["mutations"]:
-		mutations.append(crate.duplicate(true))
-	dex.clear()
-	for entry in data["dex"]:
-		dex.append(str(entry))
 	export_qualified_cycles.clear()
 	for cycle in data["export_qualified_cycles"]:
 		export_qualified_cycles.append(int(cycle))
@@ -2482,13 +2174,11 @@ func _migrate_v2(original: Dictionary) -> Dictionary:
 	data["current_island"] = 1
 	data["island2_unlocked"] = false
 	data["island_plots"] = {"1": data["plots"], "2": _empty_shores(false)}
-	data["shores_first_mutation"] = false
 	data["export_timer"] = 75.0
 	data["export_active"] = false
 	data["export_cycles"] = 0
-	data["quest_progress"] = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "mutation": 0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
+	data["quest_progress"] = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
 	data["quest_claimed"] = []
-	data["golden_hat"] = false
 	return data
 
 
@@ -2527,7 +2217,6 @@ func _migrate_winter(original: Dictionary) -> Dictionary:
 		for plot in field:
 			plot["frozen"] = false
 	data["plots"] = data["island_plots"][str(int(data["current_island"]))]
-	data["inventory_items"] = _empty_items()
 	data["island_sales"]["3"] = 0.0
 	data["frost_timer"] = 150.0
 	data["frost_active"] = false
@@ -2569,7 +2258,7 @@ func _migrate_pests(original: Dictionary) -> Dictionary:
 
 func _migrate_qol(original: Dictionary) -> Dictionary:
 	var data: Dictionary = original.duplicate(true)
-	# This stage adds revision4 fields only. Later equipment/debug migrations
+	# This stage adds revision4 fields only. Later debug migrations
 	# must still recognize older saves after this stage has run.
 	data["mechanics_revision"] = 4
 	data["tracked_seeds"] = ["russet", "golden", "giant", "radioactive"]
@@ -2588,24 +2277,6 @@ func _migrate_qol(original: Dictionary) -> Dictionary:
 			plot["yield_taken"] = 0
 	data["plots"] = data["island_plots"][str(int(data["current_island"]))]
 	return data
-
-
-func _valid_equipment(raw: Variant, owned: Variant) -> bool:
-	if not raw is Dictionary or not owned is Dictionary or raw.size() != EQUIPMENT_SLOTS.size():
-		return false
-	var seen: Array[String] = []
-	for slot in EQUIPMENT_SLOTS:
-		if not raw.has(slot) or not raw[slot] is String:
-			return false
-		var id: String = str(raw[slot])
-		if id.is_empty():
-			continue
-		if not ITEM_CATALOG.has(id) or str(ITEM_CATALOG[id].get("slot", "")) != slot or seen.has(id):
-			return false
-		if not _number(owned.get(id), 1.0, float(ITEM_CATALOG[id]["max_count"]), true):
-			return false
-		seen.append(id)
-	return true
 
 
 func _valid_precise_coins(data: Dictionary) -> bool:
@@ -2709,26 +2380,34 @@ func _valid_field_access(data: Dictionary) -> bool:
 
 
 # Preserve only fields understood by this version. Retired systems cannot
-# contaminate a fresh save, and old catalogue ownership retains its meaning.
+# contaminate a fresh save. Stored potatoes retain their variety and count.
 func _current_save_fields(raw: Variant) -> Variant:
 	if not raw is Dictionary: return raw
 	var data: Dictionary = raw.duplicate(true)
+	if _number(data.get("mechanics_revision", 0), 0, 22, true):
+		var retired: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/retired_save_fields.json"))
+		var held: Variant = data.get(retired.stored_crops, [])
+		if not held is Array: return null
+		for batch in held:
+			if not batch is Dictionary or not batch.get("crop") is String or not CROP_IDS.has(batch.crop) or not _number(batch.get("count"), 1, MAX_INVENTORY, true): return null
+			if not data.get("storage") is Dictionary or not _number(data.storage.get(batch.crop), 0, MAX_INVENTORY, true): return null
+			var total: int = int(data.storage[batch.crop]) + int(batch.count)
+			if total > MAX_INVENTORY: return null
+			data.storage[batch.crop] = total
+		if data.get("quest_progress") is Dictionary: data.quest_progress.erase(retired.quest)
+		if data.get("quest_claimed") is Array: data.quest_claimed.erase(retired.quest)
+		if data.get("activities") is Dictionary and data.activities.get("contract") is Dictionary and data.activities.contract.get("kind") == retired.contract:
+			data.activities.contract.kind = "bulk"
+		if not _number(data.get("barn_level"), 0, 20, true) or not _number(data.get("capacity"), 200, MAX_INVENTORY, true): return null
+		var base: int = 200
+		for level in range(int(data.barn_level)): base += int(200.0 * pow(4.0, level))
+		data.capacity = mini(MAX_INVENTORY, base)
 	var fields: Dictionary = _save_data()
 	fields["builds"] = {}
 	fields["activities"] = {}
 	for key in data.keys():
 		if not fields.has(key): data.erase(key)
 	if _number(data.get("mechanics_revision", 0), 0, 21, true):
-		var aliases: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/item_aliases.json"))
-		if data.get("inventory_items") is Dictionary:
-			for old_id in aliases:
-				if data.inventory_items.has(old_id):
-					data.inventory_items[aliases[old_id]] = data.inventory_items[old_id]
-					data.inventory_items.erase(old_id)
-		if data.get("equipment") is Dictionary:
-			for slot in data.equipment:
-				if data.equipment[slot] is String and aliases.has(data.equipment[slot]):
-					data.equipment[slot] = aliases[data.equipment[slot]]
 		if data.get("tutorial_progress") is Dictionary:
 			var progress: Dictionary = data.tutorial_progress
 			if progress.get("tour_only") == true and _number(progress.get("version"), 2, 2, true) and _number(progress.get("step"), 8, 100, true):
@@ -2742,7 +2421,9 @@ func _current_save_fields(raw: Variant) -> Variant:
 func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary:
 		return false
-	var data: Dictionary = _current_save_fields(raw)
+	var normalized: Variant = _current_save_fields(raw)
+	if not normalized is Dictionary: return false
+	var data: Dictionary = normalized
 	if data.has("npc_history") and not NpcRoster.valid_history(data.npc_history): return false
 	if data.has("tutorial_progress"):
 		var progress: Variant = data["tutorial_progress"]
@@ -2753,8 +2434,6 @@ func _valid_save(raw: Variant) -> bool:
 	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("valid_data") and not build_system.valid_data(data["builds"]):
 		return false
 	if data.has("activities") and is_instance_valid(activity_system) and activity_system.has_method("valid_data") and not activity_system.valid_data(data["activities"]):
-		return false
-	if data.has("equipment") and not _valid_equipment(data["equipment"], data.get("inventory_items", {})):
 		return false
 	if not data.has("schema_version") or not _number(data["schema_version"], 2.0, 3.0, true):
 		return false
@@ -2768,8 +2447,6 @@ func _valid_save(raw: Variant) -> bool:
 	if data.has("mechanics_revision") and (not newest or not _number(data["mechanics_revision"], 2.0, float(MECHANICS_REVISION), true)):
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 21 and not _valid_field_access(data):
-		return false
-	if int(data.get("mechanics_revision", 0)) >= 6 and not data.has("equipment"):
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 8 and not _valid_stock_events(data):
 		return false
@@ -2862,24 +2539,10 @@ func _valid_save(raw: Variant) -> bool:
 		return false
 	if (data["current_event"] == "") != (float(data["event_remaining"]) == 0.0):
 		return false
-	if newest:
-		if not data.has("inventory_items") or not data["inventory_items"] is Dictionary:
-			return false
-		for id in data["inventory_items"]:
-			if not ITEM_CATALOG.has(id) or not _number(data["inventory_items"][id], 0.0, float(ITEM_CATALOG[id]["max_count"]), true):
-				return false
-		for id in ITEM_CATALOG:
-			var revision: int = int(data.get("mechanics_revision", 0))
-			var required: bool = revision >= 6 or (revision >= 5 and not ITEM_CATALOG[id].has("role")) or not ITEM_CATALOG[id].has("kind")
-			if required and not data["inventory_items"].has(id):
-				return false
 	var expected_capacity: int = 200
 	for level in range(int(data["barn_level"])):
 		expected_capacity += int(200.0 * pow(4.0, level))
-	if newest:
-		var revised_artifacts: bool = int(data.get("mechanics_revision", 0)) >= 20
-		expected_capacity = mini(MAX_INVENTORY, int(floor(expected_capacity * (1.0 + int(data["inventory_items"]["winter_weave"]) * (0.20 if revised_artifacts else 0.05) + int(data["inventory_items"]["bottomless_sack"]) * (0.60 if revised_artifacts else 0.20)) + (0.000001 if revised_artifacts else 0.0))))
-	if int(data["capacity"]) != expected_capacity:
+	if int(data["capacity"]) != mini(MAX_INVENTORY, expected_capacity):
 		return false
 	if int(data["combo_multiplier"]) not in [1, 2, 4, 8, 16]:
 		return false
@@ -2930,42 +2593,20 @@ func _valid_save(raw: Variant) -> bool:
 	else:
 		if not _valid_islands(data):
 			return false
-	if not data.has("dex") or not data["dex"] is Array or data["dex"].size() > 4:
-		return false
-	var seen: Array[String] = []
-	for entry in data["dex"]:
-		if not entry is String or not MUTATION_IDS.has(entry) or seen.has(entry):
-			return false
-		seen.append(entry)
-	if not data.has("mutations") or not data["mutations"] is Array or data["mutations"].size() > save_crops.size() * MUTATION_IDS.size():
-		return false
 	var used: int = 0
 	for id in save_crops:
 		used += int(data["storage"][id])
-	for raw_crate in data["mutations"]:
-		if not raw_crate is Dictionary:
-			return false
-		var crate: Dictionary = raw_crate
-		for key in ["id", "name", "crop"]:
-			if not crate.has(key) or not crate[key] is String or crate[key].length() > 200:
-				return false
-		if not MUTATION_IDS.has(crate["id"]) or not save_crops.has(crate["crop"]) or not seen.has(crate["id"]):
-			return false
-		if not crate.has("count") or not _number(crate["count"], 1.0, float(MAX_INVENTORY), true):
-			return false
-		if not crate.has("multiplier") or not _number(crate["multiplier"], float(MUTATION_MULTIPLIERS[crate["id"]]), float(MUTATION_MULTIPLIERS[crate["id"]])):
-			return false
-		used += int(crate["count"])
 	if data.has("builds") and is_instance_valid(build_system) and build_system.has_method("saved_storage_count"):
 		used += int(build_system.saved_storage_count(data["builds"]))
-	if used > int(data["capacity"]):
+	# Older farms can be overfull after losing storage bonuses; selling frees room.
+	if used > MAX_INVENTORY:
 		return false
 	return true
 
 func _valid_islands(data: Dictionary) -> bool:
 	var rebalanced: bool = data.has("economy_revision")
 	var newest: bool = rebalanced and int(data["economy_revision"]) == 3
-	for key in ["island2_unlocked", "shores_first_mutation", "export_active", "golden_hat"]:
+	for key in ["island2_unlocked", "export_active"]:
 		if not data.has(key) or not data[key] is bool:
 			return false
 	if newest and (not data.has("island3_unlocked") or not data["island3_unlocked"] is bool):
@@ -2999,11 +2640,11 @@ func _valid_islands(data: Dictionary) -> bool:
 		return false
 	if not rebalanced and int(data["export_cycles"]) == 0 and float(data["export_timer"]) > 75.0:
 		return false
-	var targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0, "mutation": 1.0}
+	var targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0}
 	if rebalanced:
-		targets = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 10000000000.0, "mutation": 3.0}
+		targets = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 10000000000.0}
 	if newest:
-		targets = QUEST_TARGETS if data.has("mechanics_revision") else {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 50000000000.0, "mutation": 3.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
+		targets = QUEST_TARGETS if data.has("mechanics_revision") else {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 50000000000.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
 	if not data.has("quest_progress") or not data["quest_progress"] is Dictionary or data["quest_progress"].size() != targets.size():
 		return false
 	for id in targets:
@@ -3016,10 +2657,6 @@ func _valid_islands(data: Dictionary) -> bool:
 		if not id is String or not targets.has(id) or seen.has(id) or float(data["quest_progress"][id]) < float(targets[id]):
 			return false
 		seen.append(id)
-	if bool(data["golden_hat"]) != seen.has("mutation"):
-		return false
-	if data["shores_first_mutation"] and (not data.has("dex") or not data["dex"] is Array or int(data["mastery"]["sunburst"]) == 0 or not data["dex"].has("golden") or float(data["quest_progress"]["mutation"]) < 1.0):
-		return false
 	if rebalanced:
 		if not data.has("export_factor") or not _number(data["export_factor"], 2.0 if data["export_active"] else 1.0, 6.0 if data["export_active"] else 1.0):
 			return false
@@ -3029,7 +2666,7 @@ func _valid_islands(data: Dictionary) -> bool:
 			if not data["island_sales"].has(str(island)) or not _number(data["island_sales"][str(island)], 0.0, MAX_MONEY):
 				return false
 	if not data["island2_unlocked"]:
-		if data["export_active"] or float(data["export_timer"]) != (120.0 if rebalanced else 75.0) or int(data["export_cycles"]) > 0 or data["shores_first_mutation"] or (not data.has("mechanics_revision") and not seen.is_empty()):
+		if data["export_active"] or float(data["export_timer"]) != (120.0 if rebalanced else 75.0) or int(data["export_cycles"]) > 0 or (not data.has("mechanics_revision") and not seen.is_empty()):
 			return false
 		for id in targets:
 			if str(id).begins_with("starter_"):

@@ -102,18 +102,14 @@ func _run() -> void:
 		state.build_system = builds
 		var build_spikes: Dictionary = natural_sample(state)
 		check(builds.event_chance_bonus() > 0.0, "investor setup exercises a real positive-event bonus")
-		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes"]:
-			state._grant_item(id)
-		var outfit_spikes: Dictionary = natural_sample(state)
-		check(is_equal_approx(state.item_stock_factor(), 1.675), "natural independence includes the maximum stock outfit")
 		state.build_system = null
 		builds.free()
 		check(regular_spikes.hits >= 100 and regular_spikes.hits <= 200, "island %d natural spikes occur about 1.5 percent of eligible ticks" % island)
 		check(regular_spikes.mean > 0.15 and regular_spikes.mean < 0.40, "island %d natural strength still favors low values" % island)
-		for sample in [regular_spikes, build_spikes, outfit_spikes]:
+		for sample in [regular_spikes, build_spikes]:
 			check(sample.chance == 0.015, "island %d natural odds stay exactly 1.5 percent across investor bonuses" % island)
 			check(sample.bounded, "island %d natural spikes use the selected crop, correct band, and full ten seconds" % island)
-			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors and sample.quotes == regular_spikes.quotes, "island %d identical seeded natural occurrences and magnitudes are independent of stock gear and build bonuses" % island)
+			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors and sample.quotes == regular_spikes.quotes, "island %d identical seeded natural occurrences and magnitudes are independent of build bonuses bonuses" % island)
 	state.reset_game()
 	state.select_crop("golden")
 	state.surge_timer = 0.25
@@ -158,8 +154,6 @@ func _run() -> void:
 	for island in [1, 3]:
 		state.reset_game()
 		enter_island(state, island)
-		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes", "trader_token"]:
-			state._grant_item(id)
 		state._start_event("shortage")
 		state.event_strength = 64.0
 		if island == 3:
@@ -172,17 +166,17 @@ func _run() -> void:
 		for id in state.CROP_IDS:
 			capped = capped and is_equal_approx(state.market[id].sell, state.CROPS[id].base * state.stock_cap())
 			linked = linked and is_equal_approx(state.market[id].seed, State.seed_price_for(state.market[id].sell))
-		check(capped and state.item_stock_factor() > 1.0, "island %d ordinary event, gear, and offer stacks respect the local ceiling" % island)
-		check(linked, "island %d seed ratio stays fixed with tokens and capped final quotes" % island)
+		check(capped, "island %d ordinary event and offer stacks respect the local ceiling" % island)
+		check(linked, "island %d seed ratio stays fixed with capped final quotes" % island)
 		var quote: float = state.market.golden.sell
 		for _index in range(20):
 			state._refresh_market(false)
-		check(state.market.golden.sell == quote, "repeated refreshes never compound equipped stock gear")
+		check(state.market.golden.sell == quote, "repeated refreshes never compound market prices")
 		state._end_event()
 		state.thaw_remaining = 0.0
 		state._market_core.golden.sell = state.CROPS.golden.base
 		state._refresh_market(false)
-		check(is_equal_approx(state.market.golden.sell, state.CROPS.golden.base * state.item_stock_factor()), "ending temporary offers leaves only the permanent equipped benefit")
+		check(is_equal_approx(state.market.golden.sell, state.CROPS.golden.base), "ending temporary offers restores the base quote")
 	var suffixes: Array[String] = ["Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]
 	for index in range(suffixes.size()):
 		var value: float = pow(10.0, 15 + index * 3)

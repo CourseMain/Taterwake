@@ -138,10 +138,6 @@ func _impact(farm) -> void:
 		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
 		farm.storage[crop] = int(farm.storage[crop]) - lost
 		if is_instance_valid(farm.build_system): farm.build_system.professions.consumed(crop, lost)
-	for index in range(farm.mutations.size() - 1, -1, -1):
-		var crate: Dictionary = farm.mutations[index]
-		crate.count = int(crate.count) - lost_units(int(crate.count), barn_rate)
-		if int(crate.count) <= 0: farm.mutations.remove_at(index)
 	# Processing is still barn inventory: no hiding stock in a machine.
 	if is_instance_valid(farm.build_system):
 		for crop in farm.build_system.processed.keys():

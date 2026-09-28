@@ -47,11 +47,8 @@ func _run() -> void:
 	check(state.current_event == "" and state.surge_remaining == 0.0 and not state.export_active and not state.frost_active, "direct event methods cannot bypass lesson safety")
 	state._market_tick()
 	check(state.market.russet.change == 0.0, "direct ordinary market tick remains calm")
-	state.inventory_items.prospectors_hat = 1
-	state.equipment.head = "prospectors_hat"
 	state._refresh_market()
 	check(state.market.russet.change == 0.0, "equipment cannot produce tutorial stock distractions")
-	state.equipment.head = ""
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")

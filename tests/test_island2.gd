@@ -32,14 +32,6 @@ func write_save(data: Variant) -> void:
 	file.store_string(JSON.stringify(data))
 	file.close()
 
-func mutation_seed(chance: float) -> int:
-	var probe: RandomNumberGenerator = RandomNumberGenerator.new()
-	for seed_value in range(1, 100000):
-		probe.seed = seed_value
-		if probe.randf() < chance:
-			return seed_value
-	return 1
-
 func legacy_data(schema: int = 3) -> Dictionary:
 	var data: Dictionary = farm._save_data().duplicate(true)
 	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "export_factor", "event_strength", "lifetime_sales", "island_sales", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
@@ -53,7 +45,7 @@ func legacy_data(schema: int = 3) -> Dictionary:
 	data.export_timer = 25.0 if data.export_active else 75.0
 	data.market_clock = 2.5
 	data.event_in = 45.0
-	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0, "mutation": 1.0}
+	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0}
 	for id in old_targets: data.quest_progress[id] = float(old_targets[id]) if data.quest_claimed.has(id) else minf(float(data.quest_progress[id]), float(old_targets[id]))
 	if schema == 2:
 		for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: data[key].erase("sunburst")
@@ -160,13 +152,10 @@ func _run() -> void:
 	ready_crop(0, "sunburst")
 	farm.interact_plot(0, "harvest")
 	check(farm.storage_used() == 6 and farm.mastery.sunburst == 6, "Shores soil doubles base manual harvest yield")
-	check(farm.shores_first_mutation and farm.mutations.size() == 1 and farm.mutations[0].id == "golden", "first Sunburst harvest still introduces one guaranteed Golden mutation")
-	check(farm.quest_progress.mutation == 1 and not farm.quest_info()[4].complete, "first mutation advances but does not complete the three-mutation quest")
 	farm.update(3.51)
 	farm.rng.seed = 88
 	ready_crop(1, "sunburst")
 	farm.interact_plot(1, "harvest")
-	check(farm.mutations[0].count == 1, "introductory mutation does not repeat each harvest")
 	farm.travel_to(1)
 	farm.climate.acknowledge(farm)
 	check(farm.combo_count == 0 and farm.combo_time == 0.0, "travel breaks combo instead of carrying starter harvest into Shores quest")
@@ -185,7 +174,7 @@ func _run() -> void:
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 	farm.interact_plot(0, "harvest")
-	check(farm.plots[0].pending == 0 and farm.combo_count == 0 and farm.mutations[0].count == 1 and farm.mastery.sunburst == 6, "partial harvest after travel cannot duplicate yield, mutation, or chain bonus")
+	check(farm.plots[0].pending == 0 and farm.combo_count == 0 and farm.mastery.sunburst == 6, "partial harvest after travel cannot duplicate yield or chain bonus")
 	farm.reset_game()
 	enter_shores()
 	farm.export_timer = 15.1
@@ -253,14 +242,10 @@ func _run() -> void:
 			farm.interact_plot(index, "harvest")
 	check(farm.quest_progress.sunburst == 10000 and farm.quest_progress.combo == 48, "several complete manual fields finish ten-thousand-potato and full-field chain challenges")
 	for index in range(2):
-		farm.rng.seed = mutation_seed(farm.mutation_chance("sunburst"))
 		ready_crop(index, "sunburst")
 		farm.interact_plot(index, "harvest")
-	check(farm.quest_progress.mutation == 3, "three discoveries must come from actual harvest actions")
 	farm.claim_quest("sunburst")
 	farm.claim_quest("combo")
-	farm.claim_quest("mutation")
-	check(farm.golden_hat and farm.quest_claimed.has("mutation"), "completing mutation journey grants Golden Hat")
 	farm.storage.sunburst = 50000
 	farm._toggle_export()
 	farm.export_factor = 6.0
@@ -276,14 +261,14 @@ func _run() -> void:
 	check(farm.quest_progress.export == 3 and farm.export_qualified_cycles.size() == 3, "shipment challenge requires three distinct export cycles")
 	balance = farm.coins
 	farm.claim_quest("export")
-	check(farm.coins == balance + 5.0e9 and farm.quest_claimed.size() == 5, "completed shipment activity quest pays five billion exactly once")
+	check(farm.coins == balance + 5.0e9 and farm.quest_claimed.size() == 4, "completed shipment activity quest pays five billion exactly once")
 	farm.export_factor = 6.0
 	farm._refresh_market()
 	check(farm.save_game(SAVE), "complete current economy and both farms save")
 	var snapshot: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
 	check(farm.load_game(SAVE), "new save passes strict economy and island validation")
-	check(farm.current_island == 2 and farm.island_plots["1"].size() == 24 and farm.plots.size() == 48 and farm.golden_hat, "save restores both farms and owned cosmetic")
+	check(farm.current_island == 2 and farm.island_plots["1"].size() == 24 and farm.plots.size() == 48, "save restores both farms and crops")
 	check(farm.export_factor == 6.0 and farm.export_active and farm.export_timer == snapshot.export_timer and farm.lifetime_sales == snapshot.lifetime_sales, "export factor, countdown and earned-sales history persist exactly")
 	balance = farm.coins
 	farm.claim_quest("export")
@@ -311,7 +296,7 @@ func _run() -> void:
 	old_v3.market_core.sunburst.sell = 9.0e16
 	write_save(old_v3)
 	check(farm.load_game(SAVE), "old version-three island saves migrate without deleting player progress")
-	check(farm.coins == balance and farm.golden_hat and farm.quest_claimed.size() == 5, "rebalance preserves existing coins and claimed rewards")
+	check(farm.coins == balance and farm.quest_claimed.size() == 4, "rebalance preserves existing coins and claimed rewards")
 	check(farm.export_timer <= 5.0 and farm.export_factor == 4.0 and farm._market_core.sunburst.sell == 270000.0 and is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "old long peaks and disconnected prices normalize to the bounded linked economy")
 	farm.claim_quest("export")
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "migrated claimed quests stay claimed and round-trip through current saves")
@@ -365,21 +350,6 @@ func _run() -> void:
 	farm.reset_game()
 	farm.coins = 1.0e50
 	farm.reset_game()
-	farm._grant_item("sunstone")
-	farm._grant_item("almanac")
-	farm._grant_item("lens")
-	farm._grant_item("winter_weave")
-	farm._grant_item("trader_token")
-	farm._grant_item("aurora")
-	farm._grant_item("compass")
-	farm._grant_item("bottomless_sack")
-	check(farm.inventory_items.size() == farm.ITEM_CATALOG.size() and is_equal_approx(farm.item_yield_bonus(), 0.40) and farm.capacity == 360, "artifacts retain their stronger passive yield and barn effects alongside gear")
-	check(is_equal_approx(farm.item_mastery_bonus(), 0.20) and is_equal_approx(farm.item_mutation_factor(), 2.35) and is_equal_approx(farm.item_stock_factor(), 1.05), "collectibles also improve mastery, mutation chance and sale quotes")
-	var relic_rows: int = 0
-	for entry in farm.inventory_info():
-		if entry.kind == "relic" and entry.active: relic_rows += 1
-	check(relic_rows == 8, "inventory exposes all permanent items as active alongside held farming supplies")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.capacity == 360 and farm.inventory_items.aurora == 1, "collectibles and their effective storage capacity persist safely")
 	farm.reset_game()
 	farm.coins = 10000.0
 	farm._start_event("crash")
@@ -418,9 +388,8 @@ func _run() -> void:
 	revision_two.plots = revision_two.island_plots["2"]
 	for id in ["winter_ground", "winter_harvest", "winter_frost", "starter_crash", "starter_spike", "starter_combo"]: revision_two.quest_progress.erase(id)
 	write_save(revision_two)
-	check(farm.load_game(SAVE) and farm.mastery.sunburst == 6 and farm.shores_first_mutation and not farm.island3_unlocked, "economy-revision-two saves migrate to winter without resetting harvested crops or discoveries")
+	check(farm.load_game(SAVE) and farm.mastery.sunburst == 6 and not farm.island3_unlocked, "economy-revision-two saves migrate to winter without resetting harvested crops ")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "migrated revision-two economy round-trips through current strict validation")
-	farm._grant_item("aurora")
 	var pre_activity: Dictionary = farm._save_data().duplicate(true)
 	for key in ["mechanics_revision", "export_cycle_sold", "export_qualified_cycles"]: pre_activity.erase(key)
 	for id in ["starter_crash", "starter_spike", "starter_combo"]: pre_activity.quest_progress.erase(id)
@@ -429,7 +398,7 @@ func _run() -> void:
 	pre_activity.quest_progress.export = 50000000000.0
 	pre_activity.quest_claimed.append("export")
 	write_save(pre_activity)
-	check(farm.load_game(SAVE) and farm.inventory_items.aurora == 1 and farm.quest_claimed.has("export") and farm.quest_progress.export == 3, "pre-activity winter saves preserve collectibles and already claimed export rewards")
+	check(farm.load_game(SAVE) and farm.quest_claimed.has("export") and farm.quest_progress.export == 3, "pre-activity winter saves preserve already claimed export rewards")
 	balance = farm.coins
 	farm.claim_quest("export")
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "grandfathered export claim cannot pay again after migration")

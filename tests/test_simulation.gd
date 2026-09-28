@@ -130,16 +130,8 @@ func _run() -> void:
 		check(farm.news.to_lower().contains(event_words[event_id]) and farm.event_remaining > 0.0 and farm.event_remaining <= 5.0, "varied event announcement and brief timer: " + event_id)
 		farm._end_event()
 	farm.reset_game()
-	farm.storage.russet = 1
-	farm._try_mutation("russet", true)
-	check(farm.mutations.size() == 1 and farm.dex.size() == 1 and farm.storage_used() == 1, "mutation replaces a crop without exceeding barn capacity")
-	check(farm.barn_value() > 38.0, "mutation storage values its multiplier at the live price")
-	coins = farm.coins
-	price = farm.barn_value()
-	farm.sell_mutations()
-	check(farm.mutations.is_empty() and farm.dex.size() == 1 and is_equal_approx(farm.coins, coins + price), "rare sale pays correctly and keeps discovery")
 	farm.mastery.russet = 100
-	check(farm.mastery_level("russet") == 2 and farm.mutation_chance("russet") > 1.0 / 2500.0, "mastery grows from farming and improves mutation chances")
+	check(farm.mastery_level("russet") == 2, "mastery grows from farming")
 	farm.reset_game()
 	farm.interact_plot(4, "hoe")
 	farm.interact_plot(4, "plant")
@@ -173,9 +165,9 @@ func _run() -> void:
 	write_save(bad)
 	check(not farm.load_game(SAVE), "unknown crop rejected")
 	bad = saved.duplicate(true)
-	bad.storage.russet = 99999
+	bad.storage.russet = farm.MAX_INVENTORY + 1
 	write_save(bad)
-	check(not farm.load_game(SAVE), "overfull barn rejected")
+	check(not farm.load_game(SAVE), "inventory beyond global limit rejected")
 	farm.reset_game()
 	farm._market_core.russet.sell = farm.CROPS.russet.base * 3.0
 	farm._refresh_market()

@@ -69,17 +69,8 @@ func growth_factor() -> float:
 func area_bonus() -> int:
 	return (3 if level() >= 20 else (2 if level() >= 10 else (1 if level() >= 3 else 0))) if active == "farmer" else 0
 
-func mutation_factor() -> float:
-	if active == "scientist":
-		return 1.0 + level() * 0.15 + minf(0.5, research * 0.005)
-	return 1.0
-
 func event_chance_bonus() -> float:
 	return level() * 0.012 if active == "investor" else 0.0
-
-func experiment_chance() -> float:
-	var gear_factor: float = state.equipment_mutation_factor() if state.has_method("equipment_mutation_factor") else 1.0
-	return minf(0.55, (0.18 + level() * 0.025 + research * 0.0005) * gear_factor)
 
 func seed_factor() -> float:
 	return 1.0 - level() * 0.015 if active == "investor" else 1.0
@@ -102,7 +93,7 @@ func build_info() -> Array[Dictionary]:
 			"farmer": benefits = "+%d%% yield · +%.1f%% growth speed%s" % [rank * 5, maxf(0, rank - 1) * 2.5, " · wider tools" if rank >= 3 else " · wider tools at level 3"]
 			"gambler": benefits = "A rechargeable harvest-stake charm"
 			"investor": benefits = "+%.1f points positive-event chance · reserved-price deliveries" % [rank * 1.2]
-			"scientist": benefits = "+%d%% mutation chance · %d research completed" % [rank * 15 + mini(50, research / 2), research]
+			"scientist": benefits = "Permanent seed-bank varieties"
 			"industrialist": benefits = "Machine grade improves at levels 3, 10 and 20 · larger levels process faster"
 		entries.append({"id": id, "name": id.capitalize(), "level": rank, "unlocked": rank > 0, "active": active == id, "description": DESCRIPTIONS[id], "bonuses": benefits})
 	return entries
@@ -127,7 +118,6 @@ func update(delta: float, processing_step: float = -1.0) -> void:
 	fertilizer = maxf(0, fertilizer - delta)
 	professions.update(delta)
 	var work: float = delta if processing_step < 0 or not is_finite(processing_step) else processing_step
-	if state.has_method("equipment_processing_factor"): work *= state.equipment_processing_factor()
 	while work > 0 and not processing.is_empty():
 		var step: float = minf(work, float(processing.duration) - float(processing.elapsed))
 		processing.elapsed += step
@@ -180,23 +170,6 @@ func saved_storage_count(data: Dictionary) -> int:
 	for job in professional.get("queue", []): total += int(job.quantity)
 	total += int(professional.get("wager", {}).get("quantity", 0))
 	return total
-
-func inventory_info() -> Array[Dictionary]:
-	var entries: Array[Dictionary] = []
-	for id in IDS:
-		if int(levels[id]) > 0:
-			entries.append({"id": "build:" + id, "kind": "build", "name": id.capitalize() + " Build", "count": int(levels[id]), "rarity": "build", "description": DESCRIPTIONS[id], "effect": "Level %d / 30%s" % [int(levels[id]), " · equipped" if active == id else ""], "active": active == id, "action": "build:select:" + id})
-	for crop in processed:
-		entries.append({"id": "processed:" + crop, "kind": "processed", "name": "Graded " + str(state.CROPS[crop].name), "count": int(processed[crop].count), "rarity": "processed", "description": "Processed crop batch, valued at the live market.", "effect": "x%.2f sale value" % float(processed[crop].multiplier), "active": true, "sell_value": float(processed[crop].count) * float(processed[crop].multiplier) * float(state.market[crop].sell), "action": "build:sell_processed"})
-	if not processing.is_empty():
-		entries.append({"id": "processing", "kind": "processed", "name": "Batch in the processor", "count": int(processing.quantity), "rarity": "processed", "description": "The loaded batch still occupies barn space.", "effect": "%.0f%% complete" % (float(processing.elapsed) / float(processing.duration) * 100.0), "active": true, "action": "build:inspect:industrialist"})
-	for index in range(professions.data.queue.size()):
-		var job: Dictionary = professions.data.queue[index]
-		entries.append({"id": "queued:" + str(index), "kind": "processed", "name": "Queued " + job.crop, "count": job.quantity, "rarity": "processed", "description": "Loaded at the workshop. Still occupies barn space.", "effect": "Grade " + job.grade, "active": true, "action": "build:inspect:industrialist"})
-	if not professions.data.wager.is_empty():
-		var wager: Dictionary = professions.data.wager
-		entries.append({"id":"harvest_stake", "kind":"processed", "name":"Reserved harvest stake", "count":wager.quantity, "rarity":"processed", "description":"Reserved until you claim the result in Gambler details.", "effect":"Claim " + state.money(wager.quantity * wager.quote * wager.factor), "active":true, "action":"build:inspect:gambler"})
-	return entries
 
 func save_data() -> Dictionary:
 	return {"version": 5, "xp": xp.duplicate(), "professions": professions.data.duplicate(true), "active": active, "levels": levels.duplicate(), "research": research, "cooldown": cooldown, "fertilizer": fertilizer, "processing": processing.duplicate(true), "processed": processed.duplicate(true)}

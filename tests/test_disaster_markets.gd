@@ -40,8 +40,6 @@ func run() -> void:
 			fresh()
 			crash(event, severity)
 			check(is_equal_approx(farm.market.icecap.change, -95.0 * severity), event + " severity controls crash strength")
-			farm.inventory_items.market_monocle = 1
-			farm.equipment.charm = "market_monocle"
 			farm.export_active = true
 			farm.export_factor = 6
 			farm.thaw_remaining = 5

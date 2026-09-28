@@ -99,21 +99,12 @@ func run() -> void:
 			check(state.market[crop].seed == State.seed_price_for(state.market[crop].sell), "live event seed ratio " + event + " " + crop)
 			check(State.CROPS[crop].base == base_values[crop], "market never changes base " + crop)
 	state._end_event()
-	state.inventory_items.trader_token = 5
 	game.builds.levels.investor = 3
 	game.builds.active = "investor"
 	state._market_core.russet.sell = 100
 	state._market_core.giant.sell = 63
 	state._refresh_market(false)
-	# Tokens now lift the final crop quote by 5% each; seed prices follow it.
-	# Legacy seed-only discounts must not undo that final 75% relationship.
-	check(state.market.russet.sell == 125 and state.market.giant.sell == 78.75, "five Trader Tokens increase live crop quotes by 25 percent")
-	check(state.market.russet.seed == 93.75 and state.market.giant.seed == 59.06, "token-adjusted seed quotes remain 75 percent, rounded to cents")
-	# The transaction cases below deliberately use unmodified \uE000 100/\uE000 63 quotes.
-	# Do not leak this perk fixture into their exact receipt and chart amounts.
-	state.inventory_items.trader_token = 0
-	state._refresh_market(false)
-	check(state.market.russet.seed == 75 and state.market.giant.seed == 47.25, "removing tokens restores unmodified quotes without investor seed discounts")
+	check(state.market.russet.seed == 75 and state.market.giant.seed == 47.25, "seed quotes remain 75 percent without investor discounts")
 	game._on_action("market")
 	await settle()
 	var page = game.hud._refs.market_page

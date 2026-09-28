@@ -92,7 +92,7 @@ func run() -> void:
 	var inventory_tools: int = 0
 	for entry in farm.inventory_info():
 		if entry.kind == "tool": inventory_tools += 1
-	check(inventory_tools == 0, "main inventory excludes every tool")
+	check(inventory_tools == 5, "inventory includes all five usable farming tools")
 	check(farm.tracked_seed_ids().size() == 4, "starter price tracking defaults to four available seeds")
 	farm.set_tracked_seed("golden", false)
 	farm.set_tracked_seed("giant", false)

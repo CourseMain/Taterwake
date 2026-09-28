@@ -64,7 +64,7 @@ func _run() -> void:
 	activities.choose_contract("bulk")
 	check(activities.contract.kind == "bulk" and activities.contract.target == 400, "bulk contract asks for a real large harvest")
 	check(activities.contract.crop == "sunburst", "buyer targets the player's selected crop")
-	activities.choose_contract("mutation")
+	activities.choose_contract("bulk")
 	check(activities.contract.kind == "bulk", "active order cannot be overwritten to discard committed shipments")
 	state.storage.sunburst = 100
 	activities.deliver_contract()
@@ -79,18 +79,8 @@ func _run() -> void:
 	balance = state.coins
 	activities.deliver_contract()
 	check(state.coins == balance, "completed order cannot be paid twice")
-	activities.choose_contract("mutation")
+	activities.choose_contract("bulk")
 	check(activities.contract.is_empty(), "buyer cooldown prevents instant repeated contracts")
-	activities.update(25.0)
-	activities.choose_contract("mutation")
-	check(activities.contract.target == 1 and activities.contract.kind == "mutation", "mutation build gets a separate small valuable order")
-	state.mutations.clear()
-	state.mutations.append({"id": "golden", "crop": "sunburst", "name": "Golden Sunburst Potato", "count": 3, "multiplier": 25.0})
-	state.mutations.append({"id": "crystal", "crop": "golden", "name": "Crystal Golden Potato", "count": 2, "multiplier": 75.0})
-	activities.deliver_contract()
-	check(state.mutations.size() == 2 and state.mutations[0].count == 2 and state.mutations[1].count == 2, "mutation delivery consumes exact matching quantity and preserves unrelated crates")
-	check(is_equal_approx(state.coins - balance, 6750000.0), "mutation reward includes live crop quote and actual rarity multiplier plus50percent")
-	check(state.storage.sunburst == 200, "mutation delivery never consumes or fabricates ordinary crops")
 	state.current_island = 1
 	activities.update(25.0)
 	activities.choose_contract("bulk")

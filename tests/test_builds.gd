@@ -32,9 +32,7 @@ func _run() -> void:
 	builds.select_build("farmer")
 	check(state.crop_grow_time("russet") < 10.0 and state.affected_tiles(7, "hoe").size() > 1, "Farmer upgrades change real growth speed and manual tool area")
 	builds.select_build("scientist")
-	var scientific_chance: float = state.mutation_chance("russet")
 	builds.select_build("farmer")
-	check(scientific_chance > state.mutation_chance("russet"), "Scientist increases actual mutation chances")
 	var regular_seed: float = state.market.russet.seed
 	builds.select_build("investor")
 	check(state.market.russet.seed == regular_seed, "Investor preserves the fixed 75% seed rate")

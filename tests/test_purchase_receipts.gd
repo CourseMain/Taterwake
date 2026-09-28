@@ -129,7 +129,6 @@ func _test_seeds() -> void:
 		state.coins = 1.0e18
 		builds.active = "investor"
 		builds.levels.investor = 9
-		state.inventory_items.trader_token = 3
 		state._start_event("seed_fair")
 		var crop: String = "russet" if island == 1 else ("sunburst" if island == 2 else "icecap")
 		var old_quote: float = float(state.market[crop].seed)
@@ -170,10 +169,9 @@ func _test_tools_and_space() -> void:
 	state.coins = state.bankruptcy_limit()
 	_failure(func(): return state.upgrade_barn(), "barn credit limit")
 	state.coins = 100000.0
-	state._grant_item("winter_weave")
 	var old_capacity: int = state.capacity
-	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 240, 500.0, "barn with capacity equipment")
-	check(state.capacity - old_capacity == 240 and int(receipt.get("total", -1)) == state.capacity, "barn receipt reports actual capacity gain including owned upgrades")
+	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 200, 500.0, "barn expansion")
+	check(state.capacity - old_capacity == 200 and int(receipt.get("total", -1)) == state.capacity, "barn receipt reports actual capacity gain after expansion")
 	state.barn_level = 20
 	state._recompute_capacity()
 	_failure(func(): return state.upgrade_barn(), "maximum barn")
