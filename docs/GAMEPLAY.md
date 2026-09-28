@@ -60,9 +60,15 @@ New farms use `user://taterland_save_v4.json`. Older farms are not loaded or mig
 
 The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
-A smooth **60-second day–night–day cycle** changes the sky, sunlight and ambient light on the farm. Nights stay readable for farming. It follows saved play time, keeps its phase after loading, and does not alter crop growth.
+The run lasts **ten years**. Spring, Summer and Autumn each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-Watered crops grow in real time. Base growth times are Russet **10s**, Golden **25s**, Giant **40s**, Radioactive **50s**, Sunburst **55s** and Icecap **60s**. Weather cannot push active growth beyond 60 seconds; dry or frozen crops still wait for water or thawing. Menus do not pause crops or quotes; closing the game adds no offline farming.
+**Winter pauses the farm** and opens a review menu. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. Year 10 ends with **Ten years complete**; menus and New farm remain available. Every season boundary saves before its menu opens.
+
+Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Radioactive **165s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry or frozen crops wait for water or thawing.
+
+Till and plant only in **Spring and Summer**. Autumn is for tending and harvesting. At the end of Autumn, every unharvested crop is lost and prepared beds are cleared. The Winter panel reports how many beds were lost to the cold. Potatoes already in the barn are safe from this seasonal clearing.
+
+Ordinary shop and menu panels keep working time running. Conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter pauses crops, pests, weather and prices. Closing the game adds no offline farming.
 
 Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
@@ -131,7 +137,7 @@ After bankruptcy, **Debug access** still accepts the session code. **Recover tes
 
 ### Climate action and bankruptcy
 
-Weather can threaten Spud Valley from the first season. For now, each **150-second season has a 15% chance** of a disaster; the calendar redesign will replace this temporary clock. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
+Weather can threaten Spud Valley from the first season. For now, each working season has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
 
 Purchases require enough cash. A balance **strictly below −5,000 Spudions** ends the run; equality remains playable. Ordinary crop sales can cover debt. This temporary overdraft rule will be replaced by the annual ledger.
 

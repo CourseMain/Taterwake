@@ -11,7 +11,7 @@
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 27. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 28. Saves without the new calendar, including revision 27, are set aside as incompatible. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -34,7 +34,15 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 7 — current
+#### Segment 8 — current
+
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **72 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (65 checks), `test_day_night` (314) and `test_game` (39). No tests are skipped or disabled. The complete serial result is `artifacts/segment8-baseline.txt`.
+
+Growth fixtures now use seasonal durations, sky checks follow the moving sun, and market simulation stops at Winter. Fixtures for explicit weather and practice scenarios begin with a deterministic calm Spring; separate state tests still exercise the 15% disaster draw and saved RNG continuity. Scene teardown allows audio playback to finish releasing before engine exit.
+
+The explicit headless boot command passes all 39 checks. Native GL Compatibility and a temporary Web resource pack each pass all 65 calendar checks. The Winter panel and dawn/midday/dusk captures were visually inspected. Packed-resource validation is not a browser runtime test; browser automation was not rerun. Published `docs/index.*` and `web/` remain unchanged.
+
+#### Segment 7 — historical
 
 Godot 4.7.2, `tools/run_tests.sh -j 1`: **71 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes. Seven dedicated regional suites were deleted, mixed fixtures now use the single Valley field, and `test_single_farm` was added. No tests are skipped or disabled. The full serial result is `artifacts/segment7-baseline.txt`.
 
@@ -209,7 +217,7 @@ Safari was separately tested using `tools/export_browser_benchmark.py` and its i
 
 ### Shadows and device preferences
 
-Balanced/Crisp use a single orthographic shadow map, zero pancake extrusion and a stable steep sun direction. Terrain shells do not cast onto the ocean. The 60-second sky/light cycle remains; Smooth disables the shadow map. `GraphicsPreferences` saves only the quality mode in `user://taterland_graphics.cfg`, independently of farm state. Existing Balanced/Smooth preferences remain valid.
+Balanced/Crisp use a single orthographic shadow map and zero pancake extrusion. Terrain shells do not cast onto the ocean. The sun direction follows progress through each 150-second working season; quality changes preserve its position. Smooth disables the shadow map. `GraphicsPreferences` saves only the quality mode in `user://taterland_graphics.cfg`, independently of farm state. Existing Balanced/Smooth preferences remain valid.
 
 `test_static_mesh_compiler.gd`, `test_farm_viewport.gd`, `test_graphics_preferences.gd`, `test_world_graphics_quality.gd` and `test_web_canvas.js` cover transformed geometry, cache reuse, scaled Valley input, letterboxing, sharp UI budgets, preference persistence and shadow bounds. Purchase input fixtures convert projected farm coordinates into logical screen coordinates before sending clicks.
 
@@ -235,7 +243,7 @@ The first natural infestation is harmless until cleared or harvested, even when 
 
 Contextual advice is available only through Help → Current farm help. The former FarmHelp overlay is an empty hidden compatibility node, so existing layout callers cannot restore the floating debt/tool reminders. Useful action feedback, bankruptcy information and full-barn alerts remain separate. Saved first-pest protection, independent farming progress are unchanged. Dismissing a suggestion records dismissal only, not learning.
 
-Base crop times are 10/25/40/50/55/60 seconds for Russet/Golden/Giant/Radioactive/Sunburst/Icecap. Each crop's active growth speed is bounded by `base_time / 60`, including weather penalties, while positive growth bonuses can still shorten the duration. Field updates and hover timers use that same bound. Dry/frozen crops and paused simulations do not consume growth time. Revision 14 validates older plots against `OLD_GROW_TIMES` before converting elapsed time by completion percentage; mature potatoes remain mature.
+Base crop times are 75/105/135/165/195/225 seconds for Russet/Golden/Giant/Radioactive/Sunburst/Icecap. Active growth speed is bounded by `base_time / 450`, including weather penalties. Field updates and hover timers use the same bound. Dry/frozen crops and paused simulations do not consume growth time. The calendar format does not migrate earlier save revisions.
 
 ### Quiet farming feedback and shop signs
 
@@ -371,6 +379,17 @@ Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-mo
 
 There is one flock of at most two ducks, one set of climate projects and one water supply. Export ships, buyer contracts, Frostbreak, the furnace and their dedicated tests are deleted. Mixed suites keep their surviving checks on Valley fixtures. Freeze ice is cleared directly with the hoe. The arrival cinematic is removed; `chapter_subtitles.gd` preserves its timed text and skip control for the later year-start page.
 
-Weather draws once per provisional 150-second season at a constant 15% probability, including the first season. Any of the four disasters can occur. Existing 45-second warning, 30-second active and 75-second recovery phases remain. Tutorials and optional practice pause the clock. Season time and RNG state round-trip through v4 saves; no calendar or ten-year ledger is introduced in this segment.
+Weather uses a constant 15% probability at the beginning of each working season, including the first Spring, when weather is calm. Any of the four disasters can occur. Existing 45-second warning, 30-second active and 75-second recovery phases remain. Tutorials and optional practice pause the calendar. Season time and RNG state round-trip through v4 saves.
 
 `test_single_farm.gd` checks bed access, expansion, ordinary Sunburst/Icecap planting, absent regional save fields, rejection of old schemas, protected old paths, seasonal probability and reload continuity, reusable subtitles, Valley boot and the menu. `test_island_activities.gd` now covers only duck purchases, training, patrols and validation. Run with `tools/run_tests.sh -j 1 test_single_farm test_island_activities test_save_safety test_game`.
+
+
+### Segment 8: seasonal calendar
+
+`season_clock.gd` is a RefCounted object owned and serialized by GameState. Years are 1–10; Spring, Summer and Autumn each last 150 seconds. State splits simulation updates at season boundaries and discards excess time on entering Winter. Winter lasts until `start_next_year()` succeeds; year 10 remains in its final Winter. Existing conversation, practice and collapse pauses also pause the calendar. The first-harvest lesson keeps its protected growing time without advancing the calendar.
+
+GameState finishes each boundary, synchronously saves through `boundary_save_path`, then emits `season_changed`. Main assigns the live save path; isolated tests leave it empty or use a disposable path. Thus Winter is persisted before its panel opens. Autumn clearing records the number of lost beds for a persistent, visible Winter notice, preserves barn inventory and resets weather to calm. Save validation checks calendar ranges, Winter's empty fields and calm weather. The next season's probability draw occurs on its first positive update, preserving RNG continuity across boundary saves.
+
+Tilling and planting are limited to Spring and Summer; Autumn still allows harvest, watering, pest treatment and weather rescue. Crop times run from 75 to 225 seconds before weather penalties. The HUD shows year and season without a countdown, and maps the sun from dawn to dusk using calendar seconds. Winter reuses Frosthollow snow materials, roof cover and flakes on the Valley. Escape and the farm menu remain usable, including at the year-10 cap.
+
+Run `tools/run_tests.sh -j 1 test_season_clock test_day_night test_game` for the full working year, boundary save ordering, Autumn loss, Winter pause/reload, planting gates, seasonal growth, UI navigation, snow, sky mapping and boot. Older growth fixtures now wait for the selected variety's seasonal duration; calm-weather fixtures use deterministic RNG or an already-started season.
