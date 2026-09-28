@@ -670,7 +670,6 @@ func _apply_tutorial_visibility() -> void:
 	_stats_card.size.x = 763.0 if revealed_stats >= 3 else (510.0 if revealed_stats == 2 else 225.0)
 	if "stock" in features:
 		_top.market_name.text = "POTATO PRICES"
-		_top.price.text = "Slow seasonal drift"
 	_menu_button.visible = "menu" in features
 	_hotbar.visible = not tools.is_empty()
 	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 92.0 + maxi(0, tools.size() - 1) * 6.0)
@@ -989,7 +988,13 @@ func _build_top() -> void:
 	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
 	_top["price"] = _label("\uE000 38", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
-	market_box.add_child(_top["price"])
+	var quote_row: BoxContainer = _hbox(8)
+	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	market_box.add_child(quote_row)
+	quote_row.add_child(_top["price"])
+	_top["price_change"] = _label("", 16, INK, true)
+	_top.price_change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	quote_row.add_child(_top.price_change)
 	var stats_font: FontVariation = _compact_heading_font()
 	for label: Node in stats.find_children("*", "Label", true, false):
 		label.add_theme_font_override("font", stats_font)
@@ -1338,6 +1343,12 @@ func _build_modal() -> void:
 	_modal_trade_footer.hide()
 	_modal.hide()
 
+func price_change_color(crop: String) -> Color:
+	var price: float = _state.market[crop].sell
+	var base: float = float(_crop_defs[crop].base)
+	if is_equal_approx(price, base): return INK
+	return Color("436733") if price > base else Color("a63529")
+
 func update_state(state: Node) -> void:
 	_state = state
 	if not is_instance_valid(root):
@@ -1353,8 +1364,11 @@ func update_state(state: Node) -> void:
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < float(state.call("blind_info").tax) else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
-	_top.price.text = _money(float(quote.get("sell", 0)))
+	_top.price.text = state.market_money(float(quote.get("sell", 0)))
 	_top.price.add_theme_color_override("font_color", INK)
+	_top.price_change.text = "· " + state.price_percent_text(crop)
+	_top.price_change.add_theme_color_override("font_color", price_change_color(crop))
+	_top.price_change.show()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = float(storage.get(crop, 0))
 	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))

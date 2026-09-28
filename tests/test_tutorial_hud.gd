@@ -148,7 +148,7 @@ func run() -> void:
 		check(hud._tutorial_card.is_visible_in_tree() and not hud._tutorial_skip.disabled, "%s panel leaves skip available" % panel)
 		if panel == "tools":
 			check(hud._refs["upgrade:hoe"].disabled, "affordable tool upgrades stay disabled on guided inspection")
-	check(hud._top.market_name.text == "POTATO PRICES" and hud._top.price.text == "Slow seasonal drift", "stock introduction explains calm market without countdown excitement")
+	check(hud._top.market_name.text == "POTATO PRICES" and hud._top.price_change.text == "· " + state.price_percent_text(state.selected_crop), "price introduction shows the current base percentage")
 	check(hud._crop_row.anchor_left == 0.0 and hud._crop_row.anchor_right == 1.0 and hud._crop_row.offset_left == 28.0 and hud._crop_row.offset_right == -28.0, "stock introduction restores full seed tray layout")
 	check(button_for("debug") == null, "guided menu does not reveal debugging clutter")
 	hud.set_tutorial({})

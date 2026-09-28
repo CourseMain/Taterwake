@@ -1,6 +1,7 @@
 extends VBoxContainer
 ## Seed and crop counters with prices, quantities and transaction confirmation.
 const State = preload("res://scripts/game_state.gd")
+const Sparkline = preload("res://scripts/price_sparkline.gd")
 const Quantity = preload("res://scripts/market_quantity.gd")
 const Portrait = preload("res://scripts/market_portrait.gd")
 const Surface = preload("res://scripts/exchange_surface.gd")
@@ -29,6 +30,8 @@ var payout: Label
 var status: Label
 var crop_name: Label
 var crop_quote: Label
+var crop_change: Label
+var crop_history: Control
 var crop_owned: Label
 var crop_image: Control
 var minus: Button
@@ -43,13 +46,10 @@ var _total_box: VBoxContainer
 var _hero_words: VBoxContainer
 var _hero_quote_row: HBoxContainer
 var _hero_badges: HBoxContainer
-var _card_icons: Dictionary = {}
 var _finger: int = -1
 var _touch_start := Vector2.ZERO
 var _receipt_left: float = 0.0
 var _receipt: String = ""
-var _selection_tween: Tween
-var _animated_portrait: Control
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
 var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 
@@ -174,7 +174,6 @@ func _build_buy() -> void:
 		picture.seed_sack = true
 		picture.custom_minimum_size = Vector2(90, 96)
 		preview.add_child(picture)
-		_card_icons[crop] = picture
 		var identity: VBoxContainer = hud._vbox(4)
 		identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		preview.add_child(identity)
@@ -188,8 +187,18 @@ func _build_buy() -> void:
 		identity.add_child(price)
 		hud._refs[crop + ":seed_price"] = price
 		var produce: Label = _label("", 14, INK)
-		body.add_child(produce)
+		produce.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		produce.autowrap_mode = TextServer.AUTOWRAP_OFF
+		var quote_row := HBoxContainer.new()
+		body.add_child(quote_row)
+		quote_row.add_child(produce)
+		var change := _label("", 14, INK)
+		change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		change.autowrap_mode = TextServer.AUTOWRAP_OFF
+		quote_row.add_child(change)
+		hud._refs[crop + ":change"] = change
 		hud._refs[crop + ":price"] = produce
+		hud._refs[crop + ":history"] = _sparkline(body)
 		body.add_child(_rule())
 		var stock := HBoxContainer.new()
 		stock.add_theme_constant_override("separation", 10)
@@ -234,7 +243,15 @@ func _build_sell() -> void:
 	_hero_quote_row.add_theme_constant_override("separation", 12)
 	_hero_words.add_child(_hero_quote_row)
 	crop_quote = _label("", 30, INK)
+	crop_quote.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	crop_quote.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_hero_quote_row.add_child(crop_quote)
+	crop_change = _label("", 16, INK)
+	crop_change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	crop_change.autowrap_mode = TextServer.AUTOWRAP_OFF
+	crop_change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_hero_quote_row.add_child(crop_change)
+	crop_history = _sparkline(_hero_words)
 	_hero_badges = HBoxContainer.new()
 	_hero_badges.add_theme_constant_override("separation", 8)
 	_hero_words.add_child(_hero_badges)
@@ -244,6 +261,21 @@ func _build_sell() -> void:
 	_hero_badges.add_child(crop_owned)
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
 	_build_trade_bar()
+
+func _sparkline(parent: Control) -> Control:
+	var chart := Sparkline.new()
+	chart.name = "PriceHistory"
+	chart.custom_minimum_size = Vector2(180, 28)
+	chart.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	chart.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chart.tooltip_text = "Recent sale prices · up to 12 quotes"
+	parent.add_child(chart)
+	return chart
+
+func _show_price_change(label: Label, crop: String) -> void:
+	label.text = "· " + hud._state.price_percent_text(crop)
+	label.add_theme_color_override("font_color", hud.price_change_color(crop))
+	label.tooltip_text = "Compared with the variety's base price"
 
 func _board_skin() -> StyleBoxFlat:
 	return Surface.framed_skin(Color("d9c283"), FRAME, Color.TRANSPARENT, 20, 3)
@@ -322,7 +354,7 @@ func _layout() -> void:
 	else:
 		var compact: bool = touch and get_viewport_rect().size.y < 700
 		add_theme_constant_override("separation", 6 if compact else 14)
-		# Keep the history buttons clear of the fixed trade bar on short phones.
+		# Keep the variety buttons clear of the fixed trade bar on short phones.
 		for panel: PanelContainer in [hero, footer]:
 			var skin: StyleBox = panel.get_theme_stylebox("panel")
 			var inset: int = (12 if compact else 20) if panel == hero else (10 if compact else 14)
@@ -366,6 +398,8 @@ func refresh() -> void:
 			var quote: Dictionary = state.market[crop]
 			hud._refs[crop + ":seed_price"].text = "%s each" % state.market_money(quote.seed)
 			hud._refs[crop + ":price"].text = "Sale price %s" % state.market_money(quote.sell)
+			_show_price_change(hud._refs[crop + ":change"], crop)
+			hud._refs[crop + ":history"].set_history(quote.history, MUTED)
 			hud._refs[crop + ":quote"].text = state.format_number(state.seed_inventory[crop])
 			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.storage[crop])
 			for count: int in [1, 5]:
@@ -379,7 +413,10 @@ func refresh() -> void:
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
 	crop_name.text = hud._crop_name(selected) + " Potato"
-	crop_quote.text = "%s / potato" % state.market_money(price)
+	crop_quote.text = state.market_money(price)
+	crop_quote.tooltip_text = "Sale price per potato"
+	_show_price_change(crop_change, selected)
+	crop_history.set_history(quote.get("history", []), MUTED)
 	crop_owned.text = "%s owned" % state.format_number(owned)
 	crop_image.crop = selected
 	crop_image.accent = ACCENTS[selected]
@@ -402,7 +439,6 @@ func navigate(direction: int) -> void:
 	quantity.set_value_no_signal(1)
 	_receipt_left = 0
 	refresh()
-	_bounce(crop_image)
 
 func _sell() -> void:
 	if not quantity.apply():
@@ -418,27 +454,12 @@ func _sold(receipt: Dictionary) -> void:
 	_receipt_left = 2.8
 	hud._toast_box.hide()
 	refresh()
-	_bounce(crop_image)
 
 func _purchased(receipt: Dictionary) -> void:
 	if selling or not is_visible_in_tree() or receipt.kind != "seeds": return
 	_receipt = "+%d %s seeds · −%s" % [receipt.quantity, hud._crop_name(receipt.id), hud._state.market_money(receipt.cost)]
 	_receipt_left = 2.8
-	if _card_icons.has(receipt.id): _bounce(_card_icons[receipt.id])
 	refresh()
-
-func _bounce(control: Control) -> void:
-	if is_instance_valid(_selection_tween): _selection_tween.kill()
-	if is_instance_valid(_animated_portrait):
-		_animated_portrait.rotation = 0.0
-		_animated_portrait.scale = Vector2.ONE
-	_animated_portrait = control
-	control.pivot_offset = control.size * 0.5
-	control.rotation = -0.055
-	control.scale = Vector2.ONE * 0.96
-	_selection_tween = create_tween().set_parallel(true)
-	_selection_tween.tween_property(control, "rotation", 0.0, 0.26).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	_selection_tween.tween_property(control, "scale", Vector2.ONE, 0.26).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _process(delta: float) -> void:
 	if _receipt_left > 0:

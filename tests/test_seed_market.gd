@@ -37,6 +37,9 @@ func capture_polish() -> void:
 	state.coins = 125000
 	for crop: String in ["russet", "giant", "golden", "radioactive"]:
 		state.storage[crop] = 24
+	state.elapsed = 420.0
+	state._refresh_market()
+	game.hud.update_state(state)
 	game.hud._sell_crop = "russet"
 	for dimensions: Vector2i in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]:
 		root.size = dimensions
@@ -49,6 +52,33 @@ func capture_polish() -> void:
 		game.hud.show_panel("market", state)
 		await settle()
 		await shot("polished-buy-%dx%d" % [dimensions.x, dimensions.y])
+
+func check_price_information(state) -> void:
+	state.tutorial_progress.completed = true
+	game.hud.set_tutorial({})
+	for moment: float in [0.0, 37.0, 150.0, 337.0, 450.0]:
+		state.elapsed = moment
+		state._refresh_market()
+		game.hud.show_panel("market", state)
+		for crop: String in game.hud._refs.market_page.crops:
+			var expected: int = roundi((state.market[crop].sell / State.CROPS[crop].base - 1.0) * 100.0)
+			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
+			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
+			var label: Label = game.hud._refs[crop + ":change"]
+			check(label.text == text and label.get_theme_color("font_color") == color, crop + " buy signed percentage and color")
+			check(game.hud._refs[crop + ":history"].samples == state.market[crop].history, crop + " buy sparkline samples")
+		game.hud.show_panel("sell_potatoes", state)
+		var page = game.hud._refs.market_page
+		for crop: String in page.crops:
+			page.selected = crop
+			state.selected_crop = crop
+			game.hud.update_state(state)
+			var expected: int = roundi((state.market[crop].sell / State.CROPS[crop].base - 1.0) * 100.0)
+			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
+			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
+			check(page.crop_change.text == text and page.crop_change.get_theme_color("font_color") == color, crop + " sell signed percentage and color")
+			check(page.crop_history.samples == state.market[crop].history, crop + " sell navigation updates sparkline")
+			check(game.hud._top.price.text == state.market_money(state.market[crop].sell) and game.hud._top.price_change.text == text and game.hud._top.price_change.get_theme_color("font_color") == color, crop + " top bar live price, signed percentage and color")
 
 func run() -> void:
 	if not "--integration-test" in OS.get_cmdline_user_args():
@@ -207,6 +237,7 @@ func run() -> void:
 		var scroll: ScrollContainer = game.hud._body.get_parent()
 		check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 0.5, "market fits width " + str(dimensions))
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()), "market fits viewport " + str(dimensions))
+		check(page.crop_quote.get_line_count() == 1 and page.crop_change.get_line_count() == 1 and page.crop_quote.get_global_rect().end.x <= page.crop_change.global_position.x, "sell quote and percentage stay adjacent without overlap " + str(dimensions))
 		await shot("sell-%dx%d" % [dimensions.x, dimensions.y])
 		scroll.scroll_vertical = 0
 		await settle()
@@ -215,10 +246,15 @@ func run() -> void:
 		game.hud.show_panel("market", state)
 		await settle()
 		check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 0.5, "seed cards fit width " + str(dimensions))
+		for crop: String in game.hud._refs.market_page.crops:
+			var quote_label: Label = game.hud._refs[crop + ":price"]
+			var change_label: Label = game.hud._refs[crop + ":change"]
+			check(quote_label.get_line_count() == 1 and change_label.get_line_count() == 1 and quote_label.get_global_rect().end.x <= change_label.global_position.x, crop + " buy quote and percentage stay adjacent without overlap " + str(dimensions))
 		await shot("buy-%dx%d" % [dimensions.x, dimensions.y])
 		game.hud.show_panel("sell_potatoes", state)
 		page = game.hud._refs.market_page
 		await settle()
+	check_price_information(state)
 	await capture_polish()
 	game.queue_free()
 	await process_frame
