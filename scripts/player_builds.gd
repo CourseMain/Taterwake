@@ -69,19 +69,13 @@ func growth_factor() -> float:
 func area_bonus() -> int:
 	return (3 if level() >= 20 else (2 if level() >= 10 else (1 if level() >= 3 else 0))) if active == "farmer" else 0
 
-func event_chance_bonus() -> float:
-	return level() * 0.012 if active == "investor" else 0.0
-
-func seed_factor() -> float:
-	return 1.0 - level() * 0.015 if active == "investor" else 1.0
-
 func select_build(id: String) -> String:
 	if state.run_over:
 		return "Run over. Start a new farm."
 	if not levels.has(id) or int(levels[id]) < 1:
 		return state._finish("Choose an available build.")
 	active = id
-	state._refresh_market(false)
+	state._refresh_market()
 	return state._finish("%s build equipped, level %d." % [active.capitalize(), level()])
 
 func build_info() -> Array[Dictionary]:

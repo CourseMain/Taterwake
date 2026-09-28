@@ -11,10 +11,10 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"freeze": {"name": "DEEP FREEZE", "field": 0.4, "barn": 0.12, "seed": 1.7, "sell": 0.15, "growth": 0.5, "tax": 1.0, "prepare": "Visit the furnace and heat your thawing hoe. Hoe [1] melts frozen crops while the tool is hot. Frostgold resists ice."},
-	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "seed": 1.8, "sell": 0.05, "growth": 0.6, "tax": 0.8, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
-	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "seed": 1.7, "sell": 0.05, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
-	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "seed": 1.6, "sell": 0.05, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Trees shelter the far beds from wind; trees do not stop lightning."},
+	"freeze": {"name": "DEEP FREEZE", "field": 0.4, "barn": 0.12, "growth": 0.5, "tax": 1.0, "prepare": "Visit the furnace and heat your thawing hoe. Hoe [1] melts frozen crops while the tool is hot. Frostgold resists ice."},
+	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "growth": 0.6, "tax": 0.8, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
+	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "growth": 0.7, "tax": 1.1, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
+	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "growth": 0.75, "tax": 1.5, "prepare": "Harvest the gold lightning row. Trees shelter the far beds from wind; trees do not stop lightning."},
 }
 const PROJECTS: Dictionary = {
 	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 0.01, "event": "drought", "field": 0.0, "barn": 0.0, "tax": 0.0, "detail": "Buy once for all islands. Three sprinklers and connected pipes cost 6 water per patch, or 4 at level 2."},
@@ -77,7 +77,7 @@ func factor(kind: String, island: int) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or farm.rocket_pending or Lesson.active(farm) or data.phase != "calm":
+	if farm.current_island < FIRST_ISLAND or data.intro_pending or farm.run_over or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
 		return false
 	var ids: Array = EVENTS.keys()
 	if farm.current_island != 3: ids.erase("freeze")
@@ -96,7 +96,7 @@ func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
 	return true
 
 func update(farm, delta: float) -> bool:
-	if farm.run_over or farm.rocket_pending or Lesson.active(farm): return false
+	if farm.run_over or Lesson.active(farm): return false
 	var operated: bool = Operations.update(farm, delta)
 	if farm.tutorial_active or not clock_running(farm): return operated
 	data.timer = maxf(0.0, float(data.timer) - delta)
@@ -192,8 +192,6 @@ func info(farm) -> Dictionary:
 	result.available = farm.current_island >= FIRST_ISLAND
 	result.name = str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
 	result.pressure = tax_pressure()
-	result.seed_factor = factor("seed", farm.current_island)
-	result.sell_factor = factor("sell", farm.current_island)
 	result.frozen_crops = data.operations.get("ice", {}).size() if int(data.island) == farm.current_island else 0
 	result.prepare = str(EVENTS.get(data.event, {}).get("prepare", "Fund local protection before the next warning."))
 	result.warning_tax = 0.0
@@ -217,8 +215,6 @@ func capture_collapse(farm) -> void:
 		"field_lost": int(last.get("field_lost", 0)), "field_total": int(last.get("field_total", 0)),
 		"barn_lost": int(last.get("barn_lost", 0)), "barn_total": int(last.get("barn_total", 0)),
 		"tax": float(receipt.tax) if tax_caused else float(info.tax),
-		"seed_factor": factor("seed", farm.current_island), "sell_factor": factor("sell", farm.current_island),
-		"market_crop": farm.selected_crop, "market_change": float(farm.market.get(farm.selected_crop, {}).get("change", 0.0)),
 		"elapsed": farm.elapsed, "total_field_lost": data.field_lost, "total_barn_lost": data.barn_lost,
 		"tax_paid": data.tax_paid, "projects": data.projects.duplicate(true), "history": data.history.duplicate(true)}
 
@@ -260,11 +256,11 @@ static func valid(raw: Variant, maximum: float) -> bool:
 		if not Rules.number(raw.get(key), 0, maximum): return false
 	if not raw.get("collapse") is Dictionary: return false
 	if not raw.collapse.is_empty():
-		for key in ["event", "phase", "build", "cause", "market_crop"]:
+		for key in ["event", "phase", "build", "cause"]:
 			if not raw.collapse.get(key) is String or raw.collapse[key].length() > 256: return false
-		for key in ["balance", "market_change"]:
+		for key in ["balance"]:
 			if not Rules.number(raw.collapse.get(key), -maximum, maximum): return false
-		for key in ["island", "field_lost", "field_total", "barn_lost", "barn_total", "tax", "seed_factor", "sell_factor", "elapsed", "total_field_lost", "total_barn_lost", "tax_paid"]:
+		for key in ["island", "field_lost", "field_total", "barn_lost", "barn_total", "tax", "elapsed", "total_field_lost", "total_barn_lost", "tax_paid"]:
 			if not Rules.number(raw.collapse.get(key), 0, maximum): return false
 		if not raw.collapse.get("history") is Array or not raw.collapse.get("projects") is Dictionary: return false
 	return true

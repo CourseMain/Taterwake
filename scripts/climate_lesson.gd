@@ -8,7 +8,7 @@ static func active(farm) -> bool:
 	return farm.current_island == 2 and farm.climate.data.lesson.stage in ["water", "area", "success"]
 static func start(farm) -> String:
 	if farm.current_island != 2: return farm._finish("Try the water lesson on Golden Shores.")
-	if farm.climate.data.phase != "calm" or farm.run_over or farm.rocket_pending or farm.tutorial_active:
+	if farm.climate.data.phase != "calm" or farm.run_over or farm.tutorial_active:
 		return farm._finish("Try the water lesson when the farm is calm.")
 	if int(farm.climate.data.projects["2"].get("irrigation", 0)) == 0: return farm._finish("Buy Sprinklers & Irrigation at the weather station before sprinkler practice.")
 	farm.climate.data.introduced = true

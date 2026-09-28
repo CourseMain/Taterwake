@@ -1,14 +1,11 @@
 extends RefCounted
+const COLLECTION_SECONDS: float = 10.0
 ## Progression references, pressure limits, and ranks; never scale to player wealth.
 const PROGRESSION_BASELINES: Dictionary = {1: 1000000.0, 2: 100000000000.0, 3: 5000000000000000.0}
-const STOCK_REFERENCE_PERCENT: float = 0.08
 const BANKRUPTCY_PERCENT: float = 0.05
 const BOOMS_PER_BLIND: int = 3
 const TAX_RATE: float = 0.05
-const TAX_BOOM_CHANCE: float = 0.20
-const TAX_BOOM_MIN: float = 1.0
 const TAX_BOOM_MAX: float = 2.5
-const TAX_BOOM_MAX_INCREASE: int = 150
 const WEALTH_RANKS: Array[Dictionary] = [
 	{"ratio": 2.0, "name": "OVERKILL"},
 	{"ratio": 5.0, "name": "ULTRA KILL"},
@@ -41,7 +38,7 @@ static func wealth_rank(ratio: float) -> String:
 		title = str(rank.name)
 	return title
 
-static func valid_cycle(raw: Variant, max_money: float, surge_duration: float, legacy: bool = false) -> bool:
+static func valid_cycle(raw: Variant, max_money: float, collection_seconds: float, legacy: bool = false) -> bool:
 	if not raw is Dictionary:
 		return false
 	for key: String in ["island", "booms", "clears"]:
@@ -51,7 +48,7 @@ static func valid_cycle(raw: Variant, max_money: float, surge_duration: float, l
 		return false
 	var multiplier_cap: float = 14.0 if legacy else TAX_BOOM_MAX
 	var booms_required: int = 2 if legacy else BOOMS_PER_BLIND
-	if not number(raw.get("due_in"), 0.0, surge_duration) or not number(raw.get("tax_multiplier"), 1.0, multiplier_cap):
+	if not number(raw.get("due_in"), 0.0, collection_seconds) or not number(raw.get("tax_multiplier"), 1.0, multiplier_cap):
 		return false
 	if not raw.get("run_over") is bool or not raw.get("tax_rolled") is bool or raw.get("reason") not in ["", "bankrupt", "blind_missed", "tax_unpaid"]:
 		return false

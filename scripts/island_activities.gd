@@ -345,7 +345,7 @@ func info() -> Dictionary:
 	if island == 2:
 		description = "Supply a harvest shipment at a 25% premium."
 	elif island == 3:
-		description = "25 Icecaps → 20s of heat. Time it with a surge."
+		description = "25 Icecaps → 20s of heat. Use it to thaw frozen crops."
 	var ducks: Array[Dictionary] = []
 	var flock: Array = _current_ducks()
 	for index in range(flock.size()):

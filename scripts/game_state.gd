@@ -12,7 +12,6 @@ signal purchase_completed(receipt: Dictionary)
 signal sale_completed(receipt: Dictionary)
 signal purchase_rejected(message: String)
 signal blind_resolved(result: Dictionary)
-signal tax_boom_started
 signal run_ended
 signal climate_changed(phase: String)
 
@@ -23,17 +22,9 @@ const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 23
+const MECHANICS_REVISION: int = 24
 const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
-const ROCKET_MIN_MULTIPLIER: float = 351.0
-const MAX_PRICE_MULTIPLIER: float = 1001.0
-const ROCKET_INTERVAL: float = 1800.0
-const MARKET_TICK_SECONDS: float = 5.0
-const STARTER_MARKET_SECONDS: float = 3.0
-const SURGE_INTERVAL: float = 180.0
-const SURGE_DURATION: float = 10.0
-const NATURAL_STOCK_CHANCE: float = 0.015
-const BOOM_TAIL_SHAPE: float = 3.0
+const PRICE_CYCLE_SECONDS: float = 600.0
 const PEST_TICK_SECONDS: float = 5.0
 const ISLAND2_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[1]
 const ISLAND2_UNLOCK_HARVEST: int = 500
@@ -47,17 +38,16 @@ const DEFAULT_SAVE_PATH: String = "user://spud_valley_save_v3.json"
 const LEGACY_SAVE_PATH: String = "user://spud_valley_save.json"
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
 const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 28.5, "base": 38.0, "grow": 10.0, "yield": 3, "vol": 0.08, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 675.0, "base": 900.0, "grow": 25.0, "yield": 2, "vol": 0.18, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 135.0, "base": 180.0, "grow": 40.0, "yield": 8, "vol": 0.12, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 5100.0, "base": 6800.0, "grow": 50.0, "yield": 4, "vol": 0.35, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 67500.0, "base": 90000.0, "grow": 55.0, "yield": 3, "vol": 0.26, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 1500000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "vol": 0.30, "color": "aeeaff"},
+	"russet": {"name": "Russet Potato", "seed": 28.5, "base": 38.0, "grow": 10.0, "yield": 3, "color": "a87b45"},
+	"golden": {"name": "Golden Potato", "seed": 675.0, "base": 900.0, "grow": 25.0, "yield": 2, "color": "efc74c"},
+	"giant": {"name": "Giant Potato", "seed": 135.0, "base": 180.0, "grow": 40.0, "yield": 8, "color": "c7855d"},
+	"radioactive": {"name": "Radioactive Potato", "seed": 5100.0, "base": 6800.0, "grow": 50.0, "yield": 4, "color": "b6f064"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 67500.0, "base": 90000.0, "grow": 55.0, "yield": 3, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 1500000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "color": "aeeaff"},
 }
 const OLD_GROW_TIMES: Dictionary = {"russet": 10.0, "golden": 30.0, "giant": 45.0, "radioactive": 90.0, "sunburst": 45.0, "icecap": 60.0}
 const MAX_GROW_SECONDS: float = 60.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 12000.0, 250000000000.0], "water": [450.0, 15000.0, 400000000000.0], "harvest": [600.0, 20000.0, 600000000000.0]}
-const EVENT_IDS: Array[String] = ["shortage", "crash", "golden_craze", "seed_panic", "chaos", "mystery_buyer", "supply_collapse", "seed_fair", "festival"]
 const DEBUG_MONEY_LIMIT: float = 1000000.0
 const QUEST_REWARDS: Dictionary = {
 	"starter_crash": {"share": 0.005}, "starter_spike": {"share": 0.015},
@@ -94,19 +84,6 @@ var coins: float = 240.0:
 		if not _restoring_balance and coins < bankruptcy_limit():
 			_end_run("bankrupt")
 var selected_crop: String = "russet"
-var tracked_seeds: Array[String] = ["russet", "golden", "giant", "radioactive"]
-var surge_timer: float = SURGE_INTERVAL
-var surge_remaining: float = 0.0
-var surge_crop: String = "russet"
-var surge_factor: float = 1.0
-var surge_kind: String = "normal"
-var rocket_timer: float = ROCKET_INTERVAL
-var rocket_pending: bool = false
-var rocket_factor: float = 1.0
-var rocket_crop: String = "icecap"
-var natural_remaining: float = 0.0
-var natural_factor: float = 1.0
-var natural_crop: String = "russet"
 var seed_inventory: Dictionary = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var storage: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var capacity: int = 200
@@ -120,14 +97,11 @@ var frost_timer: float = 150.0
 var frost_active: bool = false
 var frost_cleared: int = 0
 var frost_target_count: int = 12
-var thaw_remaining: float = 0.0
 var island_plots: Dictionary = {}
 var field_expansions: Dictionary = {"2": false, "3": false}
 # Older farms retain access to occupied beds beyond the new starting boundary.
 var retained_beds: Dictionary = {"2": [], "3": []}
 var export_timer: float = 120.0
-var export_factor: float = 1.0
-var event_strength: float = 1.0
 var lifetime_sales: float = 0.0
 var island_sales: Dictionary = {"1": 0.0, "2": 0.0, "3": 0.0}
 var export_active: bool = false
@@ -138,8 +112,6 @@ var quest_progress: Dictionary = {"ground": 0, "sunburst": 0, "combo": 0, "expor
 var quest_claimed: Array[String] = []
 var market: Dictionary = {}
 var news: String = "Harvest your Russets. Catch a good price. Sell with F!"
-var event_name: String = "OPEN MARKET"
-var event_remaining: float = 0.0
 var elapsed: float = 0.0
 var combo_count: int = 0
 var combo_multiplier: int = 1
@@ -151,11 +123,6 @@ var mastery: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 
 var expansion: int = 0
 var barn_level: int = 0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-var current_event: String = ""
-var event_crop: String = "russet"
-var _market_core: Dictionary = {}
-var _market_clock: float = 0.0
-var _event_in: float = 8.0
 var _relief_clock: float = 0.0
 
 
@@ -174,12 +141,7 @@ func _build_starters() -> void:
 			"crop": "russet", "tilled": index < 4, "pending": 0, "frozen": false, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0})
 	island_plots = {"1": plots, "2": _empty_shores(false), "3": _empty_winter(false)}
 	market.clear()
-	_market_core.clear()
-	for id in CROP_IDS:
-		_market_core[id] = {"seed": float(CROPS[id]["seed"]), "sell": float(CROPS[id]["base"])}
-		var history: Array[float] = [float(CROPS[id]["base"])]
-		market[id] = {"seed": float(CROPS[id]["seed"]), "sell": float(CROPS[id]["base"]), "change": 0.0, "history": history}
-	_refresh_market(false)
+	_refresh_market()
 
 
 func _empty_shores(unlocked: bool) -> Array[Dictionary]:
@@ -212,9 +174,7 @@ func unlock_island3() -> String:
 
 
 func winter_info() -> Dictionary:
-	return {"phase": "THAW AUCTION" if thaw_remaining > 0.0 else ("FROSTBREAK" if frost_active else "WINTER CALM"),
-		"timer": thaw_remaining if thaw_remaining > 0.0 else frost_timer, "progress": frost_cleared,
-		"target": frost_target_count, "description": "Hoe every icy bed → 1 seed + 5s of 8× Icecap prices."}
+	return {"active": frost_active, "timer": frost_timer, "cleared": frost_cleared, "target": frost_target_count, "description": "Hoe every icy bed → 1 Icecap seed."}
 
 
 func _start_frost() -> void:
@@ -238,8 +198,7 @@ func _start_frost() -> void:
 		_end_frost(true)
 		return
 	var icy_beds: int = frost_target_count - frost_cleared
-	news = "FROSTBREAK! Hoe %d icy beds in 20 seconds. Clear the field to earn an Icecap x8 auction and a seed!" % icy_beds
-	if disaster_market_active(): news = "FROSTBREAK! Hoe %d icy beds in 20 seconds to earn an Icecap seed. Disaster prices still apply." % icy_beds
+	news = "FROSTBREAK! Hoe %d icy beds in 20 seconds. Clear the field to earn an Icecap seed!" % icy_beds
 	if frost_cleared > 0: news += " Frostgold sheltered %d beds." % frost_cleared
 	notified.emit(news)
 	changed.emit()
@@ -251,12 +210,10 @@ func _end_frost(success: bool = false) -> void:
 	frost_active = false
 	frost_timer = rng.randf_range(120.0, 220.0)
 	if success:
-		thaw_remaining = 5.0
 		seed_inventory["icecap"] = mini(MAX_INVENTORY, int(seed_inventory["icecap"]) + 1)
 		_progress_quest("winter_frost", 1.0)
 		_refresh_market()
-		news = "FROST CLEARED! Icecap potatoes x8 for 5 seconds in the Thaw Auction. +1 Icecap seed: your manual work paid off!"
-		if disaster_market_active(): news = "FROST CLEARED! +1 Icecap seed. The auction bonus cannot override disaster prices."
+		news = "FROST CLEARED! +1 Icecap seed: your manual work paid off!"
 	else:
 		news = "The frost melted. No challenge reward this time; your crops are safe. Prepare your Hoe for the next storm."
 	notified.emit(news)
@@ -319,8 +276,6 @@ func apply_debug(money_multiplier: float) -> String:
 func debug_set_balance(amount: float) -> String:
 	if run_over:
 		return _finish("Use Recover test farm to resume this ended run.")
-	if rocket_pending:
-		return _finish("Finish the current event before changing the test balance.")
 	if not is_finite(amount) or amount < 0.0 or amount > MAX_MONEY:
 		return _finish("Enter a test balance from 0 to 1e300.")
 	debug_money_modified = debug_money_modified or coins != amount
@@ -343,16 +298,12 @@ func debug_recover(amount: float) -> String:
 	coins = amount
 	climate.data.collapse.clear()
 	climate.data.tax_events.clear()
-	surge_timer = SURGE_INTERVAL
-	surge_remaining = 0.0
-	surge_factor = 1.0
-	surge_kind = "normal"
-	_refresh_market(false)
-	return _finish("DEBUG: farm recovered with %s. Progress kept; three fresh stocks before tax." % money(coins, true))
+	_refresh_market()
+	return _finish("DEBUG: farm recovered with %s. Progress kept; tax collection reset." % money(coins, true))
 
 
 func debug_unlock_island(id: int) -> String:
-	if run_over or rocket_pending:
+	if run_over:
 		return _finish("Finish the current event before unlocking islands.")
 	if id not in [2, 3]: return _finish("Choose Golden Shores or Frosthollow.")
 	if (id == 2 and island2_unlocked) or (id == 3 and island3_unlocked):
@@ -413,29 +364,6 @@ func available_crops() -> Array[String]:
 	return result
 
 
-func market_tick_seconds() -> float:
-	return STARTER_MARKET_SECONDS if current_island == 1 else MARKET_TICK_SECONDS
-
-
-func tracked_seed_ids() -> Array[String]:
-	var result: Array[String] = []
-	for id in tracked_seeds:
-		if available_crops().has(id):
-			result.append(id)
-	return result
-
-
-func set_tracked_seed(id: String, enabled: bool) -> bool:
-	if not available_crops().has(id):
-		return false
-	if enabled and not tracked_seeds.has(id):
-		tracked_seeds.append(id)
-	elif not enabled:
-		tracked_seeds.erase(id)
-	changed.emit()
-	return true
-
-
 func bankruptcy_limit() -> float:
 	return BlindRules.bankruptcy(int(blind_cycle.island))
 
@@ -464,43 +392,19 @@ func blind_progress_text(ratio: float) -> String:
 	return String.num(percent, 2).trim_suffix("00").trim_suffix("0").trim_suffix(".") + "%"
 
 
-func stock_opportunity() -> Dictionary:
-	var reference: float = float(BlindRules.PROGRESSION_BASELINES[current_island]) * BlindRules.STOCK_REFERENCE_PERCENT
-	var crop: String = surge_crop if surge_remaining > 0.0 else selected_crop
-	var quote: float = maxf(0.01, float(market[crop].sell))
-	return {"reference": reference, "baseline": BlindRules.PROGRESSION_BASELINES[current_island],
-		"crop": crop, "units": ceil(reference / quote), "quote": quote,
-		"virtual": current_island == 3}
-
-
 func climate_info() -> Dictionary:
 	return climate.info(self)
 
 
 func _promote_blind_island(id: int) -> void:
 	# Returning to an old farm cannot lower the tax tier or reset its counter.
-	# A first visit to a harder island gets three fresh booms to prepare its bill.
+	# A first visit to a harder island resets the retained collection state.
 	if id <= int(blind_cycle.island):
 		return
 	var clears: int = int(blind_cycle.clears)
 	blind_cycle = BlindRules.new_cycle(id)
 	blind_cycle.clears = clears
 	climate.data.tax_events.clear()
-
-
-func _record_major_boom() -> void:
-	if run_over or tutorial_active or float(blind_cycle.due_in) > 0.0:
-		return
-	if not bool(blind_cycle.tax_rolled):
-		blind_cycle.tax_rolled = true
-		# Warn at the FIRST boom, leaving two more major stocks to prepare.
-		if rng.randf() < BlindRules.TAX_BOOM_CHANCE:
-			blind_cycle.tax_multiplier = 1.0 + float(rng.randi_range(0, BlindRules.TAX_BOOM_MAX_INCREASE)) / 100.0
-			if float(blind_cycle.tax_multiplier) > 1.0:
-				tax_boom_started.emit()
-	blind_cycle.booms = int(blind_cycle.booms) + 1
-	if int(blind_cycle.booms) == BlindRules.BOOMS_PER_BLIND:
-		blind_cycle.due_in = SURGE_DURATION
 
 
 func _resolve_blind() -> void:
@@ -539,91 +443,6 @@ func _end_run(reason: String) -> void:
 	changed.emit()
 
 
-func surge_info() -> Dictionary:
-	if disaster_market_active():
-		return {"active": false, "crash": true, "timer": float(climate.data.timer), "phase": climate.data.phase,
-			"crop": selected_crop, "percent": float(market[selected_crop].change), "kind": "crash",
-			"rocket_timer": rocket_timer, "rocket_pending": false}
-	return {"active": surge_remaining > 0.0, "timer": surge_remaining if surge_remaining > 0.0 else surge_timer,
-		"crop": surge_crop if surge_remaining > 0.0 else selected_crop, "percent": float(market[surge_crop]["change"]) if surge_remaining > 0.0 else 500.0,
-		"minimum": 3000 if current_island >= 3 else 500, "maximum": 10000 if current_island >= 3 else 2999,
-		"rocket_timer": rocket_timer, "rocket_pending": rocket_pending, "kind": surge_kind}
-
-
-func disaster_market_active() -> bool:
-	return not tutorial_active and climate.data.phase in ["active", "recovery"] and int(climate.data.island) == current_island
-
-
-func _clear_disaster_booms() -> void:
-	# Old saves and travel can bring an already-running boom into bad weather.
-	# Cancel it rather than letting it reappear after the recovery window.
-	surge_remaining = 0.0
-	surge_factor = 1.0
-	surge_kind = "normal"
-	natural_remaining = 0.0
-	natural_factor = 1.0
-	rocket_pending = false
-	rocket_factor = 1.0
-	rocket_timer = maxf(0.000001, rocket_timer)
-
-
-func stock_cap() -> float:
-	return 101.0 if current_island >= 3 else 30.99
-
-
-func natural_stock_chance() -> float:
-	return NATURAL_STOCK_CHANCE
-
-
-func _natural_boom_roll(low: float, high: float) -> float:
-	# Beta(1, 3): 87.5% in the bottom half; only 0.1% in the top tenth.
-	# Natural strength uses the same independent distribution as its trigger.
-	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / BOOM_TAIL_SHAPE))
-
-
-func _boom_roll(low: float, high: float) -> float:
-	# Every higher equal-width band is less likely.
-	return lerpf(low, high, 1.0 - pow(1.0 - rng.randf(), 1.0 / BOOM_TAIL_SHAPE))
-
-
-func _prepare_rocket() -> void:
-	if disaster_market_active(): return
-	rocket_pending = true
-	rocket_timer = ROCKET_INTERVAL
-	rocket_factor = _boom_roll(ROCKET_MIN_MULTIPLIER, MAX_PRICE_MULTIPLIER)
-	rocket_crop = selected_crop
-
-
-func complete_rocket_launch() -> void:
-	if run_over or not rocket_pending or current_island < 3 or tutorial_active:
-		return
-	rocket_pending = false
-	_start_surge(true)
-	rocket_factor = 1.0
-	changed.emit()
-
-
-func _start_surge(rocket: bool = false) -> void:
-	if run_over or tutorial_active:
-		return
-	if disaster_market_active():
-		_clear_disaster_booms()
-		surge_timer = SURGE_INTERVAL
-		_refresh_market()
-		# A crash supplies no selling opportunity and never advances the tax count.
-		return
-	var new_event: bool = surge_remaining <= 0.0 or (rocket and surge_kind != "rocket")
-	surge_kind = "rocket" if rocket else "normal"
-	surge_crop = rocket_crop if rocket else (selected_crop if available_crops().has(selected_crop) else "russet")
-	surge_factor = rocket_factor if rocket else _boom_roll(31.0 if current_island >= 3 else 6.0, stock_cap())
-	surge_remaining = SURGE_DURATION
-	surge_timer = SURGE_INTERVAL
-	if new_event:
-		_record_major_boom()
-	_refresh_market()
-	notified.emit("STOCK SURGE! %s +%.0f%% for %.0f seconds!" % [CROPS[surge_crop]["name"], float(market[surge_crop]["change"]), SURGE_DURATION])
-
-
 func total_mastery() -> int:
 	var total: int = 0
 	for id in CROP_IDS:
@@ -648,8 +467,6 @@ func unlock_island2() -> String:
 func travel_to(id: int) -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if rocket_pending:
-		return _finish("Rocket launching—boarding resumes after liftoff.")
 	if id not in [1, 2, 3]:
 		return _finish("The ferry visits Spud Valley, Golden Shores, and Frosthollow.")
 	if id == 3 and not island3_unlocked:
@@ -662,24 +479,14 @@ func travel_to(id: int) -> String:
 	# The carried can travels with the farmer; island tanks stay independent.
 	climate.data.operations.islands[str(id)].can = ClimateSystem.Operations.local(self).can
 	current_island = id
-	farm_help.data.practice_remaining = 0.0
 	_promote_blind_island(id)
-	natural_remaining = 0.0
-	natural_factor = 1.0
-	if surge_kind == "rocket" and id < 3:
-		surge_kind = "normal"
-		surge_remaining = 0.0
-		surge_factor = 1.0
-	elif surge_kind == "normal":
-		surge_factor = minf(surge_factor, stock_cap())
-	_market_clock = fmod(_market_clock, market_tick_seconds())
 	plots = island_plots[str(id)]
 	combo_count = 0
 	combo_multiplier = 1
 	combo_time = 0.0
 	if not available_crops().has(selected_crop):
 		selected_crop = "russet"
-	_refresh_market(false)
+	_refresh_market()
 	harvest_chain.emit(0, 1)
 	island_changed.emit(id)
 	climate.on_arrival(self)
@@ -695,15 +502,11 @@ func _toggle_export() -> void:
 		export_cycles += 1
 		export_cycle_sold = 0
 		export_timer = rng.randf_range(4.0, 5.0)
-		export_factor = snappedf(rng.randf_range(2.0, 6.0), 0.1)
-		news = "EXPORT FLASH! Golden and Sunburst sale prices x%.1f for %.1f seconds. The ship is buying NOW!" % [export_factor, export_timer]
-		if disaster_market_active(): news = "The export ship has arrived. Disaster prices still apply; check the market before selling."
+		news = "The export ship is buying Golden and Sunburst potatoes at the current price."
 	else:
 		export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
-		export_factor = 1.0
-		news = "The export ship has sailed. Its price premium is gone; prepare for the next surprise shipment."
-		if disaster_market_active(): news = "The export ship has sailed. The market is still recovering from the disaster."
-	_refresh_market(true)
+		news = "The export ship has sailed. Prepare for the next shipment."
+	_refresh_market()
 	export_changed.emit(export_active)
 	notified.emit(news)
 	changed.emit()
@@ -718,8 +521,8 @@ func quest_info() -> Array[Dictionary]:
 	]
 	if current_island == 1:
 		entries = [
-			{"id": "starter_crash", "title": "BUY THE DIP", "description": "Buy 10 seeds during a crash.", "target": 10},
-			{"id": "starter_spike", "title": "SELL THE SPIKE", "description": "Sell 10 potatoes at 2× base price or better.", "target": 10},
+			{"id": "starter_crash", "title": "SEEDS FOR TOMORROW", "description": "Buy 10 seeds.", "target": 10},
+			{"id": "starter_spike", "title": "FIRST CUSTOMERS", "description": "Sell 10 potatoes.", "target": 10},
 			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Harvest 12 beds in one combo.", "target": 12},
 		]
 	elif current_island == 3:
@@ -789,26 +592,12 @@ func set_tutorial_active(active: bool) -> void:
 		return
 	# Start and finish without a queued flash, damaged lesson crop, or an
 	# almost-expired countdown. Completing a lesson never ambushes the player.
-	current_event = ""
-	event_name = "OPEN MARKET"
-	event_strength = 1.0
-	event_remaining = 0.0
-	_event_in = 8.0
-	surge_remaining = 0.0
-	surge_factor = 1.0
-	surge_timer = SURGE_INTERVAL
 	pest_timer = rng.randf_range(25.0, 100.0)
-	surge_kind = "normal"
-	natural_remaining = 0.0
-	natural_factor = 1.0
 	export_active = false
-	export_factor = 1.0
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT) if island2_unlocked else 120.0
 	frost_active = false
 	frost_cleared = 0
 	frost_timer = rng.randf_range(120.0, 220.0)
-	thaw_remaining = 0.0
-	_market_clock = 0.0
 	_relief_clock = 0.0
 	for field in island_plots.values():
 		for plot in field:
@@ -818,15 +607,8 @@ func set_tutorial_active(active: bool) -> void:
 			plot["plant_age"] = 0.0
 			plot["pest_delay"] = 0.0
 			plot["frozen"] = false
-	if active:
-		for id in CROP_IDS:
-			var base: float = float(CROPS[id]["base"])
-			_market_core[id] = {"seed": seed_price_for(base), "sell": base}
-			market[id]["history"] = [base]
-		news = "Take your time. Your crops are safe and the market is calm during the farm tour."
-	else:
-		news = "Your farm is ready. The market resumes shortly; your first stock surge is three minutes away."
-	_refresh_market(false)
+	news = "Take your time. Your crops are safe during the farm tour." if active else "Your farm is ready. Plant, tend and harvest at your own pace."
+	_refresh_market()
 	export_changed.emit(false)
 	changed.emit()
 
@@ -859,6 +641,8 @@ func _update_tutorial(delta: float) -> void:
 	var step: float = minf(delta, 3600.0)
 	var dirty: bool = false
 	elapsed += step
+	_refresh_market()
+	dirty = true
 	# Keep growth genuine while freezing every source of background pressure.
 	# Frozen timers never enter the ordinary event-boundary loop below.
 	for field_id in island_plots:
@@ -894,31 +678,19 @@ func update(delta: float) -> void:
 			if before != float(supply.water): changed.emit()
 		_update_tutorial(delta)
 		return
-	if rocket_pending:
-		return
-	# Resolve timer boundaries in order, so a long frame cannot skip a price tick.
+	# Resolve farming and weather boundaries in order.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
 	while remaining >= 0.000001:
 		farm_help.refresh_pests(self)
-		var disaster_at_start: bool = disaster_market_active()
-		var step: float = minf(remaining, market_tick_seconds() - _market_clock)
-		if float(farm_help.data.practice_remaining) > 0.0:
-			step = minf(step, float(farm_help.data.practice_remaining))
+		var step: float = remaining
 		var collecting: bool = float(blind_cycle.due_in) > 0.0
 		if climate.clock_running(self): step = minf(step, minf(float(climate.data.timer), 0.25))
 		if collecting:
 			step = minf(step, float(blind_cycle.due_in))
 		step = minf(step, 15.0 - _relief_clock)
-		step = minf(step, surge_timer)
-		if current_island >= 3 and not disaster_at_start:
-			step = minf(step, rocket_timer)
-		if natural_remaining > 0.0:
-			step = minf(step, natural_remaining)
 		if is_instance_valid(activity_system) and activity_system.has_method("next_boundary"):
 			step = minf(step, maxf(0.000001, float(activity_system.next_boundary())))
-		if surge_remaining > 0.0:
-			step = minf(step, surge_remaining)
 		for field in island_plots.values():
 			for plot in field:
 				if bool(plot.get("pests", false)) and int(plot["stage"]) > 0:
@@ -927,21 +699,19 @@ func update(delta: float) -> void:
 					_schedule_pest(plot)
 					var until_pest: float = maxf(40.0 - float(plot.get("plant_age", 0.0)), float(plot.pest_delay) - float(plot.ripe_age))
 					if until_pest > 0.000001: step = minf(step, until_pest)
-		step = minf(step, event_remaining if current_event != "" else _event_in)
 		if island2_unlocked:
 			step = minf(step, export_timer)
 			if not export_active and export_timer > 15.0:
 				step = minf(step, export_timer - 15.0)
 		if current_island == 3 and island3_unlocked and climate.data.phase == "calm":
 			step = minf(step, frost_timer)
-		if thaw_remaining > 0.0:
-			step = minf(step, thaw_remaining)
 		if combo_time > 0.0:
 			step = minf(step, combo_time)
 		step = maxf(0.000001, step)
 		remaining -= step
 		elapsed += step
-		_market_clock += step
+		_refresh_market()
+		dirty = true
 		_relief_clock += step
 		var ripe_infestation: bool = false
 		for field_id in island_plots:
@@ -979,51 +749,20 @@ func update(delta: float) -> void:
 			dirty = bool(activity_system.update(step)) or dirty
 		if ripe_infestation and int(farm_help.data.pest_phase) != 1:
 			notified.emit("An unattended ripe bed attracted pests! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
-		# Resolve weather first when a warning and stock timer share a boundary.
+		# Advance weather and its physical effects.
 		if climate.update(self, step):
-			_refresh_market(false)
-			dirty = true
-		surge_timer = maxf(0.0, surge_timer - step)
-		if natural_remaining > 0.0:
-			natural_remaining = maxf(0.0, natural_remaining - step)
-			if natural_remaining < 0.000001:
-				natural_remaining = 0.0
-				natural_factor = 1.0
-				_refresh_market()
-				dirty = true
-		if surge_remaining > 0.0:
-			surge_remaining = maxf(0.0, surge_remaining - step)
-			if surge_remaining < 0.000001:
-				surge_remaining = 0.0
-				surge_factor = 1.0
-				surge_kind = "normal"
-				_refresh_market()
-				dirty = true
-		if current_island >= 3 and not disaster_at_start:
-			rocket_timer = maxf(0.0, rocket_timer - step)
-		if disaster_market_active(): rocket_timer = maxf(0.000001, rocket_timer)
-		var rocket_due: bool = current_island >= 3 and not disaster_market_active() and rocket_timer < 0.000001
-		if surge_timer < 0.000001 and not rocket_due:
-			_start_surge()
+			_refresh_market()
 			dirty = true
 		if island2_unlocked:
 			var previous_export_timer: float = export_timer
 			export_timer = maxf(0.0, export_timer - step)
 			if not export_active and previous_export_timer > 15.000001 and export_timer <= 15.000001:
 				export_timer = 15.0
-				news = "EXPORT RUSH IN 15s! Get Golden and Sunburst crops ready."
-				if disaster_market_active(): news = "Export ship in 15s. Disaster prices will still apply while the market recovers."
+				news = "Export ship in 15s. Get Golden and Sunburst crops ready."
 				notified.emit(news)
 				dirty = true
 			if export_timer < 0.000001:
 				_toggle_export()
-				dirty = true
-		if thaw_remaining > 0.0:
-			thaw_remaining = maxf(0.0, thaw_remaining - step)
-			if thaw_remaining < 0.000001:
-				thaw_remaining = 0.0
-				_refresh_market()
-				notified.emit("The Thaw Auction has ended. Icecap prices return to the ordinary market.")
 				dirty = true
 		if current_island == 3 and island3_unlocked and climate.data.phase == "calm":
 			frost_timer = maxf(0.0, frost_timer - step)
@@ -1041,41 +780,17 @@ func update(delta: float) -> void:
 				combo_multiplier = 1
 				harvest_chain.emit(0, 1)
 				dirty = true
-		if current_event != "":
-			event_remaining = maxf(0.0, event_remaining - step)
-			if event_remaining < 0.000001:
-				_end_event()
-				dirty = true
-		else:
-			_event_in = maxf(0.0, _event_in - step)
-			if _event_in < 0.000001:
-				_start_event()
-				dirty = true
-		if _market_clock >= market_tick_seconds() - 0.000001:
-			_market_clock = maxf(0.0, _market_clock - market_tick_seconds())
-			_market_tick()
-			dirty = true
 		if _relief_clock >= 15.0 - 0.000001:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
-		if farm_help.tick(self, step):
-			dirty = true
 		if collecting:
 			blind_cycle.due_in = maxf(0.0, float(blind_cycle.due_in) - step)
 			if float(blind_cycle.due_in) < 0.000001:
 				_resolve_blind()
 				dirty = true
 				if run_over:
-					rocket_timer = maxf(0.000001, rocket_timer)
 					break
-		if rocket_due:
-			# Every clock consumes this final substep before the cinematic freezes
-			# simulation. The coincident ordinary surge waits for the rocket.
-			_prepare_rocket()
-			surge_timer = maxf(0.000001, surge_timer)
-			dirty = true
-			break
 	if dirty:
 		changed.emit()
 
@@ -1274,8 +989,6 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		return _finish("Harvested %s potatoes from %d patches! Combo x%d. Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, combo_multiplier, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
 	if action == "hoe" and thawed > 0:
 		var thaw_note: String = " Crops are safe; keep clearing before the frost timer ends!"
-		if thaw_remaining > 0.0:
-			thaw_note = " +1 Icecap seed. Disaster prices still apply." if disaster_market_active() else " Thaw Auction: Icecap x8 for 5 seconds!"
 		return _finish("Cleared ice from %d beds. %d/%d cleared.%s" % [thawed, frost_cleared, frost_target_count, thaw_note])
 	if ClimateSystem.Operations.scarce(self) and action in ["hoe", "water"]:
 		return _finish("Tended %d beds · watch the danger rings. Reserves in Climate action." % affected)
@@ -1337,12 +1050,8 @@ func select_crop(id: String) -> String:
 	return _finish("Selected %s. You have %s seeds ready to plant." % [CROPS[id]["name"], format_number(seed_inventory[id])])
 
 
-static func seed_price_for(sale_price: float) -> float:
-	return snappedf(sale_price * SEED_PRICE_RATIO + 1e-9, 0.01)
-
-
-static func price_change(price: float, base_price: float) -> float:
-	return ((price / base_price) - 1.0) * 100.0 if base_price > 0.0 else 0.0
+static func seed_price_for(base_price: float) -> float:
+	return snappedf(base_price * SEED_PRICE_RATIO + 1e-9, 0.01)
 
 
 static func crops_by_base_price(ids: Array) -> Array[String]:
@@ -1456,9 +1165,9 @@ func buy_seeds(id: String, quantity: int = 5) -> String:
 		return _reject_purchase("Your seed shed is full for this crop.")
 	coins -= cost
 	seed_inventory[id] = int(seed_inventory[id]) + quantity
-	if current_island == 1 and current_event == "crash":
+	if current_island == 1:
 		_progress_quest("starter_crash", float(quantity))
-	return _complete_purchase({"kind": "seeds", "id": id, "name": str(CROPS[id]["name"]).trim_suffix(" Potato"), "quantity": quantity, "cost": cost, "total": int(seed_inventory[id])}, "Bought %s %s seeds for %s at the live market price." % [format_number(quantity), CROPS[id]["name"], money(cost)])
+	return _complete_purchase({"kind": "seeds", "id": id, "name": str(CROPS[id]["name"]).trim_suffix(" Potato"), "quantity": quantity, "cost": cost, "total": int(seed_inventory[id])}, "Bought %s %s seeds for %s at the seed counter." % [format_number(quantity), CROPS[id]["name"], money(cost)])
 
 
 func sell_crop(id: String, quantity: int = -1) -> String:
@@ -1478,7 +1187,7 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 	_record_sales(earnings)
 	var sold_quote: float = float(market[id]["sell"])
 	farm_help.observe_sale(self, id)
-	if current_island == 1 and sold_quote >= float(CROPS[id]["base"]) * 2.0:
+	if current_island == 1:
 		_progress_quest("starter_spike", float(amount))
 	if current_island == 2 and export_active and id in ["golden", "sunburst"]:
 		_record_export_sale(amount)
@@ -1497,10 +1206,6 @@ func _record_export_sale(amount: int) -> void:
 func _record_sales(amount: float) -> void:
 	lifetime_sales = minf(MAX_MONEY, lifetime_sales + amount)
 	island_sales[str(current_island)] = minf(MAX_MONEY, float(island_sales[str(current_island)]) + amount)
-
-
-func positive_event_chance() -> float:
-	return minf(0.95, 0.60 + _build_bonus("event_chance_bonus", 0.0))
 
 
 func storage_used() -> int:
@@ -1552,7 +1257,7 @@ func upgrade_barn() -> String:
 	coins -= cost
 	barn_level += 1
 	_recompute_capacity()
-	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room to hold crops for a price spike!" % format_number(capacity))
+	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room for your harvest." % format_number(capacity))
 
 
 func _open_starting_beds(island: int) -> void:
@@ -1592,137 +1297,16 @@ func mastery_level(id: String) -> int:
 	return int(floor(sqrt(float(mastery.get(id, 0)) / 25.0)))
 
 
-func _market_tick() -> void:
-	if tutorial_active:
-		return
+func seasonal_price_factor() -> float:
+	# Placeholder four-season cycle until the season clock owns this phase.
+	return 1.0 + 0.15 * sin(TAU * fposmod(elapsed, PRICE_CYCLE_SECONDS) / PRICE_CYCLE_SECONDS)
+
+
+func _refresh_market() -> void:
+	var drift: float = seasonal_price_factor()
 	for id in CROP_IDS:
-		var volatility: float = float(CROPS[id]["vol"]) * 0.55 * (event_strength if current_event == "chaos" else 1.0) * (1.8 if current_island == 2 else 1.0)
-		volatility *= 1.0 + (1.0 - climate.factor("sell", current_island)) * 2.0
-		var core: Dictionary = _market_core[id]
-		var base: float = float(CROPS[id]["base"])
-		# Revert toward a crop's real value rather than multiplying gains forever.
-		var log_ratio: float = log(clampf(float(core["sell"]) / base, 0.35, 3.0))
-		var movement: float = rng.randf_range(-volatility, volatility)
-		if current_island == 1:
-			movement = rng.randf_range(0.0, volatility * 0.8) if rng.randf() < 0.62 else rng.randf_range(-volatility, 0.0)
-		core["sell"] = base * clampf(exp(log_ratio * 0.82 + movement), 0.35, 3.0)
-		core["seed"] = seed_price_for(float(core["sell"]))
-	if not disaster_market_active() and surge_remaining <= 0.0 and natural_remaining <= 0.0 and float(farm_help.data.practice_remaining) <= 0.0 and rng.randf() < natural_stock_chance():
-		natural_crop = selected_crop
-		natural_factor = _natural_boom_roll(71.0 if current_island >= 3 else 21.0, stock_cap())
-		natural_remaining = SURGE_DURATION
-	_refresh_market(true)
-
-
-func _refresh_market(_record_history: bool = true) -> void:
-	var crashing: bool = disaster_market_active()
-	if crashing: _clear_disaster_booms()
-	for id in CROP_IDS:
-		var sale_factor: float = 1.0
-		match current_event:
-			"shortage", "crash", "festival": sale_factor *= event_strength
-			"golden_craze": sale_factor *= event_strength if id == "golden" else 1.0
-			"mystery_buyer", "supply_collapse": sale_factor *= event_strength if id == event_crop else 1.0
-		if export_active and id in ["golden", "sunburst"]:
-			sale_factor *= export_factor
-		if id == "icecap" and thaw_remaining > 0.0:
-			sale_factor *= 8.0
-		var current: float = minf(float(CROPS[id]["base"]) * stock_cap(), float(_market_core[id]["sell"]) * sale_factor)
-		if not tutorial_active:
-			if not crashing: current *= climate.factor("sell", current_island)
-		if natural_remaining > 0.0 and id == natural_crop:
-			# Explicit boom draws are final quotes. Stacked offers must not flatten
-			# their decreasing rarity curves into a pile-up at the ceiling.
-			current = float(CROPS[id]["base"]) * minf(stock_cap(), natural_factor)
-		if surge_remaining > 0.0 and id == surge_crop:
-			var ceiling: float = MAX_PRICE_MULTIPLIER if surge_kind == "rocket" and current_island >= 3 else stock_cap()
-			current = float(CROPS[id]["base"]) * minf(ceiling, surge_factor)
-		if float(farm_help.data.practice_remaining) > 0.0 and current_island == 1 and id == str(farm_help.data.practice_crop) and surge_remaining <= 0.0 and natural_remaining <= 0.0:
-			current = float(CROPS[id]["base"]) * 2.0
-		if tutorial_active:
-			current = float(CROPS[id]["base"])
-		elif crashing:
-			var base: float = float(CROPS[id].base)
-			# Final authority, after every offer and export multiplier.
-			# Recovery eases the crash, but no positive quote returns before calm.
-			current = clampf(minf(current, base) * climate.factor("sell", current_island), base * 0.05, base)
-		# One seed costs 75% of one potato, rounded to the nearest cent.
-		# This final quote takes precedence over legacy seed-only modifiers.
-		market[id]["seed"] = seed_price_for(current)
-		market[id]["sell"] = current
-		market[id]["change"] = price_change(current, float(CROPS[id]["base"]))
-		var history: Array = market[id]["history"]
-		# Retain actual price changes, including weather and boom endings.
-		if history.is_empty() or not is_equal_approx(float(history.back()), current):
-			history.append(current)
-			if market[id]["history"].size() > 40:
-				market[id]["history"].pop_front()
-
-
-func _start_event(id: String = "") -> void:
-	if tutorial_active:
-		return
-	if disaster_market_active(): id = "crash"
-	if EVENT_IDS.has(id):
-		current_event = id
-	else:
-		var positive: Array[String] = ["shortage", "golden_craze", "mystery_buyer", "supply_collapse", "seed_fair", "festival"]
-		var other: Array[String] = ["crash", "seed_panic", "chaos"]
-		var pool: Array[String] = positive if rng.randf() < positive_event_chance() else other
-		current_event = pool[rng.randi_range(0, pool.size() - 1)]
-	var event_crops: Array[String] = available_crops()
-	event_crop = event_crops[rng.randi_range(0, event_crops.size() - 1)]
-	event_remaining = rng.randf_range(4.0, 5.0)
-	match current_event:
-		"shortage":
-			event_strength = rng.randf_range(1.5, 3.0)
-			event_name = "POTATO SHORTAGE"
-			news = "A sudden shortage lifts all crop quotes x%.1f. This buying frenzy lasts %.1f seconds!" % [event_strength, event_remaining]
-		"crash":
-			event_strength = rng.randf_range(0.3, 0.6)
-			event_name = "BUMPER HARVEST CRASH"
-			news = "The market crashes %.0f%%! Crop and seed prices both fall for %.1f seconds. Buy seeds cheap or keep holding." % [(1.0 - event_strength) * 100.0, event_remaining]
-		"golden_craze":
-			event_strength = rng.randf_range(2.0, 4.0)
-			event_name = "GOLDEN POTATO CRAZE"
-			news = "Golden potato craze: x%.1f quotes for %.1f seconds. Watch the barn!" % [event_strength, event_remaining]
-		"seed_panic":
-			event_strength = rng.randf_range(1.4, 2.2)
-			event_name = "SEED PANIC"
-			news = "Seed panic! Merchants keep seeds at 75% of each potato’s live sale price."
-		"chaos":
-			event_strength = rng.randf_range(2.0, 3.5)
-			event_name = "TOTALLY NORMAL MARKET"
-			news = "Totally normal market! Quotes swing %.1fx harder for %.1f seconds, then calm down." % [event_strength, event_remaining]
-		"mystery_buyer":
-			event_strength = rng.randf_range(2.0, 5.0)
-			event_name = "MYSTERY BUYER"
-			news = "Mystery buyer: %s x%.1f for %.1f seconds. A brief offer on your stored crops!" % [CROPS[event_crop]["name"], event_strength, event_remaining]
-		"supply_collapse":
-			event_strength = rng.randf_range(8.0, 16.0) if current_island >= 2 else rng.randf_range(3.0, 6.0)
-			event_name = "SUPPLY COLLAPSE"
-			news = "%s supply collapsed! Its quote jumps x%.1f for %.1f seconds." % [CROPS[event_crop]["name"], event_strength, event_remaining]
-		"seed_fair":
-			event_strength = rng.randf_range(0.6, 0.8)
-			event_name = "SEED FAIR"
-			news = "Seed fair! Seeds cost 75% of each potato’s live sale price. Prepare your next manual harvest."
-		"festival":
-			event_strength = rng.randf_range(1.5, 2.5)
-			event_name = "FRIES FESTIVAL"
-			news = "The fries festival wants potatoes! All crops x%.1f for %.1f seconds." % [event_strength, event_remaining]
-	_refresh_market()
-	notified.emit(news)
-
-
-func _end_event() -> void:
-	current_event = ""
-	event_name = "OPEN MARKET"
-	event_strength = 1.0
-	event_remaining = 0.0
-	_event_in = rng.randf_range(2.0, 4.0)
-	_refresh_market()
-	news = "That flash offer ended. Its multiplier has expired; ordinary quotes resume."
-	notified.emit(news)
+		var base: float = float(CROPS[id].base)
+		market[id] = {"seed": seed_price_for(base), "sell": base * drift}
 
 
 func _seed_relief() -> bool:
@@ -1821,10 +1405,7 @@ func reset_game() -> void:
 	frost_active = false
 	frost_cleared = 0
 	frost_target_count = 12
-	thaw_remaining = 0.0
 	export_timer = 120.0
-	export_factor = 1.0
-	event_strength = 1.0
 	lifetime_sales = 0.0
 	island_sales = {"1": 0.0, "2": 0.0, "3": 0.0}
 	export_active = false
@@ -1835,26 +1416,11 @@ func reset_game() -> void:
 	quest_claimed.clear()
 	coins = 240.0
 	selected_crop = "russet"
-	tracked_seeds = ["russet", "golden", "giant", "radioactive"]
-	surge_timer = SURGE_INTERVAL
-	surge_remaining = 0.0
-	surge_crop = "russet"
-	surge_factor = 1.0
-	surge_kind = "normal"
-	rocket_timer = ROCKET_INTERVAL
-	rocket_pending = false
-	rocket_factor = 1.0
-	rocket_crop = "icecap"
-	natural_remaining = 0.0
-	natural_factor = 1.0
-	natural_crop = "russet"
 	seed_inventory = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	storage = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
 	news = "Harvest your Russets. Catch a good price. Sell with F!"
-	event_name = "OPEN MARKET"
-	event_remaining = 0.0
 	elapsed = 0.0
 	combo_count = 0
 	combo_multiplier = 1
@@ -1865,10 +1431,6 @@ func reset_game() -> void:
 	mastery = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	expansion = 0
 	barn_level = 0
-	current_event = ""
-	event_crop = "russet"
-	_market_clock = 0.0
-	_event_in = 8.0
 	_relief_clock = 0.0
 	_build_starters()
 	island_changed.emit(1)
@@ -1886,28 +1448,28 @@ func _save_data() -> Dictionary:
 		"npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true),
 		"export_cycle_sold": export_cycle_sold, "export_qualified_cycles": export_qualified_cycles,
-		"export_factor": export_factor, "event_strength": event_strength,
+
 		"lifetime_sales": lifetime_sales, "island_sales": island_sales,
 		"island3_unlocked": island3_unlocked, "frost_timer": frost_timer, "frost_active": frost_active,
-		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "thaw_remaining": thaw_remaining, "pest_timer": pest_timer, "coins": coins, "coins_scientific": String.num_scientific(coins), "selected_crop": selected_crop,
-		"tracked_seeds": tracked_seeds, "surge_timer": surge_timer, "surge_remaining": surge_remaining, "surge_crop": surge_crop, "surge_factor": surge_factor,
-		"surge_kind": surge_kind, "rocket_timer": rocket_timer, "rocket_pending": rocket_pending, "rocket_factor": rocket_factor, "rocket_crop": rocket_crop,
-		"natural_remaining": natural_remaining, "natural_factor": natural_factor, "natural_crop": natural_crop,
+		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "pest_timer": pest_timer, "coins": coins, "coins_scientific": String.num_scientific(coins), "selected_crop": selected_crop,
+
+
+
 		"seed_inventory": seed_inventory, "storage": storage, "capacity": capacity, "tools": tools,
 		"plots": plots, "current_island": current_island, "island2_unlocked": island2_unlocked,
 		"island_plots": island_plots,
 		"export_timer": export_timer, "export_active": export_active, "export_cycles": export_cycles,
 		"quest_progress": quest_progress, "quest_claimed": quest_claimed,
-		"market": market, "market_core": _market_core, "news": news,
-		"event_name": event_name, "event_remaining": event_remaining, "elapsed": elapsed,
+		"news": news,
+		"elapsed": elapsed,
 		"combo_count": combo_count, "combo_multiplier": combo_multiplier, "combo_time": combo_time,
 		"mastery": mastery,
 		"debug_money_modified": debug_money_modified, "debug_islands_modified": debug_islands_modified,
 		"harvest_fraction": harvest_fraction.duplicate(),
 		"expansion": expansion, "barn_level": barn_level,
-		"current_event": current_event, "event_crop": event_crop,
-		"market_clock": _market_clock,
-		"event_in": _event_in, "relief_clock": _relief_clock,
+
+
+		"relief_clock": _relief_clock,
 		"rng_seed": str(rng.seed), "rng_state": str(rng.state)}
 	if is_instance_valid(build_system) and build_system.has_method("save_data"):
 		data["builds"] = build_system.save_data()
@@ -2062,8 +1624,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	tutorial_progress = data.get("tutorial_progress", {"version": 1, "step": 0, "completed": true, "plot": 5}).duplicate(true)
 	for key in ["version", "step", "plot"]:
 		tutorial_progress[key] = int(tutorial_progress[key])
-	tracked_seeds.assign(data["tracked_seeds"])
-	for key in ["coins", "event_remaining", "elapsed", "combo_time", "export_timer", "export_factor", "event_strength", "lifetime_sales", "frost_timer", "thaw_remaining", "pest_timer", "surge_timer", "surge_remaining", "surge_factor"]:
+	for key in ["coins", "elapsed", "combo_time", "export_timer", "lifetime_sales", "frost_timer", "pest_timer"]:
 		set(key, float(data[key]))
 	# Keep Godot's ordinary numeric balance whenever it survived JSON. Its
 	# scientific parser can differ by one ULP for some large values; the extra
@@ -2077,21 +1638,11 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	tax_credit_eligible = coins < 0.0 and not run_over and saved_tax_credit
 	for key in ["capacity", "combo_count", "combo_multiplier", "expansion", "barn_level", "current_island", "export_cycles", "frost_cleared", "frost_target_count", "export_cycle_sold"]:
 		set(key, int(data[key]))
-	for key in ["selected_crop", "news", "event_name", "current_event", "event_crop", "surge_crop"]:
+	for key in ["selected_crop", "news"]:
 		set(key, str(data[key]))
 	for key in ["island2_unlocked", "export_active", "island3_unlocked", "frost_active"]:
 		set(key, bool(data[key]))
-	surge_kind = str(data.get("surge_kind", "normal"))
-	rocket_timer = float(data.get("rocket_timer", ROCKET_INTERVAL))
-	rocket_pending = bool(data.get("rocket_pending", false))
-	rocket_factor = float(data.get("rocket_factor", 1.0))
-	rocket_crop = str(data.get("rocket_crop", "icecap"))
-	natural_remaining = float(data.get("natural_remaining", 0.0))
-	natural_factor = float(data.get("natural_factor", 1.0))
-	natural_crop = str(data.get("natural_crop", "russet"))
-	if int(data.get("mechanics_revision", 0)) < 8:
-		surge_factor = minf(surge_factor, stock_cap())
-	for key in ["seed_inventory", "storage", "tools", "market", "mastery", "quest_progress", "island_sales"]:
+	for key in ["seed_inventory", "storage", "tools", "mastery", "quest_progress", "island_sales"]:
 		set(key, data[key].duplicate(true))
 	_recompute_capacity()
 	debug_money_modified = bool(data.get("debug_money_modified", false))
@@ -2100,7 +1651,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
 	for id in CROP_IDS:
 		harvest_fraction[id] = float(data.get("harvest_fraction", {}).get(id, 0.0))
-	_market_core = data["market_core"].duplicate(true)
 	island_plots = {}
 	for id in ["1", "2", "3"]:
 		var field: Array[Dictionary] = []
@@ -2126,8 +1676,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	quest_claimed.clear()
 	for entry in data["quest_claimed"]:
 		quest_claimed.append(str(entry))
-	_market_clock = fmod(float(data["market_clock"]), market_tick_seconds())
-	_event_in = float(data["event_in"])
 	_relief_clock = float(data["relief_clock"])
 	if is_instance_valid(build_system):
 		if data.has("builds") and build_system.has_method("load_data"):
@@ -2141,16 +1689,10 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 			activity_system.reset()
 	rng.seed = int(data["rng_seed"])
 	rng.state = int(data["rng_state"])
-	# Older Rockets keep their saved prize, lifted into the new range once.
-	if int(data.get("mechanics_revision", 0)) < 9:
-		if rocket_pending:
-			rocket_factor = maxf(ROCKET_MIN_MULTIPLIER, rocket_factor)
-		if surge_kind == "rocket":
-			surge_factor = maxf(ROCKET_MIN_MULTIPLIER, surge_factor)
 	_restoring_balance = false
 	if not run_over and coins < bankruptcy_limit():
 		_end_run("bankrupt")
-	_refresh_market(false)
+	_refresh_market()
 	island_changed.emit(current_island)
 	export_changed.emit(export_active)
 	_finish("Original farm restored. Golden Shores is waiting; your original save remains a backup." if migrated else "Farm loaded. Both islands resume their saved growth and Export Rush countdown; no offline farming.")
@@ -2162,15 +1704,6 @@ func _migrate_v2(original: Dictionary) -> Dictionary:
 	data["schema_version"] = 3
 	for key in ["seed_inventory", "storage", "mastery"]:
 		data[key]["sunburst"] = 0
-	data["market_core"]["sunburst"] = {"seed": 67500.0, "sell": 90000.0}
-	var seed_factor: float = 5.0 if data["current_event"] == "seed_panic" else (0.3 if data["current_event"] == "crash" else 1.0)
-	var sale_factor: float = 1.0
-	if data["current_event"] == "shortage":
-		sale_factor *= 6.0
-	elif data["current_event"] == "crash":
-		sale_factor *= 0.3
-	var sell: float = 90000.0 * sale_factor
-	data["market"]["sunburst"] = {"seed": 67500.0 * seed_factor, "sell": sell, "change": (sale_factor - 1.0) * 100.0, "history": [sell]}
 	data["current_island"] = 1
 	data["island2_unlocked"] = false
 	data["island_plots"] = {"1": data["plots"], "2": _empty_shores(false)}
@@ -2185,20 +1718,10 @@ func _migrate_v2(original: Dictionary) -> Dictionary:
 func _migrate_economy(original: Dictionary) -> Dictionary:
 	var data: Dictionary = original.duplicate(true)
 	data["economy_revision"] = 2
-	data["market_clock"] = fposmod(float(data["market_clock"]), MARKET_TICK_SECONDS)
-	data["event_in"] = minf(11.0, float(data["event_in"]))
-	data["event_remaining"] = minf(2.0, float(data["event_remaining"]))
-	data["export_factor"] = 4.0 if data["export_active"] else 1.0
 	data["export_timer"] = minf(2.0, float(data["export_timer"])) if data["export_active"] else (minf(EXPORT_MAX_WAIT, float(data["export_timer"])) if data["island2_unlocked"] else 120.0)
-	var old_strengths: Dictionary = {"shortage": 2.0, "crash": 0.4, "golden_craze": 3.0, "seed_panic": 1.8, "chaos": 2.5, "mystery_buyer": 3.5, "supply_collapse": 4.5}
-	data["event_strength"] = float(old_strengths.get(data["current_event"], 1.0))
 	data["lifetime_sales"] = 0.0
 	data["island_sales"] = {"1": 0.0, "2": 0.0}
-	for id in data["market_core"]:
-		var base: float = float(CROPS[id]["base"])
-		data["market_core"][id]["sell"] = clampf(float(data["market_core"][id]["sell"]), base * 0.35, base * 3.0)
-		data["market_core"][id]["seed"] = seed_price_for(float(data["market_core"][id]["sell"]))
-	# Preserve already collected rewards/cosmetics without allowing a second payout.
+	# Preserve already collected quest rewards without allowing a second payout.
 	for id in data["quest_claimed"]:
 		data["quest_progress"][id] = float(QUEST_TARGETS[id])
 	return data
@@ -2209,8 +1732,6 @@ func _migrate_winter(original: Dictionary) -> Dictionary:
 	data["economy_revision"] = ECONOMY_REVISION
 	for key in ["seed_inventory", "storage", "mastery"]:
 		data[key]["icecap"] = 0
-	data["market_core"]["icecap"] = {"seed": 1500000000.0, "sell": 2000000000.0}
-	data["market"]["icecap"] = {"seed": 1500000000.0, "sell": 2000000000.0, "change": 0.0, "history": [2000000000.0]}
 	data["island3_unlocked"] = false
 	data["island_plots"]["3"] = _empty_winter(false)
 	for field in data["island_plots"].values():
@@ -2222,7 +1743,6 @@ func _migrate_winter(original: Dictionary) -> Dictionary:
 	data["frost_active"] = false
 	data["frost_cleared"] = 0
 	data["frost_target_count"] = 12
-	data["thaw_remaining"] = 0.0
 	for id in ["winter_ground", "winter_harvest", "winter_frost"]:
 		data["quest_progress"][id] = 0
 	for id in data["quest_claimed"]:
@@ -2261,11 +1781,6 @@ func _migrate_qol(original: Dictionary) -> Dictionary:
 	# This stage adds revision4 fields only. Later debug migrations
 	# must still recognize older saves after this stage has run.
 	data["mechanics_revision"] = 4
-	data["tracked_seeds"] = ["russet", "golden", "giant", "radioactive"]
-	data["surge_timer"] = SURGE_INTERVAL
-	data["surge_remaining"] = 0.0
-	data["surge_crop"] = str(data["selected_crop"])
-	data["surge_factor"] = 1.0
 	for field in data["island_plots"].values():
 		for plot in field:
 			# Migrate continuous old damage to completed thirds, never worsening it.
@@ -2298,45 +1813,6 @@ func _valid_precise_coins(data: Dictionary) -> bool:
 		return true
 	var json_value: Variant = JSON.parse_string(JSON.stringify(precise))
 	return (json_value is int or json_value is float) and numeric == float(json_value)
-
-
-func _saved_stock_cap(data: Dictionary, crop: String) -> float:
-	if int(data.get("mechanics_revision", 0)) < 8:
-		return 31.0
-	if int(data["current_island"]) >= 3 and str(data["surge_kind"]) == "rocket" and crop == str(data["surge_crop"]) and float(data["surge_remaining"]) > 0.0:
-		return MAX_PRICE_MULTIPLIER
-	return 101.0 if int(data["current_island"]) >= 3 else 30.99
-
-
-func _valid_stock_events(data: Dictionary) -> bool:
-	if not _number(data.get("current_island"), 1, 3, true):
-		return false
-	var winter: bool = int(data["current_island"]) >= 3
-	var cap: float = 101.0 if winter else 30.99
-	if not data.get("surge_kind") is String or data["surge_kind"] not in ["normal", "rocket"] or not data.get("rocket_pending") is bool:
-		return false
-	if not _number(data.get("rocket_timer"), 0.000001, ROCKET_INTERVAL) or not _number(data.get("rocket_factor"), 1.0, MAX_PRICE_MULTIPLIER):
-		return false
-	if not _number(data.get("natural_remaining"), 0, SURGE_DURATION) or not _number(data.get("natural_factor"), 1.0, cap):
-		return false
-	for key: String in ["rocket_crop", "natural_crop", "surge_crop"]:
-		if not data.get(key) is String or data[key] not in CROP_IDS:
-			return false
-	if not _number(data.get("surge_remaining"), 0, SURGE_DURATION) or not _number(data.get("surge_factor"), 1, MAX_PRICE_MULTIPLIER):
-		return false
-	if bool(data["rocket_pending"]):
-		if not winter or float(data["rocket_factor"]) < (ROCKET_MIN_MULTIPLIER if int(data.get("mechanics_revision", 0)) >= 9 else 151.0) or not is_equal_approx(float(data["rocket_timer"]), ROCKET_INTERVAL):
-			return false
-	elif float(data["rocket_factor"]) != 1.0:
-		return false
-	if data["surge_kind"] == "rocket":
-		if not winter or float(data["surge_remaining"]) <= 0.0 or float(data["surge_factor"]) < (ROCKET_MIN_MULTIPLIER if int(data.get("mechanics_revision", 0)) >= 9 else 151.0):
-			return false
-	elif float(data["surge_factor"]) > cap:
-		return false
-	if float(data["natural_remaining"]) == 0.0:
-		return float(data["natural_factor"]) == 1.0
-	return float(data["natural_factor"]) >= 21.0
 
 
 func _migrate_field_access() -> void:
@@ -2402,6 +1878,15 @@ func _current_save_fields(raw: Variant) -> Variant:
 		var base: int = 200
 		for level in range(int(data.barn_level)): base += int(200.0 * pow(4.0, level))
 		data.capacity = mini(MAX_INVENTORY, base)
+	if _number(data.get("mechanics_revision", 0), 0, 23, true) and data.get("farm_help") is Dictionary:
+		var help: Dictionary = data.farm_help
+		for key in help.keys():
+			if not FarmHelp.fresh().has(key): help.erase(key)
+		if help.get("dismissed") is Array:
+			help.dismissed = help.dismissed.filter(func(id): return id in FarmHelp.TIP_IDS)
+	if data.get("climate") is Dictionary and data.climate.get("collapse") is Dictionary:
+		for key: String in ["seed_factor", "sell_factor", "market_crop", "market_change"]:
+			data.climate.collapse.erase(key)
 	var fields: Dictionary = _save_data()
 	fields["builds"] = {}
 	fields["activities"] = {}
@@ -2441,17 +1926,15 @@ func _valid_save(raw: Variant) -> bool:
 	var rebalanced: bool = data.has("economy_revision")
 	if rebalanced and (legacy or not _number(data["economy_revision"], 2.0, 3.0, true)):
 		return false
-	if not rebalanced and (data.has("export_factor") or data.has("lifetime_sales")):
+	if not rebalanced and data.has("lifetime_sales"):
 		return false
 	var newest: bool = rebalanced and int(data["economy_revision"]) == 3
 	if data.has("mechanics_revision") and (not newest or not _number(data["mechanics_revision"], 2.0, float(MECHANICS_REVISION), true)):
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 21 and not _valid_field_access(data):
 		return false
-	if int(data.get("mechanics_revision", 0)) >= 8 and not _valid_stock_events(data):
-		return false
 	if int(data.get("mechanics_revision", 0)) >= 9:
-		if not BlindRules.valid_cycle(data.get("blind_cycle"), MAX_MONEY, SURGE_DURATION, int(data.get("mechanics_revision", 0)) == 9):
+		if not BlindRules.valid_cycle(data.get("blind_cycle"), MAX_MONEY, BlindRules.COLLECTION_SECONDS, int(data.get("mechanics_revision", 0)) == 9):
 			return false
 		var cycle: Dictionary = data.blind_cycle
 		if int(cycle.island) < int(data.get("current_island", 1)) or (int(cycle.island) >= 2 and not data.get("island2_unlocked", false)) or (int(cycle.island) >= 3 and not data.get("island3_unlocked", false)):
@@ -2483,30 +1966,12 @@ func _valid_save(raw: Variant) -> bool:
 		"combo_count": [0.0, float(MAX_INVENTORY), true], "combo_multiplier": [1.0, 16.0, true],
 		"combo_time": [0.0, 3.5, false],
 		"expansion": [0.0, 1.0, true], "barn_level": [0.0, 20.0, true],
-		"event_remaining": [0.0, 60.0, false],
-		"market_clock": [0.0, 3.0, false], "event_in": [0.0, 55.0, false], "relief_clock": [0.0, 15.0, false],
+		"relief_clock": [0.0, 15.0, false],
 	}
 	if rebalanced:
-		ranges["event_remaining"][1] = 5.0 if newest else 2.0
-		ranges["market_clock"][1] = MARKET_TICK_SECONDS if newest else 1.0
-		ranges["event_in"][1] = 11.0
-		ranges["event_strength"] = [0.3, 16.0 if newest else 6.0, false]
 		ranges["lifetime_sales"] = [0.0, MAX_MONEY, false]
 	if int(data.get("mechanics_revision", 0)) >= 3:
 		ranges["pest_timer"] = [0.000001, 100.0, false]
-	if int(data.get("mechanics_revision", 0)) >= 4:
-		ranges["surge_timer"] = [0.000001, SURGE_INTERVAL, false]
-		ranges["surge_remaining"] = [0.0, SURGE_DURATION, false]
-		ranges["surge_factor"] = [1.0, MAX_PRICE_MULTIPLIER if int(data.get("mechanics_revision", 0)) >= 8 else 31.0, false]
-		if not data.has("surge_crop") or not data["surge_crop"] is String or not CROP_IDS.has(data["surge_crop"]):
-			return false
-		if not data.has("tracked_seeds") or not data["tracked_seeds"] is Array or data["tracked_seeds"].size() > CROP_IDS.size():
-			return false
-		var tracked_seen: Array[String] = []
-		for id in data["tracked_seeds"]:
-			if not id is String or not CROP_IDS.has(id) or tracked_seen.has(id):
-				return false
-			tracked_seen.append(id)
 	for key in ranges:
 		if not data.has(key) or not _number(data[key], float(ranges[key][0]), float(ranges[key][1]), bool(ranges[key][2])):
 			return false
@@ -2523,21 +1988,12 @@ func _valid_save(raw: Variant) -> bool:
 		for id in CROP_IDS:
 			if not _number(data["harvest_fraction"].get(id), 0.0, 1.0) or float(data["harvest_fraction"][id]) >= 1.0:
 				return false
-	if int(data.get("mechanics_revision", 0)) >= 4:
-		if (float(data["surge_remaining"]) == 0.0 and float(data["surge_factor"]) != 1.0) or (float(data["surge_remaining"]) > 0.0 and float(data["surge_factor"]) < 6.0):
-			return false
-	for key in ["selected_crop", "news", "event_name", "current_event", "event_crop", "rng_seed", "rng_state"]:
+	for key in ["selected_crop", "news", "rng_seed", "rng_state"]:
 		if not data.has(key) or not data[key] is String or data[key].length() > 4096:
 			return false
 	if not data["rng_seed"].is_valid_int() or not data["rng_state"].is_valid_int():
 		return false
-	if not save_crops.has(data["selected_crop"]) or not save_crops.has(data["event_crop"]):
-		return false
-	if data["current_event"] != "" and not EVENT_IDS.has(data["current_event"]):
-		return false
-	if rebalanced and data["current_event"] == "" and float(data["event_strength"]) != 1.0:
-		return false
-	if (data["current_event"] == "") != (float(data["event_remaining"]) == 0.0):
+	if not save_crops.has(data["selected_crop"]):
 		return false
 	var expected_capacity: int = 200
 	for level in range(int(data["barn_level"])):
@@ -2564,27 +2020,6 @@ func _valid_save(raw: Variant) -> bool:
 	if int(data.get("mechanics_revision", 0)) >= 18:
 		for supply in data.climate.operations.islands.values():
 			if float(supply.can) > 16.0 + 16.0 * int(data.tools.water): return false
-	for key in ["market", "market_core"]:
-		if not data.has(key) or not data[key] is Dictionary or data[key].size() != save_crops.size():
-			return false
-		for id in save_crops:
-			if not data[key].has(id) or not data[key][id] is Dictionary:
-				return false
-			var entry: Dictionary = data[key][id]
-			if not entry.has("seed") or not entry.has("sell") or not _number(entry["seed"], 0.0001, 1.0e30) or not _number(entry["sell"], 0.0001, 1.0e30):
-				return false
-			if rebalanced and key == "market_core" and not _number(entry["sell"], float(CROPS[id]["base"]) * 0.35 - 0.000001, float(CROPS[id]["base"]) * 3.0 + 0.000001):
-				return false
-			if data.has("mechanics_revision") and key == "market" and float(entry["sell"]) > float(CROPS[id]["base"]) * _saved_stock_cap(data, id) + 0.000001:
-				return false
-			if key == "market":
-				if not entry.has("change") or not _number(entry["change"], -100.0, 1.0e22):
-					return false
-				if not entry.has("history") or not entry["history"] is Array or entry["history"].size() < 1 or entry["history"].size() > 40:
-					return false
-				for value in entry["history"]:
-					if not _number(value, 0.0001, 1.0e30):
-						return false
 	if not data.has("plots"):
 		return false
 	if legacy:
@@ -2658,8 +2093,6 @@ func _valid_islands(data: Dictionary) -> bool:
 			return false
 		seen.append(id)
 	if rebalanced:
-		if not data.has("export_factor") or not _number(data["export_factor"], 2.0 if data["export_active"] else 1.0, 6.0 if data["export_active"] else 1.0):
-			return false
 		if not data.has("island_sales") or not data["island_sales"] is Dictionary or data["island_sales"].size() != (3 if newest else 2):
 			return false
 		for island in range(1, 4 if newest else 3):
@@ -2695,15 +2128,13 @@ func _valid_islands(data: Dictionary) -> bool:
 			return false
 		if not data.has("frost_cleared") or not _number(data["frost_cleared"], 0.0, 12.0, true) or not data.has("frost_target_count") or not _number(data["frost_target_count"], 12.0, 12.0, true):
 			return false
-		if not data.has("thaw_remaining") or not _number(data["thaw_remaining"], 0.0, 5.0):
-			return false
 		var frozen_count: int = 0
 		for plot in data["island_plots"]["3"]:
 			if plot["frozen"]: frozen_count += 1
 		if frozen_count != (12 - int(data["frost_cleared"]) if data["frost_active"] else 0):
 			return false
 		if not data["island3_unlocked"]:
-			if data["frost_active"] or float(data["thaw_remaining"]) > 0.0 or int(data["frost_cleared"]) > 0:
+			if data["frost_active"] or int(data["frost_cleared"]) > 0:
 				return false
 			for id in ["winter_ground", "winter_harvest", "winter_frost"]:
 				if float(data["quest_progress"][id]) != 0.0:
