@@ -103,20 +103,20 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	panel.get_child(0).get_child(0).text = "ISLAND %d / A CHANGING CLIMATE" % (farm.current_island if introduction else int(info.island))
 	if introduction:
 		title.text = "THE WEATHER IS CHANGING"
-		message.text = "Storms can destroy your harvest and empty your barn.\nThe recovery bill comes next."
+		message.text = "Storms can destroy your harvest and empty your barn.\nProtect what remains."
 		footer.text = "Stock your reserves. Operate equipment. Rescue stressed crops."
 	elif kind == "warning":
 		title.text = "%s IN %ds" % [info.name, ceili(info.timer)]
 		message.text = {"freeze": "Visit the furnace. Heat your hoe before the crops freeze.", "drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
-		footer.text = "Recovery bill: about %s · Climate action in ☰" % farm.money(info.warning_tax, true)
+		footer.text = "Protect your crops and stored harvest."
 	elif kind == "impact":
 		title.text = {"freeze": "THE CROPS ARE FREEZING", "drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
 		message.text = {"freeze": "Heat the hoe at the furnace, then Hoe [1] melts the ice. Frozen crops stop growing.", "drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Trees shelter the far beds from wind."}.get(info.event, "Protect your harvest.")
-		footer.text = "Next tax: %s · Sell what you can save." % farm.money(farm.blind_info().tax, true)
+		footer.text = "Protect your crops and stored harvest."
 	else:
 		title.text = "THE WEATHER IS EASING"
-		message.text = "Replant. Rebuild. Prepare for the recovery bill."
-		footer.text = "Next tax: " + farm.money(farm.blind_info().tax, true)
+		message.text = "Replant. Rebuild. Prepare for the next storm."
+		footer.text = "Protect your crops and stored harvest."
 	if is_instance_valid(_tween): _tween.kill()
 	modulate.a = 0.0
 	show()

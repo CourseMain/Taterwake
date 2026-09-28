@@ -1408,7 +1408,7 @@ func highlight_tiles(indices: Array[int]) -> void:
 			_box(_area_selection, pos + Vector3(side, 0.25, 0.0), Vector3(0.075, 0.04, 2.1), Color("8ce5d2"))
 			_box(_area_selection, pos + Vector3(0.0, 0.25, side), Vector3(2.1, 0.04, 0.075), Color("8ce5d2"))
 
-func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade: int = 0, snapshots: Dictionary = {}) -> void:
+func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots: Dictionary = {}) -> void:
 	if not is_instance_valid(_tool):
 		return
 	if is_instance_valid(harvest_feedback):
@@ -1445,8 +1445,8 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 		if action in ["harvest"]: continue
 		var pos: Vector3 = plot_positions[index]
 		# Keep the action readable without filling a large field with hundreds of particles.
-		var budget: int = 64 if action == "harvest" and multiplier >= 8 else 40
-		var per_patch: int = 6 if action == "harvest" and multiplier >= 8 else 4
+		var budget: int = 40
+		var per_patch: int = 4
 		var particle_count: int = maxi(1, mini(per_patch, int(budget / maxi(1, indices.size()))))
 		for i in range(particle_count):
 			var color: Color = Color("72f4ce") if action == "pest" else (GOLD if action == "harvest" else (Color("bfe9fb") if action in ["ice", "break_ice", "frostbreak"] or (current_island == 3 and action == "hoe") else (Color("8ddbe8") if action == "water" else Color("bc9669"))))
@@ -1454,14 +1454,6 @@ func play_farm_effect(indices: Array, action: String, multiplier: int = 1, grade
 			var particle := _sphere(self, initial, Vector3(0.18, 0.07, 0.18) if action == "pest" else Vector3(0.08, 0.18 if action == "water" else 0.08, 0.08), color)
 			var velocity := Vector3(_rng.randf_range(-1.0, 1.0), -1.3 if action == "water" else (-0.3 if action == "pest" else _rng.randf_range(1.3, 3.0)), _rng.randf_range(-1.0, 1.0))
 			_effect_particles.append({"node": particle, "velocity": velocity, "life": 0.8, "total": 0.8})
-	if action == "harvest" and multiplier >= 8 and valid_indices.size() >= 6:
-		var center: Vector3 = Vector3.ZERO
-		for index in valid_indices:
-			center += plot_positions[index]
-		center /= float(valid_indices.size())
-		_show_impact("x%d COMBO" % multiplier, center + Vector3(0.0, 1.7, 0.0), Color("ffe9a3"), 31, 0.85)
-
-
 func play_reward(rarity: String) -> void:
 	if not is_instance_valid(player):
 		return

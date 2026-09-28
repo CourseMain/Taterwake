@@ -392,7 +392,6 @@ func refresh() -> void:
 	if not is_instance_valid(hud._state): return
 	var state = hud._state
 	wallet.text = _receipt if _receipt_left > 0 else "Balance %s" % state.market_money(state.coins)
-	if _receipt_left <= 0 and state.has_tax_credit(): wallet.text += " · Available on account %s" % state.market_money(state.purchase_credit())
 	if not selling:
 		for crop: String in crops:
 			var quote: Dictionary = state.market[crop]
@@ -404,7 +403,7 @@ func refresh() -> void:
 			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.storage[crop])
 			for count: int in [1, 5]:
 				var key := "buy:%s:%d" % [crop, count]
-				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else state.purchase_caption("Buy %d" % count, quote.seed * count), quote.seed * count, int(state.seed_inventory[crop]) + count > State.MAX_INVENTORY)
+				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else ("Buy %d" % count), quote.seed * count, int(state.seed_inventory[crop]) + count > State.MAX_INVENTORY)
 		return
 	hud._sell_crop = selected
 	var quote: Dictionary = state.market.get(selected, {})

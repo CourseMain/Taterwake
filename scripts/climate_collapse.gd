@@ -84,13 +84,13 @@ func _init() -> void:
 	metrics.add_theme_constant_override("h_separation", 28)
 	metrics.add_theme_constant_override("v_separation", 18)
 	content.add_child(metrics)
-	for id in ["FIELD LOST", "BARN LOST", "TAX BILL"]:
+	for id in ["FIELD LOST", "BARN LOST", "DEBT LIMIT"]:
 		var box := VBoxContainer.new()
 		box.custom_minimum_size.x = 200
 		metrics.add_child(box)
 		var caption := label(id, 12, MUTED)
 		box.add_child(caption)
-		var value: Label = label("", 34, Color("c6a986") if id != "TAX BILL" else CREAM, true)
+		var value: Label = label("", 34, Color("c6a986") if id != "DEBT LIMIT" else CREAM, true)
 		box.add_child(value)
 		var note: Label = label("", 13, MUTED)
 		box.add_child(note)
@@ -177,28 +177,26 @@ func show_report(farm) -> void:
 		report = farm.climate.data.collapse
 	if visible and _report == report: return
 	_report = report.duplicate(true)
-	headline.text = "BANKRUPT" if farm.blind_cycle.reason == "bankrupt" else "RUN ENDED"
+	headline.text = "BANKRUPT"
 	_balance.text = farm.money(report.balance, true)
 	var event: String = str(Climate.EVENTS.get(report.event, {}).get("name", ""))
-	if event.is_empty() and str(report.cause).contains("Recovery"):
+	if event.is_empty() and not str(report.get("last_event", "")).is_empty():
 		event = "AFTER THE " + str(Climate.EVENTS.get(report.get("last_event", ""), {}).get("name", "DISASTER"))
 	_event.text = "ISLAND %d   /   %s" % [int(report.island), event if not event.is_empty() else "FINAL RECEIPT"]
-	var receipt: Dictionary = farm.blind_cycle.last_result
-	var tax_caused: bool = str(report.cause).to_lower().contains("tax") and not receipt.is_empty() and float(receipt.after) == float(report.balance) and float(receipt.tax) > 0.0
-	detail.text = "This tax bill crossed the debt limit." if tax_caused else "Your debt crossed the bankruptcy limit."
+	detail.text = "Your debt crossed the overdraft limit."
 	_threshold.text = "Bankruptcy below " + farm.money(farm.bankruptcy_limit(), true)
-	_calculation.text = "%s before − %s tax = %s after" % [farm.money(receipt.balance, true), farm.money(receipt.tax, true), farm.money(receipt.after, true)] if tax_caused else "No tax was collected at this moment."
+	_calculation.text = "Sales can cover debt while the farm remains above the limit."
 	for pair in [["FIELD LOST", "field"], ["BARN LOST", "barn"]]:
 		var lost: float = float(report[pair[1] + "_lost"])
 		var total: float = float(report[pair[1] + "_total"])
 		_metrics[pair[0]].value.text = "%.0f%%" % (lost / total * 100.0) if total > 0.0 else "None"
 		_metrics[pair[0]].note.text = "%s / %s" % [farm.format_number(lost), farm.format_number(total)]
 		_metrics[pair[0]].note.visible = total > 0.0
-	_metrics["TAX BILL"].caption.text = "TAX COLLECTED" if tax_caused else "NEXT BASE TAX"
-	_metrics["TAX BILL"].value.text = farm.money(receipt.tax if tax_caused else farm.blind_info().base_tax, true)
-	_metrics["TAX BILL"].note.text = "Island %d tax tier" % int(farm.blind_cycle.island)
+	_metrics["DEBT LIMIT"].caption.text = "OVERDRAFT LIMIT"
+	_metrics["DEBT LIMIT"].value.text = farm.money(farm.bankruptcy_limit())
+	_metrics["DEBT LIMIT"].note.text = "Same on every island"
 	_context.text = "Island %d" % int(report.island)
-	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%s tax collected\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), farm.money(report.tax_paid, true), project_count(report.projects)]
+	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), project_count(report.projects)]
 	_ledger.hide()
 	_scroll.scroll_vertical = 0
 	_summary_button.text = "VIEW RUN SUMMARY"

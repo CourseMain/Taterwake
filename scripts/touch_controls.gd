@@ -300,14 +300,13 @@ func _process(delta: float) -> void:
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._blind_card, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
 	if not hud._context_box.get_meta("warning", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
 		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), "Drag to move · pinch to zoom"]
 		var weather: Dictionary = game.state.climate_info()
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
-		elif game.state.blind_info().due_in > 0: status.text += "\nTax %s · %ds" % [game.state.money(game.state.blind_info().tax, true), ceili(game.state.blind_info().due_in)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
 		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
 		elif game.world.player.position.distance_to(game.world.ferry_position()) <= 2: use_button.text = "Travel"

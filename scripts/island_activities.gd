@@ -2,9 +2,9 @@ extends Node
 ## Small island jobs that use the same crops, prices, and pest rules as the farm.
 signal duck_cleared(index: int)
 
-const DUCK_COSTS: Array[float] = [1500.0, 15000.0, 150000.0]
+const DUCK_COSTS: Array[float] = [300.0, 800.0, 1500.0]
 const DUCK_INTERVALS: Array[float] = [4.0, 3.0, 2.0]
-const DUCK_HIRE_COSTS: Array[float] = [1500.0, 25000000.0, 750000000000.0]
+const DUCK_HIRE_COSTS: Array[float] = [500.0, 500.0, 500.0]
 const FURNACE_FUEL: int = 25
 const FURNACE_DURATION: float = 20.0
 const FURNACE_COOLDOWN: float = 60.0
@@ -117,7 +117,7 @@ func hire_duck() -> String:
 		return state._reject_purchase("Flock full: %d / %d ducks." % [duck_count(), duck_capacity()])
 	var cost: float = duck_hire_cost()
 	if not state.can_purchase(cost):
-		return state._reject_purchase(state.credit_refusal(cost))
+		return state._reject_purchase(state.purchase_refusal(cost))
 	state.coins -= cost
 	duck_counts[str(_island())] = duck_count() + 1
 	_ensure_patrols()
@@ -133,7 +133,7 @@ func train_ducks() -> String:
 		return state._reject_purchase("Top speed reached · 2s per bed.")
 	var cost: float = duck_speed_cost()
 	if not state.can_purchase(cost):
-		return state._reject_purchase(state.credit_refusal(cost))
+		return state._reject_purchase(state.purchase_refusal(cost))
 	var previous_interval: float = duck_interval()
 	state.coins -= cost
 	duck_speeds[str(_island())] = duck_speed() + 1
@@ -217,8 +217,8 @@ func _update_ducks(delta: float) -> bool:
 				plot["pest_elapsed"] = 0.0
 				plot["ripe_age"] = 0.0
 				plot["pest_delay"] = 0.0
-				duck_clears = mini(1000000000, duck_clears + 1)
-				duck.clears = mini(1000000000, int(duck.clears) + 1)
+				duck_clears = mini(100000, duck_clears + 1)
+				duck.clears = mini(100000, int(duck.clears) + 1)
 				duck.peck = 0.65
 				changed = true
 				duck_cleared.emit(target)
@@ -278,7 +278,7 @@ func deliver_contract() -> String:
 	var earnings: float = float(contract.credit)
 	# Clear the order before any signal callback can request another payment.
 	contract = {}
-	contract_completed = mini(1000000, contract_completed + 1)
+	contract_completed = mini(100000, contract_completed + 1)
 	contract_cooldown = CONTRACT_COOLDOWN
 	state.coins = minf(state.MAX_MONEY, float(state.coins) + earnings)
 	state._record_sales(earnings)
@@ -296,7 +296,7 @@ func charge_furnace(crop: String = "icecap") -> String:
 	if int(state.storage.icecap) < FURNACE_FUEL:
 		return state._finish("Hold 25 spare Icecap potatoes to fuel the furnace.")
 	state.storage.icecap -= FURNACE_FUEL
-	furnace_burned = mini(1000000000, furnace_burned + FURNACE_FUEL)
+	furnace_burned = mini(100000, furnace_burned + FURNACE_FUEL)
 	furnace_remaining = FURNACE_DURATION
 	furnace_cooldown = FURNACE_COOLDOWN
 	return state._finish("FURNACE BURST! 20s · 2.5× growth")
@@ -376,7 +376,7 @@ func valid_data(data: Variant) -> bool:
 	if not data is Dictionary or not _number(data.get("version"), 1, 3, true):
 		return false
 	for key in ["duck_level", "duck_clears", "contract_completed", "furnace_burned"]:
-		var limit: int = {"duck_level": 3, "duck_clears": 1000000000, "contract_completed": 1000000, "furnace_burned": 1000000000}[key]
+		var limit: int = {"duck_level": 3, "duck_clears": 100000, "contract_completed": 100000, "furnace_burned": 100000}[key]
 		if not _number(data.get(key), 0, limit, true):
 			return false
 	var interval: float = DUCK_INTERVALS[maxi(0, int(data.duck_level) - 1)]
@@ -405,7 +405,7 @@ func valid_data(data: Variant) -> bool:
 			for duck in data.duck_patrols[island]:
 				if not duck is Dictionary or not _number(duck.get("from"), 0, size - 1, true) or not _number(duck.get("target"), 0, size - 1, true):
 					return false
-				if not _number(duck.get("elapsed"), 0, interval) or not _number(duck.get("peck"), 0, 0.65) or not _number(duck.get("clears"), 0, 1000000000, true):
+				if not _number(duck.get("elapsed"), 0, interval) or not _number(duck.get("peck"), 0, 0.65) or not _number(duck.get("clears"), 0, 100000, true):
 					return false
 				var owned: int = int(data.duck_counts[island]) if int(data.version) == 3 else int(island)
 				if targets.size() < owned and targets.has(int(duck.target)):
@@ -425,7 +425,7 @@ func valid_data(data: Variant) -> bool:
 			return false
 		if not _number(job.get("target"), 1, 1600, true):
 			return false
-		if not _number(job.get("delivered"), 0, int(job.target) - 1, true) or not _number(job.get("credit"), 0.0, 1.0e300):
+		if not _number(job.get("delivered"), 0, int(job.target) - 1, true) or not _number(job.get("credit"), 0.0, 100000.0):
 			return false
 		if (int(job.delivered) == 0) != (float(job.credit) == 0.0):
 			return false

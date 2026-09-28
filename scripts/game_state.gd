@@ -4,33 +4,30 @@ extends Node
 signal changed
 signal notified(message: String)
 signal reward_received(title: String, detail: String, rarity: String)
-signal harvest_chain(count: int, multiplier: int)
 signal island_changed(id: int)
 signal export_changed(active: bool)
 signal quest_completed(id: String)
 signal purchase_completed(receipt: Dictionary)
 signal sale_completed(receipt: Dictionary)
 signal purchase_rejected(message: String)
-signal blind_resolved(result: Dictionary)
 signal run_ended
 signal climate_changed(phase: String)
 
 const NpcRoster = preload("res://scripts/npc_roster.gd")
-const BlindRules = preload("res://scripts/blind_rules.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 3
 const ECONOMY_REVISION: int = 3
-const MECHANICS_REVISION: int = 25
-const FIELD_EXPANSION_COSTS: Dictionary = {1: 1800.0, 2: 25000000.0, 3: 1000000000000.0}
+const MECHANICS_REVISION: int = 26
+const FIELD_EXPANSION_COSTS: Dictionary = {1: 1200.0, 2: 1200.0, 3: 1200.0}
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
 const PRICE_QUOTE_SECONDS: float = 15.0
 const PEST_TICK_SECONDS: float = 5.0
-const ISLAND2_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[1]
+const ISLAND2_UNLOCK_COST: float = 5000.0
 const ISLAND2_UNLOCK_HARVEST: int = 500
-const ISLAND3_UNLOCK_COST: float = BlindRules.PROGRESSION_BASELINES[2]
+const ISLAND3_UNLOCK_COST: float = 10000.0
 const ISLAND3_UNLOCK_HARVEST: int = 25000
 const EXPORT_MIN_WAIT: float = 75.0
 const EXPORT_MAX_WAIT: float = 180.0
@@ -40,27 +37,22 @@ const DEFAULT_SAVE_PATH: String = "user://spud_valley_save_v3.json"
 const LEGACY_SAVE_PATH: String = "user://spud_valley_save.json"
 const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
 const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 28.5, "base": 38.0, "grow": 10.0, "yield": 3, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 675.0, "base": 900.0, "grow": 25.0, "yield": 2, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 135.0, "base": 180.0, "grow": 40.0, "yield": 8, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 5100.0, "base": 6800.0, "grow": 50.0, "yield": 4, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 67500.0, "base": 90000.0, "grow": 55.0, "yield": 3, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 1500000000.0, "base": 2000000000.0, "grow": 60.0, "yield": 4, "color": "aeeaff"},
+	"russet": {"name": "Russet Potato", "seed": 11.25, "base": 15.0, "grow": 10.0, "yield": 3, "color": "a87b45"},
+	"golden": {"name": "Golden Potato", "seed": 15.75, "base": 21.0, "grow": 25.0, "yield": 4, "color": "efc74c"},
+	"giant": {"name": "Giant Potato", "seed": 13.5, "base": 18.0, "grow": 40.0, "yield": 5, "color": "c7855d"},
+	"radioactive": {"name": "Radioactive Potato", "seed": 18.0, "base": 24.0, "grow": 50.0, "yield": 4, "color": "b6f064"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 20.25, "base": 27.0, "grow": 55.0, "yield": 3, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "grow": 60.0, "yield": 3, "color": "aeeaff"},
 }
 const OLD_GROW_TIMES: Dictionary = {"russet": 10.0, "golden": 30.0, "giant": 45.0, "radioactive": 90.0, "sunburst": 45.0, "icecap": 60.0}
 const MAX_GROW_SECONDS: float = 60.0
-const TOOL_COSTS: Dictionary = {"hoe": [300.0, 12000.0, 250000000000.0], "water": [450.0, 15000.0, 400000000000.0], "harvest": [600.0, 20000.0, 600000000000.0]}
-const DEBUG_MONEY_LIMIT: float = 1000000.0
-const QUEST_REWARDS: Dictionary = {
-	"starter_crash": {"share": 0.005}, "starter_spike": {"share": 0.015},
-	"starter_combo": {"share": 0.03},
-	"ground": {"share": 0.002}, "sunburst": {"share": 0.025}, "combo": {"share": 0.01},
-	"export": {"share": 0.05},
-	"winter_ground": {"share": 0.002}, "winter_harvest": {"share": 0.025},
-	"winter_frost": {"share": 0.05},
-}
-const MAX_MONEY: float = 1.0e300
-const MAX_INVENTORY: int = 1000000000000000
+const TOOL_COSTS: Dictionary = {"hoe": [300.0, 600.0, 1200.0], "water": [400.0, 800.0, 1400.0], "harvest": [500.0, 1000.0, 1500.0]}
+const BARN_COSTS: Array[float] = [300.0, 800.0, 2000.0]
+const OVERDRAFT_LIMIT: float = -5000.0
+const DEBUG_MONEY_LIMIT: float = 100000.0
+const QUEST_REWARD: float = 100.0
+const MAX_MONEY: float = 100000.0
+const MAX_INVENTORY: int = 100000
 var activity_system: Node = null
 
 # Progress is saved; the scene controller decides when to resume the guided lesson.
@@ -69,19 +61,15 @@ var farm_help = FarmHelp.new()
 var npc_history: Dictionary = {}
 var tutorial_progress: Dictionary = {"version": 2, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
-var blind_cycle: Dictionary = BlindRules.new_cycle()
 var climate = ClimateSystem.new()
 var _restoring_balance: bool = false
-var tax_credit_eligible: bool = false
-var run_over: bool:
-	get: return bool(blind_cycle.run_over)
-var coins: float = 240.0:
+var run_over: bool = false
+var harvested_total: int = 0
+var coins: float = 2000.0:
 	set(value):
 		if not is_finite(value) or (run_over and not _restoring_balance):
 			return
 		coins = clampf(value, -MAX_MONEY, MAX_MONEY)
-		if coins >= 0.0:
-			tax_credit_eligible = false
 		if not _restoring_balance and coins < bankruptcy_limit():
 			_end_run("bankrupt")
 var selected_crop: String = "russet"
@@ -114,13 +102,8 @@ var quest_claimed: Array[String] = []
 var market: Dictionary = {}
 var news: String = "Harvest your Russets. Catch a good price. Sell with F!"
 var elapsed: float = 0.0
-var combo_count: int = 0
-var combo_multiplier: int = 1
-var combo_time: float = 0.0
 var debug_money_modified: bool = false
 var debug_islands_modified: bool = false
-var harvest_fraction: Dictionary = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
-var mastery: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var expansion: int = 0
 var barn_level: int = 0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -165,8 +148,8 @@ func unlock_island3() -> String:
 		return "Run over. Start a new farm."
 	if island3_unlocked:
 		return _reject_purchase("Frosthollow is already unlocked. The winter ferry is ready.")
-	if not island2_unlocked or total_mastery() < ISLAND3_UNLOCK_HARVEST or coins < ISLAND3_UNLOCK_COST:
-		return _reject_purchase("Frosthollow needs \uE000 100B and 25,000 harvested potatoes. Grow your Golden Shores fortune first.")
+	if not island2_unlocked or harvested_total < ISLAND3_UNLOCK_HARVEST or coins < ISLAND3_UNLOCK_COST:
+		return _reject_purchase("Frosthollow needs \uE000 10,000 and 25,000 harvested potatoes. Grow your Golden Shores fortune first.")
 	coins -= ISLAND3_UNLOCK_COST
 	island3_unlocked = true
 	frost_timer = rng.randf_range(120.0, 220.0)
@@ -235,7 +218,7 @@ func crop_growth_speed(island: int = 0, crop: String = "") -> float:
 func debug_info() -> Dictionary:
 	return {"money_modified": debug_money_modified, "islands_modified": debug_islands_modified,
 		"active": debug_money_modified or debug_islands_modified, "money_min": 0.0, "money_limit": DEBUG_MONEY_LIMIT,
-		"description": "Money changes once. Progress and taxes remain active."}
+		"description": "Money changes once. Progress is kept."}
 
 
 func valid_debug_settings(money_multiplier: float) -> bool:
@@ -250,16 +233,10 @@ func apply_debug(money_multiplier: float) -> String:
 	if not valid_debug_settings(money_multiplier):
 		if is_finite(money_multiplier) and coins > 0.0 and money_multiplier > 0.0 and coins * money_multiplier == 0.0:
 			return _finish("That positive multiplier is too small to keep a nonzero balance. Use x0 explicitly if you want to clear your purse.")
-		return _finish("Debug ranges: money x0 to x1M. Decimals such as 0.1 and 1e-3 work; x0 clears your purse.")
+		return _finish("Debug ranges: money x0 to x100,000. Decimals such as 0.1 and 1e-3 work; x0 clears your purse.")
 	var previous: float = coins
 	var after: float = minf(MAX_MONEY, coins * money_multiplier)
-	var receipt: Dictionary = blind_cycle.last_result
-	var debug_collapse: bool = after < bankruptcy_limit()
-	# A Debug edit can match an old receipt exactly. Keep that history, but do
-	# not let the synchronous collapse snapshot treat it as a new collection.
-	if debug_collapse: blind_cycle.last_result = {}
 	coins = after
-	if debug_collapse: blind_cycle.last_result = receipt
 	debug_money_modified = debug_money_modified or coins != previous
 	return _finish("DEBUG applied: purse %s. Money was multiplied once." % money(coins))
 
@@ -268,10 +245,10 @@ func debug_set_balance(amount: float) -> String:
 	if run_over:
 		return _finish("Use Recover test farm to resume this ended run.")
 	if not is_finite(amount) or amount < 0.0 or amount > MAX_MONEY:
-		return _finish("Enter a test balance from 0 to 1e300.")
+		return _finish("Enter a test balance from 0 to 100,000.")
 	debug_money_modified = debug_money_modified or coins != amount
 	coins = amount
-	return _finish("DEBUG: balance set to %s. Progress kept; taxes still apply." % money(coins, true))
+	return _finish("DEBUG: balance set to %s. Progress kept." % money(coins, true))
 
 
 func debug_recover(amount: float) -> String:
@@ -280,17 +257,13 @@ func debug_recover(amount: float) -> String:
 	if not run_over:
 		return _finish("This farm is still running. Use Set balance for test funds.")
 	if not is_finite(amount) or amount <= 0.0 or amount > MAX_MONEY:
-		return _finish("Recovery needs a positive test balance up to 1e300.")
-	var previous: Dictionary = blind_cycle.duplicate(true)
-	blind_cycle = BlindRules.new_cycle(int(previous.island))
-	blind_cycle.clears = int(previous.clears)
-	blind_cycle.last_result = previous.last_result.duplicate(true)
+		return _finish("Recovery needs a positive test balance up to 100,000.")
+	run_over = false
 	debug_money_modified = true
 	coins = amount
 	climate.data.collapse.clear()
-	climate.data.tax_events.clear()
 	_refresh_market()
-	return _finish("DEBUG: farm recovered with %s. Progress kept; tax collection reset." % money(coins, true))
+	return _finish("DEBUG: farm recovered with %s. Progress kept." % money(coins, true))
 
 
 func debug_unlock_island(id: int) -> String:
@@ -308,7 +281,7 @@ func debug_unlock_island(id: int) -> String:
 		island3_unlocked = true
 		frost_timer = rng.randf_range(120.0, 220.0)
 		_open_starting_beds(3)
-	return _finish("DEBUG: %s unlocked; Spudions unchanged. Visiting raises base tax to %s, even after returning. Set test funds before travelling." % [("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"), money(float(BlindRules.PROGRESSION_BASELINES[id]) * BlindRules.TAX_RATE, true)])
+	return _finish("DEBUG: %s unlocked; Spudions unchanged." % ("Golden Shores" if id == 2 else "Golden Shores and Frosthollow"))
 
 func reset_debug() -> String:
 	return _finish("Debug timing reset. Your current Spudions are unchanged.")
@@ -356,89 +329,19 @@ func available_crops() -> Array[String]:
 
 
 func bankruptcy_limit() -> float:
-	return BlindRules.bankruptcy(int(blind_cycle.island))
-
-
-func blind_info() -> Dictionary:
-	var tax_multiplier: float = minf(BlindRules.TAX_BOOM_MAX, float(blind_cycle.tax_multiplier) + climate.tax_pressure())
-	var tax: float = BlindRules.target(blind_cycle) * BlindRules.TAX_RATE * tax_multiplier
-	return {"kind": blind_cycle.kind, "name": "TAXES",
-		"island": blind_cycle.island, "target": tax, "current": coins,
-		"base_target": BlindRules.target(blind_cycle), "base_tax": BlindRules.target(blind_cycle) * BlindRules.TAX_RATE,
-		"ratio": coins / tax, "cleared": coins >= tax, "tax": tax,
-		"rank": BlindRules.wealth_rank(coins / tax),
-		"projected": clampf(coins - tax, -MAX_MONEY, MAX_MONEY),
-		"bankruptcy": bankruptcy_limit(), "tax_boom": tax_multiplier > 1.0,
-		"climate_pressure": climate.tax_pressure(), "tax_multiplier": tax_multiplier, "booms": blind_cycle.booms,
-		"booms_required": BlindRules.BOOMS_PER_BLIND, "due_in": blind_cycle.due_in,
-		"run_over": run_over, "reason": blind_cycle.reason, "last_result": blind_cycle.last_result}
-
-
-func blind_progress_text(ratio: float) -> String:
-	if ratio >= 2.0:
-		return format_number(ratio) + "× " + BlindRules.wealth_rank(ratio)
-	if ratio < 0.0: return "Debt"
-	var percent: float = ratio * 100.0
-	if percent > 0.0 and percent < 0.01: return "<0.01%"
-	return String.num(percent, 2).trim_suffix("00").trim_suffix("0").trim_suffix(".") + "%"
-
+	return OVERDRAFT_LIMIT
 
 func climate_info() -> Dictionary:
 	return climate.info(self)
 
 
-func _promote_blind_island(id: int) -> void:
-	# Returning to an old farm cannot lower the tax tier or reset its counter.
-	# A first visit to a harder island resets the retained collection state.
-	if id <= int(blind_cycle.island):
-		return
-	var clears: int = int(blind_cycle.clears)
-	blind_cycle = BlindRules.new_cycle(id)
-	blind_cycle.clears = clears
-	climate.data.tax_events.clear()
-
-
-func _resolve_blind() -> void:
+func _end_run(_reason: String) -> void:
 	if run_over:
 		return
-	var info: Dictionary = blind_info()
-	var result: Dictionary = {"kind": blind_cycle.kind, "island": blind_cycle.island,
-		"balance": coins, "target": info.target, "ratio": maxf(0.0, float(info.ratio)),
-		"tax": info.tax, "tax_multiplier": info.tax_multiplier,
-		"after": info.projected, "cleared": info.cleared}
-	blind_cycle.last_result = result
-	blind_cycle.due_in = 0.0
-	climate.data.tax_paid = minf(MAX_MONEY, float(climate.data.tax_paid) + float(info.tax))
-	# One bill is both the displayed threshold and the actual collection.
-	# The balance setter makes bankruptcy immediate and gives it precedence.
-	coins = float(info.projected)
-	tax_credit_eligible = coins < 0.0 and not run_over
-	if not run_over:
-		blind_cycle.clears = int(blind_cycle.clears) + 1
-		blind_cycle.kind = "big" if blind_cycle.kind == "small" else "small"
-		blind_cycle.booms = 0
-		blind_cycle.tax_multiplier = 1.0
-		blind_cycle.tax_rolled = false
-		climate.data.tax_events.clear()
-	blind_resolved.emit(result.duplicate(true))
-	changed.emit()
-
-
-func _end_run(reason: String) -> void:
-	if run_over:
-		return
-	blind_cycle.run_over = true
-	blind_cycle.reason = reason
+	run_over = true
 	climate.capture_collapse(self)
 	run_ended.emit()
 	changed.emit()
-
-
-func total_mastery() -> int:
-	var total: int = 0
-	for id in CROP_IDS:
-		total += int(mastery[id])
-	return total
 
 
 func unlock_island2() -> String:
@@ -446,8 +349,8 @@ func unlock_island2() -> String:
 		return "Run over. Start a new farm."
 	if island2_unlocked:
 		return _reject_purchase("Golden Shores is already unlocked. The ferry is ready whenever you are.")
-	if total_mastery() < ISLAND2_UNLOCK_HARVEST or coins < ISLAND2_UNLOCK_COST:
-		return _reject_purchase("Golden Shores needs \uE000 1M and 500 potatoes harvested. You have %s harvested; keep farming and selling!" % format_number(total_mastery()))
+	if harvested_total < ISLAND2_UNLOCK_HARVEST or coins < ISLAND2_UNLOCK_COST:
+		return _reject_purchase("Golden Shores needs \uE000 5,000 and 500 potatoes harvested. You have %s harvested; keep farming and selling!" % format_number(harvested_total))
 	coins -= ISLAND2_UNLOCK_COST
 	island2_unlocked = true
 	export_timer = rng.randf_range(EXPORT_MIN_WAIT, EXPORT_MAX_WAIT)
@@ -461,24 +364,19 @@ func travel_to(id: int) -> String:
 	if id not in [1, 2, 3]:
 		return _finish("The ferry visits Spud Valley, Golden Shores, and Frosthollow.")
 	if id == 3 and not island3_unlocked:
-		return _finish("Frosthollow needs \uE000 100B and 25,000 potatoes harvested. Finish your Golden Shores journey first.")
+		return _finish("Frosthollow needs \uE000 10,000 and 25,000 potatoes harvested. Finish your Golden Shores journey first.")
 	if id == 2 and not island2_unlocked:
-		return _finish("Unlock Golden Shores with \uE000 1M and 500 potatoes harvested before boarding.")
+		return _finish("Unlock Golden Shores with \uE000 5,000 and 500 potatoes harvested before boarding.")
 	if id == current_island:
 		return _finish("You are already on %s." % island_name().capitalize())
 	island_plots[str(current_island)] = plots
 	# The carried can travels with the farmer; island tanks stay independent.
 	climate.data.operations.islands[str(id)].can = ClimateSystem.Operations.local(self).can
 	current_island = id
-	_promote_blind_island(id)
 	plots = island_plots[str(id)]
-	combo_count = 0
-	combo_multiplier = 1
-	combo_time = 0.0
 	if not available_crops().has(selected_crop):
 		selected_crop = "russet"
 	_refresh_market()
-	harvest_chain.emit(0, 1)
 	island_changed.emit(id)
 	climate.on_arrival(self)
 	changed.emit()
@@ -507,14 +405,14 @@ func quest_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = [
 		{"id": "ground", "title": "BREAK NEW GROUND", "description": "Hoe all 48 Shores beds.", "target": 48},
 		{"id": "sunburst", "title": "A TASTE OF SUNSHINE", "description": "Harvest 10,000 Sunbursts by hand.", "target": 10000},
-		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest all 48 Shores beds in one combo.", "target": 48},
+		{"id": "combo", "title": "CLEAR THE FIELD", "description": "Harvest 48 Shores beds.", "target": 48},
 		{"id": "export", "title": "CATCH THE SHIP", "description": "Sell 100+ Golden/Sunburst per Export Rush. Do it 3 times.", "target": 3},
 	]
 	if current_island == 1:
 		entries = [
 			{"id": "starter_crash", "title": "SEEDS FOR TOMORROW", "description": "Buy 10 seeds.", "target": 10},
 			{"id": "starter_spike", "title": "FIRST CUSTOMERS", "description": "Sell 10 potatoes.", "target": 10},
-			{"id": "starter_combo", "title": "TWELVE IN A ROW", "description": "Harvest 12 beds in one combo.", "target": 12},
+			{"id": "starter_combo", "title": "FIRST HARVESTS", "description": "Harvest 12 beds.", "target": 12},
 		]
 	elif current_island == 3:
 		entries = [
@@ -523,8 +421,7 @@ func quest_info() -> Array[Dictionary]:
 			{"id": "winter_frost", "title": "FROSTBREAKER", "description": "Beat the clock in 3 full Frostbreaks.", "target": 3},
 		]
 	for entry in entries:
-		var reward: Dictionary = QUEST_REWARDS[entry.id]
-		entry.coins = float(BlindRules.PROGRESSION_BASELINES[current_island]) * float(reward.share)
+		entry.coins = QUEST_REWARD
 		entry.reward_text = money(entry.coins)
 		if entry.id == "starter_crash": entry.reward_text += " + 2 Golden seeds"
 		elif entry.id == "ground": entry.reward_text += " + 5 Sunburst seeds"
@@ -645,14 +542,6 @@ func _update_tutorial(delta: float) -> void:
 				if float(plot["elapsed"]) >= float(CROPS[plot["crop"]]["grow"]):
 					plot["stage"] = 3
 					dirty = true
-	if combo_time > 0.0:
-		combo_time = maxf(0.0, combo_time - step)
-		if combo_time < 0.000001:
-			combo_time = 0.0
-			combo_count = 0
-			combo_multiplier = 1
-			harvest_chain.emit(0, 1)
-			dirty = true
 	if dirty:
 		changed.emit()
 
@@ -675,10 +564,7 @@ func update(delta: float) -> void:
 	while remaining >= 0.000001:
 		farm_help.refresh_pests(self)
 		var step: float = remaining
-		var collecting: bool = float(blind_cycle.due_in) > 0.0
 		if climate.clock_running(self): step = minf(step, minf(float(climate.data.timer), 0.25))
-		if collecting:
-			step = minf(step, float(blind_cycle.due_in))
 		step = minf(step, 15.0 - _relief_clock)
 		if is_instance_valid(activity_system) and activity_system.has_method("next_boundary"):
 			step = minf(step, maxf(0.000001, float(activity_system.next_boundary())))
@@ -696,8 +582,6 @@ func update(delta: float) -> void:
 				step = minf(step, export_timer - 15.0)
 		if current_island == 3 and island3_unlocked and climate.data.phase == "calm":
 			step = minf(step, frost_timer)
-		if combo_time > 0.0:
-			step = minf(step, combo_time)
 		step = maxf(0.000001, step)
 		remaining -= step
 		elapsed += step
@@ -763,25 +647,10 @@ func update(delta: float) -> void:
 				else:
 					_start_frost()
 				dirty = true
-		if combo_time > 0.0:
-			combo_time = maxf(0.0, combo_time - step)
-			if combo_time < 0.000001:
-				combo_time = 0.0
-				combo_count = 0
-				combo_multiplier = 1
-				harvest_chain.emit(0, 1)
-				dirty = true
 		if _relief_clock >= 15.0 - 0.000001:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
-		if collecting:
-			blind_cycle.due_in = maxf(0.0, float(blind_cycle.due_in) - step)
-			if float(blind_cycle.due_in) < 0.000001:
-				_resolve_blind()
-				dirty = true
-				if run_over:
-					break
 	if dirty:
 		changed.emit()
 
@@ -870,7 +739,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if index < 0 or index >= plots.size():
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
-		return _finish("Unlock more beds at Tools · \uE000 1.8K")
+		return _finish("Unlock more beds at Tools · \uE000 1,200")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
@@ -968,7 +837,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if action == "pest":
 		return _finish("Cleared %d beds! Damage stopped. Harvest ripe crops soon." % affected)
 	if action == "harvest":
-		return _finish("Harvested %s potatoes from %d patches! Combo x%d. Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, combo_multiplier, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
+		return _finish("Harvested %s potatoes from %d patches! Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
 	if action == "hoe" and thawed > 0:
 		var thaw_note: String = " Crops are safe; keep clearing before the frost timer ends!"
 		return _finish("Cleared ice from %d beds. %d/%d cleared.%s" % [thawed, frost_cleared, frost_target_count, thaw_note])
@@ -988,29 +857,20 @@ func _harvest_plot(plot: Dictionary) -> int:
 	var id: String = str(plot["crop"])
 	var first_cut: bool = int(plot.get("yield_total", 0)) == 0 and int(plot["pending"]) == 0
 	if first_cut:
-		combo_count += 1
-		combo_multiplier = mini(16, int(pow(2.0, minf(4.0, float(combo_count - 1)))))
-		combo_time = 3.5
-		var yield_bonus: float = (1.0 + minf(10.0, mastery_level(id) * 0.02)) * (3.0 if current_island == 3 else (2.0 if current_island == 2 else 1.0))
-		# Keep fractional mastery yields between harvests.
-		var precise_yield: float = float(CROPS[id]["yield"]) * yield_bonus * combo_multiplier + float(harvest_fraction[id])
-		var whole_yield: float = floor(precise_yield + 0.000000001)
-		plot["yield_total"] = maxi(1, int(whole_yield))
-		harvest_fraction[id] = clampf(precise_yield - whole_yield, 0.0, 0.999999999)
+		plot["yield_total"] = int(CROPS[id]["yield"])
 		plot["yield_taken"] = 0
 		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot.get("pest_ticks", 0))) / 3.0)))
-		harvest_chain.emit(combo_count, combo_multiplier)
 		if current_island == 2:
-			_progress_quest("combo", float(combo_count), true)
+			_progress_quest("combo", 1.0)
 		elif current_island == 1:
-			_progress_quest("starter_combo", float(combo_count), true)
+			_progress_quest("starter_combo", 1.0)
 	var quantity: int = maxi(0, mini(space, int(plot["pending"])))
 	if quantity == 0:
 		_clear_crop(plot, true)
 		return 0
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	storage[id] = int(storage[id]) + quantity
-	mastery[id] = mini(MAX_INVENTORY, int(mastery[id]) + quantity)
+	harvested_total = mini(MAX_INVENTORY, harvested_total + quantity)
 	plot["pending"] = int(plot["pending"]) - quantity
 	if current_island == 3:
 		_progress_quest("winter_harvest", float(quantity))
@@ -1041,103 +901,30 @@ static func crops_by_base_price(ids: Array) -> Array[String]:
 
 
 func market_money(value: float) -> String:
-	# Keep cents explicit in small trade quotes; retain the game's large-value suffixes.
-	return ("-" if value < 0.0 else "") + CURRENCY_SYMBOL + " " + ("%.2f" % absf(value)) if absf(value) < 1000.0 else money(value, true)
-
-
-func has_tax_credit() -> bool:
-	return tax_credit_eligible and coins < 0.0 and not run_over and not tutorial_active
-
-
-func purchase_credit() -> float:
-	return maxf(0.0, coins - bankruptcy_limit()) if has_tax_credit() else 0.0
-
+	return money(value)
 
 func purchase_quote(cost: float) -> Dictionary:
 	var valid_cost: bool = is_finite(cost) and cost >= 0.0
-	var after: float = clampf(coins - cost, -MAX_MONEY, MAX_MONEY) if valid_cost else coins
-	var borrowing: bool = valid_cost and cost > 0.0 and coins < cost and has_tax_credit()
-	var affordable: bool = valid_cost and not run_over and (cost == 0.0 or coins >= cost or (borrowing and after >= bankruptcy_limit()))
-	var remaining: float = maxf(0.0, after - bankruptcy_limit()) if has_tax_credit() else 0.0
-	var reason: String = ""
-	if not affordable:
-		if run_over: reason = "Run over. Start a new farm."
-		elif not valid_cost: reason = "Choose a valid purchase amount."
-		elif not has_tax_credit(): reason = "Not enough Spudions. Buying on account is only available while repaying tax debt."
-		else: reason = "Purchase blocked: it would exceed the %s bankruptcy limit. Sell crops or repay debt first." % money(-bankruptcy_limit())
-	return {"affordable": affordable, "uses_credit": borrowing, "after_balance": after,
-		"credit_left_after": remaining, "bankruptcy_limit": bankruptcy_limit(),
-		"near_limit": borrowing and remaining <= -bankruptcy_limit() * 0.10, "reason": reason}
-
+	var affordable: bool = valid_cost and not run_over and (cost == 0.0 or coins >= cost)
+	return {"affordable": affordable, "reason": "" if affordable else ("Run over. Start a new farm." if run_over else "Not enough Spudions.")}
 
 func can_purchase(cost: float) -> bool:
 	return bool(purchase_quote(cost).affordable)
 
 
-func purchase_caption(caption: String, cost: float) -> String:
-	var quote: Dictionary = purchase_quote(cost)
-	return caption + (" · On account" if quote.affordable and quote.uses_credit else "")
-
-
-func credit_refusal(cost: float = -1.0) -> String:
-	if cost >= 0.0: return str(purchase_quote(cost).reason)
-	return "Account limit reached. Sell crops or repay debt first." if has_tax_credit() else "Not enough Spudions. Buying on account is only available while repaying tax debt."
-
-
-func recovery_order() -> Dictionary:
-	# A full credit line takes at most 100 ordinary potatoes to repay, on every
-	# tax tier. Relief never produces cash.
-	var debt: float = maxf(0.0, -coins)
-	var rate: float = -bankruptcy_limit() / 100.0
-	var needed: int = ceili(debt / rate)
-	var held: int = 0
-	for crop: String in CROP_IDS: held += int(storage[crop])
-	var quantity: int = mini(needed, held)
-	return {"debt": debt, "rate": rate, "needed": needed, "held": held,
-		"quantity": quantity, "payment": minf(debt, quantity * rate)}
-
-
-func deliver_recovery() -> String:
-	if run_over: return "Run over. Start a new farm."
-	var order: Dictionary = recovery_order()
-	if order.debt <= 0.0: return _finish("No debt to repay.")
-	if order.quantity <= 0: return _finish("Harvest potatoes for the recovery order.")
-	var remaining: int = int(order.quantity)
-	for crop: String in crops_by_base_price(CROP_IDS):
-		var amount: int = mini(remaining, int(storage[crop]))
-		storage[crop] = int(storage[crop]) - amount
-		remaining -= amount
-		if remaining == 0: break
-	coins = minf(0.0, coins + float(order.payment))
-	return _finish("Debt cleared." if coins >= 0.0 else "Repaid %s · %s debt left." % [money(order.payment), money(-coins)])
-
-
-func can_claim_recovery_seeds() -> bool:
-	if run_over or coins >= 0.0: return false
-	for crop: String in CROP_IDS:
-		if int(seed_inventory[crop]) > 0 or int(storage[crop]) > 0: return false
-	for field in island_plots.values():
-		for plot in field:
-			if int(plot.stage) > 0: return false
-	return true
-
-
-func claim_recovery_seeds() -> String:
-	if not can_claim_recovery_seeds(): return _finish("Use your existing seeds or harvest first.")
-	seed_inventory.russet = 3
-	return _finish("3 recovery seeds collected.")
-
+func purchase_refusal(cost: float = -1.0) -> String:
+	return str(purchase_quote(cost).reason) if cost >= 0.0 else "Not enough Spudions."
 
 func buy_seeds(id: String, quantity: int = 5) -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if not CROPS.has(id) or quantity < 1 or quantity > 1000000000:
+	if not CROPS.has(id) or quantity < 1 or quantity > MAX_INVENTORY:
 		return _reject_purchase("Choose a crop and a positive seed quantity.")
 	if not available_crops().has(id):
 		return _reject_purchase("These seeds are sold on their home island. Visit its market first.")
 	var cost: float = float(market[id]["seed"]) * quantity
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal(cost))
+		return _reject_purchase(purchase_refusal(cost))
 	if int(seed_inventory[id]) + quantity > MAX_INVENTORY:
 		return _reject_purchase("Your seed shed is full for this crop.")
 	coins -= cost
@@ -1210,7 +997,7 @@ func upgrade_tool(key: String) -> String:
 		return _reject_purchase("Rank 3 tools are sold in Frosthollow: unlock the winter island to upgrade further.")
 	var cost: float = float(TOOL_COSTS[key][rank])
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal(cost))
+		return _reject_purchase(purchase_refusal(cost))
 	coins -= cost
 	tools[key] = rank + 1
 	if key == "water":
@@ -1222,11 +1009,11 @@ func upgrade_tool(key: String) -> String:
 func upgrade_barn() -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if barn_level >= 20:
+	if barn_level >= BARN_COSTS.size():
 		return _reject_purchase("Your barn has reached its maximum capacity.")
-	var cost: float = 500.0 * pow(5.0, barn_level)
+	var cost: float = BARN_COSTS[barn_level]
 	if not can_purchase(cost):
-		return _reject_purchase(credit_refusal(cost))
+		return _reject_purchase(purchase_refusal(cost))
 	var old_capacity: int = capacity
 	coins -= cost
 	barn_level += 1
@@ -1256,7 +1043,7 @@ func expand_field() -> String:
 	if info.complete:
 		return _reject_purchase("All %d beds are already open." % int(info.total))
 	if not can_purchase(float(info.cost)):
-		return _reject_purchase(credit_refusal(float(info.cost)))
+		return _reject_purchase(purchase_refusal(float(info.cost)))
 	coins -= float(info.cost)
 	if current_island == 1: expansion = 1
 	else:
@@ -1265,10 +1052,6 @@ func expand_field() -> String:
 	for plot in plots:
 		plot["unlocked"] = true
 	return _complete_purchase({"kind": "field", "id": "expansion", "name": "Garden beds", "quantity": int(info.remaining), "cost": float(info.cost), "total": int(info.total), "island": current_island}, "%d more beds open." % int(info.remaining))
-
-
-func mastery_level(id: String) -> int:
-	return int(floor(sqrt(float(mastery.get(id, 0)) / 25.0)))
 
 
 func seasonal_price_factor() -> float:
@@ -1319,40 +1102,17 @@ func _seed_relief() -> bool:
 	return true
 
 
-func format_number(value: float, suffix_decimals: int = 1) -> String:
-	if not is_finite(value):
-		return "0"
-	var absolute: float = absf(value)
-	if absolute > 0.0 and absolute < 0.01:
-		return String.num_scientific(value)
-	if absolute >= 1.0e36:
-		var exponent: int = int(floor(log(absolute) / log(10.0)))
-		var mantissa: float = value / pow(10.0, exponent)
-		if absf(snappedf(mantissa, 0.01)) >= 10.0:
-			exponent += 1
-			mantissa /= 10.0
-		return ("%.2f" % mantissa).trim_suffix("0").trim_suffix("0").trim_suffix(".") + "e" + str(exponent)
-	var suffixes: Array[String] = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]
-	var scaled: float = value
-	var level: int = 0
-	while absf(scaled) >= 1000.0 and level < suffixes.size() - 1:
-		scaled /= 1000.0
-		level += 1
-	if level > 0 and absf(round(scaled)) >= 1000.0 and level < suffixes.size() - 1:
-		scaled /= 1000.0
-		level += 1
-	if level == 0:
-		return "%.0f" % scaled if is_equal_approx(scaled, round(scaled)) or absolute >= 100.0 else "%.2f" % scaled
-	var display: String = "%.0f" % scaled if absf(scaled) >= 100.0 else "%.1f" % scaled
-	if suffix_decimals != 1 and absf(scaled) < 100.0:
-		display = String.num(scaled, suffix_decimals)
-		if display.contains("."):
-			display = display.rstrip("0").trim_suffix(".")
-	return display + suffixes[level]
+func format_number(value: float) -> String:
+	if not is_finite(value): return "0"
+	var digits: String = str(absi(roundi(value)))
+	var grouped: String = ""
+	for i in range(digits.length()):
+		if i > 0 and (digits.length() - i) % 3 == 0: grouped += ","
+		grouped += digits[i]
+	return ("-" if value < 0.0 else "") + grouped
 
-
-func money(value: float, precise: bool = false) -> String:
-	return ("-" if value < 0.0 else "") + CURRENCY_SYMBOL + " " + format_number(absf(value), 2 if precise else 1)
+func money(value: float, _precise: bool = false) -> String:
+	return ("-" if value < 0.0 else "") + CURRENCY_SYMBOL + " " + format_number(absf(value))
 
 func _saved_currency_text(text: String) -> String:
 	return text.replace("$", CURRENCY_SYMBOL + " ").replace("game coins", "game Spudions")
@@ -1379,10 +1139,10 @@ func _reject_purchase(message: String) -> String:
 
 func reset_game() -> void:
 	npc_history.clear()
-	tax_credit_eligible = false
 	field_expansions = {"2": false, "3": false}
 	retained_beds = {"2": [], "3": []}
-	blind_cycle = BlindRules.new_cycle()
+	run_over = false
+	harvested_total = 0
 	climate.reset()
 	tutorial_active = false
 	tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5}
@@ -1406,7 +1166,7 @@ func reset_game() -> void:
 	export_qualified_cycles.clear()
 	quest_progress = {"ground": 0, "sunburst": 0, "combo": 0, "export": 0.0, "starter_crash": 0, "starter_spike": 0, "starter_combo": 0, "winter_ground": 0, "winter_harvest": 0, "winter_frost": 0}
 	quest_claimed.clear()
-	coins = 240.0
+	coins = 2000.0
 	selected_crop = "russet"
 	seed_inventory = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	storage = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
@@ -1414,28 +1174,21 @@ func reset_game() -> void:
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
 	news = "Harvest your Russets. Catch a good price. Sell with F!"
 	elapsed = 0.0
-	combo_count = 0
-	combo_multiplier = 1
-	combo_time = 0.0
 	debug_money_modified = false
 	debug_islands_modified = false
-	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
-	mastery = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	expansion = 0
 	barn_level = 0
 	_relief_clock = 0.0
 	_build_starters()
 	island_changed.emit(1)
 	export_changed.emit(false)
-	_finish("A fresh farm and \uE000 240. Your next fortune starts with a potato.")
+	_finish("A fresh farm and \uE000 2,000. Your farm starts with a potato.")
 
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "economy_revision": ECONOMY_REVISION, "mechanics_revision": MECHANICS_REVISION,
-		"tax_credit_eligible": tax_credit_eligible and coins < 0.0 and not run_over,
 		"field_expansions": field_expansions.duplicate(), "retained_beds": retained_beds.duplicate(true),
-		"blind_cycle": blind_cycle.duplicate(true),
-		"climate": climate.data.duplicate(true),
+		"climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true),
 		"npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true),
@@ -1443,7 +1196,7 @@ func _save_data() -> Dictionary:
 
 		"lifetime_sales": lifetime_sales, "island_sales": island_sales,
 		"island3_unlocked": island3_unlocked, "frost_timer": frost_timer, "frost_active": frost_active,
-		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "pest_timer": pest_timer, "coins": coins, "coins_scientific": String.num_scientific(coins), "selected_crop": selected_crop,
+		"frost_cleared": frost_cleared, "frost_target_count": frost_target_count, "pest_timer": pest_timer, "coins": coins, "selected_crop": selected_crop,
 
 
 
@@ -1454,10 +1207,7 @@ func _save_data() -> Dictionary:
 		"quest_progress": quest_progress, "quest_claimed": quest_claimed,
 		"news": news,
 		"elapsed": elapsed,
-		"combo_count": combo_count, "combo_multiplier": combo_multiplier, "combo_time": combo_time,
-		"mastery": mastery,
 		"debug_money_modified": debug_money_modified, "debug_islands_modified": debug_islands_modified,
-		"harvest_fraction": harvest_fraction.duplicate(),
 		"expansion": expansion, "barn_level": barn_level,
 
 
@@ -1595,17 +1345,8 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 			climate.data.event = ""
 			climate.data.severity = 0.0
 			climate.data.timer = ClimateSystem.FIRST_WARNING
-			climate.data.tax_events.clear()
-	blind_cycle = data.blind_cycle.duplicate(true) if mechanics >= 9 else BlindRules.new_cycle(int(data["current_island"]))
-	if mechanics == 9 and blind_cycle.reason == "blind_missed":
-		blind_cycle.reason = "tax_unpaid"
-	if int(data.get("mechanics_revision", 0)) < 11:
-		# New progression-based bills get a full preparation cycle on old farms.
-		blind_cycle.booms = 0
-		blind_cycle.due_in = 0.0
-		blind_cycle.tax_multiplier = 1.0
-		blind_cycle.tax_rolled = false
-		blind_cycle.last_result = {}
+	run_over = bool(data.get("run_over", false))
+	harvested_total = int(data.get("harvested_total", 0))
 	tutorial_active = false
 	farm_help.data = data.get("farm_help", FarmHelp.fresh()).duplicate(true)
 	# An established farm gets its normal game back, without a surprise tutorial.
@@ -1614,33 +1355,20 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	tutorial_progress = data.get("tutorial_progress", {"version": 1, "step": 0, "completed": true, "plot": 5}).duplicate(true)
 	for key in ["version", "step", "plot"]:
 		tutorial_progress[key] = int(tutorial_progress[key])
-	for key in ["coins", "elapsed", "combo_time", "export_timer", "lifetime_sales", "frost_timer", "pest_timer"]:
+	for key in ["coins", "elapsed", "export_timer", "lifetime_sales", "frost_timer", "pest_timer"]:
 		set(key, float(data[key]))
-	# Keep Godot's ordinary numeric balance whenever it survived JSON. Its
-	# scientific parser can differ by one ULP for some large values; the extra
-	# string is only needed when the numeric path lost a tiny positive balance.
-	if data.has("coins_scientific") and coins == 0.0:
-		coins = str(data["coins_scientific"]).to_float()
-	# Earlier saves had no debt origin flag. A negative tax receipt is the
-	# available evidence of tax debt; a negative balance alone is not enough.
-	var old_receipt: Dictionary = blind_cycle.last_result
-	var saved_tax_credit: bool = bool(data.tax_credit_eligible) if mechanics >= 21 else float(old_receipt.get("tax", 0.0)) > 0.0 and float(old_receipt.get("after", 0.0)) < 0.0
-	tax_credit_eligible = coins < 0.0 and not run_over and saved_tax_credit
-	for key in ["capacity", "combo_count", "combo_multiplier", "expansion", "barn_level", "current_island", "export_cycles", "frost_cleared", "frost_target_count", "export_cycle_sold"]:
+	for key in ["capacity", "expansion", "barn_level", "current_island", "export_cycles", "frost_cleared", "frost_target_count", "export_cycle_sold"]:
 		set(key, int(data[key]))
 	for key in ["selected_crop", "news"]:
 		set(key, str(data[key]))
 	for key in ["island2_unlocked", "export_active", "island3_unlocked", "frost_active"]:
 		set(key, bool(data[key]))
-	for key in ["seed_inventory", "storage", "tools", "mastery", "quest_progress", "island_sales"]:
+	for key in ["seed_inventory", "storage", "tools", "quest_progress", "island_sales"]:
 		set(key, data[key].duplicate(true))
 	_recompute_capacity()
 	debug_money_modified = bool(data.get("debug_money_modified", false))
 	debug_islands_modified = bool(data.get("debug_islands_modified", false))
 	news = _saved_currency_text(news)
-	harvest_fraction = {"russet": 0.0, "golden": 0.0, "giant": 0.0, "radioactive": 0.0, "sunburst": 0.0, "icecap": 0.0}
-	for id in CROP_IDS:
-		harvest_fraction[id] = float(data.get("harvest_fraction", {}).get(id, 0.0))
 	island_plots = {}
 	for id in ["1", "2", "3"]:
 		var field: Array[Dictionary] = []
@@ -1675,6 +1403,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	rng.seed = int(data["rng_seed"])
 	rng.state = int(data["rng_state"])
 	_restoring_balance = false
+	if run_over and climate.data.collapse.is_empty(): climate.capture_collapse(self)
 	if not run_over and coins < bankruptcy_limit():
 		_end_run("bankrupt")
 	_refresh_market()
@@ -1687,7 +1416,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 func _migrate_v2(original: Dictionary) -> Dictionary:
 	var data: Dictionary = original.duplicate(true)
 	data["schema_version"] = 3
-	for key in ["seed_inventory", "storage", "mastery"]:
+	for key in ["seed_inventory", "storage"]:
 		data[key]["sunburst"] = 0
 	data["current_island"] = 1
 	data["island2_unlocked"] = false
@@ -1715,7 +1444,7 @@ func _migrate_economy(original: Dictionary) -> Dictionary:
 func _migrate_winter(original: Dictionary) -> Dictionary:
 	var data: Dictionary = original.duplicate(true)
 	data["economy_revision"] = ECONOMY_REVISION
-	for key in ["seed_inventory", "storage", "mastery"]:
+	for key in ["seed_inventory", "storage"]:
 		data[key]["icecap"] = 0
 	data["island3_unlocked"] = false
 	data["island_plots"]["3"] = _empty_winter(false)
@@ -1779,27 +1508,6 @@ func _migrate_qol(original: Dictionary) -> Dictionary:
 	return data
 
 
-func _valid_precise_coins(data: Dictionary) -> bool:
-	if not data.has("coins_scientific"):
-		return true
-	var encoded: Variant = data["coins_scientific"]
-	if not encoded is String or encoded.length() > 64 or not encoded.is_valid_float():
-		return false
-	var precise: float = encoded.to_float()
-	if not _number(precise, -MAX_MONEY, MAX_MONEY) or not _number(data.get("coins"), -MAX_MONEY, MAX_MONEY):
-		return false
-	# Godot's numeric JSON path rounds tiny balances to zero. Keep its legacy
-	# numeric field, but accept an exact scientific string only when that field
-	# matches either the real value or Godot's own numeric round trip of it.
-	var numeric: float = float(data["coins"])
-	if numeric == precise:
-		return true
-	if signf(numeric) == signf(precise) and absf(numeric - precise) <= maxf(absf(numeric), absf(precise)) * 0.00000000000001:
-		return true
-	var json_value: Variant = JSON.parse_string(JSON.stringify(precise))
-	return (json_value is int or json_value is float) and numeric == float(json_value)
-
-
 func _migrate_field_access() -> void:
 	# Only unoccupied land is reclaimed. Retained beds stay usable after harvest
 	# and save/load; buying the expansion opens all remaining land once.
@@ -1821,9 +1529,6 @@ func _migrate_field_access() -> void:
 
 
 func _valid_field_access(data: Dictionary) -> bool:
-	if not data.get("tax_credit_eligible") is bool: return false
-	if not _number(data.get("coins"), -MAX_MONEY, MAX_MONEY) or not data.get("blind_cycle") is Dictionary: return false
-	if bool(data.tax_credit_eligible) and (float(data.coins) >= 0.0 or bool(data.blind_cycle.get("run_over", false))): return false
 	for key: String in ["field_expansions", "retained_beds"]:
 		if not data.get(key) is Dictionary or data[key].size() != 2: return false
 	for id: String in ["2", "3"]:
@@ -1863,7 +1568,7 @@ func _current_save_fields(raw: Variant) -> Variant:
 		var base: int = 200
 		for level in range(int(data.barn_level)): base += int(200.0 * pow(4.0, level))
 		data.capacity = mini(MAX_INVENTORY, base)
-	if _number(data.get("mechanics_revision", 0), 0, 24, true) and data.get("farm_help") is Dictionary:
+	if _number(data.get("mechanics_revision", 0), 0, 25, true) and data.get("farm_help") is Dictionary:
 		var help: Dictionary = data.farm_help
 		for key in help.keys():
 			if not FarmHelp.fresh().has(key): help.erase(key)
@@ -1882,6 +1587,33 @@ func _current_save_fields(raw: Variant) -> Variant:
 					plot.erase("cultivated")
 					plot.erase("variety")
 	if data.get("npc_history") is Dictionary: data.npc_history.erase("ada")
+	if _number(data.get("mechanics_revision", 0), 0, 25, true):
+		if data.get("quest_progress") is Dictionary and not data.has("mechanics_revision"):
+			var shipped: Variant = data.quest_progress.get("export")
+			if (shipped is int or shipped is float) and is_finite(float(shipped)) and shipped > MAX_INVENTORY: data.quest_progress.export = MAX_INVENTORY
+		data.run_over = false
+		data.harvested_total = raw.get("harvested_total", 0)
+		if raw.get("mastery") is Dictionary:
+			for amount in raw.mastery.values():
+				if not (amount is int or amount is float) or not is_finite(float(amount)) or amount < 0: return null
+				data.harvested_total = mini(MAX_INVENTORY, int(data.harvested_total) + int(minf(MAX_INVENTORY, float(amount))))
+		for key: String in ["coins", "lifetime_sales"]:
+			if data.has(key):
+				if not (data[key] is int or data[key] is float) or not is_finite(float(data[key])): return null
+				data[key] = clampf(float(data[key]), -MAX_MONEY if key == "coins" else 0.0, MAX_MONEY)
+		data.run_over = float(data.get("coins", 0)) < OVERDRAFT_LIMIT
+		if _number(data.get("barn_level"), 0, 20, true):
+			data.barn_level = mini(3, int(data.barn_level))
+			data.capacity = 200
+			for level in range(int(data.barn_level)): data.capacity += int(200.0 * pow(4.0, level))
+		if data.get("island_sales") is Dictionary:
+			for key in data.island_sales:
+				if not (data.island_sales[key] is int or data.island_sales[key] is float) or not is_finite(float(data.island_sales[key])): return null
+				data.island_sales[key] = clampf(float(data.island_sales[key]), 0, MAX_MONEY)
+	if data.get("climate") is Dictionary:
+		if _number(data.get("mechanics_revision", 0), 0, 25, true): data.climate.collapse = {}
+		for key in data.climate.keys():
+			if not ClimateSystem.fresh_data().has(key): data.climate.erase(key)
 	var fields: Dictionary = _save_data()
 	fields["activities"] = {}
 	for key in data.keys():
@@ -1929,14 +1661,6 @@ func _valid_save(raw: Variant) -> bool:
 		return false
 	if int(data.get("mechanics_revision", 0)) >= 21 and not _valid_field_access(data):
 		return false
-	if int(data.get("mechanics_revision", 0)) >= 9:
-		if not BlindRules.valid_cycle(data.get("blind_cycle"), MAX_MONEY, BlindRules.COLLECTION_SECONDS, int(data.get("mechanics_revision", 0)) == 9):
-			return false
-		var cycle: Dictionary = data.blind_cycle
-		if int(cycle.island) < int(data.get("current_island", 1)) or (int(cycle.island) >= 2 and not data.get("island2_unlocked", false)) or (int(cycle.island) >= 3 and not data.get("island3_unlocked", false)):
-			return false
-		if _number(data.get("coins"), -MAX_MONEY, MAX_MONEY) and float(data.coins) < BlindRules.bankruptcy(int(cycle.island)) and not bool(cycle.run_over):
-			return false
 	if int(data.get("mechanics_revision", 0)) >= 11:
 		var saved_climate: Variant = data.get("climate")
 		if saved_climate is Dictionary and int(data.mechanics_revision) == 11:
@@ -1951,6 +1675,9 @@ func _valid_save(raw: Variant) -> bool:
 				if not supply.has("can") or not supply.has("refilled"): return false
 	if not data.has("mechanics_revision") and (data.has("export_cycle_sold") or data.has("export_qualified_cycles")):
 		return false
+	if int(data.get("mechanics_revision", 0)) >= 26:
+		if not data.get("run_over") is bool or not _number(data.get("harvested_total"), 0, MAX_INVENTORY, true): return false
+		if _number(data.get("coins"), -MAX_MONEY, OVERDRAFT_LIMIT - 0.000001) and not data.run_over: return false
 	var save_crops: Array[String] = ["russet", "golden", "giant", "radioactive"]
 	if not legacy:
 		save_crops.append("sunburst")
@@ -1959,9 +1686,7 @@ func _valid_save(raw: Variant) -> bool:
 	var ranges: Dictionary = {
 		"schema_version": [2.0, 3.0, true], "coins": [-MAX_MONEY, MAX_MONEY, false],
 		"capacity": [200.0, float(MAX_INVENTORY), true], "elapsed": [0.0, 1.0e15, false],
-		"combo_count": [0.0, float(MAX_INVENTORY), true], "combo_multiplier": [1.0, 16.0, true],
-		"combo_time": [0.0, 3.5, false],
-		"expansion": [0.0, 1.0, true], "barn_level": [0.0, 20.0, true],
+		"expansion": [0.0, 1.0, true], "barn_level": [0.0, 3.0, true],
 		"relief_clock": [0.0, 15.0, false],
 	}
 	if rebalanced:
@@ -1971,19 +1696,12 @@ func _valid_save(raw: Variant) -> bool:
 	for key in ranges:
 		if not data.has(key) or not _number(data[key], float(ranges[key][0]), float(ranges[key][1]), bool(ranges[key][2])):
 			return false
-	if not _valid_precise_coins(data):
-		return false
 	var has_debug_data: bool = int(data.get("mechanics_revision", 0)) >= 7
 	if has_debug_data:
 		if data.has("debug_islands_modified") and not data.debug_islands_modified is bool:
 			return false
 		if not data.get("debug_money_modified") is bool:
 			return false
-		if not data.get("harvest_fraction") is Dictionary or data["harvest_fraction"].size() != CROP_IDS.size():
-			return false
-		for id in CROP_IDS:
-			if not _number(data["harvest_fraction"].get(id), 0.0, 1.0) or float(data["harvest_fraction"][id]) >= 1.0:
-				return false
 	for key in ["selected_crop", "news", "rng_seed", "rng_state"]:
 		if not data.has(key) or not data[key] is String or data[key].length() > 4096:
 			return false
@@ -1996,13 +1714,7 @@ func _valid_save(raw: Variant) -> bool:
 		expected_capacity += int(200.0 * pow(4.0, level))
 	if int(data["capacity"]) != mini(MAX_INVENTORY, expected_capacity):
 		return false
-	if int(data["combo_multiplier"]) not in [1, 2, 4, 8, 16]:
-		return false
-	if int(data["combo_count"]) == 0 and (float(data["combo_time"]) > 0.0 or int(data["combo_multiplier"]) != 1):
-		return false
-	if int(data["combo_count"]) > 0 and (float(data["combo_time"]) == 0.0 or int(data["combo_multiplier"]) != mini(16, int(pow(2.0, minf(4.0, float(data["combo_count"]) - 1.0))))):
-		return false
-	for key in ["seed_inventory", "storage", "mastery"]:
+	for key in ["seed_inventory", "storage"]:
 		if not data.has(key) or not data[key] is Dictionary or data[key].size() != save_crops.size():
 			return false
 		for id in save_crops:
@@ -2069,11 +1781,11 @@ func _valid_islands(data: Dictionary) -> bool:
 		return false
 	if not rebalanced and int(data["export_cycles"]) == 0 and float(data["export_timer"]) > 75.0:
 		return false
-	var targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0}
+	var targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 100000.0}
 	if rebalanced:
-		targets = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 10000000000.0}
+		targets = {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 100000.0}
 	if newest:
-		targets = QUEST_TARGETS if data.has("mechanics_revision") else {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 50000000000.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
+		targets = QUEST_TARGETS if data.has("mechanics_revision") else {"ground": 48.0, "sunburst": 10000.0, "combo": 48.0, "export": 100000.0, "winter_ground": 80.0, "winter_harvest": 100000.0, "winter_frost": 3.0}
 	if not data.has("quest_progress") or not data["quest_progress"] is Dictionary or data["quest_progress"].size() != targets.size():
 		return false
 	for id in targets:
@@ -2100,7 +1812,7 @@ func _valid_islands(data: Dictionary) -> bool:
 				continue
 			if float(data["quest_progress"][id]) != 0.0:
 				return false
-		for key in ["seed_inventory", "storage", "mastery"]:
+		for key in ["seed_inventory", "storage"]:
 			if int(data[key]["sunburst"]) > 0:
 				return false
 	if data.has("mechanics_revision"):
@@ -2133,7 +1845,7 @@ func _valid_islands(data: Dictionary) -> bool:
 			for id in ["winter_ground", "winter_harvest", "winter_frost"]:
 				if float(data["quest_progress"][id]) != 0.0:
 					return false
-			for key in ["seed_inventory", "storage", "mastery"]:
+			for key in ["seed_inventory", "storage"]:
 				if int(data[key]["icecap"]) > 0:
 					return false
 	return true
@@ -2164,7 +1876,7 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 		var saved_grow: float = float(OLD_GROW_TIMES[plot.crop]) if int(data.get("mechanics_revision", 0)) < 14 else float(CROPS[plot.crop].grow)
 		if not plot.has("elapsed") or not _number(plot["elapsed"], 0.0, saved_grow):
 			return false
-		if not plot.has("pending") or not _number(plot["pending"], 0.0, 1000000000.0, true):
+		if not plot.has("pending") or not _number(plot["pending"], 0.0, 100000.0, true):
 			return false
 		var expected_unlocked: bool = index < 12 or int(data["expansion"]) == 1
 		if island == 2:
@@ -2188,7 +1900,7 @@ func _valid_plots(raw: Variant, island: int, data: Dictionary, legacy: bool = fa
 				return false
 		if int(data.get("mechanics_revision", 0)) >= 4:
 			for key in ["pest_ticks", "yield_total", "yield_taken"]:
-				if not plot.has(key) or not _number(plot[key], 0.0, 3.0 if key == "pest_ticks" else 1000000000.0, true):
+				if not plot.has(key) or not _number(plot[key], 0.0, 3.0 if key == "pest_ticks" else 100000.0, true):
 					return false
 			if not plot.has("pest_elapsed") or not _number(plot["pest_elapsed"], 0.0, PEST_TICK_SECONDS):
 				return false

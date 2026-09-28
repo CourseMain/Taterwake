@@ -9,7 +9,6 @@ const PestAlert = preload("res://scripts/pest_alert.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
 const FarmViewport = preload("res://scripts/farm_viewport.gd")
-const PurchaseReview = preload("res://scripts/purchase_review.gd")
 const WALK_SPEED: float = 7.0
 const SPRINT_MULTIPLIER: float = 1.65
 const NO_TILES: Array[int] = []
@@ -133,10 +132,8 @@ func _ready() -> void:
 	state.purchase_completed.connect(_on_purchase_completed)
 	state.purchase_rejected.connect(_on_purchase_rejected)
 	state.reward_received.connect(_on_reward)
-	state.harvest_chain.connect(_on_chain)
 	state.island_changed.connect(_on_island_changed)
 	state.export_changed.connect(_on_export_changed)
-	state.blind_resolved.connect(_on_blind_resolved)
 	state.run_ended.connect(_on_run_ended)
 	state.climate_changed.connect(_on_climate_changed)
 	_setup_sound()
@@ -253,7 +250,7 @@ func _process(delta: float) -> void:
 					if float(state.ClimateSystem.Operations.local(state).can) > before_water:
 						world._climate_field.loop.refill_time = 1.6
 						_close_equipment()
-					_save_blind_checkpoint.call_deferred()
+					_save_checkpoint.call_deferred()
 				elif not walking and pending_plot >= 0:
 					perform_plot(pending_plot, pending_tool)
 					pending_plot = -1
@@ -301,7 +298,7 @@ func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 func _simulation_delta(delta: float) -> float:
 	if not is_finite(delta) or delta <= 0.0:
 		return 0.0
-	# Debug is a workbench: editing a test setup must not spend a tax cycle,
+	# Debug is a workbench: editing a test setup must not advance weather,
 	# especially when the previous scenario left accelerated time enabled.
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
@@ -317,8 +314,6 @@ func _advance_simulation(delta: float) -> void:
 	var remaining: float = delta
 	while remaining >= 0.000001:
 		var step: float = remaining
-		if float(state.blind_cycle.due_in) > 0.0:
-			step = minf(step, float(state.blind_cycle.due_in))
 		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
 		state.update(step)
 		if state.run_over:
@@ -492,7 +487,6 @@ func _interact_station(station: String) -> void:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
-	if is_instance_valid(hud._purchase_review) and hud._purchase_review.visible: return
 	if conversation.visible: return
 	if action in ["market", "sell_potatoes"]:
 		# Market tabs navigate the same shop session; they are not NPC visits.
@@ -524,12 +518,12 @@ func _start_conversation(id: String, requested_service: String = "") -> void:
 	hud._climate_alert.dismiss()
 	farm_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	conversation.start(id, state, return_service, touch_controls.enabled)
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 
 func _finish_conversation(service: String) -> void:
 	farm_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	touch_controls.release_all()
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 	if not service.is_empty(): _on_action(service)
 	else: hud.update_state(state)
 
@@ -718,7 +712,7 @@ func queue_plot(index: int) -> void:
 		return
 	hud.note_farm_action()
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
-		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1.8K")
+		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1,200")
 		return
 	pending_ferry = false
 	pending_plot = index
@@ -762,7 +756,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		hud.clear_farm_hint()
 		if tool == "harvest" and state.storage_used() >= state.capacity:
 			hud.show_farm_hint("Barn full · Sell crops [F]")
-		world.play_farm_effect(changed_indices, action, state.combo_multiplier, int(state.tools.get("hoe" if action == "plant" else action, 0)), harvest_snapshots)
+		world.play_farm_effect(changed_indices, action, int(state.tools.get("hoe" if action == "plant" else action, 0)), harvest_snapshots)
 	if _tutorial_active():
 		tutorial.update(0.0)
 
@@ -955,7 +949,7 @@ func _climate_choose(index: int) -> void:
 	world.set_climate(state.climate_info())
 	hud.show_farm_hint(result)
 	hud.update_state(state)
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 
 func _climate_action(action: String) -> void:
 	if action == "open_furnace":
@@ -1007,11 +1001,10 @@ func _climate_action(action: String) -> void:
 	world.set_climate(state.climate_info())
 	_preview_area(-1, selected_tool)
 	hud.update_state(state)
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 
-func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
+func _on_action(action: String) -> void:
 	if is_instance_valid(conversation) and conversation.visible: return
-	if is_instance_valid(hud._purchase_review) and hud._purchase_review.visible: return
 	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu"] and not action.begins_with("graphics"):
 		state.ClimateSystem.Lesson.finish(state)
 		climate_target = ""
@@ -1025,7 +1018,7 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 		hud._climate_alert.dismiss()
 		hud._climate_intro.stop()
 		_on_user_action("climate")
-		_save_blind_checkpoint.call_deferred()
+		_save_checkpoint.call_deferred()
 		return
 	if state.run_over and action not in ["reset", "debug", "close"] and not action.begins_with("debug:"):
 		return
@@ -1041,15 +1034,6 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 	if _tutorial_active() and not tutorial.allows_action(action):
 		tutorial.explain_block()
 		return
-	var purchase_cost: float = PurchaseReview.cost_for(self, action)
-	if purchase_cost >= 0.0:
-		var quote: Dictionary = state.purchase_quote(purchase_cost)
-		quote.cost = purchase_cost
-		quote.island = state.current_island
-		# Requote at confirmation: prices, taxes and the available allowance may change.
-		if not quote.affordable or (quote != approved_quote and (quote.near_limit or not approved_quote.is_empty())):
-			hud.show_purchase_review(quote, func(): _on_action(action, quote), not approved_quote.is_empty())
-			return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
 		"talk":
@@ -1060,7 +1044,7 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "blinds", "taxes", "climate", "debt":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "climate":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1087,16 +1071,11 @@ func _on_action(action: String, approved_quote: Dictionary = {}) -> void:
 		"climate_operate":
 			if parts.size() == 2:
 				_climate_action(parts[1])
-				_save_blind_checkpoint.call_deferred()
-		"recovery":
-			if parts.size() != 2: return
-			if parts[1] == "deliver": state.deliver_recovery()
-			elif parts[1] == "seeds": state.claim_recovery_seeds()
-			_save_blind_checkpoint.call_deferred()
+				_save_checkpoint.call_deferred()
 		"climate_fund":
 			if parts.size() == 2:
 				state.climate.fund(state, parts[1])
-				_save_blind_checkpoint.call_deferred()
+				_save_checkpoint.call_deferred()
 
 		"island_unlock": state.unlock_island2()
 		"island3_unlock": state.unlock_island3()
@@ -1169,13 +1148,7 @@ func _on_climate_changed(phase: String) -> void:
 	if phase == "impact" and info.island == state.current_island:
 		climate_shake = 0.22 if info.event != "drought" else 0.08
 	world.set_climate(info)
-	_save_blind_checkpoint.call_deferred()
-
-func _on_blind_resolved(result: Dictionary) -> void:
-	if not state.run_over:
-		hud.show_toast("TAX %s · %s\nCollected %s · Balance %s" % ["PAID" if result.cleared else "BORROWED", state.blind_progress_text(result.ratio), state.money(result.tax, true), state.money(result.after, true)])
-		_play_tone(1046.5, 0.35)
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 
 func _on_run_ended() -> void:
 	_cancel_walk()
@@ -1186,9 +1159,9 @@ func _on_run_ended() -> void:
 	world.camera.h_offset = 0.0
 	world.camera.v_offset = 0.0
 	_play_tone(130.81, 0.65)
-	_save_blind_checkpoint.call_deferred()
+	_save_checkpoint.call_deferred()
 
-func _save_blind_checkpoint() -> void:
+func _save_checkpoint() -> void:
 	if not test_mode:
 		state.save_game()
 
@@ -1220,11 +1193,6 @@ func _on_pest_warning(_index: int, destroyed: bool) -> void:
 		return
 	if is_instance_valid(pest_alert):
 		pest_alert.notify_attack(destroyed)
-
-func _on_chain(count: int, multiplier: int) -> void:
-	# The rising streak note layers over the potato's pull/pop foley.
-	if count > 0:
-		_play_tone(400.0 + float(multiplier) * 40.0, 0.25)
 
 func _tutorial_active() -> bool:
 	return is_instance_valid(tutorial) and tutorial.active
@@ -1353,8 +1321,6 @@ func _update_equipment_card(delta: float = 0.0) -> void:
 		# Keep the connected beds visible: card occupies the margin beside the farm.
 		var left: float = clampf(minf(screen.x - card.size.x - 24, field_left - card.size.x - 18), 12, view.x - card.size.x - 12)
 		var minimum_top: float = 112.0
-		if hud._blind_card.visible and left < hud._blind_card.get_global_rect().end.x:
-			minimum_top = maxf(minimum_top, hud._blind_card.get_global_rect().end.y + 12)
 		var maximum_top: float = view.y - card.size.y - 110
 		if minimum_top > maximum_top:
 			left = view.x - card.size.x - 22

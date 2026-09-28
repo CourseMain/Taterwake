@@ -307,8 +307,6 @@ func refresh() -> void:
 	if hud._refs.get("shop_page") != self: return
 	if not barn:
 		_wallet.text = "Balance " + hud._money(float(hud._state.coins))
-		if hud._state.has_method("has_tax_credit") and hud._state.has_tax_credit():
-			_wallet.text += " · Available on account " + hud._money(hud._state.purchase_credit())
 		for tool: String in _levels:
 			_levels[tool].text = "LEVEL %d" % int(hud._state.tools.get(tool, 0))
 		return

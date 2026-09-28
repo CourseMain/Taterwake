@@ -1,6 +1,6 @@
 extends RefCounted
 ## Saved, optional help. No action locks and no paused simulation.
-const TIP_IDS: Array[String] = ["repeat", "pests", "taxes", "debt", "tools", "ducks"]
+const TIP_IDS: Array[String] = ["repeat", "pests", "tools", "ducks"]
 var data: Dictionary = fresh()
 
 static func fresh() -> Dictionary:
@@ -71,16 +71,12 @@ func tip(farm: Node) -> Dictionary:
 	if int(data.pest_phase) == 1 and unseen("pests"):
 		return _tip("pests", "Pests on your potatoes", "Press 5, then click an infested bed. This first group cannot damage crops. Later pests eat a third every 5 seconds.", "Equip sprayer [5]", "tool:pest")
 
-	if farm.coins < 0.0 and unseen("debt"):
-		return _tip("debt", "Debt is still playable", "Buy farm supplies on credit down to %s. Deliver potatoes to pay down debt." % farm.money(farm.bankruptcy_limit()), "Recovery orders", "debt")
-	if unseen("taxes") and float(farm.blind_cycle.due_in) > 0.0:
-		return _tip("taxes", "Keep money for taxes", "A tax bill is due. Sell potatoes before collection. Forecast: %s. Debt is allowed down to %s." % [farm.money(farm.blind_info().tax), farm.money(farm.bankruptcy_limit())], "View forecast", "taxes")
 	if int(data.independent) < 4:
 		if unseen("repeat"):
 			return _tip("repeat", "Next harvest", "Hoe → plant → water → harvest → sell.", "Go farming", "dismiss")
 		return {}
 	if unseen("ducks") and is_instance_valid(farm.activity_system) and farm.activity_system.duck_count() == 0 and farm.coins >= farm.activity_system.duck_hire_cost():
-		return _tip("ducks", "A helper you can afford", "Duck Patrol can clear pests while you farm. Hiring costs %s. Keep enough for seeds and taxes." % farm.money(farm.activity_system.duck_hire_cost()), "Browse Duck Patrol", "duck_patrol")
+		return _tip("ducks", "A helper you can afford", "Duck Patrol can clear pests while you farm. Hiring costs %s. Keep enough for seeds." % farm.money(farm.activity_system.duck_hire_cost()), "Browse Duck Patrol", "duck_patrol")
 	if unseen("tools"):
 		for tool: String in ["hoe", "water", "harvest"]:
 			var rank: int = int(farm.tools[tool])

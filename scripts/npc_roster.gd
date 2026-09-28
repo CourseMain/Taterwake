@@ -58,18 +58,17 @@ const PEOPLE := {
 		"reply":"I'm glad you're here.", "answer":"Well. Someone has to be. Warm yourself up before you go.",
 		"help":"How do I thaw frozen crops?", "advice":"Open the furnace and heat your hoe. Then use the Hoe on frozen beds before its heat runs out. I'll heat it again for free if you need another trip.",
 		"thanks":"Saved you a spot by the fire. Don't make a fuss about it.", "weather":"Beds iced over? Heat your hoe here, then get back to them before it cools."},
-	"edwin": {"name":"Edwin", "role":"Tax collector", "service":"taxes", "service_label":"Review the tax bill", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
+	"edwin": {"name":"Edwin", "role":"Village clerk", "service":"quests", "service_label":"Visit the quest board", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
 		"first":"Afternoon. Edwin. I've brought the figures. Shall we go through them?",
 		"daily":["I hope I'm not catching you at a bad time. I do seem to have a talent for it.", "Nell lent me a dry folder. I'd like to return it in the same condition."],
-		"topic":"Do people mind you visiting?", "story":"Some do. I understand. I try to explain the figures properly. My mother says I should ask about people's day before mentioning the bill.",
+		"topic":"Do people mind you visiting?", "story":"Some do. I understand. I try to explain the figures properly. My mother says I should ask about people's day before mentioning the paperwork.",
 		"reply":"Well, how was your day?", "answer":"Oh. Quite nice, actually. Thank you for asking. I saw ducklings by the pier.",
-		"help":"How do these bills work?", "advice":"The tax panel shows your next bill and the time left. Check the forecast before spending a big harvest. Any recovery relief appears in your figures.",
-		"thanks":"Afternoon. How's your day been? See—I'm learning.", "weather":"I saw the damage coming in. I'm sorry. Let's check what recovery relief applies."}
+		"help":"What needs doing?", "advice":"The quest board has a few jobs. Every completed job pays a hundred Spudions.",
+		"thanks":"Afternoon. How's your day been? See—I'm learning.", "weather":"I saw the damage coming in. I'm sorry. Let's see who needs help."}
 }
 
 static func for_station(station: String, island: int) -> String:
 	if station == "activities": return "oren" if island == 3 else "tess" if island == 2 else "pip"
-	if station == "blinds": return "edwin"
 	for id: String in PEOPLE:
 		if PEOPLE[id].service == station: return id
 	return ""
@@ -89,7 +88,7 @@ static func greeting(id: String, state, record: bool = false) -> String:
 	if weather: line = p.weather
 	if line == str(memory.get("last", "")): line = str(pool[visits % pool.size()])
 	if record:
-		state.npc_history[id] = {"visits":mini(visits + 1, 1000000), "last":line, "kind":bool(memory.get("kind", false))}
+		state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false))}
 	return line
 
 static func weather_line(id: String, state) -> String:
@@ -109,6 +108,6 @@ static func valid_history(raw: Variant) -> bool:
 		if not PEOPLE.has(id) or not raw[id] is Dictionary: return false
 		var m: Dictionary = raw[id]
 		var visits: Variant = m.get("visits")
-		if not (visits is int or visits is float) or not is_finite(float(visits)) or visits < 0 or visits > 1000000 or float(visits) != floorf(float(visits)): return false
+		if not (visits is int or visits is float) or not is_finite(float(visits)) or visits < 0 or visits > 100000 or float(visits) != floorf(float(visits)): return false
 		if not m.get("kind") is bool or not m.get("last") is String or m.last.length() > 600: return false
 	return true

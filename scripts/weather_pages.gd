@@ -55,7 +55,7 @@ func setup(owner_hud) -> void:
 	_metrics.columns = 3
 	_metrics.add_theme_constant_override("h_separation", 18)
 	status.add_child(_metrics)
-	for entry: Array in [["water","TANK"],["tax","RECOVERY TAX"]]:
+	for entry: Array in [["water","TANK"]]:
 		var col : VBoxContainer = hud._vbox(4)
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_metrics.add_child(col)
@@ -75,7 +75,7 @@ func setup(owner_hud) -> void:
 	for words: String in ["", "CROPS", "BARN", "TAX"]: _protection.add_child(_label(words, 11, MUTED))
 	for event: String in (["drought","flood","storm","freeze"] if hud._island_id() == 3 else ["drought","flood","storm"]):
 		_protection.add_child(_label(event.capitalize(), 14, WHITE))
-		for metric: String in ["field", "barn", "tax"]:
+		for metric: String in ["field", "barn"]:
 			_values[event + metric] = _label("", 14, WHITE)
 			_protection.add_child(_values[event + metric])
 	add_child(_label("EQUIPMENT", 12, CYAN))
@@ -113,7 +113,6 @@ func setup(owner_hud) -> void:
 		hud._refs.climate_practice = _button("Water practice", "climate_operate:lesson_start")
 		actions.add_child(hud._refs.climate_practice)
 	else: actions.add_child(_button("Heat thawing hoe", "climate_operate:heat_hoe"))
-	actions.add_child(_button("Tax forecast", "taxes"))
 	# Optional reference for the duration of each weather phase.
 	var details: VBoxContainer = hud._details_section("climate_details", "weather timings")
 	hud._refs.climate_details.reparent(self)
@@ -163,19 +162,18 @@ func refresh() -> void:
 	if info.phase == "recovery": hud._refs.climate_status.text = "Recovering · %ds" % ceili(info.timer)
 	var alerts := {"drought":"Water dry beds", "flood":"Open drainage gates", "storm":"Harvest the lightning row", "freeze":"Heat the hoe to thaw crops"}
 	hud._refs.climate_market.visible = info.phase != "calm"
-	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Next tax " + farm.money(farm.blind_info().tax)
+	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Prepare before the next weather warning."
 	_values.water.text = "%d / %d" % [int(info.supply.water), int(info.water_capacity)]
-	_values.tax.text = "+%d%%" % roundi(float(info.pressure) * 100.0)
 	for event: String in ["drought", "flood", "storm", "freeze"]:
-		for metric: String in ["field", "barn", "tax"]:
+		for metric: String in ["field", "barn"]:
 			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event, hud._island_id(), metric)*100)
 	for id: String in farm.ClimateSystem.PROJECTS:
 		var level: int = int(info.projects[str(hud._island_id())].get(id, 0))
 		var full: bool = level >= farm.ClimateSystem.MAX_PROJECT_LEVEL
-		var cost: float = float(farm.BlindRules.PROGRESSION_BASELINES[2 if id == "irrigation" else hud._island_id()]) * float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
+		var cost: float = float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
 		var stats := {"irrigation":"4 water / patch" if full else ("6 → 4 water / patch" if level == 1 else "3 patches · 6 water each"), "rainwater":"%d water capacity" % int(info.water_capacity) if full else "%d → %d water capacity" % [int(info.water_capacity), int(info.water_capacity)+36], "drainage":"Flood: −30% crop damage / level", "barn":"−35% stored crop loss / level", "windbreaks":"Shelters far beds · wind only"}
 		hud._refs["climate_effect:" + id].text = stats[id]
-		hud._set_purchase_button("climate_fund:" + id, "Fully upgraded" if full else farm.purchase_caption(("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost), cost), cost, full)
+		hud._set_purchase_button("climate_fund:" + id, "Fully upgraded" if full else (("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost)), cost, full)
 	if hud._refs.has("climate_practice"):
 		hud._refs.climate_practice.disabled = int(info.projects["2"].get("irrigation", 0)) == 0
 func _layout() -> void:
