@@ -52,7 +52,7 @@ func _snapshot() -> Dictionary:
 		"capacity": state.capacity, "barn": state.barn_level, "expansion": state.expansion,
 		"island2": state.island2_unlocked, "island3": state.island3_unlocked,
 		"plots": state.island_plots.duplicate(true), "duck_level": activities.duck_level,
-		"cooldown": builds.cooldown, "scout": builds.next_roll_charge,
+		"cooldown": builds.cooldown,
 		"event": state.current_event, "event_remaining": state.event_remaining}
 
 func _clear_signals() -> void:
@@ -172,8 +172,8 @@ func _test_tools_and_space() -> void:
 	state.coins = 100000.0
 	state._grant_item("winter_weave")
 	var old_capacity: int = state.capacity
-	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 210, 500.0, "barn with capacity equipment")
-	check(state.capacity - old_capacity == 210 and int(receipt.get("total", -1)) == state.capacity, "barn receipt reports actual capacity gain including owned upgrades")
+	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 240, 500.0, "barn with capacity equipment")
+	check(state.capacity - old_capacity == 240 and int(receipt.get("total", -1)) == state.capacity, "barn receipt reports actual capacity gain including owned upgrades")
 	state.barn_level = 20
 	state._recompute_capacity()
 	_failure(func(): return state.upgrade_barn(), "maximum barn")
@@ -196,7 +196,7 @@ func _test_islands() -> void:
 	_failure(func(): return state.unlock_island2(), "island two money gate")
 	state.coins += 1.0
 	_success(func(): return state.unlock_island2(), "island", "2", 1, State.ISLAND2_UNLOCK_COST, "Golden Shores unlock")
-	check(state.island2_unlocked and state.island_plots["2"].all(func(plot: Dictionary): return bool(plot.unlocked)), "Golden Shores receipt follows all 48 beds unlocking")
+	check(state.island2_unlocked and state.island_plots["2"].filter(func(plot: Dictionary): return bool(plot.unlocked)).size() == 24, "Golden Shores receipt follows 24 starter beds unlocking")
 	_failure(func(): return state.unlock_island2(), "duplicate island two unlock")
 	state.coins = State.ISLAND3_UNLOCK_COST
 	_failure(func(): return state.unlock_island3(), "winter harvest gate")
@@ -208,7 +208,7 @@ func _test_islands() -> void:
 	_failure(func(): return state.unlock_island3(), "winter money gate")
 	state.coins += 1.0
 	_success(func(): return state.unlock_island3(), "island", "3", 1, State.ISLAND3_UNLOCK_COST, "Frosthollow unlock")
-	check(state.island3_unlocked and state.island_plots["3"].all(func(plot: Dictionary): return bool(plot.unlocked)), "Frosthollow receipt follows all 80 beds unlocking")
+	check(state.island3_unlocked and state.island_plots["3"].filter(func(plot: Dictionary): return bool(plot.unlocked)).size() == 40, "Frosthollow receipt follows 40 starter beds unlocking")
 	_failure(func(): return state.unlock_island3(), "duplicate winter unlock")
 
 func _test_ducks_and_services() -> void:

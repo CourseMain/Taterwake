@@ -114,18 +114,6 @@ func _run() -> void:
 	state.unequip_gear("body")
 	check(is_equal_approx(state.market.russet.sell, base_quote), "stock clothing stops affecting prices when removed")
 	state.reset_game()
-	var ordinary_odds: float = state.roll_odds()[0].chance
-	var ordinary_mutation: float = state.mutation_chance("russet")
-	state._grant_item("gambler_shirt")
-	check(is_equal_approx(state.effective_luck(), 1.35) and state.roll_odds()[0].chance < ordinary_odds and state.mutation_chance("russet") > ordinary_mutation, "equipped luck clothing improves real odds and mutations")
-	state.unequip_gear("body")
-	check(is_equal_approx(state.effective_luck(), 1.0) and is_equal_approx(state.roll_odds()[0].chance, ordinary_odds), "stored luck clothing grants no power")
-	state.equip_gear("gambler_shirt")
-	state._grant_item("aurora_crown")
-	state._grant_item("loaded_dice")
-	state.luck = 9.9
-	check(state.effective_luck() == 10.0, "all equipped luck still obeys the10x effective cap")
-	state.reset_game()
 	builds.levels.industrialist = 1
 	builds.select_build("industrialist")
 	state._grant_item("industrialist_overalls")
@@ -178,7 +166,7 @@ func _run() -> void:
 			"missing_equipment": malformed.erase("equipment")
 		check(not state._valid_save(malformed), "strict saved equipment rejects " + error_kind)
 	state.reset_game()
-	for id in ["straw_hat", "lucky_cap", "traders_visor", "prospectors_hat", "aurora_crown", "harvest_gloves", "market_monocle", "loaded_dice"]:
+	for id in ["straw_hat", "patchwork_cap", "traders_visor", "prospectors_hat", "aurora_crown", "harvest_gloves", "market_monocle", "loaded_dice"]:
 		state._grant_item(id)
 	state.coins = 987654.0
 	state.mastery.russet = 132
@@ -194,17 +182,11 @@ func _run() -> void:
 	check(state.equipment_loadout().body == "" and state.inventory_items.farmer_shirt == 0 and state.inventory_items.straw_hat == 1 and state.coins == 987654.0 and state.mastery.russet == 132, "migration preserves ownership and progress without granting new clothes")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "migrated equipment farm remains valid when resaved")
 	state.reset_game()
-	var seeds: Dictionary = state.seed_inventory.duplicate(true)
-	for _index in range(500):
-		state._grant_roll_reward("rare", 200.0)
-		state._grant_roll_reward("epic", 200.0)
 	for id in State.ITEM_CATALOG:
-		if State.ITEM_CATALOG[id].has("role"):
-			check(int(state.inventory_items[id]) > 0, "real gacha pool can award clothing: " + id)
-	check(state.seed_inventory == seeds, "expanded clothing pool still awards no seeds")
+		if State.ITEM_CATALOG[id].get("kind") == "gear": state._grant_item(id)
 	for slot in State.EQUIPMENT_SLOTS:
 		state.unequip_gear(slot)
-	check(state.equipment_bonus("yield") == 0.0 and state.equipment_bonus("luck") == 0.0 and state.equipment_processing_factor() == 1.0 and state.item_stock_factor() == 1.0, "a full inventory of unequipped clothes grants no hidden bonuses")
+	check(state.equipment_bonus("yield") == 0.0 and state.equipment_processing_factor() == 1.0 and state.item_stock_factor() == 1.0, "a full inventory of unequipped clothes grants no hidden bonuses")
 	state.reset_game()
 	for slot in state.equipment_info():
 		check(slot.empty, "new-game reset clears " + str(slot.slot))

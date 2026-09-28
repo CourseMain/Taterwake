@@ -58,15 +58,6 @@ func _run() -> void:
 	root.add_child(builds)
 	state.rng.seed = 59267
 	var seeds: Dictionary = state.seed_inventory.duplicate(true)
-	for tier in ["common", "rare", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]:
-		for _index in range(80):
-			var result: Dictionary = state._grant_roll_reward(tier, 200.0)
-			check(result.tier == tier and not str(result.detail).is_empty(), "reward is defined for " + tier)
-		check(state.seed_inventory == seeds, "no gacha seeds, including duplicate caps, for " + tier)
-	check(state.inventory_items.size() == State.ITEM_CATALOG.size(), "every passive collectible and wearable has an inventory entry")
-	for id in state.ITEM_CATALOG:
-		check(int(state.inventory_items[id]) <= int(state.ITEM_CATALOG[id].max_count), "collection cap respected: " + id)
-	check(builds.build_crates > 0, "seed removal preserves sealed build crate drops")
 	state.reset_game()
 	var quote: float = state.market.russet.sell
 	var seed_price: float = state.market.russet.seed
@@ -95,15 +86,6 @@ func _run() -> void:
 	state._refresh_market()
 	check(is_equal_approx(state.market.russet.sell, quote * 1.40), "surge expiry returns to ordinary quote with equipped gear bonus")
 	state.reset_game()
-	var odds_before: float = state.roll_odds()[0].chance
-	var mutation_before: float = state.mutation_chance("russet")
-	var event_before: float = state.luck_stock_chance()
-	state._grant_item("lucky_cap")
-	check(is_equal_approx(state.effective_luck(), 1.25), "equipped cap adds effective luck")
-	check(state.roll_odds()[0].chance < odds_before and state.mutation_chance("russet") > mutation_before and state.luck_stock_chance() > event_before, "luck gear changes roll odds, mutations and positive events")
-	state.luck = 9.9
-	state._grant_item("loaded_dice")
-	check(state.effective_luck() == 10.0, "base plus gear luck remains capped at 10x")
 	state._grant_item("straw_hat")
 	state._grant_item("harvest_gloves")
 	state.equip_gear("straw_hat")
@@ -115,56 +97,20 @@ func _run() -> void:
 	for item in state.inventory_info():
 		if item.kind == "gear":
 			gear_count += 1
-	check(gear_count == 5, "gear is present with images and stats in full inventory")
+	check(gear_count == 3, "gear is present with images and stats in full inventory")
 	state.reset_game()
 	state.inventory_items.straw_hat = 10
 	var before_coins: float = state.coins
 	seeds = state.seed_inventory.duplicate(true)
-	state._grant_item("straw_hat", 40.0)
-	check(state.coins == before_coins + 40.0 and state.seed_inventory == seeds and state.inventory_items.straw_hat == 10, "capped gear gives stake-based coin salvage without seeds or extra buff")
 	state._grant_item("straw_hat")
-	check(state.coins == before_coins + 40.0, "non-gacha duplicate cannot mint a refund")
-	state.reset_game()
-	state.coins = 1.0e18
-	var rng_before: int = state.rng.state
-	check(state.roll_batch("normal", 3).is_empty() and state.rng.state == rng_before and state.roll_count == 0, "multi-roll is unavailable on Island 1 without advancing RNG")
-	winter(state)
-	check(state.roll_batch_cost("normal", 3) == state.roll_cost("normal") * 3.0 and state.roll_batch_cost("big", 5) == state.roll_cost("big") * 5.0, "winter batch costs equal exact fixed stake count")
-	check(state.roll_batch("all_in", 3).is_empty() and state.roll_batch("normal", 2).is_empty() and state.roll_count == 0, "all-in and invalid batch sizes rejected")
-	state.coins = state.roll_cost("normal") * 2.0
-	before_coins = state.coins
-	rng_before = state.rng.state
-	check(state.roll_batch("normal", 3).is_empty() and state.coins == before_coins and state.rng.state == rng_before, "insufficient batch funds consume no coins or RNG")
-	state.coins = state.roll_cost("normal") * 100.0
-	state.rng.seed = 72401
-	var before: Dictionary = state._save_data().duplicate(true)
-	var reentrant: Array[bool] = []
-	state.changed.connect(func(): reentrant.append(state.roll_batch("normal", 3).is_empty()), CONNECT_ONE_SHOT)
-	var batch: Array[Dictionary] = state.roll_batch("normal", 5)
-	check(batch.size() == 5 and state.roll_count == 5 and reentrant == [true], "batch settles exactly five rewards and prevents reentrant purchases")
-	for result in batch:
-		var total: float = 0.0
-		for entry in result.odds:
-			total += float(entry.chance)
-		check(is_equal_approx(total, 100.0) and result.bet == state.roll_cost("normal"), "each actual batch reward includes normalized odds and correct stake")
-	var expected_coins: float = state.coins
-	var expected_items: Dictionary = state.inventory_items.duplicate(true)
-	write_save(before)
-	check(state.load_game(SAVE), "batch comparison fixture restores safely")
-	for _index in range(5):
-		state.roll("normal")
-	var same_items: bool = true
-	for id in state.ITEM_CATALOG:
-		same_items = same_items and int(state.inventory_items[id]) == int(expected_items[id])
-	check(state.coins == expected_coins and same_items and state.roll_count == 5, "multi-roll economy matches five individually purchased rolls exactly")
-	state.travel_to(2)
-	state.climate.acknowledge(state)
-	check(not state.roll_available() and state.roll_batch("normal", 3).is_empty(), "retired earlier roll houses cannot provide cheap batches")
+	check(state.coins == before_coins and state.seed_inventory == seeds and state.inventory_items.straw_hat == 10, "capped gear preserves money, seeds and ownership")
+	state._grant_item("straw_hat")
+	check(state.coins == before_coins, "non-gacha duplicate cannot mint a refund")
 	state.reset_game()
 	state._grant_item("traders_visor")
-	state._grant_item("lucky_cap")
-	state.equip_gear("lucky_cap")
-	check(state.save_game(SAVE) and state.load_game(SAVE) and state.inventory_items.traders_visor == 1 and is_equal_approx(state.effective_luck(), 1.25), "equipped gear and its effective bonuses survive save/load")
+	state._grant_item("patchwork_cap")
+	state.equip_gear("patchwork_cap")
+	check(state.save_game(SAVE) and state.load_game(SAVE) and state.inventory_items.traders_visor == 1 and state.equipment.head == "patchwork_cap", "equipped gear and its effective bonuses survive save/load")
 	var old_save: Dictionary = state._save_data().duplicate(true)
 	old_save.mechanics_revision = 4
 	old_save.erase("equipment")
@@ -172,9 +118,9 @@ func _run() -> void:
 		if state.ITEM_CATALOG[id].get("kind", "") == "gear":
 			old_save.inventory_items.erase(id)
 	write_save(old_save)
-	check(state.load_game(SAVE) and state.inventory_items.size() == State.ITEM_CATALOG.size() and state.inventory_items.lucky_cap == 0, "old eight-collectible farms load with new gear initially unowned")
+	check(state.load_game(SAVE) and state.inventory_items.size() == State.ITEM_CATALOG.size() and state.inventory_items.patchwork_cap == 0, "old eight-collectible farms load with new gear initially unowned")
 	var malformed: Dictionary = state._save_data().duplicate(true)
-	malformed.inventory_items.lucky_cap = 999
+	malformed.inventory_items.patchwork_cap = 999
 	check(not state._valid_save(malformed), "invalid gear counts rejected by save validation")
 	state.reset_game()
 	winter(state)
@@ -202,5 +148,5 @@ func _run() -> void:
 	activity.free()
 	builds.free()
 	state.free()
-	print("SPUD GEAR + BATCH REWARDS: %d checks, %d failures" % [checks, failures])
+	print("SPUD GEAR: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures > 0 else 0)

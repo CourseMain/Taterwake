@@ -44,7 +44,6 @@ func run() -> void:
 	farm.expand_field()
 	check(farm.expansion == 1 and farm.coins == before-1800,"field expansion accepts debt")
 	var rng_before: int = farm.rng.state
-	check(not farm.can_roll("normal") and farm.roll_batch("normal",3).is_empty() and farm.rng.state == rng_before,"casino still requires a cash stake")
 	farm.coins = farm.bankruptcy_limit() + seed_cost
 	farm.buy_seeds("russet",1)
 	check(is_equal_approx(farm.coins,farm.bankruptcy_limit()) and not farm.run_over,"exact credit limit is payable without bankruptcy")

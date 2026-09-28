@@ -19,6 +19,8 @@ func enter_shores() -> void:
 	farm.coins = State.ISLAND2_UNLOCK_COST
 	farm.mastery.russet = State.ISLAND2_UNLOCK_HARVEST
 	farm.unlock_island2()
+	farm.field_expansions["2"] = true
+	for bed in farm.island_plots["2"]: bed.unlocked = true
 	farm.travel_to(2)
 	farm.climate.acknowledge(farm)
 
@@ -40,7 +42,7 @@ func mutation_seed(chance: float) -> int:
 
 func legacy_data(schema: int = 3) -> Dictionary:
 	var data: Dictionary = farm._save_data().duplicate(true)
-	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "export_factor", "event_strength", "lifetime_sales", "island_sales", "pending_roll_boost", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
+	for key in ["economy_revision", "mechanics_revision", "export_cycle_sold", "export_qualified_cycles", "export_factor", "event_strength", "lifetime_sales", "island_sales", "island3_unlocked", "frost_timer", "frost_active", "frost_cleared", "frost_target_count", "thaw_remaining", "inventory_items"]: data.erase(key)
 	for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: data[key].erase("icecap")
 	data.island_plots.erase("3")
 	for field in data.island_plots.values():
@@ -49,7 +51,6 @@ func legacy_data(schema: int = 3) -> Dictionary:
 	for id in ["winter_ground", "winter_harvest", "winter_frost", "starter_crash", "starter_spike", "starter_combo"]: data.quest_progress.erase(id)
 	data.schema_version = schema
 	data.export_timer = 25.0 if data.export_active else 75.0
-	data.luck = 100.0
 	data.market_clock = 2.5
 	data.event_in = 45.0
 	var old_targets: Dictionary = {"ground": 12.0, "sunburst": 40.0, "combo": 16.0, "export": 1000000.0, "mutation": 1.0}
@@ -57,6 +58,9 @@ func legacy_data(schema: int = 3) -> Dictionary:
 	if schema == 2:
 		for key in ["seed_inventory", "storage", "mastery", "market", "market_core"]: data[key].erase("sunburst")
 		for key in ["current_island", "island2_unlocked", "island_plots", "shores_first_mutation", "export_timer", "export_active", "export_cycles", "quest_progress", "quest_claimed", "golden_hat"]: data.erase(key)
+	for island in ["2", "3"]:
+		if data.has("island_plots") and data.island_plots.has(island):
+			for bed in data.island_plots[island]: bed.unlocked = bool(data.get("island" + island + "_unlocked", false))
 	return data
 
 func _run() -> void:
@@ -76,15 +80,23 @@ func _run() -> void:
 	farm.coins = 1000000.0
 	farm.mastery.russet = 499
 	farm.unlock_island2()
+	farm.field_expansions["2"] = true
+	for bed in farm.island_plots["2"]: bed.unlocked = true
 	check(not farm.island2_unlocked and farm.coins == 1000000.0, "ferry needs five hundred potatoes actually harvested")
 	farm.mastery.russet = 500
 	farm.coins = 999999.0
 	farm.unlock_island2()
+	farm.field_expansions["2"] = true
+	for bed in farm.island_plots["2"]: bed.unlocked = true
 	check(not farm.island2_unlocked and farm.coins == 999999.0, "second island starts after reaching the million-coin gate")
 	farm.coins = 1100000.0
 	farm.unlock_island2()
+	farm.field_expansions["2"] = true
+	for bed in farm.island_plots["2"]: bed.unlocked = true
 	check(farm.island2_unlocked and farm.coins == 100000.0, "unlock charges one million exactly once")
 	farm.unlock_island2()
+	farm.field_expansions["2"] = true
+	for bed in farm.island_plots["2"]: bed.unlocked = true
 	check(farm.coins == 100000.0, "repeated unlock does not charge twice")
 	check(farm.export_timer >= 75.0 and farm.export_timer <= 180.0, "first export delay is a randomized seventy-five to one-hundred-eighty seconds")
 	var old_market: Dictionary = farm.market.duplicate(true)
@@ -225,44 +237,6 @@ func _run() -> void:
 	farm._market_core.sunburst.sell = 270000.0
 	for _index in range(100): farm._market_tick()
 	check(farm._market_core.sunburst.sell < 180000.0, "high underlying prices revert toward value instead of compounding forever")
-	var odds_sum: float = 0.0
-	var baseline_common: float = farm.roll_odds()[0].chance
-	farm.luck = 10.0
-	for entry in farm.roll_odds(): odds_sum += entry.chance
-	check(is_equal_approx(odds_sum, 100.0) and farm.roll_odds()[0].chance < baseline_common and farm.roll_odds()[5].chance > 1.0 and farm.roll_odds()[5].chance < 2.5, "displayed luck-adjusted roll probabilities total one hundred percent")
-	check(is_equal_approx(farm.luck_stock_chance(), 0.87), "maximum luck increases beneficial market-event odds to eighty-seven percent")
-	var lucky_mutation: float = farm.mutation_chance("russet")
-	farm.luck = 1.0
-	check(is_equal_approx(lucky_mutation, farm.mutation_chance("russet") * 10.0), "luck has its displayed real effect on mutation chance")
-	var favorable: Array[String] = ["shortage", "golden_craze", "mystery_buyer", "supply_collapse", "seed_fair", "festival"]
-	var positive_counts: Array[int] = [0, 0]
-	for luck_index in range(2):
-		farm.luck = 1.0 if luck_index == 0 else 10.0
-		farm.rng.seed = 9125
-		for _index in range(600):
-			farm._start_event()
-			if favorable.has(farm.current_event): positive_counts[luck_index] += 1
-	check(positive_counts[1] > positive_counts[0] + 90, "high luck produces more positive events in a deterministic independent sample")
-	farm._end_event()
-	farm.luck = 10.0
-	for _index in range(100): farm._grant_roll_reward("epic", 1.0e8)
-	check(farm.luck == 10.0 and farm.permanent_yield <= 2.0, "earned luck and new yield bonuses cannot exceed their progression caps")
-	farm.reset_game()
-	for stake in [200.0, 2000.0, 20000.0]:
-		farm.mutations.clear()
-		farm._grant_roll_reward("mythic", stake)
-		check(farm.barn_value() <= stake * 0.75 + 0.001, "mythic liquid reward cannot create an expected-profit roll/sell loop at stake " + str(stake))
-	farm.reset_game()
-	farm.tools = {"hoe": 2, "water": 2, "harvest": 2}
-	farm._grant_roll_reward("legendary", 20000.0)
-	check(farm.pending_roll_boost > 1.0 and farm.boost_remaining == 0.0, "legendary market bonus waits for roll animation reveal")
-	farm.update(3.5)
-	check(farm.pending_roll_boost > 1.0 and farm.boost_remaining == 0.0, "spinning reel cannot spend the short market bonus")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.pending_roll_boost > 1.0, "pending reveal bonus survives saving and loading")
-	farm.activate_roll_boost()
-	check(farm.pending_roll_boost == 0.0 and farm.boost_remaining == 5.0 and farm.market.russet.sell > farm._market_core.russet.sell, "reveal starts the promised five-second market bonus")
-	farm.update(5.01)
-	check(farm.boost_remaining == 0.0 and farm.boost_factor == 1.0, "roll market bonus expires completely after five seconds")
 	farm.reset_game()
 	enter_shores()
 	for index in range(48): farm.interact_plot(index, "hoe")
@@ -278,7 +252,6 @@ func _run() -> void:
 			ready_crop(index, "sunburst")
 			farm.interact_plot(index, "harvest")
 	check(farm.quest_progress.sunburst == 10000 and farm.quest_progress.combo == 48, "several complete manual fields finish ten-thousand-potato and full-field chain challenges")
-	farm.luck = 10.0
 	for index in range(2):
 		farm.rng.seed = mutation_seed(farm.mutation_chance("sunburst"))
 		ready_crop(index, "sunburst")
@@ -315,7 +288,7 @@ func _run() -> void:
 	balance = farm.coins
 	farm.claim_quest("export")
 	check(farm.coins == balance, "save/reload cannot pay completed quest twice")
-	for key in ["island_plots", "current_island", "quest_progress", "quest_claimed", "economy_revision", "export_factor", "event_strength", "lifetime_sales", "pending_roll_boost"]:
+	for key in ["island_plots", "current_island", "quest_progress", "quest_claimed", "economy_revision", "export_factor", "event_strength", "lifetime_sales"]:
 		var bad: Dictionary = snapshot.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
@@ -324,10 +297,6 @@ func _run() -> void:
 	bad.quest_claimed.append("export")
 	write_save(bad)
 	check(not farm.load_game(SAVE), "duplicate quest claims rejected")
-	bad = snapshot.duplicate(true)
-	bad.luck = 10.01
-	write_save(bad)
-	check(not farm.load_game(SAVE), "new saves cannot exceed ten-times luck")
 	bad = snapshot.duplicate(true)
 	bad.export_timer = 6.0
 	write_save(bad)
@@ -342,7 +311,7 @@ func _run() -> void:
 	old_v3.market_core.sunburst.sell = 9.0e16
 	write_save(old_v3)
 	check(farm.load_game(SAVE), "old version-three island saves migrate without deleting player progress")
-	check(farm.coins == balance and farm.luck == 10.0 and farm.golden_hat and farm.quest_claimed.size() == 5, "rebalance preserves existing coins and claimed rewards while applying luck cap")
+	check(farm.coins == balance and farm.golden_hat and farm.quest_claimed.size() == 5, "rebalance preserves existing coins and claimed rewards")
 	check(farm.export_timer <= 5.0 and farm.export_factor == 4.0 and farm._market_core.sunburst.sell == 270000.0 and is_equal_approx(farm.market.sunburst.seed, farm.seed_price_for(farm.market.sunburst.sell)), "old long peaks and disconnected prices normalize to the bounded linked economy")
 	farm.claim_quest("export")
 	check(farm.coins == balance and farm.save_game(SAVE) and farm.load_game(SAVE), "migrated claimed quests stay claimed and round-trip through current saves")
@@ -362,8 +331,6 @@ func _run() -> void:
 	check(not farm.save_game(State.LEGACY_SAVE_PATH), "original save backup cannot be overwritten")
 	farm.reset_game()
 	enter_shores()
-	farm._grant_roll_reward("mythic", 20000.0)
-	check(farm.quest_progress.mutation == 0 and not farm.shores_first_mutation, "roll rewards never count as farming discoveries")
 	farm.travel_to(1)
 	farm.climate.acknowledge(farm)
 	farm.interact_plot(4, "hoe")
@@ -389,8 +356,6 @@ func _run() -> void:
 	farm._start_event("supply_collapse")
 	farm.event_crop = "sunburst"
 	farm.event_strength = 16.0
-	farm.boost_remaining = 5.0
-	farm.boost_factor = 3.0
 	farm._toggle_export()
 	farm.export_factor = 6.0
 	farm._refresh_market()
@@ -399,37 +364,6 @@ func _run() -> void:
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "maximum capped market stack remains a valid save")
 	farm.reset_game()
 	farm.coins = 1.0e50
-	check(farm.stake_luck_bonus("all_in") > 500.0, "higher stakes keep increasing quality beyond the former five-hundred-percent cap")
-	for kind in ["normal", "big", "stupid", "all_in"]:
-		farm.luck = 1.0
-		var low_odds: Array = farm.roll_odds(kind)
-		farm.luck = 10.0
-		var high_odds: Array = farm.roll_odds(kind)
-		var total_probability: float = 0.0
-		var monotonic: bool = true
-		var low_tail: float = 0.0
-		var high_tail: float = 0.0
-		for index in range(high_odds.size()):
-			total_probability += float(high_odds[index].chance)
-		# Luck can replace a Rare with a Relic. Compare the chance of meeting
-		# each rarity threshold, rather than requiring Rare itself to increase.
-		for index in range(high_odds.size() - 1, 0, -1):
-			low_tail += float(low_odds[index].chance)
-			high_tail += float(high_odds[index].chance)
-			monotonic = monotonic and high_tail + 0.000001 >= low_tail
-		check(monotonic and is_equal_approx(total_probability, 100.0) and high_odds[5].chance < 2.5, "luck improves every rarity threshold while cash odds remain bounded at " + kind)
-	var expected_bonus: float = farm.stake_luck_bonus("all_in")
-	farm.roll("all_in")
-	check(is_equal_approx(farm.last_roll.stake_bonus, expected_bonus), "All-In snapshots its increased quality before charging the balance")
-	farm.reset_game()
-	enter_shores()
-	check(farm.roll_cost("normal") == 2000000.0 and farm.roll_available(), "Shores Roll House uses progression-scaled million-coin stakes")
-	farm.travel_to(1)
-	farm.climate.acknowledge(farm)
-	balance = farm.coins
-	var before_rolls: int = farm.roll_count
-	farm.roll("normal")
-	check(not farm.roll_available() and farm.roll_count == before_rolls and farm.coins == balance, "unlocking the next island retires older cheap Roll Houses")
 	farm.reset_game()
 	farm._grant_item("sunstone")
 	farm._grant_item("almanac")
@@ -490,6 +424,8 @@ func _run() -> void:
 	var pre_activity: Dictionary = farm._save_data().duplicate(true)
 	for key in ["mechanics_revision", "export_cycle_sold", "export_qualified_cycles"]: pre_activity.erase(key)
 	for id in ["starter_crash", "starter_spike", "starter_combo"]: pre_activity.quest_progress.erase(id)
+	for bed in pre_activity.island_plots["2"]: bed.unlocked = true
+	pre_activity.plots = pre_activity.island_plots[str(pre_activity.current_island)]
 	pre_activity.quest_progress.export = 50000000000.0
 	pre_activity.quest_claimed.append("export")
 	write_save(pre_activity)

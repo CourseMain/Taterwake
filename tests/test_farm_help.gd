@@ -145,8 +145,6 @@ func run() -> void:
 	state.coins = activities.duck_hire_cost()
 	check(state.farm_help.tip(state).id == "ducks", "duck help waits for an affordable helper")
 	state.farm_help.dismiss("ducks")
-	builds.build_crates = 1
-	check(state.farm_help.tip(state).id == "builds", "owned crate creates relevant build help")
 	var saved: Dictionary = state._save_data()
 	for invalid: Variant in [null, {}, {"enabled": true}, "bad"]:
 		var corrupt: Dictionary = saved.duplicate(true)

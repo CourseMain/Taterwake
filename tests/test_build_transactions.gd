@@ -261,7 +261,7 @@ func migration_and_rejections() -> void:
 	legacy.professions.fresh_count = 999
 	legacy.professions.fresh_left = 30
 	check(builds.load_data(legacy) and p.fresh_info("russet").count == 80 and p.data.wager.rerolled, "version 2 migrates legitimate stake, used charm and inventory-capped freshness")
-	check(builds.save_data().version == 4 and reload_builds(), "migrated build writes a valid version 4 checkpoint")
+	check(builds.save_data().version == 5 and reload_builds(), "migrated build writes a valid version 5 checkpoint")
 	var valid: Dictionary = builds.save_data()
 	for bad_value in [null, "broken", [], {"bad": true}]:
 		var bad: Dictionary = valid.duplicate(true)

@@ -37,27 +37,17 @@ func run() -> void:
 	game._on_action("debug:unlock:" + game.DEBUG_ACCESS_CODE)
 	game._on_action("debug")
 	game.hud._refs.debug_island_2.pressed.emit()
-	check(state.island2_unlocked and not state.island3_unlocked and state.island_plots["2"].all(func(p): return p.unlocked), "debug unlocks Shores and its field")
+	check(state.island2_unlocked and not state.island3_unlocked and state.island_plots["2"].filter(func(p): return p.unlocked).size() == 24, "debug unlocks Shores and its field")
 	check(game.hud._refs.debug_island_2.disabled, "already unlocked button disables")
 	game.hud._refs.debug_island_3.pressed.emit()
-	check(state.island3_unlocked and state.island_plots["3"].all(func(p): return p.unlocked), "debug unlocks winter field")
+	check(state.island3_unlocked and state.island_plots["3"].filter(func(p): return p.unlocked).size() == 40, "debug unlocks winter field")
 	check(state.coins == coins and state.total_mastery() == harvests and state.current_island == 1 and state.blind_cycle.island == 1, "unlock preserves money, mastery, location and current tax tier")
-	check(state.debug_info().active and state.debug_islands_modified, "debug progression marks later trophy results")
+	check(state.debug_info().active and state.debug_islands_modified, "debug progression records debug access")
 	state.reset_debug()
-	check(state.debug_info().active, "reset luck does not erase debug progression history")
-	state.luck = 2.0
-	state.inventory_items.lucky_cap = 1
-	state.equipment.head = "lucky_cap"
-	state.apply_debug(1.0, 3.0)
-	var info: Dictionary = state.luck_breakdown()
-	check(is_equal_approx(info.earned, 1.0) and is_equal_approx(info.gear, 0.25) and is_equal_approx(info.normal, 2.25), "luck adds actual earned and equipped bonuses")
-	check(is_equal_approx(info.normal_percent, 125.0) and is_equal_approx(info.total, 6.75) and is_equal_approx(info.total_percent, 575.0), "percent and final multiplier describe the same effective luck")
-	game.hud.update_state(state)
-	check(game.hud._top.luck.text == "6.75×" and game.hud._top.luck_percent.text.contains("575%"), "HUD shows precise total and percentage gain")
-	game.hud._refs.debug_luck.value = 4.0
-	game.hud._refresh_debug()
-	check(game.hud._refs.debug_preview.text.contains("9.00×") and game.hud._refs.debug_preview.text.contains("800%"), "debug preview shows resulting luck before applying")
-	await shot("debug-luck")
+	check(state.debug_info().active, "reset debug does not erase debug progression history")
+	state.inventory_items.patchwork_cap = 1
+	state.equipment.head = "patchwork_cap"
+	state.apply_debug(1.0)
 	(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = 520
 	await shot("debug-islands")
 	game._on_action("dex")
@@ -94,6 +84,8 @@ func run() -> void:
 	state.travel_to(1)
 	var raw: Dictionary = state._save_data()
 	raw.mechanics_revision = 13
+	for island in ["2", "3"]:
+		for bed in raw.island_plots[island]: bed.unlocked = bool(raw["island" + island + "_unlocked"])
 	raw.erase("debug_islands_modified")
 	for pair: Array in [[4, 2, 45.0], [5, 3, 90.0]]:
 		var p: Dictionary = raw.island_plots["1"][pair[0]]

@@ -69,8 +69,6 @@ func check_boundary_clocks(state) -> void:
 		state.combo_time = effect_time
 		state.combo_count = 4
 		state.combo_multiplier = 8
-		state.boost_remaining = effect_time
-		state.boost_factor = 2.0
 		state.rocket_timer = 0.75
 		state.surge_timer = 0.75
 		state._market_clock = 4.25
@@ -84,9 +82,9 @@ func check_boundary_clocks(state) -> void:
 			check(not state.export_active and state.export_factor == 1.0 and state.export_timer >= State.EXPORT_MIN_WAIT, "export expires on the rocket boundary before simulation freezes")
 			check(state.frost_active and state.frost_timer == 20.0 and state.thaw_remaining == 0.0, "frost starts and the previous thaw ends on their exact rocket boundary")
 			check(state.combo_time == 0.0 and state.combo_count == 0 and state.combo_multiplier == 1, "combo expiry is resolved before the cinematic")
-			check(state.boost_remaining == 0.0 and state.boost_factor == 1.0 and state.current_event == "" and state.event_remaining == 0.0, "roll boost and flash offer expiry cannot be deferred until after the cinematic")
+			check(state.current_event == "" and state.event_remaining == 0.0, "flash offer expiry cannot be deferred until after the cinematic")
 		else:
-			for timer: String in ["export_timer", "frost_timer", "thaw_remaining", "combo_time", "boost_remaining", "event_remaining"]:
+			for timer: String in ["export_timer", "frost_timer", "thaw_remaining", "combo_time", "event_remaining"]:
 				check(is_equal_approx(float(state.get(timer)), 2.25), "%s consumes the same final 0.75 seconds as the rocket clock" % timer)
 		var paused: Dictionary = state._save_data().duplicate(true)
 		state.update(60.0)
@@ -170,15 +168,13 @@ func _run() -> void:
 	check(is_equal_approx(state.market.icecap.seed, State.seed_price_for(state.market.icecap.sell)), "rocket seeds follow the same final sale value")
 	state._start_event("shortage")
 	state.event_strength = 16.0
-	state.boost_remaining = 5.0
-	state.boost_factor = 3.0
 	for id in state.CROP_IDS:
 		state._market_core[id].sell = state.CROPS[id].base * 3.0
 	state._refresh_market(false)
 	var other_quotes_capped: bool = true
 	for id in state.CROP_IDS:
 		if id != "icecap":
-			other_quotes_capped = other_quotes_capped and is_equal_approx(state.market[id].sell, state.CROPS[id].base * 101.0)
+			other_quotes_capped = other_quotes_capped and state.market[id].sell <= state.CROPS[id].base * 101.0
 	check(other_quotes_capped and is_equal_approx(state.market.icecap.change, 100000.0), "only the rocket crop receives the exceptional cap during stacked offers")
 	check(state.save_game(SAVE) and state.load_game(SAVE) and state.surge_kind == "rocket" and state.surge_factor == 1001.0 and state.surge_remaining == 10.0, "an active maximum rocket survives a save/load round trip")
 	var rocket_seed_price: float = state.market.icecap.seed

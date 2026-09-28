@@ -29,8 +29,7 @@ func enter_island(state, island: int) -> void:
 	state.travel_to(island)
 	state.climate.acknowledge(state)
 
-func scheduled_sample(state, luck: float) -> Dictionary:
-	state.debug_luck_multiplier = luck
+func scheduled_sample(state) -> Dictionary:
 	state.rng.seed = 92013
 	var low: float = 31.0 if state.current_island >= 3 else 6.0
 	var total: float = 0.0
@@ -46,9 +45,7 @@ func scheduled_sample(state, luck: float) -> Dictionary:
 		bounded = bounded and normalized >= 0.0 and normalized <= 1.0 and state.surge_crop == state.selected_crop and state.surge_kind == "normal"
 	return {"mean": total / 4000.0, "bottom": bottom, "top": top, "bounded": bounded}
 
-func natural_sample(state, luck: float, debug_luck: float = 1.0) -> Dictionary:
-	state.luck = luck
-	state.debug_luck_multiplier = debug_luck
+func natural_sample(state) -> Dictionary:
 	state.rng.seed = 57241
 	state.surge_remaining = 0.0
 	state.surge_factor = 1.0
@@ -88,40 +85,35 @@ func _run() -> void:
 		var cap: float = 101.0 if island == 3 else 30.99
 		var percent: float = 10000.0 if island == 3 else 2999.0
 		check(is_equal_approx(state.stock_cap(), cap), "island %d has the intended normal stock cap" % island)
-		var ordinary: Dictionary = scheduled_sample(state, 1.0)
-		var lucky: Dictionary = scheduled_sample(state, 10.0)
-		check(ordinary.bounded and lucky.bounded, "island %d scheduled factors stay in range at both luck levels" % island)
+		var ordinary: Dictionary = scheduled_sample(state)
+		check(ordinary.bounded, "island %d scheduled factors stay in range" % island)
 		check(ordinary.mean > 0.15 and ordinary.mean < 0.40 and ordinary.bottom > ordinary.top * 2, "island %d ordinary scheduled booms favor the low end" % island)
-		check(lucky.mean > ordinary.mean + 0.025 and lucky.mean < 0.32 and lucky.bottom > lucky.top, "island %d luck modestly improves boom strength while high values remain rarer" % island)
-		state.debug_luck_multiplier = 1.0
 		state.surge_factor = cap
 		state._refresh_market(false)
 		check(is_equal_approx(state.market[crop].change, percent) and is_equal_approx(state.surge_info().percent, percent), "island %d quote and banner report the exact maximum" % island)
 		check(is_equal_approx(state.market[crop].seed, State.seed_price_for(state.market[crop].sell)), "island %d seed price follows the final capped sell quote" % island)
 		check(state.save_game(SAVE) and state.load_game(SAVE) and is_equal_approx(state.surge_factor, cap), "island %d normal maximum survives save/load" % island)
-		var regular_spikes: Dictionary = natural_sample(state, 1.0)
-		var lucky_spikes: Dictionary = natural_sample(state, 10.0)
-		var debug_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
+		var regular_spikes: Dictionary = natural_sample(state)
 		var builds = Builds.new()
 		root.add_child(builds)
 		builds.state = state
 		builds.active = "investor"
 		builds.levels.investor = 20
 		state.build_system = builds
-		var build_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
+		var build_spikes: Dictionary = natural_sample(state)
 		check(builds.event_chance_bonus() > 0.0, "investor setup exercises a real positive-event bonus")
 		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes"]:
 			state._grant_item(id)
-		var outfit_spikes: Dictionary = natural_sample(state, 10.0, State.DEBUG_LUCK_LIMIT)
+		var outfit_spikes: Dictionary = natural_sample(state)
 		check(is_equal_approx(state.item_stock_factor(), 1.675), "natural independence includes the maximum stock outfit")
 		state.build_system = null
 		builds.free()
 		check(regular_spikes.hits >= 100 and regular_spikes.hits <= 200, "island %d natural spikes occur about 1.5 percent of eligible ticks" % island)
 		check(regular_spikes.mean > 0.15 and regular_spikes.mean < 0.40, "island %d natural strength still favors low values" % island)
-		for sample in [regular_spikes, lucky_spikes, debug_spikes, build_spikes, outfit_spikes]:
-			check(sample.chance == 0.015, "island %d natural odds stay exactly 1.5 percent across luck, debug luck, and investor bonuses" % island)
+		for sample in [regular_spikes, build_spikes, outfit_spikes]:
+			check(sample.chance == 0.015, "island %d natural odds stay exactly 1.5 percent across investor bonuses" % island)
 			check(sample.bounded, "island %d natural spikes use the selected crop, correct band, and full ten seconds" % island)
-			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors and sample.quotes == regular_spikes.quotes, "island %d identical seeded natural occurrences and magnitudes are independent of luck, stock gear, and build bonuses" % island)
+			check(sample.hit_ticks == regular_spikes.hit_ticks and sample.factors == regular_spikes.factors and sample.quotes == regular_spikes.quotes, "island %d identical seeded natural occurrences and magnitudes are independent of stock gear and build bonuses" % island)
 	state.reset_game()
 	state.select_crop("golden")
 	state.surge_timer = 0.25
@@ -169,9 +161,7 @@ func _run() -> void:
 		for id in ["prospectors_hat", "market_monocle", "investor_shirt", "investor_pants", "investor_shoes", "trader_token"]:
 			state._grant_item(id)
 		state._start_event("shortage")
-		state.event_strength = 16.0
-		state.boost_remaining = 5.0
-		state.boost_factor = 3.0
+		state.event_strength = 64.0
 		if island == 3:
 			state.thaw_remaining = 5.0
 		for id in state.CROP_IDS:
@@ -189,8 +179,6 @@ func _run() -> void:
 			state._refresh_market(false)
 		check(state.market.golden.sell == quote, "repeated refreshes never compound equipped stock gear")
 		state._end_event()
-		state.boost_remaining = 0.0
-		state.boost_factor = 1.0
 		state.thaw_remaining = 0.0
 		state._market_core.golden.sell = state.CROPS.golden.base
 		state._refresh_market(false)

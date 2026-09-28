@@ -14,20 +14,6 @@ func run() -> void:
 	for island in [1,2,3]:
 		farm.current_island = island
 		farm.inventory_items.clear()
-		for tier: String in ["relic", "mystery"]:
-			var pool: Array = farm.ARTIFACT_POOLS[island][tier]
-			for id: String in pool:
-				farm.inventory_items[id] = int(farm.ITEM_CATALOG[id].max_count)
-			var wanted: String = pool[0]
-			farm.inventory_items[wanted] -= 1
-			var result: Dictionary = farm._grant_roll_reward(tier, farm.roll_minimum_stake())
-			check(result.item_id == wanted, "unfinished local artifact is preferred on island %d %s" % [island,tier])
-			check(result.title != "??? DISCOVERED!", "reveal identifies the discovered artifact")
-			var balance: float = farm.coins
-			var expected: float = farm.roll_minimum_stake() * (2 if tier == "relic" else 5)
-			result = farm._grant_roll_reward(tier, farm.roll_minimum_stake())
-			check(result.item_id in pool and is_equal_approx(farm.coins - balance, expected), "completed collection payout scales with island stake")
-			check(result.cash_kind == "duplicate" and is_equal_approx(result.cash_awarded, expected), "artifact payout is accounted once")
 		for entry: Dictionary in farm.quest_info():
 			check(entry.coins >= float(farm.BlindRules.PROGRESSION_BASELINES[island]) * 0.002, "quest reward is useful at the local economy")
 			check(entry.reward_text.begins_with(farm.money(entry.coins)), "displayed quest cash matches payout")

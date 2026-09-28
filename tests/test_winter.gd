@@ -75,11 +75,12 @@ func _run() -> void:
 	for index in range(80):
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.plot_positions[index]))
 		check(int(hit.get("plot_index", -1)) == index, "snowy plot target: %d" % index)
-	var stations: Dictionary = {"barn": Vector3(-18, 2, -12), "market": Vector3(-3, 1.8, -14), "roll": Vector3(15, 2, -12), "quests": Vector3(-15, 1.5, 14), "island": Vector3(22, 1.2, 10), "tools": Vector3(18, 1.5, 2)}
+	var stations: Dictionary = {"barn": Vector3(-18, 2, -12), "market": Vector3(-3, 1.8, -14), "quests": Vector3(-15, 1.5, 14), "island": Vector3(22, 1.2, 10), "tools": Vector3(18, 1.5, 2)}
 	for station in stations:
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(stations[station])))
 		check(hit.get("station", "") == station, "winter station target: " + station)
 	game.state.coins = 1e18
+	game.state.expand_field()
 	# This fixture isolates Frostbreak from separate climate cinematics.
 	game.state.climate.acknowledge(game.state)
 	game.state.climate.data.timer = game.state.ClimateSystem.WAIT_MAX
@@ -96,9 +97,9 @@ func _run() -> void:
 	game._process(5.1)
 	check(game.state.plots[0].elapsed == 0.0, "winter crop needs manual watering")
 	game.perform_plot(0, "water")
-	game._process(59.9)
+	game._advance_simulation(59.9)
 	check(game.state.plots[0].stage != 3, "market timing changes do not shorten crop growth")
-	game._process(0.11)
+	game._advance_simulation(0.11)
 	check(game.state.plots[0].stage == 3, "Icecap matures after its actual sixty seconds")
 	game.perform_plot(0, "harvest")
 	check(game.state.storage.icecap > 0, "winter farming stores its valuable harvest")

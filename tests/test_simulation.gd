@@ -61,8 +61,7 @@ func _run() -> void:
 	seeds = farm.seed_inventory.golden
 	farm.buy_seeds("golden", 5)
 	farm.upgrade_tool("water")
-	farm.roll("all_in")
-	check(farm.coins == farm.bankruptcy_limit() and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "exhausted credit cannot buy, upgrade or roll")
+	check(farm.coins == farm.bankruptcy_limit() and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "exhausted credit cannot buy or upgrade")
 	farm.reset_game()
 	farm.coins = 50000.0
 	farm.expand_field()
@@ -141,19 +140,6 @@ func _run() -> void:
 	check(farm.mutations.is_empty() and farm.dex.size() == 1 and is_equal_approx(farm.coins, coins + price), "rare sale pays correctly and keeps discovery")
 	farm.mastery.russet = 100
 	check(farm.mastery_level("russet") == 2 and farm.mutation_chance("russet") > 1.0 / 2500.0, "mastery grows from farming and improves mutation chances")
-	var odds: float = 0.0
-	for entry in farm.roll_odds(): odds += float(entry.chance)
-	check(is_equal_approx(odds, 100.0), "eight disjoint roll tiers total one hundred percent")
-	for tier in ["common", "rare", "epic", "legendary", "mythic", "jackpot"]:
-		var result: Dictionary = farm._grant_roll_reward(tier, 200.0)
-		check(result.tier == tier and not str(result.detail).is_empty(), "implemented reward outcome: " + tier)
-	farm.reset_game()
-	farm.coins = 199.0
-	farm.roll("all_in")
-	check(farm.roll_count == 0 and farm.coins == 199.0, "All-in has a real minimum stake")
-	farm.coins = 2000.0
-	farm.roll("all_in")
-	check(farm.roll_count == 1 and farm.coins >= 0.0, "All-in resolves without negative balance")
 	farm.reset_game()
 	farm.interact_plot(4, "hoe")
 	farm.interact_plot(4, "plant")

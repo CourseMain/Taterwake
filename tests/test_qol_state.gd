@@ -127,8 +127,6 @@ func run() -> void:
 	check(farm.market.golden.change >= 500.0 and farm.market.golden.change <= 2999.0, "guaranteed final quote is within plus five-hundred to 2999 percent")
 	quote = farm.market.golden.sell
 	farm._start_event("crash")
-	farm.boost_remaining = 5.0
-	farm.boost_factor = 3.0
 	farm._refresh_market()
 	check(farm.market.golden.sell == quote, "stacked crash and roll effects cannot reduce or compound guaranteed surge")
 	check(is_equal_approx(farm.market.golden.seed, State.seed_price_for(quote)), "surge seeds stay linked to increased crop value")
@@ -233,7 +231,7 @@ func run() -> void:
 	var bounded: bool = true
 	for id in farm.CROP_IDS:
 		bounded = bounded and is_finite(farm.market[id].sell) and farm.market[id].sell > 0.0 and farm.market[id].sell <= farm.CROPS[id].base * farm.stock_cap()
-	check(bounded and farm.coins < 1e12 and farm.coins > 1e11 and farm.blind_cycle.clears == 6 and farm.roll_count == 0, "an hour of overlapping market events keeps finite capped quotes and collects six taxes without awarding money or rolls")
+	check(bounded and farm.coins < 1e12 and farm.coins > 1e11 and farm.blind_cycle.clears == 6, "an hour of overlapping market events keeps finite capped quotes and collects six taxes without awarding money or rolls")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()
 	await process_frame

@@ -124,19 +124,8 @@ func run() -> void:
 		check(earned("gambler") == 20, "all stake outcomes earn the same one-time XP")
 
 	fresh()
-	builds.award_xp("farmer", 35)
-	for id in builds.IDS:
-		if id != "farmer": builds.levels[id] = 30
-	builds.build_crates = 1
-	builds.open_crate()
-	builds.finish_crate_reveal()
-	check(builds.levels.farmer == 2 and builds.xp.farmer == 35, "crate level preserves already-earned XP")
-	builds.award_xp("farmer", 15)
-	check(builds.levels.farmer == 3 and builds.xp.farmer == 0, "earned progress continues normally after a crate")
 	builds.award_xp("farmer", 10000)
 	check(builds.levels.farmer == 30 and builds.xp.farmer == 0, "large awards stop exactly at level thirty")
-	builds.build_crates = 1
-	check(builds.open_crate().is_empty() and builds.build_crates == 1, "maxed builds retain crates")
 	fresh()
 	builds.levels.scientist = 0
 	builds.award_xp("scientist", 500)
@@ -167,12 +156,6 @@ func run() -> void:
 		elif version == 2: old.professions.erase("fresh_lots")
 		check(builds.load_data(old) and builds.levels == saved.levels and builds.xp.farmer == 0, "legacy saves keep levels and start XP at zero")
 	fresh()
-	var crates: int = builds.build_crates
-	for i in range(300): farm._grant_roll_reward("common", 10.0, false)
-	check(builds.build_crates == crates, "free Crown bonus rewards cannot add paid-roll crate attempts")
-	farm.rng.seed = 182
-	for i in range(1000): builds.grant_roll_build("common")
-	check(builds.CRATE_DROP_CHANCE == 0.10 and builds.build_crates >= 70 and builds.build_crates <= 130, "crate drops use an independent ten percent chance")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	builds.free()
 	farm.free()

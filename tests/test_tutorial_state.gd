@@ -45,9 +45,6 @@ func _run() -> void:
 	state._start_frost()
 	check(state._infest_random_plots() == 0, "direct random infestation cannot bypass lesson safety")
 	check(state.current_event == "" and state.surge_remaining == 0.0 and not state.export_active and not state.frost_active, "direct event methods cannot bypass lesson safety")
-	state.pending_roll_boost = 2.0
-	state.activate_roll_boost()
-	check(state.boost_remaining == 0.0 and state.pending_roll_boost == 2.0, "earned market rocket waits without distracting from tutorial")
 	state._market_tick()
 	check(state.market.russet.change == 0.0, "direct ordinary market tick remains calm")
 	state.inventory_items.prospectors_hat = 1
@@ -134,8 +131,6 @@ func _run() -> void:
 	restored._toggle_export()
 	restored._start_frost()
 	restored._infest_random_plots()
-	restored.boost_factor = 2.0
-	restored.boost_remaining = 3.0
 	restored._refresh_market()
 	restored.tutorial_progress = {"version": 1, "step": 14, "completed": false, "plot": 5, "tour_only": true, "pest_plot": 1}
 	var replay_before: Dictionary = restored._save_data().duplicate(true)
@@ -164,5 +159,5 @@ func _run() -> void:
 	activities.free()
 	state.free()
 	restored.free()
-	print("Tutorial state checks: %d; failures: %d" % [checks, failures])
+	print("Tutorial state: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

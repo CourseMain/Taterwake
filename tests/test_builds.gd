@@ -26,28 +26,7 @@ func _run() -> void:
 	state.rng.seed = 87923
 	check(builds.active == "farmer" and builds.levels.farmer == 1, "every new farm starts with the Farmer build")
 	builds.select_build("scientist")
-	check(builds.active == "farmer", "unearned builds cannot be equipped")
-	var starting_levels: Dictionary = builds.levels.duplicate()
-	var starting_rng: int = state.rng.state
-	check(builds.open_crate().is_empty() and builds.levels == starting_levels and state.rng.state == starting_rng, "zero crates reject rewards before RNG advances")
-	builds.build_crates = -2
-	check(builds.open_crate().is_empty() and builds.build_crates == 0 and state.rng.state == starting_rng, "negative quantities cannot grant a reward or advance RNG")
-	builds.build_crates = 1
-	var result: Dictionary = builds.open_crate()
-	check(result.has("build_id") and result.tier == "build" and builds.build_crates == 0, "crate consumes one item and grants a build-only result")
-	check(builds.open_crate().is_empty(), "one crate cannot be opened twice")
-	builds.build_crates = 2
-	starting_rng = state.rng.state
-	starting_levels = builds.levels.duplicate()
-	check(builds.open_crate().is_empty() and builds.build_crates == 2 and builds.levels == starting_levels and state.rng.state == starting_rng, "overlapping requests reject even when another crate is owned")
-	builds.finish_crate_reveal()
-	var observed: Array[bool] = []
-	var on_reward_change: Callable = func():
-		observed.append(builds.build_crates == 1 and builds.open_crate().is_empty())
-	state.changed.connect(on_reward_change, CONNECT_ONE_SHOT)
-	check(not builds.open_crate().is_empty() and builds.build_crates == 1, "next crate can be opened after the prior reveal finishes")
-	check(observed == [true], "reward callbacks observe consumption first and cannot reenter opening")
-	builds.finish_crate_reveal()
+	check(builds.active == "scientist", "builds are available without random unlocks")
 	for id in builds.IDS:
 		builds.levels[id] = 3
 	builds.select_build("farmer")
@@ -67,14 +46,9 @@ func _run() -> void:
 	builds.cooldown = 0.0
 	builds.select_build("gambler")
 	state.storage.russet = 30
-	var odds_before: Array[Dictionary] = state.roll_odds("normal")
 	builds.use_ability()
-	var odds_after: Array[Dictionary] = state.roll_odds("normal")
 	check(builds.professions.data.wager.quantity == 20 and state.storage.russet == 10, "Gambler stakes exactly the selected harvest")
 	builds.professions.claim()
-	builds.next_roll_charge = 0.5
-	state.roll("normal")
-	check(builds.next_roll_charge == 0.0, "scouted quality is consumed by exactly one paid roll")
 	builds.cooldown = 0.0
 	builds.select_build("scientist")
 	state.storage.russet = 40
@@ -100,19 +74,18 @@ func _run() -> void:
 	check(value > 100.0 * state.market.russet.sell, "processed crop batch is worth more at the live quote")
 	builds.sell_processed()
 	check(is_equal_approx(state.coins, before + value) and builds.processed.is_empty(), "processed sale pays exactly once when requested")
-	# Save and reload an unfinished batch, build levels and an unopened crate.
+	# Save and reload an unfinished batch and build levels.
 	builds.select_build("industrialist")
 	builds.use_ability()
 	builds.update(2.0)
 	var saved_processing_work: float = float(builds.processing.elapsed)
-	builds.build_crates = 2
 	builds.levels.farmer = 30
 	check(state.save_game(SAVE), "state saves builds and processing with the same farm snapshot")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	state.reset_game()
-	check(builds.levels.farmer == 1 and builds.build_crates == 0, "reset restores the default build without retaining old rewards")
+	check(builds.levels.farmer == 1, "reset restores the default build without retaining old rewards")
 	check(state.load_game(SAVE), "build-bearing farm save reloads")
-	check(builds.active == "industrialist" and builds.levels.farmer == 30 and builds.build_crates == 2, "equipped role, level thirty and crates persist")
+	check(builds.active == "industrialist" and builds.levels.farmer == 30, "equipped role and level thirty persist")
 	check(is_equal_approx(builds.processing.elapsed, saved_processing_work), "processing resumes from exact saved progress, including equipped speed, without offline production")
 	var bad: Dictionary = saved.duplicate(true)
 	bad.builds.levels.scientist = 31
@@ -121,28 +94,6 @@ func _run() -> void:
 	file.close()
 	check(not state.load_game(SAVE) and builds.levels.farmer == 30, "invalid build data is rejected without mutating the farm")
 	state.reset_game()
-	state.rng.seed = 182
-	for index in range(1000):
-		builds.grant_roll_build("common")
-	check(builds.build_crates >= 70 and builds.build_crates <= 130, "independent common rolls include the ten percent crate drop")
-	check(builds.levels.farmer == 1, "common crate drops do not silently grant a build before opening")
-	starting_levels = builds.levels.duplicate()
-	for tier in ["rare", "epic", "legendary", "mythic", "jackpot", "relic", "mystery"]:
-		for index in range(50):
-			builds.grant_roll_build(tier)
-	check(builds.levels == starting_levels, "no paid-roll rarity silently grants or improves a build")
-	builds.build_crates = 200
-	for index in range(200):
-		builds.open_crate()
-		builds.finish_crate_reveal()
-	var all_capped: bool = true
-	for id in builds.IDS:
-		all_capped = all_capped and int(builds.levels[id]) == 30
-	check(all_capped, "build-only crates develop all five builds to thirty levels without overflow")
-	check(builds.build_crates == 51, "fully capped builds preserve unused crates instead of consuming them for nothing")
-	var invalid_crates: Dictionary = builds.save_data()
-	invalid_crates.build_crates = -1
-	check(not builds.load_data(invalid_crates) and builds.build_crates == 51, "negative saved crate ownership is rejected without mutation")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	builds.queue_free()
 	state.queue_free()

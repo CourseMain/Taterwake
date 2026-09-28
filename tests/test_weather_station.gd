@@ -105,6 +105,8 @@ func run() -> void:
 	check(farm.climate.data.operations.ice.is_empty(),"remaining ice clears at end of recovery")
 	var legacy: Dictionary = farm._save_data()
 	legacy.mechanics_revision = 18
+	for island in ["2", "3"]:
+		for bed in legacy.island_plots[island]: bed.unlocked = bool(legacy["island" + island + "_unlocked"])
 	legacy.climate.projects["1"].erase("irrigation")
 	legacy.climate.projects["2"].irrigation = 2
 	legacy.climate.projects["3"].irrigation = 1

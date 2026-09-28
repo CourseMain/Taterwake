@@ -23,38 +23,21 @@ func run() -> void:
 	root.add_child(builds)
 	builds.levels.scientist = 1
 	builds.select_build("scientist")
-	var base_chance: float = builds.experiment_chance()
+	var base_chance: float = state.mutation_chance("russet")
 	state._grant_item("scientist_coat")
-	var geared_chance: float = builds.experiment_chance()
-	check(is_equal_approx(geared_chance, base_chance * 1.3125), "lab coat improves actual experiment odds including Scientist synergy")
-	check(str(builds.activity_info().description).contains("%.1f%%" % (geared_chance * 100.0)), "experiment panel reports the chance that will actually be used")
-	var success_seed: int = -1
-	var chooser := RandomNumberGenerator.new()
-	for candidate in range(1000):
-		chooser.seed = candidate
-		var chance: float = chooser.randf()
-		if chance > base_chance and chance < geared_chance:
-			success_seed = candidate
-			break
-	check(success_seed >= 0, "deterministic draw exists between equipped and unequipped experiment odds")
+	var geared_chance: float = state.mutation_chance("russet")
+	check(is_equal_approx(geared_chance, base_chance * 1.3125), "lab coat improves field mutations including Scientist synergy")
 	state.unequip_gear("body")
-	state.storage.russet = 100
-	state.rng.seed = success_seed
-	var without_gear: String = builds.use_ability()
-	check(without_gear.contains("no mutation") and state.mutations.is_empty(), "actual experiment fails at a draw outside unequipped odds")
-	builds.research = 0
-	builds.cooldown = 0.0
+	check(is_equal_approx(state.mutation_chance("russet"), base_chance), "removing the coat removes its field bonus")
+	state.storage.russet = 20
+	state.storage.golden = 20
+	var recipe: String = builds.professions.data.recipe
+	var before_rng: int = state.rng.state
+	builds.use_ability()
+	check(builds.professions.data.seedbank.has(recipe) and state.storage.russet == 10 and state.storage.golden == 10, "breeding consumes both parent crops and stores the selected variety")
+	check(state.rng.state == before_rng, "seed-bank discovery is deterministic")
 	state.equip_gear("scientist_coat")
-	state.rng.seed = success_seed
-	var with_gear: String = builds.use_ability()
-	check(with_gear.contains("succeeded") and state.mutations.size() == 1, "same actual draw produces a stored mutation while wearing the coat")
-	state.unequip_gear("body")
-	builds.research = 0
-	check(is_equal_approx(builds.experiment_chance(), base_chance), "removing clothes removes experimental bonuses immediately")
-	builds.levels.scientist = 30
-	builds.research = 10000
-	state.equip_gear("scientist_coat")
-	check(builds.experiment_chance() == 0.55, "mutation gear preserves the experiment success ceiling")
+	check(state.mutation_chance("russet") > base_chance, "equipped coat continues to affect field harvests after research")
 	builds.levels.industrialist = 1
 	builds.select_build("industrialist")
 	builds.cooldown = 0.0

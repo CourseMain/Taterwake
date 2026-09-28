@@ -131,7 +131,6 @@ func _run() -> void:
 	state.buy_seeds("russet", 1)
 	state.sell_crop("russet")
 	state.interact_plot(0, "hoe")
-	state.roll("normal")
 	check(state._save_data() == frozen, "all clocks and economy actions stop after failure")
 	roundtrip()
 
