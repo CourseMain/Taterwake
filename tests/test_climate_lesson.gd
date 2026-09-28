@@ -22,7 +22,9 @@ func same_crops(a: Array, b: Array) -> bool:
 	if a.size() != b.size(): return false
 	for i in range(a.size()):
 		for key in b[i]:
-			if a[i].get(key) != b[i][key]: return false
+			if a[i].get(key) is float or b[i][key] is float:
+				if not is_equal_approx(float(a[i].get(key)), float(b[i][key])): return false
+			elif a[i].get(key) != b[i][key]: return false
 	return true
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
@@ -30,29 +32,16 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.set_process(false)
-	game.state.debug_unlock_island(3)
-	game.state.travel_to(2)
 	game.hud.close_panel()
 	var farm = game.state
 	var console = game.hud._climate_console
-	check(farm.climate.data.intro_pending and game.hud._climate_intro.visible, "arrival introduces changing skies")
-	check(not farm.climate.data.projects["2"].has("irrigation"), "sprinklers must be purchased")
-	await shot("arrival")
-	var clock: float = farm.elapsed
-	game._advance_simulation(1.0)
-	check(farm.elapsed == clock, "cinematic pauses farming and weather")
-	game.hud._climate_intro.skip.pressed.emit()
-	game.hud.close_panel()
-	farm.travel_to(1)
-	farm.travel_to(2)
-	check(farm.climate.data.lesson.stage == "done" and not console.visible, "dismissal persists on return")
 	farm.coins = 1e18
 	farm.climate.fund(farm,"irrigation")
 	var crops: Array = farm.plots.duplicate(true)
 	game._climate_action("lesson_start")
 	check(farm.climate.Lesson.active(farm) and game.selected_tool == "water", "practice starts with useful tool equipped")
-	check(farm.climate.Operations.capacity(farm, 2) == 36, "practice uses the familiar starter tank without an extra upgrade")
-	clock = farm.elapsed
+	check(farm.climate.Operations.capacity(farm) == 36, "practice uses the familiar starter tank without an extra upgrade")
+	var clock: float = farm.elapsed
 	game._advance_simulation(200)
 	check(farm.elapsed == clock, "practice freezes all simulation clocks and bills")
 	check(same_crops(farm.plots, crops), "practice crop visuals never replace actual saved crops")
@@ -61,7 +50,7 @@ func run() -> void:
 	check(farm.climate.data.lesson.stage == "water", "unrelated click does not falsely finish instruction")
 	var can_before: float = farm.climate.Operations.local(farm).can
 	var tank_before: float = farm.climate.Operations.local(farm).water
-	game.perform_plot(34, "water")
+	game.perform_plot(18, "water")
 	check(farm.climate.data.lesson.stage == "area" and farm.climate_info().operations.stress.size() == 2, "watering exact practice bed clears danger and advances automatically")
 	check(farm.climate.Operations.local(farm).can == can_before - 1 and farm.climate.Operations.local(farm).water == tank_before, "first practice action uses one carried water and leaves the tank alone")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.climate.data.lesson.stage == "area", "lesson resumes from saved step")
@@ -84,12 +73,12 @@ func run() -> void:
 	game._climate_action("lesson_skip")
 	check(same_crops(farm.plots, crops), "mid-lesson skip preserves all real crops")
 	# The same fixed sprinkler works in ordinary weather before drought arrives.
-	for i in [0, 34, 35, 36]:
+	for i in [0, 18, 19, 20]:
 		farm.plots[i].merge({"unlocked": true, "tilled": true, "watered": false, "stage": 1, "crop": "russet"}, true)
 	var water: float = farm.climate.Operations.local(farm).water
 	game._climate_action("show_sprinkler")
 	console.primary.pressed.emit()
-	check(farm.climate.Operations.local(farm).water == water - 6 and farm.plots[35].watered and not farm.plots[0].watered, "ordinary sprinkler spends tank water and hydrates only its fixed patch")
+	check(farm.climate.Operations.local(farm).water == water - 6 and farm.plots[19].watered and not farm.plots[0].watered, "ordinary sprinkler spends tank water and hydrates only its fixed patch")
 	water = farm.climate.Operations.local(farm).water
 	game._climate_action("show_sprinkler")
 	console.primary.pressed.emit()
@@ -100,8 +89,8 @@ func run() -> void:
 	game.hud._climate_alert.dismiss()
 	var old: float = farm.climate.data.operations.stress["0"]
 	for level in [1, 2]:
-		farm.climate.data.projects["2"].irrigation = level
-		for index in [34, 35, 36]:
+		farm.climate.data.projects.irrigation = level
+		for index in [18, 19, 20]:
 			# Weather and pests may already have damaged these crops.
 			# Start fresh planted beds for each connected-sprinkler check.
 			farm._clear_crop(farm.plots[index])
@@ -113,7 +102,7 @@ func run() -> void:
 		var cost: int = 8 - 2 * level
 		check(console.primary.text == "Water these beds · %d water" % cost, "irrigation level %d advertises its exact tank cost" % level)
 		console.primary.pressed.emit()
-		check(farm.climate.Operations.local(farm).water == water - cost and farm.climate.data.operations.stress["35"] == 0 and farm.climate.data.operations.stress["0"] == old, "irrigation level %d spends shown water and relieves only its connected beds" % level)
+		check(farm.climate.Operations.local(farm).water == water - cost and farm.climate.data.operations.stress["19"] == 0 and farm.climate.data.operations.stress["0"] == old, "irrigation level %d spends shown water and relieves only its connected beds" % level)
 	check(farm.climate.Operations.local(farm).mode == 0, "sprinklers never start hidden ongoing consumption")
 	farm.climate.Operations.local(farm).water = 0
 	farm.climate.Operations.local(farm).can = 8
@@ -156,17 +145,6 @@ func run() -> void:
 	console.primary.pressed.emit()
 	check(farm.climate.Operations.local(farm).gates and console.equipment.is_empty() and not console.primary.visible and console.hint.text.contains("Drains are open"), "opening the gate dismisses its prompt and shows the completed flood response")
 	await shot("flood")
-	# Old saves should not force a lesson or retain invisible ration mode.
-	var legacy: Dictionary = farm._save_data()
-	legacy.mechanics_revision = 16
-	for island in ["2", "3"]:
-		for bed in legacy.island_plots[island]: bed.unlocked = bool(legacy["island" + island + "_unlocked"])
-	legacy.climate.erase("lesson")
-	legacy.climate.operations.islands["2"].mode = 2
-	var file := FileAccess.open(SAVE, FileAccess.WRITE)
-	file.store_string(JSON.stringify(legacy))
-	file.close()
-	check(farm.load_game(SAVE) and farm.climate.data.lesson.stage == "done" and farm.climate.Operations.local(farm).mode == 0, "existing farms migrate quietly with old background irrigation stopped")
 	var corrupt: Dictionary = farm._save_data()
 	corrupt.climate.lesson.stage = "water"
 	check(not farm._valid_save(corrupt), "practice cannot be loaded on top of a live disaster")

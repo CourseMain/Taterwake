@@ -30,20 +30,13 @@ func same(a: Variant, b: Variant) -> bool:
 		return true
 	return a == b
 
-func fresh(island: int = 1) -> void:
+func fresh(with_irrigation: bool = false) -> void:
 	farm.reset_game()
 	farm.rng.seed = 38172
 	farm.coins = 1e18
 	farm.expansion = 1
 	for plot in farm.plots: plot.unlocked = true
-	if island > 1:
-		farm.debug_unlock_island(island)
-		for id in range(2, island + 1):
-			farm.field_expansions[str(id)] = true
-			for plot in farm.island_plots[str(id)]: plot.unlocked = true
-		farm.travel_to(island)
-		farm.climate.acknowledge(farm)
-		farm.climate.fund(farm,"irrigation")
+	if with_irrigation: farm.climate.fund(farm, "irrigation")
 	for plot in farm.plots: farm._clear_crop(plot)
 
 func planted(index: int, watered: bool = false) -> void:
@@ -95,10 +88,8 @@ func test_can_and_farming() -> void:
 	Ops.refill(farm)
 	check(supply.can == 3 and supply.water == 0, "empty reserve cannot invent water or make counts negative")
 	farm.update(6.0)
-	check(supply.water == Ops.capacity(farm, 1) and supply.can == 3, "Island 1 tank replenishes quickly while carried water remains finite")
-	check(not farm.climate.begin_warning(farm, "drought", 1), "Island 1 cannot start a disaster")
+	check(supply.water == Ops.capacity(farm) and supply.can == 3, "Island 1 tank replenishes quickly while carried water remains finite")
 	farm.climate.update(farm, 1000)
-	check(farm.climate.data.phase == "calm" and farm.climate.data.history.is_empty(), "Island 1 weather remains forgiving over long play")
 	farm.set_tutorial_active(true)
 	supply.water = 0.0
 	farm.update(6.0)
@@ -126,32 +117,32 @@ func test_upgrades_and_irrigation() -> void:
 	Ops.refill(farm)
 	check(supply.can > carried and is_equal_approx(supply.can + supply.water, carried + tank), "filling a bigger can still conserves shared water")
 	for rank in [1, 2, 3]:
-		fresh(3)
+		fresh(true)
 		farm.tools.water = rank
 		for index in range(farm.plots.size()): planted(index)
 		supply = Ops.local(farm)
 		supply.can = 5
 		tank = supply.water
-		farm.interact_plot(44, "water")
+		farm.interact_plot(14, "water")
 		var watered_count: int = 0
 		for plot in farm.plots:
 			if plot.watered: watered_count += 1
 		check(watered_count == 5 and supply.can == 0 and supply.water == tank, "rank %d area watering stops exactly at the carried reserve, preserving legacy area coverage" % rank)
-	fresh(2)
+	fresh(true)
 	supply = Ops.local(farm)
-	check(int(farm.climate.data.projects["2"].get("irrigation", 0)) >= 1, "purchased sprinkler is available before the first dry spell")
-	capacity = Ops.capacity(farm, 2)
+	check(int(farm.climate.data.projects.get("irrigation", 0)) >= 1, "purchased sprinkler is available before the first dry spell")
+	capacity = Ops.capacity(farm)
 	tank = supply.water
 	farm.climate.fund(farm, "rainwater")
-	check(Ops.capacity(farm, 2) > capacity and supply.water == tank, "bigger tank increases storage without an invisible refill")
+	check(Ops.capacity(farm) > capacity and supply.water == tank, "bigger tank increases storage without an invisible refill")
 	planted(0)
 	planted(1)
-	planted(16)
+	planted(12)
 	var cost: float = Ops.water_cost(farm)
 	carried = supply.can
 	Ops.target(farm, 0, "water")
 	check(supply.water == tank - cost and supply.can == carried, "ordinary-weather irrigation spends its displayed tank cost and leaves the can alone")
-	check(farm.plots[0].watered and farm.plots[1].watered and not farm.plots[16].watered, "sprinkler waters only its connected patch")
+	check(farm.plots[0].watered and farm.plots[1].watered and not farm.plots[12].watered, "sprinkler waters only its connected patch")
 	check(farm.plots[0].stage == 2 and farm.plots[0].watered, "ordinary irrigation provides the same wet-soil and growth state as can watering")
 	tank = supply.water
 	Ops.target(farm, 0, "water")
@@ -169,15 +160,16 @@ func test_upgrades_and_irrigation() -> void:
 	Ops.target(farm, 0, "water")
 	check(farm.plots[0].watered and supply.water == tank - Ops.water_cost(farm), "upgraded sprinkler applies its actual discounted cost")
 	check(supply.mode == 0, "clicking a sprinkler never starts hidden continuous consumption")
-	farm.climate.data.projects["2"].irrigation = 0
+	farm.climate.data.projects.irrigation = 0
 	planted(0)
 	tank = supply.water
 	Ops.target(farm, 0, "water")
 	check(supply.water == tank and not farm.plots[0].watered, "unbuilt irrigation cannot remotely water crops")
-	fresh(3)
-	farm.climate.data.projects["3"].irrigation = 1
+	fresh(true)
+	farm.climate.data.projects.irrigation = 1
 	planted(0)
-	farm.plots[0].frozen = true
+	farm.climate.begin_warning(farm, "freeze", 1.0)
+	farm.climate._impact(farm)
 	supply = Ops.local(farm)
 	tank = supply.water
 	carried = supply.can
@@ -186,8 +178,8 @@ func test_upgrades_and_irrigation() -> void:
 	check(supply.water == tank and supply.can == carried and not farm.plots[0].watered, "frozen crops cannot consume irrigation or can water before thawing")
 
 func test_drought_and_shared_reserve() -> void:
-	fresh(2)
-	for index in [0, 1, 16, 32]: planted(index)
+	fresh(true)
+	for index in [0, 1, 12, 20]: planted(index)
 	start_weather("drought")
 	var supply: Dictionary = Ops.local(farm)
 	var tank: float = supply.water
@@ -201,23 +193,20 @@ func test_drought_and_shared_reserve() -> void:
 	Ops.refill(farm)
 	check(supply.water == tank - Ops.can_capacity(farm), "drought refill draws from the same limited tank")
 	tank = supply.water
-	stress = farm.climate.data.operations.stress["32"]
-	Ops.target(farm, 16, "water")
-	check(supply.water == tank - Ops.water_cost(farm) and farm.climate.data.operations.stress["16"] == 0 and farm.climate.data.operations.stress["32"] == stress, "drought sprinkler spends tank water and rescues only connected beds")
+	stress = farm.climate.data.operations.stress["20"]
+	Ops.target(farm, 12, "water")
+	check(supply.water == tank - Ops.water_cost(farm) and farm.climate.data.operations.stress["12"] == 0 and farm.climate.data.operations.stress["20"] == stress, "drought sprinkler spends tank water and rescues only connected beds")
 	supply.water = 0.0
 	farm.update(1.0)
 	check(supply.water == 0, "depleted drought reserve cannot silently regenerate")
-	farm.travel_to(1)
 	var local_tank: Dictionary = Ops.local(farm)
 	local_tank.water = 0.0
 	farm.update(1.0)
-	check(local_tank.water > 0 and supply.water == 0 and farm.climate.data.island == 2, "travel keeps the dry spell on its own island and Island 1 refills forgiving")
-	farm.travel_to(2)
 	farm.update(30)
 	check(farm.climate.data.phase == "recovery" and supply.water > 0, "rain supply returns when the dry spell clears")
 
 func test_weather_equipment() -> void:
-	fresh(2)
+	fresh(true)
 	farm.climate.fund(farm, "drainage")
 	planted(0)
 	start_weather("flood")
@@ -232,15 +221,15 @@ func test_weather_equipment() -> void:
 	var stress: float = farm.climate.data.operations.stress["0"]
 	Ops.target(farm, 0, "water")
 	check(farm.climate.data.operations.stress["0"] == stress, "sprinkler watering cannot cure flood danger")
-	fresh(2)
+	fresh(true)
 	farm.climate.fund(farm, "windbreaks")
 	planted(0)
-	planted(32)
+	planted(20)
 	Ops.local(farm).shelter = 2
 	start_weather("storm")
 	Ops.update(farm, 2.0)
-	check(float(farm.climate.data.operations.stress["0"]) < float(farm.climate.data.operations.stress["32"]) * 0.8, "trees shelter the fixed far patch regardless of a legacy movable-screen setting")
-	fresh(2)
+	check(float(farm.climate.data.operations.stress["0"]) < float(farm.climate.data.operations.stress["20"]) * 0.8, "trees shelter the fixed far patch regardless of a legacy movable-screen setting")
+	fresh(true)
 	farm.barn_level = 2
 	farm._recompute_capacity()
 	farm.storage.russet = 1000
@@ -248,79 +237,45 @@ func test_weather_equipment() -> void:
 	Ops.local(farm).sealed = false
 	start_weather("flood")
 	check(farm.climate.data.barn_lost > 0 and farm.climate.data.barn_lost < 150, "reinforced barn automatically protects stock without a shutter control")
-	fresh(2)
+	fresh(true)
 	planted(0)
 	start_weather("drought")
 	farm.update(3.0)
-	var hazard: Dictionary = farm.climate.data.operations.stress.duplicate(true)
-	var wet: Dictionary = farm.climate.data.operations.wet.duplicate(true)
-	farm.debug_unlock_island(3)
-	farm.travel_to(3)
-	farm.climate.data.projects["3"].irrigation = 1
-	planted(0)
-	Ops.target(farm, 0, "water")
-	check(farm.plots[0].watered and same(farm.climate.data.operations.stress, hazard) and same(farm.climate.data.operations.wet, wet), "calm-island irrigation cannot rescue same-index crops on another island's disaster map")
 	var controls: Dictionary = Ops.local(farm).duplicate(true)
 	for old_action in ["mode", "shelter", "sealed", "burst", "hand"]: Ops.operate(farm, old_action)
 	check(same(Ops.local(farm), controls), "obsolete invisible controls cannot create reserves or activate movable and continuous modes")
 
-func test_save_migration_and_validation() -> void:
-	fresh(3)
+func test_save_validation() -> void:
+	fresh(true)
 	farm.tools.water = 3
 	farm.coins = 12345
 	farm.storage.russet = 21
 	farm.seed_inventory.icecap = 9
-	farm.quest_progress.winter_ground = 4
-	farm.climate.data.projects["3"].rainwater = 1
+	farm.climate.data.projects.rainwater = 1
 	planted(7)
 	Ops.local(farm).water = 51
 	Ops.local(farm).can = 37
 	var before: Dictionary = farm._save_data()
 	check(farm._valid_save(before), "connected water checkpoint is valid before writing")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "can, tank and equipment round-trip through a disposable save")
-	check(same(farm.climate.data, before.climate) and same(farm.island_plots, before.island_plots), "round-trip preserves all resource levels and planted crops")
-	# Revision 21 reclaims empty upper beds when loading an older farm.
-	# Only bed 7 is planted here; its crop and every other field value survive.
-	var migrated_fields: Dictionary = before.island_plots.duplicate(true)
-	for id in ["2", "3"]:
-		for index in range(migrated_fields[id].size() / 2, migrated_fields[id].size()):
-			migrated_fields[id][index].unlocked = false
-	var legacy: Dictionary = before.duplicate(true)
-	legacy.mechanics_revision = 17
-	for supply in legacy.climate.operations.islands.values():
-		supply.erase("can")
-		supply.erase("refilled")
-		supply.mode = 2
-		supply.shelter = 2
-	write_save(legacy)
-	farm.tools.water = 0
-	check(farm.load_game(SAVE), "revision 17 farm migrates without requiring a reset")
-	check(farm.tools.water == 3 and Ops.local(farm).can == Ops.can_capacity(farm), "migration sizes a new full can from saved upgrades rather than pre-load state")
-	check(Ops.local(farm).water == 51 and Ops.local(farm).mode == 0 and Ops.local(farm).shelter == 0, "migration retains reserve and removes obsolete automatic/movable controls")
-	check(int(farm.climate.data.projects["3"].get("irrigation", 0)) >= 1, "legacy tank area-watering ability survives as an explicit connected sprinkler")
-	check(farm.coins == 12345 and farm.storage.russet == 21 and farm.seed_inventory.icecap == 9 and farm.quest_progress.winter_ground == 4 and same(farm.island_plots, migrated_fields), "migration preserves money, barn stock, seeds, quests and every real crop while reclaiming empty expansion beds")
-	legacy.mechanics_revision = 15
-	legacy.climate.erase("operations")
-	write_save(legacy)
-	farm.tools.water = 0
-	check(farm.load_game(SAVE) and Ops.local(farm).can == Ops.can_capacity(farm) and farm.tools.water == 3, "pre-reserve saves receive the full can appropriate to their saved tool rank")
+	check(same(farm.climate.data, before.climate) and same(farm.plots, before.plots), "round-trip preserves all resource levels and planted crops")
 	for invalid in [-1.0, 65.0, NAN, INF, "16"]:
 		var corrupt: Dictionary = farm._save_data()
-		corrupt.climate.operations.islands["3"].can = invalid
+		corrupt.climate.operations.supply.can = invalid
 		check(not farm._valid_save(corrupt), "invalid can value rejects: " + str(invalid))
 	var corrupt: Dictionary = farm._save_data()
-	corrupt.climate.operations.islands["3"].erase("can")
+	corrupt.climate.operations.supply.erase("can")
 	check(not farm._valid_save(corrupt), "new revision cannot silently omit carried water")
 	corrupt = farm._save_data()
-	corrupt.climate.operations.islands["3"].refilled = 1
+	corrupt.climate.operations.supply.refilled = 1
 	check(not farm._valid_save(corrupt), "refill guidance flag has strict boolean validation")
 	corrupt = farm._save_data()
 	corrupt.tools.water = 0
-	for supply in corrupt.climate.operations.islands.values(): supply.can = 16
-	corrupt.climate.operations.islands["3"].can = 17
+	for supply in [corrupt.climate.operations.supply]: supply.can = 16
+	corrupt.climate.operations.supply.can = 17
 	check(not farm._valid_save(corrupt), "saved can cannot exceed its purchased carrying capacity")
 	corrupt = farm._save_data()
-	corrupt.climate.operations.islands["3"].water = -1
+	corrupt.climate.operations.supply.water = -1
 	write_save(corrupt)
 	var untouched: Dictionary = farm._save_data()
 	check(not farm.load_game(SAVE) and same(farm._save_data(), untouched), "rejected corrupt save leaves the current farm unchanged atomically")
@@ -330,36 +285,36 @@ func test_save_migration_and_validation() -> void:
 		check(not farm._valid_save(corrupt), "malformed water structure safely rejects: " + str(invalid))
 
 func test_practice_isolation() -> void:
-	fresh(2)
-	planted(34)
-	var real_crops: Dictionary = farm.island_plots.duplicate(true)
+	fresh(true)
+	planted(18)
+	var real_crops: Array = farm.plots.duplicate(true)
 	var money: float = farm.coins
 	var clock: float = farm.elapsed
 	farm.climate.Lesson.start(farm)
 	farm.update(200)
-	check(farm.elapsed == clock and farm.coins == money and same(farm.island_plots, real_crops), "safe practice freezes clocks and bills without changing real crops")
+	check(farm.elapsed == clock and farm.coins == money and same(farm.plots, real_crops), "safe practice freezes clocks and bills without changing real crops")
 	var supply: Dictionary = Ops.local(farm)
 	supply.can = 0
-	farm.interact_plot(34, "water")
+	farm.interact_plot(18, "water")
 	check(farm.climate.data.lesson.stage == "water" and supply.can == 0, "an empty practice can cannot bypass the real resource rule")
 	Ops.refill(farm)
 	var carried: float = supply.can
 	farm.interact_plot(0, "water")
 	check(farm.climate.data.lesson.stage == "water" and supply.can == carried, "wrong practice bed preserves both instruction and carried water")
-	farm.interact_plot(34, "water")
+	farm.interact_plot(18, "water")
 	check(farm.climate.data.lesson.stage == "area" and supply.can == carried - 1, "practice can uses the same finite resource as ordinary farming")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.climate.data.lesson.stage == "area", "practice resumes its saved step with real crops untouched")
 	supply = Ops.local(farm)
 	var tank: float = supply.water
 	Ops.target(farm, 0, "water")
 	check(farm.climate.data.lesson.stage == "area" and supply.water == tank, "wrong practice sprinkler preserves tank water")
-	Ops.target(farm, 35, "water")
+	Ops.target(farm, 19, "water")
 	check(farm.climate.data.lesson.stage == "success" and supply.water == tank - Ops.water_cost(farm), "practice sprinkler spends its shown shared-tank cost")
 	farm.climate.Lesson.tick(farm, 3.1)
-	check(farm.climate.data.lesson.stage == "done" and same(farm.island_plots, real_crops), "practice completion restores the exact saved crop view")
+	check(farm.climate.data.lesson.stage == "done" and same(farm.plots, real_crops), "practice completion restores the exact saved crop view")
 	farm.climate.Lesson.start(farm)
 	farm.climate.Lesson.finish(farm)
-	check(same(farm.island_plots, real_crops), "skipping practice cannot overwrite a real crop")
+	check(same(farm.plots, real_crops), "skipping practice cannot overwrite a real crop")
 
 func run() -> void:
 	farm = State.new()
@@ -368,16 +323,8 @@ func run() -> void:
 	test_upgrades_and_irrigation()
 	test_drought_and_shared_reserve()
 	test_weather_equipment()
-	test_save_migration_and_validation()
+	test_save_validation()
 	test_practice_isolation()
-	fresh(1)
-	Ops.local(farm).can = 7
-	farm.debug_unlock_island(2)
-	farm.travel_to(2)
-	check(Ops.local(farm).can == 7, "carried can water travels with farmer")
-	Ops.local(farm).can = 3
-	farm.travel_to(1)
-	check(Ops.local(farm).can == 3, "returning to island cannot refill carried water")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()
 	print("CONNECTED WATER STATE: %d checks, %d failures" % [checks, failures])

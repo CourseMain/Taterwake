@@ -29,25 +29,6 @@ func run() -> void:
 	for index: int in range(state.CROP_IDS.size()):
 		var crop: String = state.CROP_IDS[index]
 		check(state.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 60.0, crop + " uses balanced base growth")
-	var coins: float = state.coins
-	var harvests: int = state.harvested_total
-	game._on_action("debug:island:3")
-	game.hud._act("debug:island:2")
-	check(not state.island2_unlocked and not state.island3_unlocked, "locked debug rejects island unlocks through both routes")
-	game._on_action("debug:unlock:" + game.DEBUG_ACCESS_CODE)
-	game._on_action("debug")
-	game.hud._refs.debug_island_2.pressed.emit()
-	check(state.island2_unlocked and not state.island3_unlocked and state.island_plots["2"].filter(func(p): return p.unlocked).size() == 24, "debug unlocks Shores and its field")
-	check(game.hud._refs.debug_island_2.disabled, "already unlocked button disables")
-	game.hud._refs.debug_island_3.pressed.emit()
-	check(state.island3_unlocked and state.island_plots["3"].filter(func(p): return p.unlocked).size() == 40, "debug unlocks winter field")
-	check(state.coins == coins and state.harvested_total == harvests and state.current_island == 1, "unlock preserves money, mastery, location and current tax tier")
-	check(state.debug_info().active and state.debug_islands_modified, "debug progression records debug access")
-	state.reset_debug()
-	check(state.debug_info().active, "reset debug does not erase debug progression history")
-	state.apply_debug(1.0)
-	(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = 520
-	await shot("debug-islands")
 	game._on_action("dex")
 	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 6, "crop tab illustrates all six varieties")
 	check(game.hud._refs["dex_status:sunburst"].text.contains("55s") and game.hud._refs["dex_status:icecap"].text.contains("60s"), "Dex shows later-island growth and home")
@@ -62,49 +43,11 @@ func run() -> void:
 			check(picture.size.x >= 76 and picture.size.y >= 76, "illustration stays readable " + picture.name)
 	root.size = Vector2i(1280, 800)
 	game.hud.close_panel()
-	state.travel_to(2)
-	state.climate.acknowledge(state)
 	state.climate.begin_warning(state, "drought", 1.0)
 	state.climate.data.phase = "active"
 	state.climate.data.timer = 30.0
 	for crop: String in state.CROP_IDS:
 		check(state.crop_grow_time(crop) <= 60.000001, crop + " weather slowdown is bounded")
-	# Old saves are validated against their original times, then migrated by completion ratio.
-	state.climate.reset()
-	state.travel_to(1)
-	var raw: Dictionary = state._save_data()
-	raw.mechanics_revision = 13
-	for island in ["2", "3"]:
-		for bed in raw.island_plots[island]: bed.unlocked = bool(raw["island" + island + "_unlocked"])
-	raw.erase("debug_islands_modified")
-	for pair: Array in [[4, 2, 45.0], [5, 3, 90.0]]:
-		var p: Dictionary = raw.island_plots["1"][pair[0]]
-		p.crop = "radioactive"
-		p.stage = pair[1]
-		p.tilled = true
-		p.watered = true
-		p.elapsed = pair[2]
-	var sun: Dictionary = raw.island_plots["2"][0]
-	sun.crop = "sunburst"
-	sun.stage = 3
-	sun.tilled = true
-	sun.watered = true
-	sun.elapsed = 45.0
-	var path: String = "user://qol-migration-%d.json" % OS.get_process_id()
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(raw))
-	file.close()
-	check(state.load_game(path), "pre-rebalance save with mature 90s crop loads")
-	check(is_equal_approx(state.plots[4].elapsed, 25.0) and state.plots[4].stage == 2, "half-grown old Radioactive remains half-grown")
-	check(state.plots[5].elapsed == 50.0 and state.plots[5].stage == 3 and state.island_plots["2"][0].elapsed == 55.0, "mature crops remain mature after shorter or longer baseline")
-	check(state._valid_save(state._save_data()), "migrated farm validates at revision 14")
-	state.reset_game()
-	state.debug_unlock_island(3)
-	check(state.island2_unlocked and state.island3_unlocked, "direct winter unlock includes prerequisite island")
-	check(state.save_game(path) and state.load_game(path) and state.debug_islands_modified, "debug unlock and marker survive save/load")
-	state.reset_game()
-	check(not state.debug_islands_modified and not state.island2_unlocked and not state.island3_unlocked, "new farm resets debug progression")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	game.queue_free()
 	await process_frame
 	await create_timer(0.4).timeout

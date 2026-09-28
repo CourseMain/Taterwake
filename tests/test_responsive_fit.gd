@@ -46,10 +46,6 @@ func run() -> void:
 	game.set_process(false)
 	game.hud.set_process(false)
 	game.state.coins = 1e20
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
-	game.state.travel_to(3)
-	game.state.climate.acknowledge(game.state)
 	game.hud.update_state(game.state)
 	game.hud._toast_box.hide()
 	game.hud._reward_box.hide()

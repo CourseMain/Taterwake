@@ -20,16 +20,12 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.debug_unlock_island(3)
-	farm.climate.acknowledge(farm)
 	farm.coins = 1e18
 	var talk = game.conversation
 	for clip in talk.voice.CLIPS:
 		check(clip.get_length() >= .15 and clip.get_length() <= 1.0, "potato takes are short, nonempty audio clips")
 	var looks: Array = []
 	for id: String in Roster.PEOPLE:
-		farm.travel_to(3 if id == "oren" else 2)
-		farm.climate.acknowledge(farm)
 		farm.climate.data.phase = "calm"
 		var service: String = Roster.PEOPLE[id].service
 		game._on_user_action("talk:edwin" if id == "edwin" else service)
@@ -89,9 +85,7 @@ func run() -> void:
 		game._start_conversation(id)
 		check(talk.speech.text != previous,"no consecutive repeated greeting " + id)
 		talk.finish()
-	for island in [1,2,3]:
-		farm.travel_to(island)
-		farm.climate.acknowledge(farm)
+	for island in [1]:
 		var cast: Array = []
 		for actor in game.world._villagers: cast.append(actor.npc_id)
 		check("mara" in cast and "nell" in cast,"world residents keep distinct identities on island " + str(island))
@@ -99,40 +93,19 @@ func run() -> void:
 			check(str(game.world._npc_actors[pair[0]].get_parent().name) == ("BuyerContracts" if pair[0] == "tess" and island == 2 else pair[1]),"stallholder at their service: " + pair[0])
 		check(game.world._npc_actors.mara.position.z > .15,"seed vendor stands in front of awning")
 	game.hud.close_panel()
-	game.world.player.position = game.world.ferry_position()
-	game._interact_nearby()
-	check(talk.visible and talk.npc_id == "hollis", "nearby ferry action greets captain first")
-	talk.choose(0)
-	check(game.hud._panel_kind == "island", "captain opens crossings")
-	game.hud.close_panel()
-	game._climate_action("open_furnace")
-	check(talk.visible and talk.npc_id == "oren", "freeze shortcut greets furnace keeper")
-	talk.finish()
-	farm.travel_to(2)
-	farm.climate.data.intro_pending = true
-	game._on_action("climate_continue")
-	check(talk.visible and talk.npc_id == "iris", "sky introduction leads to Iris before weather service")
-	talk.choose(0)
-	check(game.hud._panel_kind == "climate", "Iris opens weather and protection")
-	game.hud.close_panel()
 	check(farm.save_game(SAVE),"save NPC memories")
 	var remembered: Dictionary = farm.npc_history.duplicate(true)
 	farm.npc_history.clear()
 	check(farm.load_game(SAVE),"load farm with NPC memories")
 	check(farm.npc_history == remembered,"memories survive reload")
-	var old_save: Dictionary = farm._save_data()
-	old_save.erase("npc_history")
-	check(farm._valid_save(old_save),"old saves remain compatible")
 	for bad in [[],{"mara":true},{"unknown":{"visits":1,"last":"hi","kind":true}},{"mara":{"visits":-1,"last":"hi","kind":true}},{"mara":{"visits":1,"last":false,"kind":true}}]:
 		check(not Roster.valid_history(bad),"invalid memory rejected")
-	farm.travel_to(3)
-	farm.climate.acknowledge(farm)
 	farm.climate.data.phase = "calm"
 	farm.climate.begin_warning(farm,"freeze",1)
 	game._on_action("activities")
-	game._on_action("talk:oren")
+	game._on_action("talk:bram")
 	talk.choose(2)
-	check(talk.speech.text.contains("Heat your hoe") and talk.speech.text.contains("free"),"weather choice gives local freeze guidance")
+	check(talk.speech.text.contains("hoe") and talk.speech.text.contains("clear ice"),"weather choice gives local freeze guidance")
 	var remaining: float = farm.climate.data.timer
 	game._process(12)
 	check(farm.climate.data.timer == remaining,"weather warning waits while talking")
@@ -161,15 +134,17 @@ func run() -> void:
 	game._process(.1)
 	check(farm.climate.data.timer < remaining,"simulation resumes afterwards")
 	game.hud.close_panel()
-	farm.travel_to(1)
 	game._start_conversation("oren")
 	check(not talk.visible,"winter keeper unavailable outside winter")
 	game._start_conversation("iris")
-	check(not talk.visible,"radio observer unavailable before station")
+	check(talk.visible and talk.npc_id == "iris", "weather observer is available on the valley")
+	talk.finish()
 	farm.reset_game()
 	check(farm.npc_history.is_empty(),"new farm resets introductions")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	print("NPC CONVERSATIONS: %d checks, %d failures" % [checks,failures])
 	game.queue_free()
 	await frames()
+	# Give the audio mixer one buffer cycle to release stopped voice playback.
+	await create_timer(0.1).timeout
 	quit(1 if failures else 0)

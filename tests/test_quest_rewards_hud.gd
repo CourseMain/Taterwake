@@ -16,10 +16,7 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO
 	root.size = Vector2i(390,844) if game.touch_controls.enabled else Vector2i(1280,800)
 	game.state.coins = 1e18
-	game.state.debug_unlock_island(3)
-	for island in [1,2,3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		game.hud.show_panel("quests",game.state)
 		await settle()
 		var scroll: ScrollContainer = game.hud._body.get_parent()

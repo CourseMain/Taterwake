@@ -26,10 +26,7 @@ func run() -> void:
 	root.add_child(game)
 	await settle()
 	game.set_process(false)
-	game.state.debug_unlock_island(3)
-	for island: int in [2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		game.hud._climate_alert.dismiss()
 		game.state.coins = game.state.bankruptcy_limit()
 		game._on_action("climate_fund:rainwater")
@@ -40,7 +37,7 @@ func run() -> void:
 				game._on_action("climate_fund:" + id)
 				check(game.world._project_nodes.has(id), "purchase immediately builds " + id)
 				var project: Node3D = game.world._project_nodes[id]
-				check(project.get_meta("level") == int(game.state.climate.data.projects[str(island)].get(id, 0)) + (1 if id == "rainwater" else 0), "scenery follows local upgrade level")
+				check(project.get_meta("level") == int(game.state.climate.data.projects.get(id, 0)) + (1 if id == "rainwater" else 0), "scenery follows local upgrade level")
 				var instance: int = project.get_instance_id()
 				game._on_state_changed()
 				check(game.world._project_nodes[id].get_instance_id() == instance, "ordinary refresh reuses project geometry")
@@ -57,9 +54,6 @@ func run() -> void:
 		game._on_action("climate")
 		await shot("shop-%d" % island)
 		game.hud.close_panel()
-	game.state.travel_to(1)
-	check(game.world._project_nodes.size() == 2 and game.world._project_nodes.has("irrigation"), "Island 1 retains purchased shared irrigation beside its tank")
-	game.state.travel_to(2)
 	check(game.world._project_nodes.size() == 5 and game.world._project_nodes.rainwater.get_meta("level") == 3, "returning to island restores its projects")
 	game.state.climate.reset()
 	game._on_state_changed()

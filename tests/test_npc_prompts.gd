@@ -16,12 +16,9 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.state.tutorial_progress.completed = true
-	game.state.debug_unlock_island(3)
 	game.state.coins = 1e18
 	game.set_process(false)
-	for island in [1, 2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		game.state.ClimateSystem.Lesson.finish(game.state)
 		game._on_state_changed()
 		await frames()
@@ -52,8 +49,6 @@ func run() -> void:
 			check(game.world.nearby_station().is_empty(), "no NPC prompt over field")
 		game.world.player.position = Vector3(100,0,100)
 		check(game.world.nearby_station().is_empty(), "no distant prompt")
-	game.state.travel_to(1)
-	game.state.climate.acknowledge(game.state)
 	game.hud.close_panel()
 	game.world.player.position = game.world.station_position("market") + Vector3(0, 0, 3.8)
 	await frames()

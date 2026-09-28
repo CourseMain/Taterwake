@@ -55,8 +55,6 @@ func run() -> void:
 	game.set_process(false)
 	game.hud.set_process(false)
 	game.state.coins = 1e15
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
 	game._on_action("market")
 	var starting_seeds: int = game.state.seed_inventory.russet
 	var seed_price: float = game.state.market.russet.seed
@@ -74,9 +72,7 @@ func run() -> void:
 	check(game.state.seed_inventory.russet == starting_seeds + 6, "rejection preserves inventory")
 	game.state.coins = 1e15
 	var shop_points: Array[Vector3] = [Vector3(-6.4, 1.5, -8.5), Vector3(-8, 1.5, -10.6), Vector3(18, 1.9, 2)]
-	for island: int in [1, 2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		await process_frame
 		await physics_frame
 		await physics_frame
@@ -89,15 +85,6 @@ func run() -> void:
 			await shot("purchase-live-toolsmith")
 		click_station(game.world._duck_home + Vector3(0, 0.8, 0.1), "duck_patrol")
 		check(game.hud._refs.has("activity:duck") and not game.hud._refs.has("activity:contract:bulk") and not game.hud._refs.has("activity:furnace:icecap"), "island %d coop only offers duck training" % island)
-		if island == 2:
-			press("activity:duck")
-			check(game.activities.duck_level == 1 and game.hud._purchase_receipt.kind == "duck", "duck training applies and confirms at the Shores coop")
-			await shot("purchase-live-ducks-island2")
-			click_station(Vector3(13.5, 1.35, 3.2), "activities")
-			check(game.hud._refs.has("activity:contract:bulk") and not game.hud._refs.has("activity:duck"), "buyer booth still opens its separate contract page")
-		if island == 3:
-			click_station(game.world.get_node("FrostFurnace").global_position + Vector3(0, 1.8, 0), "activities")
-			check(game.hud._refs.has("activity:furnace:icecap") and not game.hud._refs.has("activity:duck"), "furnace still has its own page")
 	game.queue_free()
 	await create_timer(0.3).timeout
 	print("PURCHASE GAME: %d checks, %d failures" % [checks, failures])

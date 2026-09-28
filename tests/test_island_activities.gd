@@ -52,247 +52,53 @@ func _run() -> void:
 	var balance: float = state.coins
 	activities.buy_duck()
 	check(activities.duck_level == 3 and activities.duck_interval() == 2 and state.coins == balance, "patrol training caps at three paid levels")
-	plot.pests = true
-	state.current_island = 2
-	activities.update(10)
-	check(plot.pests and activities.duck_clears == 1, "unvisited first-island patrol stays paused")
-	activities.buy_duck()
-	check(state.coins == balance - 500.0, "new island hires a separate local duck")
-	balance = state.coins
-	state.island2_unlocked = true
-	state.selected_crop = "sunburst"
-	state.market.sunburst.sell = 27.0
-	activities.choose_contract("bulk")
-	check(activities.contract.kind == "bulk" and activities.contract.target == 400, "bulk contract asks for a real large harvest")
-	check(activities.contract.crop == "sunburst", "buyer targets the player's selected crop")
-	activities.choose_contract("bulk")
-	check(activities.contract.kind == "bulk", "active order cannot be overwritten to discard committed shipments")
-	state.storage.sunburst = 100
-	activities.deliver_contract()
-	check(state.storage.sunburst == 0 and activities.contract.delivered == 100, "partial shipment removes only delivered ordinary crops")
-	check(state.coins == balance and activities.contract.credit == 3375.0, "partial credit includes25percent bonus without premature cash")
-	state.market.sunburst.sell = 30.0
-	state.storage.sunburst = 500
-	activities.deliver_contract()
-	check(activities.contract.is_empty() and state.storage.sunburst == 200, "completion consumes exact remaining quantity and retains surplus")
-	check(is_equal_approx(state.coins - balance, 14625.0), "each shipment uses its own real quote and pays the accumulated sum once")
-	check(is_equal_approx(state.lifetime_sales, 14625.0) and is_equal_approx(state.island_sales["2"], 14625.0), "contract earnings count toward actual island sales")
-	balance = state.coins
-	activities.deliver_contract()
-	check(state.coins == balance, "completed order cannot be paid twice")
-	activities.choose_contract("bulk")
-	check(activities.contract.is_empty(), "buyer cooldown prevents instant repeated contracts")
-	state.current_island = 1
-	activities.update(25.0)
-	activities.choose_contract("bulk")
-	check(activities.contract.is_empty(), "buyer contracts only start on Island2")
-	state.current_island = 3
-	state.island3_unlocked = true
-	state.storage.icecap = 24
-	activities.charge_furnace()
-	check(activities.furnace_remaining == 0 and state.storage.icecap == 24, "insufficient furnace fuel cannot start a burst")
-	state.storage.icecap = 100
-	state.storage.russet = 100
-	activities.charge_furnace("russet")
-	check(activities.furnace_remaining == 0 and state.storage.russet == 100, "cheap previous-island crops cannot fuel the winter furnace")
-	activities.charge_furnace()
-	check(state.storage.icecap == 75 and activities.furnace_remaining == 20, "furnace consumes exactly25 held Icecaps and starts20seconds")
-	check(activities.growth_speed_multiplier() == 2.5, "furnace exposes real crop growth boost")
-	activities.charge_furnace()
-	check(state.storage.icecap == 75 and activities.furnace_remaining == 20, "active furnace cannot be stacked or charged twice")
-	check(activities.next_boundary() <= 20.0, "simulation cannot step across furnace expiration")
-	activities.update(10)
-	var saved: Dictionary = activities.save_data()
-	check(activities.valid_data(saved), "in-flight furnace and patrol data validate")
-	activities.reset()
-	check(activities.duck_level == 0 and activities.furnace_remaining == 0, "reset clears purchased activities and running boosts")
-	check(activities.load_data(saved) and activities.furnace_remaining == 10 and activities.furnace_cooldown == 50 and activities.duck_speeds["1"] == 2 and activities.duck_counts["1"] == 1 and activities.duck_count() == 0, "saved activity state resumes timers and separate island purchases")
-	state.current_island = 2
-	check(activities.growth_speed_multiplier() == 1, "winter heat never buffs other islands")
-	activities.update(10)
-	state.current_island = 3
-	check(activities.furnace_remaining == 0 and activities.growth_speed_multiplier() == 1 and activities.furnace_cooldown == 40, "furnace heat expires while traveling without retaining boost")
-	activities.charge_furnace()
-	check(state.storage.icecap == 75, "furnace cooling period cannot be bypassed after heat expires")
-	activities.update(40)
-	activities.charge_furnace()
-	check(state.storage.icecap == 50 and activities.furnace_remaining == 20, "furnace can fire again after its real cooldown")
-	for key in ["duck_level", "furnace_remaining", "contract_completed"]:
-		var bad: Dictionary = saved.duplicate(true)
-		bad[key] = -1
-		check(not activities.valid_data(bad), "invalid negative %s rejected" % key)
-	var bad: Dictionary = saved.duplicate(true)
-	bad.furnace_remaining = 21
-	check(not activities.load_data(bad) and activities.furnace_remaining == 20, "invalid loaded duration leaves the live activity unchanged")
-	state.current_island = 2
-	activities.contract_cooldown = 0.0
-	activities.choose_contract("bulk")
-	state.storage.sunburst = 80
-	activities.deliver_contract()
-	saved = JSON.parse_string(JSON.stringify(activities.save_data()))
-	activities.reset()
-	check(activities.load_data(saved) and activities.contract.delivered == 80 and activities.contract.credit > 0, "partial contract survives JSON roundtrip with locked credit")
-	bad = saved.duplicate(true)
-	bad.contract.delivered = 0
-	check(not activities.valid_data(bad), "unearned contract credit is rejected")
-	bad = saved.duplicate(true)
-	bad.contract.credit = INF
-	check(not activities.valid_data(bad), "nonfinite contract payout is rejected")
-	# Exercise the real state's chronological growth hook and atomic farm save.
-	state.activity_system = activities
-	state.reset_game()
-	state.coins = 10000000000000.0
-	state.harvested_total = 30000
-	state.unlock_island2()
-	state.unlock_island3()
-	state.travel_to(3)
-	state.climate.acknowledge(state)
-	state.selected_crop = "icecap"
-	state.seed_inventory.icecap = 1
-	state.storage.icecap = 50
-	state.interact_plot(0, "hoe")
-	state.interact_plot(0, "plant")
-	state.interact_plot(0, "water")
-	var distant: Dictionary = state.island_plots["1"][8]
-	distant.stage = 2
-	distant.tilled = true
-	distant.watered = true
-	distant.elapsed = 0.0
-	distant.crop = "golden"
-	activities.charge_furnace()
-	check(is_equal_approx(state.crop_grow_time("icecap"), 24.0), "crop's displayed growth time includes the actual furnace multiplier")
-	state.update(10.0)
-	check(is_equal_approx(state.plots[0].elapsed, 25.0) and activities.furnace_remaining == 10.0, "real state simulation advances crop and furnace on the same clock")
-	check(is_equal_approx(distant.elapsed, 10.0), "furnace does not boost unvisited first-island fields")
-	check(state.save_game(SAVE), "activities save alongside the real farm")
-	state.reset_game()
-	check(activities.furnace_remaining == 0 and activities.contract.is_empty(), "farm reset clears activity state through its composition hook")
-	check(state.load_game(SAVE), "farm with furnace data reloads successfully")
-	check(activities.furnace_remaining == 10 and activities.furnace_cooldown == 50 and state.storage.icecap == 25, "farm loading restores exact consumed fuel and remaining heat without offline progress")
-	state.update(10.5)
-	check(is_equal_approx(state.plots[0].elapsed, 50.5) and activities.furnace_remaining == 0, "long frame across expiry applies25 boosted growth plus0.5 ordinary growth")
-	check(is_equal_approx(state.crop_grow_time("icecap"), 60.0), "growth speed returns to baseline when furnace stops")
-	var payload: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-	payload.activities.furnace_remaining = 200.0
-	var file: FileAccess = FileAccess.open(SAVE, FileAccess.WRITE)
-	file.store_string(JSON.stringify(payload))
-	file.close()
-	check(not state.load_game(SAVE) and is_equal_approx(state.plots[0].elapsed, 50.5), "corrupt activity data rejects the whole save before replacing the live farm")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	_test_flocks()
 	activities.free()
 	state.free()
-	print("ISLAND ACTIVITIES TEST: %d checks, %d failures" % [checks, failures])
+	print("FARM DUCKS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
 func _test_flocks() -> void:
+	state.activity_system = activities
 	state.reset_game()
-	state.coins = 10000000000000.0
-	state.harvested_total = 30000
-	state.unlock_island2()
-	state.unlock_island3()
-	state.pest_timer = 100.0
-	for field in state.island_plots.values():
-		for plot in field:
-			state._clear_crop(plot)
-	for island in [1, 2, 3]:
-		state.travel_to(island)
-		state.climate.acknowledge(state)
-		var data: Dictionary = activities.info()
-		check(data.duck_count == 0 and data.duck_capacity == island and data.ducks.size() == island, "island%d starts with empty patrol slots and the correct capacity" % island)
-		check(not data.ducks[0].trained, "untrained island%d flock is marked as idle for coop visuals" % island)
-	state.travel_to(2)
-	state.climate.acknowledge(state)
-	for index in [3, 8]:
-		_infest(index)
-	activities.update(8.0)
-	check(state.plots[3].pests and state.plots[8].pests and activities.duck_clears == 0, "idle untrained ducks cannot secretly remove pests")
-	var balance: float = state.coins
+	state.coins = 10000
+	for plot in state.plots: state._clear_crop(plot)
+	check(activities.duck_count() == 0 and activities.duck_capacity() == 2 and activities.info().ducks.size() == 2, "one flock has two hire slots")
+	for index in [3, 8]: _infest(index)
+	activities.update(8)
+	check(state.plots[3].pests and state.plots[8].pests, "unhired ducks never clear pests")
 	activities.hire_duck()
-	check(activities.duck_count() == 1 and is_equal_approx(balance - state.coins, 500.0), "first Shores duck charges its own island price")
 	activities.hire_duck()
-	check(activities.duck_count() == 2 and is_equal_approx(balance - state.coins, 1500.0), "second duck is a separate purchase")
-	var full_balance: float = state.coins
+	check(state.coins == 8500 and activities.duck_count() == 2, "second duck is a separate purchase")
 	activities.hire_duck()
-	check(activities.duck_count() == 2 and state.coins == full_balance, "Shores capacity blocks a third duck without charge")
-	state.update(1.0)
+	check(state.coins == 8500 and activities.duck_count() == 2, "third duck is refused without charge")
+	state.update(1)
 	var flock: Array = activities.info().ducks
-	check(flock[0].target != flock[1].target and [3, 8].has(int(flock[0].target)) and [3, 8].has(int(flock[1].target)), "two ducks reserve distinct infested targets")
-	check(flock[0].elapsed == 1 and flock[1].elapsed == 1, "each island2 duck owns an independent travel clock")
-	var shores: Array = activities.duck_patrols["2"].duplicate(true)
-	state.travel_to(3)
-	state.climate.acknowledge(state)
-	for index in [3, 5, 7]:
-		_infest(index)
+	check(flock[0].target != flock[1].target and [3, 8].has(int(flock[0].target)) and [3, 8].has(int(flock[1].target)), "ducks reserve distinct infested targets")
+	check(flock[0].elapsed == 1 and flock[1].elapsed == 1, "ducks retain independent patrol clocks")
+	var progress: float = flock[0].progress
 	activities.train_ducks()
-	check(activities.duck_count() == 0 and activities.duck_speed() == 0, "cannot train an empty winter flock")
-	for _duck: int in range(3):
-		activities.hire_duck()
-	check(activities.duck_count() == 3 and activities.duck_capacity() == 3, "winter can hire three ducks")
-	state.plots[3].pest_ticks = 1
-	state.plots[3].pest_damage = 1.0 / 3.0
-	state.update(1.0)
-	flock = activities.info().ducks
-	var targets: Dictionary = {}
-	for duck in flock:
-		targets[int(duck.target)] = true
-	check(targets.size() == 3 and targets.has(3) and targets.has(5) and targets.has(7), "three winter ducks split three simultaneous outbreaks without pileups")
-	check(flock[0].target == 3, "available duck prioritizes the crop with existing pest damage")
-	check(activities.duck_patrols["2"] == shores, "travel leaves the other island's saved patrol paths and timers unchanged")
-	state.update(3.0)
-	check(not state.plots[3].pests and not state.plots[5].pests and not state.plots[7].pests, "winter flock clears three different beds on the same arrival boundary")
-	check(activities.duck_clears == 3 and activities.info().ducks[0].clears == 1 and activities.info().ducks[1].clears == 1 and activities.info().ducks[2].clears == 1, "each duck records exactly its own successful clear")
-	check(state.plots[3].pest_ticks == 1 and is_equal_approx(state.plots[3].pest_damage, 1.0 / 3.0), "multi-duck patrol never heals earlier damage")
-	state.travel_to(2)
-	state.climate.acknowledge(state)
-	check(activities.info().ducks[0].elapsed == 1 and activities.info().ducks[1].elapsed == 1, "returning to an island resumes each duck's saved route")
-	state.update(3.0)
-	check(not state.plots[3].pests and not state.plots[8].pests and activities.duck_clears == 5, "two shores ducks finish their individual interrupted chases")
-	state.update(4.0)
-	check(activities.duck_clears == 5, "patrolling already clean beds cannot count or clear an outbreak twice")
-	activities.update(1.0)
-	var previous_progress: float = activities.info().ducks[0].progress
-	state.travel_to(3)
-	state.climate.acknowledge(state)
-	state.coins = 1e16
-	activities.train_ducks()
-	check(activities.duck_speed() == 1 and activities.duck_interval() == 3.0 and activities.duck_count() == 3, "speed upgrade improves only winter speed without adding a duck")
-	state.travel_to(2)
-	state.climate.acknowledge(state)
-	check(activities.duck_interval() == 4.0 and is_equal_approx(activities.info().ducks[0].progress, previous_progress), "winter training leaves Shores speed and route progress untouched")
+	check(activities.duck_interval() == 3 and is_equal_approx(activities.info().ducks[0].progress, progress), "training preserves fraction of journey travelled")
 	var snapshot: Dictionary = activities.save_data()
-	check(int(snapshot.version) == 3 and snapshot.duck_patrols.size() == 3 and activities.valid_data(snapshot), "version3 save contains ownership, speed and all patrol paths")
-	check(state.save_game(SAVE), "multi-island patrols serialize with the farm")
+	check(activities.valid_data(snapshot) and state.save_game(SAVE), "patrols serialize with farm")
 	state.reset_game()
-	check(state.load_game(SAVE) and activities.save_data().duck_patrols == snapshot.duck_patrols, "farm reload restores every duck path, clock and clear count")
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
-	var corrupt: Dictionary = snapshot.duplicate(true)
-	corrupt.duck_patrols["3"][0].target = 80
-	check(not activities.valid_data(corrupt), "out-of-range winter duck targets are rejected")
-	corrupt = snapshot.duplicate(true)
-	corrupt.duck_patrols["3"][1].target = corrupt.duck_patrols["3"][0].target
-	check(not activities.valid_data(corrupt), "saved ducks cannot share a reserved target")
-	corrupt = snapshot.duplicate(true)
-	corrupt.duck_patrols["3"].pop_back()
-	check(not activities.valid_data(corrupt), "save cannot silently drop the third winter duck")
-	var legacy: Dictionary = snapshot.duplicate(true)
-	legacy.version = 1
-	legacy.erase("duck_patrols")
-	legacy.duck_level = 1
-	legacy.duck_clears = 9
-	legacy.duck_from = 7
-	legacy.duck_target = 8
-	legacy.duck_elapsed = 1.25
-	legacy = JSON.parse_string(JSON.stringify(legacy))
-	check(activities.valid_data(legacy) and activities.load_data(legacy), "original version1 singleton saves remain valid and migrate")
-	check(activities.duck_level == 1 and activities.duck_clears == 9 and activities.duck_patrols["1"][0]["from"] == 7 and activities.duck_patrols["1"][0].target == 8 and activities.duck_patrols["1"][0].elapsed == 1.25, "migration preserves paid training and the original duck's exact route")
-	check(activities.duck_patrols["2"].size() == 2 and activities.duck_patrols["3"].size() == 3 and activities.valid_data(activities.save_data()), "migration adds new island flocks without charging again")
-	# The flock rule derives from island numbers rather than a hard-coded list.
-	state.island_plots["4"] = state._empty_winter(true)
-	state.current_island = 4
-	check(activities.info().duck_count == 0 and activities.info().duck_capacity == 4 and activities.info().ducks.size() == 4, "future island4 has four hire slots")
-	state.current_island = 2
-	state.island_plots.erase("4")
+	check(activities.duck_count() == 0 and state.load_game(SAVE), "reset clears flock; saved farm reloads")
+	check(activities.save_data().duck_patrols == snapshot.duck_patrols and activities.duck_count() == 2, "reload restores routes and ownership exactly")
+	state.update(2.25)
+	check(not state.plots[3].pests and not state.plots[8].pests and activities.duck_clears == 2, "both ducks clear on the saved arrival boundary")
+	state.update(3)
+	check(activities.duck_clears == 2, "clean patrols never count a second clear")
+	for defect in ["target", "duplicate", "missing", "count", "speed"]:
+		var bad: Dictionary = snapshot.duplicate(true)
+		match defect:
+			"target": bad.duck_patrols[0].target = 24
+			"duplicate": bad.duck_patrols[1].target = bad.duck_patrols[0].target
+			"missing": bad.duck_patrols.pop_back()
+			"count": bad.owned_ducks = 3
+			"speed": bad.patrol_speed = -1
+		check(not activities.valid_data(bad), "reject corrupt flock " + defect)
+	for suffix in ["", ".bak", ".rejected"]:
+		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
 
 func _infest(index: int) -> void:
 	var plot: Dictionary = state.plots[index]

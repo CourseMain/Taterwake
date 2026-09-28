@@ -92,7 +92,7 @@ func run() -> void:
 	check(fx.active.size() <= fx.MAX_HARVESTS, "large tools respect hard receipt budget")
 	fx.animate(.4)
 	check(fx.clods.size() <= fx.MAX_CLODS, "soil scatter stays bounded across a full field")
-	game.world.switch_island(2)
+	game.world.build_world()
 	check(game.world.harvest_feedback.active.is_empty(), "travel cannot replay old harvests")
 	var foley = load("res://scripts/farm_audio.gd")
 	var normal: AudioStreamWAV = foley.bake("harvest")

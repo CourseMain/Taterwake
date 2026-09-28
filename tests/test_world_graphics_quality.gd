@@ -18,8 +18,8 @@ func _run() -> void:
 	root.add_child(world)
 	world.set_graphics_quality("smooth")
 	world.set_day_time(15.0)
-	for island: int in [1, 2, 3]:
-		world.build_world(island)
+	for island in [1]:
+		world.build_world()
 		check(world.graphics_quality == "smooth" and not world._sun.shadow_enabled, "chosen quality survives island construction")
 		check(is_equal_approx(world.day_cycle_info().seconds, 15.0), "graphics construction preserves elapsed daylight")
 		var camera_id: int = world.camera.get_instance_id()
@@ -69,9 +69,9 @@ func _run() -> void:
 		await physics_frame
 		check(int(world.pick(world.camera.unproject_position(world.plot_positions[4])).get("plot_index", -1)) == 4, "smooth keeps infested beds selectable")
 		check(world._pest_roots[4].visible and world._pest_labels[4].visible, "smooth keeps pest feedback visible")
-		world.set_tutorial_focus("island")
+		world.set_tutorial_focus("market")
 		world.animate(0.1, false)
-		check(world._tutorial_marker.visible, "smooth keeps tutorial ferry guidance visible")
+		check(world._tutorial_marker.visible, "smooth keeps tutorial market guidance visible")
 		world.set_graphics_quality("invalid")
 		check(world.graphics_quality == "balanced" and world._sun.shadow_enabled, "unknown setting safely falls back to balanced")
 		check(world.camera.get_instance_id() == camera_id and world._sun.get_instance_id() == light_id, "switching modes reuses existing camera and lights")

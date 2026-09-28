@@ -87,13 +87,7 @@ func run() -> void:
 	check(not game.world._pest_labels[4].visible and game.world._pest_labels[4].text.is_empty(), "destroyed crop never leaves persistent zero-yield text")
 	game.state.coins = 2.0e11
 	game.state.harvested_total = 25000
-	game.state.unlock_island2()
-	game.state.travel_to(2)
-	game.state.climate.acknowledge(game.state)
-	game.state.unlock_island3()
-	for island in [1, 2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		game.hud._toast_box.hide()
 		game.hud._reward_box.hide()
 		game.hud._context_box.hide()

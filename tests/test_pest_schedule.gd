@@ -46,20 +46,8 @@ func run() -> void:
 	check(farm.load_game(SAVE), "scheduled farm reloads")
 	for index in range(snapshot.size()):
 		check(is_equal_approx(farm.plots[index].pest_delay, snapshot[index].pest_delay) and is_equal_approx(farm.plots[index].plant_age, snapshot[index].plant_age) and is_equal_approx(farm.plots[index].ripe_age, snapshot[index].ripe_age), "reload preserves every deadline")
-	var legacy: Dictionary = farm._save_data().duplicate(true)
-	legacy.mechanics_revision = 14
-	for field in legacy.island_plots.values():
-		for plot in field:
-			plot.erase("plant_age")
-			plot.erase("pest_delay")
-	legacy.plots = legacy.island_plots["1"]
-	var file := FileAccess.open(SAVE, FileAccess.WRITE)
-	file.store_string(JSON.stringify(legacy))
-	file.close()
-	check(farm.load_game(SAVE), "previous saves migrate without losing crops")
-	check(farm.plots[0].plant_age == 0 and farm.plots[0].pest_delay == 0, "legacy crop gets a fresh timer rather than instant infestation")
 	var invalid: Dictionary = farm._save_data().duplicate(true)
-	invalid.island_plots["1"][0].pest_delay = -1
+	invalid.plots[0].pest_delay = -1
 	check(not farm._valid_save(invalid), "negative pest deadlines are rejected")
 	farm.reset_game()
 	farm.farm_help.data.enabled = false

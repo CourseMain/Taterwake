@@ -1,5 +1,5 @@
 extends SceneTree
-## The displayed title may change; the existing farm's storage location must not.
+## The displayed title may change; the v4 farm uses its own save filename.
 func _initialize() -> void:
 	var checks: Array[bool] = [
 		ProjectSettings.get_setting("application/config/name") == "Taterland",
@@ -7,7 +7,7 @@ func _initialize() -> void:
 		ProjectSettings.get_setting("application/config/use_custom_user_dir"),
 		ProjectSettings.get_setting("application/config/custom_user_dir_name") == "Godot/app_userdata/Spud Valley",
 		ProjectSettings.get_setting("application/config/custom_user_dir_name.linux") == "godot/app_userdata/Spud Valley",
-		load("res://scripts/game_state.gd").DEFAULT_SAVE_PATH == "user://spud_valley_save_v3.json"
+		load("res://scripts/game_state.gd").DEFAULT_SAVE_PATH == "user://taterland_save_v4.json"
 	]
 	if OS.get_name() in ["macOS", "Windows", "Linux"]:
 		checks.append(OS.get_user_data_dir().replace("\\", "/").to_lower().ends_with("godot/app_userdata/spud valley"))

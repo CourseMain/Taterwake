@@ -62,13 +62,7 @@ func run() -> void:
 	await process_frame
 	check(game.hud._top.coins.get_parent().get_parent().get_parent().size.y <= 74.0, "numeric stats keep their compact height without symbol-font padding")
 	check(absf(game.hud._quick_sell.get_global_rect().end.y - hotbar.get_global_rect().end.y) < 1.0, "sell action aligns with the bottom of the tool hotbar")
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
-	for island: int in [1, 2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
-		game.state.export_active = false
-		game.state.frost_active = false
+	for island in [1]:
 		game.state._refresh_market()
 		game.hud.update_state(game.state)
 		game.hud._process(0.01)

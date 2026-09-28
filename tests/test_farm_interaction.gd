@@ -36,10 +36,7 @@ func run() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
 	await frames()
-	game.state.debug_unlock_island(3)
 	game.state.coins = 1e18
-	game.state.travel_to(2)
-	game.state.climate.acknowledge(game.state)
 	game.state.climate.fund(game.state, "irrigation")
 	await frames()
 	game._close_equipment()
@@ -50,7 +47,7 @@ func run() -> void:
 	await click(card.primary)
 	check(game.state.climate.data.lesson.stage == "water", "held click starts practice across HUD refreshes")
 	if game.state.climate.data.lesson.stage == "water":
-		game.perform_plot(34, "water")
+		game.perform_plot(18, "water")
 		await click(card.primary)
 		check(card.equipment == "sprinkler2", "held click shows connected near sprinkler")
 		await click(card.primary)
@@ -63,7 +60,6 @@ func run() -> void:
 	# Speed and animation checks use fixed real-time steps; simulation stays isolated.
 	game.set_process(false)
 	game._close_equipment()
-	game.state.travel_to(1)
 	game.hud.close_panel()
 	var world = game.world
 	var loop = world._climate_field.loop

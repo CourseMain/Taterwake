@@ -111,29 +111,6 @@ func run() -> void:
 	farm.harvested_total = 1
 	farm.coins = 84000
 	farm.pest_timer = 37.25
-	var old_state: Dictionary = farm._save_data().duplicate(true)
-	old_state.mechanics_revision = 3
-	old_state.market_clock = 4.25
-	for key in ["tracked_seeds", "surge_timer", "surge_remaining", "surge_crop", "surge_factor"]:
-		old_state.erase(key)
-	for field in old_state.island_plots.values():
-		for plot in field:
-			# Revision 3 used the original growth durations. A current ripe Giant
-			# at 40s is not a valid ripe crop in that old 45s save format.
-			if int(plot.stage) == 3: plot.elapsed = float(farm.OLD_GROW_TIMES[plot.crop])
-			for key in ["pest_ticks", "pest_elapsed", "pest_destroyed", "yield_total", "yield_taken"]:
-				plot.erase(key)
-	old_state.island_plots["1"][0].merge({"pests": true, "pest_damage": 0.5, "ripe_age": 11.0, "pending": 6}, true)
-	old_state.island_plots["1"][1].merge({"pests": true, "pest_damage": 0.8, "ripe_age": 13.0}, true)
-	old_state.plots = old_state.island_plots["1"]
-	write_snapshot(old_state)
-	check(farm.load_game(SAVE), "revision-three saves with continuous pest damage and partially harvested crops migrate")
-	check(farm.coins == 84000 and farm.storage.giant == 1 and farm.harvested_total == 1 and farm.pest_timer == 37.25 and str(farm.rng.state) == old_state.rng_state, "migration preserves wealth, collected yield, mastery, next outbreak and RNG state")
-	check(farm.plots[0].pending == 6 and farm.plots[0].yield_total == 9 and farm.plots[0].pest_ticks == 1 and farm.plots[1].pest_ticks == 2, "migration keeps exact pending potatoes and rounds old damage down to completed thirds")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE), "migration initializes new preferences and surge timer into a valid repeatable save")
-	farm.update(5.0)
-	check(farm.plots[0].pending == 3 and farm.plots[0].pest_ticks == 2 and farm.plots[1].pest_destroyed, "migrated pending yields continue decaying without duplicate harvested potatoes")
-
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()
 	await process_frame

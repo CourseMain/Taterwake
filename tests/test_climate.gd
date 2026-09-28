@@ -13,22 +13,14 @@ func check(ok: bool, description: String) -> void:
 		failures += 1
 		push_error("FAIL: " + description)
 
-func fresh(island: int = 2) -> void:
+func fresh() -> void:
 	state.reset_game()
 	state.coins = 1e18
 	state.rng.seed = 77821
 	state.barn_level = 3
 	state._recompute_capacity()
 	state.expansion = 1
-	for plot in state.island_plots["1"]: plot.unlocked = true
-	if island > 1:
-		state.island2_unlocked = true
-		state.island3_unlocked = island == 3
-		for id in range(2, island + 1):
-			state.field_expansions[str(id)] = true
-			for plot in state.island_plots[str(id)]: plot.unlocked = true
-		state.travel_to(island)
-		state.climate.acknowledge(state)
+	for plot in state.plots: plot.unlocked = true
 	for plot in state.plots:
 		state._clear_crop(plot)
 		plot.unlocked = true
@@ -63,44 +55,6 @@ func same_data(a: Variant, b: Variant) -> bool:
 func run() -> void:
 	state = State.new()
 	root.add_child(state)
-	fresh(1)
-	state.update(1200.0)
-	check(not state.climate.data.introduced and state.climate.data.history.is_empty() and state.climate.data.timer == Climate.FIRST_WARNING, "Valley play never advances weather or damages crops through climate")
-	state.island2_unlocked = true
-	state.field_expansions["2"] = true
-	for plot in state.island_plots["2"]: plot.unlocked = true
-	state.travel_to(2)
-	check(state.climate.data.intro_pending and state.climate.data.introduced, "arrival queues climate cinematic")
-	var paused_time: float = state.elapsed
-	save_load()
-	state.update(600.0)
-	check(state.elapsed == paused_time and state.climate.data.timer == Climate.FIRST_WARNING, "saved cinematic pauses farm and preparation time")
-	state.climate.acknowledge(state)
-	state.update(Climate.FIRST_WARNING)
-	check(state.climate.data.phase == "warning", "first warning follows a complete preparation period on Island 2")
-	state.travel_to(1)
-	state.travel_to(2)
-	check(not state.climate.data.intro_pending, "return travel never repeats introduction")
-	fresh(1)
-	var legacy: Dictionary = state._save_data().duplicate(true)
-	legacy.mechanics_revision = 11
-	legacy.climate.erase("introduced")
-	legacy.climate.erase("intro_pending")
-	legacy.climate.island = 1
-	legacy.climate.phase = "active"
-	legacy.climate.event = "flood"
-	legacy.climate.timer = 20.0
-	legacy.climate.severity = 1.0
-	var old_file: FileAccess = FileAccess.open(SAVE, FileAccess.WRITE)
-	old_file.store_string(JSON.stringify(legacy))
-	old_file.close()
-	check(state.load_game(SAVE) and state.climate.data.phase == "calm" and not state.climate.data.introduced, "revision-11 Valley flood migrates to safe weather without losing the farm")
-	for island in [1, 2, 3]:
-		fresh(island)
-		var baseline: float = [1e6, 1e11, 5e15][island - 1]
-		state.climate.data.tax_events = [{"event": "storm", "island": island, "pressure": 1.5}]
-	check(state.available_crops().has("icecap") and state.island_plots.size() == 3, "winter virtual baseline adds no fourth island")
-
 	for event in ["drought", "flood", "storm"]:
 		fresh()
 		var before_field: int = state.plots.size()
@@ -114,7 +68,7 @@ func run() -> void:
 		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
 		check(state.storage.russet < 1000 and state.climate.data.barn_lost == 1000 - state.storage.russet, "barn losses match removed potatoes")
 		state._refresh_market()
-		check(state.market.russet.sell >= state.CROPS.russet.base * 0.85 and state.market.russet.seed == State.seed_price_for(state.CROPS.russet.base), "weather leaves seed prices at 75% of base")
+		check(state.market.russet.sell >= state.CROPS.russet.base * 0.85 and state.market.russet.seed == state.CROPS.russet.base * State.SEED_PRICE_RATIO, "weather leaves seed prices at 75% of base")
 		state.update(30.0)
 		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost
@@ -123,7 +77,7 @@ func run() -> void:
 		check(state.climate.data.phase == "recovery", "weather transitions to economic recovery")
 		save_load()
 		state.update(75.0)
-		check(state.climate.data.phase == "calm", "weather market effects fully end after recovery")
+		check(state.climate.data.phase in ["calm", "warning"], "recovery ends before a possible next-season warning")
 		check(state.climate.data.field_lost == unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "losses do not repeat and weather losses persist through calm weather")
 		fresh()
 		for project in ["rainwater" if event == "drought" else ("drainage" if event == "flood" else "windbreaks"), "barn"]:
@@ -141,12 +95,12 @@ func run() -> void:
 	state.climate.fund(state, "drainage")
 	var paid: float = state.coins
 	state.climate.fund(state, "drainage")
-	check(state.coins == paid and state.climate.data.projects["2"].drainage == 2, "initiatives cannot exceed two levels or charge at cap")
+	check(state.coins == paid and state.climate.data.projects.drainage == 2, "initiatives cannot exceed two levels or charge at cap")
 	state.coins = state.bankruptcy_limit()
 	state.climate.fund(state, "barn")
-	check(state.coins == state.bankruptcy_limit() and not state.climate.data.projects["2"].has("barn"), "unaffordable protection never charges or grants a level")
+	check(state.coins == state.bankruptcy_limit() and not state.climate.data.projects.has("barn"), "unaffordable protection never charges or grants a level")
 
-	fresh(3)
+	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.update(45.0)
 	state.selected_crop = "icecap"
@@ -162,7 +116,7 @@ func run() -> void:
 		match defect:
 			"timer": broken.climate.timer = 9000.0
 			"severity": broken.climate.severity = 2.0
-			"project": broken.climate.projects["3"].barn = 3
+			"project": broken.climate.projects.barn = 3
 			"history": broken.climate.history[0].field_lost = 99999999
 			"event": broken.climate.event = "unknown"
 		check(not state._valid_save(broken), "reject corrupt climate " + defect)
@@ -188,8 +142,8 @@ func run() -> void:
 	fresh()
 	state.tutorial_active = true
 	state.update(3600.0)
-	check(state.climate.data.phase == "calm" and state.climate.data.timer == Climate.FIRST_WARNING and not state.climate.begin_warning(state, "flood"), "tutorial is protected from climate warnings and damage")
-	fresh(3)
+	check(state.climate.data.phase == "calm" and state.climate.data.timer == Climate.SEASON_SECONDS and not state.climate.begin_warning(state, "flood"), "tutorial is protected from climate warnings and damage")
+	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.reset_game()
 	check(state.climate.data == Climate.fresh_data() and not state.run_over, "new run clears climate history, projects and pressures")

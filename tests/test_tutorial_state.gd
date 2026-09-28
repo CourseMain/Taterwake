@@ -35,8 +35,6 @@ func _run() -> void:
 	check(state.plots[0].stage == 3 and not state.plots[0].pests and state.plots[0].ripe_age == 0.0, "unharvested ripe potatoes stay safe throughout a long lesson")
 	check(state.pest_timer == pest_wait, "background clocks do not approach an ambush")
 	check(notices.is_empty(), "long tutorial wait has no market or pest announcements")
-	state._toggle_export()
-	state._start_frost()
 	check(state._infest_random_plots() == 0, "direct random infestation cannot bypass lesson safety")
 	state._refresh_market()
 	state.interact_plot(5, "hoe")
@@ -80,7 +78,7 @@ func _run() -> void:
 	state.update(maxf(40.0 - float(state.plots[0].plant_age), float(state.plots[0].pest_delay) - float(state.plots[0].ripe_age)) + 0.01)
 	check(state.plots[0].pests, "ordinary ripe-crop pests resume after their actual grace period")
 	state.set_tutorial_active(true)
-	state.tutorial_progress = {"version": 1, "step": 6, "completed": false, "plot": 5, "visited": ["market"]}
+	state.tutorial_progress = {"version": 2, "step": 6, "completed": false, "plot": 5, "visited": ["market"]}
 	var path: String = "user://tutorial_state_test_%d.json" % OS.get_process_id()
 	check(state.save_game(path), "active lesson progress saves successfully")
 	var restored = State.new()
@@ -90,13 +88,7 @@ func _run() -> void:
 	restored.set_tutorial_active(true)
 	check(restored.tutorial_active, "resumed lesson re-enters calm mode")
 	var data: Dictionary = state._save_data()
-	data.erase("tutorial_progress")
-	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(data))
-	file.close()
-	check(restored.load_game(path) and restored.tutorial_progress.completed and not restored.tutorial_active, "legacy save without tutorial is treated as an established farm")
-	data = state._save_data()
-	for invalid in [{}, {"version": 1, "step": -1, "completed": false, "plot": 5}, {"version": 1, "step": 2, "completed": "false", "plot": 5}, {"version": 1, "step": 2, "completed": false, "plot": 99}]:
+	for invalid in [{}, {"version": 2, "step": -1, "completed": false, "plot": 5}, {"version": 2, "step": 2, "completed": "false", "plot": 5}, {"version": 2, "step": 2, "completed": false, "plot": 99}]:
 		data["tutorial_progress"] = invalid
 		check(not state._valid_save(data), "malformed lesson state is rejected")
 	restored.reset_game()
@@ -106,13 +98,9 @@ func _run() -> void:
 	# farming free crops while stock and decay clocks stand still.
 	restored.coins = 1.0e12
 	restored.harvested_total = 100000
-	restored.unlock_island2()
-	restored.unlock_island3()
-	restored._toggle_export()
-	restored._start_frost()
 	restored._infest_random_plots()
 	restored._refresh_market()
-	restored.tutorial_progress = {"version": 1, "step": 14, "completed": false, "plot": 5, "tour_only": true, "pest_plot": 1}
+	restored.tutorial_progress = {"version": 2, "step": 14, "completed": false, "plot": 5, "tour_only": true, "pest_plot": 1}
 	var replay_before: Dictionary = restored._save_data().duplicate(true)
 	restored.set_tutorial_active(true)
 	check(restored._save_data() == replay_before, "replay entry preserves all active quotes, timers, crops, frost and infestations")

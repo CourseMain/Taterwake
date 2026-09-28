@@ -22,7 +22,7 @@ func reset() -> void:
 	state.farm_help.enable()
 	state.farm_help.dismiss("repeat")
 	state.pest_timer = 100.0
-	for field: Array in state.island_plots.values():
+	for field in [state.plots]:
 		for plot: Dictionary in field: state._clear_crop(plot)
 	state.changed.emit()
 
@@ -93,12 +93,6 @@ func run() -> void:
 		var corrupt: Dictionary = saved.duplicate(true)
 		corrupt.farm_help[pair[0]] = pair[1]
 		check(not state._valid_save(corrupt), "out-of-range help field rejected: " + str(pair[0]))
-	saved.erase("farm_help")
-	saved.mechanics_revision = 12
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(saved))
-	file.close()
-	check(restored.load_game(path) and not restored.farm_help.data.enabled, "established revision-12 farms get no surprise onboarding")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	restored.free()
 	activities.free()

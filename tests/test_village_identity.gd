@@ -33,8 +33,8 @@ func run() -> void:
 	farm.reset_game()
 	var world := World.new()
 	root.add_child(world)
-	for island in [1,2,3]:
-		world.build_world(island)
+	for island in [1]:
+		world.build_world()
 		var stall: Node3D = world.get_node("MarketStall")
 		var details: Node3D = stall.get_node("MaraRepairs")
 		check(details.find_children("CompiledGeometry*", "MeshInstance3D", true, false).size() >= 5, "Mara's repair details compile on island %d" % island)

@@ -54,7 +54,7 @@ func _run() -> void:
 	check(game.world.plot_positions.size() == 24, "original 24 farm plots preserved")
 	check(is_instance_valid(game.world.player) and game.world.camera.current, "original farmer and camera active")
 	check(not game.hud.is_panel_open(), "farm available immediately")
-	check(game.state.available_crops().size() == 4, "four crop varieties available")
+	check(game.state.available_crops().size() == 6, "six crop varieties available")
 	await shot("spud-valley")
 	for station in {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}:
 		var location: Vector3 = {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}[station]
@@ -137,8 +137,7 @@ func _run() -> void:
 	check(game.hud.is_panel_open(), "PotatoDex opens")
 	await shot("potatodex")
 	game.hud.close_panel()
-	game._on_action("island")
-	check(game.hud.is_panel_open(), "locked second island is inspectable")
+
 	await shot("golden-shores")
 	game.hud.close_panel()
 	game._on_action("help")

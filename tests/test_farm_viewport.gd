@@ -18,8 +18,6 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
 	check(game.world.get_viewport() == game.farm_viewport, "3D world lives in the independent farm viewport")
 	check(game.hud.get_viewport() == root, "menus stay on the sharp root canvas")
 	for resolution: Vector2i in [Vector2i(1280,800), Vector2i(2560,1600), Vector2i(3840,2160), Vector2i(900,1600)]:
@@ -34,9 +32,7 @@ func run() -> void:
 			check(root.size == resolution, "quality cannot reduce UI resolution")
 			var logical_size: Vector2 = root.get_visible_rect().size
 			check(absf(float(size.x)/size.y - logical_size.x/logical_size.y) < 2.0/size.y, "letterboxing keeps the complete farm aspect ratio")
-			for island: int in [1, 2, 3]:
-				game.state.travel_to(island)
-				game.state.climate.acknowledge(game.state)
+			for island in [1]:
 				game.state.plots[4].unlocked = true
 				game._on_state_changed()
 				await physics_frame

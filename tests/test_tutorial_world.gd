@@ -24,23 +24,22 @@ func shot(filename: String) -> void:
 func _run() -> void:
 	var world := World.new()
 	root.add_child(world)
-	world.build_world(1)
+	world.build_world()
 	check(not world._tutorial_marker.visible, "normal farming has no tutorial marker")
 	var visible_signs: int = 0
 	for layer: Node3D in world._tutorial_label_layers:
 		visible_signs += int(layer.is_visible_in_tree())
-	check(visible_signs >= 7, "normal farm retains its station and island signs")
+	check(visible_signs == world._tutorial_label_layers.size() and visible_signs > 0, "normal farm shows all surviving station signs")
 	world.set_tutorial_focus("")
 	var hidden_signs: int = 0
 	for layer: Node3D in world._tutorial_label_layers:
 		hidden_signs += int(not layer.is_visible_in_tree())
 	check(hidden_signs == world._tutorial_label_layers.size() and not world._tutorial_marker.visible, "opening tutorial hides station clutter without an extra marker")
-	for station: String in ["market", "barn", "tools", "duck_patrol", "quests", "island"]:
+	for station: String in ["market", "barn", "tools", "duck_patrol", "quests"]:
 		world.set_tutorial_focus(station)
 		check(world._tutorial_marker.visible and world._tutorial_marker.text.length() > 1, "%s gets one named destination marker" % station)
 		var point: Vector3 = world.station_position(station)
 		check(is_equal_approx(point.x, world._tutorial_marker.position.x) and is_equal_approx(point.z, world._tutorial_marker.position.z), "%s marker points at its station" % station)
-	check(world.station_position("island").is_equal_approx(world.layout_point(Vector3(11.5, 0.0, -17.2))), "ferry guidance points to reachable boarding area, not offshore miniature")
 	world.set_tutorial_focus("market")
 	var marker_y: float = world._tutorial_marker.position.y
 	world.animate(0.3, false)
@@ -67,12 +66,12 @@ func _run() -> void:
 	check(world._duck_label.is_visible_in_tree() and not world._dock_label.is_visible_in_tree(), "ending tutorial restores labels without overriding their own visibility")
 	check(not world._tutorial_marker.visible and not world._tutorial_plot_outline.visible, "ending tutorial removes guide marker and target outline")
 	world.set_tutorial_focus("market")
-	world.build_world(1)
+	world.build_world()
 	check(world._tutorial_marker.visible and world._tutorial_focus == "market", "world rebuild retains active lesson guidance")
 	for layer: Node3D in world._tutorial_label_layers:
 		check(not layer.is_visible_in_tree(), "rebuild keeps unintroduced signs hidden")
 	world.set_tutorial_focus("", true)
-	world.switch_island(2)
+	world.build_world()
 	check(not world._tutorial_marker.visible and world._duck_label.is_visible_in_tree(), "normal travel restores normal island appearance")
 	world.queue_free()
 	await process_frame

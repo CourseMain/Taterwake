@@ -105,13 +105,7 @@ func _run() -> void:
 	game.hud.close_panel()
 	game.state.coins = 200000000000.0
 	game.state.harvested_total = 25000
-	game.state.unlock_island2()
-	game.state.travel_to(2)
-	game.state.climate.acknowledge(game.state)
 	await settle()
-	game.state.unlock_island3()
-	game.state.travel_to(3)
-	game.state.climate.acknowledge(game.state)
 	await settle()
 	game._process(0.01)
 	await create_timer(0.35).timeout

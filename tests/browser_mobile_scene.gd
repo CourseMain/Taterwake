@@ -5,14 +5,10 @@ var callback
 func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child(game)
-	game.state.debug_unlock_island(3)
-	game.state.travel_to(1)
-	game.state.climate.acknowledge(game.state)
 	game.state.tutorial_progress.completed = true
-	game.state.coins = 1e18
+	game.state.coins = 10000
 	game.state.capacity = 100000
 	game.state.pest_timer = 1000
-	game.state.surge_timer = 1000
 	for id in game.state.CROP_IDS:
 		game.state.storage[id] = 500
 		game.state.seed_inventory[id] = 100
@@ -25,7 +21,6 @@ func _process(delta: float) -> void:
 func command(args: Array) -> void:
 	var action: String = str(args[0])
 	if action == "tutorial":
-		game.state.travel_to(1)
 		game.tutorial.start(true)
 	elif action == "tutorial_sale":
 		game.set_process(false)
@@ -41,50 +36,32 @@ func command(args: Array) -> void:
 		game.hud.close_panel()
 		game.state.reset_game()
 		game.state.tutorial_progress.completed = true
-		game.state.debug_unlock_island(3)
-		game.state.travel_to(int(action.get_slice(":", 2)))
-		game.state.climate.acknowledge(game.state)
 		game.hud._climate_alert.dismiss()
 		var stocked: bool = action.get_slice(":", 1) == "stocked"
-		game.state.coins = 1e18 if stocked else -1000.0
+		game.state.coins = 10000 if stocked else -1000.0
 		game.state.capacity = 100000 if stocked else 200
 		for id in game.state.CROP_IDS:
 			game.state.storage[id] = 500 if stocked else 0
 			game.state.seed_inventory[id] = 100 if stocked else 0
 		game._on_state_changed()
-	elif action.begins_with("build:"):
-		game.hud._act("build:inspect:" + action.get_slice(":",1))
-	elif action == "island2":
-		game.state.travel_to(2)
-		game.state.climate.acknowledge(game.state)
 	elif action == "tank": game._select_equipment("tank")
 	elif action == "guide_shop": game.hud.show_panel("market", game.state)
-	elif action == "intro":
-		game.state.climate.data.lesson.stage = "off"
-		game.state.climate.data.intro_pending = true
-		game._on_state_changed()
 	elif action == "near_market":
 		game.hud.close_panel()
 		game._cancel_walk()
 		game.world.player.position = game.world.station_position("market") + Vector3(0, 0, 3.8)
 	elif action.begins_with("layout:"):
 		game.set_process(false)
-		game.state.travel_to(int(action.get_slice(":",1)))
-		game.state.climate.acknowledge(game.state)
 		game.state.climate.data.phase = "calm"
 		game.state.climate.data.event = ""
 		game.state.climate.data.operations.ice.clear()
-		for id in game.state.ClimateSystem.PROJECTS: game.state.climate.data.projects[str(game.state.current_island)][id] = 2
+		for id in game.state.ClimateSystem.PROJECTS: game.state.climate.data.projects[id] = 2
 		game.hud.close_panel()
 		game._on_state_changed()
-	elif action == "new_shores":
+	elif action == "new_farm":
 		game.set_process(false)
-		game.state.travel_to(1)
 		game.state.climate.reset()
-		game.state.travel_to(2)
 	elif action == "freeze":
-		game.state.travel_to(3)
-		game.state.climate.acknowledge(game.state)
 		game.state.climate.data.phase = "calm"
 		game.state.climate.data.event = ""
 		for plot in game.state.plots: plot.merge({"stage":2,"crop":"icecap","tilled":true,"watered":true,"elapsed":0.0},true)
@@ -109,9 +86,7 @@ func command(args: Array) -> void:
 	report.conversation = {"visible":game.conversation.visible,"npc":game.conversation.npc_id,"page":game.conversation.page,"text":game.conversation.speech.text,"clock":game.state.elapsed}
 	var voice = game.conversation.voice
 	report.voice = {"speaker":voice.speaker,"utterances":voice.utterances,"playing":voice.player.playing,"pitch":voice.player.pitch_scale,"take":voice.last_clip}
-	report.intro_visible = game.hud._climate_intro.visible
 	report.frozen_crops = game.state.climate.data.operations.ice.size()
-	report.hoe_heat = game.state.ClimateSystem.Operations.local(game.state).heat
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
 	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":game.state.storage.russet,"coins":game.state.coins}

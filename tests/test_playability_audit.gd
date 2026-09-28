@@ -29,9 +29,6 @@ func run() -> void:
 	check(not game.hud._toast_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), "notifications stay clear of modal content and its close button")
 	check(game.hud.root.get_global_rect().encloses(game.hud._toast_box.get_global_rect()), "docked notification remains within the game view")
 	# Reproduce the supplied screenshot: Island2, debt, pest tip, selected tank.
-	game.state.debug_unlock_island(2)
-	game.state.travel_to(2)
-	game.state.climate.acknowledge(game.state)
 	game.state.farm_help.enable()
 	game.state.farm_help.data.pest_phase = 1
 	game.state.farm_help.data.dismissed.clear()

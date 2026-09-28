@@ -27,11 +27,12 @@ func _run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	var world := World.new()
 	root.add_child(world)
-	world.build_world(3)
+	world.build_world()
 	world.pest_warning.connect(func(index: int, destroyed: bool): warnings.append([index, destroyed]))
 	var plots: Array = []
-	for index in range(80):
-		plots.append({"unlocked": true, "stage": 3, "crop": "icecap", "tilled": true, "watered": true, "pests": index in [3, 17, 25, 36, 44, 58, 62, 76], "pest_ticks": 0, "pest_damage": 0.0, "frozen": index in [3, 17, 25, 36]})
+	for index in range(24):
+		plots.append({"unlocked": true, "stage": 3, "crop": "icecap", "tilled": true, "watered": true, "pests": index in [3, 17, 18, 19, 20, 21, 22, 23], "pest_ticks": 0, "pest_damage": 0.0, "frozen": index in [3, 17, 18, 19]})
+	world._climate_ice = {"3": true, "17": true, "18": true, "19": true}
 	world.update_plots(plots)
 	await physics_frame
 	await physics_frame
@@ -42,14 +43,14 @@ func _run() -> void:
 	check(absf(world._crop_roots[3].rotation.z) > 0.01, "infested crops visibly shake")
 	world.update_plots(plots)
 	check(warnings.size() == 8, "redraw does not repeat warning audio")
-	for index in [17, 25, 36]:
+	for index in [17, 18, 19]:
 		plots[index]["pest_ticks"] = 1 if index == 17 else 2
 		plots[index]["pest_damage"] = float(plots[index]["pest_ticks"]) / 3.0
 	world.update_plots(plots)
 	check(world._pest_labels[17].text.ends_with("2/3"), "first damage tick visibly shows two thirds")
-	check(world._pest_labels[25].text.ends_with("1/3"), "second damage tick visibly shows one third")
+	check(world._pest_labels[18].text.ends_with("1/3"), "second damage tick visibly shows one third")
 	check(world._effect_particles.size() == 18, "damage ticks create bounded bite debris")
-	for index in range(80):
+	for index in range(24):
 		var hit: Dictionary = world.pick(world.camera.unproject_position(world.plot_positions[index]))
 		check(int(hit.get("plot_index", -1)) == index, "pest indicators preserve winter ray target %d" % index)
 	check(world._ice_roots[3].visible and world._pest_roots[3].visible, "ice and pests are independently visible")
@@ -59,21 +60,21 @@ func _run() -> void:
 	check(not world._pest_roots[17].visible and world._ice_roots[17].visible, "clearing pests leaves frozen layer intact")
 	check(world._crop_roots[17].rotation == Vector3.ZERO, "clearing pests stops crop shake")
 	check(world._pest_labels[17].text == "YIELD 2/3", "remaining damage is visible after pests are brushed away")
-	plots[25].merge({"stage": 0, "pests": false, "pest_ticks": 3, "pest_damage": 1.0, "pest_destroyed": true}, true)
+	plots[18].merge({"stage": 0, "pests": false, "pest_ticks": 3, "pest_damage": 1.0, "pest_destroyed": true}, true)
 	world.update_plots(plots)
-	check(world._pest_labels[25].text == "CROP LOST", "destruction briefly announces the lost crop")
-	check(warnings.back() == [25, true], "destruction emits a distinct sound signal")
-	check(not world._pest_roots[25].visible, "destroyed crops do not retain an active pest swarm")
+	check(world._pest_labels[18].text == "CROP LOST", "destruction briefly announces the lost crop")
+	check(warnings.back() == [18, true], "destruction emits a distinct sound signal")
+	check(not world._pest_roots[18].visible, "destroyed crops do not retain an active pest swarm")
 	await shot("world-pest-destroyed")
 	world.animate(4.1, false)
-	check(world._pest_labels[25].text.is_empty() and not world._pest_labels[25].visible, "destruction label fully disappears instead of leaving a zero-yield marker")
+	check(world._pest_labels[18].text.is_empty() and not world._pest_labels[18].visible, "destruction label fully disappears instead of leaving a zero-yield marker")
 	world.update_plots(plots)
-	check(not world._pest_labels[25].visible, "state refresh cannot resurrect the expired destroyed-crop label")
-	plots[25].merge({"stage": 1, "pests": false, "pest_ticks": 0, "pest_damage": 0.0, "pest_destroyed": false}, true)
+	check(not world._pest_labels[18].visible, "state refresh cannot resurrect the expired destroyed-crop label")
+	plots[18].merge({"stage": 1, "pests": false, "pest_ticks": 0, "pest_damage": 0.0, "pest_destroyed": false}, true)
 	world.update_plots(plots)
-	check(not world._pest_labels[25].visible, "replanting clears destroyed marker")
-	for island in [1, 2, 3]:
-		world.switch_island(island)
+	check(not world._pest_labels[18].visible, "replanting clears destroyed marker")
+	for island in [1]:
+		world.build_world()
 		world.play_reward("legendary")
 		world.animate(2.0, false)
 		check(world._effect_particles.size() == 30, "quest reward on island %d remains visible for longer than two seconds" % island)

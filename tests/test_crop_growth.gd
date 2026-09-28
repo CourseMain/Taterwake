@@ -52,7 +52,7 @@ func shot(world, plots: Array) -> void:
 func run() -> void:
 	var world = World.new()
 	root.add_child(world)
-	world.build_world(1)
+	world.build_world()
 	var plots: Array = []
 	for crop: String in State.CROP_IDS: plots.append(plot_for(crop))
 	world.update_plots(plots)

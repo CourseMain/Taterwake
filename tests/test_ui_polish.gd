@@ -61,33 +61,19 @@ func run() -> void:
 	game.state.coins = 1e7
 	game.hud.update_state(game.state)
 	game.hud._refs["activity:duck"].pressed.emit()
-	check(game.activities.duck_count() == 1 and game.hud._refs["activity:duck:status"].text == "Complete", "hiring refreshes the full flock state")
+	check(game.activities.duck_count() == 1 and game.hud._refs["activity:duck:status"].text == "Affordable", "hiring refreshes the remaining flock slot")
 	check(game.hud._refs["activity:duck:speed:status"].text == "Affordable", "hiring unlocks affordable speed training")
 	game.hud._refs["activity:duck:speed"].pressed.emit()
 	check(game.hud._refs["activity:duck:speed:value"].text.begins_with("3s → 2s"), "training advances the current-to-next value")
 	await inspect("ducks-trained")
-	game.state.coins = 2500
-	game.state.harvested_total = 250
-	game.hud.show_panel("island", game.state)
-	check(game.hud._refs["travel:2:harvest:bar"].value == 50 and game.hud._refs["travel:2:coins:bar"].value == 50, "passage shows independent harvest and money progress")
-	check(game.hud._refs.island_unlock.disabled and game.hud._refs.island3_unlock.disabled, "incomplete passage requirements keep both destinations locked")
-	await inspect("islands")
-	game.state.harvested_total = 500
-	game.state.coins = 1e6
-	game.hud.update_state(game.state)
-	game.hud._refs.island_unlock.pressed.emit()
-	check(game.state.island2_unlocked and not game.hud._refs["travel:2:unlock"].visible and not game.hud._refs["travel:2"].disabled, "unlock replaces requirements with an available travel action")
 	game.hud.show_panel("inventory", game.state)
 	game.hud._act("inventory_tab:tools")
 	await inspect("tools")
 	root.size = Vector2i(960, 600)
-	for kind: String in ["quests", "duck_patrol", "inventory", "island"]:
+	for kind: String in ["quests", "duck_patrol", "inventory"]:
 		game.hud.show_panel(kind, game.state)
 		await inspect("compact-" + kind)
-	game.state.island3_unlocked = true
-	for island: int in [2, 3]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
+	for island in [1]:
 		game.hud.show_panel("quests", game.state)
 		await inspect("island-%d-quests" % island)
 		for quest: Dictionary in game.state.quest_info():

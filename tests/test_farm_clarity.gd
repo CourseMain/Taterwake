@@ -96,10 +96,7 @@ func run() -> void:
 		hud._process(3.1)
 	root.size = Vector2i(1280, 800)
 	hud.set_context("")
-	state.debug_unlock_island(3)
-	for island: int in [1, 2, 3]:
-		state.travel_to(island)
-		state.climate.acknowledge(state)
+	for island in [1]:
 		game.world.set_day_time(0.0)
 		game._on_state_changed()
 		await settle()

@@ -31,8 +31,8 @@ func _run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	var world := World.new()
 	root.add_child(world)
-	for island in [1, 2, 3]:
-		world.build_world(island)
+	for island in [1]:
+		world.build_world()
 		await physics_frame
 		await physics_frame
 		var shop: Node3D = world.get_node("IceForge" if island == 3 else "ToolUpgradeWorkshop")
@@ -55,10 +55,6 @@ func _run() -> void:
 			for label: Label3D in tool_labels:
 				expect_pick(world, label.global_position, "tools", "island %d tool sign, zoom %.0f" % [island, zoom])
 		world.camera.size = default_zoom
-		if island == 2:
-			expect_pick(world, world.get_node("BuyerContracts").global_position + Vector3(0, 1.5, 0.3), "activities", "island 2 buyer keeps its own contract interaction")
-		if island == 3:
-			expect_pick(world, world.get_node("FrostFurnace").global_position + Vector3(0, 1.4, 0.3), "activities", "island 3 furnace keeps its own activity interaction")
 		for index in range(world.plot_positions.size()):
 			var hit: Dictionary = world.pick(world.camera.unproject_position(world.plot_positions[index]))
 			check(int(hit.get("plot_index", -1)) == index, "island %d plot %d remains selectable past new workshop" % [island, index])

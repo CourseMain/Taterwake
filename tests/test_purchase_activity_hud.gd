@@ -46,8 +46,6 @@ func run() -> void:
 	hud.update_state(state)
 	hud.set_process(false)
 	state.coins = 1e16
-	state.island2_unlocked = true
-	state.island3_unlocked = true
 	hud.show_panel("market", state)
 	hud.show_purchase({"kind": "seeds", "id": "russet", "name": "Russet", "quantity": 5, "cost": 100.0, "total": 17})
 	await process_frame
@@ -83,15 +81,12 @@ func run() -> void:
 	check(hud._purchase_title.text == "+200 barn spaces" and hud._purchase_detail.text == "Capacity 300 · −\uE000 800", "barn receipt identifies exact added spaces and resulting capacity")
 	hud._process(HUD.PURCHASE_SECONDS + 0.1)
 	hud.update_state(state)
-	for island: int in [1, 2, 3]:
-		state.current_island = island
+	for island in [1]:
 		hud.update_state(state)
 		hud.show_panel("duck_patrol", state)
 		check(hud._modal_title.text == "Duck patrol" and hud._refs.has("activity:duck"), "island %d duck station opens dedicated patrol controls" % island)
 		check(not hud._refs.has("activity:contract:bulk") and not hud._refs.has("activity:furnace:icecap"), "island %d duck controls contain no unrelated buyer or furnace" % island)
-		check(hud._refs.duck_pond.count == 0 and hud._refs.duck_pond.capacity == island and hud._refs.has("activity:duck:speed"), "island %d shows only its local flock with separate speed controls" % island)
-		if island == 2:
-			await capture("purchase-ducks-island2")
+		check(hud._refs.duck_pond.count == 0 and hud._refs.duck_pond.capacity == 2 and hud._refs.has("activity:duck:speed"), "island %d shows only its local flock with separate speed controls" % island)
 		activities.duck_level = 3
 		hud.update_state(state)
 		check(hud._refs["activity:duck"].disabled and hud._refs["activity:duck"].text == "Flock full" and hud._refs["activity:duck:speed"].disabled, "island %d independently shows full flock and top speed" % island)
@@ -99,20 +94,12 @@ func run() -> void:
 		hud.show_panel("activities", state)
 		if island == 1:
 			check(hud._refs.has("activity:duck"), "first island activity alias preserves the duck patrol entry")
-		else:
-			check(not hud._refs.has("activity:duck"), "island %d buyer/furnace does not embed duck controls" % island)
-			check(hud._refs.has("activity:contract:bulk" if island == 2 else "activity:furnace:icecap"), "island %d unique activity still opens its own controls" % island)
 		hud.show_panel("pause", state)
 		var duck_entries: int = 0
 		for button: Node in hud._body.find_children("*", "Button", true, false):
 			if str(button.get_meta("action", "")) == ("activities" if island == 1 else "duck_patrol"):
 				duck_entries += 1
 		check(duck_entries == 1, "island %d menu offers exactly one duck patrol entry" % island)
-	state.current_island = 2
-	hud.show_panel("activities", state)
-	state.current_island = 3
-	hud.update_state(state)
-	check(hud._refs.has("activity:furnace:icecap") and not hud._refs.has("activity:contract:bulk"), "travel refresh rebuilds activity controls instead of retaining buyer references")
 	hud.queue_free()
 	activities.queue_free()
 	state.queue_free()

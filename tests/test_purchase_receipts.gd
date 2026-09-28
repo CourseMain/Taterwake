@@ -43,8 +43,7 @@ func _snapshot() -> Dictionary:
 	return {"coins": state.coins, "seeds": state.seed_inventory.duplicate(true),
 		"tools": state.tools.duplicate(true), "storage": state.storage.duplicate(true),
 		"capacity": state.capacity, "barn": state.barn_level, "expansion": state.expansion,
-		"island2": state.island2_unlocked, "island3": state.island3_unlocked,
-		"plots": state.island_plots.duplicate(true), "duck_level": activities.duck_level}
+		"plots": state.plots.duplicate(true), "duck_level": activities.duck_level}
 
 func _clear_signals() -> void:
 	receipts.clear()
@@ -102,7 +101,6 @@ func _test_seeds() -> void:
 	_failure(func(): return state.buy_seeds("russet", 0), "zero seed quantity")
 	_failure(func(): return state.buy_seeds("russet", -5), "negative seed quantity")
 	_failure(func(): return state.buy_seeds("russet", 1000000001), "oversized seed request")
-	_failure(func(): return state.buy_seeds("sunburst", 5), "wrong-island seeds")
 	state.coins = state.bankruptcy_limit() + float(state.market.russet.seed) * 5 - 0.5
 	_failure(func(): return state.buy_seeds("russet", 5), "unaffordable seeds")
 	state.coins = float(state.market.russet.seed) * 5
@@ -113,12 +111,8 @@ func _test_seeds() -> void:
 	_success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, float(state.market.russet.seed) * 5, "last available seed spaces")
 	check(state.seed_inventory.russet == State.MAX_INVENTORY, "seed limit is reached without overflow")
 	_failure(func(): return state.buy_seeds("russet", 1), "full seed inventory")
-	for island in [1, 2, 3]:
+	for island in [1]:
 		_fresh()
-		state.island2_unlocked = true
-		state.island3_unlocked = true
-		state.travel_to(island)
-		state.climate.acknowledge(state)
 		state.coins = 1.0e18
 		var crop: String = "russet" if island == 1 else ("sunburst" if island == 2 else "icecap")
 		var old_quote: float = float(state.market[crop].seed)
@@ -141,14 +135,6 @@ func _test_tools_and_space() -> void:
 		for rank in [1, 2]:
 			var receipt: Dictionary = _success(func(): return state.upgrade_tool(tool), "tool", tool, 1, State.TOOL_COSTS[tool][rank - 1], "%s rank %d" % [tool, rank])
 			check(state.tools[tool] == rank and int(receipt.get("level", -1)) == rank, "receipt shows purchased %s rank %d" % [tool, rank])
-		_failure(func(): return state.upgrade_tool(tool), tool + " rank-three gate on island one")
-	state.island2_unlocked = true
-	state.island3_unlocked = true
-	state.travel_to(2)
-	state.climate.acknowledge(state)
-	_failure(func(): return state.upgrade_tool("hoe"), "rank-three gate on island two")
-	state.travel_to(3)
-	state.climate.acknowledge(state)
 	for tool: String in ["hoe", "water", "harvest"]:
 		var receipt: Dictionary = _success(func(): return state.upgrade_tool(tool), "tool", tool, 1, State.TOOL_COSTS[tool][2], tool + " winter rank three")
 		check(state.tools[tool] == 3 and int(receipt.get("level", -1)) == 3, tool + " winter receipt reports final rank")
@@ -169,33 +155,8 @@ func _test_tools_and_space() -> void:
 	_success(func(): return state.expand_field(), "field", "expansion", 12, 1200.0, "starter field expansion")
 	check(state.plots.all(func(plot: Dictionary): return bool(plot.unlocked)), "field receipt is emitted after all new beds are unlocked")
 	_failure(func(): return state.expand_field(), "already expanded field")
-	for island in [2, 3]:
-		state.current_island = island
+	for island in [1]:
 		_failure(func(): return state.expand_field(), "island %d already open field" % island)
-
-func _test_islands() -> void:
-	_fresh()
-	state.coins = State.ISLAND2_UNLOCK_COST
-	_failure(func(): return state.unlock_island2(), "island two harvest gate")
-	state.harvested_total = State.ISLAND2_UNLOCK_HARVEST
-	state.coins -= 1.0
-	_failure(func(): return state.unlock_island2(), "island two money gate")
-	state.coins += 1.0
-	_success(func(): return state.unlock_island2(), "island", "2", 1, State.ISLAND2_UNLOCK_COST, "Golden Shores unlock")
-	check(state.island2_unlocked and state.island_plots["2"].filter(func(plot: Dictionary): return bool(plot.unlocked)).size() == 24, "Golden Shores receipt follows 24 starter beds unlocking")
-	_failure(func(): return state.unlock_island2(), "duplicate island two unlock")
-	state.coins = State.ISLAND3_UNLOCK_COST
-	_failure(func(): return state.unlock_island3(), "winter harvest gate")
-	state.harvested_total = State.ISLAND3_UNLOCK_HARVEST
-	state.island2_unlocked = false
-	_failure(func(): return state.unlock_island3(), "winter prior-island gate")
-	state.island2_unlocked = true
-	state.coins -= 1.0
-	_failure(func(): return state.unlock_island3(), "winter money gate")
-	state.coins += 1.0
-	_success(func(): return state.unlock_island3(), "island", "3", 1, State.ISLAND3_UNLOCK_COST, "Frosthollow unlock")
-	check(state.island3_unlocked and state.island_plots["3"].filter(func(plot: Dictionary): return bool(plot.unlocked)).size() == 40, "Frosthollow receipt follows 40 starter beds unlocking")
-	_failure(func(): return state.unlock_island3(), "duplicate winter unlock")
 
 func _test_ducks_and_services() -> void:
 	_fresh()
@@ -203,13 +164,10 @@ func _test_ducks_and_services() -> void:
 	_failure(func(): return activities.buy_duck(), "duck insufficient cash")
 	state.coins = 1000000.0
 	_success(func(): return activities.hire_duck(), "duck", "duck_patrol", 1, 500.0, "hire one Valley duck")
-	_failure(func(): return activities.hire_duck(), "Valley duck capacity")
 	for rank in [1, 2]:
-		var receipt: Dictionary = _success(func(): return activities.train_ducks(), "duck", "duck_speed", 1, Activities.DUCK_COSTS[rank], "duck speed level %d" % rank)
+		var receipt: Dictionary = _success(func(): return activities.train_ducks(), "duck", "duck_speed", 1, Activities.DUCK_TRAINING_COSTS[rank - 1], "duck speed level %d" % rank)
 		check(activities.duck_speed() == rank and int(receipt.get("level", -1)) == rank and activities.duck_count() == 1, "speed receipt follows speed upgrade without adding ducks")
 	_failure(func(): return activities.train_ducks(), "maximum duck speed")
-	state.current_island = 2
-	_failure(func(): return activities.train_ducks(), "empty Shores flock cannot train")
 	_fresh()
 	_clear_signals()
 	state.storage.russet = 1
@@ -220,7 +178,6 @@ func _test_ducks_and_services() -> void:
 func _run() -> void:
 	_test_seeds()
 	_test_tools_and_space()
-	_test_islands()
 	_test_ducks_and_services()
 	activities.free()
 	state.free()

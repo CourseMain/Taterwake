@@ -44,7 +44,7 @@ func _ready() -> void:
 	note.text = "Isolated preview · your saved farm is untouched\nWASD / arrows · Hold Shift to sprint\nScroll / pinch to zoom · 50% more land"
 	note.add_theme_font_size_override("font_size", 12)
 	controls.add_child(note)
-	for entry in [["valley", "Island 1 · tank, can, crops"], ["shores", "Island 2 · ordinary sprinklers"], ["practice", "Island 2 · optional practice"], ["winter", "Island 3 · expanded snowy farm"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · trees and automatic shutters"]]:
+	for entry in [["valley", "Valley · tank, can, crops"], ["practice", "Valley · optional practice"], ["freeze", "Freeze · clear crop ice"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · trees and automatic shutters"]]:
 		var button := Button.new()
 		button.text = entry[1]
 		button.pressed.connect(func(): _scenario(entry[0]))
@@ -60,15 +60,9 @@ func _ready() -> void:
 	var upgrades := Button.new()
 	upgrades.text = "Open upgrades · plenty of lab coins"
 	upgrades.pressed.connect(func():
-		game._on_action("tools" if game.state.current_island == 1 else "climate")
+		game._on_action("climate")
 		_fold())
 	controls.add_child(upgrades)
-	var ferry := Button.new()
-	ferry.text = "Walk the path to the ferry"
-	ferry.pressed.connect(func():
-		game.queue_ferry()
-		_fold())
-	controls.add_child(ferry)
 	coast_toggle = CheckButton.new()
 	coast_toggle.text = "Coastal water & ice"
 	coast_toggle.tooltip_text = "Compare frame times with the coastal water and ice visible or hidden."
@@ -81,7 +75,7 @@ func _ready() -> void:
 	mature.text = "Mature farm · performance test"
 	mature.pressed.connect(func():
 		for plot in game.state.plots:
-			plot.merge({"stage": 3, "watered": true, "frozen": false, "ripe_age": 0.0}, true)
+			plot.merge({"stage": 3, "watered": true, "ripe_age": 0.0}, true)
 		game._on_state_changed()
 		_measure())
 	controls.add_child(mature)
@@ -122,26 +116,24 @@ func _scenario(kind: String) -> void:
 	game.state.reset_game()
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
-	game.state.debug_unlock_island(3)
-	game.state.travel_to(1 if kind == "valley" else (3 if kind == "winter" else 2))
-	game.state.climate.acknowledge(game.state)
-	game.state.coins = 1e18
+	game.state.coins = 10000
 	game.state.pest_timer = 1000.0
-	game.state.surge_timer = 1000.0
 	game.state.climate.data.timer = 330.0
 	game.empty_can_prompted = false
 	game.state.expansion = 1
 	for plot in game.state.plots:
-		plot.merge({"unlocked": true, "tilled": true, "watered": false, "stage": 1, "crop": "russet" if kind == "valley" else ("icecap" if kind == "winter" else "sunburst"), "ripe_age": 0.0}, true)
-	if kind == "practice": game.state.climate.data.lesson = game.state.ClimateSystem.Lesson.fresh("offer")
-	if kind in ["drought", "flood", "storm"]:
+		plot.merge({"unlocked": true, "tilled": true, "watered": false, "stage": 1, "crop": "russet" if kind == "valley" else ("icecap" if kind == "freeze" else "sunburst"), "ripe_age": 0.0}, true)
+	if kind == "practice":
+		game.state.climate.data.projects.irrigation = 1
+		game.state.climate.data.lesson = game.state.ClimateSystem.Lesson.fresh("offer")
+	if kind in ["drought", "flood", "storm", "freeze"]:
 		for plot in game.state.plots:
 			plot.watered = true
 			plot.stage = 2
-		if kind == "flood": game.state.climate.data.projects["2"].drainage = 1
+		if kind == "flood": game.state.climate.data.projects.drainage = 1
 		if kind == "storm":
-			game.state.climate.data.projects["2"].windbreaks = 1
-			game.state.climate.data.projects["2"].barn = 1
+			game.state.climate.data.projects.windbreaks = 1
+			game.state.climate.data.projects.barn = 1
 		game.state.climate.begin_warning(game.state, kind, 1)
 		game._advance_simulation(45)
 	game.hud.close_panel()

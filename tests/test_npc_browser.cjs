@@ -81,7 +81,7 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       await click('Leave  ×');
       assert.equal((await command('status')).conversation.visible, false);
       if (name === 'laptop') {
-        for (const [id, action] of [['bram','tools'],['nell','barn'],['pip','duck_patrol'],['hollis','island'],['tess','quests'],['edwin','talk:edwin']]) {
+        for (const [id, action] of [['bram','tools'],['nell','barn'],['pip','duck_patrol'],['tess','quests'],['edwin','talk:edwin']]) {
           await command('user:' + action);
           assert.equal((await command('status')).conversation.npc, id);
           await page.keyboard.press('Space');
@@ -99,20 +99,19 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
         await page.keyboard.press('Escape');
         assert.equal((await command('status')).conversation.visible, false, 'keyboard focus returns after fullscreen');
       }
-      await command('island2');
       await command('user:climate');
       await page.waitForTimeout(3500);
       await shot('iris');
       await click('See weather & protection');
       assert.equal((await command('status')).panel, 'climate');
       await command('freeze');
-      await command('user:activities');
+      await command('user:tools');
       await click("How's the weather looking?");
       await page.waitForTimeout(4500);
-      await shot('oren');
-      assert.match((await command('status')).conversation.text, /heat it again for free/);
-      await click('Open the furnace');
-      assert.equal((await command('status')).panel, 'activities');
+      await shot('bram-freeze');
+      assert.match((await command('status')).conversation.text, /hoe to clear ice/);
+      await click('See tool upgrades');
+      assert.equal((await command('status')).panel, 'tools');
       assert.deepEqual(errors, [], `${name}: browser errors`);
       console.log(`PASS ${name}: portraits, touch/mouse choices, memories, paused clocks, weather branches, service return`);
       await context.close();

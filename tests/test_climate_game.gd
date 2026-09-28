@@ -27,23 +27,8 @@ func run() -> void:
 	game.set_process(false)
 	game.set_process_unhandled_input(false)
 	game.state.coins = 1e12
-	game._advance_simulation(300.0)
-	check(game.state.climate.data.phase == "calm" and not game.state.climate.data.introduced, "Island 1 never starts climate disasters")
-	game.state.island2_unlocked = true
-	game.state.field_expansions["2"] = true
-	for plot in game.state.island_plots["2"]: plot.unlocked = true
-	game.state.travel_to(2)
-	check(game.state.climate.data.intro_pending and game.hud._climate_intro.visible, "first arrival plays paused Island 2 cinematic")
-
-	var intro_elapsed: float = game.state.elapsed
-	game._advance_simulation(120.0)
-	check(game.state.elapsed == intro_elapsed, "introduction pauses crops and weather")
-	await shot("climate-introduction")
-	game.hud._climate_intro.skip.pressed.emit()
-	check(game.conversation.visible and game.conversation.npc_id == "iris", "arrival retains Iris's station introduction")
-	game.conversation.choose(0)
-	game._on_action("climate")
-	check(not game.state.climate.data.intro_pending and game.hud._panel_kind == "climate", "one clear introduction button opens protection choices")
+	game.state.expand_field()
+	game.state.coins = 100000
 	game.state.barn_level = 3
 	game.state._recompute_capacity()
 	game.state.storage.russet = 1000
@@ -71,7 +56,7 @@ func run() -> void:
 	for id in ["rainwater", "drainage", "barn", "windbreaks"]:
 		check(game.hud._refs["climate_fund:"+id].is_visible_in_tree(), "protection purchases remain reachable in scrollable equipment panel")
 	game.hud._refs["climate_fund:drainage"].pressed.emit()
-	check(game.state.climate.data.projects["2"].get("drainage") == 1 and game.state.coins == 99250.0, "initiative button buys exactly one local level")
+	check(game.state.climate.data.projects.get("drainage") == 1 and game.state.coins == 99250.0, "initiative button buys exactly one local level")
 	game.hud.close_panel()
 	game._advance_simulation(45.0)
 	game.hud.update_state(game.state)
@@ -90,8 +75,8 @@ func run() -> void:
 	await create_timer(0.75).timeout
 	check(page.visible and page.headline.text == "BANKRUPT", "overdraft bankruptcy opens the editorial page")
 	check(page.detail.text.contains("overdraft") and page._event.text.to_upper().contains("FLOOD") and page._threshold.text.contains("5,000"), "collapse shows the overdraft boundary and actual climate event")
-	check(page._metrics["FIELD LOST"].note.text.contains("48") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
-	check(page._context.text.contains("Island 2"), "collapse identifies the affected island")
+	check(page._metrics["FIELD LOST"].note.text.contains("24") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
+	check(page._context.text.contains("Spud Valley"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
@@ -115,11 +100,8 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	check(not game.hud._climate_effect.visible and game.hud._tool_buttons.hoe.is_visible_in_tree(), "normal farming controls and tone return after collapse")
 	game.state.coins = 1e12
-	game.state.island2_unlocked = true
-	game.state.field_expansions["2"] = true
-	for plot in game.state.island_plots["2"]: plot.unlocked = true
-	game.state.travel_to(2)
-	game.hud._climate_alert.action.pressed.emit()
+	game.state.expansion = 1
+	for plot in game.state.plots: plot.unlocked = true
 	game.hud.close_panel()
 	game.state.climate.begin_warning(game.state, "storm", 1.0)
 	game._advance_simulation(45.0)

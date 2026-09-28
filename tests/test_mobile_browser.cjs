@@ -62,7 +62,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
   await tapButton('Menu'); assert.equal((await command('status')).panel,'pause');
   await tapButton('×'); assert.equal((await command('status')).panel,'');
  }
- for(const action of ['menu','build:farmer','build:scientist','market','roll','island2','climate','close','tank','close','tutorial']){
+ for(const action of ['menu','market','climate','close','tank','close','tutorial']){
   await command(action);await shot(action.replace(':','-'));
  }
  if(touch){

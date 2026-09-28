@@ -109,16 +109,9 @@ func run() -> void:
 	var before: float = game.state.elapsed
 	game._process(50.0)
 	check(is_equal_approx(game.state.elapsed - before, 1.0), "large accelerated frame cannot skip a ten-second stock boom")
-	game.state.island2_unlocked = true
-	game.state.island3_unlocked = true
-	game.state.travel_to(3)
-	game.state.climate.acknowledge(game.state)
 	game.state.pest_timer = 100.0
-	game.state.frost_timer = 100.0
-	game.state.export_timer = 100.0
-	game.activities.furnace_remaining = 0.15
-	game.activities.furnace_cooldown = 50.0
 	var plot: Dictionary = game.state.plots[0]
+	game.state._clear_crop(plot)
 	plot.unlocked = true
 	plot.tilled = true
 	plot.stage = 2
@@ -127,9 +120,8 @@ func run() -> void:
 	plot.frozen = false
 	plot.elapsed = 0.0
 	game._process(0.01)
-	check(is_equal_approx(float(plot.plant_age), 0.3) and is_equal_approx(game.state.frost_timer, 99.7) and is_equal_approx(game.state.export_timer, 99.7), "crop pest age, winter and export clocks use the same scaled interval")
-	check(is_equal_approx(game.activities.furnace_cooldown, 49.7), "activities share simulation time")
-	check(float(plot.elapsed) > 0.3, "crop growth uses scaled time and its active furnace bonus")
+	check(is_equal_approx(float(plot.plant_age), 0.3), "crop age uses the scaled interval")
+	check(is_equal_approx(float(plot.elapsed), 0.3), "ordinary crop growth uses scaled time")
 	game.hud.close_panel()
 	game.world.set_player_position(Vector3(0.0, 0.0, 9.0))
 	game.destination = Vector3(5.0, 0.0, 9.0)

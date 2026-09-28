@@ -26,9 +26,6 @@ func run() -> void:
 	var farm = game.state
 	farm.tutorial_progress.completed = true
 	farm.coins = 1e18
-	farm.debug_unlock_island(3)
-	farm.travel_to(2)
-	farm.climate.acknowledge(farm)
 	farm.coins = 10000
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
@@ -69,7 +66,7 @@ func run() -> void:
 		root.push_input(event,true)
 		await create_timer(0.05).timeout
 	await settle()
-	check(farm.climate.data.projects["2"].get("rainwater",0) == 1, "pointer checkout installs water reserve")
+	check(farm.climate.data.projects.get("rainwater",0) == 1, "pointer checkout installs water reserve")
 	check(page._values.water.text.ends_with("72"),"tank telemetry updates after real purchase")
 	game._on_action("climate")
 	await settle()
@@ -97,8 +94,8 @@ func run() -> void:
 			check(not label.text.contains("Equip tools with") and not label.text.contains("Partial deliveries welcome") and not label.text.contains("Trees shelter the far patch") and not label.text.contains("Forecasts, equipment"),"removed screenshot filler stays absent")
 	game.hud.close_panel()
 	if not phone:
-		for island in [2,3]:
-			game.world.build_world(island)
+		for island in [1]:
+			game.world.build_world()
 			var station: Node3D = game.world.weather_station
 			game.world.camera.size = 8
 			game.world.camera.position = station.global_position + Vector3(8,7,13)

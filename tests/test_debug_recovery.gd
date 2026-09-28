@@ -28,9 +28,7 @@ func run() -> void:
 	check(farm.coins == 2000, "locked route cannot set test funds")
 	game._on_action("debug:unlock:" + game.DEBUG_ACCESS_CODE)
 	game._on_action("debug:island:2")
-	check(farm.coins == 2000 and farm.current_island == 1, "unlocking preserves cash and location")
-	farm.travel_to(2)
-	farm.climate.acknowledge(farm)
+	check(farm.coins == 2000, "unlocking preserves cash and location")
 	farm.seed_inventory.russet = 37
 	farm.storage.russet = 40
 	farm.tools.water = 1

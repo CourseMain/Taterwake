@@ -24,11 +24,11 @@ func _run() -> void:
 	root.msaa_3d = Viewport.MSAA_4X
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var results: Array = []
-	for island: int in [1, 2, 3]:
+	for island in [1]:
 		var world = world_script.new()
 		root.add_child(world)
 		var begin: int = Time.get_ticks_usec()
-		world.build_world(island)
+		world.build_world()
 		var build_ms: float = (Time.get_ticks_usec() - begin) / 1000.0
 		for mode: String in ["empty", "ripe", "pests"]:
 			var plots: Array = []

@@ -31,7 +31,7 @@ func _run() -> void:
 	var world := World.new()
 	root.add_child(world)
 	world.set_day_time(75.0)
-	world.build_world(1)
+	world.build_world()
 	check(is_equal_approx(float(world.day_cycle_info().duration), 60.0), "a full day/night cycle lasts one minute")
 	check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "time can be restored before the first world build")
 	var environment_id: int = world._day_environment.get_instance_id()
@@ -73,9 +73,9 @@ func _run() -> void:
 		world.set_day_time(invalid_time)
 		check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "invalid time cannot corrupt light properties")
 	var dusk_colors: Array[Color] = []
-	for island in [1, 2, 3]:
+	for island in [1]:
 		world.set_day_time(15.0)
-		world.switch_island(island)
+		world.build_world()
 		check(is_equal_approx(float(world.day_cycle_info().phase), 0.25), "island %d travel keeps the saved cycle phase" % island)
 		dusk_colors.append(world._day_environment.background_color)
 		var forbidden_title: bool = false
@@ -87,7 +87,7 @@ func _run() -> void:
 			has_barn = has_barn or "Barn" in label.text
 			has_navigation = has_navigation or label.text == "Ferry"
 		check(not forbidden_title, "island %d removes floating decorative field titles" % island)
-		check(has_barn and has_navigation, "island %d retains functional station and travel labels" % island)
+		check(has_barn and not has_navigation, "island %d keeps station labels without travel" % island)
 		var plots: Array = []
 		for index in range(world.plot_positions.size()):
 			plots.append({"unlocked": true, "stage": 3, "crop": "icecap" if island == 3 else ("sunburst" if island == 2 else "russet"), "tilled": true, "watered": true, "pests": index == 4, "pest_ticks": 0, "pest_damage": 0.0, "frozen": island == 3 and index == 5})
@@ -100,7 +100,6 @@ func _run() -> void:
 		var hit: Dictionary = world.pick(world.camera.unproject_position(world.plot_positions[4]))
 		check(int(hit.get("plot_index", -1)) == 4, "nighttime pest plot remains selectable on island %d" % island)
 		check(world._pest_roots[4].visible and world._pest_labels[4].visible, "nighttime pest feedback remains visible on island %d" % island)
-	check(not dusk_colors[0].is_equal_approx(dusk_colors[1]) and not dusk_colors[1].is_equal_approx(dusk_colors[2]), "all three islands retain distinct dusk palettes")
 	world.queue_free()
 	await process_frame
 	await _check_main_integration()
@@ -120,10 +119,6 @@ func _check_main_integration() -> void:
 	var save_data: Dictionary = game.state._save_data()
 	var restored: Dictionary = JSON.parse_string(JSON.stringify(save_data))
 	check(game.state._valid_save(restored) and is_equal_approx(float(restored.elapsed), 30.125), "existing save schema preserves fractional day phase without new mandatory fields")
-	game.state.current_island = 2
-	game.state.island2_unlocked = true
-	game._on_island_changed(2)
-	check(is_equal_approx(float(game.world.day_cycle_info().seconds), float(restored.elapsed)), "real island travel reapplies the same saved day phase")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout

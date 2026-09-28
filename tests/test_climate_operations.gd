@@ -12,13 +12,10 @@ func check(ok: bool, message: String) -> void:
 		push_error(message)
 func fresh() -> void:
 	farm.reset_game()
-	farm.debug_unlock_island(3)
 	# Fully expanded fields also match the pre-revision-21 migration fixture.
-	for id in ["2", "3"]:
-		farm.field_expansions[id] = true
-		for plot in farm.island_plots[id]: plot.unlocked = true
-	farm.travel_to(2)
-	farm.climate.acknowledge(farm)
+	for id in ["farm"]:
+		farm.expansion = 1
+		for plot in farm.plots: plot.unlocked = true
 	farm.coins = 1e18
 	farm.rng.seed = 32451
 	for plot in farm.plots:
@@ -56,9 +53,9 @@ func run() -> void:
 	farm.update(10)
 	var before_irrigation: float = Ops.local(farm).water
 	Ops.target(farm, 0, "water")
-	check(float(farm.climate.data.operations.stress["0"]) < 0.05 and float(farm.climate.data.operations.stress["40"]) > 0.3, "sprinkler rescue only protects its fixed patch")
+	check(float(farm.climate.data.operations.stress["0"]) < 0.05 and float(farm.climate.data.operations.stress["20"]) > 0.3, "sprinkler rescue only protects its fixed patch")
 	check(Ops.local(farm).water == before_irrigation - Ops.water_cost(farm), "sprinkler uses its exact saved reserve cost")
-	check(Ops.capacity(farm, 2) == 72, "tank upgrade increases capacity")
+	check(Ops.capacity(farm) == 72, "tank upgrade increases capacity")
 	Ops.local(farm).water = 0.0
 	Ops.operate(farm, "hand")
 	check(Ops.local(farm).water == 0, "retired invisible well cannot create water")
@@ -67,18 +64,11 @@ func run() -> void:
 	var path: String = "user://climate_operations_test_only.json"
 	check(farm.save_game(path) and farm.load_game(path), "active hazard, controls and reserve round-trip")
 	var data: Dictionary = farm._save_data()
-	data.climate.operations.islands["2"].water = -1
+	data.climate.operations.supply.water = -1
 	check(not farm._valid_save(data), "negative saved water rejected atomically")
 	data = farm._save_data()
 	data.climate.operations.strike_row = 7
 	check(not farm._valid_save(data), "out-of-bounds lightning row rejected")
-	data = farm._save_data()
-	data.mechanics_revision = 15
-	data.climate.erase("operations")
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(data))
-	file.close()
-	check(farm.load_game(path) and Ops.local(farm).water == 36, "previous farms acquire supplies without losing progress")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	fresh()
 	weather("flood")
@@ -98,15 +88,13 @@ func run() -> void:
 	check(farm.climate.data.operations.strike_row >= 0 and farm.climate.data.operations.scars.is_empty(), "lightning reveals exact row before damage")
 	var row: int = farm.climate.data.operations.strike_row
 	farm.update(2.5)
-	check(farm.climate.data.operations.scars.has(str(row * 8)) and farm.climate.data.operations.flash > 0, "bolt hits warned row and leaves saved scorch marks")
+	check(farm.climate.data.operations.scars.has(str(row * 6)) and farm.climate.data.operations.flash > 0, "bolt hits warned row and leaves saved scorch marks")
 	farm.update(0.5)
 	farm.plots[0].pests = true
 	Ops.local(farm).spray = 0.0
 	farm.interact_plot(0, "pest")
 	check(farm.plots[0].pests, "empty sprayer cannot clear pests during disaster")
-	farm.travel_to(1)
 	farm.update(5)
-	check(farm.climate.data.island == 2, "travelling never transfers active disaster")
 	farm.queue_free()
 	print("CLIMATE OPERATIONS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

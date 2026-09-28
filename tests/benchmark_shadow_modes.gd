@@ -22,7 +22,7 @@ func _run() -> void:
 	root.add_child(world)
 	if world.has_method("set_graphics_quality"):
 		world.set_graphics_quality(mode)
-	world.build_world(2)
+	world.build_world()
 	var plots: Array = []
 	for index: int in range(world.plot_positions.size()):
 		plots.append({"unlocked": true, "stage": 3, "crop": "sunburst", "watered": true, "tilled": true})

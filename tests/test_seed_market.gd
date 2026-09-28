@@ -108,7 +108,7 @@ func run() -> void:
 	game._on_action("market")
 	await settle()
 	var page = game.hud._refs.market_page
-	check(page.crops == expected.slice(0, 4), "buy ordering stays fixed when live prices reverse")
+	check(page.crops == expected, "buy ordering stays fixed when live prices reverse")
 	var cash: float = state.coins
 	var seeds: int = state.seed_inventory.russet
 	press(page, "buy:russet:1")
@@ -132,7 +132,7 @@ func run() -> void:
 	await settle()
 	page = game.hud._refs.market_page
 	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
-	check(page.crops == expected.slice(0, 4), "buy and sell share base order")
+	check(page.crops == expected, "buy and sell share base order")
 	page.quantity.value = 3
 	check(page.payout.text == "\uE000 45", "quantity previews actual expected payout")
 	cash = state.coins
@@ -190,14 +190,14 @@ func run() -> void:
 	root.push_input(up, true)
 	check(page.selected == "russet", "vertical scrolling does not switch crops")
 	press(page, "market_previous")
-	check(page.selected == "radioactive" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "wrap and zero inventory work")
+	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "wrap and zero inventory work")
 	page.refresh()
-	state.storage.radioactive = 2
+	state.storage.icecap = 2
 	page.refresh()
 	check(not page.sell_button.disabled, "missing history still allows a real current-quote sale")
 	cash = state.coins
 	press(page, "market_sell")
-	check(state.storage.radioactive == 1 and state.coins == cash + state.market.radioactive.sell, "missing-history sale pays current quote")
+	check(state.storage.icecap == 1 and state.coins == cash + state.market.icecap.sell, "missing-history sale pays current quote")
 	press(page, "market_next")
 	game.hud._toast_box.hide()
 	await shot("sell-desktop")
@@ -206,14 +206,10 @@ func run() -> void:
 	state.elapsed = 150.0
 	state._refresh_market()
 	game.hud.update_state(state)
-	check(page.quantity.value == 2 and page.payout.text == "\uE000 35" and page.crops == expected.slice(0, 4), "live refresh updates payout and preserves selection/order")
+	check(page.quantity.value == 2 and page.payout.text == "\uE000 35" and page.crops == expected, "live refresh updates payout and preserves selection/order")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "new market and bounded history round-trip saves")
 	check(is_equal_approx(state.market.russet.seed, 11.25), "load recomputes 75% seed price")
 	if FileAccess.file_exists(SAVE): DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
-	state.island2_unlocked = true
-	state.island3_unlocked = true
-	state.travel_to(3)
-	state.climate.acknowledge(state)
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.climate._impact(state)
 	state._refresh_market()

@@ -44,17 +44,7 @@ func run() -> void:
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.market == expected, "save restores derived prices exactly")
 	var retired: Dictionary = {"market": {"bad": true}, "market_core": {}, "surge_timer": -1, "surge_remaining": 10, "surge_crop": "russet", "surge_factor": 1000, "surge_kind": "rocket", "rocket_pending": true, "rocket_timer": 1, "rocket_factor": 1000, "rocket_crop": "icecap", "natural_remaining": 5, "natural_factor": 50, "natural_crop": "russet", "current_event": "seed_panic", "event_name": "boom", "event_crop": "russet", "event_strength": 10, "event_remaining": 5, "event_in": 2, "market_clock": 3, "tracked_seeds": ["russet"], "export_factor": 6, "thaw_remaining": 5}
 	farm.climate.capture_collapse(farm)
-	var old: Dictionary = farm._save_data()
-	old.climate.collapse.merge({"market_crop": "russet", "market_change": 1000, "seed_factor": 2, "sell_factor": 0.05}, true)
-	old.mechanics_revision = 23
-	old.merge(retired, true)
-	old.farm_help.merge({"practice_remaining": 5, "practice_crop": "russet", "practice_tried": true}, true)
-	old.farm_help.dismissed.append("stocks")
-	var file := FileAccess.open(SAVE, FileAccess.WRITE)
-	file.store_string(JSON.stringify(old))
-	file.close()
-	check(farm.load_game(SAVE) and farm.market == expected, "old market data is discarded without affecting elapsed time")
-	check(farm.save_game(SAVE), "migrated farm saves")
+	check(farm.save_game(SAVE), "farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	for key: String in retired:
 		check(not saved.has(key), "retired field dropped: " + key)

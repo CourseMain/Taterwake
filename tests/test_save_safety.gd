@@ -80,9 +80,9 @@ func run() -> void:
 	check(FileAccess.get_file_as_string(SAVE) == first, "backup failure preserves the previous farm")
 	blocked.move_attempted = false
 	# The spy prevents all file moves; this never opens a player's legacy save.
-	blocked._reject_save(State.LEGACY_SAVE_PATH)
+	blocked._reject_save(State.PROTECTED_SAVE_PATHS[0])
 	check(not blocked.move_attempted, "legacy v2 rejection never attempts to move its file")
-	check(not blocked.save_game(State.LEGACY_SAVE_PATH), "saving cannot overwrite the legacy v2 path")
+	check(not blocked.save_game(State.PROTECTED_SAVE_PATHS[0]), "saving cannot overwrite the legacy v2 path")
 	blocked.free()
 	clean(state)
 	restored.free()

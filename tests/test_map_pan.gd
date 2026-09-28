@@ -178,20 +178,6 @@ func run() -> void:
 	game._update_weather_shake(0.01)
 	check(camera.global_position == stopped and absf(camera.h_offset) > 0.0, "weather/stock shake layers over the panned camera")
 	game._update_weather_shake(1.0)
-	for island in [2, 3, 1]:
-		game.state.current_island = island
-		game._on_island_changed(island)
-		check(game._camera_pan_offset == Vector3.ZERO and game.world.camera.global_position == game._camera_home_position, "island %d arrives centered without a previous pan" % island)
-		game._pan_camera_by(Vector2(25, 20))
-		await physics_frame
-		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.plot_positions[4]))
-		check(int(hit.get("plot_index", -1)) == 4, "island %d crop picking follows the panned view" % island)
-	var island_home: Vector3 = game._camera_home_position
-	var island_zoom: float = game._camera_home_size
-	game.world.camera.size = 19.0
-	game._zoom_target_size = 19.0
-	game._on_island_changed(game.state.current_island)
-	check(game.world.camera.global_position == island_home and game.world.camera.size == island_zoom and game._camera_home_position == island_home, "same-island loading restores the overview without replacing home with a panned view")
 	game._recenter_camera()
 	if game.touch_controls.enabled:
 		game.hud.close_panel()
@@ -231,10 +217,6 @@ func run() -> void:
 		check(is_instance_valid(reset), "touch controls provide a recenter action")
 		if is_instance_valid(reset): reset.pressed.emit()
 		check(game._camera_pan_offset == Vector3.ZERO and not game.touch_controls.drawer.visible, "touch recenter restores the overview and closes the drawer")
-		finger(2, a, true)
-		finger(3, b, true)
-		game._on_island_changed(1)
-		check(game.touch_controls.world_fingers.is_empty() and game._camera_pan_offset == Vector3.ZERO, "island arrival also cancels touches left on the previous map")
 	game.queue_free()
 	await process_frame
 	print("MAP PAN: %d checks, %d failures" % [checks, failures])

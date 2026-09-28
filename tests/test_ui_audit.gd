@@ -46,9 +46,6 @@ func run() -> void:
 	root.add_child(game)
 	await settle()
 	game.set_process(false)
-	game.state.debug_unlock_island(3)
-	game.state.travel_to(3)
-	game.state.climate.acknowledge(game.state)
 	game.state.coins = 223e15
 	for crop: String in game.state.CROP_IDS:
 		game.state.seed_inventory[crop] = 30
@@ -75,8 +72,6 @@ func run() -> void:
 		check(game.hud._refs[pair[1]].visible and scroller.get_global_rect().intersects(game.hud._refs[pair[1]].get_global_rect()), pair[1] + " reveals after expansion")
 		await shot(pair[1] + "-bottom", true)
 	for island: int in [1, 2]:
-		game.state.travel_to(island)
-		game.state.climate.acknowledge(game.state)
 		await page("activities", "activities-island-%d" % island)
 	game.state.climate.begin_warning(game.state, "storm", 1.0)
 	game.state.climate._impact(game.state)

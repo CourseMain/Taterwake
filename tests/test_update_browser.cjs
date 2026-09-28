@@ -17,8 +17,8 @@ fs.mkdirSync('artifacts/update-browser',{recursive:true});
   const command=async action=>{await page.evaluate(a=>window.mobileQA(a),action);await page.waitForTimeout(300);return report()};
   assert.equal((await report()).version,'1.0.3.1');
   const screenshot=async suffix=>page.screenshot({path:`artifacts/update-browser/${name}-${suffix}.png`});
-  await command('layout:2');
-  await screenshot('sand');
+  await command('layout:1');
+  await screenshot('valley');
   const initial=await report();
   const x=width*.47,y=height*.46;
   // Sparse drag events must still produce motion on intervening rendered frames.
@@ -45,19 +45,16 @@ fs.mkdirSync('artifacts/update-browser',{recursive:true});
   await screenshot('pan');
   await command('climate'); await command('scroll_bottom');
   let state=await report();
-  for(const text of ['Water practice','Tax forecast','Show weather timings']){
+  for(const text of ['Water practice','Show weather timings']){
    const b=state.buttons.find(b=>b.text===text);assert.ok(b,text);
    assert.ok(b.rect[2]>state.modal[2]*.65 && b.rect[3]<125,`${name} ${text} compact width/height`);
   }
   await screenshot('weather-bottom');
-  await command('close');await command('layout:3');await screenshot('snow');
-  await command('activities'); await screenshot('furnace');
-  state=await report();assert.ok(state.buttons.some(b=>b.text==='Work the bellows'));
   await command('close');
   for(const quality of ['smooth','balanced','crisp']){
-   await command('quality:'+quality);await command('close');await screenshot('snow-'+quality);
+   await command('quality:'+quality);await command('close');await screenshot('valley-'+quality);
   }
-  console.log(name+': smooth drag, weather layout, furnace, terrain and 3 graphics modes passed');
+  console.log(name+': smooth drag, weather layout, terrain and 3 graphics modes passed');
   await context.close();
  }
  await browser.close();

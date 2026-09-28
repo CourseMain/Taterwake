@@ -14,10 +14,7 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.set_process(false)
-	game.state.debug_unlock_island(3)
-	game.state.field_expansions["2"] = true
-	game.state.travel_to(2)
-	game.state.climate.acknowledge(game.state)
+	game.state.expansion = 1
 	game.state.coins = 1e18
 	game.hud.close_panel()
 	for project: String in game.state.ClimateSystem.PROJECTS:
