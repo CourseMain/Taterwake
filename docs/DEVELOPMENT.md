@@ -11,7 +11,7 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-undeveloped-f`, published as the GitHub prerelease **v2.0.0(undeveloped:f)** from the `redesign` branch. This tag covers Segments 1–17: the farm-sized economy, forty-year caretaker continuation, fifty-year presentation, new NPC roles and guided first year through Winter accounts. The earlier `v2.0.0-undeveloped-e` tag covers Segments 1–15; `v2.0.0-undeveloped-d` covers Segments 1–13 plus harvest quality and seed saving. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-undeveloped-g`, published as the GitHub prerelease **v2.0.0(undeveloped:g)** from the `redesign` branch. This tag adds field leases, revised crop and pest pacing, one connected terraced island, 30× guided waits and seasonal farm art tied to actual state. The earlier `v2.0.0-undeveloped-f` tag covers Segments 1–17, including the fifty-year ending and guided first year. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 

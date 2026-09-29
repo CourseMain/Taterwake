@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.0-undeveloped-g
+
+**Game redesign — source prerelease.** Adds the three-field farm and its seasonal art. The live browser game remains v1.0.3.1.
+
+- Added rentable Low and Hill fields with distinct exposure, Winter lease decisions, second-half expansions and shared protection levels.
+- Revised crop growth and mid-growth pest timing; guided waits run at 30× and pause for decisions.
+- Rebuilt the farm as one hexagonal landmass with three visible terraces, stepped paths, connected roads, green early-season grass and desktop/phone framing.
+- Replaced flat Winter snow with roof and branch caps, drifts, frozen tank water, path footprints and cracked bed ice that Hoe breaks. Fruit trees go bare; the farmer wears seasonal clothes.
+- Added grade markers, drought wilt, flood yellowing and frost rime; enlarged Spring blossom, Autumn leaf clusters and Summer haze.
+- Made Winter stocks, kept seed, spoilage, buyer orders and collection carts visible. Protection sites show construction progress, and the weather instrument shows the real forecast range.
+- Kept static art in the existing mesh compiler. Removed the old snow terrain overlay and its unused material adapter.
+- Validation: all 85 suites pass on Godot 4.7.2, including 1,651 tuning checks and the 39-check boot. Farm visuals pass 75 headless checks and 79 native checks. Desktop and phone Web exports run without console errors; seasonal draw counts stay within the 1,800-call budget.
+
+Saves use mechanics revision 42; older incompatible saves are set aside. Published `docs/index.*` and `web/` remain unchanged.
+
 ## 2.0.0-undeveloped-f
 
 **Game redesign — source prerelease.** Covers Segments 1–17, including farm-sized accounts, the fifty-year ending and the guided first year. The live browser game remains v1.0.3.1.
