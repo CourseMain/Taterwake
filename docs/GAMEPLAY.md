@@ -62,7 +62,7 @@ The farm keeps its angled orthographic 3D view. Drag anywhere on the island to s
 
 The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-**Annual accounts open at Winter start**, after buyer collection, storage charges, spoilage, fixed costs and the foreclosure check have been saved. The accounts pause the simulation while open and show every category, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
+**Annual accounts open at Winter start**, after buyer collection, storage charges, spoilage, fixed costs and the foreclosure check have been saved. The accounts pause the simulation while open and show every category, crop sales split by grade with sacks and totals, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
 
 The run finishes at the **end of year 10’s Winter**. The ten-year summary then shows total net, years in profit, best and worst year, final purse and remaining loan, with **New Run** to start over. The epilogue is still to come. Every season boundary saves before its screen opens, including the final Winter boundary. Calendar and accounts presentation stay synchronized at accelerated debug speed.
 
@@ -93,39 +93,56 @@ Every Winter posts these fixed costs once:
 
 The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **36**. Earlier saves, including revision 35, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Current saves use mechanics revision **37**. Earlier saves, including revision 36, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
 
 ## The live crop market
 
 | Variety | Seed cost | Base price / sack | Water need | Heat tolerance | Cold tolerance | Grow seasons | Sacks / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | Russet | 11.25 | 15 | 1 | 3 | 3 | 1 | 3 | Low |
-| Giant | 13.50 | 18 | 1 | 3 | 2 | 1 | 5 | Low |
-| Golden | 15.75 | 21 | 1 | 2 | 2 | 1 | 4 | Mid |
-| Sunburst | 20.25 | 27 | 2 | 3 | 1 | 2 | 3 | High |
-| Icecap | 22.50 | 30 | 3 | 1 | 3 | 2 | 3 | High |
+| Giant | 15.00 | 20 | 1 | 3 | 2 | 1 | 5 | Low |
+| Golden | 21.00 | 28 | 1 | 2 | 2 | 1 | 4 | Mid |
+| Sunburst | 28.50 | 38 | 2 | 3 | 1 | 2 | 3 | High |
+| Icecap | 37.50 | 50 | 3 | 1 | 3 | 2 | 3 | High |
 
 More water bars mean a thirstier crop; more heat or cold bars mean better tolerance. Higher prices come with lower combined resilience. An unwatered bed builds stress faster when water need is high. Water need and heat tolerance affect drought damage; cold tolerance affects deep-freeze damage. Icecap is cold-tolerant but thirsty and vulnerable to heat.
 
 Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** once. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
 
-Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This remains the ordinary harvest quote. Weather does not change it; stored Winter sacks use the separate price below.
+Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This is the Standard-grade quote; Table earns 1.5× and Feed earns 0.5× it. Weather does not change it; stored Winter sacks use the separate price below.
 
 Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
 
 **Buy Seeds** has five variety cards in a desktop row, stacking vertically on a phone. Each shows three bar dials, growth time, yield, seed cost, the live sack price and owned quantities. Selecting a card selects that variety and the seed tool without spending money. **Last year avg** is blank in year one; later it shows the previous full cycle’s average, currently the base price under the temporary price model. Seeds cost **75% of the variety’s base price**, calculated to cents, throughout the cycle. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
 
-**Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Sacks left in the barn when Winter begins are stored automatically; the sell page states the fee, spoilage and dashed late-Winter price in one line. Inventory sales and **F** sell ordinary stock; in Winter, stored sacks must be sold through **Barn stores**. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
+**Sell Potatoes** shows one variety at a time, with selectable **Table, Standard and Feed** rows showing their sacks and current prices. Select a grade, then swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your selected grade’s available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Sacks left in the barn when Winter begins are stored automatically; the sell page states the fee, spoilage and dashed late-Winter price in one line. Inventory sales and **F** sell ordinary stock; in Winter, stored sacks must be sold through **Barn stores**. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
 Every Buy Seeds and Sell Potatoes card includes a small, unanimated sparkline of up to **12 recent sale quotes**. Beside the live sale price, a signed percentage compares it with the variety’s base price: green above base, red below, neutral at base. The top bar shows the same comparison for the selected crop. Seed costs stay fixed; their cards show the sale-price history to help choose what to plant.
 
 Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Sunburst → Icecap**. Buy Seeds offers all five varieties; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
 
+## Crop quality and saved seed
+
+Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.5× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. Hovering a growing bed or standing beside it shows its grade; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
+
+Before variety and protection adjustments, deductions are:
+
+- Each pest bite: **6 points**.
+- Active drought or flood stress: **4 per 10 seconds** exposed.
+- Disaster ice on the bed: **15 once**, then **4 per 10 seconds** until cleared or thawed.
+- A lightning row hit: **25 once per disaster** on that bed.
+- Growing without water: **2 per 10 seconds**.
+- Left ripe: the first **30 seconds** are free, then **5 per 10 seconds**. Spraying and duck patrol do not reset this deadline.
+
+Deductions scale by **9 ÷ combined resilience**, using the same variety dials as the crop cards: Russet’s multiplier is 1, Icecap’s is 1.8. The scaled points are rounded, then matching protection cuts them by **50% / 75%** using the field-loss formula. Frost covers apply to Spring disaster ice; ordinary Winter bed ice still permits Icecap. Watering, timely spraying, ice clearing and prompt harvest avoid continued deductions. Quality never falls below zero, and a partial harvest leaves the remaining crop’s quality intact.
+
+At **Barn → Barn stores**, choose **Keep 1 Standard/Table sack as seed**. It leaves saleable storage immediately and avoids spoilage, storage ageing and Winter barn disasters. Each kept sack becomes **one seed of the same variety next Spring**. Feed cannot be kept. A barn holding only seed sacks has no storage fee. Kept seeds and their Spring conversion survive saves without duplication.
+
 ## Storing or selling
 
-Keeping any sacks in the barn at **Winter start** costs **200 Spudions once** and loses **10% of the whole barn, rounded to the nearest whole sack**, taken from the largest pile first (catalogue order breaks ties). A lone sack does not spoil. Buyer collection happens first, so only the remaining sacks count. An empty barn has no storage bill. Annual accounts show the charge and spoilage; the journal records spoiled sacks as a zero-cash note, so the loss is not charged twice. These charges happen before foreclosure is checked. Reloading does not repeat them.
+Keeping any sacks in the barn at **Winter start** costs **200 Spudions once** and loses **5% of the whole barn, rounded to the nearest whole sack**, taken from the largest variety pile first (catalogue order breaks ties; lower-quality sacks go first within it). A lone sack does not spoil. Buyer collection happens first, so only the remaining sacks count. An empty barn has no storage bill. Annual accounts show the charge and spoilage; the journal records spoiled sacks as a zero-cash note, so the loss is not charged twice. These charges happen before foreclosure is checked. Reloading does not repeat them.
 
-Surviving sacks become **Winter stores**. Open **Barn → Barn stores** (also linked from Sell Potatoes) and sell during the working Winter. Prices rise steadily from base at Winter start toward **1.2× base for Low volatility, 1.4× for Mid and 1.6× for High** at Winter’s end. The Sell Potatoes sparkline includes a dashed line for that expected late-Winter price; the signed live-market percentage remains beside the ordinary quote. Waiting can pay more, but the fee and spoilage can outweigh the gain on a small harvest.
+Surviving sacks lose **10 quality points each Winter** and are regraded before becoming **Winter stores**. A Table sack at 85 becomes Standard at 75; a Table sack at 100 remains Table at 90. Seed sacks are excluded. Open **Barn → Barn stores** (also linked from Sell Potatoes) and sell during the working Winter. Prices rise steadily from base at Winter start toward **1.2× base for Low volatility, 1.4× for Mid and 1.6× for High** at Winter’s end, multiplied by the sack’s current grade. The Sell Potatoes sparkline includes a dashed line for that expected late-Winter price; the signed live-market percentage remains beside the ordinary quote. Waiting can pay more, but the fee and spoilage can outweigh the gain on a small harvest.
 
 **Spring resets the storage premium.** Unsold stores become ordinary stock again. New Icecap harvests during Winter sell at the ordinary market quote and do not immediately earn the stored-crop premium. Fresh harvests and Winter stores share the same barn capacity: **200 initially**, then **400, 1,200 and 4,400** with upgrades. Excess harvest stays on the plant until room is available.
 
@@ -133,7 +150,7 @@ Surviving sacks become **Winter stores**. Open **Barn → Barn stores** (also li
 
 The **Contracts** board beside the northern shops opens a buyer’s order; it is also reachable from the farm menu. Each Spring offers **20 sacks of one variety at 1.1× its base price**. The variety rotates through the five crops by year. Accepting commits to that order; there is only one per year and no cancellation.
 
-At the **end of Autumn**, as Winter begins, the buyer automatically collects available sacks from the barn before spoilage and the storage fee. Autumn harvests can fill the order. Delivered sacks earn the agreed price; each missing sack costs **5 Spudions**. Both payment and penalty post under **Contracts** in the ledger. The board keeps the year’s result, and saving/reloading preserves the order without settling it twice.
+At the **end of Autumn**, as Winter begins, the buyer automatically collects **Standard or Table sacks, never Feed**, from the barn before spoilage and the storage fee. Autumn harvests can fill the order. Delivered sacks earn the agreed price; each missing sack costs **5 Spudions**. Both payment and penalty post under **Contracts** in the ledger. The board keeps the year’s result, and saving/reloading preserves the order without settling it twice.
 
 ## The Valley farm
 
