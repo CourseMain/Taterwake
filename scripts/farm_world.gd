@@ -886,7 +886,6 @@ func set_player_position(pos: Vector3) -> void:
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
-	if is_instance_valid(visuals): visuals.animate(delta)
 	if is_instance_valid(harvest_feedback): harvest_feedback.animate(delta)
 	for entry: Dictionary in _crop_tubers.values():
 		if is_instance_valid(entry.node): _update_crop_tuber(entry)

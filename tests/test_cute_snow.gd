@@ -37,11 +37,19 @@ func run() -> void:
 	check(art.snow_ground.material_override.shader==art.snow_material.shader,"ground and caps share the two-band snow shader")
 	check(art.snow_ground.mesh.get_aabb().size.y>2,"pillows follow the terraced ground")
 	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"snow leaves fifteen percent exposed grass")
+	w.player.position=Vector3(-14.7,0,15)
+	w.set_player_position(Vector3(-14.7,0,15.6))
+	check(art.print_count==2,"one walked step stamps a pair of footprints")
+	art.animate(30)
+	check(is_equal_approx(art.footprints.multimesh.get_instance_color(0).a,.5),"tracks fade halfway after thirty seconds")
+	art.animate(31)
+	check(art.print_count==0,"tracks fade away after a minute")
+	for i in range(14): w.set_player_position(Vector3(-14.7,0,15+i*.6))
 	var step := "1"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--step="): step=arg.trim_prefix("--step=")
 	await capture("step"+step+"-overview")
-	await capture("step"+step+"-detail",w.ClimateProjects.barn_position(w)+Vector3(0,1,3),23)
+	await capture("step"+step+"-detail",Vector3(-14.7,0,18) if step=="2" else w.ClimateProjects.barn_position(w)+Vector3(0,1,3),14 if step=="2" else 23)
 	game.queue_free(); await frames(); await create_timer(.4).timeout
 	print("CUTE SNOW: %d checks, %d failures" % [checks,failures])
 	quit(1 if failures else 0)

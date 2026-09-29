@@ -19,6 +19,8 @@ var footprints: MultiMeshInstance3D
 var print_count := 0
 var print_cursor := 0
 var walked_distance := 0.0
+var print_ages := PackedFloat32Array()
+const PRINT_SECONDS := 60.0
 var shards: MultiMeshInstance3D
 var flying_ice: Array[Dictionary] = []
 var stores: Node3D
@@ -55,8 +57,12 @@ func setup(w) -> void:
 		var compiled: MeshInstance3D = _compile_prototype(prototype)
 		grade_batches[grade] = _instances("Grade"+grade,compiled.mesh,compiled.material_override,world.plot_positions.size())
 		prototype.free()
-	var print_shape := BoxMesh.new(); print_shape.size = Vector3(.16,.014,.31)
-	footprints = _instances("SnowFootprints",print_shape,world._mat(Color("7b939a")),PRINT_LIMIT)
+	var print_shape := SphereMesh.new(); print_shape.radius=.13; print_shape.height=.014; print_shape.radial_segments=8; print_shape.rings=3
+	var print_material: StandardMaterial3D=world._mat(Color("7b939a")).duplicate()
+	print_material.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
+	print_material.vertex_color_use_as_albedo=true
+	footprints = _instances("SnowFootprints",print_shape,print_material,PRINT_LIMIT,true)
+	print_ages.resize(PRINT_LIMIT); print_ages.fill(PRINT_SECONDS)
 	var shard_shape := CylinderMesh.new(); shard_shape.bottom_radius=.15; shard_shape.top_radius=.04; shard_shape.height=.045; shard_shape.radial_segments=3
 	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("e2e6e5")),SHARD_LIMIT)
 	stores = _group("WinterBarnSacks")
@@ -76,9 +82,10 @@ func _compile_prototype(node: Node3D) -> MeshInstance3D:
 	world._geometry_batcher.batch_siblings(node)
 	return node.get_child(0) as MeshInstance3D
 
-func _instances(title: String, mesh: Mesh, material: Material, count: int) -> MultiMeshInstance3D:
+func _instances(title: String, mesh: Mesh, material: Material, count: int, instance_colors: bool=false) -> MultiMeshInstance3D:
 	var node := MultiMeshInstance3D.new(); node.name=title
 	node.multimesh=MultiMesh.new(); node.multimesh.transform_format=MultiMesh.TRANSFORM_3D
+	node.multimesh.use_colors=instance_colors
 	node.multimesh.mesh=mesh; node.multimesh.instance_count=count; node.multimesh.visible_instance_count=0
 	node.material_override=material
 	add_child(node)
@@ -105,6 +112,7 @@ func set_winter(enabled: bool) -> void:
 	spoiled.visible=winter and spoiled_count>0 and spoil_seconds<14
 	if not winter:
 		print_count=0; print_cursor=0; walked_distance=0
+		print_ages.fill(PRINT_SECONDS)
 		footprints.multimesh.visible_instance_count=0
 
 func _flatten_static(root: Node3D) -> void:
@@ -148,6 +156,7 @@ func _build_snow() -> void:
 		world._bar(snow,a+Vector3(0,.82,0),b+Vector3(0,.82,0),.10,SNOW)
 	for cap in world.get_meta("ridge_wall_caps",[]):
 		world._box(snow,cap.position,Vector3(1.05,.09,.61),SNOW).rotation.y=cap.angle
+	_build_scalloped_edges()
 	# Wind only heaps snow into sheltered corners, never strings of lane blobs.
 	drift_specs.clear()
 	var barn: Vector3=world.get_node("RedBarn").position
@@ -176,6 +185,40 @@ func _build_snow() -> void:
 	snow.set_meta("drift_specs",drift_specs)
 	world._snowflakes.clear()
 	world._falling_snow(snow,world.Surface.EXTENT*.48)
+
+func _build_scalloped_edges() -> void:
+	# Continuous rounded ribbons make a lip, not rows of separate snow balls.
+	for lane in world._path_segments:
+		var side: Vector3=(lane.b-lane.a).normalized().cross(Vector3.UP)*float(lane.width)*.5
+		for sign_value in [-1,1]: _snow_lip(lane.a+side*sign_value,lane.b+side*sign_value,.20,.17)
+	for p in world.plot_positions:
+		for corners in [[Vector3(-1,0,-1),Vector3(1,0,-1)],[Vector3(1,0,-1),Vector3(1,0,1)],[Vector3(1,0,1),Vector3(-1,0,1)],[Vector3(-1,0,1),Vector3(-1,0,-1)]]:
+			_snow_lip(p+corners[0],p+corners[1],.095,.10)
+	for cap in world.get_meta("ridge_wall_caps",[]):
+		var direction:=Vector3(cos(cap.angle),0,-sin(cap.angle))*.54
+		_snow_lip(cap.position-direction,cap.position+direction,.31,.08,cap.position.y)
+
+func _snow_lip(a: Vector3,b: Vector3,width: float,rise: float,fixed_height: float=-100) -> void:
+	var surface:=SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count: int=maxi(2,ceili(a.distance_to(b)/.28))
+	var side: Vector3=(b-a).normalized().cross(Vector3.UP)
+	var rows: Array=[]
+	for i in range(count+1):
+		var p: Vector3=a.lerp(b,float(i)/count)
+		var scallop: float=1.0+.28*cos(i*TAU/4)
+		var row: Array[Vector3]=[]
+		for j in range(7):
+			var angle: float=PI*j/6
+			var v: Vector3=p+side*cos(angle)*width*scallop
+			v.y=(world.ground_height(v.x,v.z)+.125 if fixed_height< -99 else fixed_height)+sin(angle)*rise
+			row.append(v)
+		rows.append(row)
+	for i in range(count):
+		for j in range(6):
+			for p: Vector3 in [rows[i][j],rows[i+1][j+1],rows[i+1][j],rows[i][j],rows[i][j+1],rows[i+1][j+1]]: surface.add_vertex(p)
+	surface.generate_normals()
+	var lip:=MeshInstance3D.new(); lip.mesh=surface.commit(); lip.material_override=world._mat(SNOW)
+	snow.add_child(lip)
 
 func _corner_drift(point: Vector3, extent: Vector2, height: float, corner: String) -> void:
 	point.y=world.ground_height(point.x,point.z)
@@ -213,13 +256,15 @@ func walked(before: Vector3, after: Vector3) -> void:
 	if walked_distance<.48 or not on_path(after): return
 	walked_distance=0
 	var direction: Vector3=(after-before).normalized()
-	var side: Vector3=direction.cross(Vector3.UP)*(.16 if print_cursor%2==0 else -.16)
-	var p: Vector3=after+side
-	p.y=world.ground_height(p.x,p.z)+.165
-	footprints.multimesh.set_instance_transform(print_cursor,Transform3D(Basis(Vector3.UP,atan2(direction.x,direction.z)),p))
-	print_cursor=(print_cursor+1)%PRINT_LIMIT
-	print_count=mini(PRINT_LIMIT,print_count+1)
-	footprints.multimesh.visible_instance_count=print_count
+	for foot in [-1,1]:
+		var p: Vector3=after+direction.cross(Vector3.UP)*.18*foot+direction*.07*foot
+		p.y=world.ground_height(p.x,p.z)+.19
+		footprints.multimesh.set_instance_transform(print_cursor,Transform3D(Basis(Vector3.UP,atan2(direction.x,direction.z)).scaled_local(Vector3(.65,1,1.15)),p))
+		footprints.multimesh.set_instance_color(print_cursor,Color.WHITE)
+		print_ages[print_cursor]=0
+		print_cursor=(print_cursor+1)%PRINT_LIMIT
+		print_count=mini(PRINT_LIMIT,print_count+1)
+	footprints.multimesh.visible_instance_count=PRINT_LIMIT
 
 func break_ice(index: int) -> void:
 	for i in range(8):
@@ -299,7 +344,16 @@ func _build_cart() -> void:
 	cart_load=_group("CollectedSacks",cart)
 	world._geometry_batcher.batch_tree(cart,{})
 
+func _process(delta: float) -> void:
+	animate(delta)
+
 func animate(delta: float) -> void:
+	if winter and print_count>0:
+		print_count=0
+		for i in range(PRINT_LIMIT):
+			print_ages[i]=minf(PRINT_SECONDS,print_ages[i]+delta)
+			footprints.multimesh.set_instance_color(i,Color(1,1,1,1-print_ages[i]/PRINT_SECONDS))
+			if print_ages[i]<PRINT_SECONDS: print_count+=1
 	for i in range(flying_ice.size()-1,-1,-1):
 		var bit: Dictionary=flying_ice[i]; bit.age+=delta; bit.v.y-=delta*4; bit.p+=bit.v*delta
 		if bit.age>1: flying_ice.remove_at(i)
