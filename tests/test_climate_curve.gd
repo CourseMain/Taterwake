@@ -26,17 +26,52 @@ func run() -> void:
 		farm.rng.seed = 410 + year
 		for i in range(12000): total += Climate.draw_severity(farm.rng, year)
 		check(absf(total / 12000 - Climate.severity_mean(year)) < 0.003, "sampled severity is centered on year mean")
-	var counts := {"drought":0, "flood":0, "storm":0}
-	var hints := {"drought":0, "flood":0, "storm":0}
-	farm.rng.seed = 510
-	for i in range(12000):
-		farm.season_clock.season = i % 4
-		farm.climate.prime_next(farm)
-		var event: String = farm.climate.data.outlook.next.event
-		if counts.has(event):
-			counts[event] += 1
-			if farm.climate.data.outlook.signal == event: hints[event] += 1
-	for event in counts: check(absf(float(hints[event]) / counts[event] - 0.7) < 0.025, "foreshadow signal appears on seventy percent of potential " + event + " seasons")
+	var counts := {"drought": [0, 0, 0, 0], "flood": [0, 0, 0, 0], "storm": [0, 0, 0, 0]}
+	var outcomes_match: bool = true
+	var signals_match: bool = true
+	for year in [1, 6, 10]:
+		var strikes: int = 0
+		var signalled: int = 0
+		var signalled_strikes: int = 0
+		var quiet: int = 0
+		var quiet_strikes: int = 0
+		farm.rng.seed = 510 + year
+		for i in range(12000):
+			farm.climate.reset()
+			# Independent seasons isolate the curve from the separate annual cap.
+			var season: int = i % 4
+			farm.season_clock.season = (season + 3) % 4
+			farm.season_clock.year = year - (1 if season == 0 else 0)
+			farm.climate.prime_next(farm)
+			var next: Dictionary = farm.climate.data.outlook.next.duplicate()
+			var hint: String = farm.climate.data.outlook.signal
+			farm.season_clock.year = year; farm.season_clock.season = season
+			farm.climate.start_season(farm)
+			var fired: bool = farm.climate.data.phase == "warning"
+			if fired: strikes += 1
+			outcomes_match = outcomes_match and fired == next.fires and (not fired or farm.climate.data.event == next.event)
+			signals_match = signals_match and (hint == "" or (counts.has(next.event) and hint == next.event))
+			if not counts.has(next.event): continue
+			# Only drought/flood/storm have signals; freezes and Winter have none.
+			var bucket: int = 0 if fired else 2
+			counts[next.event][bucket] += 1
+			if hint != "":
+				counts[next.event][bucket + 1] += 1
+				signalled += 1
+				if fired: signalled_strikes += 1
+			else:
+				quiet += 1
+				if fired: quiet_strikes += 1
+		var signal_rate: float = float(signalled_strikes) / signalled
+		var quiet_rate: float = float(quiet_strikes) / quiet
+		check(signal_rate >= 3.0 * quiet_rate, "year %d: disaster is at least three times likelier with an eligible signal" % year)
+		check(absf(strikes / 12000.0 - Climate.chance(year)) < 0.02, "pre-rolled seasonal frequency follows year %d chance" % year)
+		print("Year %d: signal %.3f, no signal %.3f, overall %.3f (curve %.3f)" % [year, signal_rate, quiet_rate, strikes / 12000.0, Climate.chance(year)])
+	check(outcomes_match, "season starts honor every saved occurrence roll and event type")
+	check(signals_match, "only drought, flood and storm produce their matching signal")
+	for event in counts:
+		check(absf(float(counts[event][1]) / counts[event][0] - 0.7) < 0.025, "seventy percent of actual " + event + " seasons are signalled")
+		check(absf(float(counts[event][3]) / counts[event][2] - 0.1) < 0.025, "ten percent of calm potential " + event + " seasons give false alarms")
 	for year in [1, 6, 10]:
 		var strikes: int = 0
 		for seed_value in range(2000):
@@ -66,11 +101,43 @@ func run() -> void:
 	check(mix_ok and winter_seen, "natural warnings use the seasonal pools, including Winter")
 	check(cap_ok, "one draw per season and at most three disasters per year")
 	check(Climate.WARNING_SECONDS + Climate.ACTIVE_SECONDS + Climate.RECOVERY_SECONDS == 150, "weather phases still occupy the whole season")
+	farm.climate.reset(); farm.season_clock.year = 1; farm.season_clock.season = 2
+	farm.climate.prime_next(farm)
+	farm.climate.data.outlook.next.fires = true
+	for season in range(3): farm.climate.data.outlook.records.append({"year":1, "season":season, "event":Climate.SEASON_EVENTS[season][0], "severity":0.5})
+	check(Protection.forecast(farm).chance == 0, "forecast still respects the annual cap")
+	farm.season_clock.season = 3; farm.climate.start_season(farm)
+	check(farm.climate.data.phase == "calm" and farm.climate.year_count(1) == 3, "annual cap overrides a saved true occurrence roll")
+	farm.climate.data.outlook.next.fires = true
+	farm.season_clock.year = 2; farm.season_clock.season = 0; farm.climate.start_season(farm)
+	check(farm.climate.data.phase == "warning" and farm.climate.year_count(2) == 1, "new year can honor its saved occurrence after last year's cap")
+	farm.climate.prime_next(farm)
+	for level in range(3):
+		farm.climate.data.protection.station = level
+		farm.climate.data.outlook.next.fires = false
+		var calm_forecast: Dictionary = Protection.forecast(farm)
+		farm.climate.data.outlook.next.fires = true
+		check(Protection.forecast(farm) == calm_forecast and is_equal_approx(calm_forecast.chance, Climate.chance(2)), "forecast at level %d reads curve, never the hidden occurrence roll" % level)
+	var malformed: Dictionary = farm.climate.data.outlook.duplicate(true)
+	malformed.next.erase("fires")
+	check(not Climate.valid_outlook(malformed), "saved outlook requires its occurrence roll")
+	malformed.next.fires = 1
+	check(not Climate.valid_outlook(malformed), "saved occurrence roll must be boolean")
 	farm.free()
 	farm = fresh(); farm.rng.seed = 91
 	farm.climate.start_season(farm)
 	var outlook: String = JSON.stringify(farm.climate.data.outlook)
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and JSON.parse_string(JSON.stringify(farm.climate.data.outlook)) == JSON.parse_string(outlook), "planned type, signal, season draw and record persist")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE) and JSON.parse_string(JSON.stringify(farm.climate.data.outlook)) == JSON.parse_string(outlook), "planned type, occurrence, signal, season draw and record persist")
+	for fires in [false, true]:
+		farm.climate.data.outlook.next.fires = fires
+		var planned: Dictionary = farm.climate.data.outlook.next.duplicate()
+		check(farm.save_game(SAVE) and farm.load_game(SAVE), "saved %s occurrence loads" % fires)
+		farm.climate.end_working_year()
+		farm.season_clock.year = int(planned.year); farm.season_clock.season = int(planned.season)
+		# Unrelated random work cannot change an already planned outcome.
+		for i in range(20): farm.rng.randf()
+		farm.climate.start_season(farm)
+		check((farm.climate.data.phase == "warning") == fires and (not fires or farm.climate.data.event == planned.event), "loaded occurrence survives unrelated RNG use without rerolling")
 	var supply: Dictionary = Climate.Operations.local(farm)
 	farm.climate.end_working_year(); farm.climate.data.outlook.signal = "drought"
 	supply.water = 0; Climate.Operations.update(farm, 1)

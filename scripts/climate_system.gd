@@ -13,6 +13,7 @@ const BASE_SEVERITY: float = 0.5
 const SEVERITY_STEP: float = 0.03
 const SEVERITY_SPREAD: float = 0.15
 const SIGNAL_CHANCE: float = 0.7
+const FALSE_ALARM_CHANCE: float = 0.1
 const ANNUAL_CAP: int = 3
 const SEASON_EVENTS: Array = [["flood", "freeze"], ["drought", "storm"], ["storm", "flood"], ["deep_freeze", "blizzard"]]
 const WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
@@ -80,7 +81,7 @@ func update(farm, delta: float) -> bool:
 	if not clock_running(farm): return false
 	var operated: bool = Operations.update(farm, delta)
 	if data.phase != "calm": data.timer = maxf(0.0, float(data.timer) - delta)
-	# Resolve existing weather before the next season's single probability draw.
+	# Resolve existing weather before starting the next season's saved outlook.
 	if float(data.timer) <= 0.000001:
 		match str(data.phase):
 			"warning": _impact(farm)
@@ -117,8 +118,9 @@ func prime_next(farm) -> void:
 	var season: int = (farm.season_clock.season + 1) % 4
 	var year: int = farm.season_clock.year + (1 if season == 0 else 0)
 	var event: String = SEASON_EVENTS[season][farm.rng.randi_range(0, 1)]
-	data.outlook.next = {"year": year, "season": season, "event": event}
-	data.outlook.signal = event if event in ["drought", "flood", "storm"] and farm.rng.randf() < SIGNAL_CHANCE else ""
+	var fires: bool = farm.rng.randf() < chance(year)
+	data.outlook.next = {"year": year, "season": season, "event": event, "fires": fires}
+	data.outlook.signal = event if event in ["drought", "flood", "storm"] and farm.rng.randf() < (SIGNAL_CHANCE if fires else FALSE_ALARM_CHANCE) else ""
 
 func start_season(farm) -> void:
 	if not clock_running(farm): return
@@ -127,12 +129,18 @@ func start_season(farm) -> void:
 	data.outlook.started = ordinal
 	var event: String = ""
 	var next: Dictionary = data.outlook.next
-	if int(next.get("year", 0)) == farm.season_clock.year and int(next.get("season", -1)) == farm.season_clock.season: event = str(next.event)
+	var fires: bool
+	if int(next.get("year", 0)) == farm.season_clock.year and int(next.get("season", -1)) == farm.season_clock.season:
+		event = str(next.event)
+		fires = bool(next.fires)
+	else:
+		# The first Spring has no preceding season to prime its outlook.
+		fires = farm.rng.randf() < chance(farm.season_clock.year)
 	# A scripted/debug warning can already occupy this season.
 	var occupied: bool = false
 	for record in data.outlook.records:
 		if int(record.year) == farm.season_clock.year and int(record.season) == farm.season_clock.season: occupied = true
-	if not occupied and year_count(farm.season_clock.year) < ANNUAL_CAP and data.phase == "calm" and farm.rng.randf() < chance(farm.season_clock.year): begin_warning(farm, event)
+	if not occupied and year_count(farm.season_clock.year) < ANNUAL_CAP and data.phase == "calm" and fires: begin_warning(farm, event)
 	prime_next(farm)
 
 func end_working_year() -> void:
@@ -291,7 +299,8 @@ static func valid_outlook(raw: Variant) -> bool:
 	if raw.get("signal") not in ["", "drought", "flood", "storm"] or not raw.get("records") is Array or raw.records.size() > 40: return false
 	if not raw.get("next") is Dictionary: return false
 	if not raw.next.is_empty():
-		if raw.next.size() != 3 or not Rules.number(raw.next.get("year"), 1, 11, true) or not Rules.number(raw.next.get("season"), 0, 3, true): return false
+		if raw.next.size() != 4 or not raw.next.get("fires") is bool: return false
+		if not Rules.number(raw.next.get("year"), 1, 11, true) or not Rules.number(raw.next.get("season"), 0, 3, true): return false
 		if raw.next.get("event") not in SEASON_EVENTS[int(raw.next.season)]: return false
 		if raw.signal != "" and raw.signal != raw.next.event: return false
 	elif raw.signal != "": return false
