@@ -457,7 +457,8 @@ storage; quest cash rewards scaled to island baselines (keep quest boards
 but pay small flat amounts for now); barn upgrade costs 500·5^level (make
 it three levels at 300, 800, 2,000).
 
-Rescale: coins start at 2,000. Crop base prices 15 to 30 per sack. Seeds
+Rescale: coins start at 2,000. Crop base prices 15 to 30 per sack
+(Segment 13b widens this to 15 to 50). Seeds
 cost 75% of base. Tool upgrades 300 to 1,500. Field expansion 1,200.
 Yields: one bed gives 3 to 5 sacks. Keep the island yield multipliers out:
 1× everywhere. Money renders as an integer with a thousands separator and
@@ -775,17 +776,74 @@ and by year).
 Acceptance: suite green; game boots.
 ```
 
+### Segment 13b: Potato grades (run before Segment 14)
+
+```
+Goal: the reward for farming well, and a wider spread between varieties.
+Harvested potatoes get a grade that changes their price, decided by how
+the crop was treated. A well-kept crop earns more; a neglected one earns
+less. Must land before the tuning bot because it moves the economy.
+
+Grades and prices, per sack, relative to the variety's base price:
+- Table: base × 1.5. Clean, undamaged, harvested on time.
+- Standard: base × 1.0.
+- Feed: base × 0.5. Bitten, stressed or left too long.
+Also "Keep as seed": at the barn, a Standard or Table sack of a variety
+can be kept over Winter and becomes one seed of that variety next Spring.
+Kept sacks are not sold and are not counted as storage for spoilage.
+
+Widen the variety spread in scripts/crop_table.gd so base prices run 15
+to 50: Russet 15, Giant 20, Golden 28, Sunburst 38, Icecap 50. Seeds stay
+at 75% of base. Higher base still means more fragile (Segment 10 dials).
+
+Quality score per bed: starts at 100 when planted, stored on the plot.
+Deductions, each scaled by the variety's fragility (inverse of its
+tolerance dials) and reduced by the relevant protection with the same
+formula used for field loss:
+- each pest bite tick: −6
+- drought or flood stress while active: −4 per 10 s of stress
+- freeze on the bed: −15 once, further −4 per 10 s
+- storm lightning row hit: −25 once
+- unwatered while growing: −2 per 10 s
+- ripe and left in the field: −5 per 10 s after the first 30 s
+Grade at harvest: 80 to 100 Table, 40 to 79 Standard, below 40 Feed.
+Storage: every Winter in storage costs −10 quality, so Table can become
+Standard; this replaces part of the 10% spoilage (keep 5% spoilage).
+
+Legibility: a small tag on each growing bed shows its current grade word
+(Table / Standard / Feed) in the bed's hover and near-player context; the
+harvest pop shows the grade; the annual accounts show sales split by
+grade with sacks and totals; a cause line explains the largest deduction
+on a downgraded bed ("Pests took it to Standard").
+
+Wiring: storage becomes per variety per grade; the Sell Potatoes page
+lists each grade with its price; contracts (Segment 11) require Standard
+or better; the farm shop (Segment 15) sells Table only at base × 1.8;
+the ledger sales category records grade in the label.
+
+Tests: test_grades.gd (score deductions and thresholds, protection
+reduces deductions, kept seed appears next Spring, storage downgrade,
+contract refuses Feed, sales by grade sum to the ledger).
+
+Acceptance: a bed hovered mid-season shows its grade; a harvest shows
+the grade; suite green; game boots.
+```
+
 ### Segment 14: The tuning bot
 
 ```
 Goal: prove the numbers instead of arguing about them.
 
 Write tests/test_tuning_bot.gd: a headless bot that plays full ten-year
-runs on game_state.gd with three fixed strategies:
+runs on game_state.gd with four fixed strategies:
 - naive: plant the highest-price variety, never protect, sell at harvest;
 - cautious: plant mid variety, buy tank then drainage in the first two
   affordable winters, store half the harvest, insure from year 2;
+- tidy: like cautious but sprays pests promptly, waters on time and
+  harvests within 30 s of ripening, so most sacks reach Table grade;
 - (placeholder until Segment 15) diversifier: same as cautious.
+Tidy must out-earn cautious by a clear margin (15 to 30% over ten years)
+and still never get rich; if it does not, grade prices are too flat.
 Run each over 30 seeds. Assert: naive forecloses by year 6 on the median
 seed; cautious survives year 10 on at least 24 of 30 seeds; no strategy
 ends year 10 with more than 8,000 cash; for every run, every year's ledger
