@@ -969,6 +969,70 @@ Acceptance: test_tutorial_*.gd rewritten and green; a new player can reach
 the first accounts screen headless in the tutorial test.
 ```
 
+### Segment 17b: Pace and land (run before Segment 18)
+
+```
+Goal: more happens between planting and harvest, on a farm big enough
+that the player cannot do everything. Fixes three complaints from play:
+the guided year is slow, growing is slow, and pests arrive after harvest.
+
+1. Pest timing (bug). Pest delays are still tuned for the old ten-second
+   crops. Rescale: a planted bed's first pest chance opens at 25% of its
+   grow time and pests must arrive, if at all, by 60% of grow time; pest
+   pressure is highest in Summer (multiply the chance by 1.5) and zero in
+   Winter. Ducks keep their patrol. Every pest bite still costs quality.
+   Test: over many seeded beds, first pests land inside 25 to 60% of grow
+   time and never after ripening.
+
+2. Three fields with different exposure. Bring the preserved Golden
+   Shores and Frosthollow geometry onto the same island as two more
+   fields so the map is roughly twice its current size:
+   - Home Field: the current 24 beds. Sheltered: storm and flood stress
+     × 0.8.
+   - Low Field: 24 beds on the shore side using the Shores ground.
+     Yield × 1.25. Flood stress × 1.5 and floods hit it first; drought
+     × 0.8.
+   - Hill Field: 24 beds on higher ground using the Frosthollow ground
+     without snow. Drought stress × 1.5 and it dries first; flood × 0.5;
+     storm wind × 1.3; freeze × 1.2.
+   Home Field starts with 12 beds open as now. Each other field is
+   rented in Winter from the accounts page: Low Field 12,000 a year,
+   Hill Field 9,000 a year (scaled money), posted under rent, cancellable
+   any Winter. Beds inside a rented field open in two halves as Home
+   Field does, at the existing expansion cost. Protections cover the
+   whole farm at their level; per-field exposure multiplies the loss.
+   Cause cards name the field. The forecast page shows the three fields
+   with their exposure words (Floods first / Dries first / Sheltered).
+   The walkable area, camera bounds and recenter grow with the map;
+   sprint stays. Ducks patrol all rented fields.
+
+3. Grow times. Keep the season at 150 s but let the fast crops turn
+   twice: Russet 60, Golden 90, Giant 110, Sunburst 160, Icecap 200. A
+   bed that ripens in Spring can be replanted in Spring. Hoe on a
+   harvested bed re-tills without waiting.
+
+4. Guided first year. Time runs at 3× while a "wait" step is active
+   (grow, and the run-up to the storm), back to 1× the moment a decision
+   or a cause card is on screen. The scripted storm lands at second 40
+   of Summer. Target: a new player reaches the first accounts in about
+   four minutes. Reduce the scripted loss to one tonne of three.
+
+5. Re-run the tuning bot after all of the above. The bot's strategies
+   rent no fields (Home Field only) so the published survival numbers
+   stay comparable; add a fifth strategy "expander" that rents the Low
+   Field from year 2 and plants it with the same crop, and assert it
+   survives at least 20 of 30 seeds and out-earns cautious in mean sales
+   while never exceeding the cash ceiling. Adjust rents until it holds.
+
+Tests: test_pace_and_land.gd covering pest windows, field exposure
+multipliers, rent posting and cancellation, bed opening per field, cause
+cards naming the field, and the guided-year timing.
+
+Acceptance: pests appear mid-growth; three fields walkable and rentable;
+guided year under five minutes; tuning bot green with the expander row
+recorded in §6; suite green; web export runs.
+```
+
 ### Segment 18: Farm visuals pass (run after Segment 15)
 
 ```
@@ -983,6 +1047,9 @@ Replace and add:
   walks, ice on beds drawn as a cracked glaze that Hoe visibly breaks.
 - Seasons (from Segment 13): make blossom, summer haze, autumn canopies
   and fallen leaves read at the default zoom, not only up close.
+- Fields (from Segment 17b): the Low Field reads wet and lush, the Hill
+  Field pale and windswept, with a signpost naming each; rented fields
+  show a fence line, unrented ones an overgrown "To let" board.
 - Beds: a small grade marker on each growing bed (green leaf for Table,
   plain for Standard, brown for Feed) that matches the hover tag; stress
   reads on the plant (wilting for drought, yellowing for flood, frost
