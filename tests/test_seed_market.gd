@@ -35,7 +35,7 @@ func capture_polish() -> void:
 	var state = game.state
 	state.reset_game()
 	state.tutorial_progress.completed = true
-	state.coins = 125000
+	state.coins = 5000000
 	for crop: String in ["russet", "giant", "golden"]:
 		state.storage[crop] = Stock.pile(24)
 	state.elapsed = 420.0
@@ -103,7 +103,7 @@ func run() -> void:
 	await settle()
 	var empty_page = game.hud._refs.market_page
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
-	state.coins = 10000
+	state.coins = 400000
 	for crop: String in State.CROP_IDS:
 		check(State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "base seed " + crop)
 		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "initial seed ratio " + crop)
@@ -122,7 +122,7 @@ func run() -> void:
 	check(game.hud._refs["buy:russet:1"].disabled, "unaffordable purchase disabled")
 	state.buy_seeds("russet", 1)
 	check(state.seed_inventory.russet == seeds + 6 and state.coins == state.bankruptcy_limit(), "exhausted credit do not mutate inventory")
-	state.coins = 10000
+	state.coins = 400000
 	state._refresh_market()
 	game.hud.update_state(state)
 	game.hud._purchase_box.hide()
@@ -164,7 +164,7 @@ func run() -> void:
 	page._sell()
 	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 4 * state.market.russet.sell, "typed quantity commits before selling")
 	press(page, "market_next")
-	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 owned", "arrow updates variety, chart, quantity and inventory together")
+	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 t owned", "arrow updates variety, chart, quantity and inventory together")
 	page.quantity.value = 2
 	check(page.payout.text == state.money(2 * state.market.giant.sell), "navigated payout uses new crop")
 	press(page, "market_previous")

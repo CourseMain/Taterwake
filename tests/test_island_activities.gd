@@ -27,9 +27,9 @@ func _run() -> void:
 	state.coins = state.bankruptcy_limit() + activities.duck_hire_cost() - 1
 	activities.buy_duck()
 	check(activities.duck_level == 0 and state.coins == state.bankruptcy_limit() + activities.duck_hire_cost() - 1, "unaffordable patrol cannot be hired")
-	state.coins = 50000.0
+	state.coins = 2000000.0
 	activities.buy_duck()
-	check(activities.duck_level == 1 and state.coins == 49500.0, "first patrol charges exactly the displayed price")
+	check(activities.duck_level == 1 and state.coins == 1980000.0, "first patrol charges exactly the displayed price")
 	var plot: Dictionary = state.plots[2]
 	plot.stage = 3
 	plot.pests = true
@@ -61,7 +61,7 @@ func _run() -> void:
 func _test_flocks() -> void:
 	state.activity_system = activities
 	state.reset_game()
-	state.coins = 10000
+	state.coins = 400000
 	for plot in state.plots: state._clear_crop(plot)
 	check(activities.duck_count() == 0 and activities.duck_capacity() == 2 and activities.info().ducks.size() == 2, "one flock has two hire slots")
 	for index in [3, 8]: _infest(index)
@@ -69,9 +69,9 @@ func _test_flocks() -> void:
 	check(state.plots[3].pests and state.plots[8].pests, "unhired ducks never clear pests")
 	activities.hire_duck()
 	activities.hire_duck()
-	check(state.coins == 8500 and activities.duck_count() == 2, "second duck is a separate purchase")
+	check(state.coins == 340000 and activities.duck_count() == 2, "second duck is a separate purchase")
 	activities.hire_duck()
-	check(state.coins == 8500 and activities.duck_count() == 2, "third duck is refused without charge")
+	check(state.coins == 340000 and activities.duck_count() == 2, "third duck is refused without charge")
 	state.update(1)
 	var flock: Array = activities.info().ducks
 	check(flock[0].target != flock[1].target and [3, 8].has(int(flock[0].target)) and [3, 8].has(int(flock[1].target)), "ducks reserve distinct infested targets")

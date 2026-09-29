@@ -31,7 +31,7 @@ func run() -> void:
 		game.state.coins = game.state.bankruptcy_limit()
 		game._on_action("climate_fund:rainwater")
 		check(game.world._project_nodes.has("rainwater") and not game.world._project_nodes.has("drainage"), "starter tank exists before purchases")
-		game.state.coins = 1e18
+		game.state.coins = 4e+19
 		game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
 		game.state.update(0.25); game.hud.close_panel()
 		for level: int in [1, 2]:

@@ -11,7 +11,7 @@ const WORK_ACTIONS: int = 3
 const UPKEEP: float = Balance.PROTECTION_UPKEEP
 const PREMIUM: float = Balance.INSURANCE_PREMIUM
 const PAYOUT: float = Balance.INSURANCE_PAYOUT
-const STATION_COST: float = 500.0
+const STATION_COST: float = Balance.STATION_COST
 
 static func fresh() -> Dictionary:
 	return {"pending": {}, "covers": {}, "losses": [], "policies": [], "winters": {}, "station": 0, "revision": 0}
@@ -93,9 +93,9 @@ static func text(entry: Dictionary) -> String:
 	if entry.event in ["deep_freeze", "blizzard"]: prevention = "Selling before impact" if entry.source == "barn" else "Harvesting before impact"
 	if entry.source == "field" and PROJECT_FOR.has(entry.event):
 		prevention = "Clearing ice in time" if float(entry.alternative) == 1.0 else "%s level %d" % [NAMES[PROJECT_FOR[entry.event]], 1 if float(entry.alternative) == 0.5 else 2]
-	var counterfactual: String = "%s would have saved %d sacks." % [prevention, entry.saved]
+	var counterfactual: String = "%s would have saved %d t." % [prevention, entry.saved]
 	if float(entry.alternative) == float(entry.reduction): counterfactual = "Maximum project protection; no further project saving."
-	return "Year %d · %s · %s · %s: %d sacks lost. %s. %s" % [entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual]
+	return "Year %d · %s · %s · %s: %d t lost. %s. %s" % [entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual]
 
 static func work(farm, id: String) -> String:
 	var p: Dictionary = farm.climate.data.protection

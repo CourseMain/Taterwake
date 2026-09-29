@@ -47,23 +47,23 @@ func run() -> void:
 	game.hud._refs.debug_unlock.pressed.emit()
 	game.hud.action_requested.connect(func(action: String) -> void: sent_action = action)
 	for source: String in ["0.1", "0.01", "0", "2"]:
-		game.state.coins = 1000
+		game.state.coins = 40000
 		type_money(source)
 		check(not game.hud._refs.debug_apply.disabled, "valid multiplier enables Apply: " + source)
 		game.hud._refs.debug_apply.pressed.emit()
-		check(is_equal_approx(game.state.coins, 1000 * float(source)), "Apply uses typed amount: " + source)
+		check(is_equal_approx(game.state.coins, 40000 * float(source)), "Apply uses typed amount: " + source)
 		check(game.hud._refs.debug_money.value == 1.0, "Apply returns to neutral multiplier")
 		game.hud._refs.debug_apply.pressed.emit()
-		check(is_equal_approx(game.state.coins, 1000 * float(source)), "second Apply cannot repeat the change")
+		check(is_equal_approx(game.state.coins, 40000 * float(source)), "second Apply cannot repeat the change")
 	for invalid: String in ["", "bad", "-1", "nan", "inf", "100001"]:
-		game.state.coins = 2000
+		game.state.coins = 80000
 		type_money(invalid)
 		check(game.hud._refs.debug_apply.disabled, "invalid input disables Apply: " + invalid)
 		game.hud._act("debug_apply")
-		check(game.state.coins == 2000, "invalid input preserves cash")
-	game.state.coins = 12345
+		check(game.state.coins == 80000, "invalid input preserves cash")
+	game.state.coins = 493800
 	type_money("0.1")
-	check(game.hud._refs.debug_balance.text.contains("12,345"), "debug balance uses grouped integers")
+	check(game.hud._refs.debug_balance.text.contains("493,800"), "debug balance uses grouped integers")
 	await shot("decimal-controls")
 	game.hud.close_panel()
 	if capture:

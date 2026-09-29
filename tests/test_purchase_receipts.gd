@@ -92,7 +92,7 @@ func _failure(action: Callable, label: String) -> void:
 
 func _test_seeds() -> void:
 	_fresh()
-	state.coins = 1000000.0
+	state.coins = 40000000.0
 	var old_count: int = state.seed_inventory.russet
 	var cost: float = float(state.market.russet.seed) * 5
 	var receipt: Dictionary = _success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, cost, "five-seed bundle")
@@ -107,14 +107,14 @@ func _test_seeds() -> void:
 	state.coins = float(state.market.russet.seed) * 5
 	_success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, state.coins, "exact-wallet seed checkout")
 	check(state.coins == 0.0, "exact-wallet seed checkout cannot leave negative money")
-	state.coins = 1.0e18
+	state.coins = 4e+19
 	state.seed_inventory.russet = State.MAX_INVENTORY - 5
 	_success(func(): return state.buy_seeds("russet", 5), "seeds", "russet", 5, float(state.market.russet.seed) * 5, "last available seed spaces")
 	check(state.seed_inventory.russet == State.MAX_INVENTORY, "seed limit is reached without overflow")
 	_failure(func(): return state.buy_seeds("russet", 1), "full seed inventory")
 	for island in [1]:
 		_fresh()
-		state.coins = 1.0e18
+		state.coins = 4e+19
 		var crop: String = "russet" if island == 1 else ("sunburst" if island == 2 else "icecap")
 		var old_quote: float = float(state.market[crop].seed)
 		cost = float(state.market[crop].seed) * 17
@@ -122,7 +122,7 @@ func _test_seeds() -> void:
 		receipt = _success(func(): return state.buy_seeds(crop, 17), "seeds", crop, 17, cost, "island %d fixed-price seeds" % island, island == 1)
 		check(int(receipt.get("total", -1)) == state.seed_inventory[crop], "island %d receipt inventory is current" % island)
 	_fresh()
-	state.coins = 100000.0
+	state.coins = 4000000.0
 	_success(func(): return state.buy_seeds("russet", 10), "seeds", "russet", 10, float(state.market.russet.seed) * 10, "quest-completing seed purchase", true)
 	check(state.quest_progress.starter_crash == 10 and notices.size() == 1 and notices[0].begins_with("QUEST COMPLETE"), "seed quest milestone stays distinct from the single purchase receipt")
 
@@ -131,7 +131,7 @@ func _test_tools_and_space() -> void:
 	_failure(func(): return state.upgrade_tool("pest"), "non-upgradeable tool")
 	state.coins = state.bankruptcy_limit()
 	_failure(func(): return state.upgrade_tool("hoe"), "tool insufficient cash")
-	state.coins = 1.0e15
+	state.coins = 4e+16
 	for tool: String in ["hoe", "water", "harvest"]:
 		for rank in [1, 2]:
 			var receipt: Dictionary = _success(func(): return state.upgrade_tool(tool), "tool", tool, 1, State.TOOL_COSTS[tool][rank - 1], "%s rank %d" % [tool, rank])
@@ -143,17 +143,17 @@ func _test_tools_and_space() -> void:
 	_fresh()
 	state.coins = state.bankruptcy_limit()
 	_failure(func(): return state.upgrade_barn(), "barn insufficient cash")
-	state.coins = 100000.0
+	state.coins = 4000000.0
 	var old_capacity: int = state.capacity
-	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 200, 300.0, "barn expansion")
+	var receipt: Dictionary = _success(func(): return state.upgrade_barn(), "barn", "barn", 200, State.BARN_COSTS[0], "barn expansion")
 	check(state.capacity - old_capacity == 200 and int(receipt.get("total", -1)) == state.capacity, "barn receipt reports actual capacity gain after expansion")
 	state.barn_level = 3
 	state._recompute_capacity()
 	_failure(func(): return state.upgrade_barn(), "maximum barn")
 	state.coins = state.bankruptcy_limit() + state.FIELD_EXPANSION_COST - 1
 	_failure(func(): return state.expand_field(), "unaffordable field")
-	state.coins = 1200.0
-	_success(func(): return state.expand_field(), "field", "expansion", 12, 1200.0, "starter field expansion")
+	state.coins = 48000.0
+	_success(func(): return state.expand_field(), "field", "expansion", 12, State.FIELD_EXPANSION_COST, "starter field expansion")
 	check(state.plots.all(func(plot: Dictionary): return bool(plot.unlocked)), "field receipt is emitted after all new beds are unlocked")
 	_failure(func(): return state.expand_field(), "already expanded field")
 	for island in [1]:
@@ -163,8 +163,8 @@ func _test_ducks_and_services() -> void:
 	_fresh()
 	state.coins = state.bankruptcy_limit()
 	_failure(func(): return activities.buy_duck(), "duck insufficient cash")
-	state.coins = 1000000.0
-	_success(func(): return activities.hire_duck(), "duck", "duck_patrol", 1, 500.0, "hire one Valley duck")
+	state.coins = 40000000.0
+	_success(func(): return activities.hire_duck(), "duck", "duck_patrol", 1, activities.duck_hire_cost(), "hire one Valley duck")
 	for rank in [1, 2]:
 		var receipt: Dictionary = _success(func(): return activities.train_ducks(), "duck", "duck_speed", 1, Activities.DUCK_TRAINING_COSTS[rank - 1], "duck speed level %d" % rank)
 		check(activities.duck_speed() == rank and int(receipt.get("level", -1)) == rank and activities.duck_count() == 1, "speed receipt follows speed upgrade without adding ducks")

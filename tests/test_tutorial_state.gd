@@ -97,7 +97,7 @@ func _run() -> void:
 	check(restored._valid_save(restored._save_data()), "reset farm remains a valid save")
 	# Repeat tours pause an established farm instead of cleansing pests or
 	# farming free crops while stock and decay clocks stand still.
-	restored.coins = 1.0e12
+	restored.coins = 40000000000000.0
 	restored.harvested_total = 100000
 	restored._infest_random_plots()
 	restored._refresh_market()

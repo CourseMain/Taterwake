@@ -110,7 +110,7 @@ func run() -> void:
 	ready_crop(1)
 	farm.storage["giant"] = Stock.pile(1)
 	farm.harvested_total = 1
-	farm.coins = 84000
+	farm.coins = 3360000
 	farm.pest_timer = 37.25
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()

@@ -27,7 +27,7 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.hud.close_panel()
-	game.state.coins = 1e18
+	game.state.coins = 4e+19
 	game.state.expansion = 1
 	game.state.set_tutorial_active(false)
 	for plot in game.state.plots:

@@ -7,7 +7,7 @@ func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child(game)
 	game.state.tutorial_progress.completed = true
-	game.state.coins = 10000
+	game.state.coins = 400000
 	game.state.capacity = 100000
 	game.state.pest_timer = 1000
 	for id in game.state.CROP_IDS:
@@ -39,7 +39,7 @@ func command(args: Array) -> void:
 		game.state.tutorial_progress.completed = true
 		game.hud._climate_alert.dismiss()
 		var stocked: bool = action.get_slice(":", 1) == "stocked"
-		game.state.coins = 10000 if stocked else -1000.0
+		game.state.coins = 400000 if stocked else -1000.0
 		game.state.capacity = 100000 if stocked else 200
 		for id in game.state.CROP_IDS:
 			game.state.storage[id] = Stock.pile(500 if stocked else 0)

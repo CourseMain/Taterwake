@@ -29,9 +29,9 @@ func run() -> void:
 	await frames()
 	game.set_process(false)
 	game.set_process_unhandled_input(false)
-	game.state.coins = 1e12
+	game.state.coins = 40000000000000
 	game.state.expand_field()
-	game.state.coins = 100000
+	game.state.coins = 4000000
 	game.state.barn_level = 3
 	game.state._recompute_capacity()
 	game.state.storage["russet"] = Stock.pile(1000)
@@ -59,7 +59,7 @@ func run() -> void:
 	for id in ["rainwater", "drainage", "frost", "windbreaks"]:
 		check(game.hud._refs["climate_fund:"+id].is_visible_in_tree(), "protection purchases remain reachable in scrollable equipment panel")
 	game.hud._refs["climate_fund:drainage"].pressed.emit()
-	check(game.hud._refs["climate_fund:drainage"].disabled and not game.state.climate.data.protection.pending.has("drainage") and game.state.coins == 100000.0, "construction purchase is gated to Winter")
+	check(game.hud._refs["climate_fund:drainage"].disabled and not game.state.climate.data.protection.pending.has("drainage") and game.state.coins == 4000000.0, "construction purchase is gated to Winter")
 	game.hud.close_panel()
 	game._advance_simulation(45.0)
 	game.hud.update_state(game.state)
@@ -80,7 +80,7 @@ func run() -> void:
 	var page: Control = game.hud._run_end
 	await create_timer(0.75).timeout
 	check(page.visible and page.headline.text == "FORECLOSED", "overdraft bankruptcy opens the editorial page")
-	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("5,000"), "foreclosure shows the overdraft boundary and accounting year")
+	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("200,000"), "foreclosure shows the overdraft boundary and accounting year")
 	check(page._metrics["FIELD LOST"].note.text.contains("24"), "field loss metric comes from actual damage")
 	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
@@ -111,7 +111,7 @@ func run() -> void:
 	game.tutorial.finish()
 	game.hud.update_state(game.state)
 	check(not game.hud._climate_effect.visible and game.hud._tool_buttons.hoe.is_visible_in_tree(), "normal farming controls and tone return after collapse")
-	game.state.coins = 1e12
+	game.state.coins = 40000000000000
 	game.state.expansion = 1
 	for plot in game.state.plots: plot.unlocked = true
 	game.hud.close_panel()

@@ -1,5 +1,5 @@
 extends LineEdit
-## A whole-potato amount. Invalid draft text never becomes a sale quantity.
+## A whole-tonne amount. Invalid draft text never becomes a sale quantity.
 signal value_changed(value: float)
 var max_value: int = 0
 var min_value: int = 0

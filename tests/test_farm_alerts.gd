@@ -57,7 +57,7 @@ func run() -> void:
 	await settle()
 	check(not game.hud._refs.has("duck_summary") and not game.hud._refs.has("activity_hint"), "duck screen omits all-island limits and filler footer")
 	check(game.hud._refs.duck_pond.capacity == 2 and game.hud._refs.duck_pond.count == 0, "pond reflects the local flock")
-	game.state.coins = 10000
+	game.state.coins = 400000
 	game.hud.update_state(game.state)
 	game.hud._refs["activity:duck"].pressed.emit()
 	await settle()

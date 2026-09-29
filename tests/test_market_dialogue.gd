@@ -38,7 +38,7 @@ func run() -> void:
 	var state = game.state
 	state.tutorial_progress.completed = true
 	state.npc_history.clear()
-	state.coins = 10000
+	state.coins = 400000
 	state.storage["giant"] = Stock.pile(7)
 	game.hud.close_panel()
 

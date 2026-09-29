@@ -43,7 +43,7 @@ func run() -> void:
 	check(not is_instance_valid(hud._farm_help_action) and not hud._refs.has("farm_tip_body"), "extra help launcher and explanation are removed")
 	check(not hud._farm_help_card.visible, "controls never add a floating help launcher")
 	hud.close_panel()
-	state.coins = 240.0
+	state.coins = 9600.0
 	hud._help_cooldown = 0.0
 	game._select_tool("water")
 	state.plots[4].tilled = true
@@ -110,7 +110,7 @@ func run() -> void:
 			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size > 0, "shared outlined shop typography: " + label.text)
 		check(signs >= 7, "island %d retains discoverable shop signs" % island)
 		await shot("island-%d" % island)
-	state.coins = 215e6
+	state.coins = 8600000000
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.climate.data.timer = 22.0
 	hud._climate_alert.dismiss()

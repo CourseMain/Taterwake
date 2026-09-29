@@ -71,7 +71,7 @@ func setup(owner_hud) -> void:
 	var protections : VBoxContainer = hud._vbox(8)
 	protection.add_child(protections)
 	protections.add_child(_label("DAMAGE REDUCTION", 11, CYAN))
-	protections.add_child(_label("Sack losses round to the nearest whole sack after protection.", 13, MUTED))
+	protections.add_child(_label("Tonne losses round to the nearest whole tonne after protection.", 13, MUTED))
 	_protection = GridContainer.new()
 	_protection.columns = 2
 	_protection.add_theme_constant_override("h_separation", 12)
@@ -181,6 +181,7 @@ func refresh() -> void:
 		var cost: float = float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
 		var pending: bool = info.protection.pending.has(id)
 		hud._refs["climate_effect:" + id].text = farm.ClimateSystem.PROJECTS[id].detail
+		if id != "irrigation": hud._refs["climate_effect:" + id].text += " Annual upkeep: " + farm.money(farm.ClimateSystem.Protection.UPKEEP)
 		if pending: hud._refs["climate_effect:" + id].text += "\nPaid · Work %d / 3. Unfinished work carries to next Winter." % int(info.protection.pending[id])
 		var winter_only: bool = id != "irrigation"
 		var caption: String = "Fully built" if full else ("Paid · Finish at site" if pending else ("Reserve" if winter_only else "Install") + " · " + farm.money(cost))

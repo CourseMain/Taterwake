@@ -22,19 +22,19 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"deep_freeze": {"name": "WINTER DEEP FREEZE", "growth": 0.5, "prepare": "Sell stored sacks and harvest ripe Icecap before impact. Annual insurance covers Winter weather losses."},
-	"blizzard": {"name": "BLIZZARD", "growth": 0.4, "prepare": "Stored sacks and living Icecap are exposed. Sell or harvest before impact; insurance pays 40% of losses."},
+	"deep_freeze": {"name": "WINTER DEEP FREEZE", "growth": 0.5, "prepare": "Sell stored tonnes and harvest ripe Icecap before impact. Annual insurance covers Winter weather losses."},
+	"blizzard": {"name": "BLIZZARD", "growth": 0.4, "prepare": "Stored tonnes and living Icecap are exposed. Sell or harvest before impact; insurance pays 40% of losses."},
 	"freeze": {"name": "DEEP FREEZE", "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
 	"drought": {"name": "DROUGHT", "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
 	"flood": {"name": "FLOOD", "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Build drainage during Winter."},
 	"storm": {"name": "SEVERE STORM", "growth": 0.75, "prepare": "Harvest the gold lightning row. Winter-built windbreaks reduce storm field losses."},
 }
 const PROJECTS: Dictionary = {
-	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 500.0, "event": "", "detail": "Manual watering: 6 tank water per patch, 4 at level 2."},
-	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50%% / −75%%. Adds 36 water capacity per level. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
-	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50%% / −75%%. Open gates to drain stress. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
-	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50%% / −75%%. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
-	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50%% / −75%% on covered beds. Build, then cover cleared Winter beds from this page or the bed context action. %d yearly upkeep." % Protection.UPKEEP},
+	"irrigation": {"name": "Sprinklers & Irrigation", "cost": Balance.IRRIGATION_COST, "event": "", "detail": "Manual watering: 6 tank water per patch, 4 at level 2."},
+	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50% / −75%. Adds 36 water capacity per level. Winter construction."},
+	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50% / −75%. Open gates to drain stress. Winter construction."},
+	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50% / −75%. Winter construction."},
+	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50% / −75% on covered beds. Build, then cover cleared Winter beds from this page or the bed context action."},
 }
 const MAX_PROJECT_LEVEL: int = 2
 const EDUCATION: String = "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."
@@ -185,7 +185,7 @@ func _winter_impact(farm) -> void:
 		var lost: int = roundi(farm.Stock.count(farm.trading.held, crop) * rate)
 		var lots: Array = farm.Stock.take(farm.trading.held, crop, lost)
 		farm.Stock.remove_lots(farm.storage, crop, lots)
-		Protection.record(farm, data.event, crop, lost, 0.0, 1.0, "Stored sacks exposed; sell before impact", "barn")
+		Protection.record(farm, data.event, crop, lost, 0.0, 1.0, "Stored tonnes exposed; sell before impact", "barn")
 	farm.trading.clamp_stock(farm)
 	for index in range(farm.plots.size()):
 		var plot: Dictionary = farm.plots[index]

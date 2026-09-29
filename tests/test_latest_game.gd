@@ -104,7 +104,7 @@ func _run() -> void:
 	press("inventory_tab:tools")
 	await shot("illustrated-inventory-tools")
 	game.hud.close_panel()
-	game.state.coins = 200000000000.0
+	game.state.coins = 8000000000000.0
 	game.state.harvested_total = 25000
 	await settle()
 	await settle()

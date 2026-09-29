@@ -27,8 +27,8 @@ func run() -> void:
 	root.size = Vector2i(390,844) if phone else Vector2i(1280,800)
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.coins = 1e18
-	farm.coins = 10000
+	farm.coins = 4e+19
+	farm.coins = 400000
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
 	game.hud.show_panel("climate",farm)

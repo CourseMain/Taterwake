@@ -37,7 +37,7 @@ func run() -> void:
 	game.hud.close_panel()
 	var farm = game.state
 	var console = game.hud._climate_console
-	farm.coins = 1e18
+	farm.coins = 4e+19
 	farm.climate.fund(farm,"irrigation")
 	var crops: Array = farm.plots.duplicate(true)
 	game._climate_action("lesson_start")

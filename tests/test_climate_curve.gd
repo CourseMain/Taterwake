@@ -13,7 +13,7 @@ func check(ok: bool, note: String) -> void:
 	if not ok: failures += 1; push_error(note)
 func fresh():
 	var farm = State.new(); root.add_child(farm)
-	farm.coins = 1000000
+	farm.coins = 40000000
 	for plot in farm.plots: farm._clear_crop(plot)
 	return farm
 func run() -> void:
@@ -166,8 +166,8 @@ func run() -> void:
 		farm.climate.update(farm, 45)
 		var barn_lost: int = roundi(95 * float(Climate.WINTER_LOSS[event]))
 		var field_lost: int = roundi(State.CropTable.CROPS.icecap.yield * float(Climate.WINTER_LOSS[event]))
-		check(Stock.count(farm.storage, "russet") == 95 - barn_lost and Stock.count(farm.trading.held, "russet") == Stock.count(farm.storage, "russet"), "Winter event removes and clamps actual stored sacks")
-		check(Stock.count(farm.storage, "icecap") == 12, "Winter barn damage only hits stored sacks, not fresh harvests")
+		check(Stock.count(farm.storage, "russet") == 95 - barn_lost and Stock.count(farm.trading.held, "russet") == Stock.count(farm.storage, "russet"), "Winter event removes and clamps actual stored tonnes")
+		check(Stock.count(farm.storage, "icecap") == 12, "Winter barn damage only hits stored tonnes, not fresh harvests")
 		check(Protection.remaining(farm.plots[0]) == State.CropTable.CROPS.icecap.yield - field_lost and farm.plots[1] == empty, "Winter hits living Icecap and leaves empty beds untouched")
 		check(is_equal_approx(farm.coins - before, (barn_lost * State.CropTable.CROPS.russet.base + field_lost * State.CropTable.CROPS.icecap.base) * 0.4), "annual insurance pays Winter barn and field loss exactly once")
 		check(farm.save_game(SAVE) and farm.load_game(SAVE), "active Winter losses and insurance survive reload")
@@ -187,7 +187,7 @@ func run() -> void:
 	quit(1 if failures else 0)
 func scene_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate(); root.add_child(game); game.set_process(false)
-	game.state.coins = 1000000
+	game.state.coins = 40000000
 	game.world.set_calendar(1, 0, 149)
 	game.world._process(1)
 	var old_grass: Color = game.world._season_palette.grass

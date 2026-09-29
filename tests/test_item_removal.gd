@@ -26,7 +26,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	var farm = game.state
-	farm.coins = 12345.0
+	farm.coins = 493800.0
 	farm.storage["russet"] = Stock.pile(195)
 	var saved: Dictionary = farm._save_data()
 	for field: String in ["inventory_items", "equipment", "mutations", "dex", "golden_hat", "shores_first_mutation"]:

@@ -310,8 +310,8 @@ func refresh() -> void:
 			_levels[tool].text = "LEVEL %d" % int(hud._state.tools.get(tool, 0))
 		return
 	_ledger.value.text = hud._money(float(hud._state.barn_value()))
-	_ledger.stored.text = hud._number(float(hud._state.storage_used()))
-	_ledger.capacity.text = hud._number(float(hud._state.capacity))
+	_ledger.stored.text = hud._number(float(hud._state.storage_used())) + " t"
+	_ledger.capacity.text = hud._number(float(hud._state.capacity)) + " t"
 	_capacity.max_value = maxf(1.0, float(hud._state.capacity))
 	_capacity.value = float(hud._state.storage_used())
 	# Show the crop ledger beside the crop shelves.
@@ -324,7 +324,7 @@ func refresh() -> void:
 	for entry: Dictionary in hud._inventory_data():
 		var id: String = str(entry.id)
 		if _item_quantities.has(id):
-			_item_quantities[id].text = hud._number(float(entry.get("count", 0)))
+			_item_quantities[id].text = hud._number(float(entry.get("count", 0))) + (" t" if entry.kind == "crop" else "")
 			hud._refs["item:" + id + ":title"].text = str(entry.get("name", ""))
 	_layout.call_deferred()
 

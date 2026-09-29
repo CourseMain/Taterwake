@@ -34,7 +34,7 @@ func same(a: Variant, b: Variant) -> bool:
 func fresh(with_irrigation: bool = false) -> void:
 	farm.reset_game()
 	farm.rng.seed = 38172
-	farm.coins = 1e18
+	farm.coins = 4e+19
 	farm.expansion = 1
 	for plot in farm.plots: plot.unlocked = true
 	if with_irrigation: farm.climate.fund(farm, "irrigation")
@@ -241,7 +241,7 @@ func test_weather_equipment() -> void:
 func test_save_validation() -> void:
 	fresh(true)
 	farm.tools.water = 3
-	farm.coins = 12345
+	farm.coins = 493800
 	farm.storage["russet"] = Stock.pile(21)
 	farm.seed_inventory.icecap = 9
 	farm.climate.data.projects.rainwater = 1

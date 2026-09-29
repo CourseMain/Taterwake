@@ -21,7 +21,7 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.state.coins = 1e16
+	game.state.coins = 4e+17
 	var stations: Dictionary = {1: "DuckPatrolHouse"}
 	for island in [1]:
 		game._on_state_changed()

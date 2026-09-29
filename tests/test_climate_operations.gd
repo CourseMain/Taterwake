@@ -16,7 +16,7 @@ func fresh() -> void:
 	for id in ["farm"]:
 		farm.expansion = 1
 		for plot in farm.plots: plot.unlocked = true
-	farm.coins = 1e18
+	farm.coins = 4e+19
 	farm.rng.seed = 32451
 	for plot in farm.plots:
 		farm._clear_crop(plot)

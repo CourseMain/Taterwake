@@ -86,7 +86,7 @@ func run() -> void:
 	game.world.animate(1.5, false)
 	game._on_state_changed()
 	check(not game.world._pest_labels[4].visible and game.world._pest_labels[4].text.is_empty(), "destroyed crop never leaves persistent zero-yield text")
-	game.state.coins = 2.0e11
+	game.state.coins = 8000000000000.0
 	game.state.harvested_total = 25000
 	for island in [1]:
 		game.hud._toast_box.hide()

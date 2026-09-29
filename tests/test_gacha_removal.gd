@@ -21,7 +21,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	var farm = game.state
-	farm.coins = 4321.0
+	farm.coins = 172840.0
 	farm.storage["russet"] = Stock.pile(17)
 	farm.quest_progress.starter_combo = 5
 	check(farm.save_game(SAVE), "farm saves")

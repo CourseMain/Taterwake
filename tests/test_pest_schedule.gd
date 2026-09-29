@@ -13,7 +13,7 @@ func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
 	farm.rng.seed = 9182
-	farm.coins = 1e12
+	farm.coins = 40000000000000
 	farm.farm_help.data.enabled = false
 	var bins: Array[int] = [0, 0, 0, 0, 0]
 	for i in range(10000):

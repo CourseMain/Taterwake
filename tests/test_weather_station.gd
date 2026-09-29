@@ -26,7 +26,7 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.coins = 1e18
+	farm.coins = 4e+19
 	await frames()
 	game._on_action("climate")
 	check(game.hud._refs.protection_summary.visible,"protection stats are immediately visible")

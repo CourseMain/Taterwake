@@ -96,7 +96,7 @@ func run() -> void:
 	hud._act("buy:russet:5")
 	hud._act("buy:russet:1")
 	check(actions == ["buy:russet:1"], "whitelist is enforced on dispatch as well as visual button state")
-	hud.show_purchase({"kind": "seeds", "id": "russet", "name": "Russet", "quantity": 1, "cost": 20.0, "total": 13})
+	hud.show_purchase({"kind": "seeds", "id": "russet", "name": "Russet", "quantity": 1, "cost": 800.0, "total": 13})
 	hud.show_toast("An unrelated farm notification")
 	hud.show_reward("A surprise", "Another distraction", "legendary")
 	hud.update_state(state)
@@ -133,7 +133,7 @@ func run() -> void:
 	sale_page._sell()
 	check(actions == ["sell:russet:2:Standard"], "guided sale dispatches the selected quantity through the existing whitelist")
 	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
-	state.coins = 1e9
+	state.coins = 40000000000
 	for panel: String in ["barn", "inventory", "tools", "quests", "duck_patrol", "island", "pause"]:
 		hud.show_panel(panel, state)
 		hud.update_state(state)

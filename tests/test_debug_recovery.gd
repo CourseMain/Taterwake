@@ -25,15 +25,15 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	var farm = game.state
-	game._on_action("debug:set_balance:10000")
-	check(farm.coins == 2000, "locked route cannot set test funds")
+	game._on_action("debug:set_balance:400000")
+	check(farm.coins == 80000, "locked route cannot set test funds")
 	game._on_action("debug:unlock:" + game.DEBUG_ACCESS_CODE)
 	game._on_action("debug:island:2")
-	check(farm.coins == 2000, "unlocking preserves cash and location")
+	check(farm.coins == 80000, "unlocking preserves cash and location")
 	farm.seed_inventory.russet = 37
 	farm.storage["russet"] = Stock.pile(40)
 	farm.tools.water = 1
-	farm.coins = -5000
+	farm.coins = -200000
 	check(not farm.run_over, "exact overdraft boundary survives")
 	farm.coins = farm.OVERDRAFT_LIMIT + farm.ledger.fixed_cost_total() - 1
 	farm.season_clock.season = 2
@@ -41,25 +41,25 @@ func run() -> void:
 	farm.update(0.25)
 	await settle()
 	var collapse = game.hud._run_end
-	check(collapse.visible and collapse.headline.text == "FORECLOSED" and collapse._threshold.text.contains("5,000"), "collapse explains overdraft boundary")
+	check(collapse.visible and collapse.headline.text == "FORECLOSED" and collapse._threshold.text.contains("200,000"), "collapse explains overdraft boundary")
 	await shot("receipt")
 	var before: float = farm.coins
-	farm.coins = 2000
+	farm.coins = 80000
 	check(farm.coins == before, "ordinary balance assignment cannot revive an ended run")
 	game._on_action("debug")
 	game._on_action("debug:recover:0")
 	check(farm.run_over, "recovery requires positive funds")
-	game._on_action("debug:recover:2000")
+	game._on_action("debug:recover:80000")
 	await settle()
-	check(not farm.run_over and farm.coins == 2000, "explicit debug recovery resumes farm")
+	check(not farm.run_over and farm.coins == 80000, "explicit debug recovery resumes farm")
 	check(farm.seed_inventory.russet == 37 and Stock.count(farm.storage, "russet") == 38 and Stock.count(farm.trading.held, "russet") == 38 and farm.tools.water == 1, "recovery preserves surviving stores, seeds and tools after Winter spoilage")
 	check(farm.climate.data.collapse.is_empty() and not collapse.visible, "recovery clears stale final receipt")
 	game.hud.close_panel()
 	game._on_action("debug")
-	game._on_action("debug:set_balance:10000")
-	check(farm.coins == 10000, "authorized cash editor sets bounded funds")
-	game._on_action("debug:set_balance:100001")
-	check(farm.coins == 10000, "cash editor rejects amounts above the limit")
+	game._on_action("debug:set_balance:400000")
+	check(farm.coins == 400000, "authorized cash editor sets bounded funds")
+	game._on_action("debug:set_balance:4000001")
+	check(farm.coins == 400000, "cash editor rejects amounts above the limit")
 	game.queue_free()
 	await settle()
 	print("DEBUG RECOVERY: %d checks, %d failures" % [checks, failures])

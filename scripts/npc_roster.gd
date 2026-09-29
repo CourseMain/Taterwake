@@ -2,12 +2,12 @@ extends RefCounted
 ## Dialogue is flavour and guidance. Choices never spend money or change odds.
 const PEOPLE := {
 	"mara": {"name":"Mara", "role":"Seed seller", "service":"market", "service_label":"Browse seeds", "color":"769751", "skin":"dbab78", "shape":Vector3(1.0,1.0,1.0), "hat":"straw", "detail":"flower",
-		"first":"Mara. Seeds are in the sacks; the blue stitches are mine. Mind that crate. One leg is a potato and I'd rather not discuss it.",
-		"daily":["That sack's on its third patch. Seeds inside are fresh. I make the distinction because Bram asked.", "I've moved the good sacks out of the drip. The roof and I are still negotiating."],
-		"topic":"You mend all these sacks?", "story":"Nell brings me the torn ones. Blue thread for a split seam, red for a mouse hole. That big patch? Giant seed delivery. Bram said the crate was sound. The crate disagreed.",
-		"reply":"I'll bring the empties back.", "answer":"Good. Fold them dry. Anyone can sell you a new sack; these have learned where to bend.",
+		"first":"Mara. Seeds are in the bags; the blue stitches are mine. Mind that crate. One leg is a potato and I'd rather not discuss it.",
+		"daily":["That bag's on its third patch. Seeds inside are fresh. I make the distinction because Bram asked.", "I've moved the good bags out of the drip. The roof and I are still negotiating."],
+		"topic":"You mend all these bags?", "story":"Nell brings me the torn ones. Blue thread for a split seam, red for a mouse hole. That big patch? Giant seed delivery. Bram said the crate was sound. The crate disagreed.",
+		"reply":"I'll bring the empties back.", "answer":"Good. Fold them dry. Anyone can sell you a new bag; these have learned where to bend.",
 		"help":"Any planting advice?", "advice":"Buy a seed you can afford to replace. Till the bed, plant it, water it. When the top goes full and leafy, pull. If it's a giant, plant your feet first.",
-		"thanks":"There's my sack-returner. Blue stitching held, then? Knew it would.", "weather":"I've double-stitched the sacks. Can't do much for the clouds. Get your ripe crops in."},
+		"thanks":"There's my bag-returner. Blue stitching held, then? Knew it would.", "weather":"I've double-stitched the bags. Can't do much for the clouds. Get your ripe crops in."},
 	"bram": {"name":"Bram", "role":"Toolsmith", "service":"tools", "service_label":"See tool upgrades", "color":"926448", "skin":"b78458", "shape":Vector3(1.12,.96,1.05), "hat":"worklamp", "detail":"brows",
 		"first":"Bram. Let me see that hoe. Handle's loose. Here—hold it now.",
 		"daily":["Handle still tight? Good. Mud off before you hang it up.", "Nearly done. Hear that? No rattle. That's the test."],
@@ -17,7 +17,7 @@ const PEOPLE := {
 		"thanks":"Hammer's sound again. Yours next.", "weather":"Tools can wait. Ripe crops can't. Go."},
 	"nell": {"name":"Nell", "role":"Barn keeper", "service":"barn", "service_label":"Open the barn", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
 		"first":"Nell. I keep the barn in order. If you leave something on the floor, I'll find a shelf for it.",
-		"daily":["Someone's been putting muddy boots on my clean sacks. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
+		"daily":["Someone's been putting muddy boots on my clean bags. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
 		"help":"Can we make more room?", "advice":"Of course. There's a barn upgrade right above your stored crops. You can check the cost and extra space before buying.",
@@ -51,7 +51,7 @@ const PEOPLE := {
 		"daily":["I hope I'm not catching you at a bad time. I do seem to have a talent for it.", "Nell lent me a dry folder. I'd like to return it in the same condition."],
 		"topic":"Do people mind you visiting?", "story":"Some do. I understand. I try to explain the figures properly. My mother says I should ask about people's day before mentioning the paperwork.",
 		"reply":"Well, how was your day?", "answer":"Oh. Quite nice, actually. Thank you for asking. I saw ducklings by the pier.",
-		"help":"What needs doing?", "advice":"The quest board has a few jobs. Every completed job pays a hundred Spudions.",
+		"help":"What needs doing?", "advice":"The quest board has a few jobs. It shows what each completed job pays.",
 		"thanks":"Afternoon. How's your day been? See—I'm learning.", "weather":"I saw the damage coming in. I'm sorry. Let's see who needs help."}
 }
 

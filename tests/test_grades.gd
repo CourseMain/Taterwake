@@ -11,7 +11,7 @@ func check(ok: bool, note: String) -> void:
 	if not ok: failures += 1; push_error(note)
 func fresh():
 	var farm = State.new(); root.add_child(farm)
-	farm.coins = 100000
+	farm.coins = 4000000
 	farm.rng.seed = 6
 	for plot in farm.plots: farm._clear_crop(plot); plot.tilled = plot.unlocked
 	return farm
@@ -97,7 +97,7 @@ func run() -> void:
 	Stock.add(farm.storage, "russet", 4, 60); Stock.add(farm.storage, "russet", 4, 20)
 	farm.sell_crop("russet", 2, "Standard"); farm.sell_crop("russet", 3, "Feed")
 	var totals: Dictionary = Stock.sales(farm.ledger, 1)
-	check(totals.Table.sacks == 1 and totals.Standard.sacks == 2 and totals.Feed.sacks == 3, "journal grade labels retain sack counts")
+	check(totals.Table.sacks == 1 and totals.Standard.sacks == 2 and totals.Feed.sacks == 3, "journal grade labels retain tonne counts")
 	check(is_equal_approx(totals.Table.total + totals.Standard.total + totals.Feed.total, farm.ledger.total(1,"sales")), "grade sales sum exactly to the sales journal")
 	var raw: Dictionary = farm._save_data()
 	raw.storage.russet.Table["39"] = 1
@@ -121,13 +121,13 @@ func run() -> void:
 	farm.trading.keep_seed(farm,"golden","Table")
 	farm.trading.keep_seed(farm,"golden","Standard")
 	farm.trading.keep_seed(farm,"golden","Feed")
-	check(farm.trading.kept_seed.golden == 2 and farm.stock_count("golden") == 4, "only Standard or Table sacks leave saleable storage for seed")
+	check(farm.trading.kept_seed.golden == 2 and farm.stock_count("golden") == 4, "only Standard or Table tonnes leave saleable storage for seed")
 	winter(farm)
 	check(farm.trading.winters["1"].spoiled.golden == 0 and farm.stock_count("golden","Table") == 2 and farm.stock_count("golden","Standard") == 1 and farm.stock_count("golden","Feed") == 1, "Winter subtracts ten per cohort and regrades without ageing kept seeds")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "cohort qualities and kept seeds round-trip")
 	var old: int = farm.seed_inventory.golden
 	farm.season_clock.seconds = 149.75; farm.update(0.25)
-	check(farm.seed_inventory.golden == old + 2 and farm.trading.kept_seed.golden == 0, "kept sacks become matching seeds next Spring")
+	check(farm.seed_inventory.golden == old + 2 and farm.trading.kept_seed.golden == 0, "kept tonnes become matching seeds next Spring")
 	farm.update(0.25)
 	check(farm.seed_inventory.golden == old + 2, "seed conversion occurs only once")
 	farm.selected_crop = "golden"
@@ -142,7 +142,7 @@ func run() -> void:
 	Stock.add(farm.storage,"russet",20,20); Stock.add(farm.storage,"russet",7,60); Stock.add(farm.storage,"russet",3,100)
 	winter(farm)
 	check(farm.trading.settled["1"][0].delivered == 10 and farm.trading.settled["1"][0].shortfall == 10, "contract refuses Feed and collects Standard or better")
-	check(farm.stock_count("russet","Feed") == 19 and farm.trading.winters["1"].spoiled.russet == 1, "remaining twenty Feed sacks suffer five percent spoilage")
+	check(farm.stock_count("russet","Feed") == 19 and farm.trading.winters["1"].spoiled.russet == 1, "remaining twenty Feed tonnes suffer five percent spoilage")
 	farm.free()
 	farm = fresh()
 	Stock.add(farm.storage,"russet",10,90); Stock.add(farm.storage,"russet",10,60); Stock.add(farm.storage,"russet",10,20)
@@ -164,7 +164,7 @@ func run() -> void:
 	quit(1 if failures else 0)
 func ui_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate(); root.add_child(game); game.set_process(false)
-	game.state.coins = 100000
+	game.state.coins = 4000000
 	game.world.show_grade(0, game.state.plots[0])
 	check(game.world.grade_tag.visible and game.world.grade_tag.text == "Grade: Table", "bed context has a small grade tag")
 	game.world.harvest_feedback.harvest({0:game.state.plots[0].duplicate(true)})
@@ -210,7 +210,7 @@ func ui_checks() -> void:
 	var page = game.hud._refs.market_page
 	check(page.grade_buttons.size() == 3, "Sell Potatoes lists each grade")
 	page.grade_buttons.Feed.pressed.emit()
-	check(page.selected_grade == "Feed" and page.crop_quote.text == game.state.market_money(game.state.market.russet.sell * 0.5), "grade selection updates the sale price")
+	check(page.selected_grade == "Feed" and page.crop_quote.text == game.state.market_money(game.state.market.russet.sell * 0.5) + "/t", "grade selection updates the sale price")
 	page.quantity.value = 1; page._sell()
 	check(game.state.stock_count("russet","Feed") == 3, "grade sale control sells only the chosen grade")
 	for size in [Vector2i(1280,800), Vector2i(390,844)]:
@@ -225,13 +225,13 @@ func ui_checks() -> void:
 			RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-market-%d.png" % size.x)
 	game.hud.show_panel("winter_stores", game.state)
 	game.hud._refs["keep_seed:russet:Table"].pressed.emit()
-	check(game.state.trading.kept_seed.russet == 1, "barn control keeps a Table sack as seed")
+	check(game.state.trading.kept_seed.russet == 1, "barn control keeps a Table tonne as seed")
 	for i in range(8): await process_frame
 	if "--capture" in OS.get_cmdline_user_args():
 		RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-barn.png")
 	game.hud.close_panel()
 	winter(game.state)
-	check(game.hud._refs["grade_sales:Feed"].text.contains("1 sacks") and game.hud._refs["grade_sales:Table"].text.contains("0 sacks"), "Winter accounts show each grade's actual sack sales")
+	check(game.hud._refs["grade_sales:Feed"].text.contains("1 t") and game.hud._refs["grade_sales:Table"].text.contains("0 t"), "Winter accounts show each grade's actual tonne sales")
 	for i in range(8): await process_frame
 	if "--capture" in OS.get_cmdline_user_args():
 		RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-accounts.png")

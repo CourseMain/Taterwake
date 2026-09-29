@@ -192,7 +192,7 @@ func accelerated_run_checks() -> void:
 	game._debug_action(PackedStringArray(["debug", "time", "30"]))
 	game.hud.close_panel()
 	for year in range(1, 11):
-		game.state.post_money("sales", "Annual receipts for calendar fixture", 5000)
+		game.state.post_money("sales", "Annual receipts for calendar fixture", 200000)
 		for frame in range(450): game._process(1.0 / 30.0)
 		check(game.state.season_clock.year == year and game.state.season_clock.season == 3 and not game.state.run_over, "30x reaches a playable Winter in year %d" % year)
 		check(game.hud._panel_kind == "accounts" and game.hud._top.season.text == "Year %d · Winter" % year, "30x accounts and year display agree")
@@ -209,7 +209,7 @@ func accelerated_run_checks() -> void:
 	game.state.reset_game(); game.hud.close_panel()
 	game.state.season_changed.disconnect(game._on_season_changed)
 	game.state.changed.disconnect(game._on_state_changed)
-	game.state.coins = 10000
+	game.state.coins = 400000
 	game.state.season_clock.year = 10; game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
 	game.state.update(0.25)
 	game.hud.update_state(game.state)

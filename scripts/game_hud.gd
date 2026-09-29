@@ -1,5 +1,6 @@
 class_name GameHUD
 extends CanvasLayer
+const Balance = preload("res://scripts/balance.gd")
 
 signal action_requested(action: String)
 
@@ -73,7 +74,7 @@ const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
 const ALL_CROP_IDS: Array[String] = CropTable.IDS
 
-const TOOL_COSTS: Dictionary = {"hoe": [300, 12000], "water": [450, 15000], "harvest": [600, 20000]}
+const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
 
@@ -789,7 +790,7 @@ func _build_top() -> void:
 	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(market_box)
 	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
-	_top["price"] = _label("\uE000 38", 22, GREEN, true)
+	_top["price"] = _label("—", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	var quote_row: BoxContainer = _hbox(8)
 	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1260,7 +1261,7 @@ func _update_barn_full_alert() -> void:
 	if not is_instance_valid(_barn_full_alert): return
 	_barn_full_alert.visible = is_instance_valid(_state) and _state.storage_used() >= _state.capacity and not _state.run_over and _tutorial.is_empty() and not is_panel_open()
 	if not _barn_full_alert.visible: return
-	_barn_full_detail.text = "%s stored · Sell crops to keep harvesting." % _number(_state.storage_used())
+	_barn_full_detail.text = "%s t stored · Sell crops to keep harvesting." % _number(_state.storage_used())
 	var width: float = minf(520, root.size.x - 36)
 	var top: float = 112
 	var touch = get_parent().get("touch_controls")
@@ -1359,8 +1360,8 @@ func show_purchase(receipt: Dictionary) -> void:
 			else:
 				detail = "%.0fs per bed" % float(combined.get("interval", 4.0 - float(combined.get("level", 1))))
 		"barn":
-			title = "+%d barn spaces" % int(combined.quantity)
-			detail = "Capacity %d" % int(combined.get("total", quantity))
+			title = "+%d t barn capacity" % int(combined.quantity)
+			detail = "Capacity %d t" % int(combined.get("total", quantity))
 		"field":
 			title = "+%d garden beds" % int(combined.quantity)
 			detail = "%d beds unlocked" % int(combined.get("total", quantity))
@@ -1659,7 +1660,7 @@ func _refresh_dex() -> void:
 	_refs.dex_entries.text = "%d varieties" % _state.CROP_IDS.size()
 	for id: String in _state.CROP_IDS:
 		_refs["dex_status:" + id].text = "%ds base growth · Spud Valley" % _crop_grow(id)
-		_refs["dex_detail:" + id].text = "%d sacks per bed" % int(_state.CropTable.CROPS[id]["yield"])
+		_refs["dex_detail:" + id].text = "%d t per bed" % int(_state.CropTable.CROPS[id]["yield"])
 
 func _build_quests() -> void:
 	_heading(str(_state.call("farm_name")).capitalize() + " quests", "")
@@ -1807,7 +1808,7 @@ func _refresh_accounts() -> void:
 	for category in _state.Ledger.CATEGORIES: _refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
 	for year in range(1, 11): _refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—"
 	var grades: Dictionary = _state.Stock.sales(_state.ledger, _state.season_clock.year)
-	for word in grades: _refs["grade_sales:" + word].text = "%d sacks · %s" % [grades[word].sacks, _state.money(grades[word].total)]
+	for word in grades: _refs["grade_sales:" + word].text = "%d t · %s" % [grades[word].sacks, _state.money(grades[word].total)]
 	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s · Loan remaining %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit()), _state.money(_state.ledger.loan_remaining())]
 
 func _build_run_summary() -> void:
@@ -2116,13 +2117,13 @@ func _set_inventory_tab() -> void:
 
 func _refresh_inventory() -> void:
 	_set_inventory_tab()
-	_refs.inventory_total.text = "HELD VALUE %s  ·  %s / %s crop storage" % [_money(float(_state.call("barn_value"))), _number(float(_state.call("storage_used"))), _number(float(_state.get("capacity")))]
+	_refs.inventory_total.text = "HELD VALUE %s  ·  %s / %s t crop storage" % [_money(float(_state.call("barn_value"))), _number(float(_state.call("storage_used"))), _number(float(_state.get("capacity")))]
 	for entry: Dictionary in _inventory_data():
 		var id: String = str(entry.id)
 		var key: String = "item:" + id
 		if not _refs.has(key + ":title"): continue
 		var kind: String = str(entry.kind)
-		_refs[key + ":title"].text = str(entry.name) + (" ×" + _number(float(entry.count)) if kind != "tool" else "")
+		_refs[key + ":title"].text = str(entry.name) + (" · " + _number(float(entry.count)) + " t" if kind == "crop" else " ×" + _number(float(entry.count)) if kind == "seed" else "")
 		var detail: String = str(entry.get("effect", ""))
 		var button: Button = _refs.get(key + ":action") as Button
 		match kind:
@@ -2142,7 +2143,7 @@ func _refresh_inventory() -> void:
 		_refs[key + ":detail"].visible = not detail.is_empty()
 	var barn_cost: float = float(_state.BARN_COSTS[mini(2, int(_state.barn_level))])
 	var maxed: bool = int(_state.barn_level) >= 3
-	_refs["upgrade:barn:detail"].text = "Maximum capacity" if maxed else "+%s storage" % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
+	_refs["upgrade:barn:detail"].text = "Maximum capacity" if maxed else "+%s t storage" % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
 	_set_purchase_button("upgrade:barn", "Max level" if maxed else ("Upgrade · " + _money(barn_cost)), barn_cost, maxed)
 
 func _catalog_number(key: String, fallback: float) -> float:
@@ -2196,8 +2197,8 @@ func _refresh_duck_patrol() -> void:
 	var count: int = int(data.get("duck_count", 0))
 	var capacity: int = int(data.get("duck_capacity", 2))
 	var speed: int = int(data.get("duck_speed", 0))
-	var hire_cost: float = float(data.get("duck_cost", 1500))
-	var speed_cost: float = float(data.get("duck_speed_cost", 15000))
+	var hire_cost: float = float(data.get("duck_cost", Balance.DUCK_HIRE_COST))
+	var speed_cost: float = float(data.get("duck_speed_cost", Balance.DUCK_TRAINING_COSTS[0]))
 	var coins: float = float(_state.coins)
 	_set_purchase_button("activity:duck", "Flock full" if count >= capacity else ("Hire +1 · " + _money(hire_cost)), hire_cost, count >= capacity or _state.run_over)
 	_refs["activity:duck:detail"].text = "%d / %d ducks" % [count, capacity]
@@ -2272,9 +2273,9 @@ func _build_debug() -> void:
 	funding.add_child(funds)
 	funds.add_child(_label("TEST FUNDS · EXACT BALANCE", 15, INK, true))
 	var amount := DebugMoneyInput.new()
-	amount.max_value = 100000
-	amount.value = 2000.0 if _flag("run_over") else maxf(0, float(_state.get("coins")))
-	amount.placeholder_text = "2000"
+	amount.max_value = Balance.MAX_MONEY
+	amount.value = Balance.STARTING_CASH if _flag("run_over") else maxf(0, float(_state.get("coins")))
+	amount.placeholder_text = str(int(Balance.STARTING_CASH))
 	amount.custom_minimum_size = Vector2(0, 42)
 	amount.add_theme_font_size_override("font_size", 18)
 	amount.add_theme_color_override("font_color", INK)
@@ -2287,8 +2288,8 @@ func _build_debug() -> void:
 	presets.add_theme_constant_override("h_separation", 7)
 	presets.add_theme_constant_override("v_separation", 7)
 	funds.add_child(presets)
-	for item: Array in [["Starter funds", "2000"], ["Tool funds", "5000"], ["Farm funds", "10000"]]:
-		var preset := _button(item[0], "debug_balance_preset:" + item[1])
+	for title: String in Balance.DEBUG_BALANCES:
+		var preset := _button(title, "debug_balance_preset:" + str(int(Balance.DEBUG_BALANCES[title])))
 		preset.tooltip_text = "Fill the input with test funds. Nothing changes until you apply."
 		presets.add_child(preset)
 	_refs.debug_balance_preview = _wrap("", 14, GREEN)
@@ -2385,7 +2386,7 @@ func _refresh_debug() -> void:
 		_refs.debug_recover.visible = ended
 		_refs.debug_recover.disabled = not valid or (valid and float(balance.value) <= 0.0)
 		if not valid:
-			_refs.debug_balance_preview.text = "Enter a balance from 0 to 100000, such as 2000."
+			_refs.debug_balance_preview.text = "Enter a balance from 0 to %s, such as %s." % [_number(Balance.MAX_MONEY), _number(Balance.STARTING_CASH)]
 		else:
 			_refs.debug_balance_preview.text = "%s to %s%s" % [_money(coins), _money(float(balance.value)), " · resume with progress kept" if ended else " · exact new balance"]
 			if ended and float(balance.value) <= 0: _refs.debug_balance_preview.text = "Enter positive test funds to recover this farm."
@@ -2399,7 +2400,7 @@ func _refresh_debug() -> void:
 		_refs.debug_preview.add_theme_color_override("font_color", CHERRY)
 	else:
 		var multiplier: float = float(parsed.value)
-		var after: float = minf(100000, coins * multiplier)
+		var after: float = minf(Balance.MAX_MONEY, coins * multiplier)
 		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s" % [_money(coins), str(multiplier), _money(after)]
 		_refs.debug_preview.add_theme_color_override("font_color", CHERRY if after < float(_state.call("bankruptcy_limit")) else GREEN)
 		if after < float(_state.call("bankruptcy_limit")): _refs.debug_preview.text += "\nBelow the overdraft limit. Foreclosure is assessed after Winter costs."
@@ -2453,7 +2454,7 @@ func modal_content_height() -> float:
 func _build_contracts() -> void:
 	var limit: int = _state.trading.order_limit(_state)
 	_heading("Buyer board", "%d Spring order%s · collection at Autumn end" % [limit, "s" if limit > 1 else ""])
-	_body.add_child(_wrap("The buyer takes Standard or Table sacks (never Feed) at Autumn end, before Winter storage. Each missing sack costs %s. Accepting is binding.%s" % [_state.money(_state.MarketDecisions.SHORTFALL_FEE), " Contract grower prices are %.1f× the ordinary contract quote." % _state.Diversification.Balance.GROWER_PRICE_FACTOR if limit == 2 else ""], 17, MUTED))
+	_body.add_child(_wrap("The buyer takes Standard or Table tonnes (never Feed) at Autumn end, before Winter storage. Each missing tonne costs %s. Accepting is binding.%s" % [_state.money(_state.MarketDecisions.SHORTFALL_FEE), " Contract grower prices are %.1f× the ordinary contract quote." % _state.Diversification.Balance.GROWER_PRICE_FACTOR if limit == 2 else ""], 17, MUTED))
 	for slot in range(limit):
 		var suffix: String = "" if slot == 0 else ":%d" % slot
 		_info("contract_details" + suffix, "", INK, 20)
@@ -2469,7 +2470,7 @@ func _refresh_contracts() -> void:
 		var active: Dictionary = trade.active_order(slot)
 		var completed: Dictionary = trade.completed_order(year, slot)
 		var order: Dictionary = active if not active.is_empty() else trade.offer(year, slot, trade.grower_active(_state))
-		var text: String = "%s · %d sacks at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
+		var text: String = "%s · %d t at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
 		if not completed.is_empty():
 			text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
 		elif not active.is_empty():
@@ -2510,7 +2511,7 @@ func _refresh_diversification() -> void:
 
 func _build_stores() -> void:
 	_heading("Barn stores", "Keep seed or sell Winter stores by grade")
-	_body.add_child(_wrap("Winter storage: %s fee, 5%% spoilage (whole barn, nearest sack; largest pile first), −10 quality. Kept seed avoids storage and becomes one seed per sack next Spring. Fresh harvests sell on Sell Potatoes." % _state.money(_state.MarketDecisions.STORAGE_FEE), 16, MUTED))
+	_body.add_child(_wrap("Winter storage: %s fee, 5%% spoilage (whole barn, nearest tonne; largest pile first), −10 quality. Kept seed avoids storage and becomes one seed per tonne next Spring. Fresh harvests sell on Sell Potatoes." % _state.money(_state.MarketDecisions.STORAGE_FEE), 16, MUTED))
 	for id in _state.CROP_IDS:
 		var card := _card(CREAM, 12)
 		_body.add_child(card)
@@ -2525,7 +2526,7 @@ func _build_stores() -> void:
 			_refs["stored_sell:" + key] = _button("Sell " + word + " stores", "stored_sell:" + key, true)
 			column.add_child(_refs["stored_sell:" + key])
 			if word != "Feed":
-				_refs["keep_seed:" + key] = _button("Keep 1 " + word + " sack as seed", "keep_seed:" + key)
+				_refs["keep_seed:" + key] = _button("Keep 1 " + word + " tonne as seed", "keep_seed:" + key)
 				column.add_child(_refs["keep_seed:" + key])
 	_body.add_child(_button("Back to barn", "barn"))
 	_refresh_stores()
@@ -2536,7 +2537,7 @@ func _refresh_stores() -> void:
 		for word in _state.Quality.GRADES:
 			var key: String = id + ":" + word
 			var stored: int = _state.Stock.count(_state.trading.held, id, word)
-			_refs["stored_grade:" + key].text = "%s · %d sacks (%d stored) · %s each now · Late Winter %s" % [word, _state.stock_count(id, word), stored, _state.market_money(_state.trading.stored_price(_state, id, word)), _state.market_money(_state.trading.peak_price(id, word))]
+			_refs["stored_grade:" + key].text = "%s · %d t (%d stored) · %s each now · Late Winter %s" % [word, _state.stock_count(id, word), stored, _state.market_money(_state.trading.stored_price(_state, id, word)), _state.market_money(_state.trading.peak_price(id, word))]
 			_refs["stored_sell:" + key].disabled = _state.run_over or _state.season_clock.season != 3 or stored == 0
 			if word != "Feed": _refs["keep_seed:" + key].disabled = _state.run_over or _state.stock_count(id, word) == 0
 

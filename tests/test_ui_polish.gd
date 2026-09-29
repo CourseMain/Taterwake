@@ -42,7 +42,7 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.hud.set_process(false)
-	game.state.coins = 1200
+	game.state.coins = 48000
 	game.state.quest_progress.starter_crash = 10
 	game.state.quest_progress.starter_spike = 4
 	game.hud.show_panel("quests", game.state)
@@ -51,14 +51,14 @@ func run() -> void:
 	await inspect("quests")
 	var before: float = game.state.coins
 	game.hud._refs["quest:starter_crash"].pressed.emit()
-	check(game.state.coins == before + 100 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
+	check(game.state.coins == before + game.state.QUEST_REWARD and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
 	game.state.coins = game.state.bankruptcy_limit()
 	game.hud.show_panel("duck_patrol", game.state)
 	check(game.hud._refs["activity:duck"].disabled and game.hud._refs["activity:duck:status"].text.begins_with("Need"), "unaffordable duck shows the missing coins")
 	check(game.hud._refs["activity:duck:speed:status"].text.begins_with("Locked"), "speed training explains the flock prerequisite")
 	await inspect("ducks-locked")
-	game.state.coins = 1e7
+	game.state.coins = 400000000
 	game.hud.update_state(game.state)
 	game.hud._refs["activity:duck"].pressed.emit()
 	check(game.activities.duck_count() == 1 and game.hud._refs["activity:duck:status"].text == "Affordable", "hiring refreshes the remaining flock slot")

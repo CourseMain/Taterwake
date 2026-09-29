@@ -17,14 +17,15 @@ var season_clock = SeasonClock.new()
 var boundary_save_path: String = ""
 
 const NpcRoster = preload("res://scripts/npc_roster.gd")
+const Balance = preload("res://scripts/balance.gd")
 const Quality = preload("res://scripts/crop_quality.gd")
 const Stock = preload("res://scripts/graded_stock.gd")
 const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 40
-const FIELD_EXPANSION_COST: float = preload("res://scripts/balance.gd").FIELD_EXPANSION_COST
+const MECHANICS_REVISION: int = 41
+const FIELD_EXPANSION_COST: float = Balance.FIELD_EXPANSION_COST
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
 const PRICE_QUOTE_SECONDS: float = 15.0
@@ -39,8 +40,8 @@ var diversification = Diversification.new()
 const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
 const MAX_GROW_SECONDS: float = 450.0
-const TOOL_COSTS: Dictionary = {"hoe": [300.0, 600.0, 1200.0], "water": [400.0, 800.0, 1400.0], "harvest": [500.0, 1000.0, 1500.0]}
-const BARN_COSTS: Array[float] = [300.0, 800.0, 2000.0]
+const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
+const BARN_COSTS: Array[float] = Balance.BARN_COSTS
 const Ledger = preload("res://scripts/ledger.gd")
 const OVERDRAFT_LIMIT: float = Ledger.OVERDRAFT_LIMIT
 var ledger = Ledger.new()
@@ -49,8 +50,8 @@ var run_outcome: String = ""
 var accounts_open: bool = false
 var climate_report_open: bool = false
 const DEBUG_MONEY_LIMIT: float = 100000.0
-const QUEST_REWARD: float = 100.0
-const MAX_MONEY: float = 100000.0
+const QUEST_REWARD: float = Balance.QUEST_REWARD
+const MAX_MONEY: float = Balance.MAX_MONEY
 const MAX_INVENTORY: int = 100000
 var activity_system: Node = null
 
@@ -159,7 +160,7 @@ func debug_set_balance(amount: float) -> String:
 	if run_over:
 		return _finish("Use Recover test farm to resume this ended run.")
 	if not is_finite(amount) or amount < 0.0 or amount > MAX_MONEY:
-		return _finish("Enter a test balance from 0 to 100,000.")
+		return _finish("Enter a test balance from 0 to %s." % format_number(MAX_MONEY))
 	debug_money_modified = debug_money_modified or coins != amount
 	post_money("other", "Debug balance adjustment", amount - coins)
 	return _finish("DEBUG: balance set to %s. Progress kept." % money(coins, true))
@@ -173,7 +174,7 @@ func debug_recover(amount: float) -> String:
 	if season_clock.year == SeasonClock.LAST_YEAR:
 		return _finish("The ten-year run is finished. Start a new farm.")
 	if not is_finite(amount) or amount <= 0.0 or amount > MAX_MONEY:
-		return _finish("Recovery needs a positive test balance up to 100,000.")
+		return _finish("Recovery needs a positive test balance up to %s." % format_number(MAX_MONEY))
 	run_over = false
 	run_outcome = ""
 	debug_money_modified = true
@@ -241,7 +242,7 @@ func _end_run(reason: String) -> void:
 func quest_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = [
 		{"id": "starter_crash", "title": "SEEDS FOR TOMORROW", "description": "Buy 10 seeds.", "target": 10},
-		{"id": "starter_spike", "title": "FIRST CUSTOMERS", "description": "Sell 10 potatoes.", "target": 10},
+		{"id": "starter_spike", "title": "FIRST CUSTOMERS", "description": "Sell 10 tonnes of potatoes.", "target": 10},
 		{"id": "starter_combo", "title": "FIRST HARVESTS", "description": "Harvest 12 beds.", "target": 12},
 	]
 	for entry in entries:
@@ -670,7 +671,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if action == "pest":
 		return _finish("Cleared %d beds! Damage stopped. Harvest ripe crops soon." % affected)
 	if action == "harvest":
-		return _finish("Harvested %s potatoes from %d patches! Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
+		return _finish("Harvested %s tonnes of potatoes from %d patches! Stored in your barn; sell whenever you choose.%s" % [format_number(harvested), affected, " Barn full; any remaining harvest stays on the plant." if storage_used() >= capacity else ""])
 	if ClimateSystem.Operations.scarce(self) and action in ["hoe", "water"]:
 		return _finish("Tended %d beds · watch the danger rings. Reserves in Climate action." % affected)
 	if action == "hoe":
@@ -812,7 +813,7 @@ func upgrade_barn() -> String:
 	post_money("storage", "Barn expansion %d" % (barn_level + 1), -cost)
 	barn_level += 1
 	_recompute_capacity()
-	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room for your harvest." % format_number(capacity))
+	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s tonnes. More room for your harvest." % format_number(capacity))
 
 
 func field_expansion_info() -> Dictionary:

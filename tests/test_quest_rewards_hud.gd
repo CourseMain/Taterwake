@@ -15,7 +15,7 @@ func run() -> void:
 	game.set_process(false)
 	root.min_size = Vector2i.ZERO
 	root.size = Vector2i(390,844) if game.touch_controls.enabled else Vector2i(1280,800)
-	game.state.coins = 1e18
+	game.state.coins = 4e+19
 	for island in [1]:
 		game.hud.show_panel("quests",game.state)
 		await settle()

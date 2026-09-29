@@ -28,7 +28,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	check(farm.plots.size() == 24 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
-	check(farm.CropTable.CROPS.size() == 5 and farm.available_crops().size() == 5 and farm.coins == 2000.0, "five crop economy starts with earned-currency budget")
+	check(farm.CropTable.CROPS.size() == 5 and farm.available_crops().size() == 5 and farm.coins == 80000.0, "five crop economy starts with earned-currency budget")
 	farm.interact_plot(4, "hoe")
 	check(farm.plots[4].tilled and farm.seed_inventory.russet == 12, "hoe is a separate manual action")
 	farm.interact_plot(4, "plant")
@@ -52,18 +52,19 @@ func _run() -> void:
 	price = farm.market.russet.seed
 	# Isolate quote accounting from affordability: a live price spike can exceed
 	# the starter purse. Insufficient funds are covered in the next transaction.
-	farm.coins = maxf(farm.coins, 5 * price + 100.0)
+	farm.coins = maxf(farm.coins, 5 * price + 4000.0)
 	coins = farm.coins
 	var seeds: int = farm.seed_inventory.russet
 	farm.buy_seeds("russet", 5)
 	check(is_equal_approx(farm.coins, coins - 5 * price) and farm.seed_inventory.russet == seeds + 5, "seed bundle charges dynamic seed cost")
 	farm.coins = farm.bankruptcy_limit()
+	coins = farm.coins # Compare against the actual journaled adjustment, including float rounding.
 	seeds = farm.seed_inventory.golden
 	farm.buy_seeds("golden", 5)
 	farm.upgrade_tool("water")
-	check(farm.coins == farm.bankruptcy_limit() and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "exhausted credit cannot buy or upgrade")
+	check(farm.coins == coins and farm.seed_inventory.golden == seeds and farm.tools.water == 0, "exhausted credit cannot buy or upgrade")
 	farm.reset_game()
-	farm.coins = 50000.0
+	farm.coins = 2000000.0
 	farm.expand_field()
 	farm.upgrade_tool("hoe")
 	farm.upgrade_tool("water")
@@ -78,7 +79,7 @@ func _run() -> void:
 	check(farm.capacity == 400 and farm.barn_level == 1, "storage upgrade changes real capacity")
 	for index in range(6): ready_crop(index)
 	farm.interact_plot(0, "harvest")
-	check(Stock.count(farm.storage, "russet") == 18, "six healthy beds yield eighteen sacks without multipliers")
+	check(Stock.count(farm.storage, "russet") == 18, "six healthy beds yield eighteen tonnes without multipliers")
 	farm.update(3.51)
 	farm.reset_game()
 	farm.storage["russet"] = Stock.pile(199)
@@ -87,7 +88,7 @@ func _run() -> void:
 	check(farm.storage_used() == 200 and farm.plots[0].pending == 2, "full barn preserves uncollected crop on the plant")
 	farm.sell_crop("russet", 5)
 	farm.interact_plot(0, "harvest")
-	check(farm.plots[0].stage == 0 and Stock.count(farm.storage, "russet") == 197, "partial harvest preserves remaining sacks")
+	check(farm.plots[0].stage == 0 and Stock.count(farm.storage, "russet") == 197, "partial harvest preserves remaining tonnes")
 	farm.reset_game()
 	for crop in farm.available_crops():
 		farm.reset_game()
@@ -122,21 +123,21 @@ func _run() -> void:
 	farm.interact_plot(4, "plant")
 	farm.interact_plot(4, "water")
 	farm.update(4.0)
-	farm.coins = 84000
+	farm.coins = 3360000
 	check(farm.save_game(SAVE), "valid farm saves atomically")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 	farm.reset_game()
 	check(farm.load_game(SAVE), "valid farm reloads")
-	check(is_equal_approx(farm.coins, 84000) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves cash, exact growth and active events")
+	check(is_equal_approx(farm.coins, 3360000) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves cash, exact growth and active events")
 	var snapshot: float = farm.elapsed
 	check(farm.elapsed == snapshot, "load does not add offline growth")
 	for key in ["ledger", "selected_crop", "capacity", "tools", "plots", "schema_version"]:
 		var bad: Dictionary = saved.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
-		check(not farm.load_game(SAVE) and farm.coins == 84000, "missing " + key + " is rejected without mutating farm")
+		check(not farm.load_game(SAVE) and farm.coins == 3360000, "missing " + key + " is rejected without mutating farm")
 	var bad: Dictionary = saved.duplicate(true)
-	bad.coins = -5001
+	bad.coins = -200001
 	write_save(bad)
 	check(not farm.load_game(SAVE), "independent saved purse rejected")
 	bad = saved.duplicate(true)

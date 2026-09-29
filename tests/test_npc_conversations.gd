@@ -21,7 +21,7 @@ func run() -> void:
 	await frames()
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.coins = 100000
+	farm.coins = 4000000
 	var talk = game.conversation
 	for clip in talk.voice.CLIPS:
 		check(clip.get_length() >= .15 and clip.get_length() <= 1.0, "potato takes are short, nonempty audio clips")

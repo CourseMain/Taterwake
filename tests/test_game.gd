@@ -112,7 +112,7 @@ func _run() -> void:
 	game.perform_plot(5, "water")
 	game._process(game.state.CropTable.CROPS.russet.grow + 0.1)
 	check(game.state.plots[5].stage == 3, "watered crop matures on continuous time")
-	game.state.coins = 100000.0
+	game.state.coins = 4000000.0
 	game._on_action("tools")
 	await shot("tools")
 	press("upgrade:water")

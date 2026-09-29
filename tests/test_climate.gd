@@ -16,7 +16,7 @@ func check(ok: bool, description: String) -> void:
 
 func fresh() -> void:
 	state.reset_game()
-	state.coins = 1e18
+	state.coins = 4e+19
 	state.rng.seed = 77821
 	state.barn_level = 3
 	state._recompute_capacity()

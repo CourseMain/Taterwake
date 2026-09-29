@@ -66,7 +66,7 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.state.coins = 1000.0
+	game.state.coins = 40000.0
 	game.state.apply_debug(1.0)
 	game._on_action("debug")
 	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0, "session starts locked at normal speed despite saved debug effects")
@@ -77,7 +77,7 @@ func run() -> void:
 		game.hud._act(action)
 	game.hud._act("debug_apply")
 	game.hud._act("debug_money:100")
-	check(game.state.coins == 1000.0 and game.debug_time_multiplier == 1.0, "controller and HUD both reject locked debug mutations")
+	check(game.state.coins == 40000.0 and game.debug_time_multiplier == 1.0, "controller and HUD both reject locked debug mutations")
 	await enter_code("wrong:code")
 	check(not game.debug_unlocked and game.hud._refs.debug_access_error.text == "Incorrect code." and game.hud._refs.debug_code.text.is_empty(), "Enter rejects wrong code inline and clears the field")
 	await shot("wrong-code")
@@ -138,7 +138,7 @@ func run() -> void:
 	check(game.debug_unlocked, "Enter also accepts the correct code")
 	game._on_action("debug:time:5")
 	game.hud._refs.debug_reset.pressed.emit()
-	check(game.debug_time_multiplier == 1.0 and game.state.coins == 1000.0, "reset restores time while keeping money")
+	check(game.debug_time_multiplier == 1.0 and game.state.coins == 40000.0, "reset restores time while keeping money")
 	game.queue_free()
 	await process_frame
 	game = load("res://scenes/main.tscn").instantiate()

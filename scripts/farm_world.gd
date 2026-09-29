@@ -1894,7 +1894,7 @@ func _update_pest_visual(index: int, data: Dictionary, infested: bool, damage: f
 	visual["destroyed"] = destroyed
 	var warning: Label3D = _pest_labels[index]
 	if infested:
-		warning.text = "! PESTS\n%d sacks remain" % Climate.Protection.remaining(data) if int(data.get("weather_lost", 0)) > 0 else "! PESTS\nYIELD %d/3" % maxi(0, 3 - ticks)
+		warning.text = "! PESTS\n%d t remain" % Climate.Protection.remaining(data) if int(data.get("weather_lost", 0)) > 0 else "! PESTS\nYIELD %d/3" % maxi(0, 3 - ticks)
 		warning.modulate = Color("ffdf70") if ticks == 0 else (Color("ffb34e") if ticks == 1 else Color("ff6c50"))
 	elif destroyed:
 		warning.text = "CROP LOST" if float(visual["caption_time"]) > 0.0 else ""

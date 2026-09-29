@@ -54,7 +54,7 @@ func run() -> void:
 	await physics_frame
 	game.set_process(false)
 	game.hud.set_process(false)
-	game.state.coins = 1e15
+	game.state.coins = 4e+16
 	game._on_action("market")
 	var starting_seeds: int = game.state.seed_inventory.russet
 	var seed_price: float = game.state.market.russet.seed
@@ -70,7 +70,7 @@ func run() -> void:
 	game._on_action("buy:russet:5")
 	check(not game.hud._purchase_box.visible and game.hud._toast_box.visible, "rejected purchase shows explanation without success popup")
 	check(game.state.seed_inventory.russet == starting_seeds + 6, "rejection preserves inventory")
-	game.state.coins = 1e15
+	game.state.coins = 4e+16
 	var shop_points: Array[Vector3] = [Vector3(-6.4, 1.5, -8.5), Vector3(-8, 1.5, -10.6), Vector3(18, 1.9, 2)]
 	for island in [1]:
 		await process_frame

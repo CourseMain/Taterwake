@@ -14,7 +14,7 @@ func fresh():
 	root.add_child(farm)
 	farm.rng.seed = 6
 	for plot in farm.plots: farm._clear_crop(plot)
-	farm.coins = 30000
+	farm.coins = 1200000
 	return farm
 func winter(farm) -> void:
 	farm.season_clock.season = 2; farm.season_clock.seconds = 149.75
@@ -40,7 +40,7 @@ func run() -> void:
 			stocked.free()
 	for event in Protection.PROJECT_FOR:
 		for rank in range(3):
-			check(Protection.loss(20, Protection.REDUCTION[rank]) == [20, 10, 5][rank], "%s level %d cuts sack losses by 0/50/75 percent" % [event, rank])
+			check(Protection.loss(20, Protection.REDUCTION[rank]) == [20, 10, 5][rank], "%s level %d cuts tonne losses by 0/50/75 percent" % [event, rank])
 			var farm = fresh()
 			farm.climate.data.projects[Protection.PROJECT_FOR[event]] = rank
 			if event == "freeze" and rank > 0: farm.climate.data.protection.covers["0"] = {"year":1, "level":rank}
@@ -52,14 +52,14 @@ func run() -> void:
 			var lost: int = quantity - Protection.remaining(farm.plots[0])
 			check(lost == Protection.loss(quantity, Protection.REDUCTION[rank]), "%s damage uses the shared formula at level %d" % [event, rank])
 			var card: Dictionary = farm.climate.data.protection.losses[-1]
-			check(card.event == event and card.crop == "icecap" and card.season == 0 and card.sacks == lost and not card.missing.is_empty(), "cause card identifies event, season, crop, sacks and protection")
+			check(card.event == event and card.crop == "icecap" and card.season == 0 and card.sacks == lost and not card.missing.is_empty(), "cause card identifies event, season, crop, tonnes and protection")
 			check(card.saved == card.sacks - Protection.loss(card.exposed, Protection.REDUCTION[mini(2, rank + 1)]), "counterfactual is the same loss formula with the next protection level")
 			check(farm.save_game(SAVE) and farm.load_game(SAVE), "damaged crop and cause card round-trip")
 			if rank > 0:
 				farm.climate.data.operations.ice.clear()
 				farm.storage["icecap"] = Stock.pile(0)
 				farm.interact_plot(0, "harvest")
-				check(Stock.count(farm.storage, "icecap") == quantity - lost, "surviving protected sacks can be harvested exactly once")
+				check(Stock.count(farm.storage, "icecap") == quantity - lost, "surviving protected tonnes can be harvested exactly once")
 			farm.free()
 	for rank in range(3):
 		var field = fresh()
@@ -71,7 +71,7 @@ func run() -> void:
 			if bed == 4: check(field.save_game(SAVE) and field.load_game(SAVE), "rounding group survives a mid-disaster reload")
 		var sacks_left: int = 0
 		for plot in field.plots: sacks_left += Protection.remaining(plot)
-		check(sacks_left == [0, 18, 27][rank], "twelve three-sack beds deliver exact field-wide protection after rounding")
+		check(sacks_left == [0, 18, 27][rank], "twelve three-tonne beds deliver exact field-wide protection after rounding")
 		check(field.climate.data.protection.losses.size() == 1 and field.climate.data.protection.losses[0].sacks == 36 - sacks_left, "one cause card totals the disaster's matching crop losses")
 		var card: Dictionary = field.climate.data.protection.losses[0]
 		check(card.saved == card.sacks - Protection.loss(36, Protection.REDUCTION[mini(2, rank + 1)]), "aggregate card counterfactual matches aggregate protection")
@@ -201,13 +201,13 @@ func run() -> void:
 func ui_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game); game.set_process(false)
-	game.state.coins = 30000
+	game.state.coins = 1200000
 	plant(game.state, 0, "giant")
 	Protection.damage(game.state, 0, "")
 	game.hud.show_panel("loss_notices", game.state)
 	var notices: String = ""
 	for label in game.hud._body.find_children("*", "Label", true, false): notices += label.text
-	check(notices.contains("Spring") and notices.contains("5 sacks lost") and notices.contains("Giant"), "season notice cards expose the actual crop loss")
+	check(notices.contains("Spring") and notices.contains("5 t lost") and notices.contains("Giant"), "season notice cards expose the actual crop loss")
 	game.hud.close_panel()
 	winter(game.state); game.hud.close_panel()
 	game._on_action("climate_fund:rainwater")
@@ -245,7 +245,7 @@ func ui_checks() -> void:
 			if page == "accounts":
 				var account_words: String = ""
 				for label in game.hud._body.find_children("*", "Label", true, false): account_words += label.text
-				check(account_words.contains("5 sacks lost") and account_words.contains("Water this bed"), "Winter accounts retain the Spring cause card")
+				check(account_words.contains("5 t lost") and account_words.contains("Water this bed"), "Winter accounts retain the Spring cause card")
 			for i in range(10): await process_frame
 			check(game.hud._body.get_combined_minimum_size().x <= game.hud._body.get_parent().size.x + 1, page + " fits available width")
 			if "--capture" in OS.get_cmdline_user_args():

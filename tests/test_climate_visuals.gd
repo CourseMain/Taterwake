@@ -15,7 +15,7 @@ func run() -> void:
 	await frames()
 	game.set_process(false)
 	game.state.expansion = 1
-	game.state.coins = 1e18
+	game.state.coins = 4e+19
 	game.hud.close_panel()
 	for project: String in game.state.ClimateSystem.PROJECTS:
 		game.state.climate.data.projects[project] = 1

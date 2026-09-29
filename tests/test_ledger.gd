@@ -24,7 +24,7 @@ func winter(farm) -> void:
 	farm.update(0.25)
 func run() -> void:
 	var farm = fresh()
-	check(farm.coins == 2000 and farm.ledger.entries.is_empty(), "opening cash is not counted as income")
+	check(farm.coins == 80000 and farm.ledger.entries.is_empty(), "opening cash is not counted as income")
 	purse(farm)
 	farm.buy_seeds("russet", 2)
 	check(farm.ledger.total(1, "seeds") == -2 * State.CropTable.CROPS.russet.seed, "seed purchase has its own signed category")
@@ -34,12 +34,12 @@ func run() -> void:
 	check(farm.ledger.total(1, "sales") == 2 * State.CropTable.CROPS.russet.base, "sale is posted at the actual quote")
 	purse(farm)
 	farm.upgrade_tool("hoe"); farm.upgrade_barn(); farm.expand_field()
-	check(farm.ledger.total(1, "upkeep") == -300 and farm.ledger.total(1, "storage") == -300 and farm.ledger.total(1, "rent") == -1200, "upgrades and expansion are categorized")
+	check(farm.ledger.total(1, "upkeep") == -12000 and farm.ledger.total(1, "storage") == -12000 and farm.ledger.total(1, "rent") == -48000, "upgrades and expansion are categorized")
 	farm.climate.fund(farm, "irrigation")
-	check(farm.ledger.total(1, "protection") == -500, "protection posts through the same ledger")
+	check(farm.ledger.total(1, "protection") == -20000, "protection posts through the same ledger")
 	purse(farm)
-	farm.coins = 1000
-	check(farm.ledger.total(1, "other") != 0 and farm.coins == 1000, "setting a test balance posts an adjustment")
+	farm.coins = 40000
+	check(farm.ledger.total(1, "other") != 0 and farm.coins == 40000, "setting a test balance posts an adjustment")
 	farm.apply_debug(2)
 	purse(farm)
 	farm.ledger.post(1, 0, "contracts", "Direct journal receipt", 12.25)
@@ -86,13 +86,13 @@ func run() -> void:
 	purse(farm)
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.coins == Ledger.STARTING_CASH + 20000 * State.CropTable.CROPS.russet.base, "uncapped receipts round-trip through the journal")
 	farm.reset_game()
-	farm.coins = -5000
+	farm.coins = -200000
 	var count: int = farm.ledger.entries.size()
 	farm.buy_seeds("russet", 1)
-	check(farm.coins == -5000 and farm.ledger.entries.size() == count, "purchase cannot exceed the overdraft")
+	check(farm.coins == -200000 and farm.ledger.entries.size() == count, "purchase cannot exceed the overdraft")
 	farm.coins = Ledger.OVERDRAFT_LIMIT + State.CropTable.CROPS.russet.seed
 	farm.buy_seeds("russet", 1)
-	check(farm.coins == -5000 and not farm.run_over, "last affordable seed can reach the exact limit")
+	check(farm.coins == -200000 and not farm.run_over, "last affordable seed can reach the exact limit")
 	farm.free()
 
 	farm = fresh()
@@ -101,7 +101,7 @@ func run() -> void:
 		var saved = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 		check(farm._valid_save(saved) and saved.ledger == JSON.parse_string(JSON.stringify(farm.ledger.save_data())), "complete accounts save before the boundary is presented"))
 	farm.update(450)
-	check((farm.season_clock.season == 3) and farm.coins == Ledger.STARTING_CASH - farm.ledger.fixed_cost_total(), "full headless year posts the fixed costs against 2000 opening cash")
+	check((farm.season_clock.season == 3) and farm.coins == Ledger.STARTING_CASH - farm.ledger.fixed_cost_total(), "full headless year posts the fixed costs against 80,000 opening cash")
 	for cost in Ledger.FIXED_COSTS:
 		check(farm.ledger.entries.any(func(entry): return entry.category == cost.category and entry.label == cost.label and entry.amount == cost.amount), "Winter posts the configured " + cost.label)
 	check(farm.ledger.loan_remaining() == Ledger.INITIAL_LOAN + Ledger.FIXED_COSTS[1].amount, "principal reduces the original loan")
@@ -111,7 +111,7 @@ func run() -> void:
 	check(farm.load_game(SAVE) and farm.ledger.save_data() == before and not farm.ledger.post_fixed_costs(1), "save/load cannot duplicate annual charges")
 	var saved: Dictionary = farm._save_data()
 	check(not saved.has("coins"), "save contains no independent purse")
-	saved.coins = 777
+	saved.coins = 31080
 	check(not farm._valid_save(saved), "a forged separate purse is rejected")
 	saved = farm._save_data(); saved.ledger.entries[0].amount = "bad"
 	check(not farm._valid_save(saved), "malformed entries fail validation")
@@ -142,7 +142,7 @@ func run() -> void:
 		purse(farm)
 		farm.free()
 	farm = fresh()
-	farm.coins = -5001
+	farm.coins = -200001
 	check(not farm.run_over, "a midyear balance below the limit waits for annual assessment")
 	winter(farm)
 	check(farm.run_over, "midyear shortfall forecloses at annual assessment")
@@ -150,7 +150,7 @@ func run() -> void:
 
 	farm = fresh()
 	for year in range(1, 11):
-		farm.post_money("sales", "Annual crop receipts", fixed_bill + (500 if year % 2 else -500))
+		farm.post_money("sales", "Annual crop receipts", fixed_bill + (20000 if year % 2 else -20000))
 		farm.update(450)
 		check((farm.season_clock.season == 3) and farm.ledger.is_closed(year), "each of ten years has closed accounts")
 		purse(farm)
@@ -210,7 +210,7 @@ func ui_checks() -> void:
 	if "--capture" in OS.get_cmdline_user_args(): await capture("foreclosure")
 	game.state.reset_game()
 	for year in range(1, 11):
-		game.state.post_money("sales", "Harvest receipts", 5000)
+		game.state.post_money("sales", "Harvest receipts", 200000)
 		game.state.update(450)
 		game.hud.close_panel()
 		game.state.update(150)
@@ -219,7 +219,7 @@ func ui_checks() -> void:
 	check(game.hud._modal_title.text == "Ten years on the farm" and game.hud._modal_trade_footer.find_children("*", "Button", true, false).any(func(button): return button.text == "New Run"), "ten-year summary offers New Run")
 	if "--capture" in OS.get_cmdline_user_args(): await capture("ten-years")
 	game._on_action("reset")
-	check(game.state.coins == 2000 and game.state.ledger.entries.is_empty() and not game.state.run_over and game.state.season_clock.year == 1, "New Run resets the journal and calendar")
+	check(game.state.coins == 80000 and game.state.ledger.entries.is_empty() and not game.state.run_over and game.state.season_clock.year == 1, "New Run resets the journal and calendar")
 	game.queue_free()
 	await process_frame
 	# Let the audio mixer release the final run-end playback before exit.

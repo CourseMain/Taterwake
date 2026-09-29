@@ -188,7 +188,7 @@ func _build_buy() -> void:
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: hud._act("crop:" + crop))
 		identity.add_child(crop_tab)
 		var definition: Dictionary = State.CropTable.CROPS[crop]
-		var badge := _label("%d season%s · %ds · %d sacks" % [definition.grow_seasons, "" if definition.grow_seasons == 1 else "s", definition.grow, definition["yield"]], 12, MUTED)
+		var badge := _label("%d season%s · %ds · %d t" % [definition.grow_seasons, "" if definition.grow_seasons == 1 else "s", definition.grow, definition["yield"]], 12, MUTED)
 		identity.add_child(badge)
 		var price: Label = _label("", 20, INK)
 		price.add_theme_stylebox_override("normal", hud.Cozy.box(PRICE_TAG, 5, 2, FRAME))
@@ -337,7 +337,7 @@ func _build_trade_bar() -> void:
 	_trade_row.add_child(sell_button)
 	_amount_box = hud._vbox(3)
 	_trade_row.add_child(_amount_box)
-	_amount_box.add_child(_label("AMOUNT", 11, MUTED))
+	_amount_box.add_child(_label("AMOUNT (t)", 11, MUTED))
 	var amount_row := HBoxContainer.new()
 	amount_row.add_theme_constant_override("separation", 5)
 	_amount_box.add_child(amount_row)
@@ -417,7 +417,7 @@ func _layout() -> void:
 		_mobile_actions.visible = narrow
 		crop_image.custom_minimum_size = Vector2.ONE * (74 if compact or narrow else 104)
 		crop_name.add_theme_font_size_override("font_size", 24 if narrow or compact else 30)
-		crop_quote.add_theme_font_size_override("font_size", 23 if compact else 30)
+		crop_quote.add_theme_font_size_override("font_size", 23 if compact or narrow else 30)
 		for control: Control in [quantity, minus, plus, maximum]: control.custom_minimum_size.y = 68 if touch else 46
 		for control: Control in [minus, plus, maximum]: control.custom_minimum_size.x = 68 if touch else 46
 		quantity.custom_minimum_size.x = 110 if touch else 84
@@ -441,11 +441,11 @@ func refresh() -> void:
 			hud._refs[crop + ":select"].set_pressed_no_signal(state.selected_crop == crop)
 			hud._refs[crop + ":last_year"].text = "Last year avg " + (state.market_money(state.last_year_price(crop)) if state.season_clock.year > 1 else "—")
 			hud._refs[crop + ":seed_price"].text = "%s each" % state.market_money(quote.seed)
-			hud._refs[crop + ":price"].text = "Sack %s" % state.market_money(quote.sell)
+			hud._refs[crop + ":price"].text = "%s/t" % state.market_money(quote.sell)
 			_show_price_change(hud._refs[crop + ":change"], crop)
 			hud._refs[crop + ":history"].set_history(quote.history, MUTED)
 			hud._refs[crop + ":quote"].text = state.format_number(state.seed_inventory[crop])
-			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.stock_count(crop))
+			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.stock_count(crop)) + " t"
 			for count: int in [1, 5]:
 				var key := "buy:%s:%d" % [crop, count]
 				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else ("Buy %d" % count), quote.seed * count, int(state.seed_inventory[crop]) + int(state.trading.kept_seed[crop]) + count > State.MAX_INVENTORY)
@@ -454,27 +454,27 @@ func refresh() -> void:
 	var quote: Dictionary = state.market.get(selected, {})
 	var price: float = float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[selected_grade]
 	for word in grade_buttons:
-		grade_buttons[word].text = "%s · %d sacks · %s each" % [word, state.trading.fresh_count(state, selected, word), state.market_money(float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[word])]
+		grade_buttons[word].text = "%s · %d t · %s/t" % [word, state.trading.fresh_count(state, selected, word), state.market_money(float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[word])]
 		grade_buttons[word].set_pressed_no_signal(word == selected_grade)
 	var owned: int = state.trading.fresh_count(state, selected, selected_grade)
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
 	crop_name.text = hud._crop_name(selected) + " Potato"
-	crop_quote.text = state.market_money(price)
-	crop_quote.tooltip_text = "Sale price per potato"
+	crop_quote.text = state.market_money(price) + "/t"
+	crop_quote.tooltip_text = "Sale price per tonne"
 	_show_price_change(crop_change, selected)
 	var grade_history: Array = []
 	for point in quote.get("history", []): grade_history.append(float(point) * State.Quality.MULTIPLIER[selected_grade])
 	crop_history.set_history(grade_history, MUTED)
 	crop_history.set_expected_price(state.trading.peak_price(selected, selected_grade))
 	crop_history.tooltip_text = "Recent prices · dashed line: expected late-Winter storage price"
-	storage_note.text = "All sacks in the barn at Winter start are stored: %s fee · 5%% spoilage rounded to nearest · −10 quality · Late Winter %s/sack (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected, selected_grade))]
+	storage_note.text = "All tonnes in the barn at Winter start are stored: %s fee · 5%% spoilage rounded to nearest · −10 quality · Late Winter %s/t (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected, selected_grade))]
 
-	crop_owned.text = "%s owned" % state.format_number(owned)
+	crop_owned.text = "%s t owned" % state.format_number(owned)
 	crop_image.crop = selected
 	crop_image.accent = ACCENTS[selected]
 	crop_image.queue_redraw()
-	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else "\uE000 0.00"
+	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else state.money(0)
 	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])
 	minus.disabled = not quantity.valid or amount <= 1
 	plus.disabled = not quantity.valid or amount >= owned
@@ -504,7 +504,7 @@ func _sell() -> void:
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return
-	_receipt = "+%s · %s sold" % [hud._state.market_money(receipt.total), hud._state.format_number(receipt.quantity)]
+	_receipt = "+%s · %s t sold" % [hud._state.market_money(receipt.total), hud._state.format_number(receipt.quantity)]
 	_receipt_left = 2.8
 	hud._toast_box.hide()
 	refresh()

@@ -45,7 +45,7 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.hud.set_process(false)
-	game.state.coins = 1e20
+	game.state.coins = 4e+21
 	game.hud.update_state(game.state)
 	game.hud._toast_box.hide()
 	game.hud._reward_box.hide()
@@ -72,7 +72,7 @@ func run() -> void:
 				inside(button, tag + " seed choice")
 		await shot(tag + "-farm")
 		game.hud.show_panel("market", game.state)
-		game.hud.show_purchase({"kind": "seeds", "id": "sunburst", "name": "Sunburst", "quantity": 12500, "cost": 125000000.0, "total": 12506})
+		game.hud.show_purchase({"kind": "seeds", "id": "sunburst", "name": "Sunburst", "quantity": 12500, "cost": 5000000000.0, "total": 12506})
 		await settle()
 		check_menu(tag + " market")
 		inside(game.hud._purchase_box, tag + " purchase receipt")
@@ -89,7 +89,7 @@ func run() -> void:
 		await settle()
 		check_menu(kind)
 		if kind in ["inventory", "tools"]:
-			game.hud.show_purchase({"kind": "barn" if kind == "inventory" else "tool", "name": "Watering can", "quantity": 200 if kind == "inventory" else 1, "cost": 500.0, "total": 400, "level": 2})
+			game.hud.show_purchase({"kind": "barn" if kind == "inventory" else "tool", "name": "Watering can", "quantity": 200 if kind == "inventory" else 1, "cost": 20000.0, "total": 400, "level": 2})
 			await settle()
 			inside(game.hud._purchase_box, kind + " upgrade receipt")
 			check(not game.hud._purchase_box.get_global_rect().intersects(game.hud._modal_card.get_global_rect()), kind + " receipt leaves upgrade controls clear")

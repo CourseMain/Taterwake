@@ -16,7 +16,7 @@ func run() -> void:
 	root.add_child(game)
 	await frames()
 	game.state.tutorial_progress.completed = true
-	game.state.coins = 1e18
+	game.state.coins = 4e+19
 	game.set_process(false)
 	for island in [1]:
 		game.state.ClimateSystem.Lesson.finish(game.state)

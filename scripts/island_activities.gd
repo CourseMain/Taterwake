@@ -2,7 +2,8 @@ extends Node
 ## One saved flock patrols the farm for pests.
 signal duck_cleared(index: int)
 
-const DUCK_TRAINING_COSTS: Array[float] = [800.0, 1500.0]
+const Balance = preload("res://scripts/balance.gd")
+const DUCK_TRAINING_COSTS: Array[float] = Balance.DUCK_TRAINING_COSTS
 const DUCK_INTERVALS: Array[float] = [4.0, 3.0, 2.0]
 
 var state
@@ -51,7 +52,7 @@ func duck_interval() -> float:
 	return DUCK_INTERVALS[duck_speed()]
 
 func duck_hire_cost() -> float:
-	return 500.0 * (owned_ducks + 1)
+	return Balance.DUCK_HIRE_COST * (owned_ducks + 1)
 
 func duck_speed_cost() -> float:
 	return DUCK_TRAINING_COSTS[mini(1, patrol_speed)]

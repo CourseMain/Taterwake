@@ -66,7 +66,7 @@ func run() -> void:
 	check(game.hud._tutorial_pointer.target == null and game.world._tutorial_plot_outline.visible, "equipped hoe points only at the target bed")
 	game.tutorial.finish()
 	check(game.world._tutorial_trail.all(func(node: Node3D): return not node.visible), "finishing hides all trail markers")
-	game.state.coins = 1e16
+	game.state.coins = 4e+17
 	game.state.harvested_total = 30000
 	for island in [1]:
 		game._on_action("duck_patrol")

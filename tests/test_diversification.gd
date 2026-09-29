@@ -13,7 +13,7 @@ func fresh():
 	var farm = State.new()
 	farm.rng.seed = 6
 	for plot in farm.plots: farm._clear_crop(plot)
-	farm.coins = 30000
+	farm.coins = 1200000
 	return farm
 func winter(farm, year: int = 3) -> void:
 	farm.season_clock.year = year
@@ -42,7 +42,7 @@ func run() -> void:
 	var before: float = farm.coins
 	farm.accounts_open = true
 	for id in Business.NAMES: farm.diversification.buy(farm, id)
-	check(farm.diversification.built.size() == 3 and farm.coins == before - 5500, "paused accounts can build both businesses and enrol once")
+	check(farm.diversification.built.size() == 3 and farm.coins == before - 220000, "paused accounts can build both businesses and enrol once")
 	var snapshot: Dictionary = farm._save_data()
 	for id in Business.NAMES: farm.diversification.buy(farm, id)
 	farm.update(50)
@@ -66,8 +66,8 @@ func run() -> void:
 	check(farm.season_clock.season == 2 and farm.season_clock.seconds == 0 and farm.season_seconds() == 150, "Autumn starts exactly at Summer second 120")
 	before = farm.coins
 	farm.update(150)
-	check(farm.diversification.winters["4"].shop == 800 and farm.diversification.winters["4"].lodging == 300, "first full year pays 800 shop and 300 for two lodging protections")
-	check(farm.coins == before + 1100 - farm.ledger.fixed_cost_total() - 2 * Balance.PROTECTION_UPKEEP, "business income pays before the Winter bill")
+	check(farm.diversification.winters["4"].shop == 32000 and farm.diversification.winters["4"].lodging == 12000, "first full year pays 32,000 shop and 12,000 for two lodging protections")
+	check(farm.coins == before + 44000 - farm.ledger.fixed_cost_total() - 2 * Balance.PROTECTION_UPKEEP, "business income pays before the Winter bill")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "income reports and entries round-trip")
 	before = farm.coins
 	farm.diversification.winter(farm)
@@ -93,10 +93,10 @@ func run() -> void:
 		farm.diversification.buy(farm, "lodging")
 		for i in range(count): farm.climate.data.projects[["rainwater", "drainage", "windbreaks", "frost"][i]] = 1
 		winter(farm, 4)
-		check(farm.diversification.winters["4"].lodging == 150 * count, "lodging scales from zero to four protections")
+		check(farm.diversification.winters["4"].lodging == 6000 * count, "lodging scales from zero to four protections")
 		farm.free()
 	farm = fresh(); winter(farm)
-	farm.coins = Balance.OVERDRAFT_LIMIT + 2999
+	farm.coins = Balance.OVERDRAFT_LIMIT + Balance.BUSINESS_COSTS.shop - 1
 	before = farm.coins
 	farm.diversification.buy(farm, "shop")
 	check(farm.coins == before and not farm.diversification.owns("shop"), "one coin short refuses construction atomically")
@@ -163,7 +163,7 @@ func contract_checks() -> void:
 	var before: float = farm.coins
 	winter(farm, 4)
 	check(farm.trading.contracts.is_empty() and farm.trading.settled["4"].size() == 2, "both orders settle at the same Autumn boundary")
-	check(farm.trading.completed_order(4, 0).delivered == 20 and farm.trading.completed_order(4, 1).delivered == 7 and farm.trading.completed_order(4, 1).shortfall == 13, "each order uses its own sacks and rejects Feed")
+	check(farm.trading.completed_order(4, 0).delivered == 20 and farm.trading.completed_order(4, 1).delivered == 7 and farm.trading.completed_order(4, 1).shortfall == 13, "each order uses its own tonnes and rejects Feed")
 	var earned: float = 20 * orders[0].price + 7 * orders[1].price
 	check(is_equal_approx(farm.ledger.total(4, "contracts"), earned - 13 * Balance.SHORTFALL_FEE), "both deliveries and the shortfall have honest ledger amounts")
 	check(is_equal_approx(farm.diversification.income(farm), earned), "premium contract receipts count as diversification income, not penalties")
@@ -184,8 +184,8 @@ func title_checks() -> void:
 	check(farm.run_title() == "Survivor", "two level-two projects do not count as three protections")
 	farm.climate.data.projects.frost = 1
 	check(farm.run_title() == "Adapter", "three protection types earn Adapter")
-	farm.post_money("sales", "Crops", 800)
-	farm.post_money("other", "Farm shop income", 800)
+	farm.post_money("sales", "Crops", 32000)
+	farm.post_money("other", "Farm shop income", 32000)
 	check(farm.run_title() == "Adapter", "a tie is not most income")
 	farm.post_money("other", "Lodging income", 1)
 	check(farm.run_title() == "Shopkeeper", "majority diversification takes precedence over Adapter")
@@ -198,7 +198,7 @@ func ui_checks() -> void:
 	root.add_child(game)
 	game.set_process(false)
 	game.state.rng.seed = 6
-	game.state.coins = 30000
+	game.state.coins = 1200000
 	winter(game.state)
 	await process_frame
 	check(game.hud._panel_kind == "accounts" and game.state.accounts_open, "year-three accounts remain paused")

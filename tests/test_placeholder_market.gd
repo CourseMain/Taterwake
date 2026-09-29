@@ -59,9 +59,9 @@ func run() -> void:
 	for index: int in range(52): farm.update(0.25)
 	check(farm.market == partial, "history is independent of simulation step size")
 	farm.reset_game()
-	farm.coins = 50000.0
+	farm.coins = 2000000.0
 	farm.update(3600.0)
-	check(farm.elapsed == 3600.0 and farm.season_clock.year == 7 and farm.season_clock.season == 0 and farm.coins == 50000.0 - 6 * farm.ledger.fixed_cost_total(), "six full working years charge exactly six annual bills")
+	check(farm.elapsed == 3600.0 and farm.season_clock.year == 7 and farm.season_clock.season == 0 and farm.coins == 2000000.0 - 6 * farm.ledger.fixed_cost_total(), "six full working years charge exactly six annual bills")
 	for path: String in [SAVE, farm.backup_path(SAVE), farm.rejected_path(SAVE)]:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	farm.free()
