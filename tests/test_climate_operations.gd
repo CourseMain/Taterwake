@@ -95,6 +95,16 @@ func run() -> void:
 	farm.interact_plot(0, "pest")
 	check(farm.plots[0].pests, "empty sprayer cannot clear pests during disaster")
 	farm.update(5)
+	fresh()
+	farm.climate.data.projects.windbreaks = 2
+	weather("storm")
+	for strike in range(4):
+		farm.climate.data.operations.strike_row = 0
+		farm.climate.data.operations.strike_in = 0.25
+		farm.update(0.25)
+	check(farm.plots[0].stage > 0 and farm.climate.data.operations.damaged.has("0") and float(farm.climate.data.operations.stress["0"]) <= 1.0, "repeated lightning keeps surviving protected beds within saved stress bounds")
+	check(farm.save_game(path) and farm.load_game(path), "repeated strikes on surviving beds leave a loadable save")
+	for suffix in ["", ".bak", ".rejected", ".tmp"]: DirAccess.remove_absolute(ProjectSettings.globalize_path(path + suffix))
 	farm.queue_free()
 	print("CLIMATE OPERATIONS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

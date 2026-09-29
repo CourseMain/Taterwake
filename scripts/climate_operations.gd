@@ -183,7 +183,7 @@ static func _tick(farm, dt: float) -> void:
 				if int(field[index].stage) == 0: continue
 				farm.Quality.deduct(farm, index, "storm", 25, true)
 				# Storm losses use the same protection formula for wind and strikes.
-				op.stress[str(index)] = float(op.stress.get(str(index), 0.0)) + 0.85 * strength
+				op.stress[str(index)] = minf(1.0, float(op.stress.get(str(index), 0.0)) + 0.85 * strength)
 				op.scars[str(index)] = true
 			op.flash = 0.75
 			op.strike_in = 7.5
