@@ -876,6 +876,18 @@ func _update_hover() -> void:
 	else:
 		hud.set_context("")
 
+	var quality_index: int = hover_plot
+	if quality_index < 0:
+		var near_distance: float = 2.8
+		for i in range(state.plots.size()):
+			var distance: float = world.player.position.distance_to(world.plot_positions[i])
+			if int(state.plots[i].stage) > 0 and distance < near_distance:
+				near_distance = distance; quality_index = i
+	world.show_grade(quality_index, state.plots[quality_index] if quality_index >= 0 else {})
+	if quality_index >= 0 and int(state.plots[quality_index].stage) > 0:
+		var quality: String = state.Quality.description(state.plots[quality_index])
+		hud.set_context((hud._hover_context + " · " if hover_plot >= 0 else "") + quality)
+
 func _on_state_changed() -> void:
 	# Activity boundaries and market ticks can signal within the same update.
 	# Paint their final result once; direct player actions still refresh at once.
@@ -1046,7 +1058,10 @@ func _on_action(action: String) -> void:
 			_cancel_walk()
 			hud.show_panel("tools", state)
 		"stored_sell":
-			if hud._panel_kind == "winter_stores": state.trading.sell_stored(state, parts[1])
+			if hud._panel_kind == "winter_stores": state.trading.sell_stored(state, parts[1], -1, parts[2] if parts.size() > 2 else "")
+		"keep_seed":
+			state.trading.keep_seed(state, parts[1], parts[2])
+			_save_checkpoint.call_deferred()
 		"contract_accept": state.trading.accept(state)
 		"quest": state.claim_quest(parts[1])
 		"close": hud.close_panel()
@@ -1056,7 +1071,7 @@ func _on_action(action: String) -> void:
 
 		"tool": _select_tool(parts[1])
 		"buy": state.buy_seeds(parts[1], int(parts[2]))
-		"sell": state.sell_crop(parts[1], int(parts[2]))
+		"sell": state.sell_crop(parts[1], int(parts[2]), parts[3] if parts.size() > 3 else "")
 		"quick_sell": state.sell_crop(state.selected_crop)
 		"upgrade":
 			match parts[1]:

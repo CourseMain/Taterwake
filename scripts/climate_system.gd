@@ -159,6 +159,7 @@ func _impact(farm) -> void:
 	if event == "freeze":
 		for index in eligible:
 			data.operations.ice[str(index)] = true
+			farm.Quality.deduct(farm, index, "freeze", 15, true)
 	# Field damage accumulates during active weather; players can rescue beds.
 	var record: Dictionary = {"event": event, "field_lost": 0,
 		"field_total": eligible.size(),
@@ -172,9 +173,9 @@ func _impact(farm) -> void:
 func _winter_impact(farm) -> void:
 	var rate: float = float(WINTER_LOSS[data.event]) * float(data.severity)
 	for crop in farm.storage:
-		var lost: int = roundi(int(farm.trading.held.get(crop, 0)) * rate)
-		farm.storage[crop] -= lost
-		farm.trading.held[crop] = maxi(0, int(farm.trading.held.get(crop, 0)) - lost)
+		var lost: int = roundi(farm.Stock.count(farm.trading.held, crop) * rate)
+		var lots: Array = farm.Stock.take(farm.trading.held, crop, lost)
+		farm.Stock.remove_lots(farm.storage, crop, lots)
 		Protection.record(farm, data.event, crop, lost, 0.0, 1.0, "Stored sacks exposed; sell before impact", "barn")
 	farm.trading.clamp_stock(farm)
 	for index in range(farm.plots.size()):

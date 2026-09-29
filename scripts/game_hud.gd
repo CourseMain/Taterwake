@@ -1129,7 +1129,6 @@ func update_state(state: Node) -> void:
 	var markets: Dictionary = state.get("market")
 	var quote: Dictionary = markets.get(crop, {})
 	var seeds: Dictionary = state.get("seed_inventory")
-	var storage: Dictionary = state.get("storage")
 	var calendar: String = "%d:%d:%s" % [state.season_clock.year, state.season_clock.season, state.run_outcome]
 	var calendar_changed: bool = calendar != _displayed_calendar
 	_displayed_calendar = calendar
@@ -1151,13 +1150,15 @@ func update_state(state: Node) -> void:
 	_top.price_change.show()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = state.trading.fresh_count(state, crop)
-	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))
+	var sale_value: float = 0
+	for word in state.Quality.GRADES: sale_value += state.trading.fresh_count(state, crop, word) * state.Quality.MULTIPLIER[word] * float(quote.get("sell", 0))
+	_quick_sell.text = "Sell held [F] · " + _money(sale_value)
 	_quick_sell.disabled = held <= 0
 	var available: Array[String] = _market_crops()
 	for id: String in _all_crop_ids():
 		var button: Button = _crop_buttons[id]
 		button.visible = id in available
-		button.refresh(int(seeds.get(id, 0)), int(storage.get(id, 0)), id == crop)
+		button.refresh(int(seeds.get(id, 0)), state.stock_count(id), id == crop)
 	_update_quest_sidebar()
 	_refresh_seed_visibility()
 	_apply_tutorial_visibility()
@@ -1225,6 +1226,7 @@ func _update_context() -> void:
 	skin.border_color = Color("ffbd9e") if warning else Color("657079")
 	skin.set_border_width_all(1)
 	_context_box.set_meta("warning", warning)
+	_context_box.set_meta("grade", text.contains("Table") or text.contains("Standard") or text.contains("Feed"))
 	_context.text = text
 	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
 	# Hug the single line instead of spanning the farm. Input passes through.
@@ -1235,7 +1237,7 @@ func _update_context() -> void:
 	_context_box.size = Vector2(width, 0)
 	var touch = get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
-		_context_box.visible = _context_box.visible and warning
+		_context_box.visible = _context_box.visible and (warning or _context_box.get_meta("grade", false))
 		_context_box.offset_top = -310
 		_context_box.offset_bottom = -268
 		_context.add_theme_font_size_override("font_size", 20)
@@ -1763,6 +1765,8 @@ func _build_winter() -> void:
 	_body.add_child(_refs.accounts_net)
 	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
 	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
+	for word in _state.Quality.GRADES:
+		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
 	var columns := _hbox(44)
 	_body.add_child(columns)
 	var categories := _vbox(2)
@@ -1792,6 +1796,8 @@ func _refresh_accounts() -> void:
 	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
 	for category in _state.Ledger.CATEGORIES: _refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
 	for year in range(1, 11): _refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—"
+	var grades: Dictionary = _state.Stock.sales(_state.ledger, _state.season_clock.year)
+	for word in grades: _refs["grade_sales:" + word].text = "%d sacks · %s" % [grades[word].sacks, _state.money(grades[word].total)]
 	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s · Loan remaining %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit()), _state.money(_state.ledger.loan_remaining())]
 
 func _build_run_summary() -> void:
@@ -1915,7 +1921,6 @@ func _refresh_panel() -> void:
 	_restore_tutorial_buttons()
 	var coins: float = float(_state.get("coins"))
 	var markets: Dictionary = _state.get("market")
-	var storage: Dictionary = _state.get("storage")
 	match _panel_kind:
 		"market", "sell_potatoes":
 			_refs.market_page.refresh()
@@ -2009,11 +2014,10 @@ func _tutorial_seed_market() -> bool:
 
 func _known_crops() -> Array[String]:
 	var result: Array[String] = []
-	var storage: Dictionary = _state.get("storage") if is_instance_valid(_state) else {}
 	var seeds: Dictionary = _state.get("seed_inventory") if is_instance_valid(_state) else {}
 	var available: Array[String] = _market_crops()
 	for id: String in _all_crop_ids():
-		if id in CROP_IDS or id in available or float(storage.get(id, 0)) > 0 or float(seeds.get(id, 0)) > 0:
+		if id in CROP_IDS or id in available or (is_instance_valid(_state) and _state.stock_count(id) > 0) or float(seeds.get(id, 0)) > 0:
 			result.append(id)
 	return result
 
@@ -2113,7 +2117,7 @@ func _refresh_inventory() -> void:
 			"crop":
 				detail = "Current value " + _money(float(entry.sell_value))
 				if is_instance_valid(button):
-					button.text = "View Winter stores" if _state.season_clock.season == 3 and int(_state.trading.held.get(entry.crop, 0)) > 0 else "Sell potatoes"
+					button.text = "View Winter stores" if _state.season_clock.season == 3 and _state.Stock.count(_state.trading.held, entry.crop) > 0 else "Sell potatoes"
 					button.disabled = int(entry.count) <= 0
 			"seed":
 				if is_instance_valid(button):
@@ -2437,7 +2441,7 @@ func modal_content_height() -> float:
 func _build_contracts() -> void:
 	_heading("Buyer board", "One Spring order · collection at Autumn end")
 	_info("contract_details", "", INK, 20)
-	_body.add_child(_wrap("The buyer automatically takes available sacks at the end of Autumn, before Winter spoilage and the storage fee. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
+	_body.add_child(_wrap("The buyer automatically takes Standard or Table sacks (never Feed) at the end of Autumn, before Winter spoilage and the storage fee. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
 	_refs.contract_accept = _button("Accept this order", "contract_accept", true)
 	_body.add_child(_refs.contract_accept)
 	_refresh_contracts()
@@ -2451,14 +2455,14 @@ func _refresh_contracts() -> void:
 	if not completed.is_empty():
 		_refs.contract_details.text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
 	elif not trade.contract.is_empty():
-		_refs.contract_details.text += "\nAccepted · In barn: %d / %d" % [_state.storage[order.crop], order.quantity]
+		_refs.contract_details.text += "\nAccepted · Standard or better: %d / %d" % [trade.eligible_contract(_state, order.crop), order.quantity]
 	elif _state.season_clock.season != 0:
 		_refs.contract_details.text += "\nNext offer arrives in Spring."
 	_refs.contract_accept.disabled = _state.run_over or _state.season_clock.season != 0 or not trade.contract.is_empty() or not completed.is_empty()
 
 func _build_stores() -> void:
-	_heading("Barn stores", "Sell during Winter · prices rise until Spring resets them")
-	_body.add_child(_wrap("Holding a harvest across Winter start costs %s once, with 10%% spoilage across the whole barn, rounded to nearest and taken from the largest pile first. New Winter harvests sell at the ordinary market. Barn capacity: %d sacks." % [_state.money(_state.MarketDecisions.STORAGE_FEE), _state.capacity], 16, MUTED))
+	_heading("Barn stores", "Keep seed or sell Winter stores by grade")
+	_body.add_child(_wrap("Winter storage: %s fee, 5%% spoilage (whole barn, nearest sack; largest pile first), −10 quality. Kept seed avoids storage and becomes one seed per sack next Spring. Fresh harvests sell on Sell Potatoes." % _state.money(_state.MarketDecisions.STORAGE_FEE), 16, MUTED))
 	for id in _state.CROP_IDS:
 		var card := _card(CREAM, 12)
 		_body.add_child(card)
@@ -2466,15 +2470,27 @@ func _build_stores() -> void:
 		card.add_child(column)
 		_refs["stored:" + id] = _wrap("", 18, INK)
 		column.add_child(_refs["stored:" + id])
-		_refs["stored_sell:" + id] = _button("Sell these stores", "stored_sell:" + id, true)
-		column.add_child(_refs["stored_sell:" + id])
+		for word in _state.Quality.GRADES:
+			var key: String = id + ":" + word
+			_refs["stored_grade:" + key] = _wrap("", 16, INK)
+			column.add_child(_refs["stored_grade:" + key])
+			_refs["stored_sell:" + key] = _button("Sell " + word + " stores", "stored_sell:" + key, true)
+			column.add_child(_refs["stored_sell:" + key])
+			if word != "Feed":
+				_refs["keep_seed:" + key] = _button("Keep 1 " + word + " sack as seed", "keep_seed:" + key)
+				column.add_child(_refs["keep_seed:" + key])
 	_body.add_child(_button("Back to barn", "barn"))
 	_refresh_stores()
 
 func _refresh_stores() -> void:
 	for id in _state.CROP_IDS:
-		_refs["stored:" + id].text = "%s · %d stored sacks\n%s each now · Late Winter %s" % [_crop_name(id), _state.trading.held[id], _state.market_money(_state.trading.stored_price(_state, id)), _state.market_money(_state.trading.peak_price(id))]
-		_refs["stored_sell:" + id].disabled = _state.run_over or _state.season_clock.season != 3 or int(_state.trading.held[id]) == 0
+		_refs["stored:" + id].text = "%s · %d kept for next Spring" % [_crop_name(id), _state.trading.kept_seed[id]]
+		for word in _state.Quality.GRADES:
+			var key: String = id + ":" + word
+			var stored: int = _state.Stock.count(_state.trading.held, id, word)
+			_refs["stored_grade:" + key].text = "%s · %d sacks (%d stored) · %s each now · Late Winter %s" % [word, _state.stock_count(id, word), stored, _state.market_money(_state.trading.stored_price(_state, id, word)), _state.market_money(_state.trading.peak_price(id, word))]
+			_refs["stored_sell:" + key].disabled = _state.run_over or _state.season_clock.season != 3 or stored == 0
+			if word != "Feed": _refs["keep_seed:" + key].disabled = _state.run_over or _state.stock_count(id, word) == 0
 
 func _build_loss_notices() -> void:
 	_refs.loss_list = _vbox(8)

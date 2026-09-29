@@ -19,6 +19,8 @@ const ACCENTS := {"russet": Color("df9c42"), "giant": Color("e87c59"), "golden":
 var hud
 var selling: bool = false
 var crops: Array[String] = []
+var selected_grade: String = "Standard"
+var grade_buttons: Dictionary = {}
 var selected: String = ""
 var grid: GridContainer
 var tabs: HBoxContainer
@@ -250,6 +252,7 @@ func _build_buy() -> void:
 func _build_sell() -> void:
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
 	if selected not in crops: selected = crops[0]
+	_choose_grade()
 	hero = Surface.new()
 	hero.name = "ExchangeTradingBoard"
 	hero.chalkboard = true
@@ -289,9 +292,16 @@ func _build_sell() -> void:
 	crop_owned.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hero_badges.add_child(crop_owned)
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
+	var grades := VBoxContainer.new()
+	add_child(grades)
+	for word in State.Quality.GRADES:
+		var button := _local_button(word, "grade:" + word, func() -> void: selected_grade = word; quantity.set_value_no_signal(1); refresh())
+		button.toggle_mode = true
+		grades.add_child(button)
+		grade_buttons[word] = button
 	storage_note = _label("", 14, MUTED)
 	add_child(storage_note)
-	add_child(hud._button("Barn stores · Winter selling", "winter_stores"))
+	add_child(hud._button("Barn stores · Keep as seed / Winter selling", "winter_stores"))
 	_build_trade_bar()
 
 func _sparkline(parent: Control) -> Control:
@@ -345,7 +355,7 @@ func _build_trade_bar() -> void:
 	amount_row.add_child(quantity)
 	plus = _local_button("+", "quantity_plus", func() -> void: quantity.value += 1)
 	amount_row.add_child(plus)
-	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = hud._state.trading.fresh_count(hud._state, selected))
+	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = hud._state.trading.fresh_count(hud._state, selected, selected_grade))
 	amount_row.add_child(maximum)
 	quantity.value_changed.connect(func(_value: float) -> void: refresh())
 	_total_box = hud._vbox(2)
@@ -435,25 +445,30 @@ func refresh() -> void:
 			_show_price_change(hud._refs[crop + ":change"], crop)
 			hud._refs[crop + ":history"].set_history(quote.history, MUTED)
 			hud._refs[crop + ":quote"].text = state.format_number(state.seed_inventory[crop])
-			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.storage[crop])
+			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.stock_count(crop))
 			for count: int in [1, 5]:
 				var key := "buy:%s:%d" % [crop, count]
-				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else ("Buy %d" % count), quote.seed * count, int(state.seed_inventory[crop]) + count > State.MAX_INVENTORY)
+				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else ("Buy %d" % count), quote.seed * count, int(state.seed_inventory[crop]) + int(state.trading.kept_seed[crop]) + count > State.MAX_INVENTORY)
 		return
 	hud._sell_crop = selected
 	var quote: Dictionary = state.market.get(selected, {})
-	var price: float = float(quote.get("sell", 0.0))
-	var owned: int = state.trading.fresh_count(state, selected)
+	var price: float = float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[selected_grade]
+	for word in grade_buttons:
+		grade_buttons[word].text = "%s · %d sacks · %s each" % [word, state.trading.fresh_count(state, selected, word), state.market_money(float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[word])]
+		grade_buttons[word].set_pressed_no_signal(word == selected_grade)
+	var owned: int = state.trading.fresh_count(state, selected, selected_grade)
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
 	crop_name.text = hud._crop_name(selected) + " Potato"
 	crop_quote.text = state.market_money(price)
 	crop_quote.tooltip_text = "Sale price per potato"
 	_show_price_change(crop_change, selected)
-	crop_history.set_history(quote.get("history", []), MUTED)
-	crop_history.set_expected_price(state.trading.peak_price(selected))
+	var grade_history: Array = []
+	for point in quote.get("history", []): grade_history.append(float(point) * State.Quality.MULTIPLIER[selected_grade])
+	crop_history.set_history(grade_history, MUTED)
+	crop_history.set_expected_price(state.trading.peak_price(selected, selected_grade))
 	crop_history.tooltip_text = "Recent prices · dashed line: expected late-Winter storage price"
-	storage_note.text = "All sacks in the barn at Winter start are stored: %s fee · 10%% total spoilage, rounded to nearest · Late Winter %s/sack (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected))]
+	storage_note.text = "All sacks in the barn at Winter start are stored: %s fee · 5%% spoilage rounded to nearest · −10 quality · Late Winter %s/sack (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected, selected_grade))]
 
 	crop_owned.text = "%s owned" % state.format_number(owned)
 	crop_image.crop = selected
@@ -473,7 +488,8 @@ func navigate(direction: int) -> void:
 	if not selling or crops.size() < 2: return
 	quantity.release_focus()
 	selected = crops[posmod(crops.find(selected) + direction, crops.size())]
-	quantity.set_available(hud._state.trading.fresh_count(hud._state, selected))
+	_choose_grade()
+	quantity.set_available(hud._state.trading.fresh_count(hud._state, selected, selected_grade))
 	quantity.set_value_no_signal(1)
 	_receipt_left = 0
 	refresh()
@@ -484,7 +500,7 @@ func _sell() -> void:
 		return
 	refresh()
 	if sell_button.disabled: return
-	hud._act("sell:%s:%d" % [selected, int(quantity.value)])
+	hud._act("sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return
@@ -521,3 +537,10 @@ func _input(event: InputEvent) -> void:
 			if absf(movement.x) >= 60 and absf(movement.x) > absf(movement.y) * 1.4:
 				navigate(1 if movement.x < 0 else -1)
 				get_viewport().set_input_as_handled()
+
+func _choose_grade() -> void:
+	selected_grade = "Standard"
+	for word in State.Quality.GRADES:
+		if hud._state.trading.fresh_count(hud._state, selected, word) > 0:
+			selected_grade = word
+			return

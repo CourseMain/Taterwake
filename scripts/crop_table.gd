@@ -3,10 +3,10 @@ extends RefCounted
 const IDS: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
 const CROPS: Dictionary = {
 	"russet": {"name": "Russet Potato", "seed": 11.25, "base": 15.0, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 3, "grow_seasons": 1, "grow": 75.0, "yield": 3, "color": "a87b45"},
-	"giant": {"name": "Giant Potato", "seed": 13.5, "base": 18.0, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 2, "grow_seasons": 1, "grow": 135.0, "yield": 5, "color": "c7855d"},
-	"golden": {"name": "Golden Potato", "seed": 15.75, "base": 21.0, "volatility": "mid", "water_need": 1, "heat_tolerance": 2, "cold_tolerance": 2, "grow_seasons": 1, "grow": 105.0, "yield": 4, "color": "efc74c"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 20.25, "base": 27.0, "volatility": "high", "water_need": 2, "heat_tolerance": 3, "cold_tolerance": 1, "grow_seasons": 2, "grow": 195.0, "yield": 3, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 225.0, "yield": 3, "color": "aeeaff"},
+	"giant": {"name": "Giant Potato", "seed": 15.0, "base": 20.0, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 2, "grow_seasons": 1, "grow": 135.0, "yield": 5, "color": "c7855d"},
+	"golden": {"name": "Golden Potato", "seed": 21.0, "base": 28.0, "volatility": "mid", "water_need": 1, "heat_tolerance": 2, "cold_tolerance": 2, "grow_seasons": 1, "grow": 105.0, "yield": 4, "color": "efc74c"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 28.5, "base": 38.0, "volatility": "high", "water_need": 2, "heat_tolerance": 3, "cold_tolerance": 1, "grow_seasons": 2, "grow": 195.0, "yield": 3, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 37.5, "base": 50.0, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 225.0, "yield": 3, "color": "aeeaff"},
 }
 const VOLATILITY: Dictionary = {
 	"low": {"drift": 0.05, "storage_peak_factor": 1.2},

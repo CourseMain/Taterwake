@@ -181,6 +181,7 @@ static func _tick(farm, dt: float) -> void:
 			var columns: int = 6
 			for index in range(int(op.strike_row) * columns, (int(op.strike_row) + 1) * columns):
 				if int(field[index].stage) == 0: continue
+				farm.Quality.deduct(farm, index, "storm", 25, true)
 				# Storm losses use the same protection formula for wind and strikes.
 				op.stress[str(index)] = float(op.stress.get(str(index), 0.0)) + 0.85 * strength
 				op.scars[str(index)] = true

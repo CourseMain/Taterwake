@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Runs the actual scene and button wiring without loading or modifying player saves.
 var checks: int = 0
 var failures: int = 0
@@ -87,17 +88,17 @@ func _run() -> void:
 	game.queue_plot(0)
 	for step in range(100):
 		game._process(0.05)
-	check(game.state.storage.russet > 0, "click walks to plot and stores harvested potatoes")
+	check(Stock.count(game.state.storage, "russet") > 0, "click walks to plot and stores harvested potatoes")
 	check(int(game.state.plots[0].stage) == 0, "harvest changes the plot mesh state")
-	var held: int = game.state.storage.russet
+	var held: int = Stock.count(game.state.storage, "russet")
 	game._process(4.0)
-	check(game.state.storage.russet == held, "market movement never automatically sells stored crops")
+	check(Stock.count(game.state.storage, "russet") == held, "market movement never automatically sells stored crops")
 	game._on_action("barn")
 	await shot("barn")
 	before_coins = game.state.coins
 	var sale_price: float = game.state.market.russet.sell
 	press("sell:russet:-1")
-	check(game.state.storage.russet == 0, "barn sell button consumes held crops")
+	check(Stock.count(game.state.storage, "russet") == 0, "barn sell button consumes held crops")
 	check(game.state.coins > before_coins, "barn sale pays farming proceeds")
 	game.hud.close_panel()
 	# Farming needs separate player actions to prepare, plant and water.

@@ -171,7 +171,7 @@ func update(_delta: float) -> void:
 		"plant": done = int(plot.stage) > 0
 		"water": done = bool(plot.watered)
 		"grow": done = int(plot.stage) == 3
-		"harvest": done = int(plot.stage) == 0 and int(game.state.storage.russet) > 0
+		"harvest": done = int(plot.stage) == 0 and game.state.stock_count("russet") > 0
 		"sell": done = game.state.lifetime_sales > sale_baseline
 	if done: _advance()
 	elif id == "grow": refresh()

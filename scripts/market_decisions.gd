@@ -1,27 +1,56 @@
 extends RefCounted
 ## Winter stores, annual storage bills and one Spring buyer order.
+const Stock = preload("res://scripts/graded_stock.gd")
+const Quality = preload("res://scripts/crop_quality.gd")
 const Table = preload("res://scripts/crop_table.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 const STORAGE_FEE: float = 200.0
-const SPOILAGE: float = 0.10
+const SPOILAGE: float = 0.05
 const SHORTFALL_FEE: float = 5.0
-var held: Dictionary = Table.empty_stock()
+var held: Dictionary = Stock.empty()
+var kept_seed: Dictionary = Table.empty_stock()
 var winters: Dictionary = {}
 var contract: Dictionary = {}
 var settled: Dictionary = {}
 
-func peak_price(id: String) -> float:
-	return float(Table.CROPS[id].base) * float(Table.VOLATILITY[Table.CROPS[id].volatility].storage_peak_factor)
+func peak_price(id: String, grade: String = "Standard") -> float:
+	return float(Table.CROPS[id].base) * float(Table.VOLATILITY[Table.CROPS[id].volatility].storage_peak_factor) * Quality.MULTIPLIER[grade]
 
-func stored_price(farm, id: String) -> float:
+func stored_price(farm, id: String, grade: String = "Standard") -> float:
 	var progress: float = clampf(farm.season_clock.seconds / farm.SeasonClock.SEASON_SECONDS, 0, 1) if farm.season_clock.season == 3 else 0.0
-	return lerpf(float(Table.CROPS[id].base), peak_price(id), progress)
+	return lerpf(float(Table.CROPS[id].base) * Quality.MULTIPLIER[grade], peak_price(id, grade), progress)
 
-func fresh_count(farm, id: String) -> int:
-	return int(farm.storage[id]) - int(held[id]) if farm.season_clock.season == 3 else int(farm.storage[id])
+func fresh_count(farm, id: String, grade: String = "") -> int:
+	return Stock.count(farm.storage, id, grade) - Stock.count(held, id, grade) if farm.season_clock.season == 3 else Stock.count(farm.storage, id, grade)
 
 func clamp_stock(farm) -> void:
-	for id in Table.IDS: held[id] = mini(int(held[id]), int(farm.storage[id]))
+	for id in Table.IDS:
+		for word in Quality.GRADES:
+			for score in held[id][word].keys():
+				var amount: int = mini(int(held[id][word][score]), int(farm.storage[id][word].get(score, 0)))
+				if amount > 0: held[id][word][score] = amount
+				else: held[id][word].erase(score)
+
+func begin_spring(farm) -> void:
+	held = Stock.empty()
+	for id in Table.IDS:
+		farm.seed_inventory[id] += int(kept_seed[id])
+	kept_seed = Table.empty_stock()
+
+func keep_seed(farm, id: String, grade: String, quantity: int = 1) -> String:
+	if farm.run_over or farm.accounts_open or farm.tutorial_active: return farm._finish("Return to the farm before keeping seed.")
+	if id not in Table.IDS or grade not in ["Standard", "Table"] or quantity < 1: return farm._finish("Keep Standard or Table sacks as seed.")
+	if Stock.count(farm.storage, id, grade) < quantity or int(kept_seed[id]) + int(farm.seed_inventory[id]) + quantity > farm.MAX_INVENTORY: return farm._finish("Not enough sacks or seed space.")
+	# Prefer fresh sacks; any remainder comes from stores with the same cohort.
+	var fresh: int = mini(quantity, fresh_count(farm, id, grade))
+	Stock.take(farm.storage, id, fresh, grade, held)
+	var lots: Array = Stock.take(held, id, quantity - fresh, grade)
+	Stock.remove_lots(farm.storage, id, lots)
+	kept_seed[id] += quantity
+	return farm._finish("Kept %d %s sacks as seed for next Spring. Outside saleable stores and spoilage." % [quantity, id.capitalize()])
+
+func eligible_contract(farm, id: String) -> int:
+	return Stock.count(farm.storage, id, "Standard") + Stock.count(farm.storage, id, "Table")
 
 func begin_winter(farm) -> void:
 	var year: String = str(farm.season_clock.year)
@@ -31,33 +60,45 @@ func begin_winter(farm) -> void:
 	var piles: Array[String] = Table.IDS.duplicate()
 	# Resolve equal piles in catalogue order so the loss is deterministic.
 	piles.sort_custom(func(a: String, b: String) -> bool:
-		return int(farm.storage[a]) > int(farm.storage[b]) if farm.storage[a] != farm.storage[b] else Table.IDS.find(a) < Table.IDS.find(b))
+		return farm.stock_count(a) > farm.stock_count(b) if farm.stock_count(a) != farm.stock_count(b) else Table.IDS.find(a) < Table.IDS.find(b))
 	for id in piles:
-		var loss: int = mini(int(farm.storage[id]), remaining_loss)
+		var loss: int = mini(farm.stock_count(id), remaining_loss)
 		remaining_loss -= loss
 		report.spoiled[id] = loss
-		farm.storage[id] = int(farm.storage[id]) - loss
-		held[id] = int(farm.storage[id])
+		Stock.take(farm.storage, id, loss)
 		farm.ClimateSystem.Protection.record(farm, "spoilage", id, loss, 0.0, 1.0, "Sell before Winter storage", "barn")
 		if loss > 0: farm.ledger.post(farm.season_clock.year, 3, "storage", "Spoilage: %d %s sacks" % [loss, id], 0.0, true)
+	farm.storage = Stock.age(farm.storage)
+	held = farm.storage.duplicate(true)
 	if report.fee > 0: farm.post_money("storage", "Winter storage fee", -float(report.fee))
 	winters[year] = report
 
-func sell_stored(farm, id: String, quantity: int = -1) -> String:
-	if farm.run_over or farm.accounts_open: return farm._finish("Return to the farm before selling stores.")
-	if farm.season_clock.season != 3: return farm._finish("Winter storage prices are available at the barn during Winter only.")
-	if id not in Table.IDS or quantity == 0 or quantity < -1: return farm._finish("Choose stored sacks to sell.")
-	var amount: int = int(held[id]) if quantity == -1 else quantity
-	if amount < 1 or amount > int(held[id]): return farm._finish("Not enough Winter stores.")
-	var price: float = stored_price(farm, id)
-	held[id] = int(held[id]) - amount
-	farm.storage[id] = int(farm.storage[id]) - amount
-	farm.post_money("sales", "Sold %d stored %s sacks" % [amount, id], price * amount)
-	farm._record_sales(price * amount)
+func sell_stored(farm, id: String, quantity: int = -1, grade: String = "") -> String:
+	return sell(farm, id, quantity, grade, true)
+
+func sell(farm, id: String, quantity: int, grade: String, stored: bool) -> String:
+	if farm.run_over or farm.accounts_open: return farm._finish("Return to the farm before selling.")
+	if stored and farm.season_clock.season != 3: return farm._finish("Sell Winter stores at the barn during Winter only.")
+	if id not in Table.IDS or quantity == 0 or quantity < -1 or (not grade.is_empty() and grade not in Quality.GRADES): return farm._finish("Choose a crop, grade and amount.")
+	var owned: int = Stock.count(held, id, grade) if stored else fresh_count(farm, id, grade)
+	var amount: int = owned if quantity == -1 else quantity
+	if amount <= 0 or amount > owned: return farm._finish("Not enough sacks of that grade. Sell stored sacks at Barn stores during Winter.")
+	var lots: Array = Stock.take(held if stored else farm.storage, id, amount, grade, {} if stored else held)
+	if stored: Stock.remove_lots(farm.storage, id, lots)
+	var earnings: float = 0
+	for word in Quality.GRADES:
+		var sacks: int = 0
+		for lot in lots:
+			if lot.grade == word: sacks += int(lot.quantity)
+		if sacks == 0: continue
+		var price: float = stored_price(farm, id, word) if stored else float(farm.market[id].sell) * Quality.MULTIPLIER[word]
+		farm.post_money("sales", "Sold %d %s %s sacks" % [sacks, word, id], price * sacks)
+		earnings += price * sacks
+	farm._record_sales(earnings)
 	farm._progress_quest("starter_spike", float(amount))
 	farm.farm_help.observe_sale(farm, id)
-	farm.sale_completed.emit({"id": id, "quantity": amount, "price": price, "total": price * amount, "owned": int(farm.storage[id])})
-	return farm._finish("Sold %d stored %s sacks for %s." % [amount, id.capitalize(), farm.money(price * amount)])
+	farm.sale_completed.emit({"id":id, "grade":grade, "quantity":amount, "price":earnings/amount, "total":earnings, "owned":farm.stock_count(id)})
+	return farm._finish("Sold %d %s %s sacks for %s." % [amount, grade, id.capitalize(), farm.money(earnings)])
 
 func offer(year: int) -> Dictionary:
 	var id: String = Table.IDS[(year - 1) % Table.IDS.size()]
@@ -68,14 +109,16 @@ func accept(farm) -> String:
 	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 0: return farm._finish("The buyer offers one order each Spring.")
 	if not contract.is_empty() or settled.has(str(year)): return farm._finish("Only one buyer order per year.")
 	contract = offer(year)
-	return farm._finish("Order accepted: %d %s sacks, collected at the end of Autumn. Shortfalls cost %s per sack." % [contract.quantity, contract.crop.capitalize(), farm.money(SHORTFALL_FEE)])
+	return farm._finish("Order accepted: %d %s sacks, Standard or better, collected at the end of Autumn. Shortfalls cost %s per sack." % [contract.quantity, contract.crop.capitalize(), farm.money(SHORTFALL_FEE)])
 
 func settle(farm) -> void:
 	if contract.is_empty(): return
 	var id: String = contract.crop
-	var delivered: int = mini(int(farm.storage[id]), int(contract.quantity))
+	var delivered: int = mini(eligible_contract(farm, id), int(contract.quantity))
 	var missing: int = int(contract.quantity) - delivered
-	farm.storage[id] = int(farm.storage[id]) - delivered
+	var standard: int = mini(delivered, Stock.count(farm.storage, id, "Standard"))
+	Stock.take(farm.storage, id, standard, "Standard")
+	Stock.take(farm.storage, id, delivered - standard, "Table")
 	clamp_stock(farm)
 	if delivered > 0: farm.post_money("contracts", "Buyer collected %d %s sacks" % [delivered, id], delivered * float(contract.price))
 	if missing > 0: farm.post_money("contracts", "Contract shortfall: %d %s sacks" % [missing, id], -missing * SHORTFALL_FEE)
@@ -91,23 +134,27 @@ func winter_text(farm) -> String:
 	if report.is_empty(): return ""
 	var loss: int = 0
 	for count in report.spoiled.values(): loss += int(count)
-	return "Storage fee %s · Spoilage %d sacks (10%% of the barn, rounded to nearest; largest pile first)." % [farm.money(report.fee), loss]
+	return "Storage fee %s · Spoilage %d sacks (5%% of the barn, rounded to nearest; largest pile first). Stored sacks lose 10 quality." % [farm.money(report.fee), loss]
 
 func save_data() -> Dictionary:
-	return {"held": held.duplicate(), "winters": winters.duplicate(true), "contract": contract.duplicate(), "settled": settled.duplicate(true)}
+	return {"held": held.duplicate(true), "kept_seed": kept_seed.duplicate(), "winters": winters.duplicate(true), "contract": contract.duplicate(), "settled": settled.duplicate(true)}
 
 func load_data(raw: Dictionary) -> void:
-	held = raw.held.duplicate()
+	held = raw.held.duplicate(true)
+	kept_seed = raw.kept_seed.duplicate()
 	winters = raw.winters.duplicate(true)
 	contract = raw.contract.duplicate()
 	settled = raw.settled.duplicate(true)
 
 func valid(raw: Variant, saved: Dictionary) -> bool:
-	if not raw is Dictionary or raw.size() != 4: return false
-	if not raw.get("held") is Dictionary or raw.held.size() != Table.IDS.size(): return false
+	if not raw is Dictionary or raw.size() != 5 or not Stock.valid(raw.get("held")): return false
+	if not raw.get("kept_seed") is Dictionary or raw.kept_seed.size() != Table.IDS.size(): return false
 	for id in Table.IDS:
-		if not Rules.number(raw.held.get(id), 0, saved.storage[id], true): return false
-		if int(saved.season_clock.season) != 3 and int(raw.held[id]) != 0: return false
+		if not Rules.number(raw.kept_seed.get(id), 0, 100000, true) or int(raw.kept_seed[id]) + int(saved.seed_inventory[id]) > 100000: return false
+		if int(saved.season_clock.season) != 3 and Stock.count(raw.held, id) != 0: return false
+		for word in Quality.GRADES:
+			for score in raw.held[id][word]:
+				if int(raw.held[id][word][score]) > int(saved.storage[id][word].get(score, 0)): return false
 	for kind in ["winters", "settled"]:
 		if not raw.get(kind) is Dictionary or raw[kind].size() > 10: return false
 		for key in raw[kind]:

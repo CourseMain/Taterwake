@@ -303,7 +303,7 @@ func _process(delta: float) -> void:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
 	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
-	if not hud._context_box.get_meta("warning", false): hud._context_box.hide()
+	if not hud._context_box.get_meta("warning", false) and not hud._context_box.get_meta("grade", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
 		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), "Drag to move · pinch to zoom"]
@@ -392,7 +392,7 @@ func open_seeds() -> void:
 		var packet := preload("res://scripts/seed_slot.gd").new()
 		drawer_body.add_child(packet)
 		packet.setup(game.hud, crop, true)
-		packet.refresh(int(game.state.seed_inventory.get(crop, 0)), int(game.state.storage.get(crop, 0)), game.state.selected_crop == crop)
+		packet.refresh(int(game.state.seed_inventory.get(crop, 0)), game.state.stock_count(crop), game.state.selected_crop == crop)
 		packet.pressed.connect(func(): game.hud._act("crop:" + crop); drawer.hide())
 	drawer.show()
 	fit_drawer.call_deferred()
