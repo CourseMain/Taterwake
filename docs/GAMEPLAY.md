@@ -22,7 +22,9 @@ Home, Low and Hill each contain 24 beds. Home starts with twelve open. Rent Low 
 | Low · Floods first | 44,000 | Yield ×1.25; flood ×1.5; drought ×0.8 |
 | Hill · Dries first | 9,000 | Drought ×1.5; flood ×0.5; storm ×1.3; freeze ×1.2 |
 
-Exposure multiplies weather stress and resulting loss. Protection projects share their levels across the farm; Spring frost covers can be placed on any rented bed. Loss cards name the field. Low Field's extra whole tonnes are distributed across four beds, giving each complete half-field exactly 25% more. Ducks patrol open beds in all rented fields. Walk, sprint or click between the shore and the higher ground; Home recentres the wider map.
+Exposure multiplies weather stress and resulting loss. Protection projects share their levels across the farm; Spring frost covers can be placed on any rented bed. Loss cards name the field. Low Field's extra whole tonnes are distributed across four beds, giving each complete half-field exactly 25% more. Ducks patrol open beds in all rented fields.
+
+Walk, sprint or click around one continuous Valley island. Straight dirt lanes connect the village, field gates and pier in loops. Hill Field sits behind the village above three evenly spaced shallow terraces, reached by one approach from the barn with two broad treads per terrace flight, landings and handrails on both sides. Low Field lies closer to the village toward the front-right shore, beside reeds and a drainage ditch. A working orchard with a central lane, hedges and crates fills the west; a small compost and barrel yard sits to the east. All three fields use the same beds and soil; unrented land is rough grass with a To let board. The straighter overview keeps the whole island visible, and Home recentres it, including on a phone.
 
 ## Three decisions
 

@@ -104,7 +104,7 @@ have saved about 60%.` Hard is fine. Unexplained is not.
 - End of run: a ten-year ledger, the climate record, a title for how you
   farmed (Adapter, Shopkeeper, Stubborn, Sold Up), then the epilogue.
 
-One connected farm whose climate shifts in place over ten years. Home is sheltered; the preserved Shores ground forms Low Field, and bare Frosthollow ground forms Hill Field. Additional land is a Winter lease decision, not travel or a new region.
+One connected Valley island whose climate shifts in place over ten years. Home is sheltered; Low Field dips toward the front-right shore, and Hill Field occupies three shallow terraces behind the village. Additional land is a Winter lease decision, not travel or a new region.
 
 ## 4b. The fifty-year epilogue
 

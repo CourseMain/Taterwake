@@ -540,7 +540,7 @@ Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-mo
 
 ### One farm (Segment 7)
 
-`FarmWorld.REGION` is fixed to 1. The connected farm has 72 beds in three stable 24-bed slices: Home, Low and Hill. Home begins with twelve open; each other field opens twelve with a Winter lease and each second half costs 48,000. All varieties and tools are available. The tropical ground and bare winter rock builders now form the two connected fields; Hill has a walkable ramp. Travel UI, boarding paths, ferry NPCs and regional state are removed.
+`FarmWorld.REGION` is fixed to 1. The connected farm has 72 beds in three stable 24-bed slices: Home, Low and Hill. Home begins with twelve open; each other field opens twelve with a Winter lease and each second half costs 48,000. All varieties and tools are available. All fields share the continuous Valley surface described under Pace and land. Travel UI, boarding paths, ferry NPCs and regional state are removed.
 
 There is one flock of at most two ducks, one set of climate projects and one water supply. Export ships, buyer contracts, Frostbreak, the furnace and their dedicated tests are deleted. Mixed suites keep their surviving checks on Valley fixtures. Freeze ice is cleared directly with the hoe. The arrival cinematic is removed; `chapter_subtitles.gd` preserves its timed text and skip control for the later year-start page.
 
@@ -891,6 +891,21 @@ Validation: all 82 GDScript suites passed across the full regression run and foc
 
 Pest deadlines are uniform between 0.25 and 0.60 of the crop's base grow duration. The season at arrival determines chance (0.16, Summer ×1.5, Winter zero). Simulation splits at each deadline and bite, so a large update cannot move first arrival past ripening. Spraying and ducks never schedule a second late attack; bites still deduct quality. Completed harvests leave untilled beds ready for immediate Hoe/plant. Tool areas stay inside their own six-by-four field.
 
-The map reuses Golden Shores ground and Frosthollow strata without permanent snow. Terrain patches join the Home island, Hill rises two units, and keyboard/click movement follows the ramp. Walk bounds, zoom range and the recentered overview include all fields. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
+The map uses one continuous Valley prism, enlarged 1.6× in width and 1.4× in depth. `farm_surface.gd` shares the coastline and height map between geometry, picking and walking. Three evenly spaced 0.35-unit terraces rise behind the village; one approach from the barn crosses them with two broad treads per terrace flight, landings and handrails on both sides. Low Field dips 0.15 units toward the shore. The terrain shader applies mild dry/wet tints within one grass palette, and Winter snow follows the same surface. Beds retain common geometry and soil; lease boards and rough grass disappear when the field opens. Static geometry signatures rebuild with each world. The old regional ground, scenery builders and their exclusive helpers are removed. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
+
+The second map pass brings Hill behind the village at field offset `(1, -23)` and Low closer at `(18, 13)`, preserving Home and village positions. Orthogonal dirt lanes form continuous loops between the village, Low and pier. A western working orchard has a central lane, hedges and crates; the eastern service yard adds compost bays and barrels. The overview camera faces the farm more directly, while overview and recenter continue to adapt to viewport aspect ratio. This pass retains the island outline, seasonal palettes, shared soil and all 17b mechanics.
 
 Run `tools/run_tests.sh --timeout 1500 test_pace_and_land test_pest_schedule test_tutorial_game test_tutorial_state test_tuning_bot` and the full suite. The pacing test follows real scene frames to the first open accounts in 234.1 seconds, including 84 seconds allocated to decisions and reading. The browser export is built under `dist/web`, leaving published `docs/index.*` and `web/` untouched.
+
+The 17b island follow-up adds `test_island_layout`: one shell, terrace heights, uphill/downhill path restrictions, all 72 bed elevations, lease visuals and desktop/phone coastline framing. Native `--capture --touch-controls` saves `artifacts/one-island-1440.png` and `artifacts/one-island-390.png`.
+
+Validated on Godot `4.7.2.stable.official.ed1daf0bf`, GL Compatibility: the full
+84-suite run passed, including all 1,651 tuning checks. After the final visual,
+walking and camera changes, all 82 ordinary/scene suites passed again; the
+unchanged tuning and epilogue simulations retain their full-run results.
+`test_island_layout` passes 133 checks, including repeated small keyboard steps,
+stair-shoulder collision heights and ocean coverage in portrait. The exact
+headless `test_game.gd -- --integration-test` boot passes 39 checks. Native
+desktop and touch-phone captures were inspected. The final export in `dist/web`
+runs in Chromium at 1440×900 and 390×844 with no console or page errors. Published
+`docs/index.*` and `web/` were not changed.
