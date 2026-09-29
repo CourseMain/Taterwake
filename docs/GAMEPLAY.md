@@ -60,15 +60,17 @@ New farms use `user://taterland_save_v4.json`. Older farms are not loaded or mig
 
 The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
-The run lasts **ten years**. Spring, Summer and Autumn each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
+The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-**Winter pauses the farm** and opens the annual accounts: every income and spending category, the year’s net and a running ten-year table on a plain cream page. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. After year 10’s accounts, **Ten-year summary** shows the total net, years in profit, best and worst year, final purse and remaining loan. The epilogue is still to come; **New Run** starts over. Every season boundary saves before its menu opens, including the Winter bill and any foreclosure. The year strip and Winter panel follow the current calendar even at accelerated debug speed; dismissing Winter keeps it closed until you reopen it.
+**Annual accounts open at Winter start**, after the fixed costs and foreclosure check have been saved. The accounts pause the simulation while open and show every category, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
+
+The run finishes at the **end of year 10’s Winter**. The ten-year summary then shows total net, years in profit, best and worst year, final purse and remaining loan, with **New Run** to start over. The epilogue is still to come. Every season boundary saves before its screen opens, including the final Winter boundary. Calendar and accounts presentation stay synchronized at accelerated debug speed.
 
 Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Radioactive **165s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry or frozen crops wait for water or thawing.
 
-Till and plant only in **Spring and Summer**. Autumn is for tending and harvesting. At the end of Autumn, every unharvested crop is lost and prepared beds are cleared. The Winter panel reports how many beds were lost to the cold. Potatoes already in the barn are safe from this seasonal clearing.
+Till and plant only in **Spring and Summer**. Autumn is for tending and harvesting. At the end of Autumn, every unharvested crop is lost and prepared beds are cleared. The accounts report how many beds were lost to the cold. Potatoes already in the barn are safe from this seasonal clearing. Every bed then ices over. Use **Hoe [1]** to clear it during Winter; this removes ice without tilling. Cleared beds can be tilled as soon as Spring starts. Uncleared beds retain their ice and need a separate clearing action before tilling in Spring, even after other weather comes and goes.
 
-Ordinary shop and menu panels keep working time running. Conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter pauses crops, pests, weather and prices. Closing the game adds no offline farming.
+Ordinary shop and menu panels keep working time running. Annual accounts, conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter remains playable: prices and tank replenishment advance, while fields stay empty and no variety grows yet. Snow refills the tank at **one quarter** the normal rain rate. There is no crop watering to do. Snow cover and roof snow last all Winter, and a lower, paler sun still moves from dawn to dusk. Closing the game adds no offline farming.
 
 Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
@@ -91,7 +93,7 @@ Every Winter posts these fixed costs once:
 
 The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Ledger saves use mechanics revision **29**. Pre-ledger saves, including revision 28, are incompatible and are set aside with the existing rejected-save protection; they are not converted into invented transaction histories.
+Current saves use mechanics revision **30**. Earlier saves, including revision 29, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
 
 ## The live crop market
 
@@ -152,11 +154,11 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-After foreclosure, **Debug access** still accepts the session code. Before year 10, **Recover test farm** posts a balance adjustment, keeps the journal and paid Winter bills, and returns to the Winter accounts at 1× time. Press **Start next year** to resume farming. Year 10 remains finished. **Try Again** starts a new farm with an empty journal.
+After foreclosure, **Debug access** still accepts the session code. Before year 10, **Recover test farm** posts a balance adjustment, keeps the journal and paid Winter bills, and returns to the Winter accounts at 1× time. Close the accounts to resume the timed Winter. Year-10 foreclosures still require a new farm. **Try Again** starts a new farm with an empty journal.
 
 ### Climate action and bankruptcy
 
-Weather can threaten Spud Valley from the first season. For now, each working season has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
+Weather can threaten Spud Valley from the first season. For now, each Spring, Summer and Autumn has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
 
 The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, the complete Winter bill is posted first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
 

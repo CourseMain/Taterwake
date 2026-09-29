@@ -8,8 +8,8 @@ The working `redesign` branch implements Segments 1–9 (the published prereleas
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
-- Spring, Summer and Autumn each last 150 seconds. Winter pauses until you start the next year; the run caps at year 10.
-- Seasonal crop growth, Autumn harvest losses, a year/season strip, changing sunlight and Winter snow.
+- All four seasons last 150 seconds. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
+- Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
 - Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
 - Warned climate disasters, water management and protection projects.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.

@@ -7,7 +7,7 @@ as a handoff for implementation.
 ## 0. Locked decisions
 
 - **Real-time seasons.** Each working season is a short real-time phase with
-  the avatar and tools; winter is a menu phase.
+  the avatar and tools, including Winter. Annual accounts pause only while open.
 - **Ten-year run.** Foreclosure is game over. The run ends with the ten-year
   ledger and then the **fifty-year epilogue** (§4b).
 - **One farm.** The climate shifts in place on a single farm. Other islands
@@ -96,8 +96,8 @@ have saved about 60%.` Hard is fine. Unexplained is not.
 - Each working season is a real-time phase of about **2 to 3 minutes**. The
   season length is the labour budget: you cannot water, hoe and harvest every
   bed if the farm is big. Hiring a hand costs money and buys time. Sprint stays.
-- **Winter** is a menu phase: the ledger, the forecast for next year, the shop.
-- A run is **ten years**, roughly 90 minutes of play across sessions, saved
+- **Winter** is a real-time working season: accounts pause at its start, then ice clearing and repairs prepare the next Spring. The year rolls over automatically.
+- A run is **ten years**, roughly 100 minutes of working time across sessions, saved
   every season. Foreclosure is game over.
 - Foreclosure happens when the overdraft passes the bank's limit. The bank is
   the second antagonist and is polite about it.
@@ -516,12 +516,11 @@ Goal: the clock that the ledger and the climate need.
 
 Add scripts/season_clock.gd (RefCounted, owned by game_state.gd): year
 (1..10), season index (0 Spring, 1 Summer, 2 Autumn, 3 Winter), seconds
-into the season, SEASON_SECONDS = 150 for working seasons, and a
-`winter_menu` flag. Spring, Summer and Autumn are real-time; Winter is a
-menu phase that ends when the player presses "Start next year". The
-season boundary saves the game. `state.update()` advances the clock; the
-farm sim pauses during winter and during any modal that already pauses it
-(conversations, collapse page).
+into the season, SEASON_SECONDS = 150 for all four seasons. Winter rolls
+into the next Spring automatically; the run ends after year 10 Winter.
+Every boundary saves. Annual accounts open and pause at Winter start;
+closing them resumes work. Conversations and collapse also pause the sim.
+This working-Winter amendment replaces the original menu-phase design.
 
 Growth: crop grow times rescale so a fast variety ripens within one
 season and a slow one needs two. Anything unharvested at the end of
@@ -532,10 +531,13 @@ Presentation: the day-night cycle in farm_world.set_day_time now maps to
 the position within the season (dawn at season start, dusk at the end) so
 the sun tells the player how much labour time is left. Add a season and
 year strip at the top of the HUD in place of the old stock countdown.
-Snow in Winter is reused from the Frosthollow visuals.
+Snow in Winter is reused from the Frosthollow visuals. The sun stays lower
+and paler but still moves dawn to dusk. Autumn loss freezes every bed; Hoe
+clears the ice, and uncleared ice survives into Spring. Tilling is blocked
+in Winter. The tank refills at one quarter rate; no crop grows yet.
 
-Tests: new test_season_clock.gd (boundaries, saving at boundaries, winter
-pause, planting gates, end-of-Autumn loss). Update test_day_night.gd to
+Tests: new test_season_clock.gd (boundaries, saving at boundaries, accounts
+pause, automatic rollover, ice clearing, planting gates, end-of-Autumn loss). Update test_day_night.gd to
 the new mapping.
 
 Acceptance: a full year plays through headless in
@@ -569,7 +571,7 @@ year, a running ten-year table, and the net figure in large type. Plain,
 paper-like, in the existing cream UI. Screenshot-friendly: no HUD chrome
 behind it.
 
-Ten-year end screen: after year 10's accounts, a summary page with the
+Ten-year end screen: after year 10's Winter finishes, a summary page with the
 ten-year net, years in profit, worst year, and a placeholder for the
 epilogue (Segment 16). Then New Run.
 
