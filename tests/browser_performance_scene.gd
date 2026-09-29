@@ -11,7 +11,7 @@ var elapsed: float = 0.0
 func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child(game)
-	game.state.pest_timer = 1000.0
+
 	for plot: Dictionary in game.state.plots:
 		plot.merge({"unlocked": true, "tilled": true, "watered": true, "stage": 3, "crop": "sunburst", "ripe_age": 0.0}, true)
 	game._on_state_changed()

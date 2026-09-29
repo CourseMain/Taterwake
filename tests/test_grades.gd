@@ -35,9 +35,9 @@ func run() -> void:
 	farm.update(0.25)
 	check(farm.plots[5].quality == 98, "ten seconds growing unwatered costs two")
 	farm.interact_plot(5, "water")
-	farm.update(75)
+	farm.update(60)
 	check(farm.plots[5].stage == 3 and farm.plots[5].quality == 98, "watered growth has no ongoing dry quality deduction")
-	farm.plots[5].pest_delay = 90
+	farm.plots[5].pest_checked = true
 	farm.update(30)
 	check(farm.plots[5].quality == 98, "first thirty ripe seconds are free")
 	farm.update(10)

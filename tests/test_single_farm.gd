@@ -12,8 +12,8 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
-	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 41, "new farm format and isolated v4 path")
-	check(World.REGION == 1 and farm.plots.size() == 24 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "Valley starts with twelve open and twelve locked beds")
+	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 42, "new farm format and isolated v4 path")
+	check(World.REGION == 1 and farm.plots.size() == 72 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "connected farm starts with twelve Home beds open")
 	check(farm.field_columns() == 6 and farm.field_rows() == 4, "one six-by-four field")
 	check(farm.available_crops().has("sunburst") and farm.available_crops().has("icecap"), "ordinary varieties have no travel gate")
 	for crop in ["sunburst", "icecap"]:
@@ -25,8 +25,8 @@ func run() -> void:
 		farm._clear_crop(farm.plots[6])
 	farm.coins = 48000
 	farm.expand_field()
-	check(farm.expansion == 1 and farm.coins == 0 and farm.plots.all(func(p): return p.unlocked), "one paid expansion opens the remaining twelve beds")
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.plots.size() == 24 and farm.expansion == 1, "single field round trips")
+	check(farm.expansion == 1 and farm.coins == 0 and farm.plots.slice(0, 24).all(func(p): return p.unlocked) and farm.plots.slice(24).all(func(p): return not p.unlocked), "one paid expansion opens the remaining twelve beds")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.plots.size() == 72 and farm.expansion == 1, "single field round trips")
 	var saved: Dictionary = farm._save_data()
 	for field in ["current_island", "island2_unlocked", "island3_unlocked", "island_plots", "field_expansions", "retained_beds", "export_active", "export_timer", "frost_active", "frost_timer"]:
 		check(not saved.has(field), "save omits " + field)
@@ -95,7 +95,7 @@ func run() -> void:
 	game.hud.show_panel("menu", game.state)
 	for button in game.hud._body.find_children("*", "Button", true, false):
 		check(not button.text.to_lower().contains("travel") and button.get_meta("action", "") != "island", "menu has no Travel entry")
-	check(game.world.plot_positions.size() == 24 and is_instance_valid(game.world.weather_station), "Valley geometry and weather station boot together")
+	check(game.world.plot_positions.size() == 72 and is_instance_valid(game.world.weather_station), "Valley geometry and weather station boot together")
 	check(game.world.has_method("_tropical_island") and game.world.has_method("_winter_island"), "dormant region builders retained")
 	for target in game.world._interaction_targets:
 		check(target.get_meta("station", "") != "island", "no jetty boarding interaction")

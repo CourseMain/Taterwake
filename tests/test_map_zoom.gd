@@ -100,7 +100,7 @@ func run() -> void:
 		check(is_equal_approx(game.world.camera.size, 18.0), "island %d enforces a useful close-up limit" % island)
 		game._unhandled_input(wheel(MOUSE_BUTTON_WHEEL_DOWN, 1000000.0))
 		settle()
-		check(is_equal_approx(game.world.camera.size, float([56, 64, 74][island - 1]) * game.world.LAND_SPACING), "island %d can zoom out farther to expose buildings" % island)
+		check(is_equal_approx(game.world.camera.size, float([90, 64, 74][island - 1]) * game.world.LAND_SPACING), "island %d can zoom out farther to expose buildings" % island)
 		await physics_frame
 		await physics_frame
 		var barn: Vector3 = [Vector3(-12, 2, -8), Vector3(-15, 2, -10), Vector3(-18, 2, -12)][island - 1]

@@ -69,7 +69,7 @@ func run() -> void:
 	check(game.hud._crop_row.visible, "closing menu restores tray when seeds are equipped")
 	key(KEY_1)
 	game.state.select_crop("russet")
-	game.state.pest_timer = 100.0
+
 	var plot: Dictionary = game.state.plots[4]
 	game.state._clear_crop(plot)
 	plot.merge({"stage": 3, "tilled": true, "watered": true, "elapsed": 10.0, "pests": true}, true)

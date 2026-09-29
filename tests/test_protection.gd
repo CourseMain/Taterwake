@@ -50,10 +50,14 @@ func run() -> void:
 			var quantity: int = Protection.remaining(farm.plots[0])
 			Protection.damage(farm, 0, event)
 			var lost: int = quantity - Protection.remaining(farm.plots[0])
-			check(lost == Protection.loss(quantity, Protection.REDUCTION[rank]), "%s damage uses the shared formula at level %d" % [event, rank])
-			var card: Dictionary = farm.climate.data.protection.losses[-1]
-			check(card.event == event and card.crop == "icecap" and card.season == 0 and card.sacks == lost and not card.missing.is_empty(), "cause card identifies event, season, crop, tonnes and protection")
-			check(card.saved == card.sacks - Protection.loss(card.exposed, Protection.REDUCTION[mini(2, rank + 1)]), "counterfactual is the same loss formula with the next protection level")
+			var exposure: float = farm.Land.exposure("home", event)
+			check(lost == Protection.loss(quantity, Protection.REDUCTION[rank], exposure), "%s damage uses the shared formula at level %d" % [event, rank])
+			if lost > 0:
+				var card: Dictionary = farm.climate.data.protection.losses[-1]
+				check(card.event == event and card.crop == "icecap" and card.season == 0 and card.sacks == lost and not card.missing.is_empty(), "cause card identifies event, season, crop, tonnes and protection")
+				check(card.saved == card.sacks - Protection.loss(card.exposed, Protection.REDUCTION[mini(2, rank + 1)], exposure), "counterfactual includes field exposure at the next protection level")
+			else:
+				check(farm.climate.data.protection.losses.is_empty(), "fully protected small harvest records no invented loss")
 			check(farm.save_game(SAVE) and farm.load_game(SAVE), "damaged crop and cause card round-trip")
 			if rank > 0:
 				farm.climate.data.operations.ice.clear()

@@ -29,9 +29,9 @@ func _run() -> void:
 	for action: String in ["hoe", "plant", "water"]: state.interact_plot(5, action)
 	state.tutorial_progress.step = 5
 	state.update(3600)
-	check(state.season_clock.season == 1 and is_equal_approx(state.season_clock.seconds, 45), "calendar advances through Spring to Summer warning impact")
-	check(state.tutorial_loss().sacks == 2 and state.climate.year_count(1) == 1, "one small scripted disaster")
-	check(state.plots[5].stage == 3 and state.ClimateSystem.Protection.remaining(state.plots[5]) == 1, "normal growth survives partial storm loss")
+	check(state.season_clock.season == 1 and is_equal_approx(state.season_clock.seconds, 40), "calendar advances through Spring to Summer warning impact")
+	check(state.tutorial_loss().sacks == 1 and state.climate.year_count(1) == 1, "one small scripted disaster")
+	check(state.plots[5].stage == 3 and state.ClimateSystem.Protection.remaining(state.plots[5]) == 2, "normal growth survives partial storm loss")
 	check(state.ledger.total(1, "seeds") == -270, "seed cost is real")
 	state.tutorial_progress.step = 6
 	before = state._save_data().duplicate(true)
@@ -51,7 +51,7 @@ func _run() -> void:
 	restored.tutorial_progress.choice = "store"
 	restored.update(3600)
 	check(restored.season_clock.season == 3 and restored.ledger.is_closed(1), "state alone reaches settled first accounts")
-	check(restored.stock_count("russet") == 1 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and charges fee")
+	check(restored.stock_count("russet") == 2 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and charges fee")
 	check(restored.climate.year_count(1) == 1, "no second guided disaster")
 	check(restored._valid_save(restored._save_data()), "Winter guide state valid before controller completes")
 	for invalid in [{}, {"version": 3, "step": -1, "completed": false, "plot": 5}, {"version": 3, "step": 2, "completed": "false", "plot": 5}, {"version": 3, "step": 2, "completed": false, "plot": 99}]:

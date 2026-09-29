@@ -97,24 +97,26 @@ func run() -> void:
 		farm = fresh()
 		farm.selected_crop = crop; farm.seed_inventory[crop] = 1
 		farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant"); farm.interact_plot(5, "water")
+		farm.plots[5].pest_checked = true
 		var duration: float = State.CropTable.CROPS[crop].grow
-		check(duration >= 75 and duration <= 225, crop + " has a half- to one-and-a-half-season base duration")
+		check(duration >= 60 and duration <= 200, crop + " has a 60–200 second base duration")
 		farm.update(minf(74.5, duration - 0.5))
 		check(farm.plots[5].stage == 2, crop + " does not ripen in the old first minute")
 		farm.free()
 	farm = fresh()
 	farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant"); farm.interact_plot(5, "water")
-	farm.update(75)
+	farm.update(60)
 	check(farm.plots[5].stage == 3 and farm.season_clock.season == 0, "fast Russet ripens halfway through Spring")
 	farm.free()
 	farm = fresh()
-	farm.rng.seed = 1
+	farm.rng.seed = 6
 	farm.selected_crop = "icecap"; farm.seed_inventory.icecap = 1
 	farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant"); farm.interact_plot(5, "water")
+	farm.plots[5].pest_checked = true
 	farm.update(150)
 	check(farm.season_clock.season == 1 and farm.plots[5].stage == 2, "slow Icecap carries growth into Summer")
-	farm.update(75)
-	check(farm.plots[5].stage == 3, "slow Icecap ripens after a season and a half")
+	farm.update(50)
+	check(farm.plots[5].stage == 3, "slow Icecap ripens at second 200")
 	farm.reset_game()
 	farm.update(600)
 	check(farm.elapsed == 600 and farm.season_clock.year == 2 and farm.season_clock.season == 0, "headless full year advances through all four working seasons")

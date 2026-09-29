@@ -109,7 +109,7 @@ func run() -> void:
 	var before: float = game.state.elapsed
 	game._process(50.0)
 	check(is_equal_approx(game.state.elapsed - before, 1.0), "large accelerated frame cannot skip a ten-second stock boom")
-	game.state.pest_timer = 100.0
+
 	var plot: Dictionary = game.state.plots[0]
 	game.state._clear_crop(plot)
 	plot.unlocked = true

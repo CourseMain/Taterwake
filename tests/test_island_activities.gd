@@ -91,7 +91,7 @@ func _test_flocks() -> void:
 	for defect in ["target", "duplicate", "missing", "count", "speed"]:
 		var bad: Dictionary = snapshot.duplicate(true)
 		match defect:
-			"target": bad.duck_patrols[0].target = 24
+			"target": bad.duck_patrols[0].target = 72
 			"duplicate": bad.duck_patrols[1].target = bad.duck_patrols[0].target
 			"missing": bad.duck_patrols.pop_back()
 			"count": bad.owned_ducks = 3

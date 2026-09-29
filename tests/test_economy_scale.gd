@@ -69,7 +69,7 @@ func run() -> void:
 func check_balance_constants() -> void:
 	# Rates may legitimately be fractional (or zero); free grower enrolment is
 	# the only zero monetary price. Signed costs are checked by magnitude.
-	var rates := ["VOLATILITY", "GRADE_MULTIPLIER", "INSURANCE_PAYOUT", "PROTECTION_REDUCTION", "SPOILAGE", "CLIMATE_BASE_CHANCE", "CLIMATE_CHANCE_STEP", "CLIMATE_MAX_CHANCE", "CLIMATE_BASE_SEVERITY", "CLIMATE_SEVERITY_STEP", "CLIMATE_SEVERITY_SPREAD", "CLIMATE_SIGNAL_CHANCE", "CLIMATE_FALSE_ALARM_CHANCE", "CLIMATE_WINTER_LOSS", "CONTRACT_PRICE_FACTOR", "GROWER_PRICE_FACTOR"]
+	var rates := ["PEST_CHANCE","VOLATILITY", "GRADE_MULTIPLIER", "INSURANCE_PAYOUT", "PROTECTION_REDUCTION", "SPOILAGE", "CLIMATE_BASE_CHANCE", "CLIMATE_CHANCE_STEP", "CLIMATE_MAX_CHANCE", "CLIMATE_BASE_SEVERITY", "CLIMATE_SEVERITY_STEP", "CLIMATE_SEVERITY_SPREAD", "CLIMATE_SIGNAL_CHANCE", "CLIMATE_FALSE_ALARM_CHANCE", "CLIMATE_WINTER_LOSS", "CONTRACT_PRICE_FACTOR", "GROWER_PRICE_FACTOR"]
 	var constants: Dictionary = Balance.new().get_script().get_script_constant_map()
 	for key in constants:
 		if key not in rates: check_scaled_value(constants[key], key)

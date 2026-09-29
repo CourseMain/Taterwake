@@ -54,7 +54,7 @@ func _run() -> void:
 	await physics_frame
 	await physics_frame
 	check(game.test_mode, "isolated fresh session")
-	check(game.world.plot_positions.size() == 24, "original 24 farm plots preserved")
+	check(game.world.plot_positions.size() == 72, "three fields contain 72 beds")
 	check(is_instance_valid(game.world.player) and game.world.camera.current, "original farmer and camera active")
 	check(not game.hud.is_panel_open(), "farm available immediately")
 	check(game.state.available_crops().size() == 5, "five crop varieties available")
@@ -102,7 +102,7 @@ func _run() -> void:
 	check(game.state.coins > before_coins, "barn sale pays farming proceeds")
 	game.hud.close_panel()
 	# Farming needs separate player actions to prepare, plant and water.
-	game.state.pest_timer = 100.0
+
 	game.perform_plot(5, "hoe")
 	check(game.state.plots[5].tilled, "manual hoe prepares soil")
 	game.perform_plot(5, "plant")

@@ -20,7 +20,7 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.set_process(false)
-	game.state.pest_timer = 100.0
+
 	for plot in game.state.plots:
 		game.state._clear_crop(plot)
 	var plot: Dictionary = game.state.plots[4]

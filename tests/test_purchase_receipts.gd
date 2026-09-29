@@ -154,7 +154,7 @@ func _test_tools_and_space() -> void:
 	_failure(func(): return state.expand_field(), "unaffordable field")
 	state.coins = 48000.0
 	_success(func(): return state.expand_field(), "field", "expansion", 12, State.FIELD_EXPANSION_COST, "starter field expansion")
-	check(state.plots.all(func(plot: Dictionary): return bool(plot.unlocked)), "field receipt is emitted after all new beds are unlocked")
+	check(state.plots.slice(0, 24).all(func(plot: Dictionary): return bool(plot.unlocked)), "field receipt is emitted after all new beds are unlocked")
 	_failure(func(): return state.expand_field(), "already expanded field")
 	for island in [1]:
 		_failure(func(): return state.expand_field(), "island %d already open field" % island)

@@ -15,15 +15,17 @@ func fresh() -> void:
 	# Fully expanded fields also match the pre-revision-21 migration fixture.
 	for id in ["farm"]:
 		farm.expansion = 1
-		for plot in farm.plots: plot.unlocked = true
+		farm.Land.sync(farm)
 	farm.coins = 4e+19
 	farm.rng.seed = 32451
 	for plot in farm.plots:
+		if not plot.unlocked: continue
 		farm._clear_crop(plot)
 		plot.unlocked = true
 		plot.tilled = true
 		plot.crop = "russet"
 		plot.stage = 1
+		plot.pest_checked = true
 func weather(event: String) -> void:
 	farm.climate.begin_warning(farm, event, 1.0)
 	farm.update(45)
@@ -67,7 +69,7 @@ func run() -> void:
 	data.climate.operations.supply.water = -1
 	check(not farm._valid_save(data), "negative saved water rejected atomically")
 	data = farm._save_data()
-	data.climate.operations.strike_row = 7
+	data.climate.operations.strike_row = 12
 	check(not farm._valid_save(data), "out-of-bounds lightning row rejected")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	fresh()

@@ -22,7 +22,7 @@ func reset() -> void:
 	state.tutorial_progress.completed = true
 	state.farm_help.enable()
 	state.farm_help.dismiss("repeat")
-	state.pest_timer = 100.0
+
 	for field in [state.plots]:
 		for plot: Dictionary in field: state._clear_crop(plot)
 	state.changed.emit()
@@ -53,12 +53,16 @@ func run() -> void:
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
-	state.update(float(state.CropTable.CROPS.russet.grow) + 90.1)
-	check(state.farm_help.data.pest_phase == 1 and state.plots[5].pests, "first naturally ripe infestation arms protection")
+	# A mid-growth encounter exercises optional help; random arrival windows
+	# and probabilities are covered across hundreds of seeds in pace_and_land.
+	state.update(20)
+	state.plots[5].pests = true
+	state.plots[5].pest_checked = true
+	state.farm_help.capture_pests(state)
+	check(state.farm_help.data.pest_phase == 1 and state.plots[5].pests, "first mid-growth infestation arms protection")
 	state.farm_help.dismiss("pests")
 	state.update(70.0)
 	check(state.plots[5].stage == 3 and state.plots[5].pest_ticks == 0, "dismissing tip never releases current pests to destroy crops")
-	check(state._infest_random_plots() == 0, "first encounter does not accumulate more infestations")
 	var path: String = "user://farm-help-%d.json" % OS.get_process_id()
 	check(state.save_game(path), "protected pests save")
 	var restored = State.new()
@@ -68,8 +72,8 @@ func run() -> void:
 	check(restored.plots[5].pest_ticks == 0 and restored.farm_help.data.dismissed.has("pests"), "protection and dismiss choice both survive reload")
 	state.interact_plot(5, "pest")
 	check(state.farm_help.data.pest_phase == 2, "spray completes first encounter")
-	state.update(0.001)
-	state.update(float(state.plots[5].pest_delay) + 5.0)
+	state.plots[5].pests = true
+	state.update(5.0)
 	check(state.plots[5].pest_ticks == 1, "later pests deal normal damage")
 	reset()
 	state.coins = -1.0

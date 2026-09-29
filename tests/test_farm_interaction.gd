@@ -65,8 +65,8 @@ func run() -> void:
 	game.hud.close_panel()
 	var world = game.world
 	var loop = world._climate_field.loop
-	check(is_equal_approx(world.farm_bounds().get_area() / (35.0 * 17.0), 1.5), "land footprint grows by 50 percent")
-	check(world.plot_positions.size() == 24 and world.plot_positions[0] == Vector3(-7.5, 0, -2), "saved bed count and coordinates remain unchanged")
+	check(is_equal_approx(world.farm_bounds().get_area() / (35.0 * 17.0 * 1.5), 2.0), "three-field walkable footprint grows beyond the old expanded island")
+	check(world.plot_positions.size() == 72 and world.plot_positions[0] == Vector3(-7.5, 0, -2), "Home coordinates preserved within the 72-bed farm")
 	var distances: Array[float] = []
 	for sprint in [false, true]:
 		game._cancel_walk()

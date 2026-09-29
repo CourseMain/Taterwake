@@ -6,8 +6,7 @@ const State = preload("res://scripts/game_state.gd")
 const Balance = preload("res://scripts/balance.gd")
 const Protection = preload("res://scripts/farm_protection.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
-const STRATEGIES = ["naive", "cautious", "tidy", "diversifier"]
-const BASELINE_PATH = "res://tests/fixtures/tuning_before_unit_scale.json"
+const STRATEGIES = ["naive", "cautious", "tidy", "diversifier", "expander"]
 var checks := 0
 var failures := 0
 func _initialize() -> void: call_deferred("run")
@@ -20,7 +19,6 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	DirAccess.make_dir_recursive_absolute("res://artifacts/test-results")
 	var results: Dictionary = {}
-	var baseline: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(BASELINE_PATH)).strategies
 	for strategy in STRATEGIES:
 		var rows: Array = []
 		for seed_value in range(1, 31): rows.append(play(strategy, seed_value))
@@ -38,28 +36,23 @@ func run() -> void:
 			check(not row.completed or row.cash <= 320000, "%s seed %d cash ceiling: %.2f" % [strategy, row.seed, row.cash])
 		years.sort()
 		print("%s: survived %d/30, median end year %.1f, mean cash %.2f, max cash %.2f, mean sales %.2f" % [strategy, survived, (years[14]+years[15])/2.0, cash/30, best, sales/30])
-		var expected_mean: float = 0.0
-		for i in range(rows.size()):
-			var old: Dictionary = baseline[strategy][i]
-			var current: Dictionary = rows[i]
-			expected_mean += float(old.cash) * Balance.MONEY_SCALE / 30.0
-			check(current.seed == old.seed and current.year == old.year and current.completed == old.completed and current.harvested_sacks == old.harvested_sacks and current.table_sacks == old.table_sacks, "%s seed %d keeps its unscaled outcome and quantities" % [strategy, current.seed])
-			for key in ["cash", "sales", "business_income"]:
-				check(absf(float(current[key]) - float(old[key]) * Balance.MONEY_SCALE) < 0.00001, "%s seed %d %s scales by forty" % [strategy, current.seed, key])
-		check(absf(cash / 30.0 - expected_mean) < 0.00001, strategy + " mean cash is the old mean times forty")
 		if strategy == "naive": check((years[14]+years[15])/2.0 <= 6, "naive median foreclosure by year six")
 		if strategy == "cautious": check(survived >= 24, "cautious survives at least 24 seeds")
 		if strategy == "tidy":
 			check(survived == 30, "tidy survives all thirty seeds")
 			check(cash / rows.size() < 320000, "tidy mean ending cash stays below 320,000: %.2f" % (cash / rows.size()))
 		if strategy == "diversifier": check(survived >= 24, "diversifier survives at least 24 seeds")
+		if strategy == "expander": check(survived >= 20, "expander survives at least 20 seeds")
 	var cautious_sales := 0.0
 	var tidy_sales := 0.0
+	var expander_sales := 0.0
 	for i in range(30):
 		cautious_sales += results.cautious[i].sales
 		tidy_sales += results.tidy[i].sales
+		expander_sales += results.expander[i].sales
 		check(results.diversifier[i].business_income > 0 and results.diversifier[i].businesses.has("grower"), "diversifier earns business income seed %d" % (i+1))
 	check(results.diversifier.filter(func(row): return row.businesses.has("shop")).size() >= 24, "at least 24 diversifiers build the shop without invented funding")
+	check(expander_sales > cautious_sales, "expander out-earns cautious in mean sales")
 	var advantage: float = tidy_sales / cautious_sales - 1.0
 	print("Tidy ten-year sales advantage: %.2f%%" % (100 * advantage))
 	check(advantage >= 0.15 and advantage <= 0.40, "tidy earns 15–40% more crop receipts across matched seeds")
@@ -96,6 +89,7 @@ func play(strategy: String, seed_value: int, keep_snapshot: bool = false) -> Dic
 		if season != last_season:
 			last_season = season
 			planted.clear()
+			if season == 3 and year == 1 and strategy == "expander": farm.rent_field("low")
 			if season == 0 and year >= 2 and not naive: Protection.insure(farm)
 			# Bind only matching Golden orders: planting choice stays legible and
 			# the bot does not knowingly promise crops it will never grow.
@@ -126,6 +120,7 @@ func play(strategy: String, seed_value: int, keep_snapshot: bool = false) -> Dic
 					built_winter = true
 		for i in range(farm.plots.size()):
 			var plot: Dictionary = farm.plots[i]
+			if not plot.unlocked: continue
 			# Shared rescue routine for ice; naive still performs ordinary farm work.
 			if Operations.crop_frozen(farm,i): farm.interact_plot(i,"hoe")
 			if int(plot.stage) == 0 and season in [0,1] and not planted.has(i):

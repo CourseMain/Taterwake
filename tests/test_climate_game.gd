@@ -36,7 +36,7 @@ func run() -> void:
 	game.state._recompute_capacity()
 	game.state.storage["russet"] = Stock.pile(1000)
 	# Keep unrelated random pests outside this flood's preparation window.
-	game.state.pest_timer = 100.0
+
 	for plot in game.state.plots:
 		if not plot.unlocked: continue
 		game.state._clear_crop(plot)
@@ -81,7 +81,7 @@ func run() -> void:
 	await create_timer(0.75).timeout
 	check(page.visible and page.headline.text == "FORECLOSED", "overdraft bankruptcy opens the editorial page")
 	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("200,000"), "foreclosure shows the overdraft boundary and accounting year")
-	check(page._metrics["FIELD LOST"].note.text.contains("24"), "field loss metric comes from actual damage")
+	check(page._metrics["FIELD LOST"].note.text.contains(str(game.state.climate.data.collapse.field_total)), "field loss metric comes from actual damage")
 	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")

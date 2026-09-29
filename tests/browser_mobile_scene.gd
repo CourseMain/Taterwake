@@ -9,7 +9,7 @@ func _ready() -> void:
 	game.state.tutorial_progress.completed = true
 	game.state.coins = 400000
 	game.state.capacity = 100000
-	game.state.pest_timer = 1000
+
 	for id in game.state.CROP_IDS:
 		game.state.storage[id] = Stock.pile(500)
 		game.state.seed_inventory[id] = 100

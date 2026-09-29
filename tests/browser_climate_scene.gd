@@ -117,7 +117,7 @@ func _scenario(kind: String) -> void:
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
 	game.state.coins = 400000
-	game.state.pest_timer = 1000.0
+
 	game.state.climate.data.timer = 330.0
 	game.empty_can_prompted = false
 	game.state.expansion = 1

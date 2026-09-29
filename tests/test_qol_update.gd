@@ -25,13 +25,13 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	var state = game.state
-	var expected: Array = [75, 135, 105, 195, 225]
+	var expected: Array = [60, 110, 90, 160, 200]
 	for index: int in range(state.CROP_IDS.size()):
 		var crop: String = state.CROP_IDS[index]
 		check(state.CropTable.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 225.0, crop + " uses balanced base growth")
 	game._on_action("dex")
 	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 5, "crop tab illustrates all five varieties")
-	check(game.hud._refs["dex_status:sunburst"].text.contains("195s") and game.hud._refs["dex_status:icecap"].text.contains("225s"), "Dex shows seasonal growth times")
+	check(game.hud._refs["dex_status:sunburst"].text.contains("160s") and game.hud._refs["dex_status:icecap"].text.contains("200s"), "Dex shows seasonal growth times")
 	await shot("dex-crops")
 	for size: Vector2i in [Vector2i(1280, 800), Vector2i(960, 600), Vector2i(640, 360), Vector2i(600, 900)]:
 		root.min_size = Vector2i.ZERO

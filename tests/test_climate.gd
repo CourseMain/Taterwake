@@ -21,12 +21,14 @@ func fresh() -> void:
 	state.barn_level = 3
 	state._recompute_capacity()
 	state.expansion = 1
-	for plot in state.plots: plot.unlocked = true
+	state.Land.sync(state)
 	for plot in state.plots:
+		if not plot.unlocked: continue
 		state._clear_crop(plot)
 		plot.unlocked = true
 		plot.tilled = true
 		plot.stage = 1
+		plot.pest_checked = true
 		plot.elapsed = 0.0
 		plot.crop = "russet"
 		plot.watered = false

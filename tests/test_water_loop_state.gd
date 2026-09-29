@@ -36,7 +36,7 @@ func fresh(with_irrigation: bool = false) -> void:
 	farm.rng.seed = 38172
 	farm.coins = 4e+19
 	farm.expansion = 1
-	for plot in farm.plots: plot.unlocked = true
+	farm.Land.sync(farm)
 	if with_irrigation: farm.climate.fund(farm, "irrigation")
 	for plot in farm.plots: farm._clear_crop(plot)
 
@@ -121,7 +121,7 @@ func test_upgrades_and_irrigation() -> void:
 	for rank in [1, 2, 3]:
 		fresh(true)
 		farm.tools.water = rank
-		for index in range(farm.plots.size()): planted(index)
+		for index in range(24): planted(index)
 		supply = Ops.local(farm)
 		supply.can = 5
 		tank = supply.water

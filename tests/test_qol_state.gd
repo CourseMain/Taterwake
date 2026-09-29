@@ -18,7 +18,7 @@ func check(condition: bool, message: String) -> void:
 func clean_farm() -> void:
 	farm.reset_game()
 	farm.rng.seed = 61622
-	farm.pest_timer = 100.0
+
 	for plot in farm.plots:
 		farm._clear_crop(plot)
 
@@ -111,7 +111,7 @@ func run() -> void:
 	farm.storage["giant"] = Stock.pile(1)
 	farm.harvested_total = 1
 	farm.coins = 3360000
-	farm.pest_timer = 37.25
+
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	farm.queue_free()
 	await process_frame

@@ -43,7 +43,7 @@ func run() -> void:
 	await frames()
 	game.state.ClimateSystem.Lesson.finish(game.state)
 	game.state.coins = 4e+21
-	game.state.pest_timer = 1000
+
 	game.hud.close_panel()
 	game.set_process(false)
 	var touch = game.touch_controls

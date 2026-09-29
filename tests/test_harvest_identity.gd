@@ -68,7 +68,7 @@ func run() -> void:
 	var stored: int = game.state.storage_used()
 	game.perform_plot(4,"harvest")
 	var fx = game.world.harvest_feedback
-	check(game.state.storage_used()-stored == 1, "first Russet harvest excludes the two storm-lost tonnes")
+	check(game.state.storage_used()-stored == 2, "first Russet harvest excludes the one storm-lost tonne")
 	check(fx.active.size() == 1 and not fx.active[0].heavy, "committed Russet starts one visual receipt")
 	check(fx.audio.last_kind == "harvest", "ordinary crop uses harvest foley")
 	fx.animate(2)

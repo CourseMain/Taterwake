@@ -27,7 +27,7 @@ func _run() -> void:
 	farm = State.new()
 	root.add_child(farm)
 	farm.rng.seed = 4481
-	check(farm.plots.size() == 24 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
+	check(farm.plots.size() == 72 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
 	check(farm.CropTable.CROPS.size() == 5 and farm.available_crops().size() == 5 and farm.coins == 80000.0, "five crop economy starts with earned-currency budget")
 	farm.interact_plot(4, "hoe")
 	check(farm.plots[4].tilled and farm.seed_inventory.russet == 12, "hoe is a separate manual action")
@@ -99,7 +99,7 @@ func _run() -> void:
 		farm.select_crop(crop)
 		farm.interact_plot(4, "plant")
 		farm.interact_plot(4, "water")
-		farm.pest_timer = 100.0
+		farm.plots[4].pest_checked = true # Isolate crop duration; pest timing has its own seeded suite.
 		farm.update(float(farm.CropTable.CROPS[crop].grow) - 0.1)
 		check(farm.plots[4].stage == 2, crop + " keeps its distinct growth duration")
 		farm.update(0.11)
