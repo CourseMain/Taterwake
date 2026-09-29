@@ -136,7 +136,7 @@ func run() -> void:
 	farm.climate.data.phase = "calm"
 	farm.climate.data.event = ""
 	farm.climate.data.severity = 0
-	farm.climate.fund(farm, "drainage")
+	farm.climate.data.projects.drainage = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	farm.climate.begin_warning(farm, "flood", 1)
 	game._advance_simulation(45)
 	game.hud._climate_alert.dismiss()

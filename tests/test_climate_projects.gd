@@ -32,10 +32,15 @@ func run() -> void:
 		game._on_action("climate_fund:rainwater")
 		check(game.world._project_nodes.has("rainwater") and not game.world._project_nodes.has("drainage"), "starter tank exists before purchases")
 		game.state.coins = 1e18
+		game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
+		game.state.update(0.25); game.hud.close_panel()
 		for level: int in [1, 2]:
 			for id: String in game.state.ClimateSystem.PROJECTS:
 				game._on_action("climate_fund:" + id)
-				check(game.world._project_nodes.has(id), "purchase immediately builds " + id)
+				if id != "irrigation":
+					check(game.world._work_nodes.has(id), "reservation marks the work site")
+					for stroke in range(3): game.state.climate.Protection.work(game.state, id)
+				check(game.world._project_nodes.has(id), "completed labour builds " + id)
 				var project: Node3D = game.world._project_nodes[id]
 				check(project.get_meta("level") == int(game.state.climate.data.projects.get(id, 0)) + (1 if id == "rainwater" else 0), "scenery follows local upgrade level")
 				var instance: int = project.get_instance_id()

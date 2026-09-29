@@ -38,6 +38,7 @@ func begin_winter(farm) -> void:
 		report.spoiled[id] = loss
 		farm.storage[id] = int(farm.storage[id]) - loss
 		held[id] = int(farm.storage[id])
+		farm.ClimateSystem.Protection.record(farm, "spoilage", id, loss, 0.0, 1.0, "Sell before Winter storage", "barn")
 		if loss > 0: farm.ledger.post(farm.season_clock.year, 3, "storage", "Spoilage: %d %s sacks" % [loss, id], 0.0, true)
 	if report.fee > 0: farm.post_money("storage", "Winter storage fee", -float(report.fee))
 	winters[year] = report

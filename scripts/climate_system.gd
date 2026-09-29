@@ -2,6 +2,7 @@ extends RefCounted
 ## Discrete warned disasters, physical crop and barn damage.
 const Lesson = preload("res://scripts/climate_lesson.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
+const Protection = preload("res://scripts/farm_protection.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 ## The farm calendar owns seasonal boundaries; this clock times weather phases.
 const SEASON_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
@@ -10,27 +11,26 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"freeze": {"name": "DEEP FREEZE", "field": 0.4, "barn": 0.12, "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
-	"drought": {"name": "DROUGHT", "field": 0.45, "barn": 0.06, "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
-	"flood": {"name": "FLOOD", "field": 0.40, "barn": 0.30, "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Reinforced barn shutters close automatically."},
-	"storm": {"name": "SEVERE STORM", "field": 0.55, "barn": 0.22, "growth": 0.75, "prepare": "Harvest the gold lightning row. Trees shelter the far beds from wind; trees do not stop lightning."},
+	"freeze": {"name": "DEEP FREEZE", "barn": 0.12, "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
+	"drought": {"name": "DROUGHT", "barn": 0.06, "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
+	"flood": {"name": "FLOOD", "barn": 0.30, "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Build drainage during Winter."},
+	"storm": {"name": "SEVERE STORM", "barn": 0.22, "growth": 0.75, "prepare": "Harvest the gold lightning row. Winter-built windbreaks reduce storm field losses."},
 }
 const PROJECTS: Dictionary = {
-	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 500.0, "event": "drought", "field": 0.0, "barn": 0.0, "detail": "Protect the farm. Three sprinklers and connected pipes cost 6 water per patch, or 4 at level 2."},
-	"rainwater": {"name": "Rainwater Reserve", "cost": 500.0, "event": "drought", "field": 0.3, "barn": 0.0, "detail": "Adds 36 water capacity per level. The can and sprinklers share this reserve. −30% drought stress per level."},
-	"drainage": {"name": "Drainage Network", "cost": 750.0, "event": "flood", "field": 0.3, "barn": 0.10, "detail": "Open the gates to actively drain beds. −30% flood stress, −10% barn losses per level."},
-	"barn": {"name": "Reinforced Barn", "cost": 1000.0, "event": "all", "field": 0.0, "barn": 0.35, "detail": "Shutters close automatically before impact and halve remaining barn damage. −35% barn losses per level."},
-	"windbreaks": {"name": "Living Windbreaks", "cost": 600.0, "event": "storm", "field": 0.3, "barn": 0.1, "detail": "Trees automatically shelter the fixed far patch from wind. −30% wind stress, −10% barn losses per level. Trees do not block lightning."},
+	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 500.0, "event": "", "detail": "Manual watering: 6 tank water per patch, 4 at level 2."},
+	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50% / −75%. Adds 36 water capacity per level. Winter construction; 100 yearly upkeep."},
+	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50% / −75%. Open gates to drain stress. Winter construction; 100 yearly upkeep."},
+	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50% / −75%. Winter construction; 100 yearly upkeep."},
+	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50% / −75% on covered beds. Build, then place with Hoe on cleared Winter beds. 100 yearly upkeep."},
 }
 const MAX_PROJECT_LEVEL: int = 2
-const MAX_PROTECTION: float = 0.8
 const EDUCATION: String = "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."
 const EDUCATION_SOURCE: String = "https://www.fao.org/publications/fao-flagship-publications/the-impact-of-disasters-on-agriculture-and-food-security/"
 var data: Dictionary = fresh_data()
 
 static func fresh_data() -> Dictionary:
 	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": SEASON_SECONDS, "event": "",
-		"severity": 0.0, "projects": {},
+		"severity": 0.0, "projects": {}, "protection": Protection.fresh(),
 		"last": {}, "history": [], "field_lost": 0, "barn_lost": 0, "collapse": {}}
 
 func reset() -> void:
@@ -39,20 +39,13 @@ func reset() -> void:
 func clock_running(farm) -> bool:
 	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over
 
-func protection(event: String, kind: String) -> float:
-	var reduction: float = 0.0
-	for id in PROJECTS:
-		if id == "windbreaks" and kind == "field": continue
-		if PROJECTS[id].event in ["all", event]:
-			reduction += float(PROJECTS[id][kind]) * int(data.projects.get(id, 0))
-	return minf(MAX_PROTECTION, reduction)
+func protection(event: String) -> float:
+	return Protection.REDUCTION[int(data.projects.get(Protection.PROJECT_FOR.get(event, ""), 0))]
 
 func factor(kind: String) -> float:
 	if data.phase not in ["active", "recovery"]:
 		return 1.0
 	var weight: float = float(data.severity) * (float(data.timer) / RECOVERY_SECONDS if data.phase == "recovery" else 1.0)
-	if kind == "growth":
-		weight *= 1.0 - protection(str(data.event), "field")
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
@@ -101,7 +94,7 @@ func end_working_year() -> void:
 	data.event = ""
 	data.timer = SEASON_SECONDS
 	data.severity = 0.0
-	for key in ["ice", "stress", "wet", "scars", "rescued"]: data.operations[key].clear()
+	for key in ["ice", "stress", "wet", "scars", "rescued", "damaged", "loss_groups"]: data.operations[key].clear()
 	data.operations.flash = 0.0
 	data.operations.strike_row = -1
 
@@ -123,10 +116,10 @@ func _impact(farm) -> void:
 	# Field damage accumulates during active weather; players can rescue beds.
 	var destroyed: int = 0
 	var held: int = farm.storage_used()
-	var shutter: float = 0.5 if int(data.projects.get("barn", 0)) > 0 else 1.0
-	var barn_rate: float = shutter * float(EVENTS[event].barn) * float(data.severity) * (1.0 - protection(event, "barn"))
+	var barn_rate: float = float(EVENTS[event].barn) * float(data.severity)
 	for crop in farm.storage:
 		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
+		Protection.record(farm, event, crop, lost, 0.0, 1.0, "Sell barn crops before impact", "barn")
 		farm.storage[crop] = int(farm.storage[crop]) - lost
 	farm.trading.clamp_stock(farm)
 	var barn_lost: int = held - farm.storage_used()
@@ -148,12 +141,16 @@ func fund(farm, id: String) -> String:
 	if farm.run_over or farm.tutorial_active or not PROJECTS.has(id): return "Finish the farm tour before funding protection."
 	var levels: Dictionary = data.projects
 	var level: int = int(levels.get(id, 0))
-	if level >= MAX_PROJECT_LEVEL: return farm._finish("This initiative is fully funded.")
+	if level >= MAX_PROJECT_LEVEL: return farm._finish("This project is fully built.")
+	if id != "irrigation":
+		if farm.accounts_open or farm.season_clock.season != 3: return farm._finish("Reserve and build protection during Winter.")
+		if data.protection.pending.has(id): return farm._finish("Already paid. Finish the work at its marked site.")
 	var cost: float = float(PROJECTS[id].cost) * float(level + 1)
 	if not farm.can_purchase(cost): return farm._reject_purchase(farm.purchase_refusal(cost))
 	farm.post_money("protection", str(PROJECTS[id].name), -cost)
-	levels[id] = level + 1
-	return farm._complete_purchase({"kind": "climate", "id": id, "name": PROJECTS[id].name, "quantity": 1, "cost": cost}, "Sprinklers installed on the farm." if id == "irrigation" else "Climate protection improved.")
+	if id == "irrigation": levels[id] = level + 1
+	else: data.protection.pending[id] = 0
+	return farm._complete_purchase({"kind": "climate" if id == "irrigation" else "construction", "id": id, "name": PROJECTS[id].name, "quantity": 1, "cost": cost}, "Sprinklers installed on the farm." if id == "irrigation" else "Reserved. Walk to the marked site and work three times during Winter.")
 
 func info(farm) -> Dictionary:
 	var result: Dictionary = data.duplicate(true)
@@ -162,6 +159,7 @@ func info(farm) -> Dictionary:
 	result.water_capacity = Operations.capacity(farm)
 	result.rescued = data.operations.rescued.size()
 	result.available = true
+	result.forecast = Protection.forecast(farm)
 	result.name = str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
 	for index in range(farm.plots.size()):
 		if bool(farm.plots[index].get("winter_ice", false)): result.operations.ice[str(index)] = true

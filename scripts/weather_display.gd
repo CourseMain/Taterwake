@@ -43,10 +43,10 @@ func _draw() -> void:
 		draw_polyline(PackedVector2Array([Vector2(49,16),Vector2(49,76),Vector2(89,76)]),CYAN,3,true)
 		draw_line(Vector2(79,67),Vector2(89,76),CYAN,2,true)
 		draw_line(Vector2(79,85),Vector2(89,76),CYAN,2,true)
-	elif kind == "barn":
-		draw_polyline(PackedVector2Array([Vector2(12,38),Vector2(50,14),Vector2(88,38)]),CYAN,2,true)
-		draw_rect(Rect2(21,38,58,47),CYAN,false,2)
-		for y in [46,55,64,73]: draw_line(Vector2(29,y),Vector2(71,y),CYAN,2,true)
+	elif kind == "frost":
+		for x in [28, 70]: draw_arc(Vector2(x, 72), 25, PI, TAU, 24, CYAN, 2, true)
+		draw_rect(Rect2(3, 47, 92, 25), Color(CYAN, 0.25))
+		draw_line(Vector2(3,72), Vector2(95,72), CYAN, 2, true)
 	else:
 		for x in [45,64,83]:
 			draw_line(Vector2(x,77),Vector2(x,22),CYAN,2,true)

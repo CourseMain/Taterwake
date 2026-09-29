@@ -44,11 +44,19 @@ func run() -> void:
 		scroll.ensure_control_visible(button)
 		await settle()
 		check(scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "equipment action reachable: "+id)
-		check(not button.disabled and button.text.begins_with("Install"),"equipment offers cash purchase: "+id)
+		check((not button.disabled and button.text.begins_with("Install")) if id == "irrigation" else (button.disabled and button.text.begins_with("Reserve")), "manual sprinklers buy now; construction waits for Winter: " + id)
 	for button: Node in page.find_children("*", "Button", true, false):
-		check(button.size.x >= scroll.size.x * 0.35 and button.size.y <= 120, "dashboard buttons have usable width and compact height: " + button.text)
+		if button.is_visible_in_tree():
+			check(button.size.x >= scroll.size.x * 0.35 and button.size.y <= 120, "dashboard buttons have usable width and compact height: " + button.text)
+		else:
+			check(str(button.get_meta("action", "")).begins_with("project_site:") and farm.climate.data.protection.pending.is_empty(), "unreserved projects have no work action")
 	scroll.scroll_vertical = 100000
 	await shot("bottom")
+	farm.season_clock.season = 2; farm.season_clock.seconds = 149.75
+	farm.update(0.25); game.hud.close_panel()
+	game.hud.show_panel("climate", farm)
+	page = game.hud._refs.weather_page
+	scroll = game.hud._body.get_parent()
 	var water: Button = game.hud._refs["climate_fund:rainwater"]
 	scroll.ensure_control_visible(water)
 	await settle()
@@ -68,13 +76,18 @@ func run() -> void:
 		root.push_input(event,true)
 		await create_timer(0.05).timeout
 	await settle()
-	check(farm.climate.data.projects.get("rainwater",0) == 1, "pointer checkout installs water reserve")
+	check(farm.climate.data.protection.pending.has("rainwater") and farm.climate.data.projects.get("rainwater", 0) == 0, "pointer checkout reserves water tank construction")
+	game.hud.close_panel()
+	for stroke in range(3): farm.climate.Protection.work(farm, "rainwater")
+	game.hud.show_panel("climate", farm)
+	page = game.hud._refs.weather_page
 	check(page._values.water.text.ends_with("72"),"tank telemetry updates after real purchase")
 	game._on_action("climate")
 	await settle()
 	scroll = game.hud._body.get_parent()
 	scroll.ensure_control_visible(game.hud._refs["climate_fund:rainwater"])
 	await shot("equipment")
+	farm.season_clock.year = 2; farm.season_clock.season = 0; farm.season_clock.seconds = 0
 	farm.climate.begin_warning(farm,"flood",1)
 	game.hud._climate_alert.dismiss()
 	game.hud.update_state(farm)

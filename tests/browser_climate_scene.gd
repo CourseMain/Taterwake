@@ -44,7 +44,7 @@ func _ready() -> void:
 	note.text = "Isolated preview · your saved farm is untouched\nWASD / arrows · Hold Shift to sprint\nScroll / pinch to zoom · 50% more land"
 	note.add_theme_font_size_override("font_size", 12)
 	controls.add_child(note)
-	for entry in [["valley", "Valley · tank, can, crops"], ["practice", "Valley · optional practice"], ["freeze", "Freeze · clear crop ice"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · trees and automatic shutters"]]:
+	for entry in [["valley", "Valley · tank, can, crops"], ["practice", "Valley · optional practice"], ["freeze", "Freeze · clear crop ice"], ["drought", "Dry spell · shared water reserve"], ["flood", "Flood · open the drain"], ["storm", "Storm · windbreaks"]]:
 		var button := Button.new()
 		button.text = entry[1]
 		button.pressed.connect(func(): _scenario(entry[0]))
@@ -133,7 +133,6 @@ func _scenario(kind: String) -> void:
 		if kind == "flood": game.state.climate.data.projects.drainage = 1
 		if kind == "storm":
 			game.state.climate.data.projects.windbreaks = 1
-			game.state.climate.data.projects.barn = 1
 		game.state.climate.begin_warning(game.state, kind, 1)
 		game._advance_simulation(45)
 	game.hud.close_panel()

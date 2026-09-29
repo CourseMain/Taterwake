@@ -18,8 +18,6 @@ var can_water: MeshInstance3D
 var tank_label: Label3D
 var can_label: Label3D
 var practice_label: Label3D
-var barn_label: Label3D
-var shutters: Array[Node3D] = []
 var info: Dictionary = {}
 var displayed_can: float = -1.0
 var displayed_water: float = -1.0
@@ -39,7 +37,6 @@ func equipment_position(id: String) -> Vector3:
 		return Projects.sprinkler_position(world, int(id.trim_prefix("sprinkler")))
 	if id == "drain": return Projects.drain_position(world)
 	if id == "trees": return Projects.trees_position(world)
-	if id == "barn": return Projects.barn_position(world) + Vector3(0, 0, 2.7)
 	return tank_position()
 
 func _label(parent: Node3D, point: Vector3, size: int) -> Label3D:
@@ -71,17 +68,6 @@ func setup(w) -> void:
 	world._bar(self, gutter_start, gutter_end, 0.105, Color("b8d1c9"))
 	world._bar(self, gutter_end, inlet + Vector3(0, 0.13, 0), 0.105, Color("b8d1c9"))
 	world._bar(self, inlet + Vector3(0, 0.13, 0), inlet - Vector3(0, 0.15, 0), 0.12, Color("b8d1c9"))
-	for side: int in [-1, 1]:
-		var shutter := Node3D.new()
-		add_child(shutter)
-		shutter.position = barn + Vector3(side * 1.84, 1.58, 2.49)
-		world._box(shutter, Vector3.ZERO, Vector3(1.12, 2.69, 0.12), Color("537783"))
-		for y: float in [-1.1, -0.66, -0.22, 0.22, 0.66, 1.1]:
-			world._box(shutter, Vector3(0, y, 0.09), Vector3(1.0, 0.075, 0.06), Color("95b2ac"))
-		world._box(shutter, Vector3(-side * 0.34, 0, 0.16), Vector3(0.07, 0.42, 0.09), Color("e9d28e"))
-		shutters.append(shutter)
-	barn_label = _label(self, barn + Vector3(1.85, 3.32, 2.55), 22)
-	barn_label.text = "AUTO"
 	gate = world._box(self, equipment_position("drain") + Vector3(0, 0.59, 0), Vector3(0.78, 0.91, 0.16), Color("bd8c58"))
 	for y: float in [-0.32, 0.32]:
 		world._box(gate, Vector3(0, y, 0.11), Vector3(0.77, 0.07, 0.055), Color("dfce99"))
@@ -104,9 +90,8 @@ func setup(w) -> void:
 	practice_label.no_depth_test = true
 	practice_label.modulate = Color("fff0a3")
 	practice_label.hide()
-	# Merge decorative can/gutter/shutter details; keep the two liquid gauges mutable.
+	# Merge decorative can/gutter details; keep the two liquid gauges mutable.
 	world._geometry_batcher.batch_tree(can, {can_water.get_instance_id(): true})
-	for shutter: Node3D in shutters: world._geometry_batcher.batch_tree(shutter, {})
 
 func animate(data: Dictionary, delta: float) -> void:
 	if data.is_empty(): return
@@ -165,14 +150,6 @@ func animate(data: Dictionary, delta: float) -> void:
 	gate.position.y = 0.59 + gate_open * 0.9
 	if world._project_nodes.has("windbreaks"):
 		world._project_nodes.windbreaks.rotation.z = sin(clock * 2.5) * 0.012 if storm else 0.0
-	var closed: bool = local_weather and info.phase in ["warning", "active"]
-	for i in range(shutters.size()):
-		shutters[i].visible = int(p.get("barn", 0)) > 0
-		var side: float = -1.0 if i == 0 else 1.0
-		var target_x: float = Projects.barn_position(world).x + side * (0.57 if closed else 1.84)
-		shutters[i].position.x = move_toward(shutters[i].position.x, target_x, delta * 1.1)
-	barn_label.visible = int(p.get("barn", 0)) > 0 and (selected == "barn" or closed)
-	barn_label.text = "AUTO"
 	# The saved hazard belongs to one island, never the same-numbered bed elsewhere.
 	for i in range(world._crop_roots.size()):
 		var crop: Node3D = world._crop_roots[i]
@@ -257,7 +234,7 @@ func draw_connections(v) -> void:
 						v._line(pos + Vector3(-0.88 + a * 1.6, 0.4 + sin(a * PI) * 1.2, 0), pos + Vector3(-0.88 + b * 1.6, 0.4 + sin(b * PI) * 1.2, 0), 0.04, Color(0.63, 0.91, 0.96, 0.8), true)
 	if int(projects.get("windbreaks", 0)) > 0 and (selected == "trees" or storm):
 		for i in range(world.plot_positions.size()):
-			if Ops.zone(i) == 0 and selected == "trees":
+			if selected == "trees":
 				_bed_outline(v, world.plot_positions[i], Color("c6dfaa"))
 		# Wind streams shorten and soften after crossing the living barrier.
 		var trees: Vector3 = Projects.trees_position(world)

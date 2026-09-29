@@ -47,7 +47,7 @@ func run() -> void:
 	farm.update(8)
 	check(supply.water == 36, "recovery refills reserves")
 	fresh()
-	farm.climate.fund(farm, "rainwater")
+	farm.climate.data.projects.rainwater = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	farm.climate.fund(farm, "irrigation")
 	weather("drought")
 	farm.update(10)
@@ -77,7 +77,7 @@ func run() -> void:
 	farm.interact_plot(0, "hoe")
 	check(float(farm.climate.data.operations.stress["0"]) < stress and farm.plots[0].stage == 1, "hoe drains living flooded beds without destroying crop")
 	fresh()
-	farm.climate.fund(farm, "drainage")
+	farm.climate.data.projects.drainage = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	Ops.operate(farm, "gates")
 	weather("flood")
 	farm.update(30)

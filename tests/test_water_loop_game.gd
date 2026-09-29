@@ -72,7 +72,8 @@ func run() -> void:
 	game._climate_action("use_sprinkler")
 	check(ops.local(game.state).water == before - ops.water_cost(game.state) and game.state.plots[16].watered and not game.state.plots[0].watered, "ordinary sprinkler waters fixed middle patch for displayed cost")
 	await shot("ordinary-irrigation")
-	for id in ["drainage", "windbreaks", "barn"]: game.state.climate.fund(game.state, id)
+	for id in ["drainage", "windbreaks"]: game.state.climate.data.projects[id] = 1
+	game._on_state_changed()
 	await settle()
 	game._close_equipment()
 	game.state.climate.begin_warning(game.state, "flood", 1)

@@ -133,7 +133,7 @@ func test_upgrades_and_irrigation() -> void:
 	check(int(farm.climate.data.projects.get("irrigation", 0)) >= 1, "purchased sprinkler is available before the first dry spell")
 	capacity = Ops.capacity(farm)
 	tank = supply.water
-	farm.climate.fund(farm, "rainwater")
+	farm.climate.data.projects.rainwater = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	check(Ops.capacity(farm) > capacity and supply.water == tank, "bigger tank increases storage without an invisible refill")
 	planted(0)
 	planted(1)
@@ -207,7 +207,7 @@ func test_drought_and_shared_reserve() -> void:
 
 func test_weather_equipment() -> void:
 	fresh(true)
-	farm.climate.fund(farm, "drainage")
+	farm.climate.data.projects.drainage = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	planted(0)
 	start_weather("flood")
 	farm.climate.data.operations.stress["0"] = 0.5
@@ -222,21 +222,13 @@ func test_weather_equipment() -> void:
 	Ops.target(farm, 0, "water")
 	check(farm.climate.data.operations.stress["0"] == stress, "sprinkler watering cannot cure flood danger")
 	fresh(true)
-	farm.climate.fund(farm, "windbreaks")
+	farm.climate.data.projects.windbreaks = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	planted(0, true)
 	planted(20, true)
 	Ops.local(farm).shelter = 2
 	start_weather("storm")
 	Ops.update(farm, 2.0)
-	check(float(farm.climate.data.operations.stress["0"]) < float(farm.climate.data.operations.stress["20"]) * 0.8, "trees shelter the fixed far patch regardless of a legacy movable-screen setting")
-	fresh(true)
-	farm.barn_level = 2
-	farm._recompute_capacity()
-	farm.storage.russet = 1000
-	farm.climate.fund(farm, "barn")
-	Ops.local(farm).sealed = false
-	start_weather("flood")
-	check(farm.climate.data.barn_lost > 0 and farm.climate.data.barn_lost < 150, "reinforced barn automatically protects stock without a shutter control")
+	check(farm.climate.Protection.level(farm, "storm", 0) == 1 and farm.climate.Protection.level(farm, "storm", 20) == 1, "completed windbreak protects all beds regardless of legacy movable-screen setting")
 	fresh(true)
 	planted(0)
 	start_weather("drought")

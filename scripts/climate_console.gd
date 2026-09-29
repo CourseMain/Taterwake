@@ -165,10 +165,7 @@ func refresh(info: Dictionary, blocked: bool) -> void:
 			primary.disabled = s.gates
 		elif equipment == "trees":
 			title.text = "Living wind shelter"
-			hint.text = "Far beds sheltered; lightning still strikes."
-		else:
-			title.text = "Reinforced barn"
-			hint.text = "Stored crops protected automatically."
+			hint.text = "Storm loss reduced across the field: 50% / 75%."
 		_finish_refresh()
 		return
 	more.text = "Farm protection  ›"

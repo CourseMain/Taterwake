@@ -18,7 +18,8 @@ func run() -> void:
 	game.state.coins = 1e18
 	game.hud.close_panel()
 	for project: String in game.state.ClimateSystem.PROJECTS:
-		game.state.climate.fund(game.state, project)
+		game.state.climate.data.projects[project] = 1
+	game._on_state_changed()
 	for event: String in ["flood", "drought", "storm"]:
 		game.state.climate.data.phase = "calm"
 		game.state.climate.data.event = ""

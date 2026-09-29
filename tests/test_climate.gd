@@ -80,25 +80,23 @@ func run() -> void:
 		check(state.climate.data.phase in ["calm", "warning"], "recovery ends before a possible next-season warning")
 		check(state.climate.data.field_lost == unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "losses do not repeat and weather losses persist through calm weather")
 		fresh()
-		for project in ["rainwater" if event == "drought" else ("drainage" if event == "flood" else "windbreaks"), "barn"]:
-			state.climate.fund(state, project)
-			state.climate.fund(state, project)
+		state.climate.data.projects[{"drought":"rainwater", "flood":"drainage", "storm":"windbreaks"}[event]] = 2
 		state.climate.begin_warning(state, event, 1.0)
 		state.update(75.0)
-		check((state.climate.data.field_lost <= unprotected_loss if event == "storm" else state.climate.data.field_lost < unprotected_loss) and state.climate.data.barn_lost < unprotected_barn, "protection reduces barn damage and prevents extra field losses (trees cannot stop lightning): " + event)
+		check(state.climate.data.field_lost < unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "completed protection preserves field crops without protecting barn stock: " + event)
 		save_load()
 
 	fresh()
-	state.climate.begin_warning(state, "flood", 1.0)
-	state.update(45.0)
-	state.climate.fund(state, "drainage")
-	state.climate.fund(state, "drainage")
+	state.season_clock.season = 3
+	for level in range(2):
+		state.climate.fund(state, "drainage")
+		for stroke in range(3): state.climate.Protection.work(state, "drainage")
 	var paid: float = state.coins
 	state.climate.fund(state, "drainage")
-	check(state.coins == paid and state.climate.data.projects.drainage == 2, "initiatives cannot exceed two levels or charge at cap")
+	check(state.coins == paid and state.climate.data.projects.drainage == 2, "initiatives cannot exceed two built levels or charge at cap")
 	state.coins = state.bankruptcy_limit()
-	state.climate.fund(state, "barn")
-	check(state.coins == state.bankruptcy_limit() and not state.climate.data.projects.has("barn"), "unaffordable protection never charges or grants a level")
+	state.climate.fund(state, "frost")
+	check(state.coins == state.bankruptcy_limit() and not state.climate.data.protection.pending.has("frost"), "unaffordable protection never charges or reserves work")
 
 	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
@@ -116,7 +114,7 @@ func run() -> void:
 		match defect:
 			"timer": broken.climate.timer = 9000.0
 			"severity": broken.climate.severity = 2.0
-			"project": broken.climate.projects.barn = 3
+			"project": broken.climate.projects.frost = 3
 			"history": broken.climate.history[0].field_lost = 99999999
 			"event": broken.climate.event = "unknown"
 		check(not state._valid_save(broken), "reject corrupt climate " + defect)

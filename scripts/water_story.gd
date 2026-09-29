@@ -54,15 +54,6 @@ func _draw() -> void:
 			_crop(Vector2(212, 55), false, 0.74)
 			_crop(Vector2(233, 55), false, 0.74)
 			labels.assign(["Strong wind", "Trees shelter", "Calmer beds"])
-		"barn":
-			_wind(Vector2(9, 13), 28)
-			_barn(Vector2(40, 48), false)
-			_barn(Vector2(130, 48), true)
-			_crate(Vector2(211, 49))
-			_crate(Vector2(230, 52))
-			draw_line(Vector2(233, 24), Vector2(239, 29), LEAF, 3, true)
-			draw_line(Vector2(239, 29), Vector2(249, 17), LEAF, 3, true)
-			labels.assign(["Warning", "Auto shutters", "Safer harvest"])
 		"can":
 			_crop(Vector2(39, 54), true, 0.85)
 			_can(Vector2(124, 33))
@@ -166,16 +157,6 @@ func _wind(pos: Vector2, length: float) -> void:
 	for i in range(3):
 		var start: Vector2 = pos + Vector2(i % 2 * 4, i * 6)
 		draw_line(start, start + Vector2(length, 0), Color("a1beb4"), 1.5, true)
-
-func _barn(pos: Vector2, closed: bool) -> void:
-	_round(Rect2(pos.x - 20, pos.y - 22, 40, 30), Color("ae795e"), 3)
-	draw_colored_polygon(PackedVector2Array([pos + Vector2(-25, -22), pos + Vector2(0, -37), pos + Vector2(25, -22)]), Color("688980"))
-	_round(Rect2(pos.x - 11, pos.y - 15, 22, 23), Color("334e45"), 1)
-	if closed:
-		for x in [-10.0, 1.0]:
-			_round(Rect2(pos.x + x, pos.y - 14, 9, 21), Color("96b3a2"), 1)
-			for y in [-8.0, -1.0, 6.0]: draw_line(pos + Vector2(x, y), pos + Vector2(x + 9, y), Color("627e76"), 1)
-	else: _crate(pos + Vector2(0, 5), 0.7)
 
 func _crate(pos: Vector2, scale_factor: float = 1.0) -> void:
 	_round(Rect2(pos + Vector2(-11, -14) * scale_factor, Vector2(22, 18) * scale_factor), Color("c6a476"), 2)

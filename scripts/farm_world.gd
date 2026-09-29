@@ -40,6 +40,9 @@ var weather_station: Node3D
 var coast: Node3D
 var _climate_field: Node3D
 var _project_nodes: Dictionary = {}
+var _work_nodes: Dictionary = {}
+var _cover_nodes: Dictionary = {}
+var _work_progress: Dictionary = {}
 var _climate_ice: Dictionary = {}
 var _project_levels: Dictionary = {}
 var _weather_strength: float = 0.0
@@ -355,6 +358,9 @@ func _clear_world() -> void:
 	_weather_drought = false
 	weather_station = null
 	_project_nodes.clear()
+	_work_nodes.clear()
+	_cover_nodes.clear()
+	_work_progress.clear()
 	_climate_ice.clear()
 	_project_levels.clear()
 	_npc_actors.clear()
@@ -468,8 +474,7 @@ func set_climate_projects(projects: Dictionary) -> void:
 		if level == int(_project_levels.get(id, 0)): continue
 		if _project_nodes.has(id):
 			var old: Node3D = _project_nodes[id]
-			remove_child(old)
-			old.queue_free()
+			_retire_climate_node(old)
 			_project_nodes.erase(id)
 		if level > 0:
 			var project: Node3D = ClimateProjects.build(self, id, level)
@@ -483,6 +488,7 @@ func set_climate(info: Dictionary) -> void:
 	for i in range(_ice_roots.size()):
 		_ice_roots[i].visible = _climate_ice.has(str(i))
 	set_climate_projects(info.get("projects", {}))
+	set_protection_work(info.get("protection", {}))
 	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	var strength: float = 0.0
 	if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
@@ -1086,7 +1092,7 @@ func nearby_station() -> Dictionary:
 	for point: Vector3 in plot_positions:
 		reach = minf(reach, player.position.distance_to(point))
 	for body: StaticBody3D in _interaction_targets:
-		if not is_instance_valid(body) or not body.is_visible_in_tree() or body.collision_layer == 0: continue
+		if not is_instance_valid(body) or not body.is_inside_tree() or not body.is_visible_in_tree() or body.collision_layer == 0: continue
 		var station: String = str(body.get_meta("station"))
 		if station.begins_with("equipment:"): continue
 		var shape: BoxShape3D = body.get_child(0).shape
@@ -1859,7 +1865,7 @@ func _update_pest_visual(index: int, data: Dictionary, infested: bool, damage: f
 	visual["destroyed"] = destroyed
 	var warning: Label3D = _pest_labels[index]
 	if infested:
-		warning.text = "! PESTS\nYIELD %d/3" % maxi(0, 3 - ticks)
+		warning.text = "! PESTS\n%d sacks remain" % Climate.Protection.remaining(data) if int(data.get("weather_lost", 0)) > 0 else "! PESTS\nYIELD %d/3" % maxi(0, 3 - ticks)
 		warning.modulate = Color("ffdf70") if ticks == 0 else (Color("ffb34e") if ticks == 1 else Color("ff6c50"))
 	elif destroyed:
 		warning.text = "CROP LOST" if float(visual["caption_time"]) > 0.0 else ""
@@ -2005,3 +2011,30 @@ func _buyer_board() -> void:
 	_roof(booth, 3.4, 1.55, 2.7, 0.5, Color("d19c54"))
 	_shop_label(booth, "Contracts", Vector3(0, 3.6, 0))
 	_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "contracts")
+
+func set_protection_work(info: Dictionary) -> void:
+	var pending: Dictionary = info.get("pending", {})
+	for id in _work_nodes.keys():
+		if not pending.has(id) or pending[id] != _work_progress.get(id):
+			_retire_climate_node(_work_nodes[id]); _work_nodes.erase(id)
+	for id in pending:
+		if not _work_nodes.has(id):
+			_work_nodes[id] = ClimateProjects.work_site(self, id, int(pending[id]))
+			_geometry_batcher.batch_tree(_work_nodes[id], {})
+	_work_progress = pending.duplicate()
+	var covers: Dictionary = info.get("covers", {})
+	for key in _cover_nodes.keys():
+		if not covers.has(key):
+			_retire_climate_node(_cover_nodes[key]); _cover_nodes.erase(key)
+	for key in covers:
+		if not _cover_nodes.has(key):
+			_cover_nodes[key] = ClimateProjects.bed_cover(self, int(key))
+			_geometry_batcher.batch_tree(_cover_nodes[key], {})
+
+func _retire_climate_node(node: Node3D) -> void:
+	for body in node.find_children("*", "StaticBody3D", true, false): _interaction_targets.erase(body)
+	for station in _tutorial_station_roots.keys():
+		_tutorial_station_roots[station].erase(node)
+		if _tutorial_station_roots[station].is_empty(): _tutorial_station_roots.erase(station)
+	remove_child(node)
+	node.queue_free()

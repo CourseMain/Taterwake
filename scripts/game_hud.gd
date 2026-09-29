@@ -59,7 +59,6 @@ const ShopPages = preload("res://scripts/shop_pages.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
 const Cozy = preload("res://scripts/cozy_ui.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const ClimateIcon = preload("res://scripts/climate_icon.gd")
 const UI_FONT = preload("res://assets/fonts/NunitoSans.ttf")
 const UI_SYMBOLS = preload("res://assets/fonts/NotoSansSymbols.ttf")
 const UI_SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
@@ -1454,6 +1453,7 @@ func show_panel(kind: String, state: Node) -> void:
 		"dex": _build_dex()
 		"quests": _build_quests()
 		"contracts": _build_contracts()
+		"loss_notices": _build_loss_notices()
 		"winter_stores": _build_stores()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
@@ -1777,6 +1777,7 @@ func _build_winter() -> void:
 	_refs.accounts_balance = _wrap("", 16, INK)
 	_body.add_child(_refs.accounts_balance)
 	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
+	_build_loss_cards(_body, clock.year)
 	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))
 	_modal_trade_footer.show()
 
@@ -1893,6 +1894,9 @@ func _refresh_graphics() -> void:
 func _refresh_panel() -> void:
 	if _panel_kind == "accounts":
 		_refresh_accounts()
+		return
+	if _panel_kind == "loss_notices":
+		_refresh_loss_notices()
 		return
 	if _panel_kind == "contracts":
 		_refresh_contracts()
@@ -2468,3 +2472,27 @@ func _refresh_stores() -> void:
 	for id in _state.CROP_IDS:
 		_refs["stored:" + id].text = "%s · %d stored sacks\n%s each now · Late Winter %s" % [_crop_name(id), _state.trading.held[id], _state.market_money(_state.trading.stored_price(_state, id)), _state.market_money(_state.trading.peak_price(id))]
 		_refs["stored_sell:" + id].disabled = _state.run_over or _state.season_clock.season != 3 or int(_state.trading.held[id]) == 0
+
+func _build_loss_notices() -> void:
+	_refs.loss_list = _vbox(8)
+	_body.add_child(_refs.loss_list)
+	_refresh_loss_notices()
+
+func _refresh_loss_notices() -> void:
+	var signature: String = "%d/%d/%d" % [_state.season_clock.year, _state.season_clock.season, _state.climate.data.protection.revision]
+	if _refs.loss_list.get_meta("signature", "") == signature: return
+	_refs.loss_list.set_meta("signature", signature)
+	for child in _refs.loss_list.get_children():
+		_refs.loss_list.remove_child(child); child.queue_free()
+	_heading("Crop loss notices", "Year %d · %s" % [_state.season_clock.year, _state.SeasonClock.NAMES[_state.season_clock.season]])
+	_build_loss_cards(_refs.loss_list, _state.season_clock.year, _state.season_clock.season)
+
+func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
+	var count: int = 0
+	for entry in _state.climate.data.protection.losses:
+		if int(entry.year) != year or (season >= 0 and int(entry.season) != season): continue
+		var card := _card(CREAM, 12)
+		parent.add_child(card)
+		card.add_child(_wrap(_state.ClimateSystem.Protection.text(entry), 16, INK))
+		count += 1
+	if count == 0: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))

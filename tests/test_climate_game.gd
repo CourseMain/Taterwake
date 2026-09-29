@@ -55,10 +55,10 @@ func run() -> void:
 	game.hud._climate_alert.dismiss()
 	await shot("climate-prepare")
 	var frame: Rect2 = game.hud._modal_card.get_global_rect()
-	for id in ["rainwater", "drainage", "barn", "windbreaks"]:
+	for id in ["rainwater", "drainage", "frost", "windbreaks"]:
 		check(game.hud._refs["climate_fund:"+id].is_visible_in_tree(), "protection purchases remain reachable in scrollable equipment panel")
 	game.hud._refs["climate_fund:drainage"].pressed.emit()
-	check(game.state.climate.data.projects.get("drainage") == 1 and game.state.coins == 99250.0, "initiative button buys exactly one local level")
+	check(game.hud._refs["climate_fund:drainage"].disabled and not game.state.climate.data.protection.pending.has("drainage") and game.state.coins == 100000.0, "construction purchase is gated to Winter")
 	game.hud.close_panel()
 	game._advance_simulation(45.0)
 	game.hud.update_state(game.state)
@@ -80,7 +80,7 @@ func run() -> void:
 	await create_timer(0.75).timeout
 	check(page.visible and page.headline.text == "FORECLOSED", "overdraft bankruptcy opens the editorial page")
 	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("5,000"), "foreclosure shows the overdraft boundary and accounting year")
-	check(page._metrics["FIELD LOST"].note.text.contains("24") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
+	check(page._metrics["FIELD LOST"].note.text.contains("24") and page._metrics["BARN LOST"].note.text.contains("300"), "loss metrics come from actual damage")
 	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")

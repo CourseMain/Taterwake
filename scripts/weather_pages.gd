@@ -1,12 +1,12 @@
 extends VBoxContainer
 const Display = preload("res://scripts/weather_display.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const BG := Color("0a1424")
-const PANEL := Color("11263a")
-const CYAN := Color("68dceb")
-const WHITE := Color("edf6ff")
-const MUTED := Color("9bb2c9")
-const AMBER := Color("ffc579")
+const BG := Color("f5ebd3")
+const PANEL := Color("eee0bd")
+const CYAN := Color("547351")
+const WHITE := Color("3f2c1c")
+const MUTED := Color("705236")
+const AMBER := Color("986c31")
 var hud
 var _grid: GridContainer
 var _metrics: GridContainer
@@ -58,20 +58,28 @@ func setup(owner_hud) -> void:
 		col.add_child(_label(entry[1], 10, MUTED))
 		_values[entry[0]] = _label("", 19, WHITE)
 		col.add_child(_values[entry[0]])
+	hud._refs.forecast_range = _label("", 18, WHITE)
+	add_child(hud._refs.forecast_range)
+	hud._refs.station_upgrade = _button("", "station_upgrade")
+	add_child(hud._refs.station_upgrade)
+	hud._refs.insurance = _button("", "insure")
+	add_child(hud._refs.insurance)
+	add_child(_button("This season's loss notices", "loss_notices"))
 	var protection := _panel(self)
 	var protections : VBoxContainer = hud._vbox(8)
 	protection.add_child(protections)
 	protections.add_child(_label("DAMAGE REDUCTION", 11, CYAN))
+	protections.add_child(_label("Sack losses round to the nearest whole sack after protection.", 13, MUTED))
 	_protection = GridContainer.new()
-	_protection.columns = 4
+	_protection.columns = 2
 	_protection.add_theme_constant_override("h_separation", 12)
 	_protection.add_theme_constant_override("v_separation", 5)
 	protections.add_child(_protection)
 	hud._refs.protection_summary = protection
-	for words: String in ["", "CROPS", "BARN", "TAX"]: _protection.add_child(_label(words, 11, MUTED))
+	for words: String in ["", "FIELD LOSS REDUCTION"]: _protection.add_child(_label(words, 11, MUTED))
 	for event: String in ["drought","flood","storm","freeze"]:
 		_protection.add_child(_label(event.capitalize(), 14, WHITE))
-		for metric: String in ["field", "barn"]:
+		for metric: String in ["field"]:
 			_values[event + metric] = _label("", 14, WHITE)
 			_protection.add_child(_values[event + metric])
 	add_child(_label("EQUIPMENT", 12, CYAN))
@@ -80,7 +88,7 @@ func setup(owner_hud) -> void:
 	_grid.add_theme_constant_override("h_separation", 12)
 	_grid.add_theme_constant_override("v_separation", 12)
 	add_child(_grid)
-	var titles := {"irrigation":"Irrigation array", "rainwater":"Water reserve", "drainage":"Drain network", "barn":"Barn shutters", "windbreaks":"Windbreaks"}
+	var titles := {"irrigation":"Sprinklers", "rainwater":"Rainwater tank", "drainage":"Drainage", "frost":"Frost cover", "windbreaks":"Windbreak"}
 	for id: String in hud._state.ClimateSystem.PROJECTS:
 		var panel := _panel(_grid)
 		panel.tooltip_text = hud._state.ClimateSystem.PROJECTS[id].detail
@@ -102,6 +110,10 @@ func setup(owner_hud) -> void:
 		var buy := _button("", "climate_fund:" + id, true)
 		column.add_child(buy)
 		hud._refs["climate_fund:" + id] = buy
+		if id != "irrigation":
+			var work_button := _button("Walk to construction site", "project_site:" + id)
+			column.add_child(work_button)
+			hud._refs["project_site:" + id] = work_button
 	var actions := VBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	add_child(actions)
@@ -139,10 +151,10 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.add_theme_font_size_override("font_size", 15)
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = CYAN if primary else Color("17344a")
+		var fill: Color = CYAN if primary else Color("d9c99f")
 		if state == "hover": fill = fill.lightened(0.1)
 		elif state == "pressed": fill = fill.darkened(0.15)
-		elif state == "disabled": fill = Color("203346")
+		elif state == "disabled": fill = Color("dfd4b8")
 		button.add_theme_stylebox_override(state, hud.Cozy.box(fill, 8, 10, Color("355870")))
 	for state: String in ["font_color","font_hover_color","font_pressed_color"]: button.add_theme_color_override(state, BG if primary else WHITE)
 	button.add_theme_color_override("font_disabled_color", MUTED)
@@ -159,15 +171,35 @@ func refresh() -> void:
 	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Prepare before the next weather warning."
 	_values.water.text = "%d / %d" % [int(info.supply.water), int(info.water_capacity)]
 	for event: String in ["drought", "flood", "storm", "freeze"]:
-		for metric: String in ["field", "barn"]:
-			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event, metric)*100)
+		for metric: String in ["field"]:
+			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event)*100) + (" · covered Spring beds" if event == "freeze" else "")
 	for id: String in farm.ClimateSystem.PROJECTS:
 		var level: int = int(info.projects.get(id, 0))
 		var full: bool = level >= farm.ClimateSystem.MAX_PROJECT_LEVEL
 		var cost: float = float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
-		var stats := {"irrigation":"4 water / patch" if full else ("6 → 4 water / patch" if level == 1 else "3 patches · 6 water each"), "rainwater":"%d water capacity" % int(info.water_capacity) if full else "%d → %d water capacity" % [int(info.water_capacity), int(info.water_capacity)+36], "drainage":"Flood: −30% crop damage / level", "barn":"−35% stored crop loss / level", "windbreaks":"Shelters far beds · wind only"}
-		hud._refs["climate_effect:" + id].text = stats[id]
-		hud._set_purchase_button("climate_fund:" + id, "Fully upgraded" if full else (("Install" if level == 0 else "Upgrade") + " · " + farm.money(cost)), cost, full)
+		var pending: bool = info.protection.pending.has(id)
+		hud._refs["climate_effect:" + id].text = farm.ClimateSystem.PROJECTS[id].detail
+		if pending: hud._refs["climate_effect:" + id].text += "\nPaid · Work %d / 3. Unfinished work carries to next Winter." % int(info.protection.pending[id])
+		var winter_only: bool = id != "irrigation"
+		var caption: String = "Fully built" if full else ("Paid · Finish at site" if pending else ("Reserve" if winter_only else "Install") + " · " + farm.money(cost))
+		hud._set_purchase_button("climate_fund:" + id, caption, cost, full or pending or (winter_only and farm.season_clock.season != 3))
+		if winter_only:
+			hud._refs["project_site:" + id].visible = pending
+			hud._refs["project_site:" + id].disabled = farm.season_clock.season != 3
+	var forecast: Dictionary = info.forecast
+	hud._refs.forecast_range.text = "Next %s: disaster chance %d to %d%%." % [farm.SeasonClock.NAMES[int(forecast.season)], roundi(forecast.low * 100), roundi(forecast.high * 100)]
+	if int(forecast.season) != 3:
+		for event in forecast.events:
+			var risk: Dictionary = forecast.events[event]
+			hud._refs.forecast_range.text += "\n%s %d to %d%%" % [str(event).capitalize(), roundi(risk.low * 100), roundi(risk.high * 100)]
+	if int(forecast.season) == 3: hud._refs.forecast_range.text = "Next Winter: no new disasters."
+	var station: int = int(info.protection.station)
+	hud._refs.station_upgrade.text = "Station level %d · ±%d points" % [station, [20, 10, 5][station]] + (" · Upgrade " + farm.money(farm.ClimateSystem.Protection.STATION_COST * (station + 1)) if station < 2 else "")
+	hud._refs.station_upgrade.disabled = station >= 2 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.STATION_COST * (station + 1))
+	var insured: bool = farm.ClimateSystem.Protection.insured(farm)
+	hud._refs.insurance.text = "Insured this year · 40% of future field losses at base prices, paid at Winter start" if insured else "Spring insurance · " + farm.money(400) + " · 40% of future field losses at base prices, paid at Winter start"
+	hud._refs.insurance.disabled = insured or farm.season_clock.season != 0 or farm.run_over or not farm.can_purchase(400)
+
 	if hud._refs.has("climate_practice"):
 		hud._refs.climate_practice.disabled = int(info.projects.get("irrigation", 0)) == 0
 func _layout() -> void:

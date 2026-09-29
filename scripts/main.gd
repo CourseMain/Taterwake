@@ -33,6 +33,8 @@ var sprint_blend: float = 0.0
 var pending_plot: int = -1
 var walk_waypoints: Array[Vector3] = []
 var pending_tool: String = "hoe"
+var pending_project: String = ""
+var project_work_left: float = 0.0
 var hover_plot: int = -1
 var hover_elapsed: float = 0.0
 var ui_elapsed: float = 0.0
@@ -192,6 +194,15 @@ func _process(delta: float) -> void:
 		_on_state_changed()
 	if state.run_over:
 		return
+	if project_work_left > 0 and not hud.is_panel_open() and not state.accounts_open and not state.run_over:
+		project_work_left = maxf(0, project_work_left - delta)
+		if project_work_left == 0:
+			var project: String = pending_project
+			pending_project = ""
+			if world.player.position.distance_to(world.ClimateProjects.site_position(world, project)) <= 1.5:
+				hud.show_farm_hint(state.ClimateSystem.Protection.work(state, project))
+			_save_checkpoint.call_deferred()
+
 	_update_equipment_card(delta)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
@@ -243,6 +254,9 @@ func _process(delta: float) -> void:
 						world._climate_field.loop.refill_time = 1.6
 						_close_equipment()
 					_save_checkpoint.call_deferred()
+				elif not walking and not pending_project.is_empty():
+					project_work_left = 0.6
+					world.play_farm_effect([], "hoe")
 				elif not walking and pending_plot >= 0:
 					perform_plot(pending_plot, pending_tool)
 					pending_plot = -1
@@ -460,7 +474,9 @@ func _tap_world(point: Vector2) -> void:
 		_interact_station(str(hit.station))
 
 func _interact_station(station: String) -> void:
-	if station.begins_with("equipment:"):
+	if station.begins_with("project:"):
+		_queue_project(station.trim_prefix("project:"))
+	elif station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
 	elif station == "market" and not _tutorial_active():
@@ -645,6 +661,8 @@ func _cancel_walk() -> void:
 	sprint_blend = 0.0
 	pending_tool = selected_tool
 	pending_refill = false
+	pending_project = ""
+	project_work_left = 0.0
 	walking = false
 	pending_plot = -1
 	walk_waypoints.clear()
@@ -706,6 +724,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		before.append(state.plots[tile].duplicate(true))
 	hud.note_farm_action()
 	_working_plot = true
+	var covers_before: Dictionary = state.climate.data.protection.covers.duplicate(true)
 	var result: String = state.interact_plot(index, tool)
 	_working_plot = false
 	var changed_indices: Array[int] = []
@@ -717,6 +736,8 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 			if action == "harvest" and int(before[step].stage) == 3:
 				harvest_snapshots[tile] = before[step]
 	if lesson_before == "water" and state.climate.data.lesson.stage == "area": changed_indices.append(index)
+	if covers_before != state.climate.data.protection.covers:
+		changed_indices.append(index)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
 		else: hud.show_farm_hint(result)
@@ -812,6 +833,9 @@ func _update_hover() -> void:
 			var area: int = state.affected_tiles(hover_plot, action).size()
 			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
 	elif hit.has("station"):
+		if str(hit.station).begins_with("project:"):
+			hud.set_context("Winter construction · Click to walk and work")
+			return
 		if str(hit.station).begins_with("equipment:"):
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
@@ -950,7 +974,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "run_summary", "winter_stores", "contracts":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "run_summary", "winter_stores", "contracts", "loss_notices":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -973,6 +997,9 @@ func _on_action(action: String) -> void:
 			if parts.size() == 2:
 				_climate_action(parts[1])
 				_save_checkpoint.call_deferred()
+		"insure": state.ClimateSystem.Protection.insure(state)
+		"station_upgrade": state.ClimateSystem.Protection.upgrade_station(state)
+		"project_site": _queue_project(parts[1])
 		"climate_fund":
 			if parts.size() == 2:
 				state.climate.fund(state, parts[1])
@@ -1239,3 +1266,11 @@ func _update_equipment_card(delta: float = 0.0) -> void:
 	else:
 		card.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 		card.position = Vector2(get_viewport().get_visible_rect().size.x - card.size.x - 22, 112)
+
+func _queue_project(id: String) -> void:
+	if not state.climate.data.protection.pending.has(id) or state.season_clock.season != 3 or state.run_over: return
+	hud.close_panel()
+	_cancel_walk()
+	pending_project = id
+	_start_walk(world.ClimateProjects.site_position(world, id))
+	hud.show_farm_hint("Walk to %s · one work action on arrival" % state.ClimateSystem.PROJECTS[id].name)

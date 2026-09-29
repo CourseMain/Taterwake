@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 33
+const MECHANICS_REVISION: int = 34
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -99,7 +99,7 @@ func _build_starters() -> void:
 		var stage: int = 3 if index < 2 else (2 if index < 4 else 0)
 		plots.append({"unlocked": index < 12, "winter_ice": false, "stage": stage, "watered": stage > 0,
 			"elapsed": float(CropTable.CROPS.russet.grow) if stage == 3 else (float(CropTable.CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
-			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0})
+			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0, "weather_lost": 0})
 	market.clear()
 	_refresh_market()
 
@@ -435,6 +435,7 @@ func update(delta: float) -> void:
 
 func _season_boundary() -> void:
 	if season_clock.season == 0: trading.held = CropTable.empty_stock()
+	if season_clock.season == 1: climate.data.protection.covers.clear()
 	var was_over: bool = run_over
 	if season_clock.finished():
 		_end_run("completed")
@@ -444,13 +445,16 @@ func _season_boundary() -> void:
 		season_clock.autumn_loss = 0
 		for plot in plots:
 			if plot.crop != "icecap" or int(plot.stage) == 0:
-				if int(plot.stage) > 0: season_clock.autumn_loss += 1
+				if int(plot.stage) > 0:
+					season_clock.autumn_loss += 1
+					ClimateSystem.Protection.record(self, "autumn_cold", plot.crop, ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Harvest before Winter; covers protect Spring freeze only", "field", 2)
 				_clear_crop(plot)
 				plot.tilled = false
 			plot.winter_ice = true
 		climate.end_working_year()
 		farm_help.refresh_pests(self)
 		trading.begin_winter(self)
+		ClimateSystem.Protection.winter(self)
 		ledger.post_fixed_costs(season_clock.year)
 		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
 		news = winter_notice()
@@ -474,13 +478,16 @@ func _pest_damage_tick(plot: Dictionary) -> void:
 	if tutorial_active or farm_help.protected_pest(self, plot):
 		plot["pest_elapsed"] = 0.0
 		return
+	var crop_before: String = str(plot.crop)
+	var sacks_before: int = ClimateSystem.Protection.remaining(plot)
 	plot["pest_elapsed"] = 0.0
 	plot["pest_ticks"] = mini(3, int(plot.get("pest_ticks", 0)) + 1)
 	plot["pest_damage"] = float(plot["pest_ticks"]) / 3.0
 	# Once harvesting has begun, damage always uses the original total, never
 	# the remaining pile. Previously collected potatoes cannot be collected again.
 	if int(plot.get("yield_total", 0)) > 0:
-		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot.get("yield_taken", 0)))
+		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot.get("yield_taken", 0)) - int(plot.get("weather_lost", 0)))
+	ClimateSystem.Protection.record(self, "pests", crop_before, sacks_before - ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Spray pests before they eat the crop", "field")
 	if int(plot["pest_ticks"]) >= 3 or (int(plot.get("yield_total", 0)) > 0 and int(plot["pending"]) == 0):
 		_clear_crop(plot, true)
 
@@ -498,6 +505,7 @@ func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
 	plot["pest_destroyed"] = destroyed
 	plot["yield_total"] = 0
 	plot["yield_taken"] = 0
+	plot["weather_lost"] = 0
 	if not destroyed:
 		plot["pest_ticks"] = 0
 		plot["pest_damage"] = 0.0
@@ -558,6 +566,8 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if not plots[index]["unlocked"]:
 		return _finish("Unlock more beds at Tools · \uE000 1,200")
 	var action: String = tool
+	if action == "hoe" and season_clock.season == 3 and not ClimateSystem.Operations.frozen(self, index) and int(climate.data.projects.get("frost", 0)) > 0:
+		return ClimateSystem.Protection.cover(self, index)
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
 	if action == "plant" and not available_crops().has(selected_crop):
@@ -659,7 +669,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 	if first_cut:
 		plot["yield_total"] = int(CropTable.CROPS[id]["yield"])
 		plot["yield_taken"] = 0
-		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot.get("pest_ticks", 0))) / 3.0)))
+		plot["pending"] = ClimateSystem.Protection.remaining(plot)
 		_progress_quest("starter_combo", 1.0)
 	var quantity: int = maxi(0, mini(space, int(plot["pending"])))
 	if quantity == 0:
@@ -1097,6 +1107,7 @@ func _valid_save(raw: Variant) -> bool:
 		if not _number(data.tools.get(key), 0, 3, true): return false
 	if float(data.climate.operations.supply.can) > 16.0 + 16.0 * int(data.tools.water): return false
 	if not _valid_plots(data.get("plots"), data): return false
+	if not ClimateSystem.Protection.valid(data.climate.get("protection"), data): return false
 	if (int(data.season_clock.season) == 3):
 		if data.climate.phase != "calm": return false
 		for plot in data.plots:
@@ -1150,7 +1161,7 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 			return false
 		if stage != 3 and float(plot["ripe_age"]) > 0.0:
 			return false
-		for key in ["pest_ticks", "yield_total", "yield_taken"]:
+		for key in ["pest_ticks", "yield_total", "yield_taken", "weather_lost"]:
 			if not plot.has(key) or not _number(plot[key], 0.0, 3.0 if key == "pest_ticks" else 100000.0, true):
 				return false
 		if not plot.has("pest_elapsed") or not _number(plot["pest_elapsed"], 0.0, PEST_TICK_SECONDS):
@@ -1161,8 +1172,9 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 			return false
 		if (plot["pest_destroyed"] and stage != 0) or (int(plot["pest_ticks"]) == 3 and stage != 0):
 			return false
-		if int(plot["yield_taken"]) > int(plot["yield_total"]) or int(plot["pending"]) > maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot["yield_taken"])):
+		if int(plot["yield_taken"]) > int(plot["yield_total"]) or int(plot["pending"]) > maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot["yield_taken"]) - int(plot["weather_lost"])):
 			return false
+		if int(plot.weather_lost) > int(CropTable.CROPS[plot.crop].yield) or (stage == 0 and int(plot.weather_lost) > 0): return false
 		if stage != 3 and (int(plot["yield_total"]) > 0 or int(plot["yield_taken"]) > 0):
 			return false
 		if not plot["unlocked"] and (stage > 0 or plot["tilled"]):

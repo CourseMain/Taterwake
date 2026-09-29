@@ -35,7 +35,7 @@ static func build(world: Node3D, id: String, level: int) -> Node3D:
 		"irrigation": _irrigation(world, root, level)
 		"rainwater": _rainwater(world, root, level)
 		"drainage": _drainage(world, root, level)
-		"barn": _barn(world, root, level)
+		"frost": _frost(world, root, level)
 		"windbreaks": _windbreaks(world, root, level)
 	return root
 
@@ -102,20 +102,33 @@ static func _drainage(w, root: Node3D, level: int) -> void:
 	w._box(root, outlet + Vector3(0, -0.2, 0), Vector3(0.8, 0.5, 0.65), Color("bcc4ae"))
 	w._target(root, gate + Vector3(0, 1.0, 0), Vector3(1.35, 2.1, 1.1), "station", "equipment:drain")
 
-static func _barn(w, root: Node3D, level: int) -> void:
-	root.position = barn_position(w)
-	w._target(root, Vector3(0, 2, 2.65), Vector3(4.5, 2.8, 0.4), "station", "equipment:barn")
-	var metal := Color("537783")
-	for x: float in [-2.72, 2.72]:
-		for z: float in [-2.04, 2.04]:
-			w._box(root, Vector3(x, 1.95, z), Vector3(0.25, 3.9, 0.25), metal)
-		w._bar(root, Vector3(x, 0.45, -1.9), Vector3(x, 3.4, 1.9), 0.09, metal)
-		w._bar(root, Vector3(x, 0.45, 1.9), Vector3(x, 3.4, -1.9), 0.09, metal)
-	w._box(root, Vector3(0, 3.08, 2.46), Vector3(5.65, 0.20, 0.2), metal)
-	if level >= 2:
-		for x: float in [-2.0, 0.0, 2.0]:
-			w._bar(root, Vector3(x, 3.89, 2.57), Vector3(x, 5.36, 0), 0.10, metal)
-			w._bar(root, Vector3(x, 5.36, 0), Vector3(x, 3.89, -2.57), 0.10, metal)
+static func _frost(w, root: Node3D, level: int) -> void:
+	root.position = site_position(w, "frost")
+	for side in [-1, 1]: w._box(root, Vector3(side * 0.75, 0.6, 0), Vector3(0.12, 1.2, 0.7), Color("92714b"))
+	for i in range(level + 1): w._cylinder(root, Vector3(0, 0.45 + i * 0.28, 0), 0.18, 0.18, 1.6, Color("d9e7dd"), 12).rotation.z = PI * 0.5
+	w._shop_label(root, "Frost covers · Hoe cleared Winter beds", Vector3(0, 2.2, 0))
+
+static func site_position(w, id: String) -> Vector3:
+	match id:
+		"rainwater": return tank_position(w) + Vector3(0, 0, 3.0)
+		"drainage": return drain_position(w) + Vector3(-2.0, 0, 0)
+		"windbreaks": return trees_position(w) + Vector3(-8.0, 0, -1.5)
+		_: return w.plot_positions[-1] + Vector3(3.0, 0, 0)
+
+static func work_site(w, id: String, progress: int) -> Node3D:
+	var root: Node3D = w._root("Work_" + id, site_position(w, id))
+	for i in range(3): w._box(root, Vector3(0, 0.10 + i * 0.15, 0), Vector3(1.7, 0.13, 0.48), Color("b69564"))
+	w._shop_label(root, "%s · Work %d / 3" % [w.Climate.PROJECTS[id].name, progress], Vector3(0, 2.2, 0))
+	w._target(root, Vector3(0, 0.8, 0), Vector3(1.7, 1.6, 1.0), "station", "project:" + id)
+	return root
+
+static func bed_cover(w, index: int) -> Node3D:
+	var root: Node3D = w._root("FrostCover_%d" % index, w.plot_positions[index])
+	for z in [-0.65, 0.65]:
+		w._bar(root, Vector3(-0.85, 0.12, z), Vector3(0, 0.75, z), 0.045, Color("809b8e"))
+		w._bar(root, Vector3(0, 0.75, z), Vector3(0.85, 0.12, z), 0.045, Color("809b8e"))
+	w._box(root, Vector3(0, 0.56, 0), Vector3(1.7, 0.06, 1.65), Color("d5e4dc"))
+	return root
 
 static func _windbreaks(w, root: Node3D, level: int) -> void:
 	root.position = trees_position(w)
