@@ -934,6 +934,111 @@ Acceptance: test_tutorial_*.gd rewritten and green; a new player can reach
 the first accounts screen headless in the tutorial test.
 ```
 
+### Segment 18: Farm visuals pass (run after Segment 15)
+
+```
+Goal: every new mechanic gets real art on the island, in the existing
+low-poly, vertex-coloured style of farm_world.gd. No new asset pipeline;
+build from the same primitives and the static mesh compiler.
+
+Replace and add:
+- Winter: replace the flat white sheet with snow that sits on things.
+  Drifts against fences and walls, snow caps on every roof and tree, bare
+  fruit trees, frozen tank surface, footprints on the paths the farmer
+  walks, ice on beds drawn as a cracked glaze that Hoe visibly breaks.
+- Seasons (from Segment 13): make blossom, summer haze, autumn canopies
+  and fallen leaves read at the default zoom, not only up close.
+- Beds: a small grade marker on each growing bed (green leaf for Table,
+  plain for Standard, brown for Feed) that matches the hover tag; stress
+  reads on the plant (wilting for drought, yellowing for flood, frost
+  rime for freeze), not only on the border.
+- Barn: stored sacks visibly stack inside the open barn door in Winter;
+  sacks kept for seed sit in a separate crate; spoiled sacks show as a
+  darker heap that shrinks.
+- Buyer board: the contract shows as a crate with a chalk tag by the
+  road; on collection a cart arrives and leaves.
+- Protections: the tank, drainage channels, windbreak rows and frost
+  covers are visible buildings and objects that appear as they are built
+  in Winter, with an under-construction state while unfinished.
+- Weather station: the forecast range shows on the instrument face.
+- Farmer: a Winter coat and hat in Winter, straw hat in Summer, from the
+  fixed-outfit system kept in Segment 3.
+
+Keep draw calls near the current count: everything static goes through
+the batcher; only animated pieces stay separate. Check the web build.
+
+Tests: test_farm_visuals.gd (season and Winter states build without
+errors, grade markers match state, batcher counts within a budget).
+
+Acceptance: a screenshot of Winter, of a stressed bed and of a built tank
+each look finished; suite green; web export runs.
+```
+
+### Segment 19: Interface visuals pass
+
+```
+Goal: the new screens look designed, in the cream paper and ink style of
+UI_STYLE.md, on desktop and phone.
+
+- Annual accounts: a ledger page. Ruled lines, category rows with dot
+  leaders, the net figure in the display font, a stamped year, the
+  ten-year table as a small column, the climate strip beneath, cause
+  cards as pinned notes. This is the screenshot screen: no HUD chrome
+  behind it, a screenshot button that saves to the user folder.
+- Crop cards: illustrated potato per variety (item_icon.gd), the three
+  dials as short bars with icons (drop, sun, snowflake), seed cost, last
+  year's price, and a grade preview line; selected card lifts.
+- Sell page: one row per variety, then per grade; the sparkline with the
+  dashed Winter marker; a single line explaining storage.
+- Contracts and Winter stores: paper order slip and a barn tally board.
+- Front page (Segment 13): a newspaper layout with masthead, headline,
+  the ten-year strip as a weather column, and a skip control.
+- Forecast: the range as a bracket on a scale, not text only.
+- Foreclosure and ten-year summary: keep the editorial page, add the
+  final ledger and the epilogue lead-in.
+- Season strip: a small four-segment bar under the wordmark with the
+  current season lit and the year number.
+- Phone layouts for every page above; touch targets at least 44 px.
+
+Remove leftover copy from the old game wherever it appears (stock words,
+island names other than Spud Valley, quest names from the market era).
+
+Tests: update the HUD layout and responsive suites for the new pages at
+the existing viewport set.
+
+Acceptance: every panel screenshotted at desktop and phone width looks
+consistent; suite green.
+```
+
+### Segment 20: Feel, sound and performance
+
+```
+Goal: the last mile before the tutorial rewrite.
+
+- Transitions: one-second crossfade at season boundaries (sky, grass,
+  snow); accounts page slides in from the ledger book; front page fades.
+- Sound: a short seasonal ambience loop each (birds, cicadas, wind,
+  muffled snow), the existing tool foley, a paper sound for the ledger,
+  a low note for foreclosure. Reuse climate_audio.gd for weather.
+- Harvest and grade feedback: the harvest pop shows the grade stamp with
+  a distinct sound per grade.
+- Epilogue (Segment 16): the fifty-year pan, headlines fading in per
+  decade, the four verdict lines typed on.
+- Camera: gentle push-in on the accounts open; storm shake stays bounded.
+- Performance: profile the web build at phone resolution; the per-frame
+  costs noted in the original analysis (day-time rewrite, nearby-station
+  scan on every frame, per-sample audio synthesis) are fixed here if
+  still present. Target 60 fps on a mid-range phone in Summer with rain.
+- Save: confirm the boundary save never hitches longer than a frame;
+  move it off the main thread if it does.
+
+Tests: test_feel.gd for transition timing and audio presence; a
+benchmark script that reports frame time in the browser fixture.
+
+Acceptance: a full year played on a phone without a visible hitch; suite
+green; web export runs.
+```
+
 ## 8. Logic checks on the original plan
 
 - **Hard versus unfair.** "Barely any money" only works if every loss is
