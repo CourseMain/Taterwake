@@ -1,11 +1,22 @@
 # Changelog
 
-## Unreleased — Segment 16a
+## 2.0.0-undeveloped-f
+
+**Game redesign — source prerelease.** Covers Segments 1–17, including farm-sized accounts, the fifty-year ending and the guided first year. The live browser game remains v1.0.3.1.
+
+- Added the deterministic fifty-year epilogue: forty caretaker years continue from the final farm, with seven futures decided by solvency, adaptation, diversification and land health. Thriving requires every axis above 0.75.
+- Added future farm visuals, a fifty-year climate strip, decade headlines, a slow camera pan, four verdicts, the final farm-value line and screenshot capture.
+- Recast Nell as accountant, Tess as farmhand, Edwin as the bank manager who visits beyond half the overdraft, and Iris as the year-start forecaster. Existing potato voices, portraits and conversations remain.
+- Replaced the first-sale lesson with a guided year: crop card, planting, water, a small Summer storm and cause card, harvest, sell or store, then the real Winter ledger. Later help stays optional.
+- Led the README and store copy with an actual ledger screenshot and the tagline “A farming game where you lose money.” Rewrote the gameplay guide around the run, decisions, accounts and ending.
 
 - Applied one 40× money scale in `scripts/balance.gd`, including upgrades, rewards and debug balances. Opening cash is 80,000, annual fixed costs 104,000 and the overdraft 200,000; rates and quantities are unchanged.
 - Changed harvest copy to tonnes (`t` on cards and receipts), with per-tonne prices and grouped integer money on sale and account pages.
 - Added per-seed comparisons with the pre-scale tuning results and a check for sub-unit balance constants. Survival counts remain naive 0/30, cautious 28/30, tidy 30/30 and diversifier 29/30; all cash and receipts scale by forty.
 - Saves use mechanics revision 41; older unit amounts are incompatible and set aside. Published browser files are unchanged.
+- Validation: all 82 GDScript suites passed across the full regression run and focused reruns. The five tutorial suites pass 243 checks; the boot check passes 39; the strategy bot passes 1,836. The native first-year walkthrough passes 57 checks with captures.
+
+The project targets Godot 4.7.2 with GL Compatibility. Validation used the installed Godot 4.7 stable binary; 4.7.2 was unavailable. This source prerelease has no new browser export and does not replace the published build.
 
 ## 2.0.0-undeveloped-e
 

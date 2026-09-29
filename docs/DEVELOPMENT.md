@@ -11,7 +11,7 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-undeveloped-e`, published as the GitHub prerelease **v2.0.0(undeveloped:e)** from the `redesign` branch. This tag covers Segments 1–15, including the tuned ten-year bot and diversification. The current branch also includes Segment 16a’s farm-sized accounts and tonnes. The earlier `v2.0.0-undeveloped-d` tag covers Segments 1–13 plus harvest quality and seed saving, `v2.0.0-undeveloped-c` covers Segments 1–12, `v2.0.0-undeveloped-b` covers Segments 1–11, and `v2.0.0-indevelopment` covers Segments 1–8. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-undeveloped-f`, published as the GitHub prerelease **v2.0.0(undeveloped:f)** from the `redesign` branch. This tag covers Segments 1–17: the farm-sized economy, forty-year caretaker continuation, fifty-year presentation, new NPC roles and guided first year through Winter accounts. The earlier `v2.0.0-undeveloped-e` tag covers Segments 1–15; `v2.0.0-undeveloped-d` covers Segments 1–13 plus harvest quality and seed saving. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
