@@ -82,7 +82,7 @@ func hire_duck() -> String:
 	var cost: float = duck_hire_cost()
 	if not state.can_purchase(cost):
 		return state._reject_purchase(state.purchase_refusal(cost))
-	state.coins -= cost
+	state.post_money("labour", "Hire patrol duck", -cost)
 	owned_ducks += 1
 	_current_ducks()
 	_assign_targets(_active_ducks(), state.plots)
@@ -99,7 +99,7 @@ func train_ducks() -> String:
 	if not state.can_purchase(cost):
 		return state._reject_purchase(state.purchase_refusal(cost))
 	var previous_interval: float = duck_interval()
-	state.coins -= cost
+	state.post_money("labour", "Train patrol ducks", -cost)
 	patrol_speed += 1
 	for duck in _current_ducks():
 		duck.elapsed = float(duck.elapsed) / previous_interval * duck_interval()

@@ -117,7 +117,7 @@ func _run() -> void:
 	check(is_equal_approx(farm.coins, 84000) and is_equal_approx(farm.plots[4].elapsed, 4.0), "saving preserves cash, exact growth and active events")
 	var snapshot: float = farm.elapsed
 	check(farm.elapsed == snapshot, "load does not add offline growth")
-	for key in ["coins", "selected_crop", "capacity", "tools", "plots", "schema_version"]:
+	for key in ["ledger", "selected_crop", "capacity", "tools", "plots", "schema_version"]:
 		var bad: Dictionary = saved.duplicate(true)
 		bad.erase(key)
 		write_save(bad)
@@ -125,7 +125,7 @@ func _run() -> void:
 	var bad: Dictionary = saved.duplicate(true)
 	bad.coins = -5001
 	write_save(bad)
-	check(not farm.load_game(SAVE), "unreported overdraft rejected")
+	check(not farm.load_game(SAVE), "independent saved purse rejected")
 	bad = saved.duplicate(true)
 	bad.schema_version = 1
 	write_save(bad)

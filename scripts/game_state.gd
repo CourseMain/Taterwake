@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 28
+const MECHANICS_REVISION: int = 29
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -43,7 +43,10 @@ const CROPS: Dictionary = {
 const MAX_GROW_SECONDS: float = 450.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 600.0, 1200.0], "water": [400.0, 800.0, 1400.0], "harvest": [500.0, 1000.0, 1500.0]}
 const BARN_COSTS: Array[float] = [300.0, 800.0, 2000.0]
-const OVERDRAFT_LIMIT: float = -5000.0
+const Ledger = preload("res://scripts/ledger.gd")
+const OVERDRAFT_LIMIT: float = Ledger.OVERDRAFT_LIMIT
+var ledger = Ledger.new()
+var run_outcome: String = ""
 const DEBUG_MONEY_LIMIT: float = 100000.0
 const QUEST_REWARD: float = 100.0
 const MAX_MONEY: float = 100000.0
@@ -57,16 +60,15 @@ var npc_history: Dictionary = {}
 var tutorial_progress: Dictionary = {"version": 2, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
 var climate = ClimateSystem.new()
-var _restoring_balance: bool = false
 var run_over: bool = false
 var harvested_total: int = 0
-var coins: float = 2000.0:
+var coins: float:
+	get: return ledger.balance()
 	set(value):
-		if not is_finite(value) or (run_over and not _restoring_balance):
-			return
-		coins = clampf(value, -MAX_MONEY, MAX_MONEY)
-		if not _restoring_balance and coins < bankruptcy_limit():
-			_end_run("bankrupt")
+		# Compatibility for debug tools and fixtures: assignments are journaled,
+		# never stored in a second purse variable.
+		if is_finite(value) and not run_over:
+			post_money("other", "Balance adjustment", clampf(value, -MAX_MONEY, MAX_MONEY) - coins)
 var selected_crop: String = "russet"
 var seed_inventory: Dictionary = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 var storage: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
@@ -139,7 +141,7 @@ func apply_debug(money_multiplier: float) -> String:
 		return _finish("Debug ranges: money x0 to x100,000. Decimals such as 0.1 and 1e-3 work; x0 clears your purse.")
 	var previous: float = coins
 	var after: float = minf(MAX_MONEY, coins * money_multiplier)
-	coins = after
+	post_money("other", "Debug balance multiplier", after - coins)
 	debug_money_modified = debug_money_modified or coins != previous
 	return _finish("DEBUG applied: purse %s. Money was multiplied once." % money(coins))
 
@@ -150,7 +152,7 @@ func debug_set_balance(amount: float) -> String:
 	if not is_finite(amount) or amount < 0.0 or amount > MAX_MONEY:
 		return _finish("Enter a test balance from 0 to 100,000.")
 	debug_money_modified = debug_money_modified or coins != amount
-	coins = amount
+	post_money("other", "Debug balance adjustment", amount - coins)
 	return _finish("DEBUG: balance set to %s. Progress kept." % money(coins, true))
 
 
@@ -159,11 +161,14 @@ func debug_recover(amount: float) -> String:
 	# rewards and purchases still cannot change an ended run's balance.
 	if not run_over:
 		return _finish("This farm is still running. Use Set balance for test funds.")
+	if season_clock.year == SeasonClock.LAST_YEAR:
+		return _finish("The ten-year run is finished. Start a new farm.")
 	if not is_finite(amount) or amount <= 0.0 or amount > MAX_MONEY:
 		return _finish("Recovery needs a positive test balance up to 100,000.")
 	run_over = false
+	run_outcome = ""
 	debug_money_modified = true
-	coins = amount
+	post_money("other", "Debug balance adjustment", amount - coins)
 	climate.data.collapse.clear()
 	_refresh_market()
 	return _finish("DEBUG: farm recovered with %s. Progress kept." % money(coins, true))
@@ -212,13 +217,16 @@ func climate_info() -> Dictionary:
 	return climate.info(self)
 
 
-func _end_run(_reason: String) -> void:
+func post_money(category: String, label: String, amount: float) -> bool:
+	if run_over: return false
+	return ledger.post(season_clock.year, season_clock.season, category, label, amount)
+
+func _end_run(reason: String) -> void:
 	if run_over:
 		return
 	run_over = true
-	climate.capture_collapse(self)
-	run_ended.emit()
-	changed.emit()
+	run_outcome = reason
+	if reason == "foreclosed": climate.capture_collapse(self)
 
 
 func quest_info() -> Array[Dictionary]:
@@ -262,7 +270,7 @@ func claim_quest(id: String) -> String:
 		if not bool(entry["complete"]):
 			return _finish("Keep going: %s" % entry["description"])
 		quest_claimed.append(id)
-		coins = minf(MAX_MONEY, coins + float(entry["coins"]))
+		post_money("other", "Quest: " + str(entry.title), float(entry.coins))
 		if id == "starter_crash":
 			seed_inventory["golden"] = mini(MAX_INVENTORY, int(seed_inventory["golden"]) + 2)
 		reward_received.emit("QUEST REWARD!", "%s: %s" % [entry["title"], entry["reward_text"]], "legendary")
@@ -422,6 +430,7 @@ func update(delta: float) -> void:
 
 
 func _season_boundary() -> void:
+	var was_over: bool = run_over
 	if season_clock.winter_menu:
 		season_clock.autumn_loss = 0
 		for plot in plots:
@@ -430,16 +439,20 @@ func _season_boundary() -> void:
 			plot.tilled = false
 		climate.end_working_year()
 		farm_help.refresh_pests(self)
+		ledger.post_fixed_costs(season_clock.year)
+		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
+		elif season_clock.year == SeasonClock.LAST_YEAR: _end_run("completed")
 		news = winter_notice()
 	else:
 		news = "Year %d · %s" % [season_clock.year, SeasonClock.NAMES[season_clock.season]]
 	# The persisted state is complete before any listener opens the Winter UI.
 	if not boundary_save_path.is_empty(): save_game(boundary_save_path)
 	season_changed.emit()
+	if run_over and not was_over: run_ended.emit()
 	if season_clock.winter_menu: notified.emit(news)
 
 func winter_notice() -> String:
-	return "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. All your crops were brought in."
+	return "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. No unharvested crops remained in the fields."
 
 func start_next_year() -> bool:
 	if run_over or not season_clock.start_next_year(): return false
@@ -675,7 +688,7 @@ func market_money(value: float) -> String:
 
 func purchase_quote(cost: float) -> Dictionary:
 	var valid_cost: bool = is_finite(cost) and cost >= 0.0
-	var affordable: bool = valid_cost and not run_over and (cost == 0.0 or coins >= cost)
+	var affordable: bool = valid_cost and not run_over and (cost == 0.0 or coins - cost >= OVERDRAFT_LIMIT)
 	return {"affordable": affordable, "reason": "" if affordable else ("Run over. Start a new farm." if run_over else "Not enough Spudions.")}
 
 func can_purchase(cost: float) -> bool:
@@ -697,7 +710,7 @@ func buy_seeds(id: String, quantity: int = 5) -> String:
 		return _reject_purchase(purchase_refusal(cost))
 	if int(seed_inventory[id]) + quantity > MAX_INVENTORY:
 		return _reject_purchase("Your seed shed is full for this crop.")
-	coins -= cost
+	post_money("seeds", "Bought %d %s seeds" % [quantity, id], -cost)
 	seed_inventory[id] = int(seed_inventory[id]) + quantity
 	_progress_quest("starter_crash", float(quantity))
 	return _complete_purchase({"kind": "seeds", "id": id, "name": str(CROPS[id]["name"]).trim_suffix(" Potato"), "quantity": quantity, "cost": cost, "total": int(seed_inventory[id])}, "Bought %s %s seeds for %s at the seed counter." % [format_number(quantity), CROPS[id]["name"], money(cost)])
@@ -715,7 +728,7 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
 	storage[id] = int(storage[id]) - amount
-	coins = minf(MAX_MONEY, coins + earnings)
+	post_money("sales", "Sold %d %s sacks" % [amount, id], earnings)
 	_record_sales(earnings)
 	var sold_quote: float = float(market[id]["sell"])
 	farm_help.observe_sale(self, id)
@@ -754,7 +767,7 @@ func upgrade_tool(key: String) -> String:
 	var cost: float = float(TOOL_COSTS[key][rank])
 	if not can_purchase(cost):
 		return _reject_purchase(purchase_refusal(cost))
-	coins -= cost
+	post_money("upkeep", "%s upgrade %d" % [key, rank + 1], -cost)
 	tools[key] = rank + 1
 	if key == "water":
 		return _complete_purchase({"kind": "tool", "id": key, "name": "Bigger watering can", "quantity": 1, "cost": cost, "level": rank + 1}, "Can now carries %d water. Click the tank to fill the extra space." % int(ClimateSystem.Operations.can_capacity(self)))
@@ -771,7 +784,7 @@ func upgrade_barn() -> String:
 	if not can_purchase(cost):
 		return _reject_purchase(purchase_refusal(cost))
 	var old_capacity: int = capacity
-	coins -= cost
+	post_money("storage", "Barn expansion %d" % (barn_level + 1), -cost)
 	barn_level += 1
 	_recompute_capacity()
 	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s potatoes. More room for your harvest." % format_number(capacity))
@@ -794,7 +807,7 @@ func expand_field() -> String:
 		return _reject_purchase("All %d beds are already open." % int(info.total))
 	if not can_purchase(float(info.cost)):
 		return _reject_purchase(purchase_refusal(float(info.cost)))
-	coins -= float(info.cost)
+	post_money("rent", "Field expansion", -float(info.cost))
 	expansion = 1
 	for plot in plots:
 		plot["unlocked"] = true
@@ -880,6 +893,8 @@ func _reject_purchase(message: String) -> String:
 
 
 func reset_game() -> void:
+	ledger = Ledger.new()
+	run_outcome = ""
 	season_clock = SeasonClock.new()
 	npc_history.clear()
 	run_over = false
@@ -894,7 +909,6 @@ func reset_game() -> void:
 	lifetime_sales = 0.0
 	quest_progress = {"starter_crash": 0, "starter_spike": 0, "starter_combo": 0}
 	quest_claimed.clear()
-	coins = 2000.0
 	selected_crop = "russet"
 	seed_inventory = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
 	storage = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
@@ -912,10 +926,10 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
-		"season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
+		"ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
-		"pest_timer": pest_timer, "coins": coins, "selected_crop": selected_crop,
+		"pest_timer": pest_timer, "selected_crop": selected_crop,
 		"seed_inventory": seed_inventory.duplicate(), "storage": storage.duplicate(), "capacity": capacity, "tools": tools.duplicate(),
 		"plots": plots.duplicate(true), "quest_progress": quest_progress.duplicate(), "quest_claimed": quest_claimed.duplicate(),
 		"news": news, "elapsed": elapsed, "debug_money_modified": debug_money_modified,
@@ -941,9 +955,10 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		_reject_save(path)
 		return false
 	var data: Dictionary = json.data
-	_restoring_balance = true
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
+	ledger.load_data(data.ledger)
+	run_outcome = data.run_outcome
 	run_over = data.run_over
 	tutorial_progress = data.tutorial_progress.duplicate(true)
 	tutorial_active = false
@@ -951,7 +966,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	for person in npc_history: npc_history[person].visits = int(npc_history[person].visits)
 	for key in ["version", "step", "plot"]: tutorial_progress[key] = int(tutorial_progress[key])
 	farm_help.data = data.farm_help.duplicate(true)
-	for key in ["coins", "elapsed", "lifetime_sales", "pest_timer"]: set(key, float(data[key]))
+	for key in ["elapsed", "lifetime_sales", "pest_timer"]: set(key, float(data[key]))
 	for key in ["capacity", "expansion", "barn_level", "harvested_total"]: set(key, int(data[key]))
 	for key in ["selected_crop", "news"]: set(key, str(data[key]))
 	for key in ["seed_inventory", "storage", "tools", "quest_progress"]: set(key, data[key].duplicate(true))
@@ -965,7 +980,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 		else: activity_system.reset()
 	rng.seed = int(data.rng_seed)
 	rng.state = int(data.rng_state)
-	_restoring_balance = false
 	_refresh_market()
 	_finish("Farm loaded. Crops and weather resume where you left them; no offline farming.")
 	return true
@@ -1033,10 +1047,24 @@ func _valid_save(raw: Variant) -> bool:
 	if not SeasonClock.valid(data.get("season_clock")): return false
 	if not ClimateSystem.valid(data.get("climate"), MAX_MONEY): return false
 	if not data.get("run_over") is bool or not data.get("debug_money_modified") is bool: return false
-	var ranges: Dictionary = {"coins": [-MAX_MONEY, MAX_MONEY, false], "elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "pest_timer": [0.000001, 100, false], "relief_clock": [0, 15, false]}
+	var ranges: Dictionary = {"elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "pest_timer": [0.000001, 100, false], "relief_clock": [0, 15, false]}
 	for key in ranges:
 		if not _number(data.get(key), ranges[key][0], ranges[key][1], ranges[key][2]): return false
-	if float(data.coins) < OVERDRAFT_LIMIT and not data.run_over: return false
+	if data.has("coins") or not Ledger.valid(data.get("ledger"), int(data.season_clock.year), int(data.season_clock.season)): return false
+	if data.get("run_outcome") not in ["", "foreclosed", "completed"] or data.run_over != (data.run_outcome != ""): return false
+	var saved_ledger = Ledger.new()
+	saved_ledger.load_data(data.ledger)
+	if data.season_clock.winter_menu and not saved_ledger.is_closed(int(data.season_clock.year)): return false
+	if data.run_over and not data.season_clock.winter_menu: return false
+	if data.season_clock.winter_menu and int(data.season_clock.year) == 10 and not data.run_over: return false
+	if data.run_outcome == "foreclosed":
+		var report: Dictionary = data.climate.collapse
+		if saved_ledger.balance() >= OVERDRAFT_LIMIT or report.get("year") != data.season_clock.year: return false
+		if not is_equal_approx(float(report.get("balance", NAN)), saved_ledger.balance()): return false
+		if not _number(report.get("year_net"), -INF, INF) or not is_equal_approx(float(report.year_net), saved_ledger.total(int(data.season_clock.year))): return false
+		if report.get("categories") != saved_ledger.category_totals(int(data.season_clock.year)): return false
+	if data.run_outcome == "completed" and (int(data.season_clock.year) != 10 or saved_ledger.balance() < OVERDRAFT_LIMIT): return false
+	if data.season_clock.winter_menu and not data.run_over and saved_ledger.balance() < OVERDRAFT_LIMIT: return false
 	for key in ["selected_crop", "news", "rng_seed", "rng_state"]:
 		if not data.get(key) is String or data[key].length() > 4096: return false
 	if not data.rng_seed.is_valid_int() or not data.rng_state.is_valid_int() or not data.selected_crop in CROP_IDS: return false

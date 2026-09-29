@@ -12,7 +12,7 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
-	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 28, "new farm format and isolated v4 path")
+	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 29, "new farm format and isolated v4 path")
 	check(World.REGION == 1 and farm.plots.size() == 24 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "Valley starts with twelve open and twelve locked beds")
 	check(farm.field_columns() == 6 and farm.field_rows() == 4, "one six-by-four field")
 	check(farm.available_crops().has("sunburst") and farm.available_crops().has("icecap"), "ordinary varieties have no travel gate")

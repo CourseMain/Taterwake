@@ -34,11 +34,14 @@ func run() -> void:
 	check(farm.coins == balance and farm.barn_level == 3, "only three barn upgrades")
 	check(farm.money(12345.4) == "\uE000 12,345" and farm.money(-5000) == "-\uE000 5,000", "money uses grouped integers and the Spudion glyph")
 	farm.coins = -1
-	check(not farm.can_purchase(1), "purchases never borrow")
+	check(farm.can_purchase(1), "purchases may use the bounded overdraft")
 	farm.coins = -5000
 	check(not farm.run_over, "exact overdraft boundary remains playable")
-	farm.coins = -5001
-	check(farm.run_over and farm.climate.data.collapse.balance == -5001, "crossing limit captures the final receipt immediately")
+	farm.coins = -501
+	farm.season_clock.season = 2
+	farm.season_clock.seconds = 149.75
+	farm.update(0.25)
+	check(farm.run_over and farm.climate.data.collapse.balance == -5001, "Winter fixed costs crossing the limit capture the final receipt")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.run_over, "ended run persists")
 	farm.reset_game()
 	var data: Dictionary = farm._save_data()
@@ -49,7 +52,10 @@ func run() -> void:
 	farm.climate.begin_warning(farm, "flood", 1.0)
 	farm.climate._impact(farm)
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "long weather timestamps are not limited by the money cap")
-	farm.coins = -5001
+	farm.coins = -501
+	farm.season_clock.season = 2
+	farm.season_clock.seconds = 149.75
+	farm.update(0.25)
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.run_over, "late-run final receipt preserves elapsed time")
 	for suffix in ["", ".bak", ".rejected"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE + suffix))

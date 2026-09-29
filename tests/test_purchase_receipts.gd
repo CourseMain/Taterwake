@@ -149,7 +149,7 @@ func _test_tools_and_space() -> void:
 	state.barn_level = 3
 	state._recompute_capacity()
 	_failure(func(): return state.upgrade_barn(), "maximum barn")
-	state.coins = state.bankruptcy_limit() + 1799.0
+	state.coins = state.bankruptcy_limit() + state.FIELD_EXPANSION_COST - 1
 	_failure(func(): return state.expand_field(), "unaffordable field")
 	state.coins = 1200.0
 	_success(func(): return state.expand_field(), "field", "expansion", 12, 1200.0, "starter field expansion")

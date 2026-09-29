@@ -34,10 +34,13 @@ func run() -> void:
 	farm.tools.water = 1
 	farm.coins = -5000
 	check(not farm.run_over, "exact overdraft boundary survives")
-	farm.coins = -5001
+	farm.coins = -501
+	farm.season_clock.season = 2
+	farm.season_clock.seconds = 149.75
+	farm.update(0.25)
 	await settle()
 	var collapse = game.hud._run_end
-	check(collapse.visible and collapse.headline.text == "BANKRUPT" and collapse._threshold.text.contains("5,000"), "collapse explains overdraft boundary")
+	check(collapse.visible and collapse.headline.text == "FORECLOSED" and collapse._threshold.text.contains("5,000"), "collapse explains overdraft boundary")
 	await shot("receipt")
 	var before: float = farm.coins
 	farm.coins = 2000

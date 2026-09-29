@@ -150,7 +150,7 @@ func fund(farm, id: String) -> String:
 	if level >= MAX_PROJECT_LEVEL: return farm._finish("This initiative is fully funded.")
 	var cost: float = float(PROJECTS[id].cost) * float(level + 1)
 	if not farm.can_purchase(cost): return farm._reject_purchase(farm.purchase_refusal(cost))
-	farm.coins -= cost
+	farm.post_money("protection", str(PROJECTS[id].name), -cost)
 	levels[id] = level + 1
 	return farm._complete_purchase({"kind": "climate", "id": id, "name": PROJECTS[id].name, "quantity": 1, "cost": cost}, "Sprinklers installed on the farm." if id == "irrigation" else "Climate protection improved.")
 
@@ -172,7 +172,8 @@ func capture_collapse(farm) -> void:
 	data.collapse = {"balance": farm.coins, "event": str(data.event),
 		"last_event": str(last.get("event", "")),
 		"phase": data.phase,
-		"cause": "Debt exceeded the farm's overdraft limit.",
+		"cause": "Winter fixed costs left the farm below its overdraft limit.",
+		"year": farm.season_clock.year, "year_net": farm.ledger.total(farm.season_clock.year), "categories": farm.ledger.category_totals(farm.season_clock.year),
 		"field_lost": int(last.get("field_lost", 0)), "field_total": int(last.get("field_total", 0)),
 		"barn_lost": int(last.get("barn_lost", 0)), "barn_total": int(last.get("barn_total", 0)),
 		"elapsed": farm.elapsed, "total_field_lost": data.field_lost, "total_barn_lost": data.barn_lost,
@@ -212,7 +213,7 @@ static func valid(raw: Variant, maximum: float) -> bool:
 		for key in ["event", "phase", "cause"]:
 			if not raw.collapse.get(key) is String or raw.collapse[key].length() > 256: return false
 		for key in ["balance"]:
-			if not Rules.number(raw.collapse.get(key), -maximum, maximum): return false
+			if not Rules.number(raw.collapse.get(key), -INF, INF): return false
 		for key in ["field_lost", "field_total", "barn_lost", "barn_total", "elapsed", "total_field_lost", "total_barn_lost"]:
 			if not Rules.number(raw.collapse.get(key), 0, 1e15 if key == "elapsed" else maximum): return false
 		if not raw.collapse.get("history") is Array or not raw.collapse.get("projects") is Dictionary: return false
