@@ -71,7 +71,7 @@ func _draw() -> void:
 			dust.append(pos)
 			dust.append(pos + Vector2(14, -2))
 		draw_multiline(dust, Color(0.97, 0.76, 0.37, 0.48 * strength), 2.0, true)
-	elif event == "freeze":
+	elif event in ["freeze", "deep_freeze", "blizzard"]:
 		for i in range(80):
 			var p := Vector2(fposmod(i*137.0+clock*45.0,size.x+40)-20, fposmod(i*89.0+clock*75.0,size.y+30)-15)
 			draw_circle(p, 1.5+i%3, Color(0.85,0.95,1.0,0.7*strength))

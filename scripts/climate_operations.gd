@@ -166,7 +166,7 @@ static func _tick(farm, dt: float) -> void:
 	op.flash = maxf(0.0, float(op.flash) - dt)
 	op.pulse = maxf(0.0, float(op.pulse) - dt)
 	if c.data.phase != "active" or c.data.event != "drought":
-		op.supply.water = minf(capacity(farm), float(op.supply.water) + dt * 6.0 * (0.25 if farm.season_clock.season == 3 else 1.0))
+		op.supply.water = minf(capacity(farm), float(op.supply.water) + dt * 6.0 * (0.5 if c.data.outlook.signal == "drought" else 1.0) * (0.25 if farm.season_clock.season == 3 else 1.0))
 	if c.data.phase != "active": op.supply.spray = minf(18.0, float(op.supply.spray) + dt * 3.0)
 	var field: Array = farm.plots
 	var supply: Dictionary = op.supply

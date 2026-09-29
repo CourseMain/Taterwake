@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 35
+const MECHANICS_REVISION: int = 36
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -43,6 +43,7 @@ var ledger = Ledger.new()
 var run_outcome: String = ""
 # Transient presentation pause, never part of a save.
 var accounts_open: bool = false
+var climate_report_open: bool = false
 const DEBUG_MONEY_LIMIT: float = 100000.0
 const QUEST_REWARD: float = 100.0
 const MAX_MONEY: float = 100000.0
@@ -351,7 +352,7 @@ func _update_tutorial(delta: float) -> void:
 
 func update(delta: float) -> void:
 	if ClimateSystem.Lesson.active(self): return
-	if run_over or accounts_open or not is_finite(delta) or delta <= 0.0:
+	if run_over or accounts_open or climate_report_open or not is_finite(delta) or delta <= 0.0:
 		return
 	if tutorial_active:
 		if not bool(tutorial_progress.get("tour_only", false)):
@@ -364,7 +365,7 @@ func update(delta: float) -> void:
 	# Resolve farming and weather boundaries in order.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
-	while remaining >= 0.000001 and not run_over and not accounts_open:
+	while remaining >= 0.000001 and not run_over and not accounts_open and not climate_report_open:
 		if season_clock.seconds == 0.0: climate.start_season(self)
 		farm_help.refresh_pests(self)
 		var step: float = minf(remaining, season_clock.remaining())
@@ -913,6 +914,7 @@ func _reject_purchase(message: String) -> String:
 
 func reset_game() -> void:
 	accounts_open = false
+	climate_report_open = false
 	ledger = Ledger.new()
 	run_outcome = ""
 	season_clock = SeasonClock.new()
@@ -981,6 +983,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	ledger.load_data(data.ledger)
 	trading.load_data(data.trading)
 	accounts_open = false
+	climate_report_open = false
 	run_outcome = data.run_outcome
 	run_over = data.run_over
 	tutorial_progress = data.tutorial_progress.duplicate(true)
@@ -1069,6 +1072,9 @@ func _valid_save(raw: Variant) -> bool:
 	if not progress is Dictionary or progress.get("version") != 2 or not _number(progress.get("step"), 0, 100, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0, 23, true): return false
 	if not SeasonClock.valid(data.get("season_clock")): return false
 	if not ClimateSystem.valid(data.get("climate"), MAX_MONEY): return false
+	if int(data.climate.outlook.seen_year) > int(data.season_clock.year): return false
+	for record in data.climate.outlook.records:
+		if int(record.year) > int(data.season_clock.year) or (int(record.year) == int(data.season_clock.year) and int(record.season) > int(data.season_clock.season)): return false
 	if not data.get("run_over") is bool or not data.get("debug_money_modified") is bool: return false
 	var ranges: Dictionary = {"elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "pest_timer": [0.000001, 100, false], "relief_clock": [0, 15, false]}
 	for key in ranges:
@@ -1107,7 +1113,6 @@ func _valid_save(raw: Variant) -> bool:
 	if not _valid_plots(data.get("plots"), data): return false
 	if not ClimateSystem.Protection.valid(data.climate.get("protection"), data): return false
 	if (int(data.season_clock.season) == 3):
-		if data.climate.phase != "calm": return false
 		for plot in data.plots:
 			if plot.crop != "icecap" and (int(plot.stage) != 0 or plot.tilled): return false
 	if not data.get("quest_progress") is Dictionary or data.quest_progress.size() != QUEST_TARGETS.size(): return false

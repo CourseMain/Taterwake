@@ -12,7 +12,7 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
-	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 35, "new farm format and isolated v4 path")
+	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 36, "new farm format and isolated v4 path")
 	check(World.REGION == 1 and farm.plots.size() == 24 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "Valley starts with twelve open and twelve locked beds")
 	check(farm.field_columns() == 6 and farm.field_rows() == 4, "one six-by-four field")
 	check(farm.available_crops().has("sunburst") and farm.available_crops().has("icecap"), "ordinary varieties have no travel gate")
@@ -60,7 +60,7 @@ func run() -> void:
 		check(farm.season_clock.season == 0, "first weather draw occurs in Spring")
 		check((farm.climate.data.phase == "warning") == event_expected, "single 15 percent draw at season boundary")
 		if event_expected: hits += 1
-	check(hits > 0 and hits < 100 and Climate.DISASTER_CHANCE == 0.15, "both calm and disaster seasons are reachable")
+	check(hits > 0 and hits < 100 and Climate.chance(1) == 0.15, "both calm and disaster seasons are reachable")
 	farm.reset_game()
 	for plot in farm.plots: farm._clear_crop(plot)
 	farm.update(149.5)

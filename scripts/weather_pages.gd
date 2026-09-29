@@ -192,16 +192,15 @@ func refresh() -> void:
 	hud._refs.cover_all.disabled = farm.ClimateSystem.Protection.coverable_beds(farm).is_empty()
 	hud._refs.cover_all.tooltip_text = "Winter only · build frost covers, then clear bed ice with Hoe."
 	hud._refs.forecast_range.text = "Next %s: disaster chance %d to %d%%." % [farm.SeasonClock.NAMES[int(forecast.season)], roundi(forecast.low * 100), roundi(forecast.high * 100)]
-	if int(forecast.season) != 3:
+	if not forecast.events.is_empty():
 		for event in forecast.events:
 			var risk: Dictionary = forecast.events[event]
-			hud._refs.forecast_range.text += "\n%s %d to %d%%" % [str(event).capitalize(), roundi(risk.low * 100), roundi(risk.high * 100)]
-	if int(forecast.season) == 3: hud._refs.forecast_range.text = "Next Winter: no new disasters."
+			hud._refs.forecast_range.text += "\n%s %d to %d%%" % [str(event).replace("_", " ").capitalize(), roundi(risk.low * 100), roundi(risk.high * 100)]
 	var station: int = int(info.protection.station)
 	hud._refs.station_upgrade.text = "Station level %d · ±%d points" % [station, [20, 10, 5][station]] + (" · Upgrade " + farm.money(farm.ClimateSystem.Protection.STATION_COST * (station + 1)) if station < 2 else "")
 	hud._refs.station_upgrade.disabled = station >= 2 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.STATION_COST * (station + 1))
 	var insured: bool = farm.ClimateSystem.Protection.insured(farm)
-	hud._refs.insurance.text = "Insured this year · 40% of future field losses at base prices, paid at Winter start" if insured else "Spring insurance · " + farm.money(400) + " · 40% of future field losses at base prices, paid at Winter start"
+	hud._refs.insurance.text = "Insured this year · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss" if insured else "Spring insurance · " + farm.money(400) + " · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss"
 	hud._refs.insurance.disabled = insured or farm.season_clock.season != 0 or farm.run_over or not farm.can_purchase(400)
 
 	if hud._refs.has("climate_practice"):

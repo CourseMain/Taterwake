@@ -189,8 +189,8 @@ func run() -> void:
 			check(f.low <= f.chance and f.high >= f.chance and f.low >= 0 and f.high <= 1, "forecast brackets actual chance and clips to probability bounds")
 			for event in f.events:
 				var risk: Dictionary = f.events[event]
-				check(risk.low <= risk.chance and risk.high >= risk.chance and is_equal_approx(risk.chance, f.chance / 4), "event forecast brackets its actual uniform-choice probability")
-			if int(f.season) != 3: check(is_equal_approx(f.high - f.chance, [0.20, 0.10, 0.05][station]), "station accuracy uses percentage points")
+				check(risk.low <= risk.chance and risk.high >= risk.chance and is_equal_approx(risk.chance, f.chance / 2), "event forecast brackets its actual uniform-choice probability")
+			check(is_equal_approx(f.high - f.chance, [0.20, 0.10, 0.05][station]), "station accuracy uses percentage points")
 	farm.free()
 	await ui_checks()
 	for suffix in ["", ".bak", ".tmp", ".rejected"]:

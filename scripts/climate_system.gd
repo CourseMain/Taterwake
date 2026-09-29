@@ -6,11 +6,22 @@ const Protection = preload("res://scripts/farm_protection.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 ## The farm calendar owns seasonal boundaries; this clock times weather phases.
 const SEASON_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
-const DISASTER_CHANCE: float = 0.15
+const BASE_CHANCE: float = 0.15
+const CHANCE_STEP: float = 0.04
+const MAX_CHANCE: float = 0.6
+const BASE_SEVERITY: float = 0.5
+const SEVERITY_STEP: float = 0.03
+const SEVERITY_SPREAD: float = 0.15
+const SIGNAL_CHANCE: float = 0.7
+const ANNUAL_CAP: int = 3
+const SEASON_EVENTS: Array = [["flood", "freeze"], ["drought", "storm"], ["storm", "flood"], ["deep_freeze", "blizzard"]]
+const WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
 const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
+	"deep_freeze": {"name": "WINTER DEEP FREEZE", "growth": 0.5, "prepare": "Sell stored sacks and harvest ripe Icecap before impact. Annual insurance covers Winter weather losses."},
+	"blizzard": {"name": "BLIZZARD", "growth": 0.4, "prepare": "Stored sacks and living Icecap are exposed. Sell or harvest before impact; insurance pays 40% of losses."},
 	"freeze": {"name": "DEEP FREEZE", "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
 	"drought": {"name": "DROUGHT", "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
 	"flood": {"name": "FLOOD", "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Build drainage during Winter."},
@@ -31,7 +42,7 @@ var data: Dictionary = fresh_data()
 static func fresh_data() -> Dictionary:
 	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": SEASON_SECONDS, "event": "",
 		"severity": 0.0, "projects": {}, "protection": Protection.fresh(),
-		"last": {}, "history": [], "field_lost": 0, "collapse": {}}
+		"last": {}, "history": [], "field_lost": 0, "collapse": {}, "outlook": {"started": -1, "next": {}, "signal": "", "records": [], "seen_year": 0}}
 
 func reset() -> void:
 	data = fresh_data()
@@ -49,18 +60,19 @@ func factor(kind: String) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.run_over or farm.season_clock.season == 3 or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
+	if farm.run_over or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
 		return false
-	var ids: Array = EVENTS.keys()
+	var ids: Array = SEASON_EVENTS[farm.season_clock.season]
 	if event.is_empty():
 		event = str(ids[farm.rng.randi_range(0, ids.size() - 1)])
-	if not EVENTS.has(event): return false
+	if not EVENTS.has(event) or (WINTER_LOSS.has(event) != (farm.season_clock.season == 3)): return false
 	if data.lesson.stage == "offer": data.lesson.stage = "done"
 	Operations.begin(farm)
 	data.event = event
-	data.severity = clampf(severity, 0.5, 1.0) if severity >= 0.0 else farm.rng.randf_range(0.5, 1.0)
+	data.severity = clampf(severity, 0.0, 1.0) if severity >= 0.0 else draw_severity(farm.rng, farm.season_clock.year)
 	data.phase = "warning"
 	data.timer = WARNING_SECONDS
+	data.outlook.records.append({"year": farm.season_clock.year, "season": farm.season_clock.season, "event": event, "severity": data.severity})
 	farm.climate_changed.emit("warning")
 	return true
 
@@ -86,8 +98,42 @@ func update(farm, delta: float) -> bool:
 		operated = true
 	return operated
 
+static func chance(year: int) -> float:
+	return minf(MAX_CHANCE, BASE_CHANCE + CHANCE_STEP * (maxi(1, year) - 1))
+
+static func severity_mean(year: int) -> float:
+	return BASE_SEVERITY + SEVERITY_STEP * (maxi(1, year) - 1)
+
+static func draw_severity(rng: RandomNumberGenerator, year: int) -> float:
+	return clampf(rng.randf_range(severity_mean(year) - SEVERITY_SPREAD, severity_mean(year) + SEVERITY_SPREAD), 0.0, 1.0)
+
+func year_count(year: int) -> int:
+	var count: int = 0
+	for record in data.outlook.records:
+		if int(record.year) == year: count += 1
+	return count
+
+func prime_next(farm) -> void:
+	var season: int = (farm.season_clock.season + 1) % 4
+	var year: int = farm.season_clock.year + (1 if season == 0 else 0)
+	var event: String = SEASON_EVENTS[season][farm.rng.randi_range(0, 1)]
+	data.outlook.next = {"year": year, "season": season, "event": event}
+	data.outlook.signal = event if event in ["drought", "flood", "storm"] and farm.rng.randf() < SIGNAL_CHANCE else ""
+
 func start_season(farm) -> void:
-	if farm.season_clock.season != 3 and data.phase == "calm" and farm.rng.randf() < DISASTER_CHANCE: begin_warning(farm)
+	if not clock_running(farm): return
+	var ordinal: int = (farm.season_clock.year - 1) * 4 + farm.season_clock.season
+	if int(data.outlook.started) == ordinal: return
+	data.outlook.started = ordinal
+	var event: String = ""
+	var next: Dictionary = data.outlook.next
+	if int(next.get("year", 0)) == farm.season_clock.year and int(next.get("season", -1)) == farm.season_clock.season: event = str(next.event)
+	# A scripted/debug warning can already occupy this season.
+	var occupied: bool = false
+	for record in data.outlook.records:
+		if int(record.year) == farm.season_clock.year and int(record.season) == farm.season_clock.season: occupied = true
+	if not occupied and year_count(farm.season_clock.year) < ANNUAL_CAP and data.phase == "calm" and farm.rng.randf() < chance(farm.season_clock.year): begin_warning(farm, event)
+	prime_next(farm)
 
 func end_working_year() -> void:
 	data.phase = "calm"
@@ -120,7 +166,29 @@ func _impact(farm) -> void:
 	data.last = record
 	data.history.append(record.duplicate(true))
 	if data.history.size() > 8: data.history.pop_front()
+	if WINTER_LOSS.has(event): _winter_impact(farm)
 	farm.climate_changed.emit("impact")
+
+func _winter_impact(farm) -> void:
+	var rate: float = float(WINTER_LOSS[data.event]) * float(data.severity)
+	for crop in farm.storage:
+		var lost: int = roundi(int(farm.trading.held.get(crop, 0)) * rate)
+		farm.storage[crop] -= lost
+		farm.trading.held[crop] = maxi(0, int(farm.trading.held.get(crop, 0)) - lost)
+		Protection.record(farm, data.event, crop, lost, 0.0, 1.0, "Stored sacks exposed; sell before impact", "barn")
+	farm.trading.clamp_stock(farm)
+	for index in range(farm.plots.size()):
+		var plot: Dictionary = farm.plots[index]
+		if int(plot.stage) == 0 or plot.crop != "icecap": continue
+		var lost: int = roundi(Protection.remaining(plot) * rate)
+		Protection.record(farm, data.event, "icecap", lost, 0.0, 1.0, "Icecap in the ground; harvest before impact", "field")
+		plot.weather_lost += lost
+		if int(plot.yield_total) > 0: plot.pending = Protection.remaining(plot)
+		if Protection.remaining(plot) == 0:
+			farm._clear_crop(plot)
+			data.field_lost += 1
+			data.last.field_lost += 1
+	data.history[-1] = data.last.duplicate(true)
 
 func fund(farm, id: String) -> String:
 	if farm.run_over or farm.tutorial_active or not PROJECTS.has(id): return "Finish the farm tour before funding protection."
@@ -139,6 +207,9 @@ func fund(farm, id: String) -> String:
 
 func info(farm) -> Dictionary:
 	var result: Dictionary = data.duplicate(true)
+	result.year = farm.season_clock.year
+	result.season = farm.season_clock.season
+	result.signal = data.outlook.signal
 	result.supply = Operations.local(farm).duplicate(true)
 	result.can_capacity = Operations.can_capacity(farm)
 	result.water_capacity = Operations.capacity(farm)
@@ -165,15 +236,15 @@ func capture_collapse(farm) -> void:
 		"projects": data.projects.duplicate(true), "history": data.history.duplicate(true)}
 
 static func valid(raw: Variant, maximum: float) -> bool:
-	if not raw is Dictionary: return false
+	if not raw is Dictionary or not valid_outlook(raw.get("outlook")): return false
 	if not Lesson.valid(raw.get("lesson")) or not Operations.valid(raw.get("operations")): return false
 	if not raw is Dictionary or raw.get("phase") not in ["calm", "warning", "active", "recovery"]: return false
 	if not Rules.number(raw.get("timer"), 0.000001, SEASON_SECONDS): return false
-	if raw.get("event") not in ["", "drought", "flood", "storm", "freeze"] or not Rules.number(raw.get("severity"), 0.0, 1.0): return false
+	if raw.get("event") not in ([""] + EVENTS.keys()) or not Rules.number(raw.get("severity"), 0.0, 1.0): return false
 	if raw.has("operations") and not raw.operations.get("ice", {}).is_empty() and (raw.event != "freeze" or raw.phase not in ["active", "recovery"]): return false
 	if (raw.phase == "calm") != (raw.event == ""): return false
 	var timer_max: float = {"calm": SEASON_SECONDS, "warning": WARNING_SECONDS, "active": ACTIVE_SECONDS, "recovery": RECOVERY_SECONDS}[raw.phase]
-	if float(raw.timer) > timer_max or (raw.phase == "calm" and float(raw.severity) != 0.0) or (raw.phase != "calm" and float(raw.severity) < 0.5): return false
+	if float(raw.timer) > timer_max or (raw.phase == "calm" and float(raw.severity) != 0.0) or (raw.phase != "calm" and float(raw.severity) <= 0.0): return false
 	if not raw.get("projects") is Dictionary: return false
 	for id in raw.projects:
 		if not PROJECTS.has(id) or not Rules.number(raw.projects[id], 0, MAX_PROJECT_LEVEL, true): return false
@@ -210,5 +281,20 @@ static func valid_loss(raw: Dictionary, maximum: float) -> bool:
 		if not Rules.number(raw.get(key), 0, 1e15 if key == "at" else maximum): return false
 	for key in ["field_lost", "field_total"]:
 		if float(raw[key]) != floor(float(raw[key])): return false
-	if not Rules.number(raw.severity, 0.5, 1.0): return false
+	if not Rules.number(raw.severity, 0.0, 1.0): return false
 	return float(raw.field_lost) <= float(raw.field_total)
+
+static func valid_outlook(raw: Variant) -> bool:
+	if not raw is Dictionary or raw.size() != 5: return false
+	if not Rules.number(raw.get("started"), -1, 39, true) or not Rules.number(raw.get("seen_year"), 0, 10, true): return false
+	if raw.get("signal") not in ["", "drought", "flood", "storm"] or not raw.get("records") is Array or raw.records.size() > 40: return false
+	if not raw.get("next") is Dictionary: return false
+	if not raw.next.is_empty():
+		if raw.next.size() != 3 or not Rules.number(raw.next.get("year"), 1, 11, true) or not Rules.number(raw.next.get("season"), 0, 3, true): return false
+		if raw.next.get("event") not in SEASON_EVENTS[int(raw.next.season)]: return false
+		if raw.signal != "" and raw.signal != raw.next.event: return false
+	elif raw.signal != "": return false
+	for record in raw.records:
+		if not record is Dictionary or record.size() != 4 or record.get("event") not in EVENTS: return false
+		if not Rules.number(record.get("year"), 1, 10, true) or not Rules.number(record.get("season"), 0, 3, true) or not Rules.number(record.get("severity"), 0, 1): return false
+	return true

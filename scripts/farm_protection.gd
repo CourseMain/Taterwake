@@ -73,18 +73,23 @@ static func record(farm, event: String, crop: String, exposed: int, reduction: f
 	var entry: Dictionary = {"year": farm.season_clock.year, "season": farm.season_clock.season if season < 0 else season,
 		"event": event, "crop": crop, "sacks": lost, "exposed": exposed, "reduction": reduction, "alternative": alternative,
 		"saved": lost - loss(exposed, alternative), "missing": missing, "source": source,
-		"insured": insured(farm) and source == "field" and (farm.season_clock.season if season < 0 else season) < 3}
+		"insured": insured(farm) and event != "spoilage" and (source == "field" or event in farm.ClimateSystem.WINTER_LOSS)}
 	var previous: int = int(data.losses[card].sacks) if card >= 0 else 0
 	if card >= 0: data.losses[card] = entry
 	else:
 		card = data.losses.size()
 		data.losses.append(entry)
+	if entry.insured and int(entry.season) == 3 and lost > previous and data.winters.has(str(farm.season_clock.year)):
+		var payout: float = (lost - previous) * float(Table.CROPS[crop].base) * PAYOUT
+		farm.post_money("insurance", "Winter crop loss payout", payout)
+		data.winters[str(farm.season_clock.year)].payout += payout
 	data.revision = int(data.revision) + 1
 	if lost > previous: farm.notified.emit(text(entry))
 	return card
 
 static func text(entry: Dictionary) -> String:
 	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter"}.get(entry.event, "")
+	if entry.event in ["deep_freeze", "blizzard"]: prevention = "Selling before impact" if entry.source == "barn" else "Harvesting before impact"
 	if entry.source == "field" and PROJECT_FOR.has(entry.event):
 		prevention = "Clearing ice in time" if float(entry.alternative) == 1.0 else "%s level %d" % [NAMES[PROJECT_FOR[entry.event]], 1 if float(entry.alternative) == 0.5 else 2]
 	var counterfactual: String = "%s would have saved %d sacks." % [prevention, entry.saved]
@@ -147,7 +152,7 @@ static func insure(farm) -> String:
 	if not farm.can_purchase(PREMIUM): return farm._reject_purchase(farm.purchase_refusal(PREMIUM))
 	farm.post_money("insurance", "Annual crop insurance", -PREMIUM)
 	p.policies.append(farm.season_clock.year)
-	return farm._finish("Crops insured: 40% of future field losses at base prices, paid at Winter start.")
+	return farm._finish("Crops insured: 40% at base prices. Field losses settle at Winter start; Winter crop and barn claims pay as losses occur.")
 
 static func upgrade_station(farm) -> String:
 	var p: Dictionary = farm.climate.data.protection
@@ -160,13 +165,15 @@ static func upgrade_station(farm) -> String:
 
 static func forecast(farm) -> Dictionary:
 	var season: int = (farm.season_clock.season + 1) % 4
-	var chance: float = 0.0 if season == 3 else farm.ClimateSystem.DISASTER_CHANCE
+	var year: int = farm.season_clock.year + (1 if season == 0 else 0)
+	var capped: bool = farm.climate.year_count(year) >= farm.ClimateSystem.ANNUAL_CAP
+	var chance: float = 0.0 if capped else farm.ClimateSystem.chance(year)
 	var margin: float = [0.20, 0.10, 0.05][int(farm.climate.data.protection.station)]
 	var events: Dictionary = {}
-	for event in PROJECT_FOR:
-		var risk: float = chance / float(PROJECT_FOR.size())
-		events[event] = {"chance": risk, "low": maxf(0, risk - margin) if season != 3 else 0.0, "high": minf(1, risk + margin) if season != 3 else 0.0}
-	return {"events": events, "season": season, "chance": chance, "low": maxf(0, chance - margin) if season != 3 else 0.0, "high": minf(1, chance + margin) if season != 3 else 0.0}
+	for event in farm.ClimateSystem.SEASON_EVENTS[season]:
+		var risk: float = chance / 2.0
+		events[event] = {"chance": risk, "low": maxf(0, risk - margin) if not capped else 0.0, "high": minf(1, risk + margin) if not capped else 0.0}
+	return {"events": events, "year": year, "season": season, "chance": chance, "low": maxf(0, chance - margin) if not capped else 0.0, "high": minf(1, chance + margin) if not capped else 0.0}
 
 static func winter(farm) -> void:
 	if farm.season_clock.season != 3: return
@@ -209,14 +216,16 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 		if not e is Dictionary or e.size() != 12: return false
 		if not Rules.number(e.get("year"), 1, int(saved.season_clock.year), true) or not Rules.number(e.get("season"), 0, 3, true): return false
 		if int(e.year) == int(saved.season_clock.year) and int(e.season) > int(saved.season_clock.season): return false
-		if e.get("event") not in ["drought", "flood", "storm", "freeze", "dry_bed", "pests", "autumn_cold", "spoilage"] or e.get("crop") not in Table.IDS or e.get("source") not in ["field", "barn"]: return false
-		if (e.event == "spoilage") != (e.source == "barn"): return false
+		if e.get("event") not in ["drought", "flood", "storm", "freeze", "dry_bed", "pests", "autumn_cold", "spoilage", "deep_freeze", "blizzard"] or e.get("crop") not in Table.IDS or e.get("source") not in ["field", "barn"]: return false
+		if e.source == "barn" and e.event not in ["spoilage", "deep_freeze", "blizzard"]: return false
+		if e.event in ["deep_freeze", "blizzard"] and int(e.season) != 3: return false
+		if e.event == "spoilage" and e.source != "barn": return false
 		if not e.get("missing") is String or e.missing.length() > 160 or not e.get("insured") is bool: return false
 		for key in ["exposed", "sacks", "saved"]:
 			if not Rules.number(e.get(key), 0, 100000, true): return false
 		if e.get("reduction") not in REDUCTION or e.get("alternative") not in [0.0, 0.5, 0.75, 1.0] or float(e.alternative) < float(e.reduction): return false
 		if int(e.sacks) <= 0 or int(e.sacks) != loss(int(e.exposed), float(e.reduction)) or int(e.saved) != int(e.sacks) - loss(int(e.exposed), float(e.alternative)): return false
-		if e.insured and (int(e.year) not in seen or e.source != "field" or int(e.season) == 3): return false
+		if e.insured and (int(e.year) not in seen or e.event == "spoilage"): return false
 	for group in saved.climate.operations.loss_groups.values():
 		if int(group.card) >= raw.losses.size(): return false
 		if int(group.card) >= 0:
@@ -242,7 +251,12 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 			if matches > 1: return false
 			upkeep += matches * UPKEEP
 		if not is_equal_approx(float(report.upkeep), upkeep): return false
-		if report.payout > 0 and not _posting(saved, int(year), 3, "insurance", "Crop loss payout", report.payout): return false
+		var posted: float = 0.0
+		for entry in saved.ledger.entries:
+			if int(entry.year) == int(year) and entry.category == "insurance" and entry.label in ["Crop loss payout", "Winter crop loss payout"]:
+				if int(entry.season) != 3 or float(entry.amount) <= 0: return false
+				posted += float(entry.amount)
+		if not is_equal_approx(posted, float(report.payout)): return false
 	if int(saved.season_clock.season) == 3 and not raw.winters.has(str(int(saved.season_clock.year))): return false
 	for e in saved.ledger.entries:
 		if e.category == "upkeep":
@@ -250,7 +264,7 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 				if e.label == name + " upkeep" and not raw.winters.has(str(int(e.year))): return false
 		if e.category == "insurance":
 			if e.label == "Annual crop insurance" and int(e.year) not in seen: return false
-			if e.label == "Crop loss payout" and (not raw.winters.has(str(int(e.year))) or float(raw.winters[str(int(e.year))].payout) <= 0): return false
+			if e.label in ["Crop loss payout", "Winter crop loss payout"] and (not raw.winters.has(str(int(e.year))) or float(raw.winters[str(int(e.year))].payout) <= 0): return false
 	return true
 
 static func _posting(saved: Dictionary, year: int, season: int, category: String, label: String, amount: float) -> bool:

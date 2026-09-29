@@ -70,10 +70,10 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	remaining = 1.5 if kind == "impact" else 2.8
 	if kind == "warning":
 		title.text = "%s IN %ds" % [info.name, ceili(info.timer)]
-		message.text = {"freeze": "Ready your hoe to clear ice from crops.", "drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
+		message.text = {"deep_freeze": "Sell stored sacks and harvest Icecap before impact.", "blizzard": "Bring in Icecap and sell stored sacks before the blizzard.", "freeze": "Ready your hoe to clear ice from crops.", "drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
 	elif kind == "impact":
 		title.text = {"freeze": "THE CROPS ARE FREEZING", "drought": "THE FIELDS ARE DRYING", "flood": "THE FLOOD HAS HIT", "storm": "THE STORM HAS HIT"}.get(info.event, info.name)
-		message.text = {"freeze": "Hoe [1] clears the ice. Frozen crops stop growing.", "drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Windbreaks reduce storm losses across the field."}.get(info.event, "Protect your harvest.")
+		message.text = {"deep_freeze": "Stored sacks and Icecap took losses. Covered claims are paid.", "blizzard": "Check the loss notices for barn and Icecap damage.", "freeze": "Hoe [1] clears the ice. Frozen crops stop growing.", "drought": "Water reserves are on the line. Water [3] rescues thirsty beds.", "flood": "Puddles are rising. Hoe [1] drains beds; open your gates.", "storm": "Harvest the gold warning row before lightning. Windbreaks reduce storm losses across the field."}.get(info.event, "Protect your harvest.")
 	else:
 		title.text = "THE WEATHER IS EASING"
 		message.text = "Replant. Rebuild. Prepare for the next storm."

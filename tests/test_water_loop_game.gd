@@ -49,6 +49,7 @@ func run() -> void:
 	check(not game.pending_refill and ops.local(game.state).can == 16 and ops.local(game.state).water < 36, "arrival transfers tank water to can")
 	check(game.hud._climate_console.equipment.is_empty() and game.world._climate_field.loop.refill_time > 0, "successful refill dismisses tip and animates transfer")
 	await shot("refilling")
+	game.state.climate.data.outlook.signal = "" # This check isolates ordinary, unforeshadowed refill.
 	game.state.update(4)
 	check(ops.local(game.state).water == 36 and game.state.climate.data.phase == "calm", "Island1 tank quickly replenishes without disaster")
 	game.state.upgrade_tool("water")
