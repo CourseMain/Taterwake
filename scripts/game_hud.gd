@@ -680,7 +680,7 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
@@ -1824,7 +1824,8 @@ func _build_run_summary() -> void:
 	_account_row(_body, "Best year", "Year %d · %s" % [best.year, _state.money(best.net)])
 	_account_row(_body, "Final purse", _state.money(_state.coins))
 	_account_row(_body, "Loan remaining", _state.money(_state.ledger.loan_remaining()))
-	_body.add_child(_wrap("The epilogue is still to come.", 24, MUTED, true))
+	_body.add_child(_wrap("Your choices continue for forty more years.", 24, MUTED, true))
+	_modal_trade_footer.add_child(_button("Fifty years on", "epilogue", true))
 	_modal_trade_footer.add_child(_button("New Run", "reset", true))
 	_modal_trade_footer.add_child(_button("Year 10 accounts", "accounts"))
 	_modal_trade_footer.show()

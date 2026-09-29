@@ -353,6 +353,7 @@ func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 
 
 func _clear_world() -> void:
+	future_root = null
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -1674,7 +1675,7 @@ func _winter_scenery() -> void:
 			var size: float = _rng.randf_range(0.62, 1.1)
 			var pos: Vector3 = point + Vector3(float(i) * 0.68, 0.34, float(i % 2) * 0.35)
 			_sphere(self, pos, Vector3(0.82, 0.65, 0.64) * size, Color("8999a4"))
-			_sphere(self, pos + Vector3(0.0, 0.34 * size, -0.02), Vector3(0.79, 0.31, 0.61) * size, Color("e9f0f1"))
+			_ground_bank(self, pos + Vector3(0.0, 0.34 * size, -0.02), Vector3(0.79, 0.31, 0.61) * size, Color("e9f0f1"))
 	# The frozen pond is decorative.
 	_sphere(self, Vector3(19.1, 0.00, -4.6), Vector3(4.0, 0.055, 2.35), Color("accedf"))
 	_sphere(self, Vector3(19.0, 0.045, -4.55), Vector3(3.68, 0.03, 2.06), Color("c6e1ed"))
@@ -2169,3 +2170,134 @@ func show_grade(index: int, plot: Dictionary) -> void:
 	if grade_tag.visible:
 		grade_tag.text = "Grade: " + preload("res://scripts/crop_quality.gd").grade(int(plot.quality))
 		grade_tag.position = plot_positions[index] + Vector3(0, 1.9, 0)
+
+var future_root: Node3D
+var future_outcome: String = ""
+
+func show_future(ending: Dictionary) -> void:
+	# Future variants live on the existing island; a rebuild restores the run view.
+	if is_instance_valid(future_root): restore_present()
+	future_outcome = str(ending.outcome)
+	future_root = _root("FutureFarm", Vector3.ZERO)
+	var abandoned: bool = future_outcome in ["Dust", "Drowned", "Deserted", "Sold to the estate"]
+	var dust: bool = future_outcome == "Dust"
+	var flooded: bool = future_outcome == "Drowned"
+	var estate: bool = future_outcome == "Sold to the estate"
+	var village: bool = future_outcome == "The shop village"
+	set_calendar(50, 1 if dust else 0, 70, "drought" if dust else "")
+	set_climate_projects(ending.get("active_projects", ending.projects))
+	for label in find_children("*", "Label3D", true, false): label.hide()
+	_climate_field.loop.can.visible = not abandoned
+	_selection.hide(); _area_selection.hide()
+	player.visible = not abandoned
+	for resident in _villagers + _toolsmiths: resident.visible = not abandoned
+	for actor in _npc_actors.values():
+		actor.visible = not abandoned
+		if not abandoned:
+			# A little grey at the temples keeps the familiar potato silhouettes.
+			_sphere(actor, Vector3(-0.36, 1.8, 0), Vector3(0.22, 0.25, 0.3), Color("e6dfcd"))
+			_sphere(actor, Vector3(0.36, 1.8, 0), Vector3(0.22, 0.25, 0.3), Color("e6dfcd"))
+	for index in range(_plot_nodes.size()):
+		_crop_roots[index].hide()
+		_pest_roots[index].hide()
+		_ice_roots[index].hide()
+		_furrow_roots[index].visible = not estate and not flooded
+		var pos: Vector3 = plot_positions[index]
+		var wild: bool = future_outcome == "Deserted" or (village and index % 2 == 0) or (future_outcome == "Holding on" and index >= 12)
+		if wild: _furrow_roots[index].hide()
+		_soil_meshes[index].material_override = _mat(Color("d4b77b") if dust else Color("70835b") if wild else Color("66513b"))
+		if estate:
+			_plot_nodes[index].hide()
+		elif dust:
+			for j in range(3):
+				var crack := pos + Vector3(-0.75 + j * 0.65, 0.25, -0.75)
+				_bar(future_root, crack, crack + Vector3(0.3, 0, 1.4), 0.025, Color("78583d"))
+				_bar(future_root, crack + Vector3(0.15, 0, 0.7), crack + Vector3(-0.25, 0, 1), 0.025, Color("78583d"))
+		elif not flooded:
+			if wild:
+				for j in range(4):
+					var stalk := pos + Vector3(-0.7 + (j % 2) * 1.3, 0.65, -0.65 + (j / 2) * 1.2)
+					_leaf(future_root, stalk, Vector3(0.25, 0.9, 0.25), Color("8e9c61"), j * 0.8)
+			else:
+				var varieties: Array = ending.get("crops", [])
+				var crop: String = str(varieties[index]) if index < varieties.size() else "golden"
+				var tuber: Node3D = _create_crop_tuber(future_root, {"crop": crop, "stage": 3})
+				tuber.position = pos + Vector3(0, 0.25, 0)
+				tuber.scale = Vector3.ONE * 0.6
+			if future_outcome == "Thriving":
+				var cover: Node3D = ClimateProjects.bed_cover(self, index)
+				cover.reparent(future_root)
+				# Old ice remains only in the shaded ditch, away from living crops.
+				if index == 23:
+					_ice_roots[index].position.x = 2.4
+					_ice_roots[index].scale = Vector3(0.5, 0.3, 0.8)
+					_ice_roots[index].show()
+	if estate:
+		_box(future_root, Vector3(-1.75, 0.3, 1.45), Vector3(14.25, 0.2, 9), Color("8b7951"))
+		for row in range(16):
+			_box(future_root, Vector3(-8.3 + row * 0.85, 0.5, 1.45), Vector3(0.3, 0.3, 8.4), Color("a6aa58"))
+	# Existing water shader and tank gauge remain the source of flood/dry visuals.
+	var weather: Dictionary = Climate.fresh_data()
+	weather.phase = "active" if flooded or dust else "calm"
+	weather.event = "flood" if flooded else "drought" if dust else ""
+	weather.severity = 1.0 if flooded or dust else 0.0
+	weather.supply = weather.operations.supply
+	weather.supply.water = 0.0 if dust else 36.0
+	weather.projects = ending.projects
+	weather.water_capacity = 36.0 + 36.0 * float(ending.projects.get("rainwater", 0))
+	weather.can_capacity = 16.0
+	for index in range(plot_positions.size()): weather.operations.stress[str(index)] = 1.0 if flooded or dust else 0.0
+	_climate_field.redraw = 0.0
+	_climate_field.set_weather(weather)
+	if dust:
+		coast.position.y = -2.5
+		for j in range(9):
+			_ground_bank(future_root, Vector3(-18 + j * 4.0, -0.05, 10), Vector3(5, 0.35, 2.4), Color("d4b77b"))
+	if flooded:
+		for j in range(5): _ground_bank(future_root, Vector3(-10 + j * 4, 0.05, -4.5), Vector3(3.5, 0.24, 1.3), Color("a99b76"))
+		for title in ["GoldenShoresDock"]:
+			var dock = get_node_or_null(title)
+			if dock != null: dock.hide()
+		_dock_gate.hide()
+	var barn: Node3D = get_node("RedBarn")
+	var market_root: Node3D = get_node("MarketStall")
+	if dust or flooded:
+		barn.hide()
+		var ruin := Node3D.new()
+		ruin.name = "CollapsedBarn"
+		future_root.add_child(ruin)
+		ruin.position = barn.position
+		_box(ruin, Vector3(0, 0.6, 0), Vector3(5.2, 1.2, 4.1), Color("826c56"))
+		var roof := _box(ruin, Vector3(0.6, 1.35, 0), Vector3(5.6, 0.2, 4.6), TEAL.darkened(0.3))
+		roof.rotation.z = 0.23
+		market_root.hide()
+	elif abandoned:
+		for building in [barn, market_root]:
+			for height in [1.2, 2.0, 2.8]:
+				_box(future_root, building.position + Vector3(0, height, 2.5), Vector3(4.6, 0.3, 0.16), Color("8c765b")).rotation.z = 0.08
+		_shop_label(future_root, "ESTATE STORAGE" if estate else "FOR SALE", barn.position + Vector3(0, 6.5, 0))
+		if estate:
+			for j in range(5): _crate(future_root, market_root.position + Vector3(-2 + j, 0.5, 3.5), false)
+	elif village:
+		_box(future_root, Vector3(7, 0.08, -8), Vector3(12, 0.12, 7), Color("d6c8a2"))
+		for j in range(3):
+			var house := Node3D.new()
+			future_root.add_child(house)
+			house.position = Vector3(5 + j * 4.5, 0, -12)
+			_box(house, Vector3(0, 1.25, 0), Vector3(3.4, 2.5, 3), CREAM)
+			_roof(house, 3.8, 3.6, 2.5, 1.1, TEAL if j % 2 == 0 else Color("b96750"))
+			_box(house, Vector3(0, 0.9, 1.53), Vector3(0.8, 1.8, 0.1), Color("7c654b"))
+			_shop_label(house, "Farm shop" if j == 0 else "Lodging", Vector3(0, 4, 0))
+		_shop_label(future_root, "THE VILLAGE SQUARE", Vector3(10, 0.8, -5))
+	else:
+		for tree in range(int(ending.projects.get("windbreaks", 0)) * 4): _tree(Vector3(10 + tree % 2 * 2, 0, -3 + tree * 1.6), 1.8)
+		if future_outcome == "Thriving": _shop_label(future_root, "For the farmer who stayed\nYear 50", Vector3(0, 2, 8))
+	_geometry_batcher.batch_tree(future_root, {})
+
+func restore_present() -> void:
+	future_outcome = ""
+	build_world()
+
+func _ground_bank(parent: Node3D, pos: Vector3, size: Vector3, tint: Color) -> void:
+	# Shared low rounded bank for snow, future silt and windblown sand.
+	_sphere(parent, pos, size, tint)

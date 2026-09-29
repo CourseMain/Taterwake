@@ -80,6 +80,8 @@ var climate_shake: float = 0.0
 var farm_viewport: SubViewport
 var touch_controls
 var conversation
+var epilogue_screen: Control
+var epilogue_result: Dictionary = {}
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -181,6 +183,7 @@ func _register_inputs() -> void:
 			InputMap.action_add_event(action, event)
 
 func _process(delta: float) -> void:
+	if is_instance_valid(epilogue_screen): return
 	if world == null or hud == null:
 		return
 	if is_instance_valid(year_intro) and year_intro.visible: return
@@ -432,6 +435,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(epilogue_screen): return
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
 		touch_controls.toggle_fullscreen()
@@ -986,6 +990,7 @@ func _climate_action(action: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_action(action: String) -> void:
+	if action.begins_with("debug:"): epilogue_result.clear()
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if is_instance_valid(conversation) and conversation.visible: return
 	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu"] and not action.begins_with("graphics"):
@@ -995,7 +1000,7 @@ func _on_action(action: String) -> void:
 		_close_equipment()
 		climate_target = ""
 		hud._climate_console.targeting = ""
-	if state.run_over and action not in (["reset", "debug", "close", "menu", "pause", "accounts", "run_summary"] if state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug:"):
+	if state.run_over and action not in (["reset", "debug", "close", "menu", "pause", "accounts", "run_summary", "epilogue"] if state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug:"):
 		return
 	if action.begins_with("farm_help:"):
 		_farm_help_action(action.get_slice(":", 1))
@@ -1075,6 +1080,7 @@ func _on_action(action: String) -> void:
 				hud.update_state(state)
 				_save_checkpoint.call_deferred()
 		"quest": state.claim_quest(parts[1])
+		"epilogue": _show_epilogue()
 		"close": hud.close_panel()
 		"crop":
 			state.select_crop(parts[1])
@@ -1098,12 +1104,14 @@ func _on_action(action: String) -> void:
 				hud.close_panel()
 				var loaded: bool = state.load_game()
 				if loaded:
+					epilogue_result.clear()
 					if state.run_outcome == "completed": hud.show_panel("run_summary", state)
 					elif not state.run_over and state.season_clock.season == 3: hud.show_panel("accounts", state)
 					elif not state.run_over and not bool(state.tutorial_progress.get("completed", false)):
 						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
 		"reset":
+			epilogue_result.clear()
 			_cancel_walk()
 			state.reset_game()
 			_set_debug_session(false)
@@ -1346,3 +1354,37 @@ func _show_year_start() -> void:
 	hud.close_panel()
 	state.climate_report_open = true
 	year_intro.present(state)
+
+func _show_epilogue() -> void:
+	if state.run_outcome != "completed" or is_instance_valid(epilogue_screen): return
+	_cancel_walk()
+	hud.close_panel()
+	hud.hide()
+	touch_controls.hide()
+	var layer := CanvasLayer.new()
+	layer.name = "EpilogueLayer"
+	layer.layer = 60
+	add_child(layer)
+	epilogue_screen = preload("res://scripts/epilogue_screen.gd").new()
+	layer.add_child(epilogue_screen)
+	epilogue_screen.setup(state, world, epilogue_result)
+	epilogue_screen.finished.connect(func(): _close_epilogue(false))
+	epilogue_screen.new_run.connect(func(): _close_epilogue(true))
+
+func _close_epilogue(restart: bool) -> void:
+	epilogue_result = epilogue_screen.result
+	var old_camera: Transform3D = epilogue_screen.saved_camera_transform
+	var old_size: float = epilogue_screen.saved_camera_size
+	var layer: Node = epilogue_screen.get_parent()
+	epilogue_screen = null
+	remove_child(layer)
+	layer.queue_free()
+	world.restore_present()
+	world.camera.transform = old_camera
+	world.camera.size = old_size
+	_reset_camera_view()
+	hud.show()
+	touch_controls.show()
+	_on_state_changed()
+	if restart: _on_user_action("reset")
+	else: hud.show_panel("run_summary", state)

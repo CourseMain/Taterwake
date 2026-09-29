@@ -4,6 +4,7 @@ const Type = preload("res://scripts/ui_type.gd")
 const Climate = preload("res://scripts/climate_system.gd")
 var records: Array = []
 var year: int = 1
+var future: bool = false
 var font: Font = Type.face(Type.BODY)
 func _init() -> void:
 	custom_minimum_size = Vector2(280, 126)
@@ -14,7 +15,15 @@ func setup(entries: Array, current_year: int) -> void:
 	for e in records: lines.append("Year %d · %s · %s" % [e.year, ["Spring", "Summer", "Autumn", "Winter"][int(e.season)], Climate.EVENTS[e.event].name])
 	tooltip_text = "\n".join(lines)
 	queue_redraw()
+func setup_future(entries: Array) -> void:
+	future = true
+	custom_minimum_size.y = 48
+	setup(entries, 50)
+
 func _draw() -> void:
+	if future:
+		_draw_future()
+		return
 	var width: float = size.x / 10.0
 	for y in range(1, 11):
 		var rect := Rect2((y - 1) * width + 1, 0, width - 2, 122)
@@ -39,3 +48,16 @@ func _icon(p: Vector2, event: String) -> void:
 		for i in range(6): draw_line(p, p + Vector2.from_angle(i * TAU / 6) * 8, ink, 1.5, true)
 		if event == "blizzard": draw_line(p + Vector2(-10,7), p + Vector2(10,4), ink, 2, true)
 		if event == "deep_freeze": draw_arc(p, 10, 0, TAU, 20, ink, 1, true)
+
+func _draw_future() -> void:
+	var width: float = size.x / 50.0
+	for y in range(1, 51):
+		var count: int = 0
+		var severity: float = 0
+		for event in records:
+			if int(event.year) == y:
+				count += 1
+				severity += float(event.severity)
+		var tint: Color = Color("b8c3a0").lerp(Color("a65e44"), severity / 3.0)
+		draw_rect(Rect2((y - 1) * width, 2, maxf(1, width - 1), 5 + count * 6), tint)
+		if y % 10 == 0: draw_string(font, Vector2((y - 3) * width, 43), str(y), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("493d2b"))
