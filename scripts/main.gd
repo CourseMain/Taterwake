@@ -981,7 +981,6 @@ func _on_action(action: String) -> void:
 		"forge":
 			_cancel_walk()
 			hud.show_panel("tools", state)
-		"store": state.trading.store(state, parts[1], int(parts[2]))
 		"stored_sell":
 			if hud._panel_kind == "winter_stores": state.trading.sell_stored(state, parts[1])
 		"contract_accept": state.trading.accept(state)

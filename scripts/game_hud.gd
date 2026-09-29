@@ -2428,9 +2428,9 @@ func modal_content_height() -> float:
 
 
 func _build_contracts() -> void:
-	_heading("Buyer board", "One Spring order · collection at Autumn start")
+	_heading("Buyer board", "One Spring order · collection at Autumn end")
 	_info("contract_details", "", INK, 20)
-	_body.add_child(_wrap("The buyer automatically takes available sacks when Autumn begins, including sacks set aside for storage. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
+	_body.add_child(_wrap("The buyer automatically takes available sacks at the end of Autumn, before Winter spoilage and the storage fee. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
 	_refs.contract_accept = _button("Accept this order", "contract_accept", true)
 	_body.add_child(_refs.contract_accept)
 	_refresh_contracts()
@@ -2451,7 +2451,7 @@ func _refresh_contracts() -> void:
 
 func _build_stores() -> void:
 	_heading("Barn stores", "Sell during Winter · prices rise until Spring resets them")
-	_body.add_child(_wrap("Holding a harvest across Winter start costs %s once, with 10%% spoilage rounded up per variety. New Winter harvests sell at the ordinary market. Barn capacity: %d sacks." % [_state.money(_state.MarketDecisions.STORAGE_FEE), _state.capacity], 16, MUTED))
+	_body.add_child(_wrap("Holding a harvest across Winter start costs %s once, with 10%% spoilage across the whole barn, rounded to nearest and taken from the largest pile first. New Winter harvests sell at the ordinary market. Barn capacity: %d sacks." % [_state.money(_state.MarketDecisions.STORAGE_FEE), _state.capacity], 16, MUTED))
 	for id in _state.CROP_IDS:
 		var card := _card(CREAM, 12)
 		_body.add_child(card)

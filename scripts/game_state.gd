@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 32
+const MECHANICS_REVISION: int = 33
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -434,13 +434,13 @@ func update(delta: float) -> void:
 
 
 func _season_boundary() -> void:
-	if season_clock.season == 2: trading.settle(self)
 	if season_clock.season == 0: trading.held = CropTable.empty_stock()
 	var was_over: bool = run_over
 	if season_clock.finished():
 		_end_run("completed")
 		news = "Ten years complete."
 	elif season_clock.season == 3:
+		trading.settle(self)
 		season_clock.autumn_loss = 0
 		for plot in plots:
 			if plot.crop != "icecap" or int(plot.stage) == 0:

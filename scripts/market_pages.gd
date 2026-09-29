@@ -32,7 +32,6 @@ var crop_name: Label
 var crop_quote: Label
 var crop_change: Label
 var crop_history: Control
-var store_button: Button
 var storage_note: Label
 var crop_owned: Label
 var crop_image: Control
@@ -292,8 +291,6 @@ func _build_sell() -> void:
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
 	storage_note = _label("", 14, MUTED)
 	add_child(storage_note)
-	store_button = _local_button("Store selected sacks", "market_store", _store)
-	add_child(store_button)
 	add_child(hud._button("Barn stores · Winter selling", "winter_stores"))
 	_build_trade_bar()
 
@@ -456,8 +453,7 @@ func refresh() -> void:
 	crop_history.set_history(quote.get("history", []), MUTED)
 	crop_history.set_expected_price(state.trading.peak_price(selected))
 	crop_history.tooltip_text = "Recent prices · dashed line: expected late-Winter storage price"
-	storage_note.text = "Sell now at %s per sack, or store. Late Winter: up to %s (dashed line). Storage: %s per Winter, 10%% spoilage. Spring resets the price. Set aside: %d sacks." % [state.market_money(price), state.market_money(state.trading.peak_price(selected)), state.money(state.MarketDecisions.STORAGE_FEE), int(state.trading.held[selected])]
-	store_button.disabled = state.run_over or state.season_clock.season == 3 or not quantity.valid or amount < 1 or amount > int(state.storage[selected]) - int(state.trading.held[selected]) or not hud._tutorial.is_empty()
+	storage_note.text = "All sacks in the barn at Winter start are stored: %s fee · 10%% total spoilage, rounded to nearest · Late Winter %s/sack (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected))]
 
 	crop_owned.text = "%s owned" % state.format_number(owned)
 	crop_image.crop = selected
@@ -489,11 +485,6 @@ func _sell() -> void:
 	refresh()
 	if sell_button.disabled: return
 	hud._act("sell:%s:%d" % [selected, int(quantity.value)])
-
-func _store() -> void:
-	if not quantity.apply(): return
-	refresh()
-	if not store_button.disabled: hud._act("store:%s:%d" % [selected, int(quantity.value)])
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return

@@ -1,5 +1,5 @@
 extends RefCounted
-## Barn commitments, annual storage bills and one Spring buyer order.
+## Winter stores, annual storage bills and one Spring buyer order.
 const Table = preload("res://scripts/crop_table.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 const STORAGE_FEE: float = 200.0
@@ -20,15 +20,6 @@ func stored_price(farm, id: String) -> float:
 func fresh_count(farm, id: String) -> int:
 	return int(farm.storage[id]) - int(held[id]) if farm.season_clock.season == 3 else int(farm.storage[id])
 
-func store(farm, id: String, quantity: int) -> String:
-	if farm.run_over or farm.accounts_open or farm.tutorial_active: return farm._finish("Return to the farm before storing crops.")
-	if farm.season_clock.season == 3: return farm._finish("Winter stores are already settled. Sell new harvests at the current price.")
-	if id not in Table.IDS or quantity < 1: return farm._finish("Choose whole sacks to store.")
-	if quantity > int(farm.storage[id]) - int(held[id]): return farm._finish("Not enough uncommitted sacks to store.")
-	if farm.storage_used() > farm.capacity: return farm._finish("Barn capacity reached. Sell crops before storing more.")
-	held[id] = int(held[id]) + quantity
-	return farm._finish("Set aside %d %s sacks. Winter storage costs %s, with 10%% spoilage. Sell at the barn during Winter." % [quantity, id.capitalize(), farm.money(STORAGE_FEE)])
-
 func clamp_stock(farm) -> void:
 	for id in Table.IDS: held[id] = mini(int(held[id]), int(farm.storage[id]))
 
@@ -36,9 +27,14 @@ func begin_winter(farm) -> void:
 	var year: String = str(farm.season_clock.year)
 	if winters.has(year): return
 	var report: Dictionary = {"fee": STORAGE_FEE if farm.storage_used() > 0 else 0.0, "spoiled": Table.empty_stock()}
-	# Keeping a harvest in the barn across the boundary is also a storage choice.
-	for id in Table.IDS:
-		var loss: int = ceili(int(farm.storage[id]) * SPOILAGE)
+	var remaining_loss: int = roundi(farm.storage_used() * SPOILAGE)
+	var piles: Array[String] = Table.IDS.duplicate()
+	# Resolve equal piles in catalogue order so the loss is deterministic.
+	piles.sort_custom(func(a: String, b: String) -> bool:
+		return int(farm.storage[a]) > int(farm.storage[b]) if farm.storage[a] != farm.storage[b] else Table.IDS.find(a) < Table.IDS.find(b))
+	for id in piles:
+		var loss: int = mini(int(farm.storage[id]), remaining_loss)
+		remaining_loss -= loss
 		report.spoiled[id] = loss
 		farm.storage[id] = int(farm.storage[id]) - loss
 		held[id] = int(farm.storage[id])
@@ -71,7 +67,7 @@ func accept(farm) -> String:
 	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 0: return farm._finish("The buyer offers one order each Spring.")
 	if not contract.is_empty() or settled.has(str(year)): return farm._finish("Only one buyer order per year.")
 	contract = offer(year)
-	return farm._finish("Order accepted: %d %s sacks, collected at the start of Autumn. Shortfalls cost %s per sack." % [contract.quantity, contract.crop.capitalize(), farm.money(SHORTFALL_FEE)])
+	return farm._finish("Order accepted: %d %s sacks, collected at the end of Autumn. Shortfalls cost %s per sack." % [contract.quantity, contract.crop.capitalize(), farm.money(SHORTFALL_FEE)])
 
 func settle(farm) -> void:
 	if contract.is_empty(): return
@@ -94,7 +90,7 @@ func winter_text(farm) -> String:
 	if report.is_empty(): return ""
 	var loss: int = 0
 	for count in report.spoiled.values(): loss += int(count)
-	return "Storage fee %s · Spoilage %d sacks (10%%, rounded up per variety)." % [farm.money(report.fee), loss]
+	return "Storage fee %s · Spoilage %d sacks (10%% of the barn, rounded to nearest; largest pile first)." % [farm.money(report.fee), loss]
 
 func save_data() -> Dictionary:
 	return {"held": held.duplicate(), "winters": winters.duplicate(true), "contract": contract.duplicate(), "settled": settled.duplicate(true)}
@@ -110,11 +106,12 @@ func valid(raw: Variant, saved: Dictionary) -> bool:
 	if not raw.get("held") is Dictionary or raw.held.size() != Table.IDS.size(): return false
 	for id in Table.IDS:
 		if not Rules.number(raw.held.get(id), 0, saved.storage[id], true): return false
+		if int(saved.season_clock.season) != 3 and int(raw.held[id]) != 0: return false
 	for kind in ["winters", "settled"]:
 		if not raw.get(kind) is Dictionary or raw[kind].size() > 10: return false
 		for key in raw[kind]:
 			if not str(key).is_valid_int() or str(int(key)) != str(key) or int(key) < 1 or int(key) > int(saved.season_clock.year): return false
-			if int(key) == int(saved.season_clock.year) and int(saved.season_clock.season) < (3 if kind == "winters" else 2): return false
+			if int(key) == int(saved.season_clock.year) and int(saved.season_clock.season) < 3: return false
 			var row: Variant = raw[kind][key]
 			if not row is Dictionary: return false
 			if kind == "winters":
@@ -126,8 +123,8 @@ func valid(raw: Variant, saved: Dictionary) -> bool:
 				if row.fee > 0 and not _posting(saved, int(key), 3, "storage", "Winter storage fee", -STORAGE_FEE): return false
 			else:
 				if not valid_order(row, int(key), true): return false
-				if int(row.delivered) > 0 and not _posting(saved, int(key), 2, "contracts", "Buyer collected %d %s sacks" % [int(row.delivered), row.crop], row.delivered * row.price): return false
-				if int(row.shortfall) > 0 and not _posting(saved, int(key), 2, "contracts", "Contract shortfall: %d %s sacks" % [int(row.shortfall), row.crop], -row.shortfall * SHORTFALL_FEE): return false
+				if int(row.delivered) > 0 and not _posting(saved, int(key), 3, "contracts", "Buyer collected %d %s sacks" % [int(row.delivered), row.crop], row.delivered * row.price): return false
+				if int(row.shortfall) > 0 and not _posting(saved, int(key), 3, "contracts", "Contract shortfall: %d %s sacks" % [int(row.shortfall), row.crop], -row.shortfall * SHORTFALL_FEE): return false
 	for entry in saved.ledger.entries:
 		if entry.category != "storage": continue
 		var report: Dictionary = raw.winters.get(str(int(entry.year)), {})
@@ -141,7 +138,7 @@ func valid(raw: Variant, saved: Dictionary) -> bool:
 			if not matches: return false
 	if not raw.get("contract") is Dictionary: return false
 	if not raw.contract.is_empty():
-		if int(saved.season_clock.season) >= 2 or raw.settled.has(str(saved.season_clock.year)): return false
+		if int(saved.season_clock.season) >= 3 or raw.settled.has(str(saved.season_clock.year)): return false
 		if not valid_order(raw.contract, int(saved.season_clock.year), false): return false
 	return true
 

@@ -23,8 +23,7 @@ func run() -> void:
 	farm.storage.icecap = 100
 	farm.season_clock.season = 2; farm.elapsed = 300; farm._refresh_market()
 	var harvest_value: float = farm.market.icecap.sell * 100
-	farm.trading.store(farm, "icecap", 100)
-	check(farm.trading.held.icecap == 100 and farm.storage_used() == 100, "storing reserves actual sacks without duplicating capacity")
+	check(farm.trading.held.icecap == 0 and farm.storage_used() == 100, "Autumn stock stays ordinary until Winter begins")
 	winter(farm)
 	check(farm.storage.icecap == 90 and farm.trading.held.icecap == 90, "Winter loses ten percent and keeps the surviving sacks")
 	check(farm.ledger.total(1, "storage") == -200, "one Winter storage fee posts to the journal")
@@ -60,9 +59,8 @@ func run() -> void:
 	farm.free()
 	farm = fresh(); farm.storage.russet = 11
 	winter(farm)
-	check(farm.storage.russet == 9, "fractional spoiled sacks round up")
+	check(farm.storage.russet == 10, "fractional spoiled sacks round to nearest")
 	farm.storage.icecap = 3
-	farm.trading.store(farm, "icecap", 3)
 	check(farm.trading.held.icecap == 0, "new Winter Icecap cannot instantly earn stored-crop prices")
 	farm.sell_crop("icecap")
 	check(farm.storage.icecap == 0 and farm.ledger.total(1, "sales") > 0, "new Winter harvests still sell normally")
@@ -72,12 +70,29 @@ func run() -> void:
 	check(farm.season_clock.season == 0 and farm.trading.held.russet == 0 and farm.trading.stored_price(farm, "russet") < peak, "Spring resets the premium and releases unsold sacks")
 	before = farm.coins
 	farm.trading.sell_stored(farm, "russet")
-	check(farm.coins == before and farm.storage.russet == 9, "Spring cannot sell at the expired Winter price")
+	check(farm.coins == before and farm.storage.russet == 10, "Spring cannot sell at the expired Winter price")
 	farm.sell_crop("russet")
 	check(farm.storage.russet == 0, "unsold stores become ordinary Spring stock")
 	farm.free()
 	farm = fresh(); winter(farm)
 	check(farm.ledger.total(1, "storage") == 0, "an empty barn has no storage fee")
+	farm.free()
+	for sacks in [1, 4, 5, 14, 15]:
+		farm = fresh(); farm.storage.russet = sacks
+		winter(farm)
+		var loss: int = {1: 0, 4: 0, 5: 1, 14: 1, 15: 2}[sacks]
+		check(farm.storage.russet == sacks - loss and farm.trading.winters["1"].spoiled.russet == loss, "whole-barn rounding for %d sacks" % sacks)
+		check(farm.trading.held.russet == sacks - loss and farm.ledger.total(1, "storage") == -200, "small barns store survivors and still pay the fee")
+		farm.free()
+	farm = fresh()
+	farm.storage.russet = 1; farm.storage.giant = 6; farm.storage.golden = 7; farm.storage.icecap = 6
+	winter(farm)
+	check(farm.storage_used() == 18 and farm.storage.golden == 5 and farm.storage.russet == 1 and farm.storage.giant == 6 and farm.storage.icecap == 6, "mixed barn loses ten percent in total from the largest pile first")
+	check(farm.trading.winters["1"].spoiled.golden == 2 and farm.save_game(SAVE) and farm.load_game(SAVE), "mixed-pile loss and journal notes round-trip")
+	farm.free()
+	farm = fresh(); farm.storage.russet = 5; farm.storage.giant = 5
+	winter(farm)
+	check(farm.storage.russet == 4 and farm.storage.giant == 5, "equal largest piles resolve in catalogue order")
 	farm.free()
 	for opening in [-300, -301]:
 		farm = fresh(); farm.coins = opening; farm.storage.russet = 1
@@ -89,29 +104,62 @@ func run() -> void:
 	farm.plots[5].merge({"crop":"russet", "stage":3, "tilled":true, "watered":true, "elapsed":75.0}, true)
 	farm.interact_plot(5, "harvest")
 	check(farm.storage_used() == farm.capacity and farm.plots[5].pending == 2, "barn capacity leaves excess harvest on the bed")
-	farm.trading.store(farm, "russet", farm.capacity + 1)
-	check(farm.trading.held.russet == 0, "cannot store sacks that do not exist")
-	farm.trading.store(farm, "russet", farm.capacity)
-	check(farm.storage_used() == farm.capacity and farm.trading.held.russet == farm.capacity, "fresh and committed sacks share one barn capacity")
-	farm.trading.accept(farm)
+	winter(farm)
+	check(farm.storage_used() == 180 and farm.trading.held.russet == 180 and farm.capacity == 200, "automatic Winter storage shares the purchased barn capacity")
+	farm.free()
+	farm = fresh()
+	check(farm.trading.accept(farm).contains("collected at the end of Autumn"), "acceptance states the Autumn-end collection deadline")
 	var order: Dictionary = farm.trading.contract.duplicate()
 	farm.trading.accept(farm)
 	check(farm.trading.contract == order, "one active Spring contract")
-	farm.storage.russet = 12; farm.trading.clamp_stock(farm)
-	check(farm.save_game(SAVE) and farm.load_game(SAVE), "active contract and commitments reload")
+	farm.storage.russet = 12
+	check(farm.save_game(SAVE) and farm.load_game(SAVE), "active Spring contract reloads")
 	farm.season_clock.season = 1; farm.season_clock.seconds = 149.75
 	farm.update(.25)
-	check(farm.trading.contract.is_empty() and farm.trading.settled["1"].delivered == 12 and farm.storage.russet == 0, "Autumn buyer collects available sacks exactly once")
-	check(is_equal_approx(farm.ledger.total(1, "contracts"), 12 * 16.5 - 8 * 5), "contract delivery and shortfall post to contracts")
+	check(farm.season_clock.season == 2 and not farm.trading.contract.is_empty() and farm.trading.settled.is_empty() and farm.storage.russet == 12 and farm.ledger.total(1, "contracts") == 0, "Autumn starts without collecting or penalizing the order")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE), "active contract survives an Autumn reload")
+	order = farm.trading.contract.duplicate()
+	farm.trading.accept(farm)
+	check(farm.trading.contract == order, "Autumn cannot accept another order")
+	var premature: Dictionary = farm._save_data(); premature.trading.held.russet = 1
+	check(not farm._valid_save(premature), "pre-Winter saves cannot mark sacks as stored")
+	farm.plots[5].merge({"crop":"russet", "stage":3, "tilled":true, "watered":true, "elapsed":75.0}, true)
+	farm.interact_plot(5, "harvest")
+	check(farm.storage.russet == 15, "Autumn harvesting adds sacks before the collection deadline")
+	winter(farm)
+	check(farm.trading.contract.is_empty() and farm.trading.settled["1"].delivered == 15 and farm.storage.russet == 0, "buyer collects the Autumn harvest exactly once at Winter start")
+	check(is_equal_approx(farm.ledger.total(1, "contracts"), 15 * 16.5 - 5 * 5), "contract delivery and shortfall post to contracts")
+	check(farm.ledger.total(1, "storage") == 0, "collection empties the barn before assessing the storage fee")
 	check(farm.trading.held.russet == 0, "contract cannot leave phantom stored sacks")
 	before = farm.coins; farm.trading.settle(farm); farm.trading.accept(farm)
-	check(farm.coins == before and farm.trading.contract.is_empty(), "settlement is idempotent and Autumn cannot accept orders")
+	check(farm.coins == before and farm.trading.contract.is_empty(), "settlement is idempotent and Winter cannot accept orders")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "settled contract round-trips")
 	var bad: Dictionary = farm._save_data(); bad.trading.held.russet = 1
 	check(not farm._valid_save(bad), "reject stores without matching stock")
 	bad = farm._save_data(); bad.trading.settled["1"].price = 999
 	check(not farm._valid_save(bad), "reject tampered contract price")
+	bad = farm._save_data()
+	for entry in bad.ledger.entries:
+		if entry.category == "contracts": entry.season = 2
+	check(not farm._valid_save(bad), "contract postings must belong to the Autumn-to-Winter boundary")
 	farm.free()
+	for sacks in [0, 20, 40]:
+		farm = fresh(); farm.trading.accept(farm)
+		farm.storage.russet = sacks
+		if sacks == 20:
+			farm.storage.russet = 17; farm.season_clock.season = 2
+			farm.plots[5].merge({"crop":"russet", "stage":3, "tilled":true, "watered":true, "elapsed":75.0}, true)
+			farm.interact_plot(5, "harvest")
+			check(farm.storage.russet == 20, "Autumn harvest completes the buyer quantity")
+		farm.boundary_save_path = SAVE
+		winter(farm)
+		var delivered: int = mini(sacks, 20)
+		var remaining: int = sacks - delivered
+		check(farm.trading.settled["1"].delivered == delivered and farm.trading.settled["1"].shortfall == 20 - delivered, "contract settles before spoilage for %d sacks" % sacks)
+		check(farm.trading.winters["1"].spoiled.russet == remaining / 10 and farm.storage.russet == remaining - remaining / 10, "only the contract remainder spoils")
+		check(farm.ledger.total(1, "storage") == (-200 if remaining > 0 else 0), "only the contract remainder incurs a storage fee")
+		check(farm.load_game(SAVE) and farm.trading.contract.is_empty() and farm.trading.settled["1"].delivered == delivered, "boundary save contains complete contract settlement and storage")
+		farm.free()
 	await ui_checks()
 	for suffix in ["", ".bak", ".tmp", ".rejected"]:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
@@ -123,9 +171,10 @@ func ui_checks() -> void:
 	game.state.storage.russet = 40
 	game.hud.show_panel("sell_potatoes", game.state)
 	var page = game.hud._refs.market_page
-	check(page.crop_history.expected_price == 18 and not page.store_button.disabled, "sell card shows storage choice and dashed Winter price")
-	page.quantity.value = 10; page.store_button.pressed.emit()
-	check(game.state.trading.held.russet == 10, "store card action uses the selected quantity")
+	check(page.crop_history.expected_price == 18 and page.storage_note.text.contains("Winter start are stored") and page.storage_note.text.contains("10% total spoilage") and page.storage_note.text.contains("dashed"), "sell card explains automatic storage beside the dashed Winter price")
+	var store_actions: Array = page.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("action", "") == "market_store" or button.text == "Store selected sacks")
+	check(store_actions.is_empty() and not page.storage_note.text.contains("Set aside"), "sell page has no Store button or held marker")
+	check(game.state.trading.held.russet == 0, "opening the sell page does not reserve sacks")
 	game._on_action("contracts")
 	check(game.hud._panel_kind == "contracts" and not game.hud._refs.contract_accept.disabled, "buyer board opens the Spring contract")
 	game.hud._refs.contract_accept.pressed.emit()
