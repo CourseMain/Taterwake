@@ -38,7 +38,9 @@ func run() -> void:
 		print("%s: survived %d/30, median end year %.1f, mean cash %.2f, max cash %.2f, mean sales %.2f" % [strategy, survived, (years[14]+years[15])/2.0, cash/30, best, sales/30])
 		if strategy == "naive": check((years[14]+years[15])/2.0 <= 6, "naive median foreclosure by year six")
 		if strategy == "cautious": check(survived >= 24, "cautious survives at least 24 seeds")
-		if strategy == "tidy": check(survived == 30, "tidy survives all thirty seeds")
+		if strategy == "tidy":
+			check(survived == 30, "tidy survives all thirty seeds")
+			check(cash / rows.size() < 8000, "tidy mean ending cash stays below 8,000: %.2f" % (cash / rows.size()))
 		if strategy == "diversifier": check(survived >= 24, "diversifier survives at least 24 seeds")
 	var cautious_sales := 0.0
 	var tidy_sales := 0.0
@@ -49,7 +51,7 @@ func run() -> void:
 	check(results.diversifier.filter(func(row): return row.businesses.has("shop")).size() >= 24, "at least 24 diversifiers build the shop without invented funding")
 	var advantage: float = tidy_sales / cautious_sales - 1.0
 	print("Tidy ten-year sales advantage: %.2f%%" % (100 * advantage))
-	check(advantage >= 0.15 and advantage <= 0.30, "tidy earns 15–30% more crop receipts across matched seeds")
+	check(advantage >= 0.15 and advantage <= 0.40, "tidy earns 15–40% more crop receipts across matched seeds")
 	print("Tuning bot: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 

@@ -40,7 +40,24 @@ The tuning bot simulates 120 runs and needs the 600-second timeout; the runner�
 
 ### Baseline
 
-#### Segment 15 diversification — current
+#### Table-price follow-up — current
+
+Godot 4.7.2: the proposed 1.5×/85 balance failed the full tuning suite
+(1,407 checks, 33 failures). The restored 1.2×/80 balance passes **1,352 checks**,
+120 seeded runs and 1,045 exact annual journal reconciliations, including the
+new tidy mean-cash assertion and 40% advantage ceiling. Final `test_grades`
+and `test_game` also pass (82 and 39 checks). All three suites ran through
+`tools/run_tests.sh`; the bot used `--timeout 600`. The baseline bot ran in
+an isolated checkout whose balance, quality and bot files were verified
+identical to the final working tree.
+
+Restored results: tidy 30/30, mean ending cash 5,555.09; cautious 28/30;
+diversifier 29/30; naive median foreclosure year five. Final bot reports are
+in `artifacts/test-results/`; rejected trial reports and parameters are in
+`artifacts/test-results/table-price-trial/`. The experiment is documented in
+REDESIGN_PLAN §6. No tests were skipped or disabled.
+
+#### Segment 15 diversification — historical
 
 2026-09-29, Godot `4.7.2.stable.official.ed1daf0bf`: **80 PASS, 0 FAIL,
 0 TIMEOUT, 0 ERRORS** across the full suite set. The 79 non-bot suites ran
@@ -591,7 +608,7 @@ Run `tools/run_tests.sh -j 1 test_climate_curve test_protection test_season_cloc
 
 ### Harvest grades before economy tuning
 
-`crop_quality.gd` owns the 100-point bed score, Table/Standard/Feed thresholds (80/40), multipliers (1.2/1/0.5, read from `balance.gd`), deduction causes, ten-second fractional clocks and once-per-disaster freeze/lightning markers. Fragility is `9 / CropTable.total_tolerance(crop)`, so the existing resilience sequence 9/8/7/6/5 produces increasing quality risk. Each scaled deduction is rounded to integer exposure, then passed through `FarmProtection.loss()` with the matching project or Spring bed-cover reduction. Manual dry/late/pest deductions have no passive project reduction. Loss totals must sum to `100 − quality` in save validation.
+`crop_quality.gd` owns the 100-point bed score, Table/Standard/Feed thresholds (80/40, with the Table threshold read from `balance.gd`), multipliers (1.2/1/0.5, read from `balance.gd`), deduction causes, ten-second fractional clocks and once-per-disaster freeze/lightning markers. Fragility is `9 / CropTable.total_tolerance(crop)`, so the existing resilience sequence 9/8/7/6/5 produces increasing quality risk. Each scaled deduction is rounded to integer exposure, then passed through `FarmProtection.loss()` with the matching project or Spring bed-cover reduction. Manual dry/late/pest deductions have no passive project reduction. Loss totals must sum to `100 − quality` in save validation.
 
 Actual pest bites deduct 6, active drought/flood stress 4 per ten seconds, disaster freeze 15 once plus 4 per ten seconds on ice, lightning-row hits 25 once, unwatered growth 2 per ten seconds and ripe neglect 5 per ten seconds after thirty seconds. The quality ripe-age clock is independent of pest timing, so spraying and ducks cannot renew the harvest grace period. Harvesting stores the current score; partial harvests preserve the remaining crop’s timers and deductions. Crop clearing/replanting resets them. Tutorials retain their damage protection.
 
@@ -635,8 +652,9 @@ must compare exactly, with no approximate tolerance. This preserves the order
 of IEEE floating-point additions rather than changing monetary precision.
 Naive median foreclosure must be by year six, cautious must complete at least
 24 of 30 runs, tidy must complete all 30 and harvest a majority of Table sacks,
-and every completed strategy must finish at or below 8,000. Tidy total crop
-receipts must exceed cautious by 15–30%; this is gross sales, since percentage
+and every completed strategy must finish at or below 8,000. Tidy mean ending
+cash must also remain strictly below 8,000. Tidy total crop
+receipts must exceed cautious by 15–40%; this is gross sales, since percentage
 comparisons of negative or near-zero net profit are misleading. Diversifier must survive at least 24 seeds, earn business income on every seed,
 and build at least 24 shops without injected funds.
 Per-seed annual opening/closing cash and category totals are written to
@@ -693,3 +711,19 @@ reconciliation, shortened Summer/save clocks, two-order delivery and penalties,
 corrupted saves, title precedence, and desktop/phone controls. Native
 `test_diversification.gd -- --integration-test --capture --touch-controls`
 writes UI previews under `artifacts/`.
+
+### Segment 14 follow-up: rejected Table-price trial
+
+Tested Table at 1.5× with an 85-point threshold, Feed at 0.5×, and the tidy
+advantage ceiling raised to 40%. All four strategies used their unchanged
+policies and seeds 1–30. Cautious survived 28/30 and tidy 30/30, but tidy mean
+cash reached 14,424.72, above the requested 8,000. Every tidy seed exceeded
+8,000 (range 10,822.40–17,972.26); crop receipts beat cautious by 53.95%.
+Naive median foreclosure also moved from year five to seven. The trial was
+rejected and the original 1.2×/80 Table balance restored; Feed stays 0.5×.
+
+`TABLE_THRESHOLD` is now a named constant in `balance.gd`; `crop_quality.gd`
+reads it alongside the price multipliers. The tuning bot retains the requested
+40% advantage ceiling and adds an explicit mean-cash assertion. The original
+per-seed cash limits and every annual ledger check remain. Final gameplay and
+save revision 40 are unchanged. REDESIGN_PLAN §6 records the experiment.

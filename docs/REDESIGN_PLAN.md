@@ -243,8 +243,20 @@ journal reconciles exactly. The maximum completed-run cash is **7,244.24**.
 Diversifier enrols on all 30 seeds, builds 28 shops and 27 lodgings, and earns
 mean diversification receipts of **6,960.37**. Seed 25 forecloses in year nine;
 seed 17, which cautious loses, survives. All **1,045 annual journals** reconcile
-exactly, with **1,351 bot checks** passing. Construction can remain unaffordable
+exactly, with **1,352 bot checks** passing. Construction can remain unaffordable
 on a bad seed; the bot receives no credit or income outside the game rules.
+
+The September 29 Table-price follow-up tested **1.5× at quality 85**, with
+Feed unchanged at **0.5×** and the tidy crop-sales advantage ceiling raised
+to **40%**. Cautious still completed **28/30** and tidy **30/30**, but tidy's
+mean ending cash reached **14,424.72** (minimum **10,822.40**, maximum
+**17,972.26**), failing the requested mean below 8,000. Its crop-sales advantage
+was **53.95%**, also above the new ceiling. Naive median foreclosure slipped
+to year **7**, failing the existing by-year-six check. The experiment was
+rejected: **Table remains 1.2× at quality 80**. The bot retains the new **15–40%**
+advantage range and an explicit **tidy mean cash < 8,000** assertion, alongside
+its existing individual cash limits. `TABLE_THRESHOLD` now lives in
+`balance.gd` with the multiplier so both knobs can be tuned in one file.
 
 From year three, Winter accounts offer these permanent businesses, with
 benefits beginning the following year. Values live in `balance.gd`.
@@ -279,8 +291,8 @@ No policy uses kept seed, quests, hired help or free funds.
 
 “Out-earns” means total **crop sales receipts** over the ten-year cohort;
 a percentage of net profit would be undefined or misleading when it is zero
-or negative. The bot also checks majority-Table tidy harvests, the 8,000 cash
-ceiling, survival and exact annual journal replay against observed purse changes.
+or negative. The bot also checks majority-Table tidy harvests, the 8,000 per-run cash
+ceiling, tidy mean cash strictly below 8,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes.
 It uses ordinary IEEE float transaction order, with no approximate-equality
 allowance. Reports under `artifacts/test-results/tuning_<strategy>.json` include
 each seed's annual opening, closing and category totals. This tests state-level

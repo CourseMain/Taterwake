@@ -7,7 +7,7 @@ const GRADES: Array[String] = ["Table", "Standard", "Feed"]
 const MULTIPLIER = Balance.GRADE_MULTIPLIER
 const CAUSES := {"pests":"Pests", "drought":"Drought", "flood":"Flood", "freeze":"Freeze", "storm":"Lightning", "dry":"Lack of water", "late":"Late harvest"}
 static func grade(score: int) -> String:
-	return "Table" if score >= 80 else ("Standard" if score >= 40 else "Feed")
+	return "Table" if score >= Balance.TABLE_THRESHOLD else ("Standard" if score >= 40 else "Feed")
 static func reset(plot: Dictionary) -> void:
 	plot.quality = 100
 	plot.quality_ripe_age = 0.0

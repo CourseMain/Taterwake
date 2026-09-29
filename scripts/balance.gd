@@ -22,6 +22,7 @@ const FIXED_COSTS: Array[Dictionary] = [
 	{"category": "living", "label": "Living costs", "amount": -800.0},
 	{"category": "upkeep", "label": "Annual equipment upkeep", "amount": -300.0},
 ]
+const TABLE_THRESHOLD: int = 80
 const GRADE_MULTIPLIER := {"Table": 1.2, "Standard": 1.0, "Feed": 0.5}
 const PROTECTION_COSTS: Dictionary = {"rainwater":900.0, "drainage":1200.0, "windbreaks":1500.0, "frost":900.0}
 const PROTECTION_UPKEEP: float = 60.0
