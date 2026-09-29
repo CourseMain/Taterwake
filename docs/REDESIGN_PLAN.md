@@ -172,28 +172,99 @@ only adapt, never stop it.
   restraint affords. That is the honest message, delivered by the ledger rather
   than by text.
 
-## 6. Economy model (starting numbers, to be tuned by simulation)
+## 6. Economy model (Segment 14 simulation tuning)
 
-| Line | Per year |
+All tuning lives in `scripts/balance.gd`; game systems and the headless bot
+read the same constants. These values replace the original starting guesses.
+Opening cash is **2,000**, the overdraft boundary is **−5,000**, and foreclosure
+is assessed at Winter start after storage, insurance, upkeep and fixed bills.
+
+| Fixed annual payment | Spudions |
 | --- | ---: |
-| Mortgage interest + principal | 2,000 |
-| Land tax and rent | 500 |
-| Living costs | 1,500 |
-| Equipment upkeep | 500 |
-| Seed (24 beds) | ~1,200 |
-| Water, fuel | ~300 |
-| **Costs, total** | **~6,000** |
-| Gross sales, good year, no disaster | ~6,500 |
-| Gross sales, one moderate disaster | ~4,900 |
-| Gross sales, two disasters | ~3,200 |
+| Mortgage interest | 600 |
+| Mortgage principal | 600 |
+| Rent and land tax | 300 |
+| Living costs | 800 |
+| Equipment upkeep | 300 |
+| **Fixed total** | **2,600** |
 
-So a clean year nets about +500, an average year about −1,100, a bad year about
-−2,800. Start with 2,000 cash and a −5,000 overdraft limit. Naive play should
-foreclose around year 4 to 5; careful play should survive year 10 with a total
-ten-year net somewhere near zero and one or two proud years. Storage: +40%
-spring price, 10% spoilage, 200 fee. Contract: fixed 22 per sack, penalty 5 per
-sack short. Protections: 1,500 to 2,500 each, 100 per year upkeep, each cuts
-its disaster's loss by 50 to 60%. Insurance: 400 premium, pays 40% of loss.
+The initial loan is 12,000; ten principal payments leave 6,000. Opening the
+remaining twelve beds costs 1,200. Seeds and protection are additional costs.
+
+| Variety | Seed | Standard base / sack | Sacks / bed | Grow seconds | Volatility |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Russet | 6.75 | 9.00 | 3 | 75 | Low |
+| Giant | 9.00 | 12.00 | 5 | 135 | Low |
+| Golden | 12.60 | 16.80 | 4 | 105 | Mid |
+| Sunburst | 17.10 | 22.80 | 3 | 195 | High |
+| Icecap | 30.00 | 30.00 | 2 | 225 | High |
+
+Table / Standard / Feed multipliers are **1.2 / 1 / 0.5**, with the existing
+80 / 40 quality thresholds. Icecap's higher seed cost and smaller harvest
+make price-chasing expensive. Two complete Golden sowings cost 604.80 in
+seed and produce at most 192 sacks before weather, pests or spoilage.
+Volatility remains 5% / 10% / 15% ordinary drift and 1.2 / 1.4 / 1.6 late-Winter
+storage factors. Nonempty Winter storage costs **120**, spoils **5%** rounded
+across the whole barn, and deducts ten quality. Contracts pay base × 1.1
+and penalize missing sacks by 5.
+
+| Protection | Level 1 | Level 2 |
+| --- | ---: | ---: |
+| Rainwater tank | 900 | 1,800 |
+| Drainage | 1,200 | 2,400 |
+| Windbreak | 1,500 | 3,000 |
+| Frost cover | 900 | 1,800 |
+
+Each completed project costs **60 annual upkeep**, regardless of level, and
+reduces matching field losses by **50% / 75%**. Annual insurance costs **240**
+and pays **40%** of insured losses at base prices.
+
+The climate curve remains `min(0.6, 0.15 + 0.04 × (year − 1))` per season;
+severity mean is `0.5 + 0.03 × (year − 1)`, with uniform ±0.15 variation
+clamped to 0–1. There are at most three disasters per year. True precursor
+signals appear 70% of the time, false signals 10%. Winter deep freeze and
+blizzard remove 20% / 30% times severity of exposed stored sacks and living
+Icecap. These constants also live in `balance.gd`.
+
+Measured on Godot 4.7.2, seeds 1–30:
+
+| Policy | Completes year 10 | Median ending year | Mean ending cash | Maximum ending cash | Mean crop sales |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Naive | 0 / 30 | 5 | −6,029.32 | −5,153.28 | 13,083.35 |
+| Cautious | 28 / 30 | 10 | −1,434.16 | 1,105.56 | 33,325.02 |
+| Tidy | 30 / 30 | 10 | 5,555.09 | 7,244.24 | 42,328.40 |
+| Diversifier placeholder | 28 / 30 | 10 | −1,434.16 | 1,105.56 | 33,325.02 |
+
+Tidy earns **27.02%** more crop receipts across the cohort, or **25.07%**
+on the 28 matched seeds where both policies complete ten years. Tidy harvests
+**96.27% Table sacks** overall (minimum per seed 86.65%). Ending statistics
+include the two cautious foreclosures; naive receipts stop at foreclosure. Every year's
+journal reconciles exactly. The maximum completed-run cash is **7,244.24**.
+
+The regression is `tools/run_tests.sh -j 1 --timeout 600 test_tuning_bot`.
+It runs seeds 1–30 for all four policies on the real `game_state.gd`.
+Every policy pays to open 24 beds and plants each bed once in Spring and
+once in Summer when the previous crop has cleared. Naive chooses Icecap,
+waters after 30 seconds, harvests immediately, sells everything and buys no
+protection. Cautious chooses Golden, waters after 30 seconds, harvests after
+35 ripe seconds, leaves pests untreated, stores half cumulatively and sells
+stores at Winter second 149. It buys tank then drainage, at most one in each
+of the first two affordable Winters, and renews insurance from year two.
+Tidy uses the same planting, selling and investment rules, but checks watering
+and pests every second and harvests within one second of ripening. All policies
+clear ice and use actual can/tank reserves. Diversifier exactly repeats cautious
+until Segment 15. No contracts, kept seed, quests, hired help or free funds.
+
+“Out-earns” means total **crop sales receipts** over the ten-year cohort;
+a percentage of net profit would be undefined or misleading when it is zero
+or negative. The bot also checks majority-Table tidy harvests, the 8,000 cash
+ceiling, survival and exact annual journal replay against observed purse changes.
+It uses ordinary IEEE float transaction order, with no approximate-equality
+allowance. Reports under `artifacts/test-results/tuning_<strategy>.json` include
+each seed's annual opening, closing and category totals. This tests state-level
+strategies; it does not model avatar walking time or prove that every possible
+human policy stays below 8,000.
+
 
 ## 7. Codex segments
 
@@ -706,11 +777,14 @@ Acceptance: suite green; game boots.
 Goal: prove the numbers instead of arguing about them.
 
 Write tests/test_tuning_bot.gd: a headless bot that plays full ten-year
-runs on game_state.gd with three fixed strategies:
+runs on game_state.gd with four fixed strategies:
 - naive: plant the highest-price variety, never protect, sell at harvest;
 - cautious: plant mid variety, buy tank then drainage in the first two
   affordable winters, store half the harvest, insure from year 2;
+- tidy: like cautious, but sprays promptly, waters on time and harvests
+  within 30 seconds; most sacks should be Table grade.
 - (placeholder until Segment 15) diversifier: same as cautious.
+Tidy must out-earn cautious by 15–30% over ten years without getting rich.
 Run each over 30 seeds. Assert: naive forecloses by year 6 on the median
 seed; cautious survives year 10 on at least 24 of 30 seeds; no strategy
 ends year 10 with more than 8,000 cash; for every run, every year's ledger

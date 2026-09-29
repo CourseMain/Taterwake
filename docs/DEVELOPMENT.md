@@ -28,17 +28,39 @@ Saves, private configuration, local recordings and generated builds do not belon
 Run the headless suites through `tools/run_tests.sh` (requires Python 3 and Godot 4.7.2):
 
 ```sh
-tools/run_tests.sh                         # all suites, four at a time
-tools/run_tests.sh -j 1                    # serial baseline
-GODOT_BIN=/path/to/godot tools/run_tests.sh # select an executable
+tools/run_tests.sh --timeout 600           # all suites, four at a time
+tools/run_tests.sh -j 1 --timeout 600      # serial baseline
+GODOT_BIN=/path/to/godot tools/run_tests.sh --timeout 600 # select an executable
 tools/run_tests.sh -j 1 test_save_safety test_game
 ```
 
 The runner imports once when `.godot/imported` is missing, discovers every `tests/test_*.gd` except `*_browser.*`, and passes `-- --integration-test` to each suite. Optional suite names can include `tests/` and `.gd`. `--timeout 180` sets the per-process timeout in seconds (180 by default, also used for import). Each suite prints one PASS/FAIL/TIMEOUT/ERRORS line with its own check/failure summary, including names containing spaces, slashes and plus signs. Nonzero failure counts or process exits fail; missing summaries and engine/script errors also fail, even with exit code zero. Full logs and `results.json` are in `artifacts/test-results/` and are replaced for the suites run. The runner exits nonzero unless every selected suite passes.
 
+The tuning bot simulates 120 runs and needs the 600-second timeout; the runner’s default remains 180 seconds for short suites.
+
 ### Baseline
 
-#### Segment 13 foreshadowing follow-up — current
+#### Segment 14 tuning bot — current
+
+2026-09-29, Godot `4.7.2.stable.official.ed1daf0bf`,
+`GODOT_BIN=/path/to/Godot tools/run_tests.sh -j 4 --timeout 600`:
+**79 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. The boot suite passes 39 checks;
+`test_tuning_bot` passes **1,348 checks**, simulating 120 runs and reconciling
+**1,044 annual ledgers** exactly. Logs and the full suite manifest are in
+`artifacts/test-results/`; four `tuning_<strategy>.json` files contain the
+per-seed accounts. The uncapped-receipt fixture was also rechecked with
+20,000 sacks so the smaller base price still exercises proceeds above the
+100,000 debug limit (`test_ledger`: 122 checks, zero failures).
+
+Naive forecloses in median year **5**; cautious and placeholder diversifier
+complete **28/30** runs (seeds 17 and 25 foreclose in year 9). Tidy completes
+**30/30**, earns **27.02%** more crop sales across the cohort (**25.07%** on
+matched completed runs), and harvests **96.27% Table sacks**. Maximum completed
+cash is **7,244.24**; cautious mean ending cash is **−1,434.16**. Final values,
+policy timing and interpretation are recorded in REDESIGN_PLAN §6. No tests
+were skipped or disabled.
+
+#### Segment 13 foreshadowing follow-up — historical
 
 Godot 4.7.2, `tools/run_tests.sh -j 4`: **78 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS** (`artifacts/foreshadowing-baseline.txt`). `test_climate_curve` passes 104 checks. Across 12,000 independent seeded seasons per sampled year, overall disaster rates are 15.1% / 34.7% / 50.0% for years 1 / 6 / 10, against curve values 15% / 35% / 51%. Among drought/flood/storm outlooks, disaster risk with a signal versus without is 57.1% / 5.4%, 79.2% / 15.3%, and 87.9% / 25.0%: each exceeds the required threefold ratio. Freeze and Winter events have no signal and are included only in the overall frequency check. Annual caps, false alarms, save/reload and forecast independence are tested separately.
 
@@ -440,7 +462,7 @@ The Builds menu, C shortcut, workshop, lab, exchange desk, stake table, professi
 
 The tax cycle, account purchasing, recovery orders, timed harvest chains, mastery bonuses and scientific coin storage are removed. Healthy beds yield 3–5 sacks. Harvest-bed quests count cumulative beds without a timer; every quest pays 100 Spudions.
 
-Starting cash is 2,000. Base prices are Russet 15, Giant 18, Golden 21, Sunburst 27 and Icecap 30. The 75% base seed ratio, bounded seasonal drift, twelve-quote sparklines and signed percentage remain. Tool upgrades cost 300–1,500; each field expansion costs 1,200. Three barn upgrades cost 300/800/2,000, giving 400/1,200/4,400 capacity. All money labels use rounded integers, thousands separators and the Spudion glyph; actual fractional seed costs and sale proceeds are retained.
+Starting cash is 2,000. Current crop prices, seed costs and yields are centralized in `balance.gd` and documented in REDESIGN_PLAN §6. Bounded seasonal drift, twelve-quote sparklines and signed percentage remain. Tool upgrades cost 300–1,500; each field expansion costs 1,200. Three barn upgrades cost 300/800/2,000, giving 400/1,200/4,400 capacity. All money labels use rounded integers, thousands separators and the Spudion glyph; actual fractional seed costs and sale proceeds are retained.
 
 Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-money suites are deleted. Mixed suites retain ordinary purchase, weather, layout and save coverage with the new values. `test_economy_scale.gd` covers prices, yields, exact seed ratio, starting funds, upgrades, integer display, bounded overdraft purchases, Winter foreclosure and legacy-field removal.
 
@@ -471,7 +493,7 @@ Run `tools/run_tests.sh -j 1 test_season_clock test_day_night test_ledger test_g
 
 ### Segment 9: annual ledger
 
-`ledger.gd` owns signed entries `{year, season, category, label, amount}` and the constants from REDESIGN_PLAN §6: 2,000 opening cash, a −5,000 overdraft, the 20,000 original loan and all five fixed-cost postings. It supplies category/year totals, closed years, years in profit and best/worst year. The annual 4,500 bill includes two mortgage entries (1,000 interest and 1,000 principal), 500 rent/tax, 1,500 living and 500 upkeep. Loan principal falls by 1,000 for each billed Winter.
+`ledger.gd` owns signed entries `{year, season, category, label, amount}` and reads the constants from `balance.gd`: 2,000 opening cash, a −5,000 overdraft, the 12,000 original loan and all five fixed-cost postings. It supplies category/year totals, closed years, years in profit and best/worst year. The annual 2,600 bill includes two mortgage entries (600 interest and 600 principal), 300 rent/tax, 800 living and 300 upkeep. Loan principal falls by 600 for each billed Winter.
 
 `GameState.coins` reads the ledger’s cached running balance in O(1). Successful postings update it, and loading reconstructs it from entries; the cache is never saved. The validator independently recomputes the balance from journal entries. Production transactions use `post_money()` with their category and label, including climate protection and duck purchases. Debug/fixture assignments to `coins` post an adjustment; they never store a second balance. Sales post their full actual receipts without the former wallet cap. Returned entries are deep copies so presentation cannot mutate the journal. Ended runs reject further state transactions.
 
@@ -497,7 +519,7 @@ Run `tools/run_tests.sh -j 1 test_crop_table test_simulation test_season_clock t
 
 ### Segment 11: storage and buyer orders
 
-`market_decisions.gd`, owned by GameState as `trading`, tracks Winter stores (`held`, a subset of `storage`, empty outside Winter), yearly Winter reports, one active contract and settled orders. Harvest capacity is still the purchased barn capacity; Winter stores never duplicate sacks or create extra capacity. Ordinary sales exclude held quality cohorts; stored sales remove matching cohorts from both inventories. All sacks left after buyer collection at Winter start automatically become stores. Empty barns pay nothing; other barns pay 200 and lose `round(total sacks × 0.05)` across the whole barn, deducted from the largest pile first with catalogue order breaking ties. A lone sack does not spoil. Surviving cohorts lose ten quality and are regraded; kept seed is outside both inventories. Fee and spoilage finish before fixed costs, foreclosure, the boundary save and accounts opening. Reports prevent repeated charges after reload.
+`market_decisions.gd`, owned by GameState as `trading`, tracks Winter stores (`held`, a subset of `storage`, empty outside Winter), yearly Winter reports, one active contract and settled orders. Harvest capacity is still the purchased barn capacity; Winter stores never duplicate sacks or create extra capacity. Ordinary sales exclude held quality cohorts; stored sales remove matching cohorts from both inventories. All sacks left after buyer collection at Winter start automatically become stores. Empty barns pay nothing; other barns pay 120 and lose `round(total sacks × 0.05)` across the whole barn, deducted from the largest pile first with catalogue order breaking ties. A lone sack does not spoil. Surviving cohorts lose ten quality and are regraded; kept seed is outside both inventories. Fee and spoilage finish before fixed costs, foreclosure, the boundary save and accounts opening. Reports prevent repeated charges after reload.
 
 Cash charges go through the ledger’s storage category. Spoilage uses `ledger.post(..., 0, true)` to retain a non-cash journal note, with the lost sack count in its label; purse and net are unchanged by that note. Validation checks report/fee/spoilage agreement. Ordinary and stored sales use sales; buyer deliveries and penalties use contracts. The purse remains derived from the journal.
 
@@ -514,7 +536,7 @@ Run `tools/run_tests.sh -j 1 test_market_decisions test_ledger test_season_clock
 
 `farm_protection.gd` owns construction, per-bed covers, loss arithmetic, annual insurance, upkeep and forecast ranges. Its state lives under `climate.protection`: pending work, covers, loss records, policy years, settled Winters and station level. Mechanics revision 38 rejects earlier saves through the existing rejected-save protection. Validation checks types, calendar bounds, cover ownership, loss and counterfactual arithmetic, policy payments, and payout/upkeep agreement with the ledger.
 
-Four completed protections have two levels: rainwater 1,500 / 3,000, drainage 2,000 / 4,000, windbreak 2,500 / 5,000, frost cover 1,500 / 3,000. `ClimateSystem.fund()` reserves them only in Winter, without granting a level. Three site actions complete a reservation; each controller action walks through the existing route system and spends 0.6 seconds on a hoe animation. Leaving the site or crossing Spring cannot complete Winter work. Progress persists until a later Winter. The existing can, starter tank and manually operated sprinklers remain; irrigation still costs 500 / 1,000 and installs immediately. Each completed protection posts 100 upkeep at Winter start, once per project rather than per level.
+Four completed protections have two levels: rainwater 900 / 1,800, drainage 1,200 / 2,400, windbreak 1,500 / 3,000, frost cover 900 / 1,800. `ClimateSystem.fund()` reserves them only in Winter, without granting a level. Three site actions complete a reservation; each controller action walks through the existing route system and spends 0.6 seconds on a hoe animation. Leaving the site or crossing Spring cannot complete Winter work. Progress persists until a later Winter. The existing can, starter tank and manually operated sprinklers remain; irrigation still costs 500 / 1,000 and installs immediately. Each completed protection posts 60 upkeep at Winter start, once per project rather than per level.
 
 Frost-cover materials are a completed project. The weather page’s “Cover all cleared beds” action places covers on every eligible bed; the nearby-bed context action places one. Both use the same eligibility rule: Winter, completed frost project, unlocked bed, no remaining ice and no matching cover already placed. Accounts, tutorials and ended runs block placement. The E badge and touch action identify “Cover bed”; ordinary Hoe actions only clear Winter ice. Batch placement emits one refresh and persists through the existing checkpoint path. A cover stores its level and the following Spring’s year, survives saves/crop clearing, and expires at Summer. The renderer keeps per-bed cover meshes separate from crops and ice so harvesting or planting cannot erase them. Other seasons’ freeze losses can be prevented by manual ice clearing, but receive no passive cover benefit.
 
@@ -522,7 +544,7 @@ The existing quarter-second stress simulation and rescue controls remain. Reachi
 
 Every actual field loss and storage-spoilage loss records a cause card with its exposed sacks, actual reduction, alternative reduction and saved sacks. Disaster groups update their existing card as affected beds accumulate. Both actual and alternative use `loss()` on the same total; alternative project protection is the next level, capped at two. Manual prevention uses the same formula with reduction 1. Climate damage, unwatered beds, pests, Autumn clearing and whole-barn storage spoilage all feed this record. A saved revision counter refreshes open season notices on additions and updates; Winter accounts include the full year. The displayed weather-loss remainder also respects previous pest damage and partial harvests.
 
-Spring insurance posts a 400 premium once per year and marks later field losses and Winter weather losses in stored sacks as insured. Winter-start settlement pays 40% of accrued base-price losses; subsequent Winter claims post incremental payouts immediately and update that year’s settlement. Pre-policy losses and storage spoilage are excluded. Validation sums initial and incremental claim postings and independently compares the total with insured cause cards. Policy membership compares integer years so JSON numeric types cannot allow duplicate premiums after reload. Insurance settlement and protection upkeep run after Autumn clearing and storage, before fixed costs, foreclosure and the boundary save. Recorded Winter reports prevent duplicate charges or payouts.
+Spring insurance posts a 240 premium once per year and marks later field losses and Winter weather losses in stored sacks as insured. Winter-start settlement pays 40% of accrued base-price losses; subsequent Winter claims post incremental payouts immediately and update that year’s settlement. Pre-policy losses and storage spoilage are excluded. Validation sums initial and incremental claim postings and independently compares the total with insured cause cards. Policy membership compares integer years so JSON numeric types cannot allow duplicate premiums after reload. Insurance settlement and protection upkeep run after Autumn clearing and storage, before fixed costs, foreclosure and the boundary save. Recorded Winter reports prevent duplicate charges or payouts.
 
 Forecasts read the next season’s year-based chance from `climate_system.gd`, divided equally between its two possible events. Ranges use ±20 / ±10 / ±5 percentage points at station levels 0 / 1 / 2 and clip to 0–100%. Reaching the annual three-event cap makes the remaining same-year forecast zero. Sensor upgrades cost 500 / 1,000 and post under Protection.
 
@@ -545,21 +567,64 @@ Winter impact removes `round(stored sacks × event rate × severity)` per variet
 
 `farm_world.gd` owns calendar palettes and a one-second real-time blend of grass, sky and sunlight. Orchard canopy shades, blossoms, verge flowers and path leaves share mutable seasonal materials; static mesh compilation excludes those materials to preserve later recolouring. Winter ground snow blends through its existing terrain shader. Summer dryness and faint field haze increase with year even when weather is calm; Autumn extends twilight. Precursors overlay these seasonal looks. Existing tank level, can, sprinklers, villagers and farm geometry remain.
 
-Run `tools/run_tests.sh -j 1 test_climate_curve test_protection test_season_clock test_day_night test_static_mesh_compiler test_world_rendering_optimization test_game`. Seeded curve tests cover chance, severity, event pools, frequency caps, 70% detection/10% false alarms, at least threefold conditional disaster risk for eligible signals, forecast independence from the hidden outcome, saved occurrence and cap enforcement, Winter claims and palette/crossfade values. Native `test_climate_curve.gd -- --integration-test --capture --touch-controls` captures all four seasons in years one and six and the desktop/phone front page under `artifacts/`. No Segment 14 tuning is included.
+Run `tools/run_tests.sh -j 1 test_climate_curve test_protection test_season_clock test_day_night test_static_mesh_compiler test_world_rendering_optimization test_game`. Seeded curve tests cover chance, severity, event pools, frequency caps, 70% detection/10% false alarms, at least threefold conditional disaster risk for eligible signals, forecast independence from the hidden outcome, saved occurrence and cap enforcement, Winter claims and palette/crossfade values. Native `test_climate_curve.gd -- --integration-test --capture --touch-controls` captures all four seasons in years one and six and the desktop/phone front page under `artifacts/`. The curve is unchanged by Segment 14; its constants now live in `balance.gd`.
 
 
 ### Harvest grades before economy tuning
 
-`crop_quality.gd` owns the 100-point bed score, Table/Standard/Feed thresholds (80/40), multipliers (1.5/1/0.5), deduction causes, ten-second fractional clocks and once-per-disaster freeze/lightning markers. Fragility is `9 / CropTable.total_tolerance(crop)`, so the existing resilience sequence 9/8/7/6/5 produces increasing quality risk. Each scaled deduction is rounded to integer exposure, then passed through `FarmProtection.loss()` with the matching project or Spring bed-cover reduction. Manual dry/late/pest deductions have no passive project reduction. Loss totals must sum to `100 − quality` in save validation.
+`crop_quality.gd` owns the 100-point bed score, Table/Standard/Feed thresholds (80/40), multipliers (1.2/1/0.5, read from `balance.gd`), deduction causes, ten-second fractional clocks and once-per-disaster freeze/lightning markers. Fragility is `9 / CropTable.total_tolerance(crop)`, so the existing resilience sequence 9/8/7/6/5 produces increasing quality risk. Each scaled deduction is rounded to integer exposure, then passed through `FarmProtection.loss()` with the matching project or Spring bed-cover reduction. Manual dry/late/pest deductions have no passive project reduction. Loss totals must sum to `100 − quality` in save validation.
 
 Actual pest bites deduct 6, active drought/flood stress 4 per ten seconds, disaster freeze 15 once plus 4 per ten seconds on ice, lightning-row hits 25 once, unwatered growth 2 per ten seconds and ripe neglect 5 per ten seconds after thirty seconds. The quality ripe-age clock is independent of pest timing, so spraying and ducks cannot renew the harvest grace period. Harvesting stores the current score; partial harvests preserve the remaining crop’s timers and deductions. Crop clearing/replanting resets them. Tutorials retain their damage protection.
 
 `graded_stock.gd` replaces scalar crop inventory with `variety → grade → score → sack count`. Bounded score cohorts preserve exact ageing without one object per sack or a second aggregate balance. `stock_count()` supplies existing hotbar, tutorial, capacity and inventory totals. Ordinary sales exclude matching held cohorts, including when fresh and stored sacks have identical scores. Winter weather removes held cohorts from both stores and barn stock. Save validation rejects malformed grades/scores/counts and held quantities exceeding their matching barn cohort. Revision 38 rejects older saves through existing save protection.
 
-Base prices are Russet 15, Giant 20, Golden 28, Sunburst 38 and Icecap 50; seeds remain 75% of base. Ordinary seasonal quotes and Winter storage quotes receive the grade multiplier. Winter storage now spoils 5% of the total, rounded nearest and deducted from the largest variety pile first, then subtracts ten quality from surviving cohorts and rebuilds their grade buckets. Within a variety, lower-quality sacks leave first. Buyer contracts take Standard before Table at their fixed contract price and refuse Feed.
+Base prices are Russet 9, Giant 12, Golden 16.80, Sunburst 22.80 and Icecap 30. Seeds cost 75% of base except Icecap at 100%; Icecap yields two sacks. These values live in `balance.gd`. Ordinary seasonal quotes and Winter storage quotes receive the grade multiplier. Winter storage now spoils 5% of the total, rounded nearest and deducted from the largest variety pile first, then subtracts ten quality from surviving cohorts and rebuilds their grade buckets. Within a variety, lower-quality sacks leave first. Buyer contracts take Standard before Table at their fixed contract price and refuse Feed.
 
 The barn’s per-grade seed action transfers Standard/Table sacks into `trading.kept_seed`, outside sales, capacity, spoilage, quality ageing and Winter barn damage. Winter-held sacks are removed from both inventories. Spring transfers each to one matching seed and clears the pending stock before saving. Seed purchases reserve capacity for pending seed. Existing return-to-Spring handling releases ordinary stores separately. The future Segment 15 farm shop must consume Table only at `base × 1.8`; that shop is not implemented in this segment.
 
 Sales post `Sold <sacks> <grade> <variety> sacks` under the existing Sales ledger category. Annual accounts derive grade sack counts and receipts directly from those entries; no duplicate sales journal is saved. Contracts remain in their own category. Sell Potatoes lists/selects each grade and scales its price, sparkline and Winter marker. Barn stores provide separate graded Winter-sale and seed actions. The hover/near-player hint is assembled once per refresh, with growth time and explicit “Grade:” wording; its layout is recalculated only when content, viewport or controls change. A smaller world tag also says “Grade:”. This avoids the growth-only/grade hint flicker and repeated container resizing. Downgraded hints name the largest deduction; harvest feedback includes a grade label.
 
-Run `tools/run_tests.sh -j 1 test_grades`. It covers thresholds, actual timed growth/pest/weather deductions, protection, deadline preservation after spraying, saved fractional clocks and markers, healthy and downgraded harvests, prices, cohort corruption, exact Winter downgrades, kept seed conversion/planting, Feed-refusing contracts, mixed fresh/stored sales and ledger reconciliation. Native `test_grades.gd -- --integration-test --capture --touch-controls` captures the desktop/phone grade market. Existing fixtures now use explicit Standard-quality cohorts where they test ordinary stock, and prices/spoilage assertions reflect the new economy. No tests are skipped or disabled; no tuning bot or farm-shop feature is introduced.
+Run `tools/run_tests.sh -j 1 test_grades`. It covers thresholds, actual timed growth/pest/weather deductions, protection, deadline preservation after spraying, saved fractional clocks and markers, healthy and downgraded harvests, prices, cohort corruption, exact Winter downgrades, kept seed conversion/planting, Feed-refusing contracts, mixed fresh/stored sales and ledger reconciliation. Native `test_grades.gd -- --integration-test --capture --touch-controls` captures the desktop/phone grade market. Existing fixtures now use explicit Standard-quality cohorts where they test ordinary stock, and prices/spoilage assertions reflect the new economy. No tests are skipped or disabled. Segment 14 adds the tuning bot below; the farm shop remains deferred.
+
+
+### Segment 14: reproducible ten-year tuning
+
+`balance.gd` is the single source for fixed costs, opening cash, overdraft,
+loan, crop cards (including yield and seed cost), grade prices, volatility,
+field expansion, storage, insurance, protection prices/reductions/upkeep and
+climate probabilities/severity/Winter damage. Existing system constants alias
+these values, so callers and validation use the same data. The insurance
+button and project details also read the shared premium/upkeep. Revision 39
+sets older saves aside because their historical bills, insurance premiums and
+crop economics no longer match validation. There is no save conversion.
+
+Run `tools/run_tests.sh -j 1 --timeout 600 test_tuning_bot` (set `GODOT_BIN`
+when Godot is not on PATH). This simulates 120 runs with full quarter-second
+crop/weather updates; allow several minutes. Seeds 1–30 are fixed, independently
+restarted for naive, cautious, tidy and the cautious-equivalent diversifier.
+The policy specification and all final values are in REDESIGN_PLAN §6.
+Only the RNG seed is set; the bot purchases the field and seeds, refills the
+can, uses ordinary plot tools, reserves and completes Winter construction,
+buys insurance and sells through the game's API. It neither overrides weather
+nor injects income, crops, protections or growth. Decisions occur every second;
+walking/animation labour is outside this state-only regression. A 6,001-step
+guard turns a stalled run into a failure.
+
+Each actual year is reconciled from its observed opening cash by replaying
+that year's journal entries in posting order; closing cash and cash delta
+must compare exactly, with no approximate tolerance. This preserves the order
+of IEEE floating-point additions rather than changing monetary precision.
+Naive median foreclosure must be by year six, cautious must complete at least
+24 of 30 runs, tidy must complete all 30 and harvest a majority of Table sacks,
+and every completed strategy must finish at or below 8,000. Tidy total crop
+receipts must exceed cautious by 15–30%; this is gross sales, since percentage
+comparisons of negative or near-zero net profit are misleading. Every
+placeholder-diversifier result must exactly match its cautious counterpart.
+Per-seed annual opening/closing cash and category totals are written to
+`artifacts/test-results/tuning_<strategy>.json` for inspection.
+
+The earlier fixtures still check their original behavior: real sale quotes,
+fixed seed prices, exact foreclosure boundaries, premiums/claims, storage,
+save corruption and UI totals. They now use the tuned prices and derive the
+one-coin foreclosure cases from the actual Winter bill. No tests are skipped
+or disabled. Diversification and the epilogue remain outside this segment.
