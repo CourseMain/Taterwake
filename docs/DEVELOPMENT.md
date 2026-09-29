@@ -15,7 +15,7 @@ The redesign source is version `2.0.0-undeveloped-f`, published as the GitHub pr
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 41. Earlier saves, including revision 40, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 42. Earlier saves, including revision 41, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -28,19 +28,40 @@ Saves, private configuration, local recordings and generated builds do not belon
 Run the headless suites through `tools/run_tests.sh` (requires Python 3 and Godot 4.7.2):
 
 ```sh
-tools/run_tests.sh --timeout 600           # all suites, four at a time
-tools/run_tests.sh -j 1 --timeout 600      # serial baseline
-GODOT_BIN=/path/to/godot tools/run_tests.sh --timeout 600 # select an executable
+tools/run_tests.sh --timeout 1500          # all suites, four at a time
+tools/run_tests.sh -j 1 --timeout 1500      # serial baseline
+GODOT_BIN=/path/to/godot tools/run_tests.sh --timeout 1500 # select an executable
 tools/run_tests.sh -j 1 test_save_safety test_game
 ```
 
 The runner imports once when `.godot/imported` is missing, discovers every `tests/test_*.gd` except `*_browser.*`, and passes `-- --integration-test` to each suite. Optional suite names can include `tests/` and `.gd`. `--timeout 180` sets the per-process timeout in seconds (180 by default, also used for import). Each suite prints one PASS/FAIL/TIMEOUT/ERRORS line with its own check/failure summary, including names containing spaces, slashes and plus signs. Nonzero failure counts or process exits fail; missing summaries and engine/script errors also fail, even with exit code zero. Full logs and `results.json` are in `artifacts/test-results/` and are replaced for the suites run. The runner exits nonzero unless every selected suite passes.
 
-The tuning bot simulates 120 runs and needs the 600-second timeout; the runner’s default remains 180 seconds for short suites.
+The tuning bot simulates 150 runs; use a 1,500-second timeout and run it separately from the epilogue to avoid CPU contention; the runner’s default remains 180 seconds for short suites.
 
 ### Baseline
 
-#### Segment 16a farm-sized accounts — current
+#### Pace and land — current
+
+Installed Godot **4.7 stable**: all **83 discovered GDScript suites pass** through
+`tools/run_tests.sh` (82 non-bot suites, then the 150-run tuning bot separately).
+The required headless boot passes **39 checks**; final `test_pace_and_land`
+passes **672**, including walking to both rented fields and reaching the first
+accounts in **234.1 seconds** with a decision/reading allowance. The bot passes
+**1,651 checks**: naive 0/30, cautious 30/30, tidy 30/30, diversifier 26/30 and
+expander 30/30. Section 6 of `REDESIGN_PLAN.md` records cash, sales and the Low
+Field rent adjustment to 44,000. Hill Field stays 9,000.
+
+The consolidated report is `artifacts/pace-and-land-suites.json`; full logs and
+per-seed ledgers are under `artifacts/test-results/`. No tests were skipped or
+disabled. The obsolete exact pre-scale outcome fixture was deleted because
+pacing changes outcomes; exact journal reconciliation remains tested.
+
+The local Web export builds into `dist/web` and `dist/Taterland-Web.zip`.
+Safari rendered the forecast with all three exposure labels and the connected
+three-field farm under GL Compatibility. Published `docs/index.*` and `web/`
+remain untouched. This machine has Godot 4.7 stable, not 4.7.2.
+
+#### Segment 16a farm-sized accounts — historical
 
 Godot 4.7.2: **80 suites pass**, including the 39-check boot. The tuning bot
 passes **1,836 checks** over 120 runs, with **1,045 exact annual journal
@@ -387,7 +408,7 @@ The first natural infestation is harmless until cleared or harvested, even when 
 
 Contextual advice is available only through Help → Current farm help. The former FarmHelp overlay is an empty hidden compatibility node, so existing layout callers cannot restore the floating debt/tool reminders. Useful action feedback, bankruptcy information and full-barn alerts remain separate. Saved first-pest protection, independent farming progress are unchanged. Dismissing a suggestion records dismissal only, not learning.
 
-Base crop times are 75/105/135/195/225 seconds for Russet/Golden/Giant/Sunburst/Icecap. Active growth speed is bounded by `base_time / 450`, including weather penalties. Field updates and hover timers use the same bound. Dry crops, disaster-frozen crops and paused simulations do not consume growth time. Icecap grows through seasonal bed ice. The calendar format does not migrate earlier save revisions.
+Base crop times are 60/90/110/160/200 seconds for Russet/Golden/Giant/Sunburst/Icecap. Active growth speed is bounded by `base_time / 450`, including weather penalties. Field updates and hover timers use the same bound. Dry crops, disaster-frozen crops and paused simulations do not consume growth time. Icecap grows through seasonal bed ice. The calendar format does not migrate earlier save revisions.
 
 ### Quiet farming feedback and shop signs
 
@@ -519,7 +540,7 @@ Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-mo
 
 ### One farm (Segment 7)
 
-`FarmWorld.REGION` is fixed to 1. The Valley has one 24-bed array, twelve beds open initially and one 48,000-Spudion expansion for the remainder. All five varieties and all tool ranks are available here. The tropical and winter geometry builders, their terrain and decorative shore structures remain behind the region constant. Travel UI, boarding paths, ferry NPCs and regional state are removed.
+`FarmWorld.REGION` is fixed to 1. The connected farm has 72 beds in three stable 24-bed slices: Home, Low and Hill. Home begins with twelve open; each other field opens twelve with a Winter lease and each second half costs 48,000. All varieties and tools are available. The tropical ground and bare winter rock builders now form the two connected fields; Hill has a walkable ramp. Travel UI, boarding paths, ferry NPCs and regional state are removed.
 
 There is one flock of at most two ducks, one set of climate projects and one water supply. Export ships, buyer contracts, Frostbreak, the furnace and their dedicated tests are deleted. Mixed suites keep their surviving checks on Valley fixtures. Freeze ice is cleared directly with the hoe. The arrival cinematic is removed; `chapter_subtitles.gd` preserves its timed text and skip control for the later year-start page.
 
@@ -556,7 +577,7 @@ Run `tools/run_tests.sh -j 1 test_ledger test_season_clock test_game` for journa
 
 ### Segment 10: crop cards
 
-`crop_table.gd` is the single source for the five varieties, seed costs, base prices, volatility, water/heat/cold dials, grow seasons, growth seconds and tonnes per bed. State, HUD, world growth and fixtures read that table. Radioactive is removed, including its icon and field decoration. Base growth is 75–225 seconds, within the stated one- or two-season budget. Combined resilience is `(4 − water_need) + heat_tolerance + cold_tolerance`: 9/8/7/6/5 as prices rise from Russet to Icecap. High water need means lower resilience; high heat/cold tolerance means higher resilience.
+`crop_table.gd` is the single source for the five varieties, seed costs, base prices, volatility, water/heat/cold dials, grow seasons, growth seconds and tonnes per bed. State, HUD, world growth and fixtures read that table. Radioactive is removed, including its icon and field decoration. Base growth is 60–200 seconds, within the stated one- or two-season budget. Combined resilience is `(4 − water_need) + heat_tolerance + cold_tolerance`: 9/8/7/6/5 as prices rise from Russet to Icecap. High water need means lower resilience; high heat/cold tolerance means higher resilience.
 
 Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm stress rates remain; protection now reduces the resulting tonne loss through the shared Segment 12 formula. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 `storage_peak_factor` values used by the Winter storage curve in Segment 11.
 
@@ -590,7 +611,7 @@ Four completed protections have two levels: rainwater 36,000 / 72,000, drainage 
 
 Frost-cover materials are a completed project. The weather page’s “Cover all cleared beds” action places covers on every eligible bed; the nearby-bed context action places one. Both use the same eligibility rule: Winter, completed frost project, unlocked bed, no remaining ice and no matching cover already placed. Accounts, tutorials and ended runs block placement. The E badge and touch action identify “Cover bed”; ordinary Hoe actions only clear Winter ice. Batch placement emits one refresh and persists through the existing checkpoint path. A cover stores its level and the following Spring’s year, survives saves/crop clearing, and expires at Summer. The renderer keeps per-bed cover meshes separate from crops and ice so harvesting or planting cannot erase them. Other seasons’ freeze losses can be prevented by manual ice clearing, but receive no passive cover benefit.
 
-The existing quarter-second stress simulation and rescue controls remain. Reaching the danger threshold calls `loss(exposed_sacks, reduction) = round(exposed_sacks × (1 − reduction))`, clamped to the exposed stock. Reductions are 0 / 0.5 / 0.75. Matching event, season, variety, protection level and insured status accumulate in saved `operations.loss_groups`; each bed loses the difference between the new and previous rounded totals. This gives twelve three-tonne beds exactly 36 / 18 / 9 lost tonnes, including across reloads. Each bed is assessed at most once per disaster; the saved `operations.damaged` map prevents repeated strikes from charging its protected loss again. Surviving crop tonnes persist as `weather_lost` on the plot and are deducted from later harvesting and pest losses. Whole-bed destruction metrics remain available in the older climate receipt. Protection no longer also reduces stress/growth, avoiding two passive reductions on the same loss.
+The existing quarter-second stress simulation and rescue controls remain. Reaching the danger threshold calls `loss(exposed_sacks, reduction, exposure) = round(exposed_sacks × (1 − reduction) × exposure)`, clamped to the exposed stock. Reductions are 0 / 0.5 / 0.75. Matching field, event, season, variety, protection level and insured status accumulate in saved `operations.loss_groups`; each bed loses the difference between the new and previous rounded totals. At exposure 1 this gives twelve three-tonne beds exactly 36 / 18 / 9 lost tonnes, including across reloads. Each bed is assessed at most once per disaster; the saved `operations.damaged` map prevents repeated strikes from charging its protected loss again. Surviving crop tonnes persist as `weather_lost` on the plot and are deducted from later harvesting and pest losses. Whole-bed destruction metrics remain available in the older climate receipt. Protection no longer also reduces stress/growth, avoiding two passive reductions on the same loss.
 
 Every actual field loss and storage-spoilage loss records a cause card with its exposed tonnes, actual reduction, alternative reduction and saved tonnes. Disaster groups update their existing card as affected beds accumulate. Both actual and alternative use `loss()` on the same total; alternative project protection is the next level, capped at two. Manual prevention uses the same formula with reduction 1. Climate damage, unwatered beds, pests, Autumn clearing and whole-barn storage spoilage all feed this record. A saved revision counter refreshes open season notices on additions and updates; Winter accounts include the full year. The displayed weather-loss remainder also respects previous pest damage and partial harvests.
 
@@ -649,9 +670,9 @@ sets older saves aside because their historical bills, insurance premiums and
 crop economics no longer match validation. There is no save conversion.
 
 Run `tools/run_tests.sh -j 1 --timeout 600 test_tuning_bot` (set `GODOT_BIN`
-when Godot is not on PATH). This simulates 120 runs with full quarter-second
+when Godot is not on PATH). This simulates 150 runs with full quarter-second
 crop/weather updates; allow several minutes. Seeds 1–30 are fixed, independently
-restarted for naive, cautious, tidy and diversifier.
+restarted for naive, cautious, tidy, diversifier and expander. The first four use Home only. Expander follows cautious, leasing the first Low half-field at Winter 1 for year 2 onwards.
 The policy specification and all final values are in REDESIGN_PLAN §6.
 Only the RNG seed is set; the bot purchases the field and seeds, refills the
 can, uses ordinary plot tools, reserves and completes Winter construction,
@@ -670,7 +691,7 @@ and every completed strategy must finish at or below 320,000. Tidy mean ending
 cash must also remain strictly below 320,000. Tidy total crop
 receipts must exceed cautious by 15–40%; this is gross sales, since percentage
 comparisons of negative or near-zero net profit are misleading. Diversifier must survive at least 24 seeds, earn business income on every seed,
-and build at least 24 shops without injected funds.
+and build at least 24 shops without injected funds. Expander must survive at least 20 seeds, out-earn cautious in mean sales and stay below the same cash ceiling.
 Per-seed annual opening/closing cash and category totals are written to
 `artifacts/test-results/tuning_<strategy>.json` for inspection.
 
@@ -758,22 +779,13 @@ whole numbers; calculations retain fractional precision. Existing internal
 `sacks` field names and the hand-built farm props remain. Small screens use
 a smaller sale quote so the currency, thousands separator and unit fit.
 
-`tests/fixtures/tuning_before_unit_scale.json` records the 120 pre-scale runs
-from commit `2abebf6`. The tuning bot checks each seed's unchanged survival,
-year and harvest quantities, and cash, sales and business income multiplied
-by forty. Cross-scale comparisons allow 0.00001 for floating-point rounding;
-the 1,045 annual journal reconciliations still require exact equality.
-`test_economy_scale` walks every numeric balance constant, exempting explicit
-rates and free grower enrolment from the minimum magnitude of one, and checks
-actual seed cards, sale totals, receipts and accounts at desktop/phone sizes.
-
 Scaled contract quotes exposed JSON's rounding of a floating-point product
 such as `360 × 1.1`. Order validation accepts the exact computed quote or its
 exact JSON round trip, preserving rejection of altered prices without a
 numeric tolerance. A credit-exhaustion fixture compares the journal's actual
 opening balance with its closing balance after a refused purchase.
 
-Run `tools/run_tests.sh --timeout 600` for the full suite. For native UI previews,
+Run `tools/run_tests.sh --timeout 1500` for the full suite. For native UI previews,
 run `godot --path . --script res://tests/test_economy_scale.gd --
 --integration-test --capture --touch-controls`; captures are written to
 `artifacts/farm-units-*.png`. Final values and scaled bot results are recorded
@@ -860,7 +872,7 @@ claim testing on that exact patch release.
 
 ## Segment 17: Cast and guided first year
 
-`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop. The guided year suppresses random events in favour of one severity-0.2 storm; its first gust exposes two tonnes on the selected bed through `FarmProtection.damage`, leaving the Russet’s third tonne to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
+`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop at 3×. Decisions and cause cards immediately return the multiplier to 1× and pause the simulation. The guided year suppresses random events in favour of one severity-0.2 storm; its gust at Summer second 40 exposes one tonne on the selected bed through `FarmProtection.damage`, leaving two tonnes to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
 
 Tutorial entry/exit no longer resets pests, crop ages or RNG, and the unused demonstration-pest helper and separate frozen-calendar growth loop are removed. Version-2 progress remains readable and migrates at controller start; completed introductions remain completed. Optional Valley tours preserve the existing farm. Winter completion clears guide locks without closing the annual accounts. A save made at the settlement boundary completes the guide on resume.
 
@@ -872,3 +884,13 @@ README and `STORE_COPY.md` lead with an actual first-year ledger capture. `GAMEP
 Validation: all 82 GDScript suites passed across the full regression run and focused reruns with `tools/run_tests.sh`. The new Winter voice exposed audio-mixer teardown errors in three scene fixtures; those now allow stopped playback to release, and their reruns are clean. The final focused run includes all five `test_tutorial_*.gd` suites (243 checks), NPC conversations (277), climate projects, diversification, economy scale and the climate curve. No tests are skipped or disabled. The strategy bot still passes all 1,836 ledger and balance checks.
 
 `godot --headless --path . --script res://tests/test_game.gd -- --integration-test` passes all 39 checks. A native GL Compatibility run of `test_tutorial_game.gd -- --integration-test --capture` passes 57 checks, including real planting/walking, both sell/store paths, cause-card resume and the first accounts. Captures in `artifacts/guide-*.png` were inspected; `docs/images/annual-ledger.png` is the actual sell-path ledger. The forecast’s return button is visible at the top of the page. Browser fixture expectations are updated, but no browser export or published build was changed. Validation used the installed Godot 4.7 stable binary; this machine does not have 4.7.2.
+
+### Pace and land
+
+`farm_land.gd` owns stable field IDs, exposure, lease renewals and cancellation. Each plot saves its field, local bed index, pest deadline and whether its single pest chance has been resolved. Mechanics revision 42 sets incompatible earlier saves aside; no player save is silently converted. The old exact ×40 tuning-outcome fixture was removed because timing and exposure now intentionally change outcomes. Journal reconciliation remains exact.
+
+Pest deadlines are uniform between 0.25 and 0.60 of the crop's base grow duration. The season at arrival determines chance (0.16, Summer ×1.5, Winter zero). Simulation splits at each deadline and bite, so a large update cannot move first arrival past ripening. Spraying and ducks never schedule a second late attack; bites still deduct quality. Completed harvests leave untilled beds ready for immediate Hoe/plant. Tool areas stay inside their own six-by-four field.
+
+The map reuses Golden Shores ground and Frosthollow strata without permanent snow. Terrain patches join the Home island, Hill rises two units, and keyboard/click movement follows the ramp. Walk bounds, zoom range and the recentered overview include all fields. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
+
+Run `tools/run_tests.sh --timeout 1500 test_pace_and_land test_pest_schedule test_tutorial_game test_tutorial_state test_tuning_bot` and the full suite. The pacing test follows real scene frames to the first open accounts in 234.1 seconds, including 84 seconds allocated to decisions and reading. The browser export is built under `dist/web`, leaving published `docs/index.*` and `web/` untouched.

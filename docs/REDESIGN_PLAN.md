@@ -104,10 +104,7 @@ have saved about 60%.` Hard is fine. Unexplained is not.
 - End of run: a ten-year ledger, the climate record, a title for how you
   farmed (Adapter, Shopkeeper, Stubborn, Sold Up), then the epilogue.
 
-Islands: one farm whose climate shifts in place over the ten years, because
-"the villain is coming to your farm" is the story. Later, the other two islands
-can become selectable **regions** at new-run time (Shores = heat and flood,
-Frosthollow = cold and storm) with their own climate curve.
+One connected farm whose climate shifts in place over ten years. Home is sheltered; the preserved Shores ground forms Low Field, and bare Frosthollow ground forms Hill Field. Additional land is a Winter lease decision, not travel or a new region.
 
 ## 4b. The fifty-year epilogue
 
@@ -172,11 +169,11 @@ only adapt, never stop it.
   restraint affords. That is the honest message, delivered by the ledger rather
   than by text.
 
-## 6. Economy model (Segments 14–16a simulation tuning)
+## 6. Economy model (including pace and land tuning)
 
 All tuning lives in `scripts/balance.gd`; game systems and the headless bot
 read the same constants. `MONEY_SCALE = 40` multiplies every monetary constant;
-ratios, yields, quantities, calendar and climate remain unchanged. Tool, barn,
+the earlier unit rescale left ratios, yields, quantities, calendar and climate unchanged. The current pacing and field changes are recorded below. Tool, barn,
 duck, irrigation, station and quest money also lives in this file. These values
 replace the original starting guesses.
 Opening cash is **80,000**, the overdraft boundary is **−200,000**, and foreclosure
@@ -196,11 +193,11 @@ remaining twelve beds costs 48,000. Seeds and protection are additional costs.
 
 | Variety | Seed | Standard base / tonne | Tonnes / bed | Grow seconds | Volatility |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Russet | 270 | 360 | 3 | 75 | Low |
-| Giant | 360 | 480 | 5 | 135 | Low |
-| Golden | 504 | 672 | 4 | 105 | Mid |
-| Sunburst | 684 | 912 | 3 | 195 | High |
-| Icecap | 1,200 | 1,200 | 2 | 225 | High |
+| Russet | 270 | 360 | 3 | 60 | Low |
+| Giant | 360 | 480 | 5 | 110 | Low |
+| Golden | 504 | 672 | 4 | 90 | Mid |
+| Sunburst | 684 | 912 | 3 | 160 | High |
+| Icecap | 1,200 | 1,200 | 2 | 200 | High |
 
 Table / Standard / Feed multipliers are **1.2 / 1 / 0.5**, with the existing
 80 / 40 quality thresholds. Icecap's higher seed cost and smaller harvest
@@ -229,7 +226,38 @@ signals appear 70% of the time, false signals 10%. Winter deep freeze and
 blizzard remove 20% / 30% times severity of exposed stored tonnes and living
 Icecap. These constants also live in `balance.gd`.
 
-Measured on Godot 4.7.2, seeds 1–30:
+Current pace and land results (installed Godot 4.7 stable, seeds 1–30):
+
+| Policy | Completes year 10 | Median ending year | Mean ending cash | Maximum ending cash | Mean crop sales |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Naive | 0 / 30 | 4 | -231,297.63 | -200,488.86 | 307,689.04 |
+| Cautious | 30 / 30 | 10 | -30,269.59 | 55,498.72 | 1,370,622.57 |
+| Tidy | 30 / 30 | 10 | 271,118.27 | 319,021.66 | 1,759,191.23 |
+| Diversifier | 26 / 30 | 10 | -14,160.84 | 122,204.05 | 1,220,605.45 |
+| Expander | 30 / 30 | 10 | 209,394.14 | 311,958.73 | 2,078,761.18 |
+
+All **1,651 bot checks** pass across 150 runs, including exact annual journal
+replay. The original four policies use Home Field only. Tidy's mean sales
+advantage is **28.35%**; expander survives all 30 seeds and out-earns cautious
+without exceeding the **320,000 ending-cash ceiling** on any seed. Ending
+statistics include foreclosures; receipts stop when a farm closes.
+
+Low Field rent is tuned to **44,000 a year**; Hill Field remains **9,000**.
+The requested initial Low rent of 12,000 produced expander mean ending cash
+529,394.14 and maximum 631,958.73, failing the ceiling on all 30 seeds.
+Raising rent preserves its 2,078,761.18 mean crop sales while bringing every
+ending balance below the ceiling. Leases pay ahead in Winter, starting with
+Winter 1 for the expander's year-two planting. Each lease opens twelve beds;
+the other twelve cost the existing 48,000 expansion price. Home's fixed rent
+and tax remain in the annual bills above. Low's yield multiplier is 1.25;
+field exposure and cancellation rules are listed in `GAMEPLAY.md`.
+
+The single pest chance is **16%**, **24% in Summer**, and **zero in Winter**,
+with its deadline uniformly between 25% and 60% of base grow time. The old
+22% chance failed cautious survival after the pacing change, so it was reduced.
+Seasons remain 150 seconds; the current crop durations are in the table above.
+
+Historical baseline before pace and land (Godot 4.7.2, seeds 1–30, growth 75/135/105/195/225 seconds):
 
 | Policy | Completes year 10 | Median ending year | Mean ending cash | Maximum ending cash | Mean crop sales |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -275,8 +303,8 @@ Lodging counts tank, drainage, windbreak and frost cover once each, ignoring
 levels and sprinklers. Annual shop/lodging income posts before foreclosure;
 construction Winter pays nothing. Each has its own ledger label.
 
-The regression is `tools/run_tests.sh -j 1 --timeout 600 test_tuning_bot`.
-It runs seeds 1–30 for all four policies on the real `game_state.gd`.
+The regression is `tools/run_tests.sh -j 1 --timeout 1500 test_tuning_bot`.
+It runs seeds 1–30 for all five policies on the real `game_state.gd`.
 Every policy pays to open 24 beds and plants each bed once in Spring and
 once in Summer when the previous crop has cleared. Naive chooses Icecap,
 waters after 30 seconds, harvests immediately, sells everything and buys no
@@ -291,7 +319,7 @@ care, then enrols and buys at most one business at Winter second 149 from year
 three, after store sales: shop first, lodging second, retaining 40,000 of credit
 above the overdraft boundary. It accepts only matching Golden premium orders
 and reserves promised tonnes at harvest. Other policies take no contracts.
-No policy uses kept seed, quests, hired help or free funds.
+The original four policies rent no land. Expander follows cautious with the same Golden crop and leases Low Field at Winter 1 for years 2–10, using its first twelve beds. No policy uses kept seed, quests, hired help or free funds.
 
 “Out-earns” means total **crop sales receipts** over the ten-year cohort;
 a percentage of net profit would be undefined or misleading when it is zero
@@ -299,10 +327,7 @@ or negative. The bot also checks majority-Table tidy harvests, the 320,000 per-r
 ceiling, tidy mean cash strictly below 320,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes.
 It uses ordinary IEEE float transaction order, with no approximate-equality
 allowance. Reports under `artifacts/test-results/tuning_<strategy>.json` include
-each seed's annual opening, closing and category totals. A committed pre-scale
-fixture from `2abebf6` checks every seed's outcome, quantities and cash/sales/
-business receipts against the original values ×40 (absolute float tolerance
-0.00001 only for cross-scale comparisons; annual ledger replay stays exact). This tests state-level
+each seed's annual opening, closing and category totals. The obsolete pre-scale outcome fixture was removed when pacing changed; annual ledger replay stays exact. This tests state-level
 strategies; it does not model avatar walking time or prove that every possible
 human policy stays below 320,000.
 
@@ -310,7 +335,7 @@ The debug money cap is **4,000,000**. Monetary displays round to whole
 Spudions with separators; internal transaction precision is unchanged. Cards
 and receipts use **t**, prose uses **tonnes**, and the underlying integer
 quantities stay unchanged (including Icecap's two-tonne yield). Mechanics
-revision **41** safely sets older, unscaled saves aside. The economy suite
+revision **42** safely sets earlier saves aside, including revision 41 farms without field leases. The economy suite
 rejects non-rate balance values below one in magnitude, except explicitly
 free contract-grower enrolment, and checks phone/desktop prices and accounts.
 

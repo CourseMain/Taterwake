@@ -4,13 +4,25 @@
 
 ## Keep the farm for ten years
 
-You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open beds and twelve available through expansion. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
+You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open Home Field beds, twelve more available through expansion, and two rentable fields. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 
 Spring is for planting, Summer for tending, Autumn for bringing crops in, and Winter for accounts and protection work. Each season lasts **150 seconds**; a farm shop reduces Summer to **120 seconds**. The accounts pause time at Winter’s start. Close them to clear ice and prepare the farm; Spring follows automatically. Saves preserve your farm across sessions, with no offline growth.
 
-The first-year guide buys one Russet crop card, tills a bed, plants and waters it. Time pauses for your decisions and runs while Spring advances into Summer. This introductory year has one disclosed, mild storm: a gust exposes two tonnes on your bed, leaving one to harvest. Tess reads its real cause card, including what a windbreak would have saved. The first crop’s quality and pest damage are protected while you learn; the seed, yield loss, sale, storage and annual bills are real.
+The first-year guide buys one Russet crop card, tills a bed, plants and waters it. Time pauses for your decisions and runs at **3× during waits**, returning to 1× as soon as a decision or cause card appears. Allow about four minutes to reach the first accounts. This introductory year has one disclosed, mild storm: at second **40 of Summer**, a gust takes **one of three tonnes**, leaving two to harvest. Tess reads its real cause card, including what a windbreak would have saved. The first crop’s quality and pest damage are protected while you learn; the seed, yield loss, sale, storage and annual bills are real.
 
-Harvest the survivor, then **sell now or choose Store for Winter**. Neither choice ends the guide early. Autumn advances to Winter, Nell opens the first accounts, and guidance ends. The gold cue follows your chosen bed; the correct tool is selected for each step. **× → End tutorial** leaves early without clearing existing hazards or refunding costs. Later help stays optional in **H**. The optional Valley tour pauses and preserves the farm; it does not replay the introductory disaster.
+Harvest the remaining crop, then **sell now or choose Store for Winter**. Neither choice ends the guide early. Autumn advances to Winter, Nell opens the first accounts, and guidance ends. The gold cue follows your chosen bed; the correct tool is selected for each step. **× → End tutorial** leaves early without clearing existing hazards or refunding costs. Later help stays optional in **H**. The optional Valley tour pauses and preserves the farm; it does not replay the introductory disaster.
+
+## Three fields, one island
+
+Home, Low and Hill each contain 24 beds. Home starts with twelve open. Rent Low or Hill from the **Winter accounts** to open its first twelve; each field's second half costs **48,000**. The two leases renew each Winter, posted under Rent. Cancellation refunds that Winter's renewal, removes standing crops and closes its beds; purchased expansions remain if you rent again.
+
+| Field | Annual rent | Exposure |
+| --- | ---: | --- |
+| Home · Sheltered | Included in fixed costs | Storm and flood ×0.8 |
+| Low · Floods first | 44,000 | Yield ×1.25; flood ×1.5; drought ×0.8 |
+| Hill · Dries first | 9,000 | Drought ×1.5; flood ×0.5; storm ×1.3; freeze ×1.2 |
+
+Exposure multiplies weather stress and resulting loss. Protection projects share their levels across the farm; Spring frost covers can be placed on any rented bed. Loss cards name the field. Low Field's extra whole tonnes are distributed across four beds, giving each complete half-field exactly 25% more. Ducks patrol open beds in all rented fields. Walk, sprint or click between the shore and the higher ground; Home recentres the wider map.
 
 ## Three decisions
 
@@ -29,7 +41,9 @@ Read Mara’s crop cards: seed cost, water need, heat and cold tolerance, growth
 
 More water bars mean thirstier crops; more heat or cold bars mean better tolerance. High prices come with vulnerabilities. Icecap’s two potential tonnes do not automatically make its expensive seed profitable. Till and plant ordinary crops in Spring and Summer. Icecap also plants into prepared Autumn beds and grows through Winter; clear its ice before working it. Other crops left in the field are lost at Winter’s start.
 
-Crops have **Table, Standard or Feed** quality, selling for **1.2×, 1× or 0.5×** the quote. Dry soil, weather, pests and late harvesting reduce quality. Water promptly, clear ice, spray pests and bring ripe crops in. A full barn leaves excess yield on the plant. Pest attacks remove one third of the original yield every five seconds; spraying stops further loss. The first naturally appearing pest group after the guide is protected until cleared, then ordinary pest damage applies.
+Growth takes **60 / 90 / 110 / 160 / 200 seconds** for Russet / Golden / Giant / Sunburst / Icecap before weather slows it. Harvested beds can be hoed and replanted immediately in the same Spring or Summer; two Russet harvests fit a calm season.
+
+Crops have **Table, Standard or Feed** quality, selling for **1.2×, 1× or 0.5×** the quote. Dry soil, weather, pests and late harvesting reduce quality. Water promptly, clear ice, spray pests and bring ripe crops in. A full barn leaves excess yield on the plant. Each planting has one pest chance, scheduled between **25% and 60%** of its growth time: **16% normally, 24% in Summer, zero in Winter**. No first infestation starts after ripening. Pest attacks remove one third of the original yield every five seconds; spraying stops further loss. The first naturally appearing pest group after the guide is protected until cleared, then ordinary pest damage applies.
 
 ### When to sell
 
@@ -106,6 +120,6 @@ Mara sells seeds; Bram upgrades tools; Nell keeps the accounts and barn; Tess re
 
 Use WASD or arrows to walk and Shift to sprint. Click a bed to walk over and use the selected tool, or press E beside it. Tools are **1 Hoe, 2 Seeds, 3 Water, 4 Harvest, 5 Sprayer**. **B** opens seeds, **F** selling, **I** inventory and **H** optional help. Drag or scroll to pan, use wheel/pinch to zoom, and Home to recenter. Touch has a movement stick and Tools drawer. Graphics settings offer Balanced, Smooth and Crisp.
 
-Tool upgrades widen your reach. Expand the field for **48,000**; barn upgrades increase its initial **200-tonne** capacity. Pip hires up to two ducks to clear pests. Three local challenges pay **4,000** each and can be claimed once. These are optional purchases and goals; their costs and receipts still enter the ledger.
+Tool upgrades widen your reach. Open another half-field for **48,000**; barn upgrades increase its initial **200-tonne** capacity. Pip hires up to two ducks to clear pests. Three local challenges pay **4,000** each and can be claimed once. These are optional purchases and goals; their costs and receipts still enter the ledger.
 
 See the [README](../README.md) for running or exporting the source and [development notes](DEVELOPMENT.md) for saves and tests.
