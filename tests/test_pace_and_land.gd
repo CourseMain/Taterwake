@@ -161,6 +161,15 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO; root.size = Vector2i(600, 900)
 	for frame in range(8): await process_frame
 	check(game.hud._body.get_combined_minimum_size().x <= game.hud._body.size.x + 1, "rental controls fit phone-width accounts")
+	game._on_action("lease:hill")
+	game.hud.close_panel()
+	for index in [24, 48]:
+		var destination: Vector3 = game.world.plot_positions[index]
+		game._start_walk(destination)
+		for frame in range(1200):
+			game._process(0.04)
+			if not game.walking: break
+		check(not game.walking and game.world.player.position.is_equal_approx(destination), "farmer walks to " + game.state.Land.NAMES[game.state.Land.id(index)])
 	print("Guided first accounts: %.1f real seconds including decision allowance" % wall)
 	game.queue_free()
 	await create_timer(0.4).timeout

@@ -63,7 +63,7 @@ static func rent(farm, field: String, enabled: bool) -> String:
 		for key in farm.climate.data.protection.covers.keys():
 			if id(int(key)) == field: farm.climate.data.protection.covers.erase(key)
 	sync(farm)
-	return farm._finish(NAMES[field] + (" rented. Twelve beds open; renews each Winter." if enabled else " returned. Standing crops cleared; this Winter's rent refunded."))
+	return farm._finish(("%s rented. %d beds open; renews each Winter." % [NAMES[field], farm.field_expansion_info(field).opened]) if enabled else NAMES[field] + " returned. Standing crops cleared; this Winter's rent refunded.")
 
 static func valid(raw: Variant, saved: Dictionary = {}) -> bool:
 	if not raw is Dictionary or raw.size() != 2: return false
