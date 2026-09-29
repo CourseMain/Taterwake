@@ -267,7 +267,7 @@ func _update_weather_ui() -> void:
 	water_count.add_theme_color_override("font_color", Color("ffd39f") if float(climate.supply.can) < 1.0 else CREAM)
 	_tool_buttons.water.tooltip_text = "Watering can: %d / %d water. Each watered bed uses 1. Click the tank to refill." % [floori(climate.supply.can), int(climate.can_capacity)]
 	_climate_console.refresh(climate, is_panel_open() or bool(_state.run_over) or not _tutorial.is_empty())
-	_climate_effect.set_weather(climate, bool(_state.run_over) or not _tutorial.is_empty())
+	_climate_effect.set_weather(climate, bool(_state.run_over) or (not _tutorial.is_empty() and not _state.guided_first_year()))
 	_weather_button.visible = _tutorial.is_empty() and not is_panel_open() and not _state.run_over
 	_weather_button.text = "Weather & protection →" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
 	if _state.run_outcome == "foreclosed":
@@ -402,7 +402,7 @@ func set_tutorial(info: Dictionary) -> void:
 		set_context(_context.text)
 		_refresh_seed_visibility()
 	else:
-		_tutorial_progress.text = ("VALLEY TOUR" if info.get("tour_only", false) else "FIRST HARVEST") + "  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
+		_tutorial_progress.text = ("VALLEY TOUR" if info.get("tour_only", false) else "FIRST YEAR") + "  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
 		_tutorial_title.text = str(info.get("title", "Your first farm"))
 		_tutorial_body.text = str(info.get("body", ""))
 		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Click the gold bed" if str(info.get("focus", "")).begins_with("plot:") else "Follow the gold marker"
@@ -412,8 +412,8 @@ func set_tutorial(info: Dictionary) -> void:
 			_tutorial_next.disabled = false
 		elif info.get("id") == "walk":
 			_tutorial_next.text = "Try a few steps"
-		elif info.get("id") == "grow":
-			_tutorial_next.text = "Growing…"
+		elif info.get("id") in ["grow", "winter"]:
+			_tutorial_next.text = "Calendar running…"
 		_tutorial_key.text = str(info.get("key", ""))
 		_tutorial_key.visible = not _tutorial_key.text.is_empty()
 		_tutorial_meter.value = 100.0 * float(info.get("step", 1)) / maxf(1.0, float(info.get("total", 20)))
@@ -467,7 +467,7 @@ func _apply_tutorial_buttons() -> void:
 			if not node.has_meta("tutorial_disabled"):
 				node.set_meta("tutorial_disabled", node.disabled)
 				node.set_meta("tutorial_tooltip", node.tooltip_text)
-			node.tooltip_text = "Available after the first sale, or choose End tutorial to farm freely."
+			node.tooltip_text = "Available after the first accounts, or choose End tutorial to farm freely."
 			node.disabled = true
 
 func _apply_tutorial_visibility() -> void:

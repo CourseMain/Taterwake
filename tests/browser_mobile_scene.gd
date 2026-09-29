@@ -26,7 +26,7 @@ func command(args: Array) -> void:
 	elif action == "tutorial_sale":
 		game.set_process(false)
 		game.state.reset_game()
-		game.state.tutorial_progress = {"version": 2, "step": 7, "completed": false, "plot": 4}
+		game.state.tutorial_progress = {"version": 3, "step": 8, "completed": false, "plot": 4}
 		game.state.storage["russet"] = Stock.pile(9)
 		game.hud._inventory_tab = "tools"
 		game.tutorial.start()
@@ -90,7 +90,7 @@ func command(args: Array) -> void:
 	report.frozen_crops = game.state.climate.data.operations.ice.size()
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
-	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
+	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"step":game.tutorial.current_id(),"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
 	report.labels = []
 	collect_labels(game.hud._modal_card, report.labels)
 	collect_labels(game.conversation, report.labels)

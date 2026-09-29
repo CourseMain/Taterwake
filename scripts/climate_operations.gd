@@ -16,7 +16,7 @@ static func zone(index: int) -> int:
 	return mini(2, (index / 6) * 3 / 4)
 
 static func scarce(farm) -> bool:
-	return not farm.tutorial_active and farm.climate.data.phase == "active"
+	return (not farm.tutorial_active or farm.guided_first_year()) and farm.climate.data.phase == "active"
 
 static func spend(farm, resource: String, amount: float) -> bool:
 	if resource != "water" and not scarce(farm): return true

@@ -49,7 +49,7 @@ func _run() -> void:
 		check(absf(tip.x) < 0.05 and tip.z > 0.0, "trail chevron points forward toward destination")
 	await shot("tutorial-marker-market")
 	world.set_tutorial_focus("plot:4")
-	check(world._tutorial_marker.visible and is_equal_approx(world._tutorial_marker.position.x, world.plot_positions[4].x) and is_equal_approx(world._tutorial_marker.position.z, world.plot_positions[4].z), "crop and pest lessons can mark the real target plot")
+	check(world._tutorial_marker.visible and is_equal_approx(world._tutorial_marker.position.x, world.plot_positions[4].x) and is_equal_approx(world._tutorial_marker.position.z, world.plot_positions[4].z), "guided crop work marks the real target plot")
 	check(world._tutorial_plot_outline.visible and world._tutorial_plot_outline.position.is_equal_approx(world.plot_positions[4]), "clear ground outline surrounds the exact lesson bed")
 	check(world._tutorial_marker.position.y < 2.0 and world._tutorial_marker.font_size >= 60, "large plot arrow sits close to its outlined bed")
 	await shot("tutorial-marker-plot")
@@ -73,6 +73,16 @@ func _run() -> void:
 	world.set_tutorial_focus("", true)
 	world.build_world()
 	check(not world._tutorial_marker.visible and world._duck_label.is_visible_in_tree(), "normal travel restores normal island appearance")
+	check(world._npc_actors.has("edwin"), "bank manager has a first-farm actor")
+	world.set_bank_visit(false)
+	check(not world._npc_actors.edwin.visible, "bank manager absent before threshold")
+	world.set_bank_visit(true)
+	check(world._npc_actors.edwin.visible, "bank manager arrives with existing potato model")
+	for body: Node in world._npc_actors.edwin.find_children("*", "StaticBody3D", true, false):
+		check(body.collision_layer != 0, "arriving manager is clickable")
+	world.set_bank_visit(false)
+	for body: Node in world._npc_actors.edwin.find_children("*", "StaticBody3D", true, false):
+		check(body.collision_layer == 0, "absent manager leaves no invisible collider")
 	world.queue_free()
 	await process_frame
 	print("TUTORIAL WORLD: %d checks, %d failures" % [checks, failures])

@@ -46,10 +46,11 @@ const fs = require('node:fs');
   const after = await report();
   assert.equal(after.tutorial.russets, 0, 'actual click/tap sells entire harvest');
   assert.ok(after.tutorial.coins > before.tutorial.coins, 'sale credits coins');
-  assert.equal(after.tutorial.completed, true);
-  assert.equal(after.tutorial.active, false);
+  assert.equal(after.tutorial.completed, false);
+  assert.equal(after.tutorial.step, "winter");
+  assert.equal(after.tutorial.active, true);
   await page.screenshot({path:`artifacts/tutorial-barn/${name}-complete.png`});
-  console.log(name + ': first sale from remembered Tools completed using ' + (touch ? 'touch' : 'mouse'));
+  console.log(name + ': first sale from remembered Tools proceeds to Winter using ' + (touch ? 'touch' : 'mouse'));
   await context.close();
  }
  await browser.close();

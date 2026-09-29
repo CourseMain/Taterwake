@@ -1,6 +1,6 @@
 extends SceneTree
 const Stock = preload("res://scripts/graded_stock.gd")
-## A staged introduction stays calm, readable, and safe around every shop.
+## The first-year card stays readable through crop choice, loss, sale and accounts.
 const State = preload("res://scripts/game_state.gd")
 const HUD = preload("res://scripts/game_hud.gd")
 const Activities = preload("res://scripts/island_activities.gd")
@@ -25,7 +25,7 @@ func settle() -> void:
 		await process_frame
 
 func guide(tools: Array = [], features: Array = [], allowed: Array = []) -> Dictionary:
-	return {"id": "market", "title": "Grab a seed", "body": "Follow the arrow to the market.\nBuy 1 Russet seed.", "step": 3, "total": 20, "tools": tools, "features": features, "allowed_actions": allowed, "continue": true}
+	return {"id": "market", "title": "Grab a seed", "body": "Follow the arrow to the market.\nBuy 1 Russet seed.", "step": 2, "total": 10, "tools": tools, "features": features, "allowed_actions": allowed, "continue": true}
 
 func button_for(action: String) -> Button:
 	for node: Node in hud.root.find_children("*", "Button", true, false):
@@ -69,7 +69,7 @@ func run() -> void:
 	hud.set_tool("plant")
 	hud.update_state(state)
 	check(hud._tool_buttons.hoe.visible and hud._tool_buttons.plant.visible and not hud._tool_buttons.water.visible, "hotbar reveals only introduced tools")
-	check(hud._top.coins.is_visible_in_tree() and not hud._top.price.is_visible_in_tree(), "coins reveal independently from stocks and luck")
+	check(hud._top.coins.is_visible_in_tree() and not hud._top.price.is_visible_in_tree(), "purse reveals before the full price display")
 	check(hud._crop_row.visible, "first planting shows seeds without tracked price clutter")
 	await settle()
 	check(is_equal_approx(hud._crop_row.size.x, 300.0) and is_equal_approx(hud._crop_row.get_global_rect().get_center().x, hud.root.size.x * 0.5), "first Russet choice uses a compact centered tray")
@@ -119,7 +119,8 @@ func run() -> void:
 	# The guided first sale now lives on the separate selling page/footer.
 	var sale_guide: Dictionary = guide(["hoe", "plant", "water", "harvest"], ["coins", "market"], ["sell:russet:", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer", "close"])
 	sale_guide["id"] = "sell"
-	sale_guide["continue"] = false
+	sale_guide["continue"] = true
+	sale_guide["continue_label"] = "Store for Winter →"
 	state.storage["russet"] = Stock.pile(3)
 	hud.set_tutorial(sale_guide)
 	hud.show_panel("sell_potatoes", state)
@@ -127,7 +128,7 @@ func run() -> void:
 	hud._update_tutorial_pointer()
 	var sale_page: Control = hud._refs.market_page
 	check(sale_page.selling and sale_page.selected == "russet" and not sale_page.sell_button.disabled, "guided selling opens the available Russet stock")
-	check(hud._tutorial_pointer.target == sale_page.sell_button, "first-sale pointer targets the actual footer Sell button")
+	check(hud._tutorial_pointer.target == hud._tutorial_next and hud._tutorial_next.text == "Store for Winter →", "explicit store choice remains beside enabled Sell")
 	actions.clear()
 	sale_page.quantity.value = 2
 	sale_page._sell()

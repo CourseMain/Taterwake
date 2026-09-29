@@ -92,9 +92,10 @@ func test_can_and_farming() -> void:
 	check(supply.water == Ops.capacity(farm) and supply.can == 3, "Island 1 tank replenishes quickly while carried water remains finite")
 	farm.climate.update(farm, 1000)
 	farm.set_tutorial_active(true)
+	farm.tutorial_progress.step = 5
 	supply.water = 0.0
 	farm.update(6.0)
-	check(supply.water > 0, "starter tutorial still replenishes its teaching tank")
+	check(supply.water > 0, "running first-year calendar replenishes its tank")
 	farm._clear_crop(farm.plots[5])
 	farm.plots[5].tilled = false
 	var seeds: int = farm.seed_inventory.russet

@@ -151,6 +151,7 @@ func _ready() -> void:
 		if state.run_over:
 			_on_run_ended()
 		elif (state.season_clock.season == 3):
+			if not state.tutorial_progress.completed: tutorial.start()
 			hud.show_panel("accounts", state)
 		elif not bool(state.tutorial_progress.get("completed", false)):
 			tutorial.start()
@@ -187,7 +188,7 @@ func _process(delta: float) -> void:
 	if world == null or hud == null:
 		return
 	if is_instance_valid(year_intro) and year_intro.visible: return
-	if not test_mode and not state.run_over and not state.tutorial_active and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
+	if not test_mode and not state.run_over and (not state.tutorial_active or tutorial.current_id() == "welcome") and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
 		_show_year_start()
 		return
 	if state.run_over:
@@ -225,7 +226,7 @@ func _process(delta: float) -> void:
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
 	world.set_calendar(state.season_clock.year, state.season_clock.season, state.calendar_light_seconds(), state.climate.data.outlook.signal)
-	climate_audio.set_weather(climate_info, state.tutorial_active or state.run_over)
+	climate_audio.set_weather(climate_info, (state.tutorial_active and not state.guided_first_year()) or state.run_over)
 	_update_camera_zoom(delta)
 	_update_weather_shake(delta)
 	var infested: int = 0
@@ -1109,7 +1110,9 @@ func _on_action(action: String) -> void:
 				if loaded:
 					epilogue_result.clear()
 					if state.run_outcome == "completed": hud.show_panel("run_summary", state)
-					elif not state.run_over and state.season_clock.season == 3: hud.show_panel("accounts", state)
+					elif not state.run_over and state.season_clock.season == 3:
+						if not state.tutorial_progress.completed: tutorial.start()
+						hud.show_panel("accounts", state)
 					elif not state.run_over and not bool(state.tutorial_progress.get("completed", false)):
 						tutorial.start()
 				hud.show_toast("Farm restored. The exchange is open." if loaded else "No readable farm save yet.")
@@ -1154,7 +1157,9 @@ func _on_climate_changed(phase: String) -> void:
 
 func _on_season_changed() -> void:
 	if state.season_clock.season == 0 and not state.run_over and not test_mode: _show_year_start()
-	if state.season_clock.season == 3 and not state.run_over: state.accounts_open = true
+	if state.season_clock.season == 3 and not state.run_over:
+		state.accounts_open = true
+		if _tutorial_active(): tutorial.update(0.0)
 	_cancel_walk()
 	_close_equipment()
 	if (state.season_clock.season == 3):
@@ -1213,8 +1218,6 @@ func _tutorial_active() -> bool:
 func play_tutorial_cue(kind: String) -> void:
 	# Short, warm notes guide progress without interrupting the field audio.
 	match kind:
-		"pest": tutorial_notes.assign([329.63, 220.0, 329.63])
-		"visit": tutorial_notes.assign([587.33, 783.99])
 		"finish": tutorial_notes.assign([523.25, 659.25, 783.99, 1046.50])
 		_: tutorial_notes.assign([523.25, 659.25])
 	tutorial_note_clock = 0.0
@@ -1352,7 +1355,7 @@ func _queue_project(id: String) -> void:
 	hud.show_farm_hint("Walk to %s · one work action on arrival" % state.ClimateSystem.PROJECTS[id].name)
 
 func _show_year_start() -> void:
-	if not is_instance_valid(year_intro) or state.run_over or state.tutorial_active: return
+	if not is_instance_valid(year_intro) or state.run_over or (state.tutorial_active and tutorial.current_id() != "welcome"): return
 	_stop_map_navigation()
 	_cancel_walk()
 	hud.close_panel()

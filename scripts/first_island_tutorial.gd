@@ -1,14 +1,16 @@
 extends Node
-## One real harvest. Further introductions belong to optional, contextual help.
+## A guided first year through real Winter accounts. Later help is optional.
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Mara has a theory", "body": "One Russet. A little water.\nLet's see what comes out of the ground.\nWASD to walk. Drag the island to look around.", "next": true, "label": "Try Mara's seed →"},
-	{"id": "market", "title": "Buy a seed", "body": "Click Seeds, then Buy 1 Russet. Or press B.", "focus": "market", "key": "B · SEEDS"},
+	{"id": "welcome", "title": "Your first year", "body": "Plant, water, weather, harvest. Then Nell reads the bills.\nThis guided year has one small Summer storm. Decisions pause time.\nWASD to walk; drag to look.", "next": true, "label": "Try Mara's seed →"},
+	{"id": "market", "title": "Choose your first crop card", "body": "Open Seeds [B]. Read the Russet card: water, tolerance, price and seed cost. Buy one for this first bed.", "focus": "market", "key": "B · SEEDS"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
-	{"id": "grow", "title": "Let it grow", "body": "Watered potatoes grow on their own. You can walk around while you wait."},
+	{"id": "grow", "title": "Spring into Summer", "body": "The calendar is running. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
+	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. Two tonnes lost; one left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
-	{"id": "sell", "title": "Your first sale", "body": "Open the barn, then Sell on your Russet crate. Or press F.", "focus": "barn", "key": "F · SELL"},
+	{"id": "sell", "title": "Sell now or store?", "body": "Sell your Russet in the barn [F] for cash now. Or keep it: Winter charges storage and spoilage, while prices rise. Either choice leads to the same honest accounts.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
+	{"id": "winter", "title": "The bills are coming", "body": "Time is running through Autumn. Nell will open the accounts at Winter. Unsold crops stay in the barn; crops left in the field face the cold."},
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
@@ -16,7 +18,7 @@ const TOUR: Array[Dictionary] = [
 	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
 	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
 	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "quests", "title": "Local challenges", "body": "Click the challenge keeper for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
+	{"id": "quests", "title": "Local challenges", "body": "Click the challenge board for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
 	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Up to two ducks can patrol your farm.", "focus": "duck_patrol"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},
 ]
@@ -31,31 +33,35 @@ func setup(owner_game: Node) -> void:
 
 func start(replay: bool = false) -> void:
 	if replay:
-		game.state.tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5, "tour_only": true}
+		game.state.tutorial_progress = {"version": 3, "step": 0, "completed": false, "plot": 5, "tour_only": true}
 	else:
 		_migrate()
 		if bool(game.state.tutorial_progress.get("completed", false)):
 			return
 	active = true
 	game.state.set_tutorial_active(true)
+	if not replay and (game.state.season_clock.season == 3 or game.state.season_clock.year > 1):
+		finish()
+		return
 	_enter_step()
 
 func _migrate() -> void:
 	var progress: Dictionary = game.state.tutorial_progress
-	if int(progress.version) >= 2:
-		return
-	progress.version = 2
+	if int(progress.version) >= 3: return
+	var old_version: int = int(progress.version)
+	progress.version = 3
 	if bool(progress.get("tour_only", false)):
 		progress.step = 0
 	elif not progress.completed:
-		var old_step: int = int(progress.step)
-		progress.step = maxi(0, old_step - 1) if old_step >= 2 else old_step
-		if old_step >= 9:
-			# The first sale already happened. Retire the remaining compulsory tour.
-			progress.completed = true
-			game.state.set_tutorial_active(false)
-			game.state.farm_help.enable()
-			_save()
+		if old_version == 1:
+			progress.step = maxi(0, int(progress.step) - 1) if int(progress.step) >= 2 else int(progress.step)
+			if int(progress.step) >= 8: progress.completed = true
+		# Old unfinished harvests join at the weather demonstration; if already
+		# harvested, retain the real sell/store choice instead of inventing a crop.
+		if int(progress.step) >= 6: progress.step = 8 if int(game.state.plots[_plot_index()].stage) == 0 else 5
+		if game.state.season_clock.season == 3 or game.state.season_clock.year > 1: progress.completed = true
+		if progress.completed: game.state.farm_help.enable()
+	progress.step = clampi(int(progress.step), 0, (TOUR.size() if progress.get("tour_only", false) else STEPS.size()) - 1)
 
 func _steps() -> Array[Dictionary]:
 	return TOUR if _tour_only() else STEPS
@@ -84,12 +90,16 @@ func _enter_step() -> void:
 	if step.has("tool"):
 		game._select_tool(str(step.tool))
 	game._on_state_changed()
+	if current_id() == "loss":
+		game.hud._climate_alert.dismiss()
+		game.hud.show_panel("loss_notices", game.state)
+		game.conversation.voice.begin_line("tess", game.state.NpcRoster.weather_cost(game.state).length(), true)
 	_save()
 
 func _tools() -> Array[String]:
 	var result: Array[String] = []
 	if _tour_only(): return result
-	for entry: Array in [[2, "hoe"], [3, "plant"], [4, "water"], [6, "harvest"]]:
+	for entry: Array in [[2, "hoe"], [3, "plant"], [4, "water"], [7, "harvest"]]:
 		if _index() >= int(entry[0]): result.append(str(entry[1]))
 	return result
 
@@ -110,6 +120,7 @@ func allowed_actions() -> Array[String]:
 	if current_id() == "market": result.append("buy:russet:1")
 	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
 	if current_id() == "plant": result.append("crop:russet")
+	if current_id() == "loss": result.append("loss_notices")
 	return result
 
 func allows_action(action: String) -> bool:
@@ -138,7 +149,8 @@ func explain_block() -> void:
 	var message: String = "This tour only previews shops. Resume farming to use them."
 	if not _tour_only():
 		var step: Dictionary = _steps()[_index()]
-		message = str(step.body)
+		refresh()
+		message = str(game.hud._tutorial.body)
 		if step.has("tool"):
 			game._select_tool(str(step.tool))
 			message = "%s selected again. Click the gold bed." % str(step.tool).capitalize()
@@ -153,8 +165,7 @@ func refresh() -> void:
 	if not _tour_only() and current_id() in ["hoe", "plant", "water", "grow", "harvest"]:
 		focus = "plot:%d" % _plot_index()
 	if current_id() == "grow":
-		var plot: Dictionary = game.state.plots[_plot_index()]
-		body = "Ready in %ds. Watering once is enough.\nYou can walk around while it grows." % maxi(0, int(ceil(10.0 - float(plot.elapsed))))
+		body = "Spring → Summer. The calendar is running.\nIris will warn us before the small storm. Your first crop's quality and pests are protected while you learn."
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "id": current_id(), "key": str(step.get("key", "")),
@@ -170,9 +181,15 @@ func update(_delta: float) -> void:
 		"hoe": done = bool(plot.tilled)
 		"plant": done = int(plot.stage) > 0
 		"water": done = bool(plot.watered)
-		"grow": done = int(plot.stage) == 3
+		"grow": done = not game.state.tutorial_loss().is_empty()
 		"harvest": done = int(plot.stage) == 0 and game.state.stock_count("russet") > 0
-		"sell": done = game.state.lifetime_sales > sale_baseline
+		"sell":
+			done = game.state.lifetime_sales > sale_baseline
+			if done: game.state.tutorial_progress.choice = "sell"
+		"winter":
+			if game.state.season_clock.season == 3:
+				finish()
+				return
 	if done: _advance()
 	elif id == "grow": refresh()
 
@@ -186,7 +203,9 @@ func observe_purchase(receipt: Dictionary) -> void:
 	if active and current_id() == "market" and not _tour_only() and receipt.get("kind") == "seeds" and receipt.get("id") == "russet": _advance()
 
 func next() -> void:
-	if active and (_tour_only() or bool(_steps()[_index()].get("next", false))): _advance()
+	if active and (_tour_only() or bool(_steps()[_index()].get("next", false))):
+		if not _tour_only() and current_id() == "sell": game.state.tutorial_progress.choice = "store"
+		_advance()
 
 func _advance() -> void:
 	if _index() >= _steps().size() - 1:
@@ -204,7 +223,7 @@ func finish() -> void:
 	game.state.set_tutorial_active(false)
 	if not was_tour: game.state.farm_help.enable()
 	game._cancel_walk()
-	game.hud.close_panel()
+	if not game.state.accounts_open: game.hud.close_panel()
 	game.hud.set_tutorial({})
 	game.world.set_tutorial_focus("", true)
 	game._select_tool("hoe")

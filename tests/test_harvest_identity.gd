@@ -57,7 +57,10 @@ func run() -> void:
 	game._process(1)
 	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
 	game._process(float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1)
-	check(game.tutorial.current_id() == "harvest", "crop requires ordinary watering and growing time")
+	check(game.state.plots[4].stage == 3 and game.tutorial.current_id() == "grow", "crop uses ordinary growth before Summer lesson")
+	game._process(1000)
+	check(game.tutorial.current_id() == "loss", "guided storm precedes first harvest")
+	game.tutorial.next()
 	game.world.camera.size = 17
 	game.world.camera.position = game.world.plot_positions[4] + Vector3(11,15,17)
 	game.world.camera.look_at(game.world.plot_positions[4] + Vector3(0,1,0))
@@ -65,7 +68,7 @@ func run() -> void:
 	var stored: int = game.state.storage_used()
 	game.perform_plot(4,"harvest")
 	var fx = game.world.harvest_feedback
-	check(game.state.storage_used()-stored == 3, "first Russet harvest has its ordinary yield")
+	check(game.state.storage_used()-stored == 1, "first Russet harvest excludes the two storm-lost tonnes")
 	check(fx.active.size() == 1 and not fx.active[0].heavy, "committed Russet starts one visual receipt")
 	check(fx.audio.last_kind == "harvest", "ordinary crop uses harvest foley")
 	fx.animate(2)

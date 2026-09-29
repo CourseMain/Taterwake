@@ -31,9 +31,10 @@ static func remaining(plot: Dictionary) -> int:
 	var total: int = int(plot.yield_total) if int(plot.yield_total) > 0 else int(Table.CROPS[plot.crop].yield)
 	return maxi(0, floori(total * (3 - int(plot.pest_ticks)) / 3.0) - int(plot.yield_taken) - int(plot.get("weather_lost", 0)))
 
-static func damage(farm, index: int, event: String) -> void:
+static func damage(farm, index: int, event: String, exposed_limit: int = -1) -> void:
 	var plot: Dictionary = farm.plots[index]
 	var quantity: int = remaining(plot)
+	if exposed_limit >= 0: quantity = mini(quantity, exposed_limit)
 	if quantity <= 0: return
 	var rank: int = level(farm, event, index)
 	var id: String = PROJECT_FOR.get(event, "")

@@ -142,8 +142,9 @@ func run() -> void:
 
 	fresh()
 	state.tutorial_active = true
+	state.tutorial_progress.tour_only = true
 	state.update(3600.0)
-	check(state.climate.data.phase == "calm" and state.climate.data.timer == Climate.SEASON_SECONDS and not state.climate.begin_warning(state, "flood"), "tutorial is protected from climate warnings and damage")
+	check(state.climate.data.phase == "calm" and state.climate.data.timer == Climate.SEASON_SECONDS and not state.climate.begin_warning(state, "flood"), "optional tour preserves climate without running warnings or damage")
 	fresh()
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.reset_game()

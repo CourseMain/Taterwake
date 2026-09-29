@@ -60,7 +60,7 @@ var activity_system: Node = null
 const FarmHelp = preload("res://scripts/farm_help.gd")
 var farm_help = FarmHelp.new()
 var npc_history: Dictionary = {}
-var tutorial_progress: Dictionary = {"version": 2, "step": 0, "completed": false, "plot": 5}
+var tutorial_progress: Dictionary = {"version": 3, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
 var climate = ClimateSystem.new()
 var run_over: bool = false
@@ -290,88 +290,36 @@ func claim_quest(id: String) -> String:
 
 
 func set_tutorial_active(active: bool) -> void:
-	if active == tutorial_active:
-		return
+	if active == tutorial_active: return
 	tutorial_active = active
-	# A repeat tour is a paused view of an established farm. Preserve every
-	# timer, quote, crop and infestation so opening it cannot cleanse hazards.
-	if bool(tutorial_progress.get("tour_only", false)):
-		changed.emit()
-		return
-	# Start and finish without a queued flash, damaged lesson crop, or an
-	# almost-expired countdown. Completing a lesson never ambushes the player.
-	pest_timer = rng.randf_range(25.0, 100.0)
-	_relief_clock = 0.0
-	for plot in plots:
-		plot["pests"] = false
-		plot["pest_elapsed"] = 0.0
-		plot["ripe_age"] = 0.0
-		plot["plant_age"] = 0.0
-		plot["pest_delay"] = 0.0
-	news = "Take your time. Your crops are safe during the farm tour." if active else "Your farm is ready. Plant, tend and harvest at your own pace."
-	_refresh_market()
 	changed.emit()
 
+func guided_first_year() -> bool:
+	return tutorial_active and int(tutorial_progress.version) == 3 and not tutorial_progress.get("tour_only", false) and not tutorial_progress.completed and season_clock.year == 1
 
-func spawn_tutorial_pest(index: int) -> bool:
-	if not tutorial_active or bool(tutorial_progress.get("tour_only", false)) or index < 0 or index >= plots.size():
-		return false
-	var plot: Dictionary = plots[index]
-	if not bool(plot["unlocked"]) or int(plot["stage"]) <= 0:
-		return false
-	# Only one harmless demonstration patch exists, even after a lesson resumes.
-	for other_plot in plots:
-		other_plot["pests"] = false
-		other_plot["pest_elapsed"] = 0.0
-	plot["pests"] = true
-	plot["pest_ticks"] = 0
-	plot["pest_damage"] = 0.0
-	plot["pest_destroyed"] = false
-	plot["ripe_age"] = 0.0
-	plot["plant_age"] = 0.0
-	plot["pest_delay"] = 0.0
-	changed.emit()
-	return true
+func tutorial_loss() -> Dictionary:
+	for entry: Dictionary in climate.data.protection.losses:
+		if int(entry.year) == 1 and int(entry.season) == 1 and entry.event == "storm": return entry
+	return {}
 
-
-func _update_tutorial(delta: float) -> void:
-	if bool(tutorial_progress.get("tour_only", false)):
-		return
-	var step: float = minf(delta, 3600.0)
-	var dirty: bool = false
-	elapsed += step
-	_refresh_market()
-	dirty = true
-	# Keep growth genuine while freezing every source of background pressure.
-	# Frozen timers never enter the ordinary event-boundary loop below.
-	var growth_speed: float = _growth_speed()
-	for plot in plots:
-		if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"]:
-			plot["stage"] = 2
-			plot["elapsed"] = minf(float(CropTable.CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
-			if float(plot["elapsed"]) >= float(CropTable.CROPS[plot["crop"]]["grow"]):
-				plot["stage"] = 3
-				dirty = true
-	if dirty:
-		changed.emit()
+func _tutorial_clock_running() -> bool:
+	if not tutorial_active: return true
+	if not guided_first_year(): return false
+	match int(tutorial_progress.step):
+		5: return tutorial_loss().is_empty()
+		9: return season_clock.season < 3
+	return false
 
 
 func update(delta: float) -> void:
 	if ClimateSystem.Lesson.active(self): return
 	if run_over or accounts_open or climate_report_open or not is_finite(delta) or delta <= 0.0:
 		return
-	if tutorial_active:
-		if not bool(tutorial_progress.get("tour_only", false)):
-			var supply: Dictionary = ClimateSystem.Operations.local(self)
-			var before: float = float(supply.water)
-			supply.water = minf(ClimateSystem.Operations.capacity(self), before + delta * 6.0)
-			if before != float(supply.water): changed.emit()
-		_update_tutorial(delta)
-		return
+	if not _tutorial_clock_running(): return
 	# Resolve farming and weather boundaries in order.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
-	while remaining >= 0.000001 and not run_over and not accounts_open and not climate_report_open:
+	while remaining >= 0.000001 and not run_over and not accounts_open and not climate_report_open and _tutorial_clock_running():
 		if season_clock.seconds == 0.0: climate.start_season(self)
 		farm_help.refresh_pests(self)
 		var step: float = minf(remaining, season_clock.remaining(season_seconds()))
@@ -415,7 +363,7 @@ func update(delta: float) -> void:
 				_schedule_pest(plot)
 				if not was_ripe: Quality.ripe(self, plot_index, ripe_step)
 				plot["ripe_age"] = minf(1000000000.0, float(plot.get("ripe_age", 0.0)) + ripe_step)
-				if float(plot["ripe_age"]) >= float(plot.pest_delay) - 0.000001 and float(plot.plant_age) >= 40.0 - 0.000001 and not bool(plot.get("pests", false)) and farm_help.can_infest():
+				if float(plot["ripe_age"]) >= float(plot.pest_delay) - 0.000001 and float(plot.plant_age) >= 40.0 - 0.000001 and not bool(plot.get("pests", false)) and not tutorial_active and farm_help.can_infest():
 					plot["pests"] = true
 					plot["pest_elapsed"] = 0.0
 					ripe_infestation = true
@@ -930,7 +878,7 @@ func reset_game() -> void:
 	harvested_total = 0
 	climate.reset()
 	tutorial_active = false
-	tutorial_progress = {"version": 2, "step": 0, "completed": false, "plot": 5}
+	tutorial_progress = {"version": 3, "step": 0, "completed": false, "plot": 5}
 	farm_help.data = FarmHelp.fresh()
 	if is_instance_valid(activity_system) and activity_system.has_method("reset"):
 		activity_system.reset()
@@ -1081,7 +1029,10 @@ func _valid_save(raw: Variant) -> bool:
 	if data.get("schema_version") != SAVE_VERSION or data.get("mechanics_revision") != MECHANICS_REVISION: return false
 	if not NpcRoster.valid_history(data.get("npc_history")) or not FarmHelp.valid(data.get("farm_help")): return false
 	var progress: Variant = data.get("tutorial_progress")
-	if not progress is Dictionary or progress.get("version") != 2 or not _number(progress.get("step"), 0, 100, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0, 23, true): return false
+	if not progress is Dictionary or not _number(progress.get("version"), 2, 3, true) or not _number(progress.get("step"), 0, 100, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0, 23, true): return false
+	if progress.has("tour_only") and not progress.tour_only is bool: return false
+	if int(progress.version) == 3 and int(progress.step) > (7 if progress.get("tour_only", false) else 9): return false
+	if progress.has("choice") and progress.choice not in ["sell", "store"]: return false
 	if not SeasonClock.valid(data.get("season_clock")): return false
 	if not ClimateSystem.valid(data.get("climate"), MAX_MONEY): return false
 	if int(data.climate.outlook.seen_year) > int(data.season_clock.year): return false

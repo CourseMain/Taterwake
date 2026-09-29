@@ -49,7 +49,7 @@ func sell_harvest() -> void:
 	press("sell:russet:-1")
 	check(Stock.count(game.state.storage, "russet") == 0, "sale clears harvested Russets")
 	check(game.state.coins > coins_before and game.state.lifetime_sales > sales_before, "sale credits coins")
-	check(not game.tutorial.active and game.state.tutorial_progress.completed, "barn sale completes lesson")
+	check(game.tutorial.current_id() == "winter" and not game.state.tutorial_progress.completed, "barn sale continues to Winter accounts")
 
 func run() -> void:
 	if not "--integration-test" in OS.get_cmdline_user_args():
@@ -71,9 +71,11 @@ func run() -> void:
 	walk_plot("hoe")
 	walk_plot("plant")
 	walk_plot("water")
-	game._process(float(game.state.CropTable.CROPS.russet.grow) + 0.1)
+	game._process(1000)
+	check(game.tutorial.current_id() == "loss", "Summer loss precedes harvest")
+	press("tutorial:next")
 	walk_plot("harvest")
-	check(game.tutorial.current_id() == "sell", "real growing and harvesting reaches first sale")
+	check(game.tutorial.current_id() == "sell", "real Summer loss and harvest reach sell/store choice")
 	var path: String = "user://tutorial-barn-%d.json" % OS.get_process_id()
 	check(game.state.save_game(path), "save unfinished first sale")
 	game._on_action("barn")
@@ -99,6 +101,9 @@ func run() -> void:
 	await settle()
 	check_crops()
 	sell_harvest()
+	game._process(1000)
+	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
+	game._on_action("close")
 	game.hud.show_panel("barn", game.state)
 	press("inventory_tab:tools")
 	game.tutorial.start(true)
@@ -107,5 +112,6 @@ func run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	game.queue_free()
 	await process_frame
+	await create_timer(0.4).timeout
 	print("TUTORIAL BARN: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

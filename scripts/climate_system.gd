@@ -50,7 +50,7 @@ func reset() -> void:
 	data = fresh_data()
 
 func clock_running(farm) -> bool:
-	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over
+	return (not farm.tutorial_active or farm.guided_first_year()) and not Lesson.active(farm) and not farm.run_over
 
 func protection(event: String) -> float:
 	return Protection.REDUCTION[int(data.projects.get(Protection.PROJECT_FOR.get(event, ""), 0))]
@@ -62,7 +62,7 @@ func factor(kind: String) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.run_over or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
+	if farm.run_over or (farm.tutorial_active and not farm.guided_first_year()) or Lesson.active(farm) or data.phase != "calm":
 		return false
 	var ids: Array = SEASON_EVENTS[farm.season_clock.season]
 	if event.is_empty():
@@ -128,6 +128,12 @@ func start_season(farm) -> void:
 	var ordinal: int = (farm.season_clock.year - 1) * 4 + farm.season_clock.season
 	if int(data.outlook.started) == ordinal: return
 	data.outlook.started = ordinal
+	# The guided year has one disclosed, mild Summer storm. All later years
+	# use the ordinary saved outlook and climate curve.
+	if farm.guided_first_year():
+		if farm.season_clock.season == 1 and year_count(1) == 0: begin_warning(farm, "storm", 0.2)
+		prime_next(farm)
+		return
 	var event: String = ""
 	var next: Dictionary = data.outlook.next
 	var fires: bool
@@ -176,6 +182,10 @@ func _impact(farm) -> void:
 	data.last = record
 	data.history.append(record.duplicate(true))
 	if data.history.size() > 8: data.history.pop_front()
+	if farm.guided_first_year() and event == "storm" and farm.tutorial_loss().is_empty():
+		# One gust exposes two tonnes on the lesson bed; the same loss and
+		# counterfactual arithmetic as every other field cause card applies.
+		Protection.damage(farm, int(farm.tutorial_progress.plot), event, 2)
 	if WINTER_LOSS.has(event): _winter_impact(farm)
 	farm.climate_changed.emit("impact")
 
