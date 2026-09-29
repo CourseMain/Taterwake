@@ -39,12 +39,14 @@ func run() -> void:
 		if strategy == "naive": check((years[14]+years[15])/2.0 <= 6, "naive median foreclosure by year six")
 		if strategy == "cautious": check(survived >= 24, "cautious survives at least 24 seeds")
 		if strategy == "tidy": check(survived == 30, "tidy survives all thirty seeds")
+		if strategy == "diversifier": check(survived >= 24, "diversifier survives at least 24 seeds")
 	var cautious_sales := 0.0
 	var tidy_sales := 0.0
 	for i in range(30):
 		cautious_sales += results.cautious[i].sales
 		tidy_sales += results.tidy[i].sales
-		check(results.diversifier[i] == results.cautious[i], "placeholder repeats cautious seed %d" % (i+1))
+		check(results.diversifier[i].business_income > 0 and results.diversifier[i].businesses.has("grower"), "diversifier earns business income seed %d" % (i+1))
+	check(results.diversifier.filter(func(row): return row.businesses.has("shop")).size() >= 24, "at least 24 diversifiers build the shop without invented funding")
 	var advantage: float = tidy_sales / cautious_sales - 1.0
 	print("Tidy ten-year sales advantage: %.2f%%" % (100 * advantage))
 	check(advantage >= 0.15 and advantage <= 0.30, "tidy earns 15–30% more crop receipts across matched seeds")
@@ -82,6 +84,11 @@ func play(strategy: String, seed_value: int) -> Dictionary:
 			last_season = season
 			planted.clear()
 			if season == 0 and year >= 2 and not naive: Protection.insure(farm)
+			# Bind only matching Golden orders: planting choice stays legible and
+			# the bot does not knowingly promise crops it will never grow.
+			if season == 0 and strategy == "diversifier" and farm.trading.grower_active(farm):
+				for slot in range(farm.trading.order_limit(farm)):
+					if farm.trading.offer(year, slot, true).crop == crop: farm.trading.accept(farm, slot)
 			if season == 3: sold_winter = false; built_winter = false
 		# Accounts are presentation-only in the scene; the standalone state keeps running.
 		farm.accounts_open = false
@@ -91,6 +98,13 @@ func play(strategy: String, seed_value: int) -> Dictionary:
 			if not naive and not sold_winter and farm.season_clock.seconds >= 149:
 				for id in State.CROP_IDS: farm.trading.sell_stored(farm, id)
 				sold_winter = true
+				if strategy == "diversifier" and year >= Balance.DIVERSIFY_YEAR:
+					farm.diversification.buy(farm, "grower")
+					# At most one new building per Winter; keep 1,000 of credit for
+					# next Spring's seeds/insurance rather than exhausting the bank.
+					var business: String = "lodging" if farm.diversification.owns("shop") else "shop"
+					if farm.coins - Balance.BUSINESS_COSTS[business] >= Balance.OVERDRAFT_LIMIT + 1000:
+						farm.diversification.buy(farm, business)
 			if not naive and not built_winter:
 				var id: String = "rainwater" if int(farm.climate.data.projects.get("rainwater",0)) == 0 else "drainage"
 				if int(farm.climate.data.projects.get(id,0)) == 0 and farm.can_purchase(Protection.COSTS[id]):
@@ -122,12 +136,17 @@ func play(strategy: String, seed_value: int) -> Dictionary:
 				# Sell exactly half cumulatively (including odd sacks), leaving the
 				# other half in the barn for automatic Winter storage.
 				var sell: int = amount if naive else (harvested/2 - (harvested-amount)/2)
+				if strategy == "diversifier":
+					var promised: int = 0
+					for order in farm.trading.contracts:
+						if order.crop == id: promised += int(order.quantity)
+					sell = mini(sell, maxi(0, farm.stock_count(id) - promised))
 				if sell > 0: farm.sell_crop(id,sell)
 		farm.update(1.0)
 	annual.append(reconcile(farm,last_year,year_open,strategy,seed_value))
 	check(farm.run_outcome in ["completed","foreclosed"], "run has a real ending")
 	if tidy: check(table_sacks > harvested/2, "tidy majority Table seed %d" % seed_value)
-	var result: Dictionary = {"seed":seed_value,"year":farm.season_clock.year,"completed":farm.run_outcome == "completed","cash":farm.coins,"sales":farm.ledger.total(0,"sales"), "table_sacks":table_sacks, "harvested_sacks":harvested, "years":annual}
+	var result: Dictionary = {"seed":seed_value,"year":farm.season_clock.year,"completed":farm.run_outcome == "completed","cash":farm.coins,"sales":farm.ledger.total(0,"sales"), "table_sacks":table_sacks, "harvested_sacks":harvested, "years":annual, "businesses":farm.diversification.built.duplicate(), "business_income":farm.diversification.income(farm), "title":farm.run_title()}
 	farm.free()
 	return result
 

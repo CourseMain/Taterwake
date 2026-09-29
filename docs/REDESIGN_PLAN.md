@@ -172,12 +172,12 @@ only adapt, never stop it.
   restraint affords. That is the honest message, delivered by the ledger rather
   than by text.
 
-## 6. Economy model (Segment 14 simulation tuning)
+## 6. Economy model (Segments 14–15 simulation tuning)
 
 All tuning lives in `scripts/balance.gd`; game systems and the headless bot
 read the same constants. These values replace the original starting guesses.
 Opening cash is **2,000**, the overdraft boundary is **−5,000**, and foreclosure
-is assessed at Winter start after storage, insurance, upkeep and fixed bills.
+is assessed at Winter start after storage, insurance, upkeep, business income and fixed bills.
 
 | Fixed annual payment | Spudions |
 | --- | ---: |
@@ -233,13 +233,31 @@ Measured on Godot 4.7.2, seeds 1–30:
 | Naive | 0 / 30 | 5 | −6,029.32 | −5,153.28 | 13,083.35 |
 | Cautious | 28 / 30 | 10 | −1,434.16 | 1,105.56 | 33,325.02 |
 | Tidy | 30 / 30 | 10 | 5,555.09 | 7,244.24 | 42,328.40 |
-| Diversifier placeholder | 28 / 30 | 10 | −1,434.16 | 1,105.56 | 33,325.02 |
+| Diversifier | 29 / 30 | 10 | −924.50 | 2,916.58 | 31,774.98 |
 
 Tidy earns **27.02%** more crop receipts across the cohort, or **25.07%**
 on the 28 matched seeds where both policies complete ten years. Tidy harvests
 **96.27% Table sacks** overall (minimum per seed 86.65%). Ending statistics
-include the two cautious foreclosures; naive receipts stop at foreclosure. Every year's
+include the two cautious foreclosures and one diversifier foreclosure; naive receipts stop at foreclosure. Every year's
 journal reconciles exactly. The maximum completed-run cash is **7,244.24**.
+Diversifier enrols on all 30 seeds, builds 28 shops and 27 lodgings, and earns
+mean diversification receipts of **6,960.37**. Seed 25 forecloses in year nine;
+seed 17, which cautious loses, survives. All **1,045 annual journals** reconcile
+exactly, with **1,351 bot checks** passing. Construction can remain unaffordable
+on a bad seed; the bot receives no credit or income outside the game rules.
+
+From year three, Winter accounts offer these permanent businesses, with
+benefits beginning the following year. Values live in `balance.gd`.
+
+| Business | Build/enrolment | Annual benefit |
+| --- | ---: | --- |
+| Farm shop | 3,000 | 800; Summer loses 30 seconds (120 remain) |
+| Contract grower | 0 | Two simultaneous orders; contract quote × 1.2 |
+| Lodging | 2,500 | 600 × completed protection types / 4 |
+
+Lodging counts tank, drainage, windbreak and frost cover once each, ignoring
+levels and sprinklers. Annual shop/lodging income posts before foreclosure;
+construction Winter pays nothing. Each has its own ledger label.
 
 The regression is `tools/run_tests.sh -j 1 --timeout 600 test_tuning_bot`.
 It runs seeds 1–30 for all four policies on the real `game_state.gd`.
@@ -252,8 +270,12 @@ stores at Winter second 149. It buys tank then drainage, at most one in each
 of the first two affordable Winters, and renews insurance from year two.
 Tidy uses the same planting, selling and investment rules, but checks watering
 and pests every second and harvests within one second of ripening. All policies
-clear ice and use actual can/tank reserves. Diversifier exactly repeats cautious
-until Segment 15. No contracts, kept seed, quests, hired help or free funds.
+clear ice and use actual can/tank reserves. Diversifier keeps cautious crop
+care, then enrols and buys at most one business at Winter second 149 from year
+three, after store sales: shop first, lodging second, retaining 1,000 of credit
+above the overdraft boundary. It accepts only matching Golden premium orders
+and reserves promised sacks at harvest. Other policies take no contracts.
+No policy uses kept seed, quests, hired help or free funds.
 
 “Out-earns” means total **crop sales receipts** over the ten-year cohort;
 a percentage of net profit would be undefined or misleading when it is zero
