@@ -172,81 +172,85 @@ only adapt, never stop it.
   restraint affords. That is the honest message, delivered by the ledger rather
   than by text.
 
-## 6. Economy model (Segments 14–15 simulation tuning)
+## 6. Economy model (Segments 14–16a simulation tuning)
 
 All tuning lives in `scripts/balance.gd`; game systems and the headless bot
-read the same constants. These values replace the original starting guesses.
-Opening cash is **2,000**, the overdraft boundary is **−5,000**, and foreclosure
+read the same constants. `MONEY_SCALE = 40` multiplies every monetary constant;
+ratios, yields, quantities, calendar and climate remain unchanged. Tool, barn,
+duck, irrigation, station and quest money also lives in this file. These values
+replace the original starting guesses.
+Opening cash is **80,000**, the overdraft boundary is **−200,000**, and foreclosure
 is assessed at Winter start after storage, insurance, upkeep, business income and fixed bills.
 
 | Fixed annual payment | Spudions |
 | --- | ---: |
-| Mortgage interest | 600 |
-| Mortgage principal | 600 |
-| Rent and land tax | 300 |
-| Living costs | 800 |
-| Equipment upkeep | 300 |
-| **Fixed total** | **2,600** |
+| Mortgage interest | 24,000 |
+| Mortgage principal | 24,000 |
+| Rent and land tax | 12,000 |
+| Living costs | 32,000 |
+| Equipment upkeep | 12,000 |
+| **Fixed total** | **104,000** |
 
-The initial loan is 12,000; ten principal payments leave 6,000. Opening the
-remaining twelve beds costs 1,200. Seeds and protection are additional costs.
+The initial loan is 480,000; ten principal payments leave 240,000. Opening the
+remaining twelve beds costs 48,000. Seeds and protection are additional costs.
 
-| Variety | Seed | Standard base / sack | Sacks / bed | Grow seconds | Volatility |
+| Variety | Seed | Standard base / tonne | Tonnes / bed | Grow seconds | Volatility |
 | --- | ---: | ---: | ---: | ---: | --- |
-| Russet | 6.75 | 9.00 | 3 | 75 | Low |
-| Giant | 9.00 | 12.00 | 5 | 135 | Low |
-| Golden | 12.60 | 16.80 | 4 | 105 | Mid |
-| Sunburst | 17.10 | 22.80 | 3 | 195 | High |
-| Icecap | 30.00 | 30.00 | 2 | 225 | High |
+| Russet | 270 | 360 | 3 | 75 | Low |
+| Giant | 360 | 480 | 5 | 135 | Low |
+| Golden | 504 | 672 | 4 | 105 | Mid |
+| Sunburst | 684 | 912 | 3 | 195 | High |
+| Icecap | 1,200 | 1,200 | 2 | 225 | High |
 
 Table / Standard / Feed multipliers are **1.2 / 1 / 0.5**, with the existing
 80 / 40 quality thresholds. Icecap's higher seed cost and smaller harvest
-make price-chasing expensive. Two complete Golden sowings cost 604.80 in
-seed and produce at most 192 sacks before weather, pests or spoilage.
+make price-chasing expensive. Two complete Golden sowings cost 24,192 in
+seed and produce at most 192 tonnes before weather, pests or spoilage.
 Volatility remains 5% / 10% / 15% ordinary drift and 1.2 / 1.4 / 1.6 late-Winter
-storage factors. Nonempty Winter storage costs **120**, spoils **5%** rounded
+storage factors. Nonempty Winter storage costs **4,800**, spoils **5%** rounded
 across the whole barn, and deducts ten quality. Contracts pay base × 1.1
-and penalize missing sacks by 5.
+and penalize missing tonnes by 200.
 
 | Protection | Level 1 | Level 2 |
 | --- | ---: | ---: |
-| Rainwater tank | 900 | 1,800 |
-| Drainage | 1,200 | 2,400 |
-| Windbreak | 1,500 | 3,000 |
-| Frost cover | 900 | 1,800 |
+| Rainwater tank | 36,000 | 72,000 |
+| Drainage | 48,000 | 96,000 |
+| Windbreak | 60,000 | 120,000 |
+| Frost cover | 36,000 | 72,000 |
 
-Each completed project costs **60 annual upkeep**, regardless of level, and
-reduces matching field losses by **50% / 75%**. Annual insurance costs **240**
+Each completed project costs **2,400 annual upkeep**, regardless of level, and
+reduces matching field losses by **50% / 75%**. Annual insurance costs **9,600**
 and pays **40%** of insured losses at base prices.
 
 The climate curve remains `min(0.6, 0.15 + 0.04 × (year − 1))` per season;
 severity mean is `0.5 + 0.03 × (year − 1)`, with uniform ±0.15 variation
 clamped to 0–1. There are at most three disasters per year. True precursor
 signals appear 70% of the time, false signals 10%. Winter deep freeze and
-blizzard remove 20% / 30% times severity of exposed stored sacks and living
+blizzard remove 20% / 30% times severity of exposed stored tonnes and living
 Icecap. These constants also live in `balance.gd`.
 
 Measured on Godot 4.7.2, seeds 1–30:
 
 | Policy | Completes year 10 | Median ending year | Mean ending cash | Maximum ending cash | Mean crop sales |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Naive | 0 / 30 | 5 | −6,029.32 | −5,153.28 | 13,083.35 |
-| Cautious | 28 / 30 | 10 | −1,434.16 | 1,105.56 | 33,325.02 |
-| Tidy | 30 / 30 | 10 | 5,555.09 | 7,244.24 | 42,328.40 |
-| Diversifier | 29 / 30 | 10 | −924.50 | 2,916.58 | 31,774.98 |
+| Naive | 0 / 30 | 5 | -241,172.67 | -206,131.20 | 523,334.00 |
+| Cautious | 28 / 30 | 10 | -57,366.49 | 44,222.40 | 1,333,000.66 |
+| Tidy | 30 / 30 | 10 | 222,203.62 | 289,769.79 | 1,693,136.10 |
+| Diversifier | 29 / 30 | 10 | -36,979.83 | 116,663.30 | 1,270,999.05 |
 
 Tidy earns **27.02%** more crop receipts across the cohort, or **25.07%**
 on the 28 matched seeds where both policies complete ten years. Tidy harvests
-**96.27% Table sacks** overall (minimum per seed 86.65%). Ending statistics
+**96.27% Table tonnes** overall (minimum per seed 86.65%). Ending statistics
 include the two cautious foreclosures and one diversifier foreclosure; naive receipts stop at foreclosure. Every year's
-journal reconciles exactly. The maximum completed-run cash is **7,244.24**.
+journal reconciles exactly. The maximum completed-run cash is **289,769.79**.
 Diversifier enrols on all 30 seeds, builds 28 shops and 27 lodgings, and earns
-mean diversification receipts of **6,960.37**. Seed 25 forecloses in year nine;
+mean diversification receipts of **278,414.93**. Seed 25 forecloses in year nine;
 seed 17, which cautious loses, survives. All **1,045 annual journals** reconcile
-exactly, with **1,352 bot checks** passing. Construction can remain unaffordable
+exactly, with **1,836 bot checks** passing. Construction can remain unaffordable
 on a bad seed; the bot receives no credit or income outside the game rules.
 
-The September 29 Table-price follow-up tested **1.5× at quality 85**, with
+The September 29 Table-price follow-up (before the 40× rescale; amounts in
+this historical paragraph use the original units) tested **1.5× at quality 85**, with
 Feed unchanged at **0.5×** and the tidy crop-sales advantage ceiling raised
 to **40%**. Cautious still completed **28/30** and tidy **30/30**, but tidy's
 mean ending cash reached **14,424.72** (minimum **10,822.40**, maximum
@@ -254,7 +258,7 @@ mean ending cash reached **14,424.72** (minimum **10,822.40**, maximum
 was **53.95%**, also above the new ceiling. Naive median foreclosure slipped
 to year **7**, failing the existing by-year-six check. The experiment was
 rejected: **Table remains 1.2× at quality 80**. The bot retains the new **15–40%**
-advantage range and an explicit **tidy mean cash < 8,000** assertion, alongside
+advantage range and an explicit **tidy mean cash < 320,000** assertion in the scaled units, alongside
 its existing individual cash limits. `TABLE_THRESHOLD` now lives in
 `balance.gd` with the multiplier so both knobs can be tuned in one file.
 
@@ -263,9 +267,9 @@ benefits beginning the following year. Values live in `balance.gd`.
 
 | Business | Build/enrolment | Annual benefit |
 | --- | ---: | --- |
-| Farm shop | 3,000 | 800; Summer loses 30 seconds (120 remain) |
+| Farm shop | 120,000 | 32,000; Summer loses 30 seconds (120 remain) |
 | Contract grower | 0 | Two simultaneous orders; contract quote × 1.2 |
-| Lodging | 2,500 | 600 × completed protection types / 4 |
+| Lodging | 100,000 | 24,000 × completed protection types / 4 |
 
 Lodging counts tank, drainage, windbreak and frost cover once each, ignoring
 levels and sprinklers. Annual shop/lodging income posts before foreclosure;
@@ -284,20 +288,31 @@ Tidy uses the same planting, selling and investment rules, but checks watering
 and pests every second and harvests within one second of ripening. All policies
 clear ice and use actual can/tank reserves. Diversifier keeps cautious crop
 care, then enrols and buys at most one business at Winter second 149 from year
-three, after store sales: shop first, lodging second, retaining 1,000 of credit
+three, after store sales: shop first, lodging second, retaining 40,000 of credit
 above the overdraft boundary. It accepts only matching Golden premium orders
-and reserves promised sacks at harvest. Other policies take no contracts.
+and reserves promised tonnes at harvest. Other policies take no contracts.
 No policy uses kept seed, quests, hired help or free funds.
 
 “Out-earns” means total **crop sales receipts** over the ten-year cohort;
 a percentage of net profit would be undefined or misleading when it is zero
-or negative. The bot also checks majority-Table tidy harvests, the 8,000 per-run cash
-ceiling, tidy mean cash strictly below 8,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes.
+or negative. The bot also checks majority-Table tidy harvests, the 320,000 per-run cash
+ceiling, tidy mean cash strictly below 320,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes.
 It uses ordinary IEEE float transaction order, with no approximate-equality
 allowance. Reports under `artifacts/test-results/tuning_<strategy>.json` include
-each seed's annual opening, closing and category totals. This tests state-level
+each seed's annual opening, closing and category totals. A committed pre-scale
+fixture from `2abebf6` checks every seed's outcome, quantities and cash/sales/
+business receipts against the original values ×40 (absolute float tolerance
+0.00001 only for cross-scale comparisons; annual ledger replay stays exact). This tests state-level
 strategies; it does not model avatar walking time or prove that every possible
-human policy stays below 8,000.
+human policy stays below 320,000.
+
+The debug money cap is **4,000,000**. Monetary displays round to whole
+Spudions with separators; internal transaction precision is unchanged. Cards
+and receipts use **t**, prose uses **tonnes**, and the underlying integer
+quantities stay unchanged (including Icecap's two-tonne yield). Mechanics
+revision **41** safely sets older, unscaled saves aside. The economy suite
+rejects non-rate balance values below one in magnitude, except explicitly
+free contract-grower enrolment, and checks phone/desktop prices and accounts.
 
 
 ## 7. Codex segments

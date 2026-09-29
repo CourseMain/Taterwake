@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Segment 16a
+
+- Applied one 40× money scale in `scripts/balance.gd`, including upgrades, rewards and debug balances. Opening cash is 80,000, annual fixed costs 104,000 and the overdraft 200,000; rates and quantities are unchanged.
+- Changed harvest copy to tonnes (`t` on cards and receipts), with per-tonne prices and grouped integer money on sale and account pages.
+- Added per-seed comparisons with the pre-scale tuning results and a check for sub-unit balance constants. Survival counts remain naive 0/30, cautious 28/30, tidy 30/30 and diversifier 29/30; all cash and receipts scale by forty.
+- Saves use mechanics revision 41; older unit amounts are incompatible and set aside. Published browser files are unchanged.
+
 ## 2.0.0-undeveloped-e
 
 **Game redesign — unfinished source prerelease.** Covers Segments 1–15, including economy tuning and diversification. The live browser game remains v1.0.3.1.

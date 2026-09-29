@@ -4,10 +4,10 @@
 
 Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-e).
 
-The `v2.0.0-undeveloped-e` source prerelease implements redesign Segments 1–15:
+The `v2.0.0-undeveloped-e` source prerelease implements Segments 1–15. The current `redesign` branch also includes Segment 16a’s farm-sized accounts and tonnes:
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
-- Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
+- Farm-sized prices per tonne, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
 - Seasons last 150 seconds, or 120 for Summer with a farm shop. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
 - Five crop cards with water, heat and cold dials; Icecap plants in Autumn and grows through Winter ice.
 - Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
@@ -18,9 +18,9 @@ The `v2.0.0-undeveloped-e` source prerelease implements redesign Segments 1–15
 - A worsening climate curve, seasonal event mixes, foreshadowing, year-start headlines and a ten-year disaster record.
 - Spring blossom, Summer haze and drying grass, Autumn canopies and leaves, with smooth seasonal transitions.
 - Table, Standard and Feed harvest grades; wider crop prices, graded sales and contracts requiring Standard or better.
-- Keep Standard or Table sacks as seed for next Spring; stored sacks lose ten quality and suffer 5% spoilage each Winter.
+- Keep Standard or Table tonnes as seed for next Spring; stored tonnes lose ten quality and suffer 5% spoilage each Winter.
 - Year-three farm shop, contract growing and lodging investments, separate ledger entries and earned run titles.
-- Shared balance constants and 120 seeded strategy runs, with every annual ledger reconciled exactly.
+- Shared balance constants, a uniform 40× money scale, and 120 seeded strategy runs with every annual ledger reconciled exactly.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
 The fifty-year epilogue and remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
