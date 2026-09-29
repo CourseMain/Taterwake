@@ -7,6 +7,7 @@ const PRINT_LIMIT := 96
 const SHARD_LIMIT := 48
 var world
 var snow: Node3D
+var snow_material: ShaderMaterial
 var snow_ground: MeshInstance3D
 var snow_exposed_fraction := 0.0
 var drift_specs: Array[Dictionary] = []
@@ -113,6 +114,11 @@ func _flatten_static(root: Node3D) -> void:
 	for child in root.get_children():
 		if not child is MeshInstance3D: child.free()
 	world._geometry_batcher.batch_siblings(root)
+	if snow_material == null:
+		snow_material = ShaderMaterial.new()
+		snow_material.shader = preload("res://scripts/winter_ground.gdshader")
+		snow_material.set_shader_parameter("ground_surface",false)
+	for mesh: MeshInstance3D in root.get_children(): mesh.material_override=snow_material
 
 func _build_snow() -> void:
 	_clear(snow)
