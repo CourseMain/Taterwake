@@ -2,11 +2,11 @@ extends RefCounted
 ## Shared economy and climate tuning. Regression evidence: tests/test_tuning_bot.gd.
 const MONEY_SCALE: float = 40.0
 const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 6.75 * MONEY_SCALE, "base": 9.0 * MONEY_SCALE, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 3, "grow_seasons": 1, "grow": 75.0, "yield": 3, "color": "a87b45"},
-	"giant": {"name": "Giant Potato", "seed": 9.0 * MONEY_SCALE, "base": 12.0 * MONEY_SCALE, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 2, "grow_seasons": 1, "grow": 135.0, "yield": 5, "color": "c7855d"},
-	"golden": {"name": "Golden Potato", "seed": 12.6 * MONEY_SCALE, "base": 16.8 * MONEY_SCALE, "volatility": "mid", "water_need": 1, "heat_tolerance": 2, "cold_tolerance": 2, "grow_seasons": 1, "grow": 105.0, "yield": 4, "color": "efc74c"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 17.1 * MONEY_SCALE, "base": 22.8 * MONEY_SCALE, "volatility": "high", "water_need": 2, "heat_tolerance": 3, "cold_tolerance": 1, "grow_seasons": 2, "grow": 195.0, "yield": 3, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 30.0 * MONEY_SCALE, "base": 30.0 * MONEY_SCALE, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 225.0, "yield": 2, "color": "aeeaff"},
+	"russet": {"name": "Russet Potato", "seed": 6.75 * MONEY_SCALE, "base": 9.0 * MONEY_SCALE, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 3, "grow_seasons": 1, "grow": 60.0, "yield": 3, "color": "a87b45"},
+	"giant": {"name": "Giant Potato", "seed": 9.0 * MONEY_SCALE, "base": 12.0 * MONEY_SCALE, "volatility": "low", "water_need": 1, "heat_tolerance": 3, "cold_tolerance": 2, "grow_seasons": 1, "grow": 110.0, "yield": 5, "color": "c7855d"},
+	"golden": {"name": "Golden Potato", "seed": 12.6 * MONEY_SCALE, "base": 16.8 * MONEY_SCALE, "volatility": "mid", "water_need": 1, "heat_tolerance": 2, "cold_tolerance": 2, "grow_seasons": 1, "grow": 90.0, "yield": 4, "color": "efc74c"},
+	"sunburst": {"name": "Sunburst Potato", "seed": 17.1 * MONEY_SCALE, "base": 22.8 * MONEY_SCALE, "volatility": "high", "water_need": 2, "heat_tolerance": 3, "cold_tolerance": 1, "grow_seasons": 2, "grow": 160.0, "yield": 3, "color": "ffab42"},
+	"icecap": {"name": "Icecap Potato", "seed": 30.0 * MONEY_SCALE, "base": 30.0 * MONEY_SCALE, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 200.0, "yield": 2, "color": "aeeaff"},
 }
 const VOLATILITY: Dictionary = {
 	"low": {"drift": 0.05, "storage_peak_factor": 1.2},
@@ -43,6 +43,8 @@ const CLIMATE_SIGNAL_CHANCE: float = 0.7
 const CLIMATE_FALSE_ALARM_CHANCE: float = 0.1
 const CLIMATE_ANNUAL_CAP: int = 3
 const CLIMATE_WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
+const PEST_CHANCE: float = 0.16
+const FIELD_RENTS := {"low": 1100.0 * MONEY_SCALE, "hill": 225.0 * MONEY_SCALE}
 const FIELD_EXPANSION_COST: float = 1200.0 * MONEY_SCALE
 const CONTRACT_QUANTITY: int = 20
 const CONTRACT_PRICE_FACTOR: float = 1.1

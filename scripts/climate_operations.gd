@@ -13,7 +13,7 @@ static func capacity(farm) -> float:
 	return 36.0 + 36.0 * int(farm.climate.data.projects.get("rainwater", 0))
 
 static func zone(index: int) -> int:
-	return mini(2, (index / 6) * 3 / 4)
+	return mini(2, ((index % 24) / 6) * 3 / 4)
 
 static func scarce(farm) -> bool:
 	return (not farm.tutorial_active or farm.guided_first_year()) and farm.climate.data.phase == "active"
@@ -97,6 +97,7 @@ static func target(farm, index: int, action: String) -> String:
 	if farm.climate.Lesson.active(farm):
 		if action == "water" and farm.climate.data.lesson.stage == "area": return farm.climate.Lesson.area(farm, index)
 		return farm._finish("Water the glowing practice bed first [3].")
+	if not farm.plots[index].unlocked: return farm._finish("Choose open beds on the farm.")
 	if farm.run_over:
 		return farm._finish("These controls are for the affected farm.")
 	var supply: Dictionary = local(farm)
@@ -176,14 +177,17 @@ static func _tick(farm, dt: float) -> void:
 	if event == "storm":
 		op.strike_in -= dt
 		if int(op.strike_row) < 0 and float(op.strike_in) <= 2.5:
-			op.strike_row = farm.rng.randi_range(0, 3)
+			var rows: Array[int] = []
+			for row in range(12):
+				if field[row * 6].unlocked: rows.append(row)
+			op.strike_row = rows[farm.rng.randi_range(0, rows.size() - 1)]
 		if float(op.strike_in) <= 0.0:
 			var columns: int = 6
 			for index in range(int(op.strike_row) * columns, (int(op.strike_row) + 1) * columns):
 				if int(field[index].stage) == 0: continue
 				farm.Quality.deduct(farm, index, "storm", 25, true)
 				# Storm losses use the same protection formula for wind and strikes.
-				op.stress[str(index)] = minf(1.0, float(op.stress.get(str(index), 0.0)) + 0.85 * strength)
+				op.stress[str(index)] = minf(1.0, float(op.stress.get(str(index), 0.0)) + 0.85 * strength * farm.Land.exposure(farm.Land.id(index), event))
 				op.scars[str(index)] = true
 			op.flash = 0.75
 			op.strike_in = 7.5
@@ -205,7 +209,7 @@ static func _tick(farm, dt: float) -> void:
 		if not field[index].watered: stress += dt * 0.0025 * water_need
 		var wet: float = maxf(0.0, float(op.wet.get(key, 0.0)))
 		op.wet[key] = wet
-		var exposure: float = 0.75 + float((index * 7) % 11) / 20.0
+		var exposure: float = (0.75 + float(((index % 24) * 7) % 11) / 20.0) * farm.Land.exposure(farm.Land.id(index), event)
 		if event == "drought":
 			if wet <= 0.0: stress += dt * 0.052 * strength * exposure * (0.5 + 0.5 * water_need) * CropTable.heat_factor(crop)
 		elif event == "freeze":
@@ -215,7 +219,7 @@ static func _tick(farm, dt: float) -> void:
 			if supply.gates and int(projects.get("drainage", 0)) > 0:
 				stress = maxf(0.0, stress - dt * 0.075 * int(projects.drainage))
 		elif event == "storm":
-			stress += dt * 0.009 * strength
+			stress += dt * 0.009 * strength * farm.Land.exposure(farm.Land.id(index), event)
 		op.stress[key] = minf(1.0, stress)
 		if stress >= 1.0:
 			c.Protection.damage(farm, index, event)
@@ -237,9 +241,9 @@ static func valid(raw: Variant) -> bool:
 	for key in ["gates"]:
 		if not s.get(key) is bool: return false
 	if raw.has("ice"):
-		if not raw.ice is Dictionary or raw.ice.size() > 24: return false
+		if not raw.ice is Dictionary or raw.ice.size() > 72: return false
 		for index in raw.ice:
-			if not str(index).is_valid_int() or int(index) < 0 or int(index) >= 24 or raw.ice[index] != true: return false
+			if not str(index).is_valid_int() or int(index) < 0 or int(index) >= 72 or raw.ice[index] != true: return false
 	if not raw.get("loss_groups") is Dictionary or raw.loss_groups.size() > 120: return false
 	for key in raw.loss_groups:
 		var group: Variant = raw.loss_groups[key]
@@ -248,11 +252,11 @@ static func valid(raw: Variant) -> bool:
 		if not _number(group.get("card"), -1, 99999) or float(group.card) != floorf(float(group.card)): return false
 	for key in ["tick", "strike_in", "flash", "pulse"]:
 		if not _number(raw.get(key), 0.0, 0.25 if key == "tick" else 8.0): return false
-	if not _number(raw.get("strike_row"), -1, 3) or float(raw.strike_row) != floor(float(raw.strike_row)): return false
+	if not _number(raw.get("strike_row"), -1, 11) or float(raw.strike_row) != floor(float(raw.strike_row)): return false
 	for key in ["stress", "wet", "scars", "rescued", "damaged"]:
-		if not raw.get(key) is Dictionary or raw[key].size() > 24: return false
+		if not raw.get(key) is Dictionary or raw[key].size() > 72: return false
 		for index in raw[key]:
-			if not str(index).is_valid_int() or int(index) < 0 or int(index) >= 24: return false
+			if not str(index).is_valid_int() or int(index) < 0 or int(index) >= 72: return false
 			if key in ["scars", "rescued", "damaged"]:
 				if not raw[key][index] is bool: return false
 			elif not _number(raw[key][index], 0, 6.0 if key == "wet" else 1.0): return false

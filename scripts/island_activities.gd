@@ -237,7 +237,7 @@ func valid_data(data: Variant) -> bool:
 	for duck in data.duck_patrols:
 		if not duck is Dictionary: return false
 		for key in ["from", "target"]:
-			if not _number(duck.get(key), 0, 23, true): return false
+			if not _number(duck.get(key), 0, 71, true): return false
 		if not _number(duck.get("elapsed"), 0, DUCK_INTERVALS[int(data.patrol_speed)]) or not _number(duck.get("peck"), 0, 0.65) or not _number(duck.get("clears"), 0, 100000, true): return false
 		if targets.size() < int(data.owned_ducks) and targets.has(int(duck.target)): return false
 		targets.append(int(duck.target))

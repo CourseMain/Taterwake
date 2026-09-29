@@ -24,7 +24,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 41
+const MECHANICS_REVISION: int = 42
 const FIELD_EXPANSION_COST: float = Balance.FIELD_EXPANSION_COST
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -78,7 +78,6 @@ var storage: Dictionary = Stock.empty()
 var capacity: int = 200
 var tools: Dictionary = {"hoe": 0, "water": 0, "harvest": 0}
 var plots: Array[Dictionary] = []
-var pest_timer: float = 60.0
 # Older farms retain access to occupied beds beyond the new starting boundary.
 var lifetime_sales: float = 0.0
 var quest_progress: Dictionary = {"starter_crash": 0, "starter_spike": 0, "starter_combo": 0}
@@ -87,6 +86,8 @@ var market: Dictionary = {}
 var news: String = "Harvest your Russets. Catch a good price. Sell with F!"
 var elapsed: float = 0.0
 var debug_money_modified: bool = false
+const Land = preload("res://scripts/farm_land.gd")
+var land: Dictionary = Land.fresh()
 var expansion: int = 0
 var barn_level: int = 0
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -95,16 +96,15 @@ var _relief_clock: float = 0.0
 
 func _init() -> void:
 	rng.randomize()
-	pest_timer = rng.randf_range(25.0, 100.0)
 	_build_starters()
 
 
 func _build_starters() -> void:
 	seed_inventory.russet = 12
 	plots = []
-	for index in range(24):
+	for index in range(72):
 		var stage: int = 3 if index < 2 else (2 if index < 4 else 0)
-		plots.append({"unlocked": index < 12, "winter_ice": false, "stage": stage, "watered": stage > 0,
+		plots.append({"field": Land.id(index), "bed": index % 24, "pest_checked": false, "unlocked": index < 12, "winter_ice": false, "stage": stage, "watered": stage > 0,
 			"elapsed": float(CropTable.CROPS.russet.grow) if stage == 3 else (float(CropTable.CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
 			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0, "weather_lost": 0, "quality": 100, "quality_ripe_age": 0.0, "quality_losses": {}, "quality_time": {}, "quality_hits": []})
 	market.clear()
@@ -330,9 +330,9 @@ func update(delta: float) -> void:
 		for plot in plots:
 			if bool(plot.get("pests", false)) and int(plot["stage"]) > 0:
 				step = minf(step, PEST_TICK_SECONDS - float(plot.get("pest_elapsed", 0.0)))
-			if int(plot["stage"]) == 3 and not bool(plot.get("pests", false)):
+			if int(plot.stage) in [1, 2] and not plot.pest_checked:
 				_schedule_pest(plot)
-				var until_pest: float = maxf(40.0 - float(plot.get("plant_age", 0.0)), float(plot.pest_delay) - float(plot.ripe_age))
+				var until_pest: float = float(plot.pest_delay) - float(plot.plant_age)
 				if until_pest > 0.000001: step = minf(step, until_pest)
 		step = maxf(0.000001, step)
 		remaining -= step
@@ -344,6 +344,7 @@ func update(delta: float) -> void:
 		var farm_growth: float = _growth_speed()
 		for plot_index in range(plots.size()):
 			var plot: Dictionary = plots[plot_index]
+			if int(plot.stage) == 0: continue
 			var was_ripe: bool = int(plot.stage) == 3
 			Quality.update(self, plot_index, step)
 			if (season_clock.season == 3 and plot.crop != "icecap") or ClimateSystem.Operations.crop_frozen(self, plot_index): continue
@@ -359,15 +360,18 @@ func update(delta: float) -> void:
 				if float(plot["elapsed"]) >= float(CropTable.CROPS[plot["crop"]]["grow"]):
 					plot["stage"] = 3
 					dirty = true
-			if int(plot["stage"]) == 3:
-				_schedule_pest(plot)
-				if not was_ripe: Quality.ripe(self, plot_index, ripe_step)
-				plot["ripe_age"] = minf(1000000000.0, float(plot.get("ripe_age", 0.0)) + ripe_step)
-				if float(plot["ripe_age"]) >= float(plot.pest_delay) - 0.000001 and float(plot.plant_age) >= 40.0 - 0.000001 and not bool(plot.get("pests", false)) and not tutorial_active and farm_help.can_infest():
-					plot["pests"] = true
-					plot["pest_elapsed"] = 0.0
+			if int(plot.stage) in [1, 2] and not plot.pest_checked and float(plot.plant_age) >= float(plot.pest_delay) - 0.000001:
+				plot.pest_checked = true
+				var chance: float = Balance.PEST_CHANCE * (1.5 if season_clock.season == 1 else (0.0 if season_clock.season == 3 else 1.0))
+				var roll: float = rng.randf()
+				if float(plot.plant_age) <= float(CropTable.CROPS[plot.crop].grow) * 0.6 + 0.000001 and roll < chance and not tutorial_active and farm_help.can_infest():
+					plot.pests = true
+					plot.pest_elapsed = 0.0
 					ripe_infestation = true
-					dirty = true
+			if int(plot.stage) == 3:
+				plot.pest_checked = true
+				if not was_ripe: Quality.ripe(self, plot_index, ripe_step)
+				plot.ripe_age = minf(1e9, float(plot.ripe_age) + ripe_step)
 			if was_infested and int(plot["stage"]) > 0:
 				plot["pest_elapsed"] = float(plot.get("pest_elapsed", 0.0)) + step
 				if float(plot["pest_elapsed"]) >= PEST_TICK_SECONDS - 0.000001:
@@ -377,7 +381,7 @@ func update(delta: float) -> void:
 		if is_instance_valid(activity_system) and activity_system.has_method("update"):
 			dirty = bool(activity_system.update(step)) or dirty
 		if ripe_infestation and int(farm_help.data.pest_phase) != 1:
-			notified.emit("An unattended ripe bed attracted pests! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
+			notified.emit("Pests have reached a growing bed! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
 		# Advance weather and its physical effects.
 		if climate.update(self, step):
 			_refresh_market()
@@ -416,7 +420,7 @@ func _season_boundary() -> void:
 			if plot.crop != "icecap" or int(plot.stage) == 0:
 				if int(plot.stage) > 0:
 					season_clock.autumn_loss += 1
-					ClimateSystem.Protection.record(self, "autumn_cold", plot.crop, ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Harvest before Winter; covers protect Spring freeze only", "field", 2)
+					ClimateSystem.Protection.record(self, "autumn_cold", plot.crop, ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Harvest before Winter; covers protect Spring freeze only", "field", 2, -1, str(plot.field))
 				_clear_crop(plot)
 				plot.tilled = false
 			plot.winter_ice = true
@@ -425,6 +429,7 @@ func _season_boundary() -> void:
 		trading.begin_winter(self)
 		ClimateSystem.Protection.winter(self)
 		diversification.winter(self)
+		Land.renew(self)
 		ledger.post_fixed_costs(season_clock.year)
 		if coins < OVERDRAFT_LIMIT and not caretaker_mode: _end_run("foreclosed")
 		news = winter_notice()
@@ -458,7 +463,7 @@ func _pest_damage_tick(plot: Dictionary, index: int = -1) -> void:
 	# the remaining pile. Previously collected potatoes cannot be collected again.
 	if int(plot.get("yield_total", 0)) > 0:
 		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot.get("yield_taken", 0)) - int(plot.get("weather_lost", 0)))
-	ClimateSystem.Protection.record(self, "pests", crop_before, sacks_before - ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Spray pests before they eat the crop", "field")
+	ClimateSystem.Protection.record(self, "pests", crop_before, sacks_before - ClimateSystem.Protection.remaining(plot), 0.0, 1.0, "Spray pests before they eat the crop", "field", -1, -1, str(plot.field))
 	if int(plot["pest_ticks"]) >= 3 or (int(plot.get("yield_total", 0)) > 0 and int(plot["pending"]) == 0):
 		_clear_crop(plot, true)
 
@@ -473,6 +478,7 @@ func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
 	plot["ripe_age"] = 0.0
 	plot["plant_age"] = 0.0
 	plot["pest_delay"] = 0.0
+	plot["pest_checked"] = false
 	plot["pest_elapsed"] = 0.0
 	plot["pest_destroyed"] = destroyed
 	plot["yield_total"] = 0
@@ -485,12 +491,7 @@ func _clear_crop(plot: Dictionary, destroyed: bool = false) -> void:
 
 func _schedule_pest(plot: Dictionary) -> void:
 	if float(plot.get("pest_delay", 0)) <= 0:
-		plot["pest_delay"] = rng.randf_range(15.0, 90.0)
-
-func _infest_random_plots() -> int:
-	# Retained for callers that request a pest check. No farm-wide wave.
-	return 0
-
+		plot["pest_delay"] = rng.randf_range(0.25, 0.6) * float(CropTable.CROPS[plot.crop].grow)
 
 func affected_tiles(index: int, tool: String) -> Array[int]:
 	var result: Array[int] = []
@@ -503,7 +504,8 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 		return result
 	var rank: int = int(tools["hoe"] if action == "pest" else tools[action])
 	var columns: int = field_columns()
-	var row: int = int(index / columns)
+	var field_start: int = (index / 24) * 24
+	var row: int = int((index % 24) / columns)
 	var column: int = index % columns
 	var row_radius: int = 0
 	var column_radius: int = 0
@@ -521,7 +523,7 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 		row_radius = 2 if rank >= 3 else (1 if rank == 2 else 0)
 	for target_row in range(maxi(0, row - row_radius), mini(field_rows(), row + row_radius + 1)):
 		for target_column in range(maxi(0, column - column_radius), mini(columns, column + column_radius + 1)):
-			var target: int = target_row * columns + target_column
+			var target: int = field_start + target_row * columns + target_column
 			if plots[target]["unlocked"]:
 				result.append(target)
 	return result
@@ -536,7 +538,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if index < 0 or index >= plots.size():
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
-		return _finish("Unlock more beds at Tools · \uE000 1,200")
+		return _finish(Land.NAMES[Land.id(index)] + " · Rent or open more beds at the Winter accounts. Expansion: " + money(FIELD_EXPANSION_COST))
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
@@ -637,7 +639,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 	var id: String = str(plot["crop"])
 	var first_cut: bool = int(plot.get("yield_total", 0)) == 0 and int(plot["pending"]) == 0
 	if first_cut:
-		plot["yield_total"] = int(CropTable.CROPS[id]["yield"])
+		plot["yield_total"] = Land.yield_for(plot)
 		plot["yield_taken"] = 0
 		plot["pending"] = ClimateSystem.Protection.remaining(plot)
 		_progress_quest("starter_combo", 1.0)
@@ -651,6 +653,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 	plot["pending"] = int(plot["pending"]) - quantity
 	if int(plot["pending"]) == 0:
 		_clear_crop(plot)
+		plot.tilled = false
 	return quantity
 
 
@@ -765,28 +768,27 @@ func upgrade_barn() -> String:
 	return _complete_purchase({"kind": "barn", "id": "barn", "name": "Barn space", "quantity": capacity - old_capacity, "cost": cost, "total": capacity, "level": barn_level}, "Barn expanded to %s tonnes. More room for your harvest." % format_number(capacity))
 
 
-func field_expansion_info() -> Dictionary:
+func field_expansion_info(field: String = "home") -> Dictionary:
 	var opened: int = 0
 	for plot in plots:
-		if plot.unlocked: opened += 1
-	return {"opened": opened, "total": plots.size(),
-		"remaining": plots.size() - opened, "cost": float(FIELD_EXPANSION_COST),
-		"complete": opened == plots.size()}
+		if plot.field == field and plot.unlocked: opened += 1
+	return {"opened": opened, "total": 24, "remaining": 24 - opened, "cost": FIELD_EXPANSION_COST, "complete": opened == 24}
 
+func rent_field(field: String, enabled: bool = true) -> String:
+	return Land.rent(self, field, enabled)
 
-func expand_field() -> String:
-	if run_over:
-		return "Run over. Start a new farm."
-	var info: Dictionary = field_expansion_info()
-	if info.complete:
-		return _reject_purchase("All %d beds are already open." % int(info.total))
-	if not can_purchase(float(info.cost)):
-		return _reject_purchase(purchase_refusal(float(info.cost)))
-	post_money("rent", "Field expansion", -float(info.cost))
-	expansion = 1
-	for plot in plots:
-		plot["unlocked"] = true
-	return _complete_purchase({"kind": "field", "id": "expansion", "name": "Garden beds", "quantity": int(info.remaining), "cost": float(info.cost), "total": int(info.total)}, "%d more beds open." % int(info.remaining))
+func expand_field(field: String = "home") -> String:
+	if run_over: return "Run over. Start a new farm."
+	if field not in Land.IDS or not Land.active(self, field): return _reject_purchase("Rent this field at the Winter accounts first.")
+	var info: Dictionary = field_expansion_info(field)
+	if info.complete: return _reject_purchase("All 24 beds are already open.")
+	if not can_purchase(float(info.cost)): return _reject_purchase(purchase_refusal(float(info.cost)))
+	post_money("rent", "Field expansion" if field == "home" else Land.NAMES[field] + " expansion", -float(info.cost))
+	if field == "home": expansion = 1
+	else: land[field].expansion = 1
+	Land.sync(self)
+	return _complete_purchase({"kind": "field", "id": "expansion", "name": Land.NAMES[field], "quantity": int(info.remaining), "cost": float(info.cost), "total": 24}, "%d more beds open." % int(info.remaining))
+
 
 
 func seasonal_price_factor(id: String = "russet") -> float:
@@ -882,7 +884,6 @@ func reset_game() -> void:
 	farm_help.data = FarmHelp.fresh()
 	if is_instance_valid(activity_system) and activity_system.has_method("reset"):
 		activity_system.reset()
-	pest_timer = rng.randf_range(25.0, 100.0)
 	lifetime_sales = 0.0
 	quest_progress = {"starter_crash": 0, "starter_spike": 0, "starter_combo": 0}
 	quest_claimed.clear()
@@ -897,6 +898,7 @@ func reset_game() -> void:
 	elapsed = 0.0
 	debug_money_modified = false
 	expansion = 0
+	land = Land.fresh()
 	barn_level = 0
 	_relief_clock = 0.0
 	_build_starters()
@@ -908,11 +910,11 @@ func _save_data() -> Dictionary:
 		"diversification": diversification.save_data(), "trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
-		"pest_timer": pest_timer, "selected_crop": selected_crop,
+		"selected_crop": selected_crop,
 		"seed_inventory": seed_inventory.duplicate(), "storage": storage.duplicate(true), "capacity": capacity, "tools": tools.duplicate(),
 		"plots": plots.duplicate(true), "quest_progress": quest_progress.duplicate(), "quest_claimed": quest_claimed.duplicate(),
 		"news": news, "elapsed": elapsed, "debug_money_modified": debug_money_modified,
-		"expansion": expansion, "barn_level": barn_level, "relief_clock": _relief_clock,
+		"land": land.duplicate(true), "expansion": expansion, "barn_level": barn_level, "relief_clock": _relief_clock,
 		"rng_seed": str(rng.seed), "rng_state": str(rng.state)}
 	if is_instance_valid(activity_system): data.activities = activity_system.save_data()
 	return data
@@ -938,6 +940,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	return true
 
 func restore_snapshot(data: Dictionary) -> void:
+	land = data.land.duplicate(true)
 	# Caller supplies either a validated save or a trusted in-memory snapshot.
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
@@ -954,7 +957,7 @@ func restore_snapshot(data: Dictionary) -> void:
 	for person in npc_history: npc_history[person].visits = int(npc_history[person].visits)
 	for key in ["version", "step", "plot"]: tutorial_progress[key] = int(tutorial_progress[key])
 	farm_help.data = data.farm_help.duplicate(true)
-	for key in ["elapsed", "lifetime_sales", "pest_timer"]: set(key, float(data[key]))
+	for key in ["elapsed", "lifetime_sales"]: set(key, float(data[key]))
 	for key in ["capacity", "expansion", "barn_level", "harvested_total"]: set(key, int(data[key]))
 	for key in ["selected_crop", "news"]: set(key, str(data[key]))
 	for key in ["seed_inventory", "storage", "tools", "quest_progress"]: set(key, data[key].duplicate(true))
@@ -1039,7 +1042,7 @@ func _valid_save(raw: Variant) -> bool:
 	for record in data.climate.outlook.records:
 		if int(record.year) > int(data.season_clock.year) or (int(record.year) == int(data.season_clock.year) and int(record.season) > int(data.season_clock.season)): return false
 	if not data.get("run_over") is bool or not data.get("debug_money_modified") is bool: return false
-	var ranges: Dictionary = {"elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "pest_timer": [0.000001, 100, false], "relief_clock": [0, 15, false]}
+	var ranges: Dictionary = {"elapsed": [0, 1e15, false], "capacity": [200, MAX_INVENTORY, true], "barn_level": [0, 3, true], "expansion": [0, 1, true], "harvested_total": [0, MAX_INVENTORY, true], "lifetime_sales": [0, MAX_MONEY, false], "relief_clock": [0, 15, false]}
 	for key in ranges:
 		if not _number(data.get(key), ranges[key][0], ranges[key][1], ranges[key][2]): return false
 	if data.has("coins") or not Ledger.valid(data.get("ledger"), int(data.season_clock.year), int(data.season_clock.season)): return false
@@ -1099,7 +1102,8 @@ func _valid_save(raw: Variant) -> bool:
 
 
 func _valid_plots(raw: Variant, data: Dictionary) -> bool:
-	var expected_size: int = 24
+	if not Land.valid(data.get("land"), data): return false
+	var expected_size: int = 72
 	if not raw is Array or raw.size() != expected_size:
 		return false
 	for index in range(expected_size):
@@ -1119,11 +1123,13 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 			return false
 		if not plot.has("pending") or not _number(plot["pending"], 0.0, 100000.0, true):
 			return false
-		var expected_unlocked: bool = index < 12 or int(data["expansion"]) == 1
+		var field: String = Land.id(index)
+		if plot.get("field") != field or plot.get("bed") != index % 24 or not plot.get("pest_checked") is bool: return false
+		var expected_unlocked: bool = (index < 12 or int(data.expansion) == 1) if field == "home" else (bool(data.land[field].rented) and (index % 24 < 12 or int(data.land[field].expansion) == 1))
 		if bool(plot["unlocked"]) != expected_unlocked:
 			return false
-		if not _number(plot.get("plant_age"), 0, 1e9) or not _number(plot.get("pest_delay"), 0, 90): return false
-		if float(plot.pest_delay) != 0 and float(plot.pest_delay) < 15: return false
+		if not _number(plot.get("plant_age"), 0, 1e9) or not _number(plot.get("pest_delay"), 0, saved_grow * 0.6): return false
+		if float(plot.pest_delay) != 0 and float(plot.pest_delay) < saved_grow * 0.25: return false
 		var stage: int = int(plot["stage"])
 		if not plot.has("pests") or not plot["pests"] is bool or not plot.has("pest_damage") or not _number(plot["pest_damage"], 0.0, 1.0) or not plot.has("ripe_age") or not _number(plot["ripe_age"], 0.0, 1000000000.0):
 			return false
@@ -1144,7 +1150,7 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 			return false
 		if int(plot["yield_taken"]) > int(plot["yield_total"]) or int(plot["pending"]) > maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot["pest_ticks"])) / 3.0)) - int(plot["yield_taken"]) - int(plot["weather_lost"])):
 			return false
-		if int(plot.weather_lost) > int(CropTable.CROPS[plot.crop].yield) or (stage == 0 and int(plot.weather_lost) > 0): return false
+		if int(plot.weather_lost) > Land.yield_for(plot) or (stage == 0 and int(plot.weather_lost) > 0): return false
 		if stage != 3 and (int(plot["yield_total"]) > 0 or int(plot["yield_taken"]) > 0):
 			return false
 		if not plot["unlocked"] and (stage > 0 or plot["tilled"]):

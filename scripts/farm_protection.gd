@@ -1,4 +1,5 @@
 extends RefCounted
+const Land = preload("res://scripts/farm_land.gd")
 const Balance = preload("res://scripts/balance.gd")
 ## Winter construction and a journal of physical crop losses.
 const Table = preload("res://scripts/crop_table.gd")
@@ -23,12 +24,12 @@ static func level(farm, event: String, index: int) -> int:
 		return int(cover.get("level", 0)) if farm.season_clock.season == 0 and int(cover.get("year", 0)) == farm.season_clock.year else 0
 	return int(farm.climate.data.projects.get(id, 0))
 
-static func loss(quantity: int, reduction: float) -> int:
-	return clampi(roundi(quantity * (1.0 - reduction)), 0, quantity)
+static func loss(quantity: int, reduction: float, exposure: float = 1.0) -> int:
+	return clampi(roundi(quantity * (1.0 - reduction) * exposure), 0, quantity)
 
 static func remaining(plot: Dictionary) -> int:
 	if int(plot.stage) == 0: return 0
-	var total: int = int(plot.yield_total) if int(plot.yield_total) > 0 else int(Table.CROPS[plot.crop].yield)
+	var total: int = int(plot.yield_total) if int(plot.yield_total) > 0 else Land.yield_for(plot)
 	return maxi(0, floori(total * (3 - int(plot.pest_ticks)) / 3.0) - int(plot.yield_taken) - int(plot.get("weather_lost", 0)))
 
 static func damage(farm, index: int, event: String, exposed_limit: int = -1) -> void:
@@ -44,17 +45,19 @@ static func damage(farm, index: int, event: String, exposed_limit: int = -1) -> 
 	if id == "frost" and farm.season_clock.season != 0:
 		missing = "Covers protect Spring only; clear ice with Hoe"
 		alternative = 1.0
+	var field: String = Land.id(index)
+	var exposure: float = Land.exposure(field, event)
 	var exposed: int = quantity
 	var previous: int = 0
 	var card: int = -1
-	var group_key: String = "%d/%d/%s/%s/%d/%s" % [farm.season_clock.year, farm.season_clock.season, event, plot.crop, rank, str(insured(farm))]
+	var group_key: String = "%d/%d/%s/%s/%d/%s/%s" % [farm.season_clock.year, farm.season_clock.season, event, plot.crop, rank, str(insured(farm)), field]
 	var groups: Dictionary = farm.climate.data.operations.loss_groups
 	if not event.is_empty() and groups.has(group_key):
 		exposed += int(groups[group_key].exposed)
-		previous = loss(int(groups[group_key].exposed), REDUCTION[rank])
+		previous = loss(int(groups[group_key].exposed), REDUCTION[rank], exposure)
 		card = int(groups[group_key].card)
-	var lost: int = loss(exposed, REDUCTION[rank]) - previous
-	card = record(farm, event if not event.is_empty() else "dry_bed", str(plot.crop), exposed, REDUCTION[rank], alternative, missing, "field", -1, card)
+	var lost: int = loss(exposed, REDUCTION[rank], exposure) - previous
+	card = record(farm, event if not event.is_empty() else "dry_bed", str(plot.crop), exposed, REDUCTION[rank], alternative, missing, "field", -1, card, field)
 	if not event.is_empty(): groups[group_key] = {"exposed": exposed, "card": card}
 	if lost == 0: return
 	plot.weather_lost = int(plot.get("weather_lost", 0)) + lost
@@ -68,14 +71,15 @@ static func damage(farm, index: int, event: String, exposed_limit: int = -1) -> 
 			farm.climate.data.last.field_total = maxi(int(farm.climate.data.last.field_total), int(farm.climate.data.last.field_lost))
 			if not farm.climate.data.history.is_empty(): farm.climate.data.history[-1] = farm.climate.data.last.duplicate(true)
 
-static func record(farm, event: String, crop: String, exposed: int, reduction: float, alternative: float, missing: String, source: String, season: int = -1, card: int = -1) -> int:
-	var lost: int = loss(exposed, reduction)
+static func record(farm, event: String, crop: String, exposed: int, reduction: float, alternative: float, missing: String, source: String, season: int = -1, card: int = -1, field: String = "home") -> int:
+	var exposure: float = Land.exposure(field, event) if source == "field" else 1.0
+	var lost: int = loss(exposed, reduction, exposure)
 	if lost <= 0: return -1
 	var data: Dictionary = farm.climate.data.protection
 	var entry: Dictionary = {"year": farm.season_clock.year, "season": farm.season_clock.season if season < 0 else season,
 		"event": event, "crop": crop, "sacks": lost, "exposed": exposed, "reduction": reduction, "alternative": alternative,
-		"saved": lost - loss(exposed, alternative), "missing": missing, "source": source,
-		"insured": insured(farm) and event != "spoilage" and (source == "field" or event in farm.ClimateSystem.WINTER_LOSS)}
+		"field": field if source == "field" else "barn", "saved": lost - loss(exposed, alternative, exposure), "missing": missing, "source": source,
+		"insured": insured(farm) and event not in ["spoilage", "lease_ended"] and (source == "field" or event in farm.ClimateSystem.WINTER_LOSS)}
 	var previous: int = int(data.losses[card].sacks) if card >= 0 else 0
 	if card >= 0: data.losses[card] = entry
 	else:
@@ -90,13 +94,13 @@ static func record(farm, event: String, crop: String, exposed: int, reduction: f
 	return card
 
 static func text(entry: Dictionary) -> String:
-	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter"}.get(entry.event, "")
+	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter", "lease_ended":"Harvesting before returning the field"}.get(entry.event, "")
 	if entry.event in ["deep_freeze", "blizzard"]: prevention = "Selling before impact" if entry.source == "barn" else "Harvesting before impact"
 	if entry.source == "field" and PROJECT_FOR.has(entry.event):
 		prevention = "Clearing ice in time" if float(entry.alternative) == 1.0 else "%s level %d" % [NAMES[PROJECT_FOR[entry.event]], 1 if float(entry.alternative) == 0.5 else 2]
 	var counterfactual: String = "%s would have saved %d t." % [prevention, entry.saved]
 	if float(entry.alternative) == float(entry.reduction): counterfactual = "Maximum project protection; no further project saving."
-	return "Year %d · %s · %s · %s: %d t lost. %s. %s" % [entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual]
+	return "%s · Year %d · %s · %s · %s: %d t lost. %s. %s" % [Land.NAMES.get(entry.get("field", "home"), "Barn"), entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual]
 
 static func work(farm, id: String) -> String:
 	var p: Dictionary = farm.climate.data.protection
@@ -204,7 +208,7 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 			if entry.category == "protection" and entry.label == NAMES[id] and float(entry.amount) == -COSTS[id] * (int(saved.climate.projects.get(id, 0)) + 1) and int(entry.season) == 3: paid += 1
 		if paid != 1: return false
 	for key in raw.covers:
-		if not str(key).is_valid_int() or str(int(key)) != key or int(key) < 0 or int(key) >= 24 or not saved.plots[int(key)].unlocked: return false
+		if not str(key).is_valid_int() or str(int(key)) != key or int(key) < 0 or int(key) >= 72 or not saved.plots[int(key)].unlocked: return false
 		var cover: Variant = raw.covers[key]
 		if not cover is Dictionary or cover.size() != 2 or not Rules.number(cover.get("year"), 1, 11, true) or not Rules.number(cover.get("level"), 1, int(saved.climate.projects.get("frost", 0)), true): return false
 		if int(cover.year) != int(saved.season_clock.year) + (1 if int(saved.season_clock.season) == 3 else 0) or int(saved.season_clock.season) in [1, 2]: return false
@@ -215,19 +219,21 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 		seen.append(int(year))
 		if not _posting(saved, int(year), 0, "insurance", "Annual crop insurance", -PREMIUM): return false
 	for e in raw.losses:
-		if not e is Dictionary or e.size() != 12: return false
+		if not e is Dictionary or e.size() != 13: return false
 		if not Rules.number(e.get("year"), 1, int(saved.season_clock.year), true) or not Rules.number(e.get("season"), 0, 3, true): return false
 		if int(e.year) == int(saved.season_clock.year) and int(e.season) > int(saved.season_clock.season): return false
-		if e.get("event") not in ["drought", "flood", "storm", "freeze", "dry_bed", "pests", "autumn_cold", "spoilage", "deep_freeze", "blizzard"] or e.get("crop") not in Table.IDS or e.get("source") not in ["field", "barn"]: return false
+		if e.get("event") not in ["drought", "flood", "storm", "freeze", "dry_bed", "pests", "autumn_cold", "lease_ended", "spoilage", "deep_freeze", "blizzard"] or e.get("crop") not in Table.IDS or e.get("source") not in ["field", "barn"]: return false
 		if e.source == "barn" and e.event not in ["spoilage", "deep_freeze", "blizzard"]: return false
 		if e.event in ["deep_freeze", "blizzard"] and int(e.season) != 3: return false
 		if e.event == "spoilage" and e.source != "barn": return false
+		if e.get("field") not in (Land.IDS if e.source == "field" else ["barn"]): return false
 		if not e.get("missing") is String or e.missing.length() > 160 or not e.get("insured") is bool: return false
 		for key in ["exposed", "sacks", "saved"]:
 			if not Rules.number(e.get(key), 0, 100000, true): return false
 		if e.get("reduction") not in REDUCTION or e.get("alternative") not in [0.0, 0.5, 0.75, 1.0] or float(e.alternative) < float(e.reduction): return false
-		if int(e.sacks) <= 0 or int(e.sacks) != loss(int(e.exposed), float(e.reduction)) or int(e.saved) != int(e.sacks) - loss(int(e.exposed), float(e.alternative)): return false
-		if e.insured and (int(e.year) not in seen or e.event == "spoilage"): return false
+		var exposure: float = Land.exposure(str(e.field), str(e.event)) if e.source == "field" else 1.0
+		if int(e.sacks) <= 0 or int(e.sacks) != loss(int(e.exposed), float(e.reduction), exposure) or int(e.saved) != int(e.sacks) - loss(int(e.exposed), float(e.alternative), exposure): return false
+		if e.insured and (int(e.year) not in seen or e.event in ["spoilage", "lease_ended"]): return false
 	for group in saved.climate.operations.loss_groups.values():
 		if int(group.card) >= raw.losses.size(): return false
 		if int(group.card) >= 0:

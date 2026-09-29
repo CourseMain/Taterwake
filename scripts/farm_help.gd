@@ -89,7 +89,7 @@ static func valid(raw: Variant) -> bool:
 	if not raw is Dictionary: return false
 	for key: String in ["enabled", "hidden"]:
 		if not raw.get(key) is bool: return false
-	for entry: Array in [["independent", 0, 4], ["plot", -1, 23], ["pest_phase", 0, 2]]:
+	for entry: Array in [["independent", 0, 4], ["plot", -1, 71], ["pest_phase", 0, 2]]:
 		var value: Variant = raw.get(entry[0])
 		if not (value is float or value is int) or not is_finite(float(value)) or float(value) < entry[1] or float(value) > entry[2]: return false
 		if float(value) != floor(float(value)): return false
@@ -98,7 +98,7 @@ static func valid(raw: Variant) -> bool:
 	if not raw.get("dismissed") is Array or raw.dismissed.size() > TIP_IDS.size(): return false
 	for id: Variant in raw.dismissed:
 		if id not in TIP_IDS: return false
-	if not raw.get("protected") is Array or raw.protected.size() > 24: return false
+	if not raw.get("protected") is Array or raw.protected.size() > 72: return false
 	for key: Variant in raw.protected:
-		if not key is String or not key.is_valid_int() or int(key) < 0 or int(key) >= 24: return false
+		if not key is String or not key.is_valid_int() or int(key) < 0 or int(key) >= 72: return false
 	return true

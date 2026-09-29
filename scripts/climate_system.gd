@@ -131,7 +131,9 @@ func start_season(farm) -> void:
 	# The guided year has one disclosed, mild Summer storm. All later years
 	# use the ordinary saved outlook and climate curve.
 	if farm.guided_first_year():
-		if farm.season_clock.season == 1 and year_count(1) == 0: begin_warning(farm, "storm", 0.2)
+		if farm.season_clock.season == 1 and year_count(1) == 0:
+			begin_warning(farm, "storm", 0.2)
+			data.timer = 40.0
 		prime_next(farm)
 		return
 	var event: String = ""
@@ -183,9 +185,9 @@ func _impact(farm) -> void:
 	data.history.append(record.duplicate(true))
 	if data.history.size() > 8: data.history.pop_front()
 	if farm.guided_first_year() and event == "storm" and farm.tutorial_loss().is_empty():
-		# One gust exposes two tonnes on the lesson bed; the same loss and
+		# One gust exposes one tonne on the lesson bed; the same loss and
 		# counterfactual arithmetic as every other field cause card applies.
-		Protection.damage(farm, int(farm.tutorial_progress.plot), event, 2)
+		Protection.damage(farm, int(farm.tutorial_progress.plot), event, 1)
 	if WINTER_LOSS.has(event): _winter_impact(farm)
 	farm.climate_changed.emit("impact")
 
@@ -201,7 +203,7 @@ func _winter_impact(farm) -> void:
 		var plot: Dictionary = farm.plots[index]
 		if int(plot.stage) == 0 or plot.crop != "icecap": continue
 		var lost: int = roundi(Protection.remaining(plot) * rate)
-		Protection.record(farm, data.event, "icecap", lost, 0.0, 1.0, "Icecap in the ground; harvest before impact", "field")
+		Protection.record(farm, data.event, "icecap", lost, 0.0, 1.0, "Icecap in the ground; harvest before impact", "field", -1, -1, str(plot.field))
 		plot.weather_lost += lost
 		if int(plot.yield_total) > 0: plot.pending = Protection.remaining(plot)
 		if Protection.remaining(plot) == 0:
@@ -270,8 +272,8 @@ static func valid(raw: Variant, maximum: float) -> bool:
 		if not PROJECTS.has(id) or not Rules.number(raw.projects[id], 0, MAX_PROJECT_LEVEL, true): return false
 	if raw.has("lesson") and raw.lesson.stage in ["water", "area", "success"] and raw.phase != "calm": return false
 	if raw.has("operations"):
-		var limit: int = 24
-		if int(raw.operations.strike_row) >= 4: return false
+		var limit: int = 72
+		if int(raw.operations.strike_row) >= 12: return false
 		for key in ["stress", "wet", "scars", "rescued"]:
 			for index in raw.operations[key]:
 				if int(index) >= limit: return false
