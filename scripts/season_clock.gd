@@ -3,13 +3,14 @@ extends RefCounted
 const SEASON_SECONDS: float = 150.0
 const LAST_YEAR: int = 10
 const NAMES: Array[String] = ["Spring", "Summer", "Autumn", "Winter"]
+var last_year: int = LAST_YEAR # Runtime-only horizon for the isolated caretaker.
 var year: int = 1
 var season: int = 0
 var seconds: float = 0.0
 var autumn_loss: int = 0
 
 func finished() -> bool:
-	return year == LAST_YEAR and season == 3 and seconds == SEASON_SECONDS
+	return year == last_year and season == 3 and seconds == SEASON_SECONDS
 
 func remaining(duration: float = SEASON_SECONDS) -> float:
 	return duration - seconds

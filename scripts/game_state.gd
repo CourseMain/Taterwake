@@ -46,6 +46,7 @@ const Ledger = preload("res://scripts/ledger.gd")
 const OVERDRAFT_LIMIT: float = Ledger.OVERDRAFT_LIMIT
 var ledger = Ledger.new()
 var run_outcome: String = ""
+var caretaker_mode: bool = false # Never saved; only an isolated epilogue copy enables this.
 # Transient presentation pause, never part of a save.
 var accounts_open: bool = false
 var climate_report_open: bool = false
@@ -477,7 +478,7 @@ func _season_boundary() -> void:
 		ClimateSystem.Protection.winter(self)
 		diversification.winter(self)
 		ledger.post_fixed_costs(season_clock.year)
-		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
+		if coins < OVERDRAFT_LIMIT and not caretaker_mode: _end_run("foreclosed")
 		news = winter_notice()
 	else:
 		news = "Year %d · %s" % [season_clock.year, SeasonClock.NAMES[season_clock.season]]
@@ -984,7 +985,12 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	if error != OK or not _valid_save(json.data):
 		_reject_save(path)
 		return false
-	var data: Dictionary = json.data
+	restore_snapshot(json.data)
+	_finish("Farm loaded. Crops and weather resume where you left them; no offline farming.")
+	return true
+
+func restore_snapshot(data: Dictionary) -> void:
+	# Caller supplies either a validated save or a trusted in-memory snapshot.
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
 	ledger.load_data(data.ledger)
@@ -1015,8 +1021,6 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	rng.seed = int(data.rng_seed)
 	rng.state = int(data.rng_state)
 	_refresh_market()
-	_finish("Farm loaded. Crops and weather resume where you left them; no offline farming.")
-	return true
 
 func backup_path(path: String = DEFAULT_SAVE_PATH) -> String:
 	return path + ".bak"

@@ -8,6 +8,7 @@ const CATEGORIES: Array[String] = ["sales", "seeds", "water_fuel", "labour", "up
 const LABELS: Dictionary = {"sales": "Crop sales", "seeds": "Seeds", "water_fuel": "Water & fuel", "labour": "Labour", "upkeep": "Equipment upkeep", "protection": "Protection", "insurance": "Insurance", "mortgage": "Mortgage", "rent": "Rent & land tax", "living": "Living costs", "storage": "Storage", "contracts": "Contracts", "other": "Other"}
 # REDESIGN_PLAN §6. Interest is fixed for this ten-year model.
 const FIXED_COSTS: Array[Dictionary] = Balance.FIXED_COSTS
+var last_year: int = 10 # Runtime-only; normal saves remain ten-year journals.
 var _entries: Array[Dictionary] = []
 var _balance: float = STARTING_CASH
 var _closed_years: Array[int] = []
@@ -15,7 +16,7 @@ var entries: Array[Dictionary]:
 	get: return _entries.duplicate(true)
 
 func post(year: int, season: int, category: String, label: String, amount: float, record_zero: bool = false) -> bool:
-	if year < 1 or year > 10 or season < 0 or season > 3 or category not in CATEGORIES: return false
+	if year < 1 or year > last_year or season < 0 or season > 3 or category not in CATEGORIES: return false
 	if label.is_empty() or label.length() > 256 or not is_finite(amount) or not is_finite(balance() + amount): return false
 	if amount != 0.0 or record_zero:
 		_entries.append({"year": year, "season": season, "category": category, "label": label, "amount": amount})
@@ -74,13 +75,16 @@ func fixed_cost_total() -> float:
 	return amount
 
 func post_fixed_costs(year: int) -> bool:
-	if is_closed(year) or year < 1 or year > 10: return false
-	for cost in FIXED_COSTS: post(year, 3, cost.category, cost.label, cost.amount)
+	if is_closed(year) or year < 1 or year > last_year: return false
+	for cost in FIXED_COSTS:
+		# The inherited loan is paid off after twenty principal payments.
+		if cost.category == "mortgage" and loan_remaining() <= 0: continue
+		post(year, 3, cost.category, cost.label, cost.amount)
 	_closed_years.append(year)
 	return true
 
 func loan_remaining() -> float:
-	return INITIAL_LOAN + _closed_years.size() * float(FIXED_COSTS[1].amount)
+	return maxf(0.0, INITIAL_LOAN + _closed_years.size() * float(FIXED_COSTS[1].amount))
 
 func save_data() -> Dictionary:
 	return {"entries": entries, "closed_years": _closed_years.duplicate()}

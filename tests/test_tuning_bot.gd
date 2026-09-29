@@ -66,7 +66,7 @@ func run() -> void:
 	print("Tuning bot: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
-func play(strategy: String, seed_value: int) -> Dictionary:
+func play(strategy: String, seed_value: int, keep_snapshot: bool = false) -> Dictionary:
 	var farm = State.new()
 	farm.rng.seed = seed_value
 	# All policies pay for the same 24-bed field, keeping labour area comparable.
@@ -160,6 +160,7 @@ func play(strategy: String, seed_value: int) -> Dictionary:
 	check(farm.run_outcome in ["completed","foreclosed"], "run has a real ending")
 	if tidy: check(table_sacks > harvested/2, "tidy majority Table seed %d" % seed_value)
 	var result: Dictionary = {"seed":seed_value,"year":farm.season_clock.year,"completed":farm.run_outcome == "completed","cash":farm.coins,"sales":farm.ledger.total(0,"sales"), "table_sacks":table_sacks, "harvested_sacks":harvested, "years":annual, "businesses":farm.diversification.built.duplicate(), "business_income":farm.diversification.income(farm), "title":farm.run_title()}
+	if keep_snapshot: result.snapshot = farm._save_data()
 	farm.free()
 	return result
 
