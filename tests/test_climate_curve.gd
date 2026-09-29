@@ -179,6 +179,9 @@ func run() -> void:
 	var autumn: Dictionary = World.season_tints(1, 2)
 	var late: Dictionary = World.season_tints(6, 1)
 	check(spring.grass != summer.grass and summer.grass != autumn.grass and spring.canopy != autumn.canopy, "three growing seasons have distinct grass and canopy palettes")
+	check(spring.grass.g > spring.grass.r * 1.3 and summer.grass.g > summer.grass.r * 1.1, "early Spring and Summer remain green grass, not sand")
+	for year in range(2,6):
+		check(World.season_tints(year,1).grass == summer.grass, "strong Summer drying waits until year six")
 	check(spring.blossom == 1 and spring.flower == 1 and autumn.leaf == 1, "Spring blooms and Autumn path leaves follow the calendar")
 	check(late.grass != summer.grass and late.haze > summer.haze, "year six Summer is visibly drier and hazier even in calm weather")
 	await scene_checks()

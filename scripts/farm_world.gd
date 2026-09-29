@@ -1852,8 +1852,8 @@ func _retire_climate_node(node: Node3D) -> void:
 ## Calendar presentation is deterministic; only the one-second blend uses real time.
 static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
 	var age: float = clampf((year - 1) / 9.0, 0, 1)
-	var grass: Color = [Color("8daa68"), Color("adab65"), Color("b8995b"), Color("ccd7cd")][season]
-	if season == 1: grass = grass.lerp(Color("c4a16d"), age * 0.85)
+	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("ccd7cd")][season]
+	if season == 1: grass = grass.lerp(Color("c4a16d"), clampf((year - 5) / 5.0, 0, 1) * 0.85)
 	if hint == "drought": grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,

@@ -13,13 +13,14 @@ func run() -> void:
 	game.set_process(false)
 	game.state.tutorial_progress.completed = true
 	game.hud.close_panel()
-	game.world.set_calendar(1,0,55)
 	game._on_state_changed()
 	var world = game.world
 	check(world.find_children("IslandTerrainShell", "MeshInstance3D", true, false).size() == 1, "one continuous island shell")
 	check(world.find_children("GoldenShoresGround", "", true, false).is_empty() and world.find_children("FrosthollowGround", "", true, false).is_empty(), "no attached regional ground")
-	for entry in [[-12.9,0.35],[-13.9,0.70],[-18.0,1.05]]:
-		check(is_equal_approx(Surface.height_at(0,entry[0]),entry[1]), "three shallow terrace levels")
+	check(Surface.half_width(0)-Surface.half_width(Surface.EXTENT.y*0.5) > 10, "coast has pronounced angled sides")
+	check(is_equal_approx(Surface.half_width(10),Surface.half_width(0)-10*Surface.CUT.x/Surface.CUT.y), "hexagonal coast has straight sides")
+	for entry in [[-12.9,0.8],[-13.9,1.6],[-18.0,2.4]]:
+		check(is_equal_approx(Surface.height_at(0,entry[0]),entry[1]), "three distinct terrace levels")
 	check(is_equal_approx(Surface.height_at(22,10),-0.15), "Low dips fifteen centimetres")
 	for edge: float in Surface.STEPS:
 		var before := Vector3(0,0,edge+0.3)
@@ -67,9 +68,15 @@ func run() -> void:
 		for z in [-Surface.EXTENT.y*0.5, 0.0, Surface.EXTENT.y*0.5]:
 			for x in [-Surface.half_width(z),Surface.half_width(z)]:
 				check(view.has_point(world.camera.unproject_position(Vector3(x,0,z))), "default camera contains coastline at " + str(size))
-		if "--capture" in OS.get_cmdline_user_args():
-			await RenderingServer.frame_post_draw
-			root.get_texture().get_image().save_png("res://artifacts/one-island-%d.png" % size.x)
+		if "--capture" in OS.get_cmdline_user_args() and ((size.x < 600) == ("--touch-controls" in OS.get_cmdline_user_args())):
+			for calendar in [[1,0],[1,1],[6,1]]:
+				game.state.season_clock.year = calendar[0]
+				game.state.season_clock.season = calendar[1]
+				game.hud.update_state(game.state)
+				world.set_calendar(calendar[0],calendar[1],75)
+				world._process(1)
+				await RenderingServer.frame_post_draw
+				root.get_texture().get_image().save_png("res://artifacts/island-year%d-season%d-%d.png" % [calendar[0],calendar[1],size.x])
 	game.queue_free()
 	await create_timer(0.4).timeout
 	print("ISLAND LAYOUT: %d checks, %d failures" % [checks,failures])

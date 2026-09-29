@@ -1,7 +1,11 @@
 extends RefCounted
 ## The Valley outline, height map, paths and walking all share world coordinates.
 const EXTENT := Vector2(40.3 * 1.6, 30.7 * 1.4) * 1.2247448714
-const CUT := Vector2(2.3 * 1.6, 2.3 * 1.4) * 1.2247448714
+const CUT := Vector2(12.0, EXTENT.y * 0.5)
+const TERRACE_RISE: float = 0.8
+const TREAD_SPACING: float = 0.22
+const TREAD_COUNT: int = 4
+const STAIR_START: float = 0.18
 const STEPS := [-12.5, -13.5, -14.5]
 const PATH_X: float = -23.0
 
@@ -18,7 +22,10 @@ static func _z_samples() -> Array[float]:
 	var values: Array[float] = [-EXTENT.y*0.5,EXTENT.y*0.5]
 	for z in range(-26,27): values.append(float(z))
 	for edge: float in STEPS:
-		for distance: float in [0.0,-0.25,0.15,0.05,-0.3,-0.4]: values.append(edge+distance)
+		for distance: float in [0.0,-0.25]: values.append(edge+distance)
+		for tread in range(TREAD_COUNT):
+			values.append(edge+STAIR_START-tread*TREAD_SPACING)
+			values.append(edge+STAIR_START-tread*TREAD_SPACING-0.06)
 	values.sort()
 	return values
 
@@ -38,12 +45,12 @@ static func height_at(x: float, z: float) -> float:
 static func _profile(x: float, z: float) -> float:
 	var hill: float = 0.0
 	for edge: float in STEPS:
-		hill += 0.35 * clampf((edge - z) / 0.25, 0.0, 1.0)
+		hill += TERRACE_RISE * clampf((edge - z) / 0.25, 0.0, 1.0)
 	if absf(x - PATH_X) < 2.0:
 		var stairs: float = 0.0
 		for edge: float in STEPS:
-			stairs += 0.175 * clampf((edge + 0.15 - z) / 0.1, 0, 1)
-			stairs += 0.175 * clampf((edge - 0.30 - z) / 0.1, 0, 1)
+			for tread in range(TREAD_COUNT):
+				stairs += TERRACE_RISE / TREAD_COUNT * clampf((edge+STAIR_START-tread*TREAD_SPACING-z)/0.06,0,1)
 		hill = lerpf(hill,stairs,clampf((2.0-absf(x-PATH_X))/0.8,0,1))
 	var low: float = smoothstep(7.0, 10.0, x) * smoothstep(7.0, 10.0, z)
 	return hill - 0.15 * low
@@ -88,8 +95,12 @@ static func mesh() -> ArrayMesh:
 		rows.append(row)
 	for j in range(rows.size() - 1):
 		for i in range(rows[j].size() - 1):
-			for p: Vector3 in [rows[j][i], rows[j][i+1], rows[j+1][i+1], rows[j][i], rows[j+1][i+1], rows[j+1][i]]:
-				surface.add_vertex(p)
+			for triangle in [[rows[j][i],rows[j][i+1],rows[j+1][i+1]],[rows[j][i],rows[j+1][i+1],rows[j+1][i]]]:
+				# Clipped columns converge along the six angled coast edges.
+				var ab: Vector3 = triangle[1]-triangle[0]
+				var ac: Vector3 = triangle[2]-triangle[0]
+				if ab.cross(ac).length_squared() < 0.00000001: continue
+				for point: Vector3 in triangle: surface.add_vertex(point)
 	# Strata belong to the same closed prism, including the raised back coast.
 	var outline: Array[Vector3] = []
 	outline.append_array(rows[0])
@@ -99,6 +110,7 @@ static func mesh() -> ArrayMesh:
 	for j in range(rows.size() - 2, 0, -1): outline.append(rows[j][0])
 	for i in range(outline.size()):
 		var a: Vector3 = outline[i]; var b: Vector3 = outline[(i+1) % outline.size()]
+		if a.is_equal_approx(b): continue
 		var bottom_a := Vector3(a.x, -2.2, a.z); var bottom_b := Vector3(b.x, -2.2, b.z)
 		for p: Vector3 in [b, a, bottom_a, bottom_b, b, bottom_a, bottom_a, Vector3(0,-2.2,0), bottom_b]: surface.add_vertex(p)
 	surface.generate_normals()

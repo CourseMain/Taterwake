@@ -20,8 +20,7 @@ func _outline(distance: float) -> PackedVector3Array:
 	var x: float = size.x * 0.5 + distance
 	var z: float = size.y * 0.5 + distance
 	var cut: float = world.Surface.CUT.x + distance * 0.35
-	var cut_z: float = world.Surface.CUT.y + distance * 0.35
-	return PackedVector3Array([Vector3(-x + cut, WATER_Y, -z), Vector3(x - cut, WATER_Y, -z), Vector3(x, WATER_Y, -z + cut_z), Vector3(x, WATER_Y, z - cut_z), Vector3(x - cut, WATER_Y, z), Vector3(-x + cut, WATER_Y, z), Vector3(-x, WATER_Y, z - cut_z), Vector3(-x, WATER_Y, -z + cut_z)])
+	return PackedVector3Array([Vector3(-x+cut,WATER_Y,-z),Vector3(x-cut,WATER_Y,-z),Vector3(x,WATER_Y,0),Vector3(x-cut,WATER_Y,z),Vector3(-x+cut,WATER_Y,z),Vector3(-x,WATER_Y,0)])
 
 func _build_water() -> void:
 	water = MeshInstance3D.new()
@@ -40,8 +39,8 @@ func _build_water() -> void:
 		var inner: PackedVector3Array = _outline(distances[band])
 		var outer: PackedVector3Array = _outline(distances[band + 1])
 		var along: float = 0.0
-		for edge in range(8):
-			var next: int = (edge + 1) % 8
+		for edge in range(inner.size()):
+			var next: int = (edge + 1) % inner.size()
 			var edge_length: float = _outline(0)[edge].distance_to(_outline(0)[next])
 			for part in range(12):
 				var a: float = part / 12.0

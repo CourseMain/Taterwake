@@ -41,10 +41,10 @@ static func _lanes(w) -> void:
 static func _steps(w) -> void:
 	var root: Node3D = w._root("HillStairPath",Vector3.ZERO)
 	for edge: float in w.Surface.STEPS:
-		# Two broad shallow treads per flight; the earth itself carries the rise.
-		for offset: float in [-0.13,-0.58]:
-			var z: float = edge+offset
-			w._box(root,Vector3(-23,w.ground_height(-23,z)+0.045,z),Vector3(2.15,0.09,0.34),WOOD)
+		# Four shallow treads per raised terrace, with a level landing between flights.
+		for tread in range(w.Surface.TREAD_COUNT):
+			var z: float = edge+w.Surface.STAIR_START-tread*w.Surface.TREAD_SPACING-0.14
+			w._box(root,Vector3(w.Surface.PATH_X,w.ground_height(w.Surface.PATH_X,z)+0.03,z),Vector3(2.15,0.06,0.16),WOOD)
 		for side in [-1,1]:
 			var a := Vector3(-23+side*1.3,w.ground_height(-23,edge+0.3),edge+0.3)
 			var b := Vector3(a.x,w.ground_height(-23,edge-0.7),edge-0.7)
@@ -59,12 +59,13 @@ static func _hedge(w, a: Vector3, b: Vector3) -> void:
 	var count: int = maxi(1,ceili(a.distance_to(b)/1.3))
 	for i in range(count+1):
 		var p: Vector3 = a.lerp(b,float(i)/count)
+		p.x = clampf(p.x,-w.Surface.half_width(p.z,2.4),w.Surface.half_width(p.z,2.4))
 		p.y = w.ground_height(p.x,p.z)+0.36
 		w._sphere(w,p,Vector3(0.80,0.52,0.65),HEDGE)
 		if i % 4 == 0: w._sphere(w,p+Vector3(0.12,0.23,0),Vector3(0.5,0.28,0.46),HEDGE.lightened(0.05))
 
 static func _orchard(w) -> void:
-	for x in [-32.5,-23.0]:
+	for x in [-30.0,-23.0]:
 		for z in [-2.0,4.0,10.0,16.0]:
 			w._tree(Vector3(x,0,z),0.90)
 			# Dark mulch and a few windfalls tie each tree to the meadow.
@@ -81,19 +82,19 @@ static func _orchard(w) -> void:
 	for x in [1.65,3.35]: w._box(store,Vector3(x,0.35,0),Vector3(0.12,0.7,0.5),WOOD.darkened(0.18))
 
 static func _ridge(w) -> void:
-	for x in [-31,-25,-19,12,21,30]:
+	for x in [-25,-19,-13,12,19,25]:
 		var first: int = w.get_child_count()
-		w._tree(Vector3(x,1.05,-22.6),0.85)
+		w._tree(Vector3(x,w.ground_height(x,-22.6),-22.6),0.85)
 		w.get_child(first).rotation.z = -0.15
-	for pair in [[Vector3(-34,0,-25.2),Vector3(32,0,-25.2)],[Vector3(-34,0,-25.2),Vector3(-34,0,-19)],[Vector3(32,0,-25.2),Vector3(32,0,-19)]]:
+	for pair in [[Vector3(-25.5,0,-25.0),Vector3(25.5,0,-25.0)],[Vector3(-25.5,0,-25.0),Vector3(-30,0,-18)],[Vector3(25.5,0,-25.0),Vector3(30,0,-18)]]:
 		var a: Vector3 = pair[0]; var b: Vector3 = pair[1]
 		var count: int = ceili(a.distance_to(b)/1.15)
 		for i in range(count):
 			var p: Vector3 = a.lerp(b,float(i)/count)
 			if a.z == b.z and p.x > -8.6 and p.x < 7.0: continue
 			p.y = w.ground_height(p.x,p.z)+0.22
-			w._box(w,p,Vector3(1.10,0.44,0.50) if a.z == b.z else Vector3(0.50,0.44,1.10),STONE)
-			w._box(w,p+Vector3(0,0.28,0),Vector3(1.02,0.16,0.58) if a.z == b.z else Vector3(0.58,0.16,1.02),STONE.lightened(0.06))
+			w._box(w,p,Vector3(1.10,0.44,0.50),STONE).rotation.y = -atan2(b.z-a.z,b.x-a.x)
+			w._box(w,p+Vector3(0,0.28,0),Vector3(1.02,0.16,0.58),STONE.lightened(0.06)).rotation.y = -atan2(b.z-a.z,b.x-a.x)
 
 static func _yard(w) -> void:
 	w._ground_path(Vector3(27,0,0),Vector3(33,0,0),1.8)
@@ -109,7 +110,7 @@ static func _yard(w) -> void:
 		w._cylinder(w,p+Vector3(0,1.1,0),0.45,0.45,0.06,Color("536a61"),10)
 	for i in range(4): w._sphere(w,Vector3(33+(i%2)*0.7,0.35+(i/2)*0.5,-2.5),Vector3(0.7,0.6,0.85),Color("bdb08a"))
 	_hedge(w,Vector3(35.5,0,-7),Vector3(35.5,0,17))
-	for p in [Vector3(31,0,-8),Vector3(32,0,13),Vector3(33,0,18)]:
+	for p in [Vector3(31,0,-8),Vector3(32,0,13),Vector3(29,0,16)]:
 		p.y = w.ground_height(p.x,p.z)
 		w._tree(p,0.95)
 
@@ -123,6 +124,7 @@ static func _low_shore(w) -> void:
 	for i in range(65):
 		var x: float = rng.randf_range(9,33)
 		var z: float = rng.randf_range(23.1,25.0)
+		x = minf(x,w.Surface.half_width(z,1.3))
 		var p := Vector3(x,w.ground_height(x,z),z)
 		var height: float = rng.randf_range(0.38,0.85)
 		w._bar(w,p,p+Vector3(0.11,height,0),0.027,Color("7b905a"))
@@ -135,7 +137,7 @@ static func _verges(w) -> void:
 		var p := Vector3(rng.randf_range(-36,36),0,rng.randf_range(-24,23))
 		# Meadow details occupy working margins, leaving beds and lanes legible.
 		if p.x > -20 and p.x < 29 and p.z > -18 and p.z < 22: continue
-		if absf(p.x+27.5)<1.4 or p.z < -24.5: continue
+		if absf(p.x+27.5)<1.4 or p.z < -24.5 or absf(p.x) > w.Surface.half_width(p.z,1.5): continue
 		p.y=w.ground_height(p.x,p.z)+0.12
 		for j in range(2): w._leaf(w,p+Vector3(j*0.14,0,0),Vector3(0.07,0.27,0.06),HEDGE.lightened(0.1),-0.25+j*0.5)
 		if i % 5 == 0: w._sphere(w,p+Vector3(0,0.15,0),Vector3.ONE*0.085,Color("e3d3a1"))
