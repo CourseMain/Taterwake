@@ -136,6 +136,8 @@ func ui_checks() -> void:
 		await capture("ledger-%d" % size.x)
 	game.queue_free()
 	await process_frame
+	# Let the audio mixer release the accountant's stopped voice playback.
+	await create_timer(0.4).timeout
 
 func capture(label: String) -> void:
 	if "--capture" not in OS.get_cmdline_user_args(): return

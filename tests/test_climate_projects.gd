@@ -65,5 +65,7 @@ func run() -> void:
 	check(game.world._project_nodes.size() == 1 and game.world._project_nodes.rainwater.get_meta("level") == 1, "reset removes purchases and retains starter tank")
 	game.queue_free()
 	await settle()
+	# Let the audio mixer release the accountant's stopped voice playback.
+	await create_timer(0.4).timeout
 	print("CLIMATE PROJECTS: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

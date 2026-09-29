@@ -232,7 +232,7 @@ func show_page(next_page: String, text: String = "") -> void:
 			labels = [str(p.help),service_label(),"I'll see you later."]
 			choice_ids = ["advice","service","leave"]
 		"advice", "weather":
-			text = p.advice if page == "advice" else Roster.weather_line(npc_id,state)
+			text = Roster.advice(npc_id, state) if page == "advice" else Roster.weather_line(npc_id,state)
 			labels = [service_label(),"Can I ask you something else?","Thanks. See you around."]
 			choice_ids = ["service","greeting","leave"]
 	speech.text = text
@@ -259,7 +259,7 @@ func show_page(next_page: String, text: String = "") -> void:
 	layout()
 
 func service_label() -> String:
-	return str(Roster.PEOPLE[npc_id].service_label)
+	return "Read the annual accounts" if npc_id == "nell" and state.season_clock.season == 3 else str(Roster.PEOPLE[npc_id].service_label)
 
 func choose(index: int) -> void:
 	if not visible or index < 0 or index >= choice_ids.size(): return

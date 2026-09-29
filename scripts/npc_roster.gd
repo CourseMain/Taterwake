@@ -15,19 +15,19 @@ const PEOPLE := {
 		"reply":"Sounds like it means a lot.", "answer":"Fits my hand. That's enough. Pass me your hoe.",
 		"help":"Which upgrade helps?", "advice":"Wider head. More beds per swing. Pick the tool you wear out fastest. Test it on one small patch before the whole field.",
 		"thanks":"Hammer's sound again. Yours next.", "weather":"Tools can wait. Ripe crops can't. Go."},
-	"nell": {"name":"Nell", "role":"Barn keeper", "service":"barn", "service_label":"Open the barn", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
-		"first":"Nell. I keep the barn in order. If you leave something on the floor, I'll find a shelf for it.",
+	"nell": {"name":"Nell", "role":"Accountant", "service":"barn", "service_label":"Open the barn", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
+		"first":"Nell. I keep the accounts and the barn. Both are easier if you bring things in before they rot.",
 		"daily":["Someone's been putting muddy boots on my clean bags. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
-		"help":"Can we make more room?", "advice":"Of course. There's a barn upgrade right above your stored crops. You can check the cost and extra space before buying.",
+		"help":"What goes in the accounts?", "advice":"Everything paid in and out. Seeds, sales, storage, mortgage, rent, living costs. Unsold potatoes are not income. I read the totals in Winter. Bring a chair.",
 		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops."},
-	"tess": {"name":"Tess", "role":"Quest keeper", "service":"quests", "service_label":"Check local quests", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
-		"first":"You're the farmer everyone's talking about. I'm Tess. Sorry—let me put these notices down.",
-		"daily":["I came here to pin up one notice. That was an hour ago.", "Someone's asked me to organise a meeting about how many meetings we have."],
-		"topic":"Do you ever take a break?", "story":"I was going to have lunch with Pip. Then the board needed sorting. Pip brought my lunch here instead. It had a duck feather in it.",
-		"reply":"You should still take that break.", "answer":"I should. Thank you. I'll finish this page, then go. Hold me to it.",
-		"help":"How can I help out?", "advice":"Have a look at the local quests. Pick one that fits what you're already growing, then come back to claim its reward.",
+	"tess": {"name":"Tess", "role":"Farmhand", "service":"loss_notices", "service_label":"Read the cause cards", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
+		"first":"Tess. I work the beds and count what the weather leaves. Those are two different jobs, lately.",
+		"daily":["Mud in both boots. That is the complete morning report.", "I sharpened the hoe. The clouds remain unimpressed."],
+		"topic":"Do you ever take a break?", "story":"I was going to have lunch with Pip. Then the drains backed up. Pip brought my lunch to the field instead. It had a duck feather in it.",
+		"reply":"You should still take that break.", "answer":"I should. Thank you. One more row, then I go. Hold me to it.",
+		"help":"How can I help out?", "advice":"Read the cause card after a loss. It says what hit, what we lost and what protection would have saved. I count tonnes. Nell does the wincing.",
 		"thanks":"I took that break. Pip says you deserve the credit.", "weather":"I'm checking who needs help. Some farms got hit harder than ours."},
 	"pip": {"name":"Pip", "role":"Duck caretaker", "service":"duck_patrol", "service_label":"Visit Duck Patrol", "color":"e1b550", "skin":"eac291", "shape":Vector3(.93,.88,.94), "hat":"cap", "detail":"duck",
 		"first":"I'm Pip. That one's Button. Don't let the name fool you.",
@@ -38,20 +38,20 @@ const PEOPLE := {
 		"thanks":"Button remembers you. That's a good thing. Usually.", "weather":"I've counted them three times. Button keeps walking behind me."},
 
 
-	"iris": {"name":"Iris", "role":"Weather observer · radio link", "service":"climate", "service_label":"See weather & protection", "color":"6b9daa", "skin":"b9825c", "shape":Vector3(.94,1.02,.98), "hat":"", "detail":"headset",
+	"iris": {"name":"Iris", "role":"Weather forecaster", "service":"climate", "service_label":"See weather & protection", "color":"6b9daa", "skin":"b9825c", "shape":Vector3(.94,1.02,.98), "hat":"", "detail":"headset",
 		"first":"Can you hear me? Good. I'm Iris. This station sends me your local weather readings.",
 		"daily":["Clear for now. I'm checking the next reading.", "Bram called twice this morning. He says he's only checking the radio works."],
 		"topic":"What do the readings show?", "story":"The changes used to be gradual enough to plan around. Now the gaps between bad spells are harder to predict. I check twice before sending a warning.",
 		"reply":"Thanks for keeping watch.", "answer":"Thanks for listening. A warning only helps if someone has time to act on it.",
-		"help":"How do I protect the farm?", "advice":"The station shows your protection stats and sells upgrades. Sprinklers and irrigation are one purchase for the farm. You'll still need water in the tank.",
+		"help":"How do I protect the farm?", "advice":"The forecast is a probability, not a promise. A better station narrows its uncertainty. Budget for tanks, drains, windbreaks or Spring frost covers in Winter. None protects against everything.",
 		"thanks":"Good to hear your voice again. I've got the latest readings here.", "weather":"The readings are changing quickly. Check your protection while there's time."},
 
-	"edwin": {"name":"Edwin", "role":"Village clerk", "service":"quests", "service_label":"Visit the quest board", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
+	"edwin": {"name":"Edwin", "role":"Bank manager", "service":"bank", "service_label":"Review the overdraft", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
 		"first":"Afternoon. Edwin. I've brought the figures. Shall we go through them?",
 		"daily":["I hope I'm not catching you at a bad time. I do seem to have a talent for it.", "Nell lent me a dry folder. I'd like to return it in the same condition."],
 		"topic":"Do people mind you visiting?", "story":"Some do. I understand. I try to explain the figures properly. My mother says I should ask about people's day before mentioning the paperwork.",
 		"reply":"Well, how was your day?", "answer":"Oh. Quite nice, actually. Thank you for asking. I saw ducklings by the pier.",
-		"help":"What needs doing?", "advice":"The quest board has a few jobs. It shows what each completed job pays.",
+		"help":"What does the limit mean?", "advice":"You can use the overdraft to keep farming. If Winter settlement takes you below the limit, the farm is foreclosed. Seeds, repairs and the next Winter bills all draw on the same balance. I would much rather leave with an empty folder.",
 		"thanks":"Afternoon. How's your day been? See—I'm learning.", "weather":"I saw the damage coming in. I'm sorry. Let's see who needs help."}
 }
 
@@ -61,8 +61,34 @@ static func for_station(station: String) -> String:
 		if PEOPLE[id].service == station: return id
 	return ""
 
-static func available(id: String) -> bool:
-	return PEOPLE.has(id)
+static func available(id: String, state = null) -> bool:
+	return PEOPLE.has(id) and (id != "edwin" or state == null or state.coins < state.bankruptcy_limit() * 0.5)
+
+static func ledger_lines(state) -> String:
+	return "Year %d net: %s.\nPurse: %s. Unsold potatoes do not pay the mortgage." % [state.season_clock.year, state.money(state.ledger.total(state.season_clock.year)), state.money(state.coins)]
+
+static func weather_cost(state) -> String:
+	var losses: Array = state.climate.data.protection.losses
+	for i in range(losses.size() - 1, -1, -1):
+		var entry: Dictionary = losses[i]
+		if int(entry.year) != state.season_clock.year or entry.event in ["pests", "spoilage"]: continue
+		var value: float = int(entry.sacks) * float(state.CropTable.CROPS[entry.crop].base)
+		return "%s took %d t of %s. That's %s at base prices, not a cash charge. The field is shorter; the bills aren't." % [str(entry.event).replace("_", " ").capitalize(), int(entry.sacks), state.CropTable.CROPS[entry.crop].name, state.money(value)]
+	return "No weather loss recorded this year. I'll take an empty page. The bills will still arrive."
+
+static func bank_line(state) -> String:
+	return "Your overdraft is %s of %s. More than half used. The next Winter bills still have to fit. I have brought a pencil, not more money." % [state.money(maxf(0, -state.coins)), state.money(-state.bankruptcy_limit())]
+
+static func forecast_line(state) -> String:
+	if not state.tutorial_progress.completed and state.season_clock.year == 1:
+		return "Iris, on the radio. This guided first year has one small Summer storm. After your first accounts, the forecasts are probabilities. The weather won't wait for us."
+	return "Iris, on the radio. Year %d: %d%% disaster chance each season. These are odds, not appointments. Read the sky, leave room in the budget." % [state.season_clock.year, roundi(state.ClimateSystem.chance(state.season_clock.year) * 100)]
+
+static func advice(id: String, state) -> String:
+	if id == "nell" and state.season_clock.season == 3: return ledger_lines(state)
+	if id == "tess": return weather_cost(state)
+	if id == "edwin": return bank_line(state)
+	return PEOPLE[id].advice
 
 static func greeting(id: String, state, record: bool = false) -> String:
 	var p: Dictionary = PEOPLE[id]
@@ -72,14 +98,19 @@ static func greeting(id: String, state, record: bool = false) -> String:
 	var weather: bool = state.climate.data.phase in ["warning", "active", "recovery"]
 	var line: String = p.first if visits == 0 else str(pool[visits % pool.size()])
 	if bool(memory.get("kind", false)): line = p.thanks
-	if id == "nell" and state.barn_level == 0 and visits > 0 and not bool(memory.get("kind", false)): line = "Getting tight in here. We can expand the barn whenever you're ready."
 	if weather: line = p.weather
 	if line == str(memory.get("last", "")): line = str(pool[visits % pool.size()])
+	# Reports keep their figures even on repeated visits; flavour never replaces
+	# an unfavourable balance or turns a physical loss into fictional spending.
+	if id == "nell" and state.season_clock.season == 3: line = ledger_lines(state)
+	if id == "tess": line = weather_cost(state)
+	if id == "edwin": line = bank_line(state)
 	if record:
 		state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false))}
 	return line
 
 static func weather_line(id: String, state) -> String:
+	if id == "tess": return weather_cost(state)
 	var event: String = str(state.climate.data.event)
 	if state.climate.data.phase in ["warning", "active"]:
 		var advice: String = {"freeze":"Use your hoe to clear ice from frozen beds.", "drought":"Fill the tank and keep the beds watered. The weather station shows your protection.", "flood":"Check the drains and open the gates before the water builds up.", "storm":"Get ripe crops in before lightning hits. Check your protection at the station."}.get(event, "Check the latest forecast at the weather station.")

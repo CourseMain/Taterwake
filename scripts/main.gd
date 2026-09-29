@@ -518,15 +518,17 @@ func _on_user_action(action: String) -> void:
 			_on_action(action)
 			return
 	var id: String = state.NpcRoster.for_station(action)
-	if not id.is_empty() and state.NpcRoster.available(id) and not _tutorial_active():
+	if not id.is_empty() and state.NpcRoster.available(id, state) and not _tutorial_active():
 		_start_conversation(id, action)
 	else:
 		_on_action(action)
 
 func _start_conversation(id: String, requested_service: String = "") -> void:
-	if not state.NpcRoster.available(id) or _tutorial_active() or state.run_over: return
+	if not state.NpcRoster.available(id, state) or _tutorial_active() or state.run_over: return
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
+	if id == "nell" and state.season_clock.season == 3: return_service = "accounts"
+	if id == "edwin": return_service = "accounts" if state.season_clock.season == 3 else "bank"
 	_cancel_walk()
 	_close_equipment()
 	climate_target = ""
@@ -909,6 +911,7 @@ func _on_state_changed() -> void:
 		hud.set_tutorial({})
 		world.set_tutorial_focus("", true)
 	if world != null:
+		world.set_bank_visit(state.NpcRoster.available("edwin", state))
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
@@ -1024,7 +1027,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "run_summary", "winter_stores", "contracts", "loss_notices":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1156,6 +1159,7 @@ func _on_season_changed() -> void:
 	_close_equipment()
 	if (state.season_clock.season == 3):
 		hud._climate_alert.dismiss()
+		conversation.voice.begin_line("nell", state.NpcRoster.ledger_lines(state).length())
 	_on_state_changed()
 
 

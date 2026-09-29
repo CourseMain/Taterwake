@@ -1002,10 +1002,21 @@ func _tree(pos: Vector3, size: float) -> void:
 func _staff_stalls() -> void:
 	# Each keeper has a reason to stand here: serve the counter, mind the
 	# doorway, inspect the belt or watch the ducks. Leave their approaches open.
+	if not _npc_actors.has("edwin"):
+		_villagers.append(_npc_person(self, Vector3(8.4, 0, -4.0), "edwin", "bank"))
+	set_bank_visit(false)
 	_place_stallholder("mara", "market", "MarketStall", Vector3(-.25,.18,.68), -12)
 	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
 	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
-	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
+	_place_stallholder("tess", "loss_notices", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
+
+func set_bank_visit(needed: bool) -> void:
+	if not _npc_actors.has("edwin"): return
+	var actor: Node3D = _npc_actors.edwin
+	actor.visible = needed
+	for body: Node in actor.find_children("*", "StaticBody3D", true, false):
+		body.collision_layer = 1 if needed else 0
+		body.collision_mask = 1 if needed else 0
 
 func _place_stallholder(id: String, station: String, stall_name: String, at: Vector3, facing_degrees: float) -> void:
 	var stall: Node3D = get_node(stall_name)

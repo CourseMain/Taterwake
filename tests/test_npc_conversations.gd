@@ -28,6 +28,8 @@ func run() -> void:
 	var looks: Array = []
 	for id: String in Roster.PEOPLE:
 		farm.climate.data.phase = "calm"
+		if id == "edwin": farm.coins = farm.bankruptcy_limit() * 0.5 - 1
+		var expected_greeting: String = Roster.greeting(id, farm)
 		var service: String = Roster.PEOPLE[id].service
 		game._on_user_action("talk:edwin" if id == "edwin" else service)
 		check(talk.visible and talk.npc_id == id,"conversation before service at " + service)
@@ -36,7 +38,7 @@ func run() -> void:
 		check(not game.hud._modal.visible,"no stacked shop " + id)
 		check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"only portrait renders while talking")
 		check(talk.title.text == Roster.PEOPLE[id].name,"named portrait " + id)
-		check(talk.speech.text == Roster.PEOPLE[id].first,"first introduction " + id)
+		check(talk.speech.text == expected_greeting,"first introduction " + id)
 		check(farm.npc_history[id].visits == 1,"remembers meeting " + id)
 		check(talk.portrait.avatar.npc_id == id,"matching character model " + id)
 		check(talk.portrait.get_index() > talk.card.get_index(), "portrait draws above the dialogue background " + id)
@@ -57,7 +59,7 @@ func run() -> void:
 		talk.choose(0)
 		check(talk.speech.text == Roster.PEOPLE[id].answer and farm.npc_history[id].kind,"choice gets personal response " + id)
 		talk.choose(0)
-		check(talk.speech.text == Roster.PEOPLE[id].advice,"practical branch " + id)
+		check(talk.speech.text == Roster.advice(id, farm),"practical branch " + id)
 		var first_take: int = talk.voice.last_clip
 		var spoken: int = talk.voice.utterances
 		for i in range(100): talk.voice._process(.1)
@@ -80,12 +82,22 @@ func run() -> void:
 		check(not talk.voice.player.playing and not talk.voice.is_processing(), "service transition leaves no voice playing " + id)
 		check(talk.portrait.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"hidden portrait stops rendering " + id)
 		game._on_action("talk:" + id)
-		check(talk.speech.text == Roster.PEOPLE[id].thanks,"remembers friendly response " + id)
+		check(farm.npc_history[id].kind and talk.speech.text == (Roster.advice(id, farm) if id in ["tess", "edwin"] else Roster.PEOPLE[id].thanks),"friendly memory preserves current reports " + id)
 		var previous: String = talk.speech.text
 		talk.finish()
 		game._start_conversation(id)
-		check(talk.speech.text != previous,"no consecutive repeated greeting " + id)
+		check(talk.speech.text == previous if id in ["tess", "edwin"] else talk.speech.text != previous,"reports stay accurate; flavour greetings vary " + id)
 		talk.finish()
+	farm.coins = farm.bankruptcy_limit() * 0.5
+	game._on_state_changed()
+	game._start_conversation("edwin")
+	check(not talk.visible and not game.world._npc_actors.edwin.visible, "exactly half overdraft has no bank visit")
+	farm.post_money("other", "Test overdraft crossing", -1)
+	game._on_state_changed()
+	game._on_user_action("bank")
+	check(talk.visible and talk.npc_id == "edwin" and game.world._npc_actors.edwin.visible, "crossing half brings manager to first farm")
+	check(talk.speech.text.contains("100,001") and talk.speech.text.contains("200,000"), "bank manager quotes actual debt and limit")
+	talk.finish()
 	for island in [1]:
 		var cast: Array = []
 		for actor in game.world._villagers: cast.append(actor.npc_id)
@@ -135,11 +147,18 @@ func run() -> void:
 	game._process(.1)
 	check(farm.climate.data.timer < remaining,"simulation resumes afterwards")
 	game.hud.close_panel()
-	game._start_conversation("oren")
-	check(not talk.visible,"winter keeper unavailable outside winter")
 	game._start_conversation("iris")
 	check(talk.visible and talk.npc_id == "iris", "weather observer is available on the valley")
 	talk.finish()
+	# Winter commentary consists of two lines derived from the actual accounts.
+	farm.climate.end_working_year()
+	farm.season_clock.season = 3
+	farm.ledger.post_fixed_costs(1)
+	game._start_conversation("nell")
+	check(talk.speech.text.split("\n").size() == 2 and talk.speech.text.contains(farm.money(farm.ledger.total(1))), "accountant reads two honest Winter lines")
+	talk.choose(0)
+	check(game.hud._panel_kind == "accounts", "accountant opens annual ledger in Winter")
+	game._on_action("close")
 	farm.reset_game()
 	check(farm.npc_history.is_empty(),"new farm resets introductions")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

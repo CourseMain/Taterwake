@@ -240,3 +240,5 @@ func ui_checks() -> void:
 	check(game.hud._refs.run_title.text == game.state.run_title(), "ten-year summary presents the derived title")
 	game.queue_free()
 	await process_frame
+	# Let the audio mixer release the accountant's stopped voice playback.
+	await create_timer(0.4).timeout

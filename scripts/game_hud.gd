@@ -1460,6 +1460,10 @@ func show_panel(kind: String, state: Node) -> void:
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
 		"accounts": _build_winter()
+		"bank":
+			_heading("The overdraft", "Edwin · Bank manager")
+			_body.add_child(_wrap(_state.NpcRoster.bank_line(_state), 20, INK))
+			_body.add_child(_wrap("Annual fixed bills: " + _state.money(_state.ledger.fixed_cost_total()) + ". Open Winter accounts for the full ledger.", 16, INK))
 		"run_summary": _build_run_summary()
 		"dex": _build_dex()
 		"quests": _build_quests()
@@ -1767,15 +1771,10 @@ func _build_winter() -> void:
 	var clock = _state.season_clock
 	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Time paused")
 	var net: float = _state.ledger.total(clock.year)
-	var strip = preload("res://scripts/climate_strip.gd").new()
-	strip.setup(_state.climate.data.outlook.records, clock.year)
-	_body.add_child(strip)
 	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
 	_body.add_child(_refs.accounts_net)
-	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
-	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
-	for word in _state.Quality.GRADES:
-		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
+	_refs.accountant = _wrap("Nell · Accountant\n" + _state.NpcRoster.ledger_lines(_state), 16, INK)
+	_body.add_child(_refs.accountant)
 	var columns := _hbox(44)
 	_body.add_child(columns)
 	var categories := _vbox(2)
@@ -1793,6 +1792,13 @@ func _build_winter() -> void:
 	_refs.accounts_balance = _wrap("", 16, INK)
 	_body.add_child(_refs.accounts_balance)
 	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
+	var strip = preload("res://scripts/climate_strip.gd").new()
+	strip.setup(_state.climate.data.outlook.records, clock.year)
+	_body.add_child(strip)
+	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
+	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
+	for word in _state.Quality.GRADES:
+		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
 	_build_diversification()
 	_build_loss_cards(_body, clock.year)
 	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))
@@ -1803,6 +1809,7 @@ func _refresh_accounts() -> void:
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
 	var net: float = _state.ledger.total(_state.season_clock.year)
+	_refs.accountant.text = "Nell · Accountant\n" + _state.NpcRoster.ledger_lines(_state)
 	_refs.accounts_net.text = "Year net  " + _state.money(net)
 	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
 	for category in _state.Ledger.CATEGORIES: _refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
@@ -2554,7 +2561,11 @@ func _refresh_loss_notices() -> void:
 	for child in _refs.loss_list.get_children():
 		_refs.loss_list.remove_child(child); child.queue_free()
 	_heading("Crop loss notices", "Year %d · %s" % [_state.season_clock.year, _state.SeasonClock.NAMES[_state.season_clock.season]])
+	_refs.farmhand_report = _wrap("Tess · Farmhand\n" + _state.NpcRoster.weather_cost(_state), 18, INK)
+	_refs.loss_list.add_child(_refs.farmhand_report)
 	_build_loss_cards(_refs.loss_list, _state.season_clock.year, _state.season_clock.season)
+	if not _tutorial.is_empty() and _tutorial.get("id") == "loss":
+		_refs.loss_list.add_child(_button("Harvest what remains →", "tutorial:next", true))
 
 func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
 	var count: int = 0
