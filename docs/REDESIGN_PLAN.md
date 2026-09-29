@@ -6,8 +6,9 @@ as a handoff for implementation.
 
 ## 0. Locked decisions
 
-- **Real-time seasons.** Each working season is a short real-time phase with
-  the avatar and tools; winter is a menu phase.
+- **Real-time seasons, all four.** Each season is a short real-time phase
+  with the avatar and tools. Winter is a working season too: the ground is
+  frozen, the accounts open as it begins, and there is Winter work to do.
 - **Ten-year run.** Foreclosure is game over. The run ends with the ten-year
   ledger and then the **fifty-year epilogue** (§4b).
 - **One farm.** The climate shifts in place on a single farm. Other islands
@@ -92,11 +93,15 @@ have saved about 60%.` Hard is fine. Unexplained is not.
 ## 4. Structure of a run
 
 - **Year** = Spring (plant), Summer (tend, first disasters), Autumn (harvest,
-  sell or store), Winter (accounts, plan, buy protection, repairs).
-- Each working season is a real-time phase of about **2 to 3 minutes**. The
-  season length is the labour budget: you cannot water, hoe and harvest every
-  bed if the farm is big. Hiring a hand costs money and buys time. Sprint stays.
-- **Winter** is a menu phase: the ledger, the forecast for next year, the shop.
+  sell or store), Winter (accounts, clear ice, build protection, sell stored
+  sacks, repairs).
+- Each season is a real-time phase of about **2 to 3 minutes**. The season
+  length is the labour budget: you cannot water, hoe and harvest every bed
+  if the farm is big. Hiring a hand costs money and buys time. Sprint stays.
+- **Winter** is a working season with frozen ground. The annual accounts
+  open as Winter begins and pause the clock until closed; then the player is
+  back on the farm in the snow. The year rolls over automatically when
+  Winter ends.
 - A run is **ten years**, roughly 90 minutes of play across sessions, saved
   every season. Foreclosure is game over.
 - Foreclosure happens when the overdraft passes the bank's limit. The bank is
@@ -555,17 +560,17 @@ derived value (starting cash plus the sum of entries) so the ledger can
 never disagree with the purse. Year totals, category totals, best and
 worst year.
 
-Fixed costs posted in Winter: mortgage 2,000 (interest 1,000 + principal
-1,000 on a 20,000 loan), rent and land tax 500, living 1,500, equipment
-upkeep 500. Constants in one place, docs/REDESIGN_PLAN.md §6 is the
+Fixed costs posted at the start of Winter: mortgage 2,000 (interest 1,000
++ principal 1,000 on a 20,000 loan), rent and land tax 500, living 1,500,
+equipment upkeep 500. Constants in one place, docs/REDESIGN_PLAN.md §6 is the
 source.
 
 Overdraft: the bank allows −5,000. Crossing it in Winter (after fixed
 costs) forecloses: reuse climate_collapse.gd's editorial page with the
 ledger's last year, the cause, and Try Again.
 
-Annual accounts screen: a Winter panel listing every category for the
-year, a running ten-year table, and the net figure in large type. Plain,
+Annual accounts screen: a panel that opens as Winter begins (Segment 9b
+makes it pause the clock), listing every category for the year, a running ten-year table, and the net figure in large type. Plain,
 paper-like, in the existing cream UI. Screenshot-friendly: no HUD chrome
 behind it.
 
@@ -581,6 +586,53 @@ Acceptance: play a year headless, see fixed costs in the ledger; suite
 green; game boots.
 ```
 
+### Segment 9b: Working Winter (run before Segment 11)
+
+```
+Goal: Winter becomes a fourth real-time working season. This corrects
+Segment 8, which made Winter a menu phase.
+
+Clock (scripts/season_clock.gd): Winter is season 3 with the same
+SEASON_SECONDS as the others. Remove winter_menu and start_next_year().
+advance() rolls the year over automatically when Winter ends (year += 1,
+season = 0) and the boundary save fires as for any other season. Year 10
+ends when its Winter ends: set the run-complete condition to "year 10
+Winter finished" and show the ten-year summary then. Keep can_plant()
+false in Winter. Tilling is also blocked in Winter.
+
+Accounts at Winter start: when the Autumn to Winter boundary fires, open
+the annual accounts panel from Segment 9 and pause the simulation while it
+is open, exactly as NPC conversations pause it. Fixed costs post at that
+boundary as before. Closing the panel resumes the clock. The panel stays
+reachable from the farm menu all Winter. Foreclosure still checks after
+the fixed costs post.
+
+Frozen fields: at the Autumn to Winter boundary, unharvested crops are
+lost as now, then every bed ices over (reuse the frost visuals and the
+"hoe the ice" action kept from the old Frostbreak). Hoe [1] on an iced
+bed clears it. A bed cleared in Winter is ready to till on the first
+second of Spring; a bed still iced at Spring start must be cleared first,
+costing Spring labour. That is the reason to work in Winter.
+
+Water: the tank refills at a quarter rate in Winter (snow, not rain). The
+watering can and sprinklers are not needed since nothing grows, except
+Icecap (Segment 10 gives it "grows through Winter"; until then nothing).
+
+Visuals: the Segment 8 snow cover and roof snow appear for the whole
+season; the sun still runs dawn to dusk, lower and paler.
+
+HUD: remove the Winter panel's "Start next year" button and the pause
+menu's Winter entry; the season strip shows "Year N · Winter" like any
+other season. The old Winter panel becomes the accounts panel's host.
+
+Tests: rewrite test_season_clock.gd for four working seasons, automatic
+rollover, the year-10 end condition, and ice clearing carrying into
+Spring. Update test_ledger.gd for accounts-at-start pausing.
+
+Acceptance: a full year of four seasons plays through headless; ice
+cleared in Winter is tillable at Spring start; suite green; game boots.
+```
+
 ### Segment 10: Crop cards and the planting decision
 
 ```
@@ -589,7 +641,10 @@ Goal: the first player decision, with no theory.
 Data: a CROPS table with five varieties (Russet, Giant, Golden, Sunburst,
 Icecap) each with: seed cost, base price, price volatility (low/mid/high),
 water need (1 to 3), heat tolerance (1 to 3), cold tolerance (1 to 3), grow
-seasons (1 or 2), sacks per bed. Fragile varieties pay more. Put the table
+seasons (1 or 2), sacks per bed. Fragile varieties pay more. Icecap is the
+exception card: it can be planted in Autumn and keeps growing through
+Winter on an iced bed, harvested in Winter or early Spring, so it is the
+only crop that turns Winter labour into sales. Put the table
 in scripts/crop_table.gd and make game_state.gd read it; remove the old
 CROPS constants and GROW_TIMES.
 
@@ -617,8 +672,10 @@ suite green; game boots.
 Goal: the second decision.
 
 Selling at harvest pays the current (glut) price. Storing costs 200 per
-Winter, loses 10% of stored sacks to spoilage, and stored sacks sell in
-the next Spring at base × (1.2 to 1.6 depending on volatility). Storage
+Winter, loses 10% of stored sacks to spoilage, and the stored price climbs
+through Winter from base × 1.0 at the start to base × (1.2 to 1.6 depending
+on volatility) by late Winter, then falls back at Spring. Selling stored
+sacks is a Winter action at the barn, so timing within Winter matters. Storage
 capacity is the barn level. Contracts: in Spring, one buyer offers a fixed
 price per sack (base × 1.1) for a quantity due at Autumn; a shortfall costs
 5 per sack. One contract at a time.
@@ -646,7 +703,11 @@ Goal: the third decision, and legible losses.
 Map the existing climate projects (climate_projects.gd, two levels each)
 to: Rainwater tank (drought), Drainage (flood), Windbreak (storm), Frost
 cover (freeze). Cost 1,500 to 2,500 for level 1, roughly double for level
-2, upkeep 100 per year posted in Winter. Level 1 cuts that disaster's field
+2, upkeep 100 per year posted at Winter start. Building is Winter work:
+paying reserves the project, then the player walks to its site and spends
+labour (a few hoe-style actions) to finish it before Spring; unfinished
+work carries to the next Winter. Frost covers are placed per bed in
+Winter and protect that bed against the Spring freeze. Level 1 cuts that disaster's field
 loss by 50%, level 2 by 75%. Insurance: 400 per year, pays 40% of the
 season's crop loss at Winter. Keep the water loop (tank, can, sprinklers)
 as the manual side of drought.
@@ -673,10 +734,11 @@ Acceptance: suite green; game boots.
 ```
 Goal: the trend the player can see.
 
-Curve: per working season, disaster chance = 0.15 + 0.04 × (year − 1),
-capped at 0.6; severity mean = 0.5 + 0.03 × (year − 1). Event mix by
-season: Spring flood or freeze, Summer drought or storm, Autumn storm or
-flood. Constants in climate_system.gd, read by the forecast.
+Curve: per season, disaster chance = 0.15 + 0.04 × (year − 1), capped at
+0.6; severity mean = 0.5 + 0.03 × (year − 1). Event mix by season: Spring
+flood or freeze, Summer drought or storm, Autumn storm or flood, Winter
+deep freeze or blizzard (these hit the barn's stored sacks and any Icecap
+in the ground, not empty beds). Constants in climate_system.gd, read by the forecast.
 
 Foreshadowing: the season before a drought, the tank fills at half rate
 and the ground colour dries; before a flood, rain visuals run more often;
@@ -742,7 +804,7 @@ Acceptance: test_tuning_bot.gd passes; the constants are documented.
 ```
 Goal: the mid-game strategic decision.
 
-From year 3, the Winter menu offers: Farm shop (3,000 to build, +800 per
+From year 3, the accounts panel offers: Farm shop (3,000 to build, +800 per
 year, consumes one season's worth of labour each year by shortening
 Summer by 30 seconds), Contract grower (unlocks two simultaneous
 contracts and a 1.2× contract price), Lodging (2,500, +600 per year, income
