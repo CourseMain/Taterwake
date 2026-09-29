@@ -7,6 +7,7 @@ signal reward_received(title: String, detail: String, rarity: String)
 signal quest_completed(id: String)
 signal purchase_completed(receipt: Dictionary)
 signal sale_completed(receipt: Dictionary)
+signal contract_collected(receipts: Array)
 signal purchase_rejected(message: String)
 signal run_ended
 signal climate_changed(phase: String)

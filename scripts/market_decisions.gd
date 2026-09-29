@@ -159,6 +159,7 @@ func settle(farm) -> void:
 		farm.notified.emit("Autumn buyer: %d tonnes delivered; %d short. Penalty %s." % [delivered, missing, farm.money(missing * SHORTFALL_FEE)])
 	settled[str(year)] = receipts
 	contracts.clear()
+	farm.contract_collected.emit(receipts)
 
 func winter_text(farm) -> String:
 	var report: Dictionary = winters.get(str(farm.season_clock.year), {})

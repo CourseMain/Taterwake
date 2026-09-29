@@ -46,7 +46,7 @@ func run() -> void:
 	check(world._sun.light_color.b > 0.95 and world._sun.light_energy < 0.65, "Winter sunlight is pale and weaker")
 	world.set_day_time(150, true)
 	check(world.day_cycle_info().phase == 1 and world._sun.rotation_degrees.y > winter_dawn.y, "Winter reaches dusk at the season end")
-	check(world._winter_cover.visible and world._snowflakes.size() == 28, "Winter reuses snow surface, roof and falling flakes")
+	check(world._winter_cover.visible and world._snowflakes.size() == 28, "Winter builds accumulated snow and falling flakes")
 	var flake_y: float = world._snowflakes[0].position.y
 	world.animate(0.1, false)
 	check(world._snowflakes[0].position.y != flake_y, "Winter snowfall animates independently of paused farm time")

@@ -130,6 +130,7 @@ func _ready() -> void:
 	conversation.finished.connect(_finish_conversation)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
 	hud.action_requested.connect(_on_user_action)
+	state.contract_collected.connect(func(receipts): world.visuals.collect_order(receipts))
 	state.changed.connect(_on_state_changed)
 	state.notified.connect(_on_notification)
 	state.purchase_completed.connect(_on_purchase_completed)
@@ -296,6 +297,7 @@ func _process(delta: float) -> void:
 		if _hud_update_frame != Engine.get_process_frames():
 			hud.update_state(state)
 		world.set_activity_state(activities.info())
+		world.visuals.sync_state(state)
 	save_elapsed += delta
 	if save_elapsed >= 10.0 and not test_mode:
 		state.save_game()
@@ -763,6 +765,8 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		var tile: int = indices[step]
 		if ice_before.has(str(tile)) != state.climate.data.operations.ice.has(str(tile)) or before[step] != state.plots[tile] or float(danger_before.get(str(tile), 0.0)) != float(state.climate.data.operations.stress.get(str(tile), 0.0)):
 			changed_indices.append(tile)
+			if action == "hoe" and (ice_before.has(str(tile)) or bool(before[step].get("winter_ice",false))) and not (state.climate.data.operations.ice.has(str(tile)) or bool(state.plots[tile].get("winter_ice",false))):
+				world.visuals.break_ice(tile)
 			if action == "harvest" and int(before[step].stage) == 3:
 				harvest_snapshots[tile] = before[step]
 	if lesson_before == "water" and state.climate.data.lesson.stage == "area": changed_indices.append(index)
@@ -925,6 +929,7 @@ func _on_state_changed() -> void:
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
+		world.visuals.sync_state(state)
 		world.set_calendar(state.season_clock.year, state.season_clock.season, state.calendar_light_seconds(), state.climate.data.outlook.signal)
 	if hud != null:
 		hud.update_state(state)

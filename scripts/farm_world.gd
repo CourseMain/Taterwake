@@ -119,7 +119,13 @@ var _season_materials: Array[Dictionary] = []
 var _season_palette: Dictionary = {}
 var _winter_visible: bool = false
 var _winter_cover: Node3D
-var _winter_roofs: Array[Node3D] = []
+var visuals: Node3D
+var _roof_specs: Array[Dictionary] = []
+var _tree_specs: Array[Dictionary] = []
+var _fence_specs: Array[Dictionary] = []
+var _path_segments: Array[Dictionary] = []
+var _live_plots: Array = []
+var _plant_weather: Dictionary = {}
 
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
@@ -147,6 +153,7 @@ func build_world() -> void:
 	_staff_stalls()
 	_expand_village()
 	_extended_fields()
+	_season_verges()
 	_garden()
 	coast = preload("res://scripts/coastal_world.gd").new()
 	add_child(coast)
@@ -186,6 +193,9 @@ func build_world() -> void:
 	harvest_feedback = preload("res://scripts/harvest_feedback.gd").new()
 	add_child(harvest_feedback)
 	harvest_feedback.setup(self)
+	visuals = preload("res://scripts/farm_visuals.gd").new()
+	add_child(visuals)
+	visuals.setup(self)
 	_apply_season()
 
 
@@ -378,7 +388,13 @@ func _clear_world() -> void:
 	_season_key = ""
 	_season_palette.clear()
 	_winter_cover = null
-	_winter_roofs.clear()
+	visuals = null
+	_roof_specs.clear()
+	_tree_specs.clear()
+	_fence_specs.clear()
+	_path_segments.clear()
+	_live_plots = []
+	_plant_weather.clear()
 	_ducks.clear()
 	_duck_bodies.clear()
 	_materials.clear()
@@ -488,14 +504,18 @@ func set_climate_projects(projects: Dictionary) -> void:
 			_project_nodes[id] = project
 			_geometry_batcher.batch_tree(project, {})
 	_project_levels = levels.duplicate(true)
+	if is_instance_valid(visuals): visuals.winter_dirty = true
 
 
 func set_climate(info: Dictionary) -> void:
+	_plant_weather = {"event":info.get("event", ""), "stress":info.get("operations", {}).get("stress", {})}
+	if is_instance_valid(weather_station): weather_station.set_forecast(info.get("forecast", {}))
 	_climate_ice = info.get("operations", {}).get("ice", {})
 	for i in range(_ice_roots.size()):
 		_ice_roots[i].visible = _climate_ice.has(str(i))
 	set_climate_projects(info.get("projects", {}))
 	set_protection_work(info.get("protection", {}))
+	if not _live_plots.is_empty(): update_plots(_live_plots)
 	if is_instance_valid(_climate_field): _climate_field.set_weather(info)
 	var strength: float = 0.0
 	if info.phase == "warning": strength = float(info.severity) * lerpf(0.15, 0.65, 1.0 - float(info.timer) / Climate.WARNING_SECONDS)
@@ -563,8 +583,8 @@ func _island() -> void:
 	var ground := MeshInstance3D.new()
 	ground.name = "IslandTerrainShell"
 	ground.mesh = Surface.mesh()
-	_ground_material = preload("res://scripts/island_terrain.gd").material(false)
-	_ground_material.set_shader_parameter("farm", true)
+	_ground_material = ShaderMaterial.new()
+	_ground_material.shader = preload("res://scripts/island_terrain.gdshader")
 	ground.material_override = _ground_material
 	ground.set_meta("terrain_shell", true)
 	ground.set_meta("land_layout", true)
@@ -575,6 +595,8 @@ func _island() -> void:
 	ground.get_child(0).set_meta("ground", true)
 
 func _paths() -> void:
+	for lane in [[Vector3(-15,0,-4.7),Vector3(15,0,-4.7),2.0],[Vector3(7,0,-5.3),Vector3(7,0,8.3),2.0],[Vector3(-11.8,0,7.7),Vector3(7.8,0,7.7),2.15]]:
+		_path_segments.append({"a":layout_point(lane[0]), "b":layout_point(lane[1]), "width":lane[2]*LAND_SPACING})
 	_box(self, Vector3(0.0, 0.025, -4.7), Vector3(30.0, 0.065, 2.0), Color("d4bc82"))
 	_box(self, Vector3(7.0, 0.028, 1.5), Vector3(2.0, 0.07, 13.6), Color("d4bc82"))
 	_box(self, Vector3(-2.0, 0.03, 7.7), Vector3(19.6, 0.065, 2.15), Color("d4bc82"))
@@ -587,6 +609,7 @@ func _paths() -> void:
 		_box(self, pos, Vector3(0.8, 0.055, 0.48), Color("e4ce98"))
 
 func _ground_path(a: Vector3, b: Vector3, width: float = 1.8) -> void:
+	_path_segments.append({"a":a,"b":b,"width":width})
 	var count: int = ceili(a.distance_to(b) / 0.22)
 	var side: Vector3 = (b - a).normalized().cross(Vector3.UP) * width * 0.5
 	var surface := SurfaceTool.new()
@@ -609,7 +632,7 @@ func _extended_fields() -> void:
 
 func _garden() -> void:
 	_lease_boards.clear()
-	for entry: Array in [[Vector3.ZERO,0,"Home Field · Sheltered"], [Vector3(18,0,13),24,"Low Field · Floods first"], [Vector3(1,0,-23),48,"Hill Field · Dries first"]]:
+	for entry: Array in [[Vector3.ZERO,0,"Home Field · Sheltered"], [Vector3(18,0,13),24,"Low Field · Wet / floods first"], [Vector3(1,0,-23),48,"Hill Field · Dry & windy"]]:
 		var offset: Vector3 = entry[0]
 		_garden_field(offset, entry[1])
 		var sign_pos: Vector3 = offset + Vector3(1.5,0,6.7)
@@ -652,12 +675,13 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 			ice.name = "ClimateIce"
 			root.add_child(ice)
 			_ice_roots.append(ice)
-			_box(ice, Vector3(0.0, 0.27, 0.0), Vector3(1.88, 0.10, 1.88), Color("aed8e8"))
-			for point in [Vector3(-0.61, 0.52, -0.55), Vector3(0.57, 0.48, 0.50)]:
-				var crystal := _cylinder(ice, point, 0.19, 0.05, 0.52, Color("d2ecf4"), 5)
-				crystal.rotation.z = -0.22
-			_bar(ice, Vector3(-0.76, 0.334, 0.12), Vector3(0.59, 0.334, -0.37), 0.018, Color("eef8fa"))
-			_bar(ice, Vector3(-0.10, 0.335, -0.76), Vector3(0.38, 0.335, 0.67), 0.018, Color("eaf5f8"))
+			# Thin polygonal glaze; dark branching seams remain readable under snow.
+			_box(ice, Vector3(0,0.255,0),Vector3(1.88,0.055,1.88),Color("a9cbd4"))
+			for branch in range(6):
+				var a := Vector3(-0.8+branch*0.30,0.289,-0.88)
+				var b := a+Vector3(0.18,0,0.85)
+				_bar(ice,a,b,0.023,Color("698c9e"))
+				_bar(ice,b,b+Vector3(-0.25,0,0.78),0.018,Color("eef7f5"))
 			ice.visible = false
 			var pests := Node3D.new()
 			pests.name = "CropPests"
@@ -693,6 +717,8 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 		else: _fence(a,b,7 if j % 2 == 0 else 5)
 
 func update_plots(plots: Array) -> void:
+	_live_plots = plots
+	if is_instance_valid(visuals): visuals.update_grades(plots)
 	for j in range(_lease_boards.size()):
 		_lease_boards[j].visible = plots.size() > (j+1)*24 and not plots[(j+1)*24].get("unlocked", false)
 	for i in range(mini(plots.size(), _crop_roots.size())):
@@ -714,6 +740,9 @@ func update_plots(plots: Array) -> void:
 		# Only the plant grows. Soil marks and the pest-shaking parent stay fixed.
 		_crop_roots[i].scale = Vector3.ONE
 		var key: String = "%s/%d/%s/%s/%s/%s/%d/%s" % [str(unlocked), stage, str(watered), str(tilled), crop_kind, str(infested), damage_level, str(data.get("pest_destroyed", false))]
+		var stress: float = floorf(float(_plant_weather.get("stress", {}).get(str(i),0))*4)/4.0
+		var event: String = str(_plant_weather.get("event", "")) if stress > 0 else ""
+		key += "/%s/%.2f" % [event,stress]
 		if key == _plot_states[i]:
 			if _crop_tubers.has(i): _update_crop_tuber(_crop_tubers[i])
 			continue
@@ -750,9 +779,9 @@ func update_plots(plots: Array) -> void:
 					_sphere(root, remains + Vector3(0.10, -0.08, 0.16), Vector3(0.14, 0.055, 0.09), Color("ad8545"))
 			_geometry_batcher.batch_siblings(root)
 			continue
-		var tuber: Node3D = _create_crop_tuber(root, data)
+		var tuber: Node3D = _create_crop_tuber(root, data, event, stress)
 		tuber.position = Vector3(0, .25, 0)
-		_crop_tubers[i] = {"node": tuber, "plot": data}
+		_crop_tubers[i] = {"node": tuber, "plot": data, "stress":stress, "event":event}
 		_update_crop_tuber(_crop_tubers[i])
 		if stage == 3:
 			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), GOLD, 0.12)
@@ -770,22 +799,30 @@ func _crop_appearance(plot: Dictionary) -> Dictionary:
 func _crop_tuber_size(plot: Dictionary) -> float:
 	return float({"giant": .90, "sunburst": .70, "icecap": .72}.get(str(plot.get("crop", "russet")), .62))
 
-func _create_crop_tuber(parent: Node3D, plot: Dictionary) -> Node3D:
+func _create_crop_tuber(parent: Node3D, plot: Dictionary, event: String = "", stress: float = 0.0) -> Node3D:
 	# The intro, ordinary growth and harvest all use this same potato.
 	var tuber := Node3D.new()
 	tuber.name = "PotatoTuber"
 	parent.add_child(tuber)
 	var appearance: Dictionary = _crop_appearance(plot)
+	if event == "flood": appearance.foliage = appearance.foliage.lerp(Color("d3bd53"),stress)
+	if event == "drought": appearance.foliage = appearance.foliage.lerp(Color("a18b4f"),stress*0.65)
+	if event == "freeze": appearance.foliage = appearance.foliage.lerp(Color("cde8ee"),stress)
 	var color: Color = appearance.crop
 	_sphere(tuber, Vector3(0,.58,0), Vector3(1.03,.87,.83), color)
 	_sphere(tuber, Vector3(-.65,.48,.03), Vector3(.45,.52,.59), color.darkened(.07))
 	for eye: Vector3 in [Vector3(.35,1.19,.43), Vector3(-.30,.72,.79), Vector3(.65,.38,.63)]:
 		_sphere(tuber, eye, Vector3(.05,.035,.025), color.darkened(.27))
 	for side: float in [-1, 1]:
-		_leaf(tuber, Vector3(side*.22,1.44,0), Vector3(.42,.14,.24), appearance.foliage, side*.35)
+		_leaf(tuber, Vector3(side*.22,1.44,0), Vector3(.42,.14,.24), appearance.foliage, side*(.35-stress*1.4 if event == "drought" else .35))
 	if int(plot.get("stage", 0)) == 3:
 		if plot.get("crop") == "sunburst": _sunburst_bloom(tuber, Vector3(0,1.58,0))
 		elif plot.get("crop") == "icecap": _icecap_bloom(tuber, Vector3(0,1.58,0))
+	if event == "freeze" and stress > 0:
+		for j in range(5):
+			var p := Vector3(-.55+j*.25,1.12+sin(j)*.18,.48)
+			_bar(tuber,p,p+Vector3(.12,.30,0),.025,Color("e8f5f4"))
+			_bar(tuber,p+Vector3(0,.12,0),p+Vector3(-.14,.24,0),.018,Color("b8dbe8"))
 	_geometry_batcher.batch_siblings(tuber)
 	return tuber
 
@@ -793,6 +830,9 @@ func _update_crop_tuber(entry: Dictionary) -> void:
 	var plot: Dictionary = entry.plot
 	var progress: float = 1.0 if int(plot.stage) == 3 else clampf(float(plot.get("elapsed", 0)) / float(FarmState.CropTable.CROPS[str(plot.crop)].grow), 0, 1)
 	entry.node.scale = Vector3.ONE * _crop_tuber_size(plot) * lerpf(.375, 1.0, smoothstep(0, 1, progress))
+	if entry.get("event", "") == "drought":
+		entry.node.scale.y *= 1.0-float(entry.get("stress",0))*.25
+		entry.node.rotation.z = float(entry.get("stress",0))*.18
 
 
 func highlight_plot(index: int) -> void:
@@ -811,10 +851,13 @@ func set_player_position(pos: Vector3) -> void:
 	var direction: Vector3 = pos - player.position
 	if Vector2(direction.x, direction.z).length() > 0.005:
 		_player_heading = atan2(direction.x, direction.z)
+	var previous: Vector3 = player.position
 	player.position = Surface.move(player.position, pos)
+	if is_instance_valid(visuals): visuals.walked(previous,player.position)
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
+	if is_instance_valid(visuals): visuals.animate(delta)
 	if is_instance_valid(harvest_feedback): harvest_feedback.animate(delta)
 	for entry: Dictionary in _crop_tubers.values():
 		if is_instance_valid(entry.node): _update_crop_tuber(entry)
@@ -886,20 +929,25 @@ func pick(screen_pos: Vector2) -> Dictionary:
 
 func _barn(pos: Vector3) -> void:
 	var root := _root("RedBarn", pos)
-	_box(root, Vector3(0.0, 1.9, 0.0), Vector3(5.2, 3.8, 4.1), Color("93775e") if current_island == 3 else (Color("f2d69e") if current_island == 2 else Color("b95647")))
+	for x in [-1.85,1.85]: _box(root,Vector3(x,1.9,0),Vector3(1.5,3.8,4.1),Color("b95647"))
+	_box(root,Vector3(0,3.4,0),Vector3(2.2,0.8,4.1),Color("b95647"))
+	_box(root,Vector3(0,1.5,-1.9),Vector3(2.2,3,.25),Color("673d36"))
 	_box(root, Vector3(0.0, 0.17, 0.0), Vector3(5.55, 0.35, 4.4), Color("d4c2a2"))
-	for x in [-2.55, -1.7, -0.85, 0.0, 0.85, 1.7, 2.55]:
+	for x in [-2.55, -1.7, 1.7, 2.55]:
 		_box(root, Vector3(x, 2.0, 2.08), Vector3(0.055, 3.7, 0.045), Color("d8775b"))
 	for x in [-2.57, 2.57]:
 		_box(root, Vector3(x, 1.97, 2.12), Vector3(0.16, 3.9, 0.15), CREAM)
-	_box(root, Vector3(0.0, 1.48, 2.13), Vector3(2.36, 2.8, 0.12), CREAM)
-	_box(root, Vector3(0.0, 1.43, 2.23), Vector3(2.07, 2.55, 0.11), Color("7c443b"))
-	_box(root, Vector3(0.0, 1.45, 2.31), Vector3(0.10, 2.55, 0.06), CREAM)
-	_bar(root, Vector3(-0.96, 0.26, 2.31), Vector3(0.96, 2.58, 2.31), 0.09, CREAM)
-	_bar(root, Vector3(0.96, 0.26, 2.32), Vector3(-0.96, 2.58, 2.32), 0.09, CREAM)
+	for x in [-1.16,1.16]: _box(root,Vector3(x,1.45,2.15),Vector3(.15,2.9,.15),CREAM)
+	_box(root,Vector3(0,2.91,2.15),Vector3(2.5,.15,.15),CREAM)
+	for side in [-1,1]:
+		var door := Node3D.new()
+		door.name = "BarnDoor"
+		root.add_child(door)
+		door.position = Vector3(side*1.2,0,2.2)
+		door.rotation.y = side*1.1
+		_box(door,Vector3(-side*.52,1.45,0),Vector3(1.05,2.65,.12),Color("7c443b"))
+		_bar(door,Vector3(-side*.98,.2,.08),Vector3(-side*.05,2.7,.08),.065,CREAM)
 	_roof(root, 6.0, 5.0, 3.85, 1.4, Color("6b7f89") if current_island == 3 else (Color("db8066") if current_island == 2 else TEAL))
-	if current_island == 3:
-		_snow_roof(root, 6.0, 5.0, 3.85, 1.4)
 	_box(root, Vector3(0.0, 3.49, 2.14), Vector3(0.8, 0.53, 0.14), CREAM)
 	_box(root, Vector3(0.0, 3.5, 2.24), Vector3(0.57, 0.34, 0.06), Color("425c67"))
 	for x in [-1.8, 1.8]:
@@ -959,7 +1007,6 @@ func _scenery() -> void:
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
 			_sphere(self, pos + Vector3(float(i) * 0.53, 0.38, 0.0), Vector3(0.65, 0.59, 0.6), Color("63905c"))
-	_season_verges()
 	for i in range(70):
 		var x: float = _rng.randf_range(-18.0, 18.0)
 		var z: float = _rng.randf_range(9.2, 13.1) if i < 40 else _rng.randf_range(-12.9, 10.0)
@@ -1010,16 +1057,20 @@ func _scenery() -> void:
 func _tree(pos: Vector3, size: float) -> void:
 	var root := _root("OrchardTree", pos)
 	root.scale = Vector3.ONE * size
-	_cylinder(root, Vector3(0.0, 1.1, 0.0), 0.22, 0.13, 2.2, Color("876346"), 7)
-	_season_mesh(_sphere(root, Vector3(0.0, 2.8, 0.0), Vector3(1.36, 1.7, 1.30), Color("6b965b")), "canopy")
-	_season_mesh(_sphere(root, Vector3(-0.72, 2.4, 0.18), Vector3(0.88, 1.03, 0.9), Color("80a768")), "canopy")
-	_season_mesh(_sphere(root, Vector3(0.68, 2.5, 0.1), Vector3(0.85, 1.2, 0.87), Color("8eae6b")), "canopy")
-	for i in range(3):
-		_sphere(root, Vector3(-0.65 + float(i) * 0.58, 2.45 + float(i % 2) * 0.65, 1.03), Vector3(0.15, 0.16, 0.15), Color("d5a660"))
-
+	_cylinder(root,Vector3(0,1.1,0),.22,.13,2.2,Color("876346"),7)
+	var canopy := Node3D.new(); root.add_child(canopy)
+	canopy.name = "DeciduousCanopy"
+	for branch in range(5):
+		var tip := Vector3(sin(branch*2.1)*1.05,2.5+float(branch%2)*.65,cos(branch*2.1)*.9)
+		_bar(root,Vector3(0,1.3,0),tip,.075,Color("876346"))
+		_bar(root,tip*.85,tip+Vector3(.23,.38,.10),.038,Color("876346"))
+	for lump in [[Vector3(0,2.8,0),Vector3(1.36,1.7,1.30)],[Vector3(-.72,2.4,.18),Vector3(.88,1.03,.9)],[Vector3(.68,2.5,.1),Vector3(.85,1.2,.87)]]:
+		_season_mesh(_sphere(canopy,lump[0],lump[1],Color("80a768")),"canopy")
+	for i in range(3): _sphere(canopy,Vector3(-.65+i*.58,2.45+float(i%2)*.65,1.03),Vector3.ONE*.16,Color("d5a660"))
 	for i in range(9):
-		var point := Vector3(sin(i * 2.4) * 1.08, 2.6 + cos(i * 1.7) * 0.8, cos(i * 2.4) * 1.05)
-		_season_mesh(_sphere(root, point, Vector3.ONE * 0.22, Color("f3c4d2")), "blossom")
+		var point := Vector3(sin(i*2.4)*1.18,2.8+cos(i*1.7)*.95,cos(i*2.4)*1.15)
+		_season_mesh(_sphere(canopy,point,Vector3(.38,.30,.38),Color("f3c4d2")),"blossom")
+	_tree_specs.append({"parent":root,"canopy":canopy})
 
 func _staff_stalls() -> void:
 	# Each keeper has a reason to stand here: serve the counter, mind the
@@ -1097,6 +1148,7 @@ func _potato_person(parent: Node3D, pos: Vector3, skin: Color, clothes: Color, f
 func _fence(start: Vector3, end: Vector3, segments: int) -> void:
 	var fence := _root("Fence", Vector3.ZERO)
 	fence.set_meta("layout_stretch", true)
+	_fence_specs.append({"parent":fence,"a":start,"b":end})
 	for i in range(segments + 1):
 		var pos: Vector3 = start.lerp(end, float(i) / float(segments))
 		_box(fence, pos + Vector3(0.0, 0.48, 0.0), Vector3(0.16, 0.96, 0.16), Color("e3d4a8"))
@@ -1266,6 +1318,7 @@ func _label(parent: Node3D, text: String, pos: Vector3, font_size: int, color: C
 	return label
 
 func _roof(parent: Node3D, width: float, depth: float, base: float, rise: float, color: Color) -> void:
+	_roof_specs.append({"parent":parent,"width":width,"depth":depth,"base":base,"rise":rise})
 	var verts: Array[Vector3] = [Vector3(-width / 2, base, -depth / 2), Vector3(width / 2, base, -depth / 2), Vector3(0, base + rise, -depth / 2), Vector3(-width / 2, base, depth / 2), Vector3(width / 2, base, depth / 2), Vector3(0, base + rise, depth / 2)]
 	var mesh := SurfaceTool.new()
 	mesh.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -1536,28 +1589,12 @@ func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 		_snowflakes.append(snowflake)
 
 func _set_winter_cover(enabled: bool) -> void:
-	if enabled and not is_instance_valid(_winter_cover):
-		_winter_cover = _root("WinterSnow", Vector3.ZERO)
-		var snow := MeshInstance3D.new()
-		snow.mesh = Surface.mesh()
-		snow.position.y = 0.025
-		_winter_cover.add_child(snow)
-		snow.material_override = preload("res://scripts/island_terrain.gd").material(true)
-		snow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_falling_snow(_winter_cover, Surface.EXTENT * 0.48)
-		var barn: Node3D = get_node_or_null("RedBarn")
-		if is_instance_valid(barn):
-			var roof := Node3D.new()
-			barn.add_child(roof)
-			_snow_roof(roof, 6.0, 5.0, 3.85, 1.4)
-			_winter_roofs.append(roof)
-	if is_instance_valid(_winter_cover):
-		var snow_weight: float = float(_season_palette.get("snow", 1.0 if enabled else 0.0)) if not _season_key.is_empty() else (1.0 if enabled else 0.0)
-		_winter_cover.visible = enabled or snow_weight > 0.001
-		var surface: ShaderMaterial = _winter_cover.get_child(0).material_override
-		surface.set_shader_parameter("snow_cover", snow_weight)
-		surface.set_shader_parameter("exposed_ground", _season_palette.get("grass", GRASS))
-	for roof in _winter_roofs: roof.visible = enabled
+	if is_instance_valid(visuals):
+		visuals.set_winter(enabled)
+		_winter_cover = visuals.snow
+	if is_instance_valid(_player_body): _player_body.set_season(3 if enabled else _season_index)
+	for tree in _tree_specs:
+		if is_instance_valid(tree.canopy): tree.canopy.visible = not enabled
 
 
 func _icecap_bloom(parent: Node3D, pos: Vector3) -> void:
@@ -1852,12 +1889,12 @@ func _retire_climate_node(node: Node3D) -> void:
 ## Calendar presentation is deterministic; only the one-second blend uses real time.
 static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
 	var age: float = clampf((year - 1) / 9.0, 0, 1)
-	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("ccd7cd")][season]
+	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("829386")][season]
 	if season == 1: grass = grass.lerp(Color("c4a16d"), clampf((year - 5) / 5.0, 0, 1) * 0.85)
 	if hint == "drought": grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
-		"snow": 1.0 if season == 3 else 0.0, "haze": (0.06 + age * 0.32) if season == 1 else 0.0}
+		"haze": (0.12 + age * 0.26) if season == 1 else 0.0}
 
 func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	for entry in _season_materials:
@@ -1872,15 +1909,21 @@ func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	_season_materials.append({"material": material, "kind": kind, "base": material.albedo_color})
 
 func _season_verges() -> void:
-	var flowers := _root("SpringFlowers", Vector3.ZERO)
-	var leaves := _root("AutumnLeaves", Vector3.ZERO)
+	var flowers := _root("SpringFlowers",Vector3.ZERO)
+	var leaves := _root("AutumnLeaves",Vector3.ZERO)
 	for i in range(36):
-		var side: float = -1.0 if i % 2 == 0 else 1.0
-		var pos := Vector3(-16.0 + (i / 2) * 1.85, 0.12, side * 10.8)
-		_season_mesh(_sphere(flowers, pos, Vector3(0.13, 0.16, 0.13), Color("edd998") if i % 3 == 0 else Color("f2c5d2")), "flower")
-		var leaf := _sphere(leaves, Vector3(pos.x, 0.22, side * 8.6 + sin(i) * 0.7), Vector3(0.30, 0.025, 0.16), Color("ba693b") if i % 2 == 0 else Color("8e6241"))
-		leaf.rotation.y = i * 1.3
-		_season_mesh(leaf, "leaf")
+		var pos: Vector3=layout_point(Vector3(-16+(i/2)*1.85,.12,(-1 if i%2==0 else 1)*10.8))
+		_season_mesh(_sphere(flowers,pos,Vector3(.18,.18,.18),Color("edd998") if i%3==0 else Color("f2c5d2")),"flower")
+	var rng:=RandomNumberGenerator.new(); rng.seed=1803
+	for tree in _tree_specs:
+		for i in range(16):
+			var angle: float=rng.randf_range(0,TAU)
+			var p: Vector3=tree.parent.position+Vector3(cos(angle)*rng.randf_range(.7,2.1),0,sin(angle)*rng.randf_range(.7,2.1))
+			p.x=clampf(p.x,-Surface.half_width(p.z,.4),Surface.half_width(p.z,.4))
+			p.y=ground_height(p.x,p.z)+.06
+			var leaf:=_sphere(leaves,p,Vector3(.32,.025,.19),Color("bf7940") if i%2==0 else Color("a9744d"))
+			leaf.rotation.y=angle
+			_season_mesh(leaf,"leaf")
 
 func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> void:
 	var key: String = "%d/%d/%s" % [year, season, hint]
@@ -1908,6 +1951,7 @@ func _apply_season() -> void:
 	for key in target:
 		_season_palette[key] = _season_from.get(key, target[key]).lerp(target[key], _season_blend) if target[key] is Color else lerpf(float(_season_from.get(key, target[key])), float(target[key]), _season_blend)
 	if is_instance_valid(_ground_material): _ground_material.set_shader_parameter("grass_color", _season_palette.grass)
+	_set_winter_cover(_season_index == 3)
 	for entry in _season_materials:
 		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass
 		elif entry.kind == "canopy":
@@ -1924,7 +1968,7 @@ func draw_season_signals(v, time: float) -> void:
 			for j in range(15):
 				var x: float = plot_positions[0].x + j * 0.8
 				var z: float = plot_positions[0].z + band * 1.6
-				v._line(Vector3(x, 0.75 + sin(time * 2.1 + j + band) * 0.08, z), Vector3(x + 0.8, 0.75 + sin(time * 2.1 + j + 1 + band) * 0.08, z), 0.08, Color(1.0, 0.86, 0.62, haze * 0.18), true)
+				v._line(Vector3(x, 0.75 + sin(time * 2.1 + j + band) * 0.08, z), Vector3(x + 0.8, 0.75 + sin(time * 2.1 + j + 1 + band) * 0.08, z), 0.17, Color(1.0, 0.86, 0.62, haze * 0.65), true)
 	if _season_signal == "flood" and fposmod(time, 8.0) < 5.0:
 		for i in range(48):
 			var p := Vector3(plot_positions[0].x + fposmod(i * 1.71, 13), 0.3 + fposmod(i * 0.41 - time * 4, 4.5), plot_positions[0].z + fposmod(i * 1.33, 8))
