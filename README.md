@@ -1,27 +1,29 @@
 # Taterland
 
-**v2.0.0(undeveloped:d) — Game redesign**
+**v2.0.0(undeveloped:e) — Game redesign**
 
-Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-d).
+Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-e).
 
-The `v2.0.0-undeveloped-d` source prerelease implements redesign Segments 1–13 plus harvest quality and seed saving:
+The `v2.0.0-undeveloped-e` source prerelease implements redesign Segments 1–15:
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
-- All four seasons last 150 seconds. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
+- Seasons last 150 seconds, or 120 for Summer with a farm shop. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
 - Five crop cards with water, heat and cold dials; Icecap plants in Autumn and grows through Winter ice.
 - Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
 - Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
-- Winter storage prices, fees and spoilage; one Spring buyer contract collected at the end of Autumn.
+- Winter storage prices, fees and spoilage; Spring buyer contracts collected at the end of Autumn, with two premium orders for contract growers.
 - Warned climate disasters, manual water management, Winter protection construction and per-bed frost covers.
 - Annual crop insurance, including Winter weather losses, protection upkeep, forecast ranges and crop-loss cause cards.
 - A worsening climate curve, seasonal event mixes, foreshadowing, year-start headlines and a ten-year disaster record.
 - Spring blossom, Summer haze and drying grass, Autumn canopies and leaves, with smooth seasonal transitions.
 - Table, Standard and Feed harvest grades; wider crop prices, graded sales and contracts requiring Standard or better.
 - Keep Standard or Table sacks as seed for next Spring; stored sacks lose ten quality and suffer 5% spoilage each Winter.
+- Year-three farm shop, contract growing and lodging investments, separate ledger entries and earned run titles.
+- Shared balance constants and 120 seeded strategy runs, with every annual ledger reconciled exactly.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
-Economy tuning, diversification and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
+The fifty-year epilogue and remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — this is the previous game, not the v2 redesign. The live site and downloadable v1 build remain unchanged. To try v2, use the prerelease source with Godot 4.7.2 as described below.
 
@@ -37,7 +39,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `redesign` branch or the `v2.0.0-undeveloped-d` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch or the `v2.0.0-undeveloped-e` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0-undeveloped-e
+
+**Game redesign — unfinished source prerelease.** Covers Segments 1–15, including economy tuning and diversification. The live browser game remains v1.0.3.1.
+
+- Centralized prices, fixed costs, protection, insurance and climate tuning in `scripts/balance.gd`; tuned crop prices and grades against full ten-year runs.
+- Added a headless tuning bot: naive, cautious, tidy and diversifier each play seeds 1–30 through the real game state. Naive forecloses in median year five; cautious survives 28/30, tidy 30/30 and diversifier 29/30. Tidy earns 27.02% more crop receipts than cautious; no completed strategy exceeds 8,000 cash.
+- Added year-three accounts investments: farm shop (3,000, 800 yearly, Summer shortened by 30 seconds), free contract-grower enrolment (two simultaneous orders at 1.2× the ordinary quote), and lodging (2,500, up to 600 yearly based on completed protection types). Benefits start the following year and each posts under its own ledger label.
+- Added Adapter, Shopkeeper, Stubborn and Sold Up run titles, with Survivor for completed farms with one or two protections.
+- Made weather precursor signals predict the following season's disaster occurrence and kept repeated storm stress within save bounds.
+- Validation: all 80 headless suites pass, including the 39-check boot. The tuning bot passes 1,351 checks and reconciles 1,045 annual ledgers exactly. The diversification suite passes 89 checks, also verified under native GL Compatibility with desktop/phone UI previews.
+
+Use Godot 4.7.2 to run the source. Saves use the v4 path and mechanics revision 40; incompatible older saves are safely set aside. The fifty-year epilogue remains unfinished. This source prerelease does not replace the published browser build.
+
 ## 2.0.0-undeveloped-d
 
 **Game redesign — unfinished source prerelease.** Covers Segments 1–13 plus harvest quality and seed saving, before economy tuning. The live browser game remains v1.0.3.1.
