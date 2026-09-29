@@ -200,8 +200,8 @@ func refresh() -> void:
 	hud._refs.station_upgrade.text = "Station level %d · ±%d points" % [station, [20, 10, 5][station]] + (" · Upgrade " + farm.money(farm.ClimateSystem.Protection.STATION_COST * (station + 1)) if station < 2 else "")
 	hud._refs.station_upgrade.disabled = station >= 2 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.STATION_COST * (station + 1))
 	var insured: bool = farm.ClimateSystem.Protection.insured(farm)
-	hud._refs.insurance.text = "Insured this year · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss" if insured else "Spring insurance · " + farm.money(400) + " · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss"
-	hud._refs.insurance.disabled = insured or farm.season_clock.season != 0 or farm.run_over or not farm.can_purchase(400)
+	hud._refs.insurance.text = "Insured this year · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss" if insured else "Spring insurance · " + farm.money(farm.ClimateSystem.Protection.PREMIUM) + " · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss"
+	hud._refs.insurance.disabled = insured or farm.season_clock.season != 0 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.PREMIUM)
 
 	if hud._refs.has("climate_practice"):
 		hud._refs.climate_practice.disabled = int(info.projects.get("irrigation", 0)) == 0

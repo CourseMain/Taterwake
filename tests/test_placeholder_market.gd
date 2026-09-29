@@ -18,7 +18,7 @@ func run() -> void:
 		for crop: String in State.CROP_IDS:
 			var base: float = State.CropTable.CROPS[crop].base
 			check(farm.market[crop].sell >= base * 0.85 - 0.000001 and farm.market[crop].sell <= base * 1.15 + 0.000001, crop + " bounded drift")
-			check(farm.market[crop].seed == base * 0.75, crop + " fixed seed cost")
+			check(farm.market[crop].seed == State.CropTable.CROPS[crop].seed, crop + " fixed seed cost")
 			check(farm.price_percent(crop) == roundi((farm.market[crop].sell / base - 1.0) * 100.0), crop + " percentage is rounded against base")
 			check(farm.market[crop].history.size() >= 1 and farm.market[crop].history.size() <= 12 and farm.market[crop].history.back() == farm.market[crop].sell, crop + " bounded history ends at live quote")
 	farm.reset_game()
@@ -26,10 +26,10 @@ func run() -> void:
 	check(absf(farm.market.russet.sell / State.CropTable.CROPS.russet.base - 1.0) < 0.002, "one second changes prices by less than 0.2 percent")
 	farm.elapsed = 150.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 15.75), "quarter-cycle reaches upper bound")
+	check(is_equal_approx(farm.market.russet.sell, State.CropTable.CROPS.russet.base * 1.05), "quarter-cycle reaches upper bound")
 	farm.elapsed = 450.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 14.25), "three-quarter-cycle reaches lower bound")
+	check(is_equal_approx(farm.market.russet.sell, State.CropTable.CROPS.russet.base * 0.95), "three-quarter-cycle reaches lower bound")
 	for crop: String in State.CROP_IDS:
 		var history: Array = farm.market[crop].history
 		check(history.size() == 12, crop + " retains the last twelve quotes")

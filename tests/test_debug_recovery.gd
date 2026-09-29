@@ -35,7 +35,7 @@ func run() -> void:
 	farm.tools.water = 1
 	farm.coins = -5000
 	check(not farm.run_over, "exact overdraft boundary survives")
-	farm.coins = -501
+	farm.coins = farm.OVERDRAFT_LIMIT + farm.ledger.fixed_cost_total() - 1
 	farm.season_clock.season = 2
 	farm.season_clock.seconds = 149.75
 	farm.update(0.25)

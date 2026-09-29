@@ -105,8 +105,8 @@ func run() -> void:
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
 	state.coins = 10000
 	for crop: String in State.CROP_IDS:
-		check(State.CropTable.CROPS[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "base seed " + crop)
-		check(state.market[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "initial seed ratio " + crop)
+		check(State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "base seed " + crop)
+		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "initial seed ratio " + crop)
 	game._on_action("market")
 	await settle()
 	var page = game.hud._refs.market_page
@@ -115,7 +115,7 @@ func run() -> void:
 	var seeds: int = state.seed_inventory.russet
 	press(page, "buy:russet:1")
 	press(page, "buy:russet:5")
-	check(state.seed_inventory.russet == seeds + 6 and state.coins == cash - 67.5, "buy controls add seeds and spend live currency")
+	check(state.seed_inventory.russet == seeds + 6 and state.coins == cash - 6 * State.CropTable.CROPS.russet.seed, "buy controls add seeds and spend live currency")
 	check(game.hud._purchase_receipt.quantity == 6, "purchase receipt and inventory retained")
 	state.coins = state.bankruptcy_limit()
 	game.hud.update_state(state)
@@ -136,13 +136,13 @@ func run() -> void:
 	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
 	check(page.crops == expected, "buy and sell share base order")
 	page.quantity.value = 3
-	check(page.payout.text == "\uE000 45", "quantity previews actual expected payout")
+	check(page.payout.text == state.money(3 * state.market.russet.sell), "quantity previews actual expected payout")
 	cash = state.coins
 	press(page, "market_sell")
-	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 45, "sell commits chosen quantity at live price")
-	check(page.status.text.contains("sold") and page.status.text.contains("45"), "successful sale confirms committed payout")
+	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 3 * state.market.russet.sell, "sell commits chosen quantity at live price")
+	check(page.status.text.contains("sold") and page.status.text.contains(state.format_number(3 * state.market.russet.sell)), "successful sale confirms committed payout")
 	page.quantity.value = 10
-	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "quantity is bounded by owned stock")
+	check(page.quantity.value == 9 and page.payout.text == state.money(9 * state.market.russet.sell), "quantity is bounded by owned stock")
 	page.quantity.text = "2.5"
 	page.quantity.text_changed.emit("2.5")
 	check(page.sell_button.disabled and page.status.text.contains("whole number"), "invalid text blocks selling with clear guidance")
@@ -155,18 +155,18 @@ func run() -> void:
 	press(page, "quantity_minus")
 	check(page.quantity.value == 1 and page.minus.disabled, "minus stops at one")
 	state.sell_crop("russet", 10)
-	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 45, "insufficient direct sale is rejected without partial payout")
+	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 3 * state.market.russet.sell, "insufficient direct sale is rejected without partial payout")
 	press(page, "market_all")
-	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "Max selects available stock and previews its value")
+	check(page.quantity.value == 9 and page.payout.text == state.money(9 * state.market.russet.sell), "Max selects available stock and previews its value")
 	page.quantity.get_line_edit().grab_focus()
 	page.quantity.get_line_edit().text = "4"
 	cash = state.coins
 	page._sell()
-	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 60, "typed quantity commits before selling")
+	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 4 * state.market.russet.sell, "typed quantity commits before selling")
 	press(page, "market_next")
 	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 owned", "arrow updates variety, chart, quantity and inventory together")
 	page.quantity.value = 2
-	check(page.payout.text == "\uE000 40", "navigated payout uses new crop")
+	check(page.payout.text == state.money(2 * state.market.giant.sell), "navigated payout uses new crop")
 	press(page, "market_previous")
 	check(page.selected == "russet", "previous returns to Russet")
 	await settle()
@@ -208,15 +208,15 @@ func run() -> void:
 	state.elapsed = 150.0
 	state._refresh_market()
 	game.hud.update_state(state)
-	check(page.quantity.value == 2 and page.payout.text == "\uE000 32" and page.crops == expected, "live refresh updates payout and preserves selection/order")
+	check(page.quantity.value == 2 and page.payout.text == state.money(2 * state.market.russet.sell) and page.crops == expected, "live refresh updates payout and preserves selection/order")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "new market and bounded history round-trip saves")
-	check(is_equal_approx(state.market.russet.seed, 11.25), "load recomputes 75% seed price")
+	check(is_equal_approx(state.market.russet.seed, State.CropTable.CROPS.russet.seed), "load recomputes fixed seed price")
 	if FileAccess.file_exists(SAVE): DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.climate._impact(state)
 	state._refresh_market()
 	for crop: String in State.CROP_IDS:
-		check(state.market[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "disaster seeds follow final quote " + crop)
+		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "disaster seeds follow final quote " + crop)
 	game.hud.show_panel("market", state)
 	check(game.hud._refs.market_page.crops == State.crops_by_base_price(state.available_crops()), "buy preserves local island availability")
 	game.hud.show_panel("sell_potatoes", state)

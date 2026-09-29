@@ -84,36 +84,36 @@ Every Winter posts these fixed costs once:
 
 | Cost | Spudions per year |
 | --- | ---: |
-| Mortgage interest | 1,000 |
-| Mortgage principal | 1,000 |
-| Rent and land tax | 500 |
-| Living costs | 1,500 |
-| Equipment upkeep | 500 |
-| **Total** | **4,500** |
+| Mortgage interest | 600 |
+| Mortgage principal | 600 |
+| Rent and land tax | 300 |
+| Living costs | 800 |
+| Equipment upkeep | 300 |
+| **Total** | **2,600** |
 
-The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
+The mortgage starts at **12,000**. Each Winter’s principal payment reduces it by 600; the ten-year model keeps interest at 600 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **37**. Earlier saves, including revision 36, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Current saves use mechanics revision **39**. Earlier saves, including revision 38, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
 
 ## The live crop market
 
 | Variety | Seed cost | Base price / sack | Water need | Heat tolerance | Cold tolerance | Grow seasons | Sacks / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Russet | 11.25 | 15 | 1 | 3 | 3 | 1 | 3 | Low |
-| Giant | 15.00 | 20 | 1 | 3 | 2 | 1 | 5 | Low |
-| Golden | 21.00 | 28 | 1 | 2 | 2 | 1 | 4 | Mid |
-| Sunburst | 28.50 | 38 | 2 | 3 | 1 | 2 | 3 | High |
-| Icecap | 37.50 | 50 | 3 | 1 | 3 | 2 | 3 | High |
+| Russet | 6.75 | 9 | 1 | 3 | 3 | 1 | 3 | Low |
+| Giant | 9.00 | 12 | 1 | 3 | 2 | 1 | 5 | Low |
+| Golden | 12.60 | 16.80 | 1 | 2 | 2 | 1 | 4 | Mid |
+| Sunburst | 17.10 | 22.80 | 2 | 3 | 1 | 2 | 3 | High |
+| Icecap | 30.00 | 30 | 3 | 1 | 3 | 2 | 2 | High |
 
-More water bars mean a thirstier crop; more heat or cold bars mean better tolerance. Higher prices come with lower combined resilience. An unwatered bed builds stress faster when water need is high. Water need and heat tolerance affect drought damage; cold tolerance affects deep-freeze damage. Icecap is cold-tolerant but thirsty and vulnerable to heat.
+More water bars mean a thirstier crop; more heat or cold bars mean better tolerance. Higher prices come with lower combined resilience. An unwatered bed builds stress faster when water need is high. Water need and heat tolerance affect drought damage; cold tolerance affects deep-freeze damage. Icecap is cold-tolerant but thirsty and vulnerable to heat. Its 30-Spudion seed buys only two potential sacks; the highest sack price does not mean the highest profit.
 
 Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** once. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
 
-Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This is the Standard-grade quote; Table earns 1.5× and Feed earns 0.5× it. Weather does not change it; stored Winter sacks use the separate price below.
+Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This is the Standard-grade quote; Table earns 1.2× and Feed earns 0.5× it. Weather does not change it; stored Winter sacks use the separate price below.
 
 Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
 
-**Buy Seeds** has five variety cards in a desktop row, stacking vertically on a phone. Each shows three bar dials, growth time, yield, seed cost, the live sack price and owned quantities. Selecting a card selects that variety and the seed tool without spending money. **Last year avg** is blank in year one; later it shows the previous full cycle’s average, currently the base price under the temporary price model. Seeds cost **75% of the variety’s base price**, calculated to cents, throughout the cycle. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
+**Buy Seeds** has five variety cards in a desktop row, stacking vertically on a phone. Each shows three bar dials, growth time, yield, seed cost, the live sack price and owned quantities. Selecting a card selects that variety and the seed tool without spending money. **Last year avg** is blank in year one; later it shows the previous full cycle’s average, currently the base price under the temporary price model. Seed prices stay fixed throughout the cycle: **75% of base for Russet, Giant, Golden and Sunburst; 100% for Icecap**. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
 
 **Sell Potatoes** shows one variety at a time, with selectable **Table, Standard and Feed** rows showing their sacks and current prices. Select a grade, then swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your selected grade’s available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Sacks left in the barn when Winter begins are stored automatically; the sell page states the fee, spoilage and dashed late-Winter price in one line. Inventory sales and **F** sell ordinary stock; in Winter, stored sacks must be sold through **Barn stores**. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
@@ -123,7 +123,7 @@ Both pages order varieties by their fixed base selling price: **Russet → Giant
 
 ## Crop quality and saved seed
 
-Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.5× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. “Table” means the best eating quality. Hovering a growing bed or standing beside it shows a small “Grade: Table” (or Standard/Feed) tag and a steady grade hint alongside the growth time; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
+Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.2× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. “Table” means the best eating quality. Hovering a growing bed or standing beside it shows a small “Grade: Table” (or Standard/Feed) tag and a steady grade hint alongside the growth time; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
 
 Before variety and protection adjustments, deductions are:
 
@@ -140,7 +140,7 @@ At **Barn → Barn stores**, choose **Keep 1 Standard/Table sack as seed**. It l
 
 ## Storing or selling
 
-Keeping any sacks in the barn at **Winter start** costs **200 Spudions once** and loses **5% of the whole barn, rounded to the nearest whole sack**, taken from the largest variety pile first (catalogue order breaks ties; lower-quality sacks go first within it). A lone sack does not spoil. Buyer collection happens first, so only the remaining sacks count. An empty barn has no storage bill. Annual accounts show the charge and spoilage; the journal records spoiled sacks as a zero-cash note, so the loss is not charged twice. These charges happen before foreclosure is checked. Reloading does not repeat them.
+Keeping any sacks in the barn at **Winter start** costs **120 Spudions once** and loses **5% of the whole barn, rounded to the nearest whole sack**, taken from the largest variety pile first (catalogue order breaks ties; lower-quality sacks go first within it). A lone sack does not spoil. Buyer collection happens first, so only the remaining sacks count. An empty barn has no storage bill. Annual accounts show the charge and spoilage; the journal records spoiled sacks as a zero-cash note, so the loss is not charged twice. These charges happen before foreclosure is checked. Reloading does not repeat them.
 
 Surviving sacks lose **10 quality points each Winter** and are regraded before becoming **Winter stores**. A Table sack at 85 becomes Standard at 75; a Table sack at 100 remains Table at 90. Seed sacks are excluded. Open **Barn → Barn stores** (also linked from Sell Potatoes) and sell during the working Winter. Prices rise steadily from base at Winter start toward **1.2× base for Low volatility, 1.4× for Mid and 1.6× for High** at Winter’s end, multiplied by the sack’s current grade. The Sell Potatoes sparkline includes a dashed line for that expected late-Winter price; the signed live-market percentage remains beside the ordinary quote. Waiting can pay more, but the fee and spoilage can outweigh the gain on a small harvest.
 
@@ -206,12 +206,12 @@ The Weather Station keeps its scanning sensor tower and uses a cream page with l
 
 | Protection | Disaster | Level 1 | Level 2 |
 | --- | --- | ---: | ---: |
-| Rainwater tank | Drought | 1,500 | 3,000 |
-| Drainage | Flood | 2,000 | 4,000 |
-| Windbreak | Storm | 2,500 | 5,000 |
-| Frost cover | Spring freeze, covered beds only | 1,500 | 3,000 |
+| Rainwater tank | Drought | 900 | 1,800 |
+| Drainage | Flood | 1,200 | 2,400 |
+| Windbreak | Storm | 1,500 | 3,000 |
+| Frost cover | Spring freeze, covered beds only | 900 | 1,800 |
 
-**Reserve during Winter**, after closing accounts. Payment buys materials; protection begins only when the work is finished. Use **Walk to construction site**, or click the marked materials in the world, for one walked, 0.6-second hoe action. **Three actions finish each level.** Unfinished paid work keeps its progress through Spring and can resume next Winter. An upgrade keeps the completed lower level working meanwhile. Each completed protection costs **100 upkeep per year at Winter start**, regardless of level; work completed later that Winter is first billed the following Winter. Sprinklers remain a separate manual-water purchase at 500 / 1,000.
+**Reserve during Winter**, after closing accounts. Payment buys materials; protection begins only when the work is finished. Use **Walk to construction site**, or click the marked materials in the world, for one walked, 0.6-second hoe action. **Three actions finish each level.** Unfinished paid work keeps its progress through Spring and can resume next Winter. An upgrade keeps the completed lower level working meanwhile. Each completed protection costs **60 upkeep per year at Winter start**, regardless of level; work completed later that Winter is first billed the following Winter. Sprinklers remain a separate manual-water purchase at 500 / 1,000.
 
 Completed level 1 reduces the matching disaster’s field sack loss by **50%**, level 2 by **75%**, rounded to the nearest whole sack across affected beds of the same variety and protection level. At a bed’s danger threshold, surviving sacks remain on the crop and can be harvested. One disaster cannot repeatedly charge that same bed’s loss. Watering, opening drains and clearing ice can prevent the danger threshold from being reached. Drought, flood, storm and freeze do not damage barn stock in Spring, Summer or Autumn. Winter-start storage spoilage still applies.
 
@@ -219,7 +219,7 @@ After finishing the frost-cover project, use **Hoe [1]** to clear Winter ice. Th
 
 ### Insurance and loss notices
 
-Buy **400-Spudion annual insurance in Spring**. It covers subsequent field crop losses and Winter weather losses in stored sacks, paying **40% of lost sacks × the crop’s fixed base price**. Spring–Autumn claims settle at Winter start before foreclosure; new Winter claims pay when the loss happens. Losses before purchase and storage spoilage are excluded. The premium and payouts post under Insurance without repeating on reload. Renewal is a new Spring decision.
+Buy **240-Spudion annual insurance in Spring**. It covers subsequent field crop losses and Winter weather losses in stored sacks, paying **40% of lost sacks × the crop’s fixed base price**. Spring–Autumn claims settle at Winter start before foreclosure; new Winter claims pay when the loss happens. Losses before purchase and storage spoilage are excluded. The premium and payouts post under Insurance without repeating on reload. Renewal is a new Spring decision.
 
 Every field crop loss, Winter stored-sack loss and storage-spoilage loss records a **cause card**: year, season, event, variety, sacks lost, missing protection or action, and how many sacks that alternative would have saved. Open **This season’s loss notices** at the weather station; the list updates while open. Winter accounts retain all that year’s cards, including drought, flood, storm, freeze, dry beds, pests, Autumn cold, Winter deep freeze, blizzard and storage spoilage. Climate cards compare the same exposed sacks with the next protection level; at maximum protection there is no further project saving. Where prevention is manual, the card names watering, spraying, harvesting, selling or ice clearing instead.
 

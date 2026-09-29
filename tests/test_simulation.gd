@@ -48,7 +48,7 @@ func _run() -> void:
 	check(Stock.count(farm.storage, "russet") == held and farm.coins == coins, "holding inventory never sells or generates passive income")
 	var price: float = farm.market.russet.sell
 	farm.sell_crop("russet")
-	check(is_equal_approx(farm.coins, coins + held * price * 1.5) and Stock.count(farm.storage, "russet") == 0, "selling uses the live quote")
+	check(is_equal_approx(farm.coins, coins + held * price * State.Quality.MULTIPLIER.Table) and Stock.count(farm.storage, "russet") == 0, "selling uses the live quote")
 	price = farm.market.russet.seed
 	# Isolate quote accounting from affordability: a live price spike can exceed
 	# the starter purse. Insufficient funds are covered in the next transaction.

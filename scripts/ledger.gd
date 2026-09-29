@@ -1,18 +1,13 @@
 extends RefCounted
+const Balance = preload("res://scripts/balance.gd")
 ## The purse caches opening cash plus the journal; saves contain only entries.
-const STARTING_CASH: float = 2000.0
-const OVERDRAFT_LIMIT: float = -5000.0
-const INITIAL_LOAN: float = 20000.0
+const STARTING_CASH: float = Balance.STARTING_CASH
+const OVERDRAFT_LIMIT: float = Balance.OVERDRAFT_LIMIT
+const INITIAL_LOAN: float = Balance.INITIAL_LOAN
 const CATEGORIES: Array[String] = ["sales", "seeds", "water_fuel", "labour", "upkeep", "protection", "insurance", "mortgage", "rent", "living", "storage", "contracts", "other"]
 const LABELS: Dictionary = {"sales": "Crop sales", "seeds": "Seeds", "water_fuel": "Water & fuel", "labour": "Labour", "upkeep": "Equipment upkeep", "protection": "Protection", "insurance": "Insurance", "mortgage": "Mortgage", "rent": "Rent & land tax", "living": "Living costs", "storage": "Storage", "contracts": "Contracts", "other": "Other"}
 # REDESIGN_PLAN §6. Interest is fixed for this ten-year model.
-const FIXED_COSTS: Array[Dictionary] = [
-	{"category": "mortgage", "label": "Mortgage interest", "amount": -1000.0},
-	{"category": "mortgage", "label": "Mortgage principal", "amount": -1000.0},
-	{"category": "rent", "label": "Rent and land tax", "amount": -500.0},
-	{"category": "living", "label": "Living costs", "amount": -1500.0},
-	{"category": "upkeep", "label": "Annual equipment upkeep", "amount": -500.0},
-]
+const FIXED_COSTS: Array[Dictionary] = Balance.FIXED_COSTS
 var _entries: Array[Dictionary] = []
 var _balance: float = STARTING_CASH
 var _closed_years: Array[int] = []

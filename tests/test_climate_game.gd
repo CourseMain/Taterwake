@@ -70,7 +70,7 @@ func run() -> void:
 	game.hud.close_panel()
 	# Finish the weather cycle before crossing the overdraft limit.
 	game._advance_simulation(105.0)
-	game.state.coins = -501
+	game.state.coins = game.state.OVERDRAFT_LIMIT + game.state.ledger.fixed_cost_total() - 1
 	game.state.season_clock.season = 2
 	game.state.season_clock.seconds = 149.75
 	game.state.update(0.25)

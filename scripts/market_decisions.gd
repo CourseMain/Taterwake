@@ -1,12 +1,13 @@
 extends RefCounted
+const Balance = preload("res://scripts/balance.gd")
 ## Winter stores, annual storage bills and one Spring buyer order.
 const Stock = preload("res://scripts/graded_stock.gd")
 const Quality = preload("res://scripts/crop_quality.gd")
 const Table = preload("res://scripts/crop_table.gd")
 const Rules = preload("res://scripts/save_validation.gd")
-const STORAGE_FEE: float = 200.0
-const SPOILAGE: float = 0.05
-const SHORTFALL_FEE: float = 5.0
+const STORAGE_FEE: float = Balance.STORAGE_FEE
+const SPOILAGE: float = Balance.SPOILAGE
+const SHORTFALL_FEE: float = Balance.SHORTFALL_FEE
 var held: Dictionary = Stock.empty()
 var kept_seed: Dictionary = Table.empty_stock()
 var winters: Dictionary = {}

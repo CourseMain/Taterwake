@@ -173,7 +173,7 @@ func scene_checks() -> void:
 	game._process(10)
 	check(game.state.season_clock.seconds == 0, "NPC conversations still pause time")
 	game.conversation.finish()
-	game.state.coins = -501
+	game.state.coins = game.state.OVERDRAFT_LIMIT + game.state.ledger.fixed_cost_total() - 1
 	game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
 	game.state.update(0.25)
 	game._process(10)

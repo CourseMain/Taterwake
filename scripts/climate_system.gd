@@ -1,4 +1,5 @@
 extends RefCounted
+const Balance = preload("res://scripts/balance.gd")
 ## Discrete warned disasters and physical field-crop damage.
 const Lesson = preload("res://scripts/climate_lesson.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
@@ -6,17 +7,17 @@ const Protection = preload("res://scripts/farm_protection.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 ## The farm calendar owns seasonal boundaries; this clock times weather phases.
 const SEASON_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
-const BASE_CHANCE: float = 0.15
-const CHANCE_STEP: float = 0.04
-const MAX_CHANCE: float = 0.6
-const BASE_SEVERITY: float = 0.5
-const SEVERITY_STEP: float = 0.03
-const SEVERITY_SPREAD: float = 0.15
-const SIGNAL_CHANCE: float = 0.7
-const FALSE_ALARM_CHANCE: float = 0.1
-const ANNUAL_CAP: int = 3
+const BASE_CHANCE: float = Balance.CLIMATE_BASE_CHANCE
+const CHANCE_STEP: float = Balance.CLIMATE_CHANCE_STEP
+const MAX_CHANCE: float = Balance.CLIMATE_MAX_CHANCE
+const BASE_SEVERITY: float = Balance.CLIMATE_BASE_SEVERITY
+const SEVERITY_STEP: float = Balance.CLIMATE_SEVERITY_STEP
+const SEVERITY_SPREAD: float = Balance.CLIMATE_SEVERITY_SPREAD
+const SIGNAL_CHANCE: float = Balance.CLIMATE_SIGNAL_CHANCE
+const FALSE_ALARM_CHANCE: float = Balance.CLIMATE_FALSE_ALARM_CHANCE
+const ANNUAL_CAP: int = Balance.CLIMATE_ANNUAL_CAP
 const SEASON_EVENTS: Array = [["flood", "freeze"], ["drought", "storm"], ["storm", "flood"], ["deep_freeze", "blizzard"]]
-const WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
+const WINTER_LOSS: Dictionary = Balance.CLIMATE_WINTER_LOSS
 const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
@@ -30,10 +31,10 @@ const EVENTS: Dictionary = {
 }
 const PROJECTS: Dictionary = {
 	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 500.0, "event": "", "detail": "Manual watering: 6 tank water per patch, 4 at level 2."},
-	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50% / −75%. Adds 36 water capacity per level. Winter construction; 100 yearly upkeep."},
-	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50% / −75%. Open gates to drain stress. Winter construction; 100 yearly upkeep."},
-	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50% / −75%. Winter construction; 100 yearly upkeep."},
-	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50% / −75% on covered beds. Build, then cover cleared Winter beds from this page or the bed context action. 100 yearly upkeep."},
+	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50%% / −75%%. Adds 36 water capacity per level. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
+	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50%% / −75%%. Open gates to drain stress. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
+	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50%% / −75%%. Winter construction; %d yearly upkeep." % Protection.UPKEEP},
+	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50%% / −75%% on covered beds. Build, then cover cleared Winter beds from this page or the bed context action. %d yearly upkeep." % Protection.UPKEEP},
 }
 const MAX_PROJECT_LEVEL: int = 2
 const EDUCATION: String = "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."

@@ -128,7 +128,7 @@ func run() -> void:
 	state.update(45.0)
 	# Record the weather damage before the overdraft ends this run.
 	state.update(105.0)
-	state.coins = -501
+	state.coins = state.OVERDRAFT_LIMIT + state.ledger.fixed_cost_total() - 1
 	state.season_clock.season = 2
 	state.season_clock.seconds = 149.75
 	state.update(0.25)

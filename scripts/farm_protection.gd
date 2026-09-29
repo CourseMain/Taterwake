@@ -1,15 +1,16 @@
 extends RefCounted
+const Balance = preload("res://scripts/balance.gd")
 ## Winter construction and a journal of physical crop losses.
 const Table = preload("res://scripts/crop_table.gd")
 const Rules = preload("res://scripts/save_validation.gd")
-const REDUCTION: Array[float] = [0.0, 0.5, 0.75]
+const REDUCTION: Array[float] = Balance.PROTECTION_REDUCTION
 const PROJECT_FOR: Dictionary = {"drought": "rainwater", "flood": "drainage", "storm": "windbreaks", "freeze": "frost"}
 const NAMES: Dictionary = {"rainwater":"Rainwater tank", "drainage":"Drainage", "windbreaks":"Windbreak", "frost":"Frost cover"}
-const COSTS: Dictionary = {"rainwater":1500.0, "drainage":2000.0, "windbreaks":2500.0, "frost":1500.0}
+const COSTS: Dictionary = Balance.PROTECTION_COSTS
 const WORK_ACTIONS: int = 3
-const UPKEEP: float = 100.0
-const PREMIUM: float = 400.0
-const PAYOUT: float = 0.4
+const UPKEEP: float = Balance.PROTECTION_UPKEEP
+const PREMIUM: float = Balance.INSURANCE_PREMIUM
+const PAYOUT: float = Balance.INSURANCE_PAYOUT
 const STATION_COST: float = 500.0
 
 static func fresh() -> Dictionary:
@@ -235,7 +236,7 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 		if not str(year).is_valid_int() or str(int(year)) != year or int(year) < 1 or int(year) > int(saved.season_clock.year): return false
 		if int(year) == int(saved.season_clock.year) and int(saved.season_clock.season) != 3: return false
 		var report: Variant = raw.winters[year]
-		if not report is Dictionary or report.size() != 2 or not Rules.number(report.get("payout"), 0, INF) or not Rules.number(report.get("upkeep"), 0, 400): return false
+		if not report is Dictionary or report.size() != 2 or not Rules.number(report.get("payout"), 0, INF) or not Rules.number(report.get("upkeep"), 0, UPKEEP * PROJECT_FOR.size()): return false
 		var expected: float = 0.0
 		for entry in raw.losses:
 			if int(entry.year) == int(year) and entry.insured: expected += int(entry.sacks) * float(Table.CROPS[entry.crop].base) * PAYOUT

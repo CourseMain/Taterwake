@@ -93,7 +93,7 @@ func run() -> void:
 	winter(farm)
 	for id in Protection.PROJECT_FOR.values():
 		var cost: float = farm.ClimateSystem.PROJECTS[id].cost
-		check(cost >= 1500 and cost <= 2500, "first level cost is within the specified range")
+		check(cost == Protection.COSTS[id] and cost > 0, "project quote uses the shared protection cost")
 		opening = farm.coins
 		farm.climate.fund(farm, id)
 		check(farm.coins == opening - cost and farm.climate.data.protection.pending[id] == 0 and farm.climate.data.projects.get(id, 0) == 0, "paying reserves materials without granting protection")
@@ -111,7 +111,7 @@ func run() -> void:
 		check(farm.climate.data.projects[id] == 1 and not farm.climate.data.protection.pending.has(id), "third work action completes the reserved level")
 	opening = farm.coins
 	farm.climate.fund(farm, "rainwater")
-	check(farm.coins == opening - 3000 and farm.climate.data.projects.rainwater == 1, "second level costs twice as much and old protection remains while building")
+	check(farm.coins == opening - 2 * Protection.COSTS.rainwater and farm.climate.data.projects.rainwater == 1, "second level costs twice as much and old protection remains while building")
 	for i in range(3): Protection.work(farm, "rainwater")
 	opening = farm.coins; farm.climate.fund(farm, "rainwater")
 	check(farm.climate.data.projects.rainwater == 2 and farm.coins == opening, "completed projects have two levels only")
@@ -128,7 +128,7 @@ func run() -> void:
 	farm.season_clock.seconds = 149.75; farm.update(0.25)
 	check(farm.climate.data.protection.covers.is_empty(), "Spring covers expire in Summer")
 	winter(farm)
-	check(farm.climate.data.protection.winters["3"].upkeep == 400, "Winter posts 100 per completed project, independent of level")
+	check(farm.climate.data.protection.winters["3"].upkeep == 4 * Protection.UPKEEP, "Winter posts the tuned upkeep per completed project, independent of level")
 	opening = farm.coins
 	Protection.winter(farm)
 	check(farm.coins == opening and farm.save_game(SAVE) and farm.load_game(SAVE), "upkeep is idempotent across calls and saves")
@@ -163,14 +163,14 @@ func run() -> void:
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "Spring insurance and pre-policy losses survive reload")
 	opening = farm.coins
 	Protection.insure(farm)
-	check(farm.coins == opening and farm.ledger.total(1, "insurance") == -400, "annual premium posts once")
+	check(farm.coins == opening and farm.ledger.total(1, "insurance") == -Protection.PREMIUM, "annual premium posts once")
 	plant(farm, 1, "giant")
 	farm.climate.begin_warning(farm, "drought", 1); farm.climate._impact(farm)
 	Protection.damage(farm, 1, "drought")
 	var claim: float = State.CropTable.CROPS.giant.yield * State.CropTable.CROPS.giant.base * 0.4
 	farm.boundary_save_path = SAVE
 	winter(farm)
-	check(is_equal_approx(farm.ledger.total(1, "insurance"), claim - 400), "insurance pays forty percent at base price, excluding losses before purchase")
+	check(is_equal_approx(farm.ledger.total(1, "insurance"), claim - Protection.PREMIUM), "insurance pays forty percent at base price, excluding losses before purchase")
 	check(farm.load_game(SAVE) and is_equal_approx(farm.climate.data.protection.winters["1"].payout, claim), "boundary save contains insurance settlement before accounts")
 	opening = farm.coins; Protection.winter(farm)
 	check(farm.coins == opening, "claims cannot be paid twice")

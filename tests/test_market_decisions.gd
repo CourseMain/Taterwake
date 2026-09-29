@@ -27,7 +27,7 @@ func run() -> void:
 	check(Stock.count(farm.trading.held, "icecap") == 0 and farm.storage_used() == 100, "Autumn stock stays ordinary until Winter begins")
 	winter(farm)
 	check(Stock.count(farm.storage, "icecap") == 95 and Stock.count(farm.trading.held, "icecap") == 95, "Winter loses five percent and keeps the surviving sacks")
-	check(farm.ledger.total(1, "storage") == -200, "one Winter storage fee posts to the journal")
+	check(farm.ledger.total(1, "storage") == -State.MarketDecisions.STORAGE_FEE, "one Winter storage fee posts to the journal")
 	var spoilage_note: bool = false
 	for entry in farm.ledger.entries:
 		if entry.category == "storage" and entry.label == "Spoilage: 5 icecap sacks" and entry.amount == 0: spoilage_note = true
@@ -48,12 +48,13 @@ func run() -> void:
 			var price: float = farm.trading.stored_price(farm, crop)
 			check(price >= last and price <= farm.trading.peak_price(crop), crop + " Winter price rises without overshooting")
 			last = price
-	check(farm.trading.peak_price("russet") == 18 and is_equal_approx(farm.trading.peak_price("golden"), 39.2) and farm.trading.peak_price("icecap") == 80, "volatility sets the storage ceiling")
+	for id in State.CROP_IDS:
+		check(is_equal_approx(farm.trading.peak_price(id), State.CropTable.CROPS[id].base * State.CropTable.VOLATILITY[State.CropTable.CROPS[id].volatility].storage_peak_factor), "volatility sets the storage ceiling for " + id)
 	farm.sell_crop("icecap")
 	check(Stock.count(farm.storage, "icecap") == 95, "quick and market sales cannot bypass the Winter barn action")
 	farm.trading.sell_stored(farm, "icecap")
 	var sales: float = farm.ledger.total(1, "sales")
-	check(sales - 200 > harvest_value, "late-Winter sale beats harvest sale after fee and spoilage in a calm year")
+	check(sales - State.MarketDecisions.STORAGE_FEE > harvest_value, "late-Winter sale beats harvest sale after fee and spoilage in a calm year")
 	check(Stock.count(farm.storage, "icecap") == 0 and Stock.count(farm.trading.held, "icecap") == 0, "stored sale consumes each sack once")
 	check(farm.quest_progress.starter_spike == 10, "stored sales count toward the retained sale quest")
 	check(is_equal_approx(farm.coins, farm.Ledger.STARTING_CASH + farm.ledger.total()), "purse equals the complete journal")
@@ -83,7 +84,7 @@ func run() -> void:
 		winter(farm)
 		var loss: int = {1: 0, 4: 0, 5: 0, 14: 1, 15: 1}[sacks]
 		check(Stock.count(farm.storage, "russet") == sacks - loss and farm.trading.winters["1"].spoiled.russet == loss, "whole-barn rounding for %d sacks" % sacks)
-		check(Stock.count(farm.trading.held, "russet") == sacks - loss and farm.ledger.total(1, "storage") == -200, "small barns store survivors and still pay the fee")
+		check(Stock.count(farm.trading.held, "russet") == sacks - loss and farm.ledger.total(1, "storage") == -State.MarketDecisions.STORAGE_FEE, "small barns store survivors and still pay the fee")
 		farm.free()
 	farm = fresh()
 	farm.storage["russet"] = Stock.pile(1); farm.storage["giant"] = Stock.pile(6); farm.storage["golden"] = Stock.pile(7); farm.storage["icecap"] = Stock.pile(6)
@@ -95,10 +96,11 @@ func run() -> void:
 	winter(farm)
 	check(Stock.count(farm.storage, "russet") == 4 and Stock.count(farm.storage, "giant") == 5, "equal largest piles resolve in catalogue order")
 	farm.free()
-	for opening in [-300, -301]:
+	var winter_bill: float = State.Ledger.new().fixed_cost_total() + State.MarketDecisions.STORAGE_FEE
+	for opening in [State.OVERDRAFT_LIMIT + winter_bill, State.OVERDRAFT_LIMIT + winter_bill - 1]:
 		farm = fresh(); farm.coins = opening; farm.storage["russet"] = Stock.pile(1)
 		winter(farm)
-		check(farm.coins == opening - 4700 and farm.run_over == (opening == -301), "storage fee is included before exact overdraft foreclosure")
+		check(farm.coins == opening - winter_bill and farm.run_over == (opening - winter_bill < State.OVERDRAFT_LIMIT), "storage fee is included before exact overdraft foreclosure")
 		farm.free()
 	farm = fresh()
 	farm.storage["russet"] = Stock.pile(farm.capacity - 1)
@@ -129,7 +131,7 @@ func run() -> void:
 	check(Stock.count(farm.storage, "russet") == 15, "Autumn harvesting adds sacks before the collection deadline")
 	winter(farm)
 	check(farm.trading.contract.is_empty() and farm.trading.settled["1"].delivered == 15 and Stock.count(farm.storage, "russet") == 0, "buyer collects the Autumn harvest exactly once at Winter start")
-	check(is_equal_approx(farm.ledger.total(1, "contracts"), 15 * 16.5 - 5 * 5), "contract delivery and shortfall post to contracts")
+	check(is_equal_approx(farm.ledger.total(1, "contracts"), 15 * order.price - 5 * State.MarketDecisions.SHORTFALL_FEE), "contract delivery and shortfall post to contracts")
 	check(farm.ledger.total(1, "storage") == 0, "collection empties the barn before assessing the storage fee")
 	check(Stock.count(farm.trading.held, "russet") == 0, "contract cannot leave phantom stored sacks")
 	before = farm.coins; farm.trading.settle(farm); farm.trading.accept(farm)
@@ -158,7 +160,7 @@ func run() -> void:
 		var remaining: int = sacks - delivered
 		check(farm.trading.settled["1"].delivered == delivered and farm.trading.settled["1"].shortfall == 20 - delivered, "contract settles before spoilage for %d sacks" % sacks)
 		check(farm.trading.winters["1"].spoiled.russet == roundi(remaining * 0.05) and Stock.count(farm.storage, "russet") == remaining - roundi(remaining * 0.05), "only the contract remainder spoils")
-		check(farm.ledger.total(1, "storage") == (-200 if remaining > 0 else 0), "only the contract remainder incurs a storage fee")
+		check(farm.ledger.total(1, "storage") == (-State.MarketDecisions.STORAGE_FEE if remaining > 0 else 0), "only the contract remainder incurs a storage fee")
 		check(farm.load_game(SAVE) and farm.trading.contract.is_empty() and farm.trading.settled["1"].delivered == delivered, "boundary save contains complete contract settlement and storage")
 		farm.free()
 	await ui_checks()
@@ -172,7 +174,7 @@ func ui_checks() -> void:
 	game.state.storage["russet"] = Stock.pile(40)
 	game.hud.show_panel("sell_potatoes", game.state)
 	var page = game.hud._refs.market_page
-	check(page.crop_history.expected_price == 18 and page.storage_note.text.contains("Winter start are stored") and page.storage_note.text.contains("5% spoilage") and page.storage_note.text.contains("dashed"), "sell card explains automatic storage beside the dashed Winter price")
+	check(is_equal_approx(page.crop_history.expected_price, game.state.trading.peak_price("russet")) and page.storage_note.text.contains("Winter start are stored") and page.storage_note.text.contains("5% spoilage") and page.storage_note.text.contains("dashed"), "sell card explains automatic storage beside the dashed Winter price")
 	var store_actions: Array = page.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("action", "") == "market_store" or button.text == "Store selected sacks")
 	check(store_actions.is_empty() and not page.storage_note.text.contains("Set aside"), "sell page has no Store button or held marker")
 	check(Stock.count(game.state.trading.held, "russet") == 0, "opening the sell page does not reserve sacks")
@@ -186,7 +188,7 @@ func ui_checks() -> void:
 	game.state.update(.25)
 	winter(game.state)
 	check(game.state.accounts_open and game.hud._panel_kind == "accounts", "storage posts before accounts pause opens")
-	check(game.hud._refs.accounts_storage.text == game.state.money(-200), "accounts list storage charges")
+	check(game.hud._refs.accounts_storage.text == game.state.money(-State.MarketDecisions.STORAGE_FEE), "accounts list storage charges")
 	game.hud.close_panel(); game._on_action("winter_stores")
 	game.state.season_clock.seconds = 140
 	game.hud.update_state(game.state)

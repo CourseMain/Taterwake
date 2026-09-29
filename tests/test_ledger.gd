@@ -27,11 +27,11 @@ func run() -> void:
 	check(farm.coins == 2000 and farm.ledger.entries.is_empty(), "opening cash is not counted as income")
 	purse(farm)
 	farm.buy_seeds("russet", 2)
-	check(farm.ledger.total(1, "seeds") == -22.5, "seed purchase has its own signed category")
+	check(farm.ledger.total(1, "seeds") == -2 * State.CropTable.CROPS.russet.seed, "seed purchase has its own signed category")
 	purse(farm)
 	farm.storage["russet"] = Stock.pile(3)
 	farm.sell_crop("russet", 2)
-	check(farm.ledger.total(1, "sales") == 30, "sale is posted at the actual quote")
+	check(farm.ledger.total(1, "sales") == 2 * State.CropTable.CROPS.russet.base, "sale is posted at the actual quote")
 	purse(farm)
 	farm.upgrade_tool("hoe"); farm.upgrade_barn(); farm.expand_field()
 	check(farm.ledger.total(1, "upkeep") == -300 and farm.ledger.total(1, "storage") == -300 and farm.ledger.total(1, "rent") == -1200, "upgrades and expansion are categorized")
@@ -47,7 +47,7 @@ func run() -> void:
 	var copy: Array = farm.ledger.entries
 	copy[0].amount = 99999
 	purse(farm)
-	check(farm.ledger.total(1, "seeds") == -22.5, "journal snapshots cannot edit posted entries")
+	check(farm.ledger.total(1, "seeds") == -2 * State.CropTable.CROPS.russet.seed, "journal snapshots cannot edit posted entries")
 	var before: Dictionary = farm.ledger.save_data()
 	var balance_before: float = farm.coins
 	check(not farm.ledger.post(1, 0, "unknown", "Bad", 1) and not farm.ledger.post(1, 0, "other", "Bad", NAN) and farm.ledger.save_data() == before, "invalid postings are atomic")
@@ -80,17 +80,17 @@ func run() -> void:
 	check(farm.ledger.total(1, "other") == other_before + farm.QUEST_REWARD, "quest cash is journaled")
 	purse(farm)
 	farm.reset_game()
-	farm.storage["russet"] = Stock.pile(10000)
+	farm.storage["russet"] = Stock.pile(20000)
 	farm.sell_crop("russet")
-	check(farm.coins == 152000 and farm.ledger.total(1, "sales") == 150000, "sales never silently cap proceeds outside the journal")
+	check(farm.coins == Ledger.STARTING_CASH + 20000 * State.CropTable.CROPS.russet.base and farm.ledger.total(1, "sales") == 20000 * State.CropTable.CROPS.russet.base, "sales never silently cap proceeds outside the journal")
 	purse(farm)
-	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.coins == 152000, "uncapped receipts round-trip through the journal")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.coins == Ledger.STARTING_CASH + 20000 * State.CropTable.CROPS.russet.base, "uncapped receipts round-trip through the journal")
 	farm.reset_game()
 	farm.coins = -5000
 	var count: int = farm.ledger.entries.size()
 	farm.buy_seeds("russet", 1)
 	check(farm.coins == -5000 and farm.ledger.entries.size() == count, "purchase cannot exceed the overdraft")
-	farm.coins = -4988.75
+	farm.coins = Ledger.OVERDRAFT_LIMIT + State.CropTable.CROPS.russet.seed
 	farm.buy_seeds("russet", 1)
 	check(farm.coins == -5000 and not farm.run_over, "last affordable seed can reach the exact limit")
 	farm.free()
@@ -101,9 +101,10 @@ func run() -> void:
 		var saved = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
 		check(farm._valid_save(saved) and saved.ledger == JSON.parse_string(JSON.stringify(farm.ledger.save_data())), "complete accounts save before the boundary is presented"))
 	farm.update(450)
-	check((farm.season_clock.season == 3) and farm.coins == -2500, "full headless year posts 4500 costs against 2000 opening cash")
-	check(farm.ledger.total(1, "mortgage") == -2000 and farm.ledger.total(1, "rent") == -500 and farm.ledger.total(1, "living") == -1500 and farm.ledger.total(1, "upkeep") == -500, "Winter fixed cost table matches the plan")
-	check(farm.ledger.loan_remaining() == 19000, "principal reduces the original 20000 loan")
+	check((farm.season_clock.season == 3) and farm.coins == Ledger.STARTING_CASH - farm.ledger.fixed_cost_total(), "full headless year posts the fixed costs against 2000 opening cash")
+	for cost in Ledger.FIXED_COSTS:
+		check(farm.ledger.entries.any(func(entry): return entry.category == cost.category and entry.label == cost.label and entry.amount == cost.amount), "Winter posts the configured " + cost.label)
+	check(farm.ledger.loan_remaining() == Ledger.INITIAL_LOAN + Ledger.FIXED_COSTS[1].amount, "principal reduces the original loan")
 	check(farm.ledger.entries.all(func(e): return e.year == 1 and e.season == 3), "fixed charges belong to Winter")
 	before = farm.ledger.save_data()
 	check(not farm.ledger.post_fixed_costs(1) and farm.ledger.save_data() == before, "Winter charges post only once")
@@ -125,7 +126,8 @@ func run() -> void:
 	purse(farm)
 	farm.free()
 
-	for opening in [-500.0, -501.0]:
+	var fixed_bill: float = Ledger.new().fixed_cost_total()
+	for opening in [Ledger.OVERDRAFT_LIMIT + fixed_bill, Ledger.OVERDRAFT_LIMIT + fixed_bill - 1]:
 		farm = fresh()
 		farm.coins = opening
 		farm.season_clock.season = 2
@@ -133,7 +135,7 @@ func run() -> void:
 		farm.update(0.25)
 		check(not farm.run_over and farm.coins == opening, "no foreclosure before Winter costs")
 		farm.update(0.25)
-		check(farm.coins == opening - 4500 and farm.run_over == (opening == -501), "one coin distinguishes survival at -5000 from foreclosure at -5001")
+		check(farm.coins == opening - fixed_bill and farm.run_over == (opening - fixed_bill < Ledger.OVERDRAFT_LIMIT), "one coin distinguishes survival at -5000 from foreclosure at -5001")
 		if farm.run_over:
 			check(farm.run_outcome == "foreclosed" and farm.climate.data.collapse.year == 1 and farm.climate.data.collapse.year_net == farm.ledger.total(1), "foreclosure records the year's ledger and cause")
 			check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.run_over, "foreclosure survives reload")
@@ -148,7 +150,7 @@ func run() -> void:
 
 	farm = fresh()
 	for year in range(1, 11):
-		farm.post_money("sales", "Annual crop receipts", 5000 if year % 2 else 4000)
+		farm.post_money("sales", "Annual crop receipts", fixed_bill + (500 if year % 2 else -500))
 		farm.update(450)
 		check((farm.season_clock.season == 3) and farm.ledger.is_closed(year), "each of ten years has closed accounts")
 		purse(farm)
@@ -175,7 +177,7 @@ func ui_checks() -> void:
 	game.state.boundary_save_path = SAVE
 	game.state.update(450)
 	await process_frame
-	check(game.hud._panel_kind == "accounts" and game.hud._refs.accounts_net.text.contains("4,500"), "annual accounts show the year net")
+	check(game.hud._panel_kind == "accounts" and game.hud._refs.accounts_net.text.contains(game.state.format_number(game.state.ledger.fixed_cost_total())), "annual accounts show the year net")
 	check((game.hud._modal.get_child(0) as ColorRect).color.a == 1 and game.hud._modal.modulate.a == 1, "opaque paper hides all HUD chrome without a fade")
 	for category in Ledger.CATEGORIES:
 		check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == Ledger.LABELS[category]), "accounts include " + category)
@@ -187,7 +189,7 @@ func ui_checks() -> void:
 	check(game.state._save_data() == paused, "accounts pause at Winter start after the fixed charges")
 	game.state.post_money("other", "Winter adjustment", 10)
 	game.hud.update_state(game.state)
-	check(game.hud._refs.accounts_other.text == game.state.money(10) and game.hud._refs.accounts_net.text.contains("4,490"), "open accounts refresh from new journal entries")
+	check(game.hud._refs.accounts_other.text == game.state.money(10) and game.hud._refs.accounts_net.text.contains(game.state.format_number(game.state.ledger.fixed_cost_total()-10)), "open accounts refresh from new journal entries")
 	if "--touch-controls" in OS.get_cmdline_user_args():
 		root.size = Vector2i(390, 844)
 		for frame in range(5): await process_frame
@@ -197,6 +199,7 @@ func ui_checks() -> void:
 		if "--capture" in OS.get_cmdline_user_args(): await capture("accounts-phone")
 	game.hud.close_panel()
 	game.state.update(150)
+	game.state.post_money("other", "Boundary fixture", -game.state.ledger.fixed_cost_total())
 	game.state.update(450)
 	await process_frame
 	check(game.hud._run_end.visible and game.hud._run_end.headline.text == "FORECLOSED" and game.hud._run_end._event.text.contains("YEAR 2"), "foreclosure reuses the editorial page with the last accounting year")

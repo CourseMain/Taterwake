@@ -33,7 +33,7 @@ func run() -> void:
 	var last_tolerance: int = 10
 	for id in Table.IDS:
 		var crop: Dictionary = Table.CROPS[id]
-		check(crop.seed == crop.base * .75 and crop["yield"] >= 3 and crop["yield"] <= 5, id + " has legible seed cost and yield")
+		check(crop.seed > 0 and crop.seed <= crop.base and crop["yield"] >= 2 and crop["yield"] <= 5, id + " has legible seed cost and yield")
 		check(crop.base > last_price and Table.total_tolerance(id) < last_tolerance, id + " pays more for lower combined water/heat/cold resilience")
 		last_price = crop.base; last_tolerance = Table.total_tolerance(id)
 		for dial in ["water_need", "heat_tolerance", "cold_tolerance"]: check(crop[dial] in [1, 2, 3], id + " bounded " + dial)
@@ -77,7 +77,7 @@ func run() -> void:
 		farm.update(75 + autumn_second)
 		check(farm.plots[5].stage == 3 and farm.plots[5].winter_ice and farm.season_clock.season == (3 if autumn_second == 0 else 0), "Icecap ripens through Winter ice or early Spring")
 		farm.interact_plot(5, "harvest")
-		check(Stock.count(farm.storage, "icecap") == 3 and farm.plots[5].winter_ice, "Icecap harvest works through uncleared bed ice")
+		check(Stock.count(farm.storage, "icecap") == Table.CROPS.icecap.yield and farm.plots[5].winter_ice, "Icecap harvest works through uncleared bed ice")
 		check(farm.save_game(SAVE) and farm.load_game(SAVE), "harvested Icecap bed remains valid saved state")
 		var before: float = farm.coins
 		farm.sell_crop("icecap")

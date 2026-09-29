@@ -1,9 +1,10 @@
 extends RefCounted
+const Balance = preload("res://scripts/balance.gd")
 const Table = preload("res://scripts/crop_table.gd")
 const Protection = preload("res://scripts/farm_protection.gd")
 const Rules = preload("res://scripts/save_validation.gd")
 const GRADES: Array[String] = ["Table", "Standard", "Feed"]
-const MULTIPLIER := {"Table": 1.5, "Standard": 1.0, "Feed": 0.5}
+const MULTIPLIER = Balance.GRADE_MULTIPLIER
 const CAUSES := {"pests":"Pests", "drought":"Drought", "flood":"Flood", "freeze":"Freeze", "storm":"Lightning", "dry":"Lack of water", "late":"Late harvest"}
 static func grade(score: int) -> String:
 	return "Table" if score >= 80 else ("Standard" if score >= 40 else "Feed")

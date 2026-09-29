@@ -25,8 +25,8 @@ func run() -> void:
 	for item in [[100,"Table"],[80,"Table"],[79,"Standard"],[40,"Standard"],[39,"Feed"],[0,"Feed"]]: check(Q.grade(item[0]) == item[1], "quality threshold %d" % item[0])
 	var farm = fresh()
 	for crop in State.CROP_IDS:
-		check(State.CropTable.CROPS[crop].base == {"russet":15,"giant":20,"golden":28,"sunburst":38,"icecap":50}[crop], "wider base for " + crop)
-		check(State.CropTable.CROPS[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "seed ratio for " + crop)
+		check(farm.market[crop].sell == State.CropTable.CROPS[crop].base, "initial quote uses base for " + crop)
+		check(State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "bounded seed price for " + crop)
 	plant(farm)
 	check(farm.plots[5].quality == 100, "planting starts quality at 100")
 	farm.update(9.75)
@@ -93,7 +93,7 @@ func run() -> void:
 	var cash: float = farm.coins
 	var price: float = farm.market.russet.sell
 	farm.sell_crop("russet", 1, "Table")
-	check(is_equal_approx(farm.coins - cash, price * 1.5), "Table sells at one and a half times the variety quote")
+	check(is_equal_approx(farm.coins - cash, price * Q.MULTIPLIER.Table), "Table sells at the Table multiplier times the variety quote")
 	Stock.add(farm.storage, "russet", 4, 60); Stock.add(farm.storage, "russet", 4, 20)
 	farm.sell_crop("russet", 2, "Standard"); farm.sell_crop("russet", 3, "Feed")
 	var totals: Dictionary = Stock.sales(farm.ledger, 1)
