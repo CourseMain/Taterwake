@@ -551,7 +551,7 @@ func _finish_conversation(service: String) -> void:
 	else: hud.update_state(state)
 
 func _camera_zoom_max() -> float:
-	return (74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 90.0)) * world.LAND_SPACING
+	return 90.0 * world.LAND_SPACING * maxf(1.0, world.overview_size() / 76.0)
 
 func _reset_camera_zoom() -> void:
 	_zoom_target_size = clampf(world.camera.size, CAMERA_ZOOM_MIN, _camera_zoom_max())
@@ -663,6 +663,13 @@ func _zoom_by_log_amount(amount: float) -> void:
 	_zoom_target_size = clampf(_zoom_target_size * exp(clampf(amount, -3.0, 3.0)), CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _update_camera_zoom(delta: float) -> void:
+	if is_instance_valid(world.camera):
+		var overview: float = world.overview_size()
+		if not is_equal_approx(overview, _camera_home_size):
+			var ratio: float = overview / _camera_home_size
+			world.camera.size *= ratio
+			_zoom_target_size *= ratio
+			_camera_home_size = overview
 	_update_camera_pan(delta)
 	# Letterboxing can resize the window without changing logical viewport size.
 	if _map_drag_button != 0 and (not _map_navigation_allowed() or _map_drag_window_size != get_tree().root.size): _cancel_map_drag()
