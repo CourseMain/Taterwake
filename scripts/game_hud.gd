@@ -1132,7 +1132,7 @@ func update_state(state: Node) -> void:
 	var calendar: String = "%d:%d:%s" % [state.season_clock.year, state.season_clock.season, state.run_outcome]
 	var calendar_changed: bool = calendar != _displayed_calendar
 	_displayed_calendar = calendar
-	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]]
+	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]] + (" · %ds" % state.season_seconds() if state.season_clock.season == 1 and state.diversification.owns("shop") else "")
 	# Reconcile from state on ordinary refreshes too, after the boundary save.
 	# Remember the calendar so Escape can dismiss Winter without reopening it.
 	if calendar_changed and state.run_outcome != "foreclosed":
@@ -1792,11 +1792,13 @@ func _build_winter() -> void:
 	_refs.accounts_balance = _wrap("", 16, INK)
 	_body.add_child(_refs.accounts_balance)
 	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
+	_build_diversification()
 	_build_loss_cards(_body, clock.year)
 	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))
 	_modal_trade_footer.show()
 
 func _refresh_accounts() -> void:
+	_refresh_diversification()
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
 	var net: float = _state.ledger.total(_state.season_clock.year)
@@ -1811,6 +1813,8 @@ func _refresh_accounts() -> void:
 func _build_run_summary() -> void:
 	_paper_page()
 	_heading("Ten years on the farm", "FINAL ACCOUNTS · Spud Valley")
+	_refs.run_title = _label(_state.run_title(), 32, GREEN, true)
+	_body.add_child(_refs.run_title)
 	_body.add_child(_label("Ten-year net  " + _state.money(_state.ledger.total()), 40, INK, true))
 	_account_row(_body, "Years in profit", "%d / 10" % _state.ledger.years_in_profit())
 	var worst: Dictionary = _state.ledger.worst_year()
@@ -2447,26 +2451,62 @@ func modal_content_height() -> float:
 
 
 func _build_contracts() -> void:
-	_heading("Buyer board", "One Spring order · collection at Autumn end")
-	_info("contract_details", "", INK, 20)
-	_body.add_child(_wrap("The buyer automatically takes Standard or Table sacks (never Feed) at the end of Autumn, before Winter spoilage and the storage fee. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
-	_refs.contract_accept = _button("Accept this order", "contract_accept", true)
-	_body.add_child(_refs.contract_accept)
+	var limit: int = _state.trading.order_limit(_state)
+	_heading("Buyer board", "%d Spring order%s · collection at Autumn end" % [limit, "s" if limit > 1 else ""])
+	_body.add_child(_wrap("The buyer takes Standard or Table sacks (never Feed) at Autumn end, before Winter storage. Each missing sack costs %s. Accepting is binding.%s" % [_state.money(_state.MarketDecisions.SHORTFALL_FEE), " Contract grower prices are %.1f× the ordinary contract quote." % _state.Diversification.Balance.GROWER_PRICE_FACTOR if limit == 2 else ""], 17, MUTED))
+	for slot in range(limit):
+		var suffix: String = "" if slot == 0 else ":%d" % slot
+		_info("contract_details" + suffix, "", INK, 20)
+		_refs["contract_accept" + suffix] = _button("Accept order %d" % (slot + 1), "contract_accept:%d" % slot, true)
+		_body.add_child(_refs["contract_accept" + suffix])
 	_refresh_contracts()
 
 func _refresh_contracts() -> void:
 	var trade = _state.trading
 	var year: int = _state.season_clock.year
-	var order: Dictionary = trade.contract if not trade.contract.is_empty() else trade.offer(year)
-	var completed: Dictionary = trade.settled.get(str(year), {})
-	_refs.contract_details.text = "%s · %d sacks at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
-	if not completed.is_empty():
-		_refs.contract_details.text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
-	elif not trade.contract.is_empty():
-		_refs.contract_details.text += "\nAccepted · Standard or better: %d / %d" % [trade.eligible_contract(_state, order.crop), order.quantity]
-	elif _state.season_clock.season != 0:
-		_refs.contract_details.text += "\nNext offer arrives in Spring."
-	_refs.contract_accept.disabled = _state.run_over or _state.season_clock.season != 0 or not trade.contract.is_empty() or not completed.is_empty()
+	for slot in range(trade.order_limit(_state)):
+		var suffix: String = "" if slot == 0 else ":%d" % slot
+		var active: Dictionary = trade.active_order(slot)
+		var completed: Dictionary = trade.completed_order(year, slot)
+		var order: Dictionary = active if not active.is_empty() else trade.offer(year, slot, trade.grower_active(_state))
+		var text: String = "%s · %d sacks at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
+		if not completed.is_empty():
+			text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
+		elif not active.is_empty():
+			text += "\nAccepted · Standard or better: %d / %d" % [trade.eligible_contract(_state, order.crop), order.quantity]
+		elif _state.season_clock.season != 0: text += "\nNext offer arrives in Spring."
+		_refs["contract_details" + suffix].text = text
+		_refs["contract_accept" + suffix].disabled = _state.run_over or _state.season_clock.season != 0 or not active.is_empty() or not completed.is_empty()
+
+func _build_diversification() -> void:
+	if _state.season_clock.year < _state.Diversification.Balance.DIVERSIFY_YEAR: return
+	_body.add_child(_label("DIVERSIFY OR DOUBLE DOWN", 18, INK, true))
+	var descriptions: Dictionary = {
+		"shop": "Earn %s each Winter after a full year. Running the shop shortens each Summer by %d seconds (%d seconds to farm)." % [_state.money(_state.Diversification.Balance.SHOP_INCOME), _state.Diversification.Balance.SHOP_SUMMER_SECONDS, _state.SeasonClock.SEASON_SECONDS - _state.Diversification.Balance.SHOP_SUMMER_SECONDS],
+		"grower": "From next Spring, accept two different orders at %.1f× the ordinary contract price. Shortfall penalties still apply." % _state.Diversification.Balance.GROWER_PRICE_FACTOR,
+		"lodging": "Earn up to %s each Winter after a full year: %s per completed tank, drainage, windbreak or frost-cover project. Levels do not stack; no protections means no guests." % [_state.money(_state.Diversification.Balance.LODGING_INCOME), _state.money(_state.Diversification.Balance.LODGING_INCOME / 4.0)],
+	}
+	for id in _state.Diversification.NAMES:
+		_body.add_child(_wrap(descriptions[id], 16, MUTED))
+		_refs["diversify:" + id] = _button("", "diversify:" + id)
+		_refs["diversify:" + id].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_body.add_child(_refs["diversify:" + id])
+	_refs.business_ledger = _wrap("", 16, INK)
+	_body.add_child(_refs.business_ledger)
+	_refresh_diversification()
+
+func _refresh_diversification() -> void:
+	if not _refs.has("business_ledger"): return
+	for id in _state.Diversification.NAMES:
+		var owned: bool = _state.diversification.owns(id)
+		_refs["diversify:" + id].text = _state.Diversification.NAMES[id] + (" · Enrolled" if id == "grower" else " · Built") if owned else _state.Diversification.NAMES[id] + " · " + _state.money(_state.Diversification.Balance.BUSINESS_COSTS[id])
+		_refs["diversify:" + id].disabled = not _state.diversification.can_buy(_state, id)
+	var lines := PackedStringArray()
+	for entry in _state.ledger.entries:
+		if int(entry.year) != _state.season_clock.year: continue
+		if entry.label in _state.Diversification.BUILD_LABELS.values() or entry.label in _state.Diversification.INCOME_LABELS.values() or str(entry.label).begins_with("Contract grower "):
+			lines.append(entry.label + " · " + _state.money(entry.amount))
+	_refs.business_ledger.text = "\n".join(lines)
 
 func _build_stores() -> void:
 	_heading("Barn stores", "Keep seed or sell Winter stores by grade")

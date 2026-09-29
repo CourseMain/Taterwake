@@ -141,7 +141,7 @@ func run() -> void:
 	farm = fresh(); farm.trading.accept(farm)
 	Stock.add(farm.storage,"russet",20,20); Stock.add(farm.storage,"russet",7,60); Stock.add(farm.storage,"russet",3,100)
 	winter(farm)
-	check(farm.trading.settled["1"].delivered == 10 and farm.trading.settled["1"].shortfall == 10, "contract refuses Feed and collects Standard or better")
+	check(farm.trading.settled["1"][0].delivered == 10 and farm.trading.settled["1"][0].shortfall == 10, "contract refuses Feed and collects Standard or better")
 	check(farm.stock_count("russet","Feed") == 19 and farm.trading.winters["1"].spoiled.russet == 1, "remaining twenty Feed sacks suffer five percent spoilage")
 	farm.free()
 	farm = fresh()

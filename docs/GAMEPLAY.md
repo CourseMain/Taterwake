@@ -60,9 +60,9 @@ New farms use `user://taterland_save_v4.json`. Older farms are not loaded or mig
 
 The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
 
-The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
+The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 seconds** of working time; owning a farm shop reduces Summer to **120 seconds**. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-**Annual accounts open at Winter start**, after buyer collection, storage charges, spoilage, fixed costs and the foreclosure check have been saved. The accounts pause the simulation while open and show every category, crop sales split by grade with sacks and totals, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
+**Annual accounts open at Winter start**, after buyer collection, storage charges, spoilage, business income, fixed costs and the foreclosure check have been saved. The accounts pause the simulation while open and show every category, crop sales split by grade with sacks and totals, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
 
 The run finishes at the **end of year 10’s Winter**. The ten-year summary then shows total net, years in profit, best and worst year, final purse and remaining loan, with **New Run** to start over. The epilogue is still to come. Every season boundary saves before its screen opens, including the final Winter boundary. Calendar and accounts presentation stay synchronized at accelerated debug speed.
 
@@ -93,7 +93,21 @@ Every Winter posts these fixed costs once:
 
 The mortgage starts at **12,000**. Each Winter’s principal payment reduces it by 600; the ten-year model keeps interest at 600 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **39**. Earlier saves, including revision 38, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Current saves use mechanics revision **40**. Earlier saves, including revision 39, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+
+## Diversification and run titles
+
+From **year three**, annual accounts offer three permanent businesses. Purchases work while accounts are paused and appear under their own labels. Construction and annual business income use Other; contract-grower collections and shortfalls use Contracts.
+
+| Business | Cost | Return and tradeoff |
+| --- | ---: | --- |
+| Farm shop | 3,000 | 800 each Winter; Summer has 30 fewer seconds for farming. |
+| Contract grower | Free enrolment | Two simultaneous Spring orders, each at 1.2× the ordinary contract price; normal shortfall penalties apply. |
+| Lodging | 2,500 | 150 each Winter per completed protection type, up to 600. |
+
+Benefits start the following year: construction Winter pays no retroactive income. Lodging counts the tank, drainage, windbreak and frost cover separately, regardless of level; sprinklers do not count. With no protections, lodging earns nothing. Annual income settles before the Winter foreclosure check and cannot repeat on reload.
+
+Completed runs receive **Shopkeeper** when more than half of gross crop, contract and business receipts came from diversification, otherwise **Adapter** for at least three protection types, or **Stubborn** for none. One or two protections earn **Survivor**. Insurance and other payments do not count toward the income comparison. Foreclosure always gives **Sold Up**, including before year ten.
 
 ## The live crop market
 
@@ -148,7 +162,7 @@ Surviving sacks lose **10 quality points each Winter** and are regraded before b
 
 ## Buyer contracts
 
-The **Contracts** board beside the northern shops opens a buyer’s order; it is also reachable from the farm menu. Each Spring offers **20 sacks of one variety at 1.1× its base price**. The variety rotates through the five crops by year. Accepting commits to that order; there is only one per year and no cancellation.
+The **Contracts** board beside the northern shops opens a buyer’s order; it is also reachable from the farm menu. Each Spring offers **20 sacks of one variety at 1.1× its base price**. The variety rotates through the five crops by year. Accepting commits to that order; ordinary farms can accept one per year, and contract growers can accept two distinct orders at **1.2× the ordinary quote** (base × 1.32). There is no cancellation.
 
 At the **end of Autumn**, as Winter begins, the buyer automatically collects **Standard or Table sacks, never Feed**, from the barn before spoilage and the storage fee. Autumn harvests can fill the order. Delivered sacks earn the agreed price; each missing sack costs **5 Spudions**. Both payment and penalty post under **Contracts** in the ledger. The board keeps the year’s result, and saving/reloading preserves the order without settling it twice.
 
@@ -198,7 +212,7 @@ The preceding season may hint at the next disaster: drought dries the grass and 
 
 Each year opens with a cream newspaper front page, a grimmer headline and a **ten-year strip of recorded disasters**. It pauses farming, closes after twelve seconds, and can be skipped with the button, Space or Escape. The same strip appears in Winter accounts. Spring has fresh grass, orchard blossom and verge flowers; Summer has warmer grass and faint field haze; Autumn has orange and brown canopies, path leaves and a longer dusk. Winter keeps its snow. Grass and sky blend over **one second** at a boundary. By year six, even calm Summers have drier grass and stronger haze. The tank’s visible water level remains part of reading the farm.
 
-The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, buyer collection, storage, insurance payouts, protection upkeep and the complete fixed Winter bill are settled first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
+The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, buyer collection, storage, insurance payouts, protection upkeep, business income and the complete fixed Winter bill are settled first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
 
 The Weather Station keeps its scanning sensor tower and uses a cream page with live tank levels, protection, construction progress and the **next season’s disaster probability range**. Station levels **0 / 1 / 2** give **±20 / ±10 / ±5 percentage points**, clipped to 0–100%. Sensor upgrades cost 500, then 1,000. The overall chance follows the next season’s year; each of its two possible disasters has half that probability. Both overall and per-disaster ranges are shown. After three disasters, remaining seasons that year have zero risk. Better instruments narrow uncertainty; they do not change the weather.
 

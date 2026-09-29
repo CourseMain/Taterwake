@@ -11,17 +11,17 @@ var autumn_loss: int = 0
 func finished() -> bool:
 	return year == LAST_YEAR and season == 3 and seconds == SEASON_SECONDS
 
-func remaining() -> float:
-	return SEASON_SECONDS - seconds
+func remaining(duration: float = SEASON_SECONDS) -> float:
+	return duration - seconds
 
 func can_plant() -> bool:
 	return season < 2
 
-func advance(delta: float) -> bool:
+func advance(delta: float, duration: float = SEASON_SECONDS) -> bool:
 	if finished() or not is_finite(delta) or delta <= 0: return false
-	seconds = minf(SEASON_SECONDS, seconds + delta)
-	if seconds < SEASON_SECONDS - 0.000001: return false
-	seconds = SEASON_SECONDS
+	seconds = minf(duration, seconds + delta)
+	if seconds < duration - 0.000001: return false
+	seconds = duration
 	if finished(): return true
 	seconds = 0.0
 	season = (season + 1) % 4

@@ -183,7 +183,7 @@ func show_report(farm) -> void:
 	headline.text = "FORECLOSED"
 	_balance.text = farm.money(farm.coins, true)
 	_event.text = "SPUD VALLEY   /   YEAR %d ACCOUNTS" % farm.season_clock.year
-	detail.text = str(report.cause)
+	detail.text = farm.run_title() + " · " + str(report.cause)
 	_threshold.text = "Foreclosure below " + farm.money(farm.bankruptcy_limit(), true)
 	_calculation.text = "Year %d net: %s. The complete Winter bill of %s has been posted." % [farm.season_clock.year, farm.money(farm.ledger.total(farm.season_clock.year)), farm.money(farm.ledger.fixed_cost_total())]
 	for pair in [["FIELD LOST", "field"]]:

@@ -1,6 +1,6 @@
 extends RefCounted
 const Balance = preload("res://scripts/balance.gd")
-## Winter stores, annual storage bills and one Spring buyer order.
+## Winter stores, annual storage bills and Spring buyer orders.
 const Stock = preload("res://scripts/graded_stock.gd")
 const Quality = preload("res://scripts/crop_quality.gd")
 const Table = preload("res://scripts/crop_table.gd")
@@ -11,7 +11,7 @@ const SHORTFALL_FEE: float = Balance.SHORTFALL_FEE
 var held: Dictionary = Stock.empty()
 var kept_seed: Dictionary = Table.empty_stock()
 var winters: Dictionary = {}
-var contract: Dictionary = {}
+var contracts: Array[Dictionary] = []
 var settled: Dictionary = {}
 
 func peak_price(id: String, grade: String = "Standard") -> float:
@@ -101,34 +101,64 @@ func sell(farm, id: String, quantity: int, grade: String, stored: bool) -> Strin
 	farm.sale_completed.emit({"id":id, "grade":grade, "quantity":amount, "price":earnings/amount, "total":earnings, "owned":farm.stock_count(id)})
 	return farm._finish("Sold %d %s %s sacks for %s." % [amount, grade, id.capitalize(), farm.money(earnings)])
 
-func offer(year: int) -> Dictionary:
-	var id: String = Table.IDS[(year - 1) % Table.IDS.size()]
-	return {"year": year, "crop": id, "quantity": 20, "price": float(Table.CROPS[id].base) * 1.1}
+func grower_active(farm, year: int = -1) -> bool:
+	if year < 0: year = farm.season_clock.year
+	return farm.diversification.owns("grower") and int(farm.diversification.built.grower) < year
 
-func accept(farm) -> String:
+func order_limit(farm) -> int:
+	return 2 if grower_active(farm) else 1
+
+func offer(year: int, slot: int = 0, grower: bool = false) -> Dictionary:
+	var id: String = Table.IDS[(year - 1 + slot) % Table.IDS.size()]
+	return {"year": year, "slot": slot, "crop": id, "quantity": Balance.CONTRACT_QUANTITY, "price": float(Table.CROPS[id].base) * Balance.CONTRACT_PRICE_FACTOR * (Balance.GROWER_PRICE_FACTOR if grower else 1.0)}
+
+func active_order(slot: int) -> Dictionary:
+	for order in contracts:
+		if int(order.slot) == slot: return order
+	return {}
+
+func completed_order(year: int, slot: int) -> Dictionary:
+	for order in settled.get(str(year), []):
+		if int(order.slot) == slot: return order
+	return {}
+
+func accept(farm, slot: int = 0) -> String:
 	var year: int = farm.season_clock.year
-	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 0: return farm._finish("The buyer offers one order each Spring.")
-	if not contract.is_empty() or settled.has(str(year)): return farm._finish("Only one buyer order per year.")
-	contract = offer(year)
-	return farm._finish("Order accepted: %d %s sacks, Standard or better, collected at the end of Autumn. Shortfalls cost %s per sack." % [contract.quantity, contract.crop.capitalize(), farm.money(SHORTFALL_FEE)])
+	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 0: return farm._finish("The buyer offers orders each Spring.")
+	if slot < 0 or slot >= order_limit(farm): return farm._finish("Enrol as a contract grower in annual accounts for two orders.")
+	if not active_order(slot).is_empty() or settled.has(str(year)): return farm._finish("This buyer order is already accepted or settled.")
+	var order: Dictionary = offer(year, slot, grower_active(farm))
+	contracts.append(order)
+	return farm._finish("Order accepted: %d %s sacks, Standard or better, collected at the end of Autumn. Shortfalls cost %s per sack." % [order.quantity, order.crop.capitalize(), farm.money(SHORTFALL_FEE)])
+
+static func collection_label(delivered: int, crop: String, grower: bool) -> String:
+	return ("Contract grower collected " if grower else "Buyer collected ") + "%d %s sacks" % [delivered, crop]
+
+static func shortfall_label(missing: int, crop: String, grower: bool) -> String:
+	return ("Contract grower shortfall: " if grower else "Contract shortfall: ") + "%d %s sacks" % [missing, crop]
 
 func settle(farm) -> void:
-	if contract.is_empty(): return
-	var id: String = contract.crop
-	var delivered: int = mini(eligible_contract(farm, id), int(contract.quantity))
-	var missing: int = int(contract.quantity) - delivered
-	var standard: int = mini(delivered, Stock.count(farm.storage, id, "Standard"))
-	Stock.take(farm.storage, id, standard, "Standard")
-	Stock.take(farm.storage, id, delivered - standard, "Table")
-	clamp_stock(farm)
-	if delivered > 0: farm.post_money("contracts", "Buyer collected %d %s sacks" % [delivered, id], delivered * float(contract.price))
-	if missing > 0: farm.post_money("contracts", "Contract shortfall: %d %s sacks" % [missing, id], -missing * SHORTFALL_FEE)
-	var receipt: Dictionary = contract.duplicate()
-	receipt.delivered = delivered
-	receipt.shortfall = missing
-	settled[str(int(contract.year))] = receipt
-	contract.clear()
-	farm.notified.emit("Autumn buyer: %d sacks delivered; %d short. Penalty %s." % [delivered, missing, farm.money(missing * SHORTFALL_FEE)])
+	if contracts.is_empty() or farm.season_clock.season != 3: return
+	var year: int = farm.season_clock.year
+	var receipts: Array = []
+	for order in contracts:
+		var id: String = order.crop
+		var delivered: int = mini(eligible_contract(farm, id), int(order.quantity))
+		var missing: int = int(order.quantity) - delivered
+		var standard: int = mini(delivered, Stock.count(farm.storage, id, "Standard"))
+		Stock.take(farm.storage, id, standard, "Standard")
+		Stock.take(farm.storage, id, delivered - standard, "Table")
+		clamp_stock(farm)
+		var grower: bool = grower_active(farm)
+		if delivered > 0: farm.post_money("contracts", collection_label(delivered, id, grower), delivered * float(order.price))
+		if missing > 0: farm.post_money("contracts", shortfall_label(missing, id, grower), -missing * SHORTFALL_FEE)
+		var receipt: Dictionary = order.duplicate()
+		receipt.delivered = delivered
+		receipt.shortfall = missing
+		receipts.append(receipt)
+		farm.notified.emit("Autumn buyer: %d sacks delivered; %d short. Penalty %s." % [delivered, missing, farm.money(missing * SHORTFALL_FEE)])
+	settled[str(year)] = receipts
+	contracts.clear()
 
 func winter_text(farm) -> String:
 	var report: Dictionary = winters.get(str(farm.season_clock.year), {})
@@ -138,13 +168,13 @@ func winter_text(farm) -> String:
 	return "Storage fee %s · Spoilage %d sacks (5%% of the barn, rounded to nearest; largest pile first). Stored sacks lose 10 quality." % [farm.money(report.fee), loss]
 
 func save_data() -> Dictionary:
-	return {"held": held.duplicate(true), "kept_seed": kept_seed.duplicate(), "winters": winters.duplicate(true), "contract": contract.duplicate(), "settled": settled.duplicate(true)}
+	return {"held": held.duplicate(true), "kept_seed": kept_seed.duplicate(), "winters": winters.duplicate(true), "contracts": contracts.duplicate(true), "settled": settled.duplicate(true)}
 
 func load_data(raw: Dictionary) -> void:
 	held = raw.held.duplicate(true)
 	kept_seed = raw.kept_seed.duplicate()
 	winters = raw.winters.duplicate(true)
-	contract = raw.contract.duplicate()
+	contracts.assign(raw.contracts.duplicate(true))
 	settled = raw.settled.duplicate(true)
 
 func valid(raw: Variant, saved: Dictionary) -> bool:
@@ -156,24 +186,17 @@ func valid(raw: Variant, saved: Dictionary) -> bool:
 		for word in Quality.GRADES:
 			for score in raw.held[id][word]:
 				if int(raw.held[id][word][score]) > int(saved.storage[id][word].get(score, 0)): return false
-	for kind in ["winters", "settled"]:
-		if not raw.get(kind) is Dictionary or raw[kind].size() > 10: return false
-		for key in raw[kind]:
-			if not str(key).is_valid_int() or str(int(key)) != str(key) or int(key) < 1 or int(key) > int(saved.season_clock.year): return false
-			if int(key) == int(saved.season_clock.year) and int(saved.season_clock.season) < 3: return false
-			var row: Variant = raw[kind][key]
-			if not row is Dictionary: return false
-			if kind == "winters":
-				if row.size() != 2 or row.get("fee") not in [0.0, STORAGE_FEE] or not row.get("spoiled") is Dictionary or row.spoiled.size() != Table.IDS.size(): return false
-				for id in Table.IDS:
-					if not Rules.number(row.spoiled.get(id), 0, 100000, true): return false
-					if int(row.spoiled[id]) > 0:
-						if row.fee != STORAGE_FEE or not _posting(saved, int(key), 3, "storage", "Spoilage: %d %s sacks" % [int(row.spoiled[id]), id], 0.0): return false
-				if row.fee > 0 and not _posting(saved, int(key), 3, "storage", "Winter storage fee", -STORAGE_FEE): return false
-			else:
-				if not valid_order(row, int(key), true): return false
-				if int(row.delivered) > 0 and not _posting(saved, int(key), 3, "contracts", "Buyer collected %d %s sacks" % [int(row.delivered), row.crop], row.delivered * row.price): return false
-				if int(row.shortfall) > 0 and not _posting(saved, int(key), 3, "contracts", "Contract shortfall: %d %s sacks" % [int(row.shortfall), row.crop], -row.shortfall * SHORTFALL_FEE): return false
+	if not raw.get("winters") is Dictionary or raw.winters.size() > 10: return false
+	for key in raw.winters:
+		if not str(key).is_valid_int() or str(int(key)) != str(key) or int(key) < 1 or int(key) > int(saved.season_clock.year): return false
+		if int(key) == int(saved.season_clock.year) and int(saved.season_clock.season) < 3: return false
+		var row: Variant = raw.winters[key]
+		if not row is Dictionary or row.size() != 2 or row.get("fee") not in [0.0, STORAGE_FEE] or not row.get("spoiled") is Dictionary or row.spoiled.size() != Table.IDS.size(): return false
+		for id in Table.IDS:
+			if not Rules.number(row.spoiled.get(id), 0, 100000, true): return false
+			if int(row.spoiled[id]) > 0:
+				if row.fee != STORAGE_FEE or not _posting(saved, int(key), 3, "storage", "Spoilage: %d %s sacks" % [int(row.spoiled[id]), id], 0.0): return false
+		if row.fee > 0 and not _posting(saved, int(key), 3, "storage", "Winter storage fee", -STORAGE_FEE): return false
 	for entry in saved.ledger.entries:
 		if entry.category != "storage": continue
 		var report: Dictionary = raw.winters.get(str(int(entry.year)), {})
@@ -185,20 +208,41 @@ func valid(raw: Variant, saved: Dictionary) -> bool:
 			for id in Table.IDS:
 				if int(report.spoiled[id]) > 0 and entry.label == "Spoilage: %d %s sacks" % [int(report.spoiled[id]), id]: matches = true
 			if not matches: return false
-	if not raw.get("contract") is Dictionary: return false
-	if not raw.contract.is_empty():
-		if int(saved.season_clock.season) >= 3 or raw.settled.has(str(saved.season_clock.year)): return false
-		if not valid_order(raw.contract, int(saved.season_clock.year), false): return false
+	if not raw.get("contracts") is Array or not raw.get("settled") is Dictionary or raw.settled.size() > 10: return false
+	var year: int = int(saved.season_clock.year)
+	if not raw.contracts.is_empty() and (int(saved.season_clock.season) >= 3 or raw.settled.has(str(year))): return false
+	if not valid_orders(raw.contracts, year, false, saved): return false
+	for key in raw.settled:
+		if not str(key).is_valid_int() or str(int(key)) != key or int(key) < 1 or int(key) > year: return false
+		if int(key) == year and int(saved.season_clock.season) != 3: return false
+		if not raw.settled[key] is Array or raw.settled[key].is_empty() or not valid_orders(raw.settled[key], int(key), true, saved): return false
+	# A settlement posting cannot outlive its report, or be assigned to another year.
+	for entry in saved.ledger.entries:
+		if str(entry.label).begins_with("Buyer collected ") or str(entry.label).begins_with("Contract shortfall: ") or str(entry.label).begins_with("Contract grower collected ") or str(entry.label).begins_with("Contract grower shortfall: "):
+			var found: bool = false
+			var premium: bool = saved.diversification.built.has("grower") and int(saved.diversification.built.grower) < int(entry.year)
+			for row in raw.settled.get(str(int(entry.year)), []):
+				if entry.label in [collection_label(int(row.delivered), row.crop, premium), shortfall_label(int(row.shortfall), row.crop, premium)]: found = true
+			if not found: return false
 	return true
 
-func valid_order(row: Dictionary, year: int, complete: bool) -> bool:
-	if row.size() != (6 if complete else 4): return false
-	var expected: Dictionary = offer(year)
-	for key in expected:
-		if row.get(key) != expected[key]: return false
-	if complete:
-		if not Rules.number(row.get("delivered"), 0, expected.quantity, true) or not Rules.number(row.get("shortfall"), 0, expected.quantity, true): return false
-		if int(row.delivered) + int(row.shortfall) != int(expected.quantity): return false
+func valid_orders(rows: Array, year: int, complete: bool, saved: Dictionary) -> bool:
+	var grower: bool = saved.diversification.built.has("grower") and int(saved.diversification.built.grower) < year
+	var limit: int = 2 if grower else 1
+	if rows.size() > limit: return false
+	var seen: Array = []
+	for row in rows:
+		if not row is Dictionary or row.size() != (7 if complete else 5) or not Rules.number(row.get("slot"), 0, limit - 1, true): return false
+		if int(row.slot) in seen: return false
+		seen.append(int(row.slot))
+		var expected: Dictionary = offer(year, int(row.slot), grower)
+		for key in expected:
+			if row.get(key) != expected[key]: return false
+		if complete:
+			if not Rules.number(row.get("delivered"), 0, expected.quantity, true) or not Rules.number(row.get("shortfall"), 0, expected.quantity, true): return false
+			if int(row.delivered) + int(row.shortfall) != int(expected.quantity): return false
+			if int(row.delivered) > 0 and not _posting(saved, year, 3, "contracts", collection_label(int(row.delivered), row.crop, grower), row.delivered * row.price): return false
+			if int(row.shortfall) > 0 and not _posting(saved, year, 3, "contracts", shortfall_label(int(row.shortfall), row.crop, grower), -row.shortfall * SHORTFALL_FEE): return false
 	return true
 
 func _posting(saved: Dictionary, year: int, season: int, category: String, label: String, amount: float) -> bool:

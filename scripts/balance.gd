@@ -42,3 +42,12 @@ const CLIMATE_FALSE_ALARM_CHANCE: float = 0.1
 const CLIMATE_ANNUAL_CAP: int = 3
 const CLIMATE_WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
 const FIELD_EXPANSION_COST: float = 1200.0
+const CONTRACT_QUANTITY: int = 20
+const CONTRACT_PRICE_FACTOR: float = 1.1
+# Winter diversification, available from year three. Payments start next Winter.
+const DIVERSIFY_YEAR: int = 3
+const BUSINESS_COSTS: Dictionary = {"shop": 3000.0, "grower": 0.0, "lodging": 2500.0}
+const SHOP_INCOME: float = 800.0
+const SHOP_SUMMER_SECONDS: float = 30.0
+const LODGING_INCOME: float = 600.0
+const GROWER_PRICE_FACTOR: float = 1.2

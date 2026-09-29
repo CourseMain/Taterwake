@@ -109,7 +109,7 @@ func _ready() -> void:
 	_reset_camera_view()
 	get_tree().root.size_changed.connect(_stop_map_navigation)
 	get_tree().root.focus_exited.connect(_stop_map_navigation)
-	world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
+	world.set_calendar(state.season_clock.year, state.season_clock.season, state.calendar_light_seconds(), state.climate.data.outlook.signal)
 	world.pest_warning.connect(_on_pest_warning)
 	hud = HudScript.new()
 	hud.name = "GameHUD"
@@ -221,7 +221,7 @@ func _process(delta: float) -> void:
 	_update_equipment_card(delta)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
-	world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
+	world.set_calendar(state.season_clock.year, state.season_clock.season, state.calendar_light_seconds(), state.climate.data.outlook.signal)
 	climate_audio.set_weather(climate_info, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
 	_update_weather_shake(delta)
@@ -908,7 +908,7 @@ func _on_state_changed() -> void:
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
-		world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
+		world.set_calendar(state.season_clock.year, state.season_clock.season, state.calendar_light_seconds(), state.climate.data.outlook.signal)
 	if hud != null:
 		hud.update_state(state)
 		_hud_update_frame = Engine.get_process_frames()
@@ -1066,7 +1066,14 @@ func _on_action(action: String) -> void:
 		"keep_seed":
 			state.trading.keep_seed(state, parts[1], parts[2])
 			_save_checkpoint.call_deferred()
-		"contract_accept": state.trading.accept(state)
+		"contract_accept":
+			state.trading.accept(state, int(parts[1]) if parts.size() > 1 else 0)
+			_save_checkpoint.call_deferred()
+		"diversify":
+			if parts.size() == 2:
+				state.diversification.buy(state, parts[1])
+				hud.update_state(state)
+				_save_checkpoint.call_deferred()
 		"quest": state.claim_quest(parts[1])
 		"close": hud.close_panel()
 		"crop":

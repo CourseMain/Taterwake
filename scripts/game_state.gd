@@ -23,7 +23,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 39
+const MECHANICS_REVISION: int = 40
 const FIELD_EXPANSION_COST: float = preload("res://scripts/balance.gd").FIELD_EXPANSION_COST
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -34,6 +34,8 @@ const DEFAULT_SAVE_PATH: String = "user://taterland_save_v4.json"
 const PROTECTED_SAVE_PATHS: Array[String] = ["user://spud_valley_save.json", "user://spud_valley_save_v3.json"]
 const MarketDecisions = preload("res://scripts/market_decisions.gd")
 var trading = MarketDecisions.new()
+const Diversification = preload("res://scripts/diversification.gd")
+var diversification = Diversification.new()
 const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
 const MAX_GROW_SECONDS: float = 450.0
@@ -370,7 +372,7 @@ func update(delta: float) -> void:
 	while remaining >= 0.000001 and not run_over and not accounts_open and not climate_report_open:
 		if season_clock.seconds == 0.0: climate.start_season(self)
 		farm_help.refresh_pests(self)
-		var step: float = minf(remaining, season_clock.remaining())
+		var step: float = minf(remaining, season_clock.remaining(season_seconds()))
 		if climate.clock_running(self): step = minf(step, minf(climate.next_boundary(), 0.25))
 		step = minf(step, 15.0 - _relief_clock)
 		if is_instance_valid(activity_system) and activity_system.has_method("next_boundary"):
@@ -434,12 +436,23 @@ func update(delta: float) -> void:
 			_relief_clock = maxf(0.0, _relief_clock - 15.0)
 			if _seed_relief():
 				dirty = true
-		if season_clock.advance(step): _season_boundary()
+		if season_clock.advance(step, season_seconds()): _season_boundary()
 	if dirty:
 		changed.emit()
 
 
+func season_seconds() -> float:
+	return SeasonClock.SEASON_SECONDS - (Diversification.Balance.SHOP_SUMMER_SECONDS if season_clock.season == 1 and diversification.owns("shop") else 0.0)
+
+func calendar_light_seconds() -> float:
+	return season_clock.seconds / season_seconds() * SeasonClock.SEASON_SECONDS
+
+func run_title() -> String:
+	return diversification.title(self)
+
 func _season_boundary() -> void:
+	# Short Summers end during recovery, before the next season's warning draw.
+	if season_clock.season == 2 and diversification.owns("shop") and climate.data.phase == "recovery": climate.end_working_year()
 	if season_clock.season == 0: trading.begin_spring(self)
 	if season_clock.season == 1: climate.data.protection.covers.clear()
 	var was_over: bool = run_over
@@ -461,6 +474,7 @@ func _season_boundary() -> void:
 		farm_help.refresh_pests(self)
 		trading.begin_winter(self)
 		ClimateSystem.Protection.winter(self)
+		diversification.winter(self)
 		ledger.post_fixed_costs(season_clock.year)
 		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
 		news = winter_notice()
@@ -926,6 +940,7 @@ func reset_game() -> void:
 	seed_inventory = CropTable.empty_stock()
 	storage = Stock.empty()
 	trading = MarketDecisions.new()
+	diversification = Diversification.new()
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
 	news = "Harvest your Russets. Catch a good price. Sell with F!"
@@ -940,7 +955,7 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
-		"trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
+		"diversification": diversification.save_data(), "trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
 		"pest_timer": pest_timer, "selected_crop": selected_crop,
@@ -973,6 +988,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	season_clock.load_data(data.season_clock)
 	ledger.load_data(data.ledger)
 	trading.load_data(data.trading)
+	diversification.load_data(data.diversification)
 	accounts_open = false
 	climate_report_open = false
 	run_outcome = data.run_outcome
@@ -1097,6 +1113,8 @@ func _valid_save(raw: Variant) -> bool:
 		if not data.get(key) is Dictionary or data[key].size() != CROP_IDS.size(): return false
 		for id in CROP_IDS:
 			if not _number(data[key].get(id), 0, MAX_INVENTORY, true): return false
+	if not Diversification.valid(data.get("diversification"), data): return false
+	if int(data.season_clock.season) == 1 and data.diversification.built.has("shop") and float(data.season_clock.seconds) >= SeasonClock.SEASON_SECONDS - Diversification.Balance.SHOP_SUMMER_SECONDS: return false
 	if not trading.valid(data.get("trading"), data): return false
 	if not data.get("tools") is Dictionary or data.tools.size() != 3: return false
 	for key in TOOL_COSTS:
