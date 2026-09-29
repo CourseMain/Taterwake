@@ -682,7 +682,7 @@ The earlier fixtures still check their original behavior: real sale quotes,
 fixed seed prices, exact foreclosure boundaries, premiums/claims, storage,
 save corruption and UI totals. They now use the tuned prices and derive the
 one-coin foreclosure cases from the actual Winter bill. No tests are skipped
-or disabled. The epilogue remains deferred.
+or disabled.
 
 ### Segment 15: diversification and run titles
 
@@ -782,3 +782,81 @@ run `godot --path . --script res://tests/test_economy_scale.gd --
 --integration-test --capture --touch-controls`; captures are written to
 `artifacts/farm-units-*.png`. Final values and scaled bot results are recorded
 in REDESIGN_PLAN §6.
+
+
+### Segment 16: The fifty-year epilogue
+
+`epilogue.gd` clones the trusted final snapshot, including RNG state, stock,
+per-bed crop choices, projects, businesses and ducks, through the same restore
+path as validated saves. It first normalizes through the existing JSON save
+precision so reopening the browser cannot alter the projection. The isolated clock and journal use a runtime horizon
+of 50; ordinary save validation and the playable run still end at ten. The
+completed Winter boundary advances once to year 11. `advance_year()` drives
+ordinary one-second caretaker decisions and `GameState.update()` retains its
+quarter-second hazards. The screen budgets 80 decisions per frame to keep the
+single-threaded browser responsive. No wall time or new seed enters the result.
+
+The caretaker plants each open bed once in Spring and Summer using its final
+variety, waters and sprays promptly, clears ice, replaces owned frost covers,
+sells half the harvested tonnes and holds half for late Winter. Matching premium
+orders and existing annual insurance are renewed. It buys no new assets.
+Existing protection condition loses six percentage points per matching
+severity-one disaster. Winter repairs restore condition for the damaged
+fraction of annual project upkeep per level, only with enough cash; below half
+condition the project stops protecting until repaired. Original project levels
+remain the repair ceiling. Caretaker work stops at the first Winter insolvency;
+the remaining seasonal climate and property accounts still run to fifty.
+The ordinary mortgage bill stops after the original twenty principal payments.
+
+Solvency combines year-ten cash less remaining debt (25%), the last decade's
+net trend (35%) and ending liquidity (40%). Adaptation weights retained project
+levels and condition by experienced disaster pressure. Diversification is twice
+the share of positive receipts from businesses and premium grower orders,
+capped at one. Land health carries earlier weather and current bed stress;
+unmitigated severity costs 0.009 health, with up to 40% less erosion from trees.
+The earlier ten-year weather receives half weight. All four axes are clamped to
+[0,1]. Below 0.25 land health, flood versus drought burden chooses Drowned or
+Dust. Otherwise early insolvency (through year twenty) yields Sold to the
+estate, later insolvency yields Deserted; surviving businesses with at least
+0.45 diversification yield The shop village, other survivors Holding on.
+Thriving is tested first and requires all four axes strictly above 0.75.
+Farm value is surviving land value (initial mortgage × health) plus cash less
+remaining debt, floored at zero. Thresholds are visible in `epilogue.gd`.
+
+The summary's Fifty years on action opens `epilogue_screen.gd`, hides normal
+HUD/touch chrome, and extends `climate_strip.gd` to fifty annual markers with
+one headline per decade. The scene fades up and pans in real time. Four verdicts,
+the final valuation, screenshot and ledger/new-run actions stay on cream paper.
+Screenshot captures the composed scene without buttons and downloads a PNG via
+`JavaScriptBridge` on Web, or writes `user://taterland-50-years.png` natively.
+Headless screenshot requests report the lack of a rendered window.
+
+`farm_world.gd` builds cracked, flooded, overgrown and monoculture beds; collapsed,
+boarded, estate-storage and shop-village buildings; dry tank and standing water.
+It reuses the flood shader, frost covers, ditch ice and rounded snowbank geometry
+for silt/sand, retains the
+potato farmer and villagers in occupied futures, and adds grey temples and a
+commemorative plaque. Returning to the ledger rebuilds the present world and
+restores the camera. The projection is cached only for the current session;
+reopening a saved final farm deterministically regenerates it.
+
+Run `tools/run_tests.sh -j 4 --timeout 600 test_epilogue test_epilogue_scene test_tuning_bot test_ledger test_season_clock test_game`.
+The epilogue suite plays the actual bot's naive, cautious and diversifier
+strategies at seed one, verifies three distinct futures, forty additional years,
+all four Thriving gates, snapshot isolation and deterministic repetition across
+JSON reload and frame batching. It also checks all seven classification branches, repair affordability,
+unchanged investment ownership and the mortgage payoff.
+`test_epilogue_scene` checks all seven visual states, navigation, camera motion,
+responsive bounds and restart; add `--capture --touch-controls` to a native
+invocation for PNGs under `artifacts/epilogue/` and a real screenshot-button check.
+
+Validation on the installed Godot **4.7.stable** Compatibility build: all 82
+GDScript suites passed (including the 1,836-check tuning bot). The strengthened
+epilogue regression passes 534 checks, and scene checks pass 72 headless / 73
+native with capture. Native captures
+covered all seven future scenes and desktop/phone portrait/landscape layouts;
+the screenshot button wrote a real PNG. An uncached native continuation from
+the diversifier's real ten-year state simulated all forty years in 14.38 seconds,
+showed The shop village, and returned to the unchanged ten-year ledger. This
+machine does not provide the requested 4.7.2 binary, so these results do not
+claim testing on that exact patch release.
