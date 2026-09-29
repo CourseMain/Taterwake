@@ -93,7 +93,7 @@ Every Winter posts these fixed costs once:
 
 The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **33**. Earlier saves, including revision 32, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Current saves use mechanics revision **34**. Earlier saves, including revision 33, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
 
 ## The live crop market
 
@@ -173,11 +173,32 @@ After foreclosure, **Debug access** still accepts the session code. Before year 
 
 ### Climate action and bankruptcy
 
-Weather can threaten Spud Valley from the first season. For now, each Spring, Summer and Autumn has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
+Weather can threaten Spud Valley from the first season. For now, each Spring, Summer and Autumn has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open **Weather & protection** to reserve Winter protection, buy manual sprinklers, insure crops and read next season’s forecast. Climate escalation is not implemented yet.
 
-The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, storage fees and the complete fixed Winter bill are posted first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
+The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, buyer collection, storage, insurance payouts, protection upkeep and the complete fixed Winter bill are settled first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
 
-The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
+The Weather Station keeps its scanning sensor tower and uses a cream page with live tank levels, protection, construction progress and the **next season’s disaster probability range**. Station levels **0 / 1 / 2** give **±20 / ±10 / ±5 percentage points**, clipped to 0–100%. Sensor upgrades cost 500, then 1,000. The overall chance is currently 15%; each of the four equally likely disasters has a 3.75% chance. Both overall and per-disaster ranges are shown. Winter has no new disasters. Better instruments narrow uncertainty; they do not change the weather.
+
+### Winter protection work
+
+| Protection | Disaster | Level 1 | Level 2 |
+| --- | --- | ---: | ---: |
+| Rainwater tank | Drought | 1,500 | 3,000 |
+| Drainage | Flood | 2,000 | 4,000 |
+| Windbreak | Storm | 2,500 | 5,000 |
+| Frost cover | Spring freeze, covered beds only | 1,500 | 3,000 |
+
+**Reserve during Winter**, after closing accounts. Payment buys materials; protection begins only when the work is finished. Use **Walk to construction site**, or click the marked materials in the world, for one walked, 0.6-second hoe action. **Three actions finish each level.** Unfinished paid work keeps its progress through Spring and can resume next Winter. An upgrade keeps the completed lower level working meanwhile. Each completed protection costs **100 upkeep per year at Winter start**, regardless of level; work completed later that Winter is first billed the following Winter. Sprinklers remain a separate manual-water purchase at 500 / 1,000.
+
+Completed level 1 reduces the matching disaster’s field sack loss by **50%**, level 2 by **75%**, rounded to the nearest whole sack across affected beds of the same variety and protection level. At a bed’s danger threshold, surviving sacks remain on the crop and can be harvested. One disaster cannot repeatedly charge that same bed’s loss. Watering, opening drains and clearing ice can prevent the danger threshold from being reached. These four protections do not protect barn stock.
+
+After finishing the frost-cover project, use **Hoe [1]** to clear a bed’s Winter ice, then use Hoe on that bed again to place its cover. Placement is per bed even with an upgraded hoe. The cover protects that bed against freeze during the **following Spring**, and expires in Summer. Covers must be placed again each Winter. They do not save crops left unharvested at Autumn’s end; Icecap keeps its existing Winter exception.
+
+### Insurance and loss notices
+
+Buy **400-Spudion annual insurance in Spring**. It covers subsequent field crop losses through Autumn, paying **40% of lost sacks × the crop’s fixed base price** at Winter start, before foreclosure. Losses before purchase, barn damage and storage spoilage are excluded. The premium and payout are posted under Insurance, once per year. Renewal is a new Spring decision.
+
+Every field or barn crop loss records a **cause card**: year, season, event, variety, sacks lost, missing protection or action, and how many sacks that alternative would have saved. Open **This season’s loss notices** at the weather station; the list updates while open. Winter accounts retain all that year’s cards, including drought, flood, storm, freeze, dry beds, pests, Autumn cold and storage spoilage. Climate cards compare the same exposed sacks with the next protection level; at maximum protection there is no further project saving. Where prevention is manual, the card names watering, spraying, harvesting, selling or ice clearing instead.
 
 The foreclosure page shows the accounting year, cause, year net, Winter bill, debt limit, weather losses and final balance. **View Run Summary** reveals that year’s category totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather pressure.
 
@@ -192,7 +213,7 @@ After purchasing irrigation, optional water practice is available at the weather
 
 - **Drought:** water dry crops; the shared tank reserve now matters.
 - **Flood:** open purchased drains to send water through channels toward the sea; Hoe [1] drains individual planted beds.
-- **Storm:** fixed trees shelter their highlighted patch from wind. A warned lightning row remains dangerous. Reinforced barn shutters close automatically.
+- **Storm:** completed windbreaks reduce field losses across the whole farm. Harvest the warned lightning row or rely on the built protection to preserve part of its crop.
 
 Double-click **Play Climate Lab.command** for disposable water practice, ordinary farming, upgrades and weather scenarios. It never reads or writes your saved farm. Hold **Shift** to sprint.
 

@@ -15,7 +15,7 @@ The redesign source is version `2.0.0-undeveloped-b`, published as the GitHub pr
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 33. Earlier saves, including revision 32, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 34. Earlier saves, including revision 33, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -38,7 +38,13 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 11 follow-up — current
+#### Segment 12 — current
+
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **76 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. The new `test_protection` passes 207 checks, including actual protected harvests, aggregate rounding across reloads, site labour, unfinished work, covers, insurance, upkeep, forecast ranges and cause-card arithmetic. Existing climate, water, ledger, season and UI suites also pass. No tests are skipped or disabled. The serial report is `artifacts/segment12-baseline.txt`.
+
+The explicit headless boot passes 39 checks (`artifacts/segment12-boot.txt`), with the existing five-instance ObjectDB teardown warning. Native GL Compatibility passes all 207 protection checks with touch controls (`artifacts/segment12-native.txt`). Construction sites, bed covers and desktop/phone forecast, notice and accounts pages were visually inspected. Browser runtime automation was not rerun. Published `docs/index.*` and `web/` remain untouched.
+
+#### Segment 11 follow-up — historical
 
 Godot 4.7.2, `tools/run_tests.sh -j 1`: **75 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. This includes `test_market_decisions` (110 checks), `test_ledger` (118), `test_season_clock` (123), `test_seed_market` (216), `test_single_farm` (265) and `test_game` (39). No tests are skipped or disabled. The serial report is `artifacts/segment11-followup-baseline.txt`.
 
@@ -218,7 +224,7 @@ Raw local outputs are `artifacts/segment1-baseline.log`, `artifacts/segment1-bas
 
 ### Climate and the temporary overdraft rule
 
-`climate_system.gd` retains warnings, physical crop/barn losses, protection, weather phases and the collapse report. Weather never changes prices or generates a bill. Protection has flat costs of 500–1,000 per first level and twice that for the second level. `save_validation.gd` supplies finite-number validation shared with climate saves.
+`climate_system.gd` retains warnings, physical crop/barn losses, protection, weather phases and the collapse report. Weather never changes prices or generates a bill. Protection uses the Winter construction and annual upkeep rules described in Segment 12 below. `save_validation.gd` supplies finite-number validation shared with climate saves.
 
 A balance strictly below −5,000 ends the run immediately. `run_over` and the final climate receipt persist in saves; equality remains playable. The editorial collapse page shows the final balance, overdraft limit and weather losses, with run summary, restart and authenticated debug recovery. The annual ledger is not implemented in this segment.
 
@@ -295,7 +301,7 @@ Normal field actions never create central toasts. No-op feedback (for example, �
 
 `test_farm_clarity.gd -- --integration-test` checks rapid repeated actions, feedback expiry, duplicate suppression, full-barn feedback, help action stability, responsive layout and Valley typography. A native `--capture` run writes `artifacts/clarity-watering.png`, `clarity-island-1.png` through `clarity-island-3.png`, and `clarity-winter-warning.png`.
 
-`climate_projects.gd` builds a farm tank, perimeter drainage, braces on the existing barn, and a rear tree windbreak from the saved project levels. Second levels add visible infrastructure. `FarmWorld.set_climate_projects()` creates/batches geometry only when local levels change, and clears it on reset or world rebuild. The controller applies purchases immediately. Structures occupy gaps and field edges, keeping existing map dimensions and all crop targets accessible.
+`climate_projects.gd` builds a farm tank, perimeter drainage, a rear tree windbreak, a frost-cover rack and per-bed covers. `FarmWorld.set_climate_projects()` creates/batches geometry only when completed levels change, and clears it on reset or world rebuild. Paid reservations have separate marked work sites; completion replaces those sites with the upgraded geometry. Retired sites unregister their interaction targets before leaving the tree. Structures occupy gaps and field edges, keeping existing map dimensions and all crop targets accessible.
 
 
 ### v1.0.2 operational climate implementation
@@ -309,7 +315,7 @@ Validation for the simplified flow: 33 lesson checks, 119 climate checks, 42 gam
 
 ### Connected water loop (mechanics revision 18)
 
-Manual watering spends carried can water in all weather. Refilling conserves tank plus can water. Connected sprinklers consume the same reserve; drought stops rain replenishment. Frozen and locked beds are excluded. Drain opening is idempotent, trees shelter their fixed far patch and barn shutters close automatically.
+Manual watering spends carried can water in all weather. Refilling conserves tank plus can water. Connected sprinklers consume the same reserve; drought stops rain replenishment. Frozen and locked beds are excluded. Drain opening is idempotent. Completed windbreaks reduce storm field losses across the farm. Reinforced barn projects, automatic shutters and their dedicated geometry, illustrations and save flag have been removed.
 
 Weather warning/impact announcements are now brief, nonblocking strips above the farm; recovery uses the existing field status card instead of a second large announcement.
 
@@ -361,7 +367,7 @@ Run `tools/run_tests.sh -j 1 test_harvest_identity test_village_identity test_cr
 
 `GameState.can_purchase()` accepts finite, nonnegative costs only when the resulting balance stays at or above the ledger’s −5,000 overdraft limit and the run is active. Shop buttons share that predicate; failed actions emit rejection feedback without inventory changes or success receipts. Account warnings, review overlays and recovery orders are removed.
 
-`weather_pages.gd` retains the navy/cyan dashboard with live tank levels, physical protection, costs and timers. `test_weather_dashboard.gd` checks telemetry, purchase limits, warnings and desktop/phone layout; native `--capture` writes isolated previews.
+`weather_pages.gd` uses the cream UI for next-season probability ranges, live tank levels, protection, construction, insurance, costs and timers. `test_weather_dashboard.gd` checks telemetry, purchase limits, warnings and desktop/phone layout; native `--capture` writes isolated previews.
 
 ### Island surfaces and camera movement
 
@@ -456,7 +462,7 @@ Run `tools/run_tests.sh -j 1 test_ledger test_season_clock test_game` for journa
 
 `crop_table.gd` is the single source for the five varieties, seed costs, base prices, volatility, water/heat/cold dials, grow seasons, growth seconds and sacks per bed. State, HUD, world growth and fixtures read that table. Radioactive is removed, including its icon and field decoration. Base growth is 75–225 seconds, within the stated one- or two-season budget. Combined resilience is `(4 − water_need) + heat_tolerance + cold_tolerance`: 9/8/7/6/5 as prices rise from Russet to Icecap. High water need means lower resilience; high heat/cold tolerance means higher resilience.
 
-Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm rates and protection still apply as before. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 `storage_peak_factor` values used by the Winter storage curve in Segment 11.
+Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm stress rates remain; protection now reduces the resulting sack loss through the shared Segment 12 formula. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 `storage_peak_factor` values used by the Winter storage curve in Segment 11.
 
 Icecap can be planted in prepared Autumn beds. Autumn clearing preserves its live crop, water and growth, and the Winter notice explains the exception. `crop_frozen()` distinguishes disaster ice from seasonal ice, letting Icecap grow, receive water and be harvested in Winter or early Spring without hoeing. An empty iced bed still needs clearing before new planting. Winter save validation permits Icecap; mechanics revision 31 rejects older crop tables through the existing save protection.
 
@@ -478,3 +484,22 @@ The Sell Potatoes card retains its live signed percentage and history; `price_sp
 One Spring offer per year requests 20 sacks, rotates varieties by year, and fixes base × 1.1. The card and accept message state collection at the end of Autumn. Settlement runs at the Autumn-to-Winter boundary before spoilage or storage fees, so Autumn harvests can fill the order. It takes available sacks once, pays for deliveries, and charges 5 per missing sack. Contract postings belong to Winter; active orders remain valid throughout Autumn. Active and settled orders round-trip; malformed prices, quantities, future records and inconsistent postings are rejected. Mechanics revision 33 sets older saves aside through the existing protection.
 
 Run `tools/run_tests.sh -j 1 test_market_decisions test_ledger test_season_clock test_seed_market test_game`. New checks cover net storage benefit, monotonic quotes, Spring reset, new Winter harvests, spoilage notes, fee idempotence, overdraft boundaries including storage, shared capacity, contract collection/penalties, save corruption and UI actions. Native `test_market_decisions.gd -- --integration-test --capture --touch-controls` writes desktop/phone market, board, stores and accounts captures to `artifacts/`.
+
+
+### Segment 12: Winter protection, insurance and cause cards
+
+`farm_protection.gd` owns construction, per-bed covers, loss arithmetic, annual insurance, upkeep and forecast ranges. Its state lives under `climate.protection`: pending work, covers, loss records, policy years, settled Winters and station level. Mechanics revision 34 rejects earlier saves through the existing rejected-save protection. Validation checks types, calendar bounds, cover ownership, loss and counterfactual arithmetic, policy payments, and payout/upkeep agreement with the ledger.
+
+Four completed protections have two levels: rainwater 1,500 / 3,000, drainage 2,000 / 4,000, windbreak 2,500 / 5,000, frost cover 1,500 / 3,000. `ClimateSystem.fund()` reserves them only in Winter, without granting a level. Three site actions complete a reservation; each controller action walks through the existing route system and spends 0.6 seconds on a hoe animation. Leaving the site or crossing Spring cannot complete Winter work. Progress persists until a later Winter. The existing can, starter tank and manually operated sprinklers remain; irrigation still costs 500 / 1,000 and installs immediately. Each completed protection posts 100 upkeep at Winter start, once per project rather than per level.
+
+Frost-cover materials are a completed project; placement is a separate per-bed Winter hoe action after clearing ice. A cover stores its level and the following Spring’s year, survives saves/crop clearing, and expires at Summer. The renderer keeps per-bed cover meshes separate from crops and ice so harvesting or planting cannot erase them. Other seasons’ freeze losses can be prevented by manual ice clearing, but receive no passive cover benefit.
+
+The existing quarter-second stress simulation and rescue controls remain. Reaching the danger threshold calls `loss(exposed_sacks, reduction) = round(exposed_sacks × (1 − reduction))`, clamped to the exposed stock. Reductions are 0 / 0.5 / 0.75. Matching event, season, variety, protection level and insured status accumulate in saved `operations.loss_groups`; each bed loses the difference between the new and previous rounded totals. This gives twelve three-sack beds exactly 36 / 18 / 9 lost sacks, including across reloads. Each bed is assessed at most once per disaster; the saved `operations.damaged` map prevents repeated strikes from charging its protected loss again. Surviving crop sacks persist as `weather_lost` on the plot and are deducted from later harvesting and pest losses. Whole-bed destruction metrics remain available in the older climate receipt. Protection no longer also reduces stress/growth, avoiding two passive reductions on the same loss.
+
+Every actual field/barn loss records a cause card with its exposed sacks, actual reduction, alternative reduction and saved sacks. Disaster groups update their existing card as affected beds accumulate. Both actual and alternative use `loss()` on the same total; alternative project protection is the next level, capped at two. Manual prevention uses the same formula with reduction 1. Climate damage, unwatered beds, pests, Autumn clearing, barn weather damage and whole-barn storage spoilage all feed this record. A saved revision counter refreshes open season notices on additions and updates; Winter accounts include the full year. The displayed weather-loss remainder also respects previous pest damage and partial harvests.
+
+Spring insurance posts a 400 premium once per year and marks only later Spring–Autumn field losses as insured. Winter settlement pays 40% of their base-price value; pre-policy losses, Winter losses and barn losses are excluded. Policy membership compares integer years so JSON numeric types cannot allow duplicate premiums after reload. Insurance settlement and protection upkeep run after Autumn clearing and storage, before fixed costs, foreclosure and the boundary save. Recorded Winter reports prevent duplicate charges or payouts.
+
+Forecasts use the existing constant 15% disaster draw, divided equally across the four events for per-event probabilities. Ranges use ±20 / ±10 / ±5 percentage points at station levels 0 / 1 / 2 and clip to 0–100%; Winter forecasts are zero. Sensor upgrades cost 500 / 1,000 and post under Protection. No year-based climate escalation, seasonal event mix or foreshadowing from Segment 13 has been added.
+
+Run `tools/run_tests.sh -j 1 test_protection test_climate test_climate_game test_climate_projects test_climate_operations test_water_loop_state test_weather_dashboard test_ledger test_game`. `test_protection` covers the loss formula and counterfactual, protected harvests, repeated strikes, Winter-only reservations, walked labour, carryover, per-bed cover expiry, insurance/policy reloads, annual upkeep, forecast bounds, corruption rejection and phone-width pages. Native `test_protection.gd -- --integration-test --capture --touch-controls` writes construction, cover, forecast, notices and accounts previews under `artifacts/`.
