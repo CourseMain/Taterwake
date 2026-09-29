@@ -135,6 +135,7 @@ func run() -> void:
 	game.state.buy_seeds("russet", 1)
 	for action in ["hoe", "plant", "water"]: game.state.interact_plot(5, action)
 	game.state.tutorial_progress.step = 5
+	check(game._simulation_delta(1) == 30, "guided waits run at thirty times speed")
 	var wall: float = 6 * 12.0
 	while game.state.tutorial_loss().is_empty() and wall < 290:
 		game._process(0.1); wall += 0.1
@@ -151,7 +152,7 @@ func run() -> void:
 	game.state.tutorial_progress.choice = "store"
 	while game.state.season_clock.season != 3 and wall < 300:
 		game._process(0.1); wall += 0.1
-	check(wall < 300 and game.state.accounts_open and game.hud._panel_kind == "accounts", "guided player reaches actual accounts under five minutes")
+	check(wall < 110 and game.state.accounts_open and game.hud._panel_kind == "accounts", "30x waits reach accounts under 110 seconds including reading allowance")
 	check(game.world.plot_positions.size() == 72, "all three fields drawn")
 	for i in [0, 24, 48]:
 		var pos: Vector3 = game.world.plot_positions[i]

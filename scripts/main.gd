@@ -325,7 +325,7 @@ func _simulation_delta(delta: float) -> float:
 	# especially when the previous scenario left accelerated time enabled.
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
-	if state.guided_first_year(): multiplier = 3.0 if state._tutorial_clock_running() else 1.0
+	if state.guided_first_year(): multiplier = TutorialScript.WAIT_SPEED if state._tutorial_clock_running() else 1.0
 	var step: float = minf(delta * multiplier, MAX_ACCELERATED_STEP if debug_unlocked and debug_time_multiplier > 1.0 else 3600.0)
 	return step
 

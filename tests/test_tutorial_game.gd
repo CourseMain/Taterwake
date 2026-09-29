@@ -69,6 +69,8 @@ func run() -> void:
 	lesson("water")
 	walk_plot("water", 4)
 	lesson("grow")
+	check(game._simulation_delta(1) == 30, "guided wait uses 30x simulation")
+	check(game.hud._tutorial_body.text.contains("30×"), "guide displays actual wait speed")
 	game._process(1000.0)
 	lesson("loss")
 	check(game.state.season_clock.season == 1 and game.state.climate.data.phase == "active", "large update stops at Summer cause card")
