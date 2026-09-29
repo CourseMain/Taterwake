@@ -1,10 +1,10 @@
 # Taterland
 
-**v2.0.0 (in development) — Game redesign**
+**v2.0.0(undeveloped:b) — Game redesign**
 
-Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-indevelopment).
+Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-b).
 
-The working `redesign` branch implements Segments 1–11 (the published prerelease tag contains Segments 1–8):
+The `v2.0.0-undeveloped-b` source prerelease implements redesign Segments 1–11:
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
@@ -32,7 +32,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `redesign` branch or the `v2.0.0-indevelopment` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch or the `v2.0.0-undeveloped-b` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.0-undeveloped-b
+
+**Game redesign — unfinished source prerelease.** Covers Segments 1–11 and the purchase-receipt currency-symbol fix. The live browser game remains v1.0.3.1.
+
+- Added ledger-backed cash, annual accounts, fixed costs, foreclosure and the ten-year summary.
+- Made Winter a fourth 150-second working season, with ice clearing and automatic Spring rollover. Accounts pause only while open.
+- Added five crop cards with water, heat and cold dials. Icecap plants in Autumn and grows through Winter ice.
+- Added Winter storage fees, 10% spoilage and prices that climb through Winter before resetting at Spring.
+- Added one Spring buyer order per year, collected at Autumn start, with delivery payments and shortfall penalties in the ledger.
+- Restored the Spudion symbol in purchase receipts and checked desktop/phone layouts.
+- Validation: all 75 headless suites passed serially for Segment 11; subsequent quest and receipt regressions pass, as does the 39-check boot test. Native UI and temporary Web resource-pack checks also pass.
+
+Use Godot 4.7.2 to run the source. Saves use the v4 path and mechanics revision 32; incompatible older saves are safely set aside. Later redesign segments remain unfinished. This release does not replace the published browser build.
+
 ## 2.0.0-indevelopment
 
 **Game redesign — in development.** Source prerelease covering redesign Segments 1–8. The published browser game remains v1.0.3.1.
