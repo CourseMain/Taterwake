@@ -131,7 +131,7 @@ func scene_checks() -> void:
 	game._process(1)
 	check(game.state.season_clock.winter_menu and game.hud._panel_kind == "winter", "main opens Winter at the boundary")
 	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.winter_menu, "Winter is already on disk when its menu appears")
-	check(game.hud._body.find_children("*", "Button", true, false).any(func(b): return b.text == "Start next year"), "Winter offers a real next-year button")
+	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Start next year"), "Winter offers a real next-year button")
 	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "HUD calendar and snow reflect Winter")
 	var snapshot: Dictionary = game.state._save_data()
 	game._process(10)
@@ -140,7 +140,7 @@ func scene_checks() -> void:
 	game._unhandled_input(escape)
 	check(not game.hud.is_panel_open(), "Escape can dismiss Winter")
 	game._on_action("menu")
-	check(game.hud._body.find_children("*", "Button", true, false).any(func(b): return b.get_meta("action", "") == "winter"), "farm menu always offers a route back to Winter")
+	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.get_meta("action", "") == "winter"), "farm menu always offers a route back to Winter")
 	game._on_action("winter")
 	if "--capture" in OS.get_cmdline_user_args():
 		await create_timer(0.3).timeout
@@ -148,12 +148,13 @@ func scene_checks() -> void:
 		root.get_texture().get_image().save_png("res://artifacts/season-winter.png")
 	game._on_action("next_year")
 	check(game.state.season_clock.year == 2 and not game.hud.is_panel_open() and not game.world._winter_cover.visible, "next year restores the green farm without trapping controls")
+	game.state.coins = 10000
 	game.state.season_clock.year = 10
 	game.state.season_clock.season = 2
 	game.state.season_clock.seconds = 149.75
 	game._process(0.25)
 	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Ten years complete"), "final Winter announces completion")
-	check(not game.hud._body.find_children("*", "Button", true, false).any(func(button): return button.get_meta("action", "") == "next_year"), "year ten has no next-year button")
+	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(button): return button.get_meta("action", "") == "next_year"), "year ten has no next-year button")
 	game._on_action("next_year")
 	check(game.state.season_clock.year == 10 and game.hud._panel_kind == "winter", "stale next-year actions cannot leave the final Winter")
 	game._on_action("menu")
@@ -169,7 +170,11 @@ func scene_checks() -> void:
 	game.conversation.finish()
 	# Let the audio mixer release the conversation playback before scene teardown.
 	await create_timer(0.1).timeout
-	game.state.coins = -5001
+	game.state.coins = -501
+	game.state.season_clock.season = 2
+	game.state.season_clock.seconds = 149.75
+	game.state.update(0.25)
+	before = game.state.season_clock.seconds
 	game._process(10)
 	check(game.state.season_clock.seconds == before, "collapse pauses the calendar")
 	game.queue_free()
@@ -188,6 +193,7 @@ func accelerated_run_checks() -> void:
 	await process_frame
 	check(game.debug_time_multiplier == 30, "accelerated regression uses the real 30x debug control")
 	for year in range(1, 11):
+		game.state.post_money("sales", "Annual receipts for calendar fixture", 5000)
 		var frames: int = 0
 		while not game.state.season_clock.winter_menu and frames < 1000:
 			game._process(1.0 / 30.0)
@@ -201,7 +207,7 @@ func accelerated_run_checks() -> void:
 		check(not game.hud.is_panel_open(), "regular refresh respects dismissed Winter in year %d" % year)
 		game._on_action("winter")
 		if year < 10:
-			for button in game.hud._body.find_children("*", "Button", true, false):
+			for button in game.hud._modal.find_children("*", "Button", true, false):
 				if button.get_meta("action", "") == "next_year":
 					button.pressed.emit()
 					break
@@ -213,6 +219,7 @@ func accelerated_run_checks() -> void:
 	game.hud.close_panel()
 	game.state.season_changed.disconnect(game._on_season_changed)
 	game.state.changed.disconnect(game._on_state_changed)
+	game.state.coins = 10000
 	game.state.season_clock.year = 10
 	game.state.season_clock.season = 2
 	game.state.season_clock.seconds = 149.75

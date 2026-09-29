@@ -16,11 +16,12 @@ func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
-	await frames()
 	game.set_process(false)
+	game.state.rng.seed = 6
+	await frames()
 	var farm = game.state
 	farm.tutorial_progress.completed = true
-	farm.coins = 1e18
+	farm.coins = 100000
 	var talk = game.conversation
 	for clip in talk.voice.CLIPS:
 		check(clip.get_length() >= .15 and clip.get_length() <= 1.0, "potato takes are short, nonempty audio clips")

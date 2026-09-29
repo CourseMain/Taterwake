@@ -277,14 +277,15 @@ func update_interaction_prompt() -> void:
 func _process(delta: float) -> void:
 	update_interaction_prompt()
 	var hud = game.hud
+	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["winter", "run_summary"]) or hud._run_end.visible
+	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 	if OS.has_feature("web"):
-		var cover_fullscreen: bool = enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes"
+		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 		if cover_fullscreen != _browser_fullscreen_hidden:
 			_browser_fullscreen_hidden = cover_fullscreen
 			JavaScriptBridge.eval("document.getElementById('fullscreen-button').style.visibility = '%s';" % ("hidden" if cover_fullscreen else "visible"))
 	if not enabled: return
 	_clock += delta
-	fullscreen.visible = not OS.has_feature("web") and not (hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 
 	var blocked: bool = hud.is_panel_open() or game.state.run_over
 	if blocked and not _blocked_before: release_all()

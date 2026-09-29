@@ -69,29 +69,38 @@ func run() -> void:
 	game.hud.close_panel()
 	# Finish the weather cycle before crossing the overdraft limit.
 	game._advance_simulation(105.0)
-	game.state.coins = -5001.0
+	game.state.coins = -501
+	game.state.season_clock.season = 2
+	game.state.season_clock.seconds = 149.75
+	game.state.update(0.25)
 	for _i in range(3):
 		game._advance_simulation(10.0)
 	game.hud.update_state(game.state)
 	var page: Control = game.hud._run_end
 	await create_timer(0.75).timeout
-	check(page.visible and page.headline.text == "BANKRUPT", "overdraft bankruptcy opens the editorial page")
-	check(page.detail.text.contains("overdraft") and page._event.text.to_upper().contains("FLOOD") and page._threshold.text.contains("5,000"), "collapse shows the overdraft boundary and actual climate event")
+	check(page.visible and page.headline.text == "FORECLOSED", "overdraft bankruptcy opens the editorial page")
+	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("5,000"), "foreclosure shows the overdraft boundary and accounting year")
 	check(page._metrics["FIELD LOST"].note.text.contains("24") and page._metrics["BARN LOST"].note.text.contains("270"), "loss metrics come from actual damage")
-	check(page._context.text.contains("Spud Valley"), "collapse identifies the farm")
+	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
 	page._summary_button.pressed.emit()
-	check(page._summary.is_visible_in_tree() and page._summary.text.contains("1 protection upgrades"), "view run summary reveals recorded projects and run totals")
+	check(page._summary.is_visible_in_tree() and page._summary.text.contains("Protection") and page._summary.text.contains("Mortgage"), "view accounts reveals protection and mortgage categories")
 	await shot("climate-summary")
 	for dimensions: Vector2i in [Vector2i(1024, 600), Vector2i(1280, 800), Vector2i(1920, 1080)]:
 		root.size = dimensions
 		await frames()
+		page._scroll.scroll_vertical = 0
+		await frames()
 		var screen: Rect2 = game.hud.root.get_global_rect().grow(1.0)
-		for item in [page.headline, page._balance, page._summary, page._summary_button, page.find_child("TryAgain", true, false)]:
+		for item in [page.headline, page._balance, page._summary_button, page.find_child("TryAgain", true, false)]:
 			check(screen.encloses(item.get_global_rect()), "editorial content and actions fit " + str(dimensions))
+		page._scroll.ensure_control_visible(page._summary)
+		await frames()
+		check(page._summary.get_global_rect().end.y <= page._scroll.get_global_rect().end.y + 1, "scroll reaches the last annual category at " + str(dimensions))
 	# Grouped balances must fit the same authored composition.
-	game.state.climate.data.collapse.balance = -12345
+	game.state.ledger.post(1, 3, "other", "Grouped balance fixture", -12345 - game.state.coins)
+	game.state.climate.capture_collapse(game.state)
 	page.show_report(game.state)
 	await frames()
 	check(page._balance.text == "-\uE000 12,345" and game.hud.root.get_global_rect().encloses(page._balance.get_global_rect()), "negative balance remains legible")

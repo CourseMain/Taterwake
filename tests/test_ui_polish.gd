@@ -53,7 +53,7 @@ func run() -> void:
 	game.hud._refs["quest:starter_crash"].pressed.emit()
 	check(game.state.coins == before + 100 and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
-	game.state.coins = 0
+	game.state.coins = game.state.bankruptcy_limit()
 	game.hud.show_panel("duck_patrol", game.state)
 	check(game.hud._refs["activity:duck"].disabled and game.hud._refs["activity:duck:status"].text.begins_with("Need"), "unaffordable duck shows the missing coins")
 	check(game.hud._refs["activity:duck:speed:status"].text.begins_with("Locked"), "speed training explains the flock prerequisite")

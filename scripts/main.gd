@@ -171,6 +171,7 @@ func _process(delta: float) -> void:
 	if world == null or hud == null:
 		return
 	if state.run_over:
+		hud.update_state(state)
 		_pump_audio()
 		return
 	if is_instance_valid(conversation) and conversation.visible:
@@ -410,7 +411,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if hud == null:
 		return
-	if state.run_over:
+	if state.run_over and state.run_outcome != "completed":
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
@@ -925,7 +926,7 @@ func _on_action(action: String) -> void:
 		_close_equipment()
 		climate_target = ""
 		hud._climate_console.targeting = ""
-	if state.run_over and action not in ["reset", "debug", "close"] and not action.begins_with("debug:"):
+	if state.run_over and action not in (["reset", "debug", "close", "menu", "pause", "winter", "run_summary"] if state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug:"):
 		return
 	if action.begins_with("farm_help:"):
 		_farm_help_action(action.get_slice(":", 1))
@@ -949,10 +950,11 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "winter":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "winter", "run_summary":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
+			if parts[0] == "run_summary" and state.run_outcome != "completed": return
 			_cancel_walk()
 			hud.show_panel(parts[0], state)
 		"activity":

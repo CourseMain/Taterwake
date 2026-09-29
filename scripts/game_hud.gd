@@ -273,7 +273,7 @@ func _update_weather_ui() -> void:
 	_climate_effect.set_weather(climate, bool(_state.run_over) or not _tutorial.is_empty())
 	_weather_button.visible = _tutorial.is_empty() and not is_panel_open() and not _state.run_over
 	_weather_button.text = "Weather & protection →" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
-	if _state.run_over:
+	if _state.run_outcome == "foreclosed":
 		var debug_open: bool = is_panel_open() and _panel_kind == "debug"
 		_modal.z_index = 210 if debug_open else 0
 		if not _run_end.visible and not debug_open:
@@ -683,7 +683,7 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in ["reset", "debug", "close"] and not action.begins_with("debug"):
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "winter", "run_summary", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
@@ -1140,7 +1140,7 @@ func update_state(state: Node) -> void:
 	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]]
 	# Reconcile from state on ordinary refreshes too, after the boundary save.
 	# Remember the calendar so Escape can dismiss Winter without reopening it.
-	if calendar_changed and not state.run_over:
+	if calendar_changed and state.run_outcome != "foreclosed":
 		if state.season_clock.winter_menu: show_panel("winter", state)
 		elif _panel_kind == "winter": close_panel()
 	_top.coins.text = _money(float(state.get("coins")))
@@ -1402,6 +1402,9 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind != _panel_kind:
 		_reset_pending = false
 	_panel_kind = kind
+	var paper: bool = kind in ["winter", "run_summary"]
+	(_modal.get_child(0) as ColorRect).color = CREAM if paper else Color(0.06, 0.13, 0.10, 0.58)
+	_modal.z_index = 150 if paper else 0
 	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
 	_modal_card.offset_left = -376
 	_modal_card.offset_right = 376
@@ -1446,6 +1449,7 @@ func show_panel(kind: String, state: Node) -> void:
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
 		"winter": _build_winter()
+		"run_summary": _build_run_summary()
 		"dex": _build_dex()
 		"quests": _build_quests()
 		"activities": _build_activities()
@@ -1457,6 +1461,8 @@ func show_panel(kind: String, state: Node) -> void:
 	_polish_card_typography(_body)
 	_polish_card_typography(_modal_trade_footer)
 	_polish_card_typography(_modal_market_nav)
+	if paper:
+		_paper_typography(_modal_card)
 	var bottom_space := Control.new()
 	bottom_space.custom_minimum_size.y = 8
 	bottom_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1464,7 +1470,7 @@ func show_panel(kind: String, state: Node) -> void:
 	_refresh_panel()
 	_modal.show()
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
-	_modal.modulate.a = 0.0
+	_modal.modulate.a = 1.0 if paper else 0.0
 	_modal_fade = create_tween()
 	_modal_fade.tween_property(_modal, "modulate:a", 1.0, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_barn_full_alert.hide()
@@ -1717,17 +1723,88 @@ func _build_help() -> void:
 		row.add_child(title)
 		row.add_child(_label(entry[1], 16, INK))
 
+func _account_row(parent: Node, title: String, value: String) -> Label:
+	var row := _hbox(16)
+	parent.add_child(row)
+	var caption := _label(title, 16, INK)
+	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(caption)
+	var amount := _label(value, 16, INK, true)
+	row.add_child(amount)
+	return amount
+
+func _paper_typography(node: Node) -> void:
+	if node is Label:
+		var font: FontVariation = Type.face(Type.DISPLAY if node.get_theme_font("font") in [_card_heading_font, _heading_font] else Type.BODY, 600)
+		font.fallbacks = [Type.SPUDION]
+		node.add_theme_font_override("font", font)
+	for child in node.get_children(): _paper_typography(child)
+
+func _paper_page() -> void:
+	_modal_card.offset_left = -550
+	_modal_card.offset_right = 550
+	_modal_card.offset_top = -370
+	_modal_card.offset_bottom = 370
+	_modal_card.add_theme_stylebox_override("panel", _style(CREAM, 24))
+
 func _build_winter() -> void:
+	_paper_page()
 	var clock = _state.season_clock
-	_heading("Winter · Year %d" % clock.year, "The fields are resting.")
-	_body.add_child(_wrap(_state.winter_notice(), 21, INK, true))
-	_body.add_child(_wrap("Time is paused. Visit the shops or use the farm menu whenever you like." + (" Spring begins only when you are ready." if clock.year < clock.LAST_YEAR else ""), 18, MUTED))
+	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Spud Valley")
+	var net: float = _state.ledger.total(clock.year)
+	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
+	_body.add_child(_refs.accounts_net)
+	_body.add_child(_wrap(_state.winter_notice(), 16, INK))
+	var columns := _hbox(44)
+	_body.add_child(columns)
+	var categories := _vbox(2)
+	categories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(categories)
+	categories.add_child(_label("THIS YEAR", 13, MUTED, true))
+	for category in _state.Ledger.CATEGORIES:
+		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
+	var years := _vbox(2)
+	years.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(years)
+	years.add_child(_label("TEN-YEAR RECORD", 13, MUTED, true))
+	for year in range(1, 11):
+		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—")
+	_refs.accounts_balance = _wrap("", 16, INK)
+	_body.add_child(_refs.accounts_balance)
+	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
 	if clock.year < clock.LAST_YEAR:
-		_body.add_child(_button("Start next year", "next_year", true))
+		_modal_trade_footer.add_child(_button("Start next year", "next_year", true))
 	else:
-		_body.add_child(_wrap("Ten years complete", 26, GREEN, true))
-		_body.add_child(_wrap("Your ten-year farm remains here. Open Settings & saves in the farm menu to start a new farm.", 18, MUTED))
-	_body.add_child(_button("Farm menu", "menu"))
+		_body.add_child(_label("Ten years complete", 22, GREEN, true))
+		_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true))
+	_modal_trade_footer.add_child(_button("Farm menu", "menu"))
+	_modal_trade_footer.show()
+
+func _refresh_accounts() -> void:
+	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
+	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
+	var net: float = _state.ledger.total(_state.season_clock.year)
+	_refs.accounts_net.text = "Year net  " + _state.money(net)
+	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
+	for category in _state.Ledger.CATEGORIES: _refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
+	for year in range(1, 11): _refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—"
+	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s · Loan remaining %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit()), _state.money(_state.ledger.loan_remaining())]
+
+func _build_run_summary() -> void:
+	_paper_page()
+	_heading("Ten years on the farm", "FINAL ACCOUNTS · Spud Valley")
+	_body.add_child(_label("Ten-year net  " + _state.money(_state.ledger.total()), 40, INK, true))
+	_account_row(_body, "Years in profit", "%d / 10" % _state.ledger.years_in_profit())
+	var worst: Dictionary = _state.ledger.worst_year()
+	var best: Dictionary = _state.ledger.best_year()
+	_account_row(_body, "Worst year", "Year %d · %s" % [worst.year, _state.money(worst.net)])
+	_account_row(_body, "Best year", "Year %d · %s" % [best.year, _state.money(best.net)])
+	_account_row(_body, "Final purse", _state.money(_state.coins))
+	_account_row(_body, "Loan remaining", _state.money(_state.ledger.loan_remaining()))
+	_body.add_child(_wrap("The epilogue is still to come.", 24, MUTED, true))
+	_modal_trade_footer.add_child(_button("New Run", "reset", true))
+	_modal_trade_footer.add_child(_button("Year 10 accounts", "winter"))
+	_modal_trade_footer.show()
 
 
 func _build_pause() -> void:
@@ -1813,6 +1890,9 @@ func _refresh_graphics() -> void:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
+	if _panel_kind == "winter":
+		_refresh_accounts()
+		return
 	if _panel_kind == "climate":
 		_refresh_climate()
 		return
@@ -2098,8 +2178,8 @@ func _refresh_duck_patrol() -> void:
 		_refs["activity:duck:value"].text = "Clears pests automatically"
 		_refs["activity:duck:speed:value"].text = _refs["activity:duck:speed:detail"].text
 		_refs["activity:duck:speed:detail"].text = "Whole flock"
-		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if coins >= hire_cost else "Need Spudions"), "active" if count >= capacity or coins >= hire_cost else "warning")
-		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if coins >= speed_cost else "Need Spudions")), "locked" if count == 0 else ("active" if speed >= 2 or coins >= speed_cost else "warning"))
+		Cozy.badge(_refs["activity:duck:status"], "Complete" if count >= capacity else ("Affordable" if _state.can_purchase(hire_cost) else "Need Spudions"), "active" if count >= capacity or _state.can_purchase(hire_cost) else "warning")
+		Cozy.badge(_refs["activity:duck:speed:status"], "Complete" if speed >= 2 else ("Locked · Hire a duck" if count == 0 else ("Affordable" if _state.can_purchase(speed_cost) else "Need Spudions")), "locked" if count == 0 else ("active" if speed >= 2 or _state.can_purchase(speed_cost) else "warning"))
 	_refs.duck_pond.count = count
 	_refs.duck_pond.capacity = capacity
 	_refs.activity_status.text = "%d duck%s on patrol" % [count, "" if count == 1 else "s"] if count > 0 else "No ducks hired yet"
@@ -2293,7 +2373,7 @@ func _refresh_debug() -> void:
 		var after: float = minf(100000, coins * multiplier)
 		_refs.debug_preview.text = "APPLY ONCE  %s × %s → %s" % [_money(coins), str(multiplier), _money(after)]
 		_refs.debug_preview.add_theme_color_override("font_color", CHERRY if after < float(_state.call("bankruptcy_limit")) else GREEN)
-		if after < float(_state.call("bankruptcy_limit")): _refs.debug_preview.text += "\nThis crosses bankruptcy. Use exact test funds above to clear debt."
+		if after < float(_state.call("bankruptcy_limit")): _refs.debug_preview.text += "\nBelow the overdraft limit. Foreclosure is assessed after Winter costs."
 	_refs.debug_reset.disabled = is_equal_approx(_debug_time_multiplier, 1.0)
 	_refs.debug_time_status.text = "GAME TIME · %d×" % int(_debug_time_multiplier)
 	for speed: int in [1, 2, 5, 10, 30]:

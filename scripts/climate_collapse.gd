@@ -25,6 +25,8 @@ var _tween: Tween
 var _scroll: ScrollContainer
 
 func _init() -> void:
+	_font.fallbacks = [Type.SPUDION]
+	_display.fallbacks = [Type.SPUDION]
 	name = "ClimateCollapse"
 	z_index = 200
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -63,6 +65,7 @@ func _init() -> void:
 	amount_row.add_theme_constant_override("v_separation", 8)
 	content.add_child(amount_row)
 	var balance_box := VBoxContainer.new()
+	balance_box.custom_minimum_size.x = 265
 	amount_row.add_child(balance_box)
 	balance_box.add_child(label("FINAL BALANCE", 12, MUTED))
 	_balance = label("", 40, DEBT, true)
@@ -177,15 +180,12 @@ func show_report(farm) -> void:
 		report = farm.climate.data.collapse
 	if visible and _report == report: return
 	_report = report.duplicate(true)
-	headline.text = "BANKRUPT"
-	_balance.text = farm.money(report.balance, true)
-	var event: String = str(Climate.EVENTS.get(report.event, {}).get("name", ""))
-	if event.is_empty() and not str(report.get("last_event", "")).is_empty():
-		event = "AFTER THE " + str(Climate.EVENTS.get(report.get("last_event", ""), {}).get("name", "DISASTER"))
-	_event.text = "SPUD VALLEY   /   %s" % (event if not event.is_empty() else "FINAL RECEIPT")
-	detail.text = "Your debt crossed the overdraft limit."
-	_threshold.text = "Bankruptcy below " + farm.money(farm.bankruptcy_limit(), true)
-	_calculation.text = "Sales can cover debt while the farm remains above the limit."
+	headline.text = "FORECLOSED"
+	_balance.text = farm.money(farm.coins, true)
+	_event.text = "SPUD VALLEY   /   YEAR %d ACCOUNTS" % farm.season_clock.year
+	detail.text = str(report.cause)
+	_threshold.text = "Foreclosure below " + farm.money(farm.bankruptcy_limit(), true)
+	_calculation.text = "Year %d net: %s. The complete Winter bill of %s has been posted." % [farm.season_clock.year, farm.money(farm.ledger.total(farm.season_clock.year)), farm.money(farm.ledger.fixed_cost_total())]
 	for pair in [["FIELD LOST", "field"], ["BARN LOST", "barn"]]:
 		var lost: float = float(report[pair[1] + "_lost"])
 		var total: float = float(report[pair[1] + "_total"])
@@ -195,8 +195,11 @@ func show_report(farm) -> void:
 	_metrics["DEBT LIMIT"].caption.text = "OVERDRAFT LIMIT"
 	_metrics["DEBT LIMIT"].value.text = farm.money(farm.bankruptcy_limit())
 	_metrics["DEBT LIMIT"].note.text = "Farm overdraft limit"
-	_context.text = "Spud Valley"
-	_summary.text = "%.0f min farmed\n%s beds lost · %s stored potatoes lost\n%d protection upgrades funded" % [float(report.elapsed) / 60.0, farm.format_number(report.total_field_lost), farm.format_number(report.total_barn_lost), project_count(report.projects)]
+	_context.text = "Year %d · Category totals" % farm.season_clock.year
+	var lines := PackedStringArray()
+	for category in farm.Ledger.CATEGORIES:
+		lines.append("%s   %s" % [farm.Ledger.LABELS[category], farm.money(farm.ledger.total(farm.season_clock.year, category))])
+	_summary.text = "\n".join(lines)
 	_ledger.hide()
 	_scroll.scroll_vertical = 0
 	_summary_button.text = "VIEW RUN SUMMARY"
@@ -205,8 +208,3 @@ func show_report(farm) -> void:
 	if is_instance_valid(_tween): _tween.kill()
 	_tween = create_tween()
 	_tween.tween_property(self, "modulate:a", 1.0, 0.65)
-
-func project_count(projects: Dictionary) -> int:
-	var total: int = 0
-	for value in projects.values(): total += int(value)
-	return total
