@@ -22,66 +22,72 @@ func fresh():
 	return farm
 func run() -> void:
 	var clock = Clock.new()
-	check(clock.year == 1 and clock.season == 0 and clock.seconds == 0 and not clock.winter_menu, "new farm starts at year-one Spring dawn")
-	check(not clock.advance(149.5) and clock.seconds == 149.5, "fractional working time")
+	check(clock.year == 1 and clock.season == 0 and clock.seconds == 0, "new farm starts at Spring dawn")
+	check(not clock.advance(149.5), "fractional time stays in the season")
 	check(clock.advance(0.5) and clock.season == 1 and clock.seconds == 0, "exact Spring boundary")
 	clock.advance(150)
 	check(clock.season == 2 and not clock.can_plant(), "Autumn closes planting")
 	clock.advance(150)
-	var paused: Dictionary = clock.save_data()
-	check(clock.winter_menu and not clock.advance(999) and clock.save_data() == paused, "Winter waits for the player")
-	check(clock.start_next_year() and clock.year == 2 and clock.season == 0, "explicit next year returns to Spring")
-	check(not clock.start_next_year(), "next-year action cannot skip working seasons")
+	check(clock.season == 3 and not clock.can_plant(), "Winter is the fourth working season without planting")
+	clock.advance(75)
+	check(clock.seconds == 75 and clock.year == 1, "Winter has a real midpoint")
+	check(clock.advance(75) and clock.year == 2 and clock.season == 0, "Winter rolls automatically into Spring")
 	for invalid in [NAN, INF, -1.0]:
-		check(not clock.advance(invalid) and clock.seconds == 0, "invalid delta never corrupts the calendar")
+		check(not clock.advance(invalid) and clock.seconds == 0, "invalid delta cannot corrupt time")
 	for bad in [{"year": 11}, {"season": -1}, {"seconds": 150}, {"winter_menu": true}, {"autumn_loss": 25}]:
 		var data: Dictionary = clock.save_data(); data.merge(bad, true)
 		check(not Clock.valid(data), "reject corrupt clock " + str(bad))
+	clock.year = 10; clock.season = 3; clock.seconds = 149.75
+	check(not clock.finished(), "year ten remains playable before Winter ends")
+	check(clock.advance(0.25) and clock.finished() and Clock.valid(clock.save_data()), "final Winter ends exactly at 150 seconds")
+	check(not clock.advance(150) and clock.year == 10, "there is no year eleven")
 
 	var farm = fresh()
 	farm.boundary_save_path = SAVE
 	var boundaries: Array = []
 	farm.season_changed.connect(func():
 		var saved = JSON.parse_string(FileAccess.get_file_as_string(SAVE))
-		check(farm._valid_save(saved) and saved.season_clock == JSON.parse_string(JSON.stringify(farm.season_clock.save_data())), "boundary is saved before listeners run")
+		check(farm._valid_save(saved) and saved.season_clock == JSON.parse_string(JSON.stringify(farm.season_clock.save_data())), "complete boundary saved before listeners")
 		boundaries.append(int(saved.season_clock.season)))
-	farm.update(149.75)
-	check(farm.season_clock.season == 0 and is_equal_approx(farm.season_clock.seconds, 149.75) and boundaries.is_empty(), "no early transition or boundary save")
-	farm.update(0.5)
-	check(farm.season_clock.season == 1 and is_equal_approx(farm.season_clock.seconds, 0.25), "large step carries its remainder into Summer")
+	farm.update(149.75); farm.update(0.5)
+	check(farm.season_clock.season == 1 and farm.season_clock.seconds == 0.25, "excess time carries into Summer")
 	farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant")
-	check(farm.plots[5].stage == 1, "Summer permits both tilling and planting")
+	check(farm.plots[5].stage == 1, "Summer permits tilling and planting")
 	farm._clear_crop(farm.plots[5]); farm.plots[5].tilled = false
-	farm.season_clock.seconds = 149.75
-	farm.update(0.25)
-	check(farm.season_clock.season == 2 and boundaries == [1, 2], "Summer boundary saves Autumn")
-	var seeds: int = farm.seed_inventory.russet
+	farm.update(149.75)
 	farm.interact_plot(5, "hoe")
-	check(not farm.plots[5].tilled, "Autumn cannot till empty beds")
-	farm.plots[5].tilled = true
-	farm.interact_plot(5, "plant")
-	check(farm.plots[5].stage == 0 and farm.seed_inventory.russet == seeds, "Autumn planting cannot spend seeds")
+	check(not farm.plots[5].tilled, "Autumn blocks tilling")
 	farm.plots[0].merge({"stage": 1, "tilled": true}, true)
 	farm.plots[1].merge({"stage": 3, "tilled": true, "watered": true, "elapsed": State.CROPS.russet.grow}, true)
 	farm.storage.russet = 7
 	var notices: Array = []
 	farm.notified.connect(func(message): notices.append(message))
 	farm.season_clock.seconds = 149.75
-	farm.update(10)
-	check(farm.season_clock.winter_menu and farm.season_clock.autumn_loss == 2 and farm.plots.all(func(p): return p.stage == 0 and not p.tilled), "Autumn clears growing and ripe crops, plus prepared soil")
-	check(farm.storage.russet == 7 and boundaries == [1, 2, 3], "Winter preserves stored harvest and saves exactly once")
-	check(notices.any(func(n): return "2 unharvested beds were lost" in n), "visible notice gives loss count and winter cause")
-	paused = farm._save_data()
-	farm.update(500)
-	check(farm._save_data() == paused, "Winter pauses crops, pests, ducks, prices, climate and elapsed time")
+	farm.update(0.25)
+	check(farm.season_clock.season == 3 and farm.season_clock.autumn_loss == 2, "Autumn records both unharvested crops")
+	check(farm.plots.all(func(p): return p.stage == 0 and not p.tilled and p.winter_ice), "every bed freezes after crops and prepared soil are cleared")
+	check(farm.storage.russet == 7 and boundaries == [1, 2, 3], "Winter preserves the barn and saves once")
+	check(notices.any(func(n): return "2 unharvested beds were lost" in n), "visible notice names Winter loss")
+	farm.climate.data.operations.supply.water = 0
+	farm.climate.data.operations.supply.can = 0
+	farm.update(4)
+	check(farm.season_clock.seconds == 4 and farm.climate.data.operations.supply.water == 6 and farm.climate.data.operations.supply.can == 0, "Winter snow refills the tank at one quarter rain rate, not the can")
 	farm.interact_plot(5, "hoe")
-	check(not farm.plots[5].tilled, "Winter field controls cannot bypass the pause")
-	farm.climate.fund(farm, "irrigation")
-	check(farm.climate.data.projects.get("irrigation", 0) == 1, "Winter still allows buying protection while time is paused")
-	check(farm.load_game(SAVE) and farm.season_clock.winter_menu and farm.season_clock.autumn_loss == 2, "Winter loss and menu phase survive reload")
-	check(farm.start_next_year() and farm.season_clock.year == 2 and boundaries == [1, 2, 3, 0], "next year saves Spring before reopening work")
+	check(not farm.plots[5].winter_ice and not farm.plots[5].tilled, "Winter hoe clears ice without tilling")
 	farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant")
-	check(farm.plots[5].stage == 1, "Spring reopens tilling and planting")
+	check(not farm.plots[5].tilled and farm.plots[5].stage == 0, "Winter cannot till or plant after clearing")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE) and not farm.plots[5].winter_ice and farm.plots[6].winter_ice and farm.season_clock.seconds == 4, "Winter time and per-bed clearing survive reload")
+	farm.update(146)
+	check(farm.season_clock.year == 2 and farm.season_clock.season == 0 and boundaries == [1, 2, 3, 0], "fourth boundary saves automatic Spring rollover")
+	farm.interact_plot(5, "hoe")
+	check(farm.plots[5].tilled, "a bed cleared in Winter is tillable on the first second of Spring")
+	farm.interact_plot(6, "hoe")
+	check(not farm.plots[6].winter_ice and not farm.plots[6].tilled, "uncleared Spring bed needs a separate ice-clearing action")
+	farm.interact_plot(6, "hoe")
+	check(farm.plots[6].tilled, "second Spring action tills the cleared bed")
+	farm.climate.begin_warning(farm, "flood", 1)
+	farm.update(150)
+	check(farm.plots[7].winter_ice, "weather resets and recovery do not melt outstanding Winter work")
 	farm.boundary_save_path = ""
 	farm.free()
 
@@ -109,10 +115,8 @@ func run() -> void:
 	farm.update(75)
 	check(farm.plots[5].stage == 3, "slow Icecap ripens after a season and a half")
 	farm.reset_game()
-	farm.update(1000)
-	check(farm.season_clock.winter_menu and farm.season_clock.year == 1 and farm.elapsed == 450, "a full working year stops exactly at Winter even with excess delta")
-	farm.season_clock.year = 10
-	check(not farm.start_next_year() and farm.season_clock.year == 10 and farm.season_clock.winter_menu, "year ten is the final Winter")
+	farm.update(600)
+	check(farm.elapsed == 600 and farm.season_clock.year == 2 and farm.season_clock.season == 0, "headless full year advances through all four working seasons")
 	farm.free()
 	await scene_checks()
 	await accelerated_run_checks()
@@ -120,66 +124,62 @@ func run() -> void:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
 	print("SEASON CLOCK: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
 func scene_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
-	await process_frame
 	game.set_process(false)
 	game.state.boundary_save_path = SAVE
 	game.state.season_clock.season = 2
 	game.state.season_clock.seconds = 149.75
-	game._process(1)
-	check(game.state.season_clock.winter_menu and game.hud._panel_kind == "winter", "main opens Winter at the boundary")
-	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.winter_menu, "Winter is already on disk when its menu appears")
-	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Start next year"), "Winter offers a real next-year button")
-	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "HUD calendar and snow reflect Winter")
-	var snapshot: Dictionary = game.state._save_data()
 	game._process(10)
-	check(game.state._save_data() == snapshot, "main keeps Winter frozen while rendering")
+	check(game.state.season_clock.season == 3 and game.state.season_clock.seconds == 0 and game.hud._panel_kind == "accounts", "accounts interrupt excess simulation exactly at Winter start")
+	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.season == 3, "Winter saves before accounts open")
+	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "season strip and snow show Winter")
+	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return "Hoe [1]" in label.text), "accounts explain the Winter ice-clearing job in the scrolling body")
+	check(game.world._ice_roots.all(func(ice): return ice.visible), "frost meshes show ice on every bed")
+	var snapshot: Dictionary = game.state._save_data()
+	game._process(10); game.state.update(10)
+	check(game.state._save_data() == snapshot, "accounts pause both controller and state simulation")
 	var escape := InputEventKey.new(); escape.physical_keycode = KEY_ESCAPE; escape.pressed = true
 	game._unhandled_input(escape)
-	check(not game.hud.is_panel_open(), "Escape can dismiss Winter")
+	game._process(1)
+	check(not game.hud.is_panel_open() and game.state.season_clock.seconds == 1, "Escape closes accounts and resumes Winter")
 	game._on_action("menu")
-	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.get_meta("action", "") == "winter"), "farm menu always offers a route back to Winter")
-	game._on_action("winter")
+	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Annual accounts"), "farm menu offers accounts during Winter")
+	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text.begins_with("Winter")), "old Winter menu entry is gone")
+	game._on_action("accounts")
+	check(game.state.accounts_open, "reopening accounts pauses again")
+	for button in game.hud._modal_trade_footer.find_children("*", "Button", true, false):
+		if button.text == "Return to farm": button.pressed.emit()
+	check(not game.state.accounts_open and not game.hud.is_panel_open(), "Return to farm button resumes Winter without skipping it")
+	game.perform_plot(5, "hoe")
+	check(not game.world._ice_roots[5].visible, "clearing a bed removes its frost mesh")
 	if "--capture" in OS.get_cmdline_user_args():
 		await create_timer(0.3).timeout
 		RenderingServer.force_draw()
-		root.get_texture().get_image().save_png("res://artifacts/season-winter.png")
-	game._on_action("next_year")
-	check(game.state.season_clock.year == 2 and not game.hud.is_panel_open() and not game.world._winter_cover.visible, "next year restores the green farm without trapping controls")
-	game.state.coins = 10000
-	game.state.season_clock.year = 10
-	game.state.season_clock.season = 2
-	game.state.season_clock.seconds = 149.75
-	game._process(0.25)
-	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Ten years complete"), "final Winter announces completion")
-	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(button): return button.get_meta("action", "") == "next_year"), "year ten has no next-year button")
-	game._on_action("next_year")
-	check(game.state.season_clock.year == 10 and game.hud._panel_kind == "winter", "stale next-year actions cannot leave the final Winter")
+		root.get_texture().get_image().save_png("res://artifacts/working-winter.png")
 	game._on_action("menu")
-	check(game.hud.is_panel_open() and game.hud._panel_kind != "winter", "final Winter still opens the farm menu")
-	game.state.reset_game()
+	game._process(149)
+	check(game.state.season_clock.year == 2 and not game.world._winter_cover.visible, "automatic Spring restores green ground")
+	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Annual accounts"), "Spring refresh removes the Winter-only accounts link")
+	game._on_action("accounts")
+	check(not game.state.accounts_open, "stale accounts actions cannot pause Spring")
 	game.hud.close_panel()
+	game.state.reset_game()
 	game._start_conversation("mara")
-	# Exercise a real playback frame before ending the conversation.
 	await create_timer(0.1).timeout
-	var before: float = game.state.season_clock.seconds
 	game._process(10)
-	check(game.state.season_clock.seconds == before, "conversations pause the calendar")
+	check(game.state.season_clock.seconds == 0, "NPC conversations still pause time")
 	game.conversation.finish()
-	# Let the audio mixer release the conversation playback before scene teardown.
-	await create_timer(0.1).timeout
 	game.state.coins = -501
-	game.state.season_clock.season = 2
-	game.state.season_clock.seconds = 149.75
+	game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
 	game.state.update(0.25)
-	before = game.state.season_clock.seconds
 	game._process(10)
-	check(game.state.season_clock.seconds == before, "collapse pauses the calendar")
+	check(game.state.run_outcome == "foreclosed" and game.state.season_clock.seconds == 0, "foreclosure still stops the clock at Winter start")
 	game.queue_free()
 	await process_frame
-	await create_timer(0.1).timeout
+	await create_timer(0.25).timeout
 
 func accelerated_run_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
@@ -190,45 +190,31 @@ func accelerated_run_checks() -> void:
 	game._set_debug_session(true)
 	game._debug_action(PackedStringArray(["debug", "time", "30"]))
 	game.hud.close_panel()
-	await process_frame
-	check(game.debug_time_multiplier == 30, "accelerated regression uses the real 30x debug control")
 	for year in range(1, 11):
 		game.state.post_money("sales", "Annual receipts for calendar fixture", 5000)
-		var frames: int = 0
-		while not game.state.season_clock.winter_menu and frames < 1000:
-			game._process(1.0 / 30.0)
-			frames += 1
-			if frames % 50 == 0: await process_frame
-		check(game.state.season_clock.year == year and game.state.season_clock.winter_menu, "30x reaches Winter in year %d" % year)
-		check(game.hud._top.season.text == "Year %d · Winter" % year and game.hud._modal_title.text == "Winter · Year %d" % year and game.hud._panel_kind == "winter", "30x keeps both year displays current in year %d" % year)
-		check(int(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.year) == year, "30x boundary save agrees with the displayed year")
+		for frame in range(450): game._process(1.0 / 30.0)
+		check(game.state.season_clock.year == year and game.state.season_clock.season == 3 and not game.state.run_over, "30x reaches a playable Winter in year %d" % year)
+		check(game.hud._panel_kind == "accounts" and game.hud._top.season.text == "Year %d · Winter" % year, "30x accounts and year display agree")
+		check(int(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.year) == year, "boundary save agrees with displayed year")
 		game.hud.close_panel()
-		game._process(0.25)
-		check(not game.hud.is_panel_open(), "regular refresh respects dismissed Winter in year %d" % year)
-		game._on_action("winter")
+		for frame in range(149): game._process(1.0 / 30.0)
+		check(not game.state.run_over and game.state.season_clock.year == year, "Winter lasts its full working time")
+		game._process(1.0 / 30.0)
 		if year < 10:
-			for button in game.hud._modal.find_children("*", "Button", true, false):
-				if button.get_meta("action", "") == "next_year":
-					button.pressed.emit()
-					break
-			check(game.hud._top.season.text == "Year %d · Spring" % (year + 1) and not game.hud.is_panel_open(), "next-year button immediately updates the year at 30x")
+			check(game.hud._top.season.text == "Year %d · Spring" % (year + 1) and not game.hud.is_panel_open(), "30x rolls straight into next Spring")
 		await process_frame
-	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Ten years complete"), "30x run presents the final year-ten message")
-	# A missed transition callback must heal on the next ordinary HUD refresh.
-	game.state.reset_game()
-	game.hud.close_panel()
+	check(game.state.run_outcome == "completed" and game.state.season_clock.finished() and game.hud._panel_kind == "run_summary", "only the end of tenth Winter opens the ten-year summary")
+	check(game.state.load_game(SAVE) and game.state.season_clock.finished(), "completed final boundary round-trips")
+	game.state.reset_game(); game.hud.close_panel()
 	game.state.season_changed.disconnect(game._on_season_changed)
 	game.state.changed.disconnect(game._on_state_changed)
 	game.state.coins = 10000
-	game.state.season_clock.year = 10
-	game.state.season_clock.season = 2
-	game.state.season_clock.seconds = 149.75
+	game.state.season_clock.year = 10; game.state.season_clock.season = 2; game.state.season_clock.seconds = 149.75
 	game.state.update(0.25)
-	check(not game.hud.is_panel_open(), "missed callback leaves the presentation stale before polling")
-	await process_frame
-	game.ui_elapsed = 0.21
-	game._process(0.01)
-	check(game.hud._top.season.text == "Year 10 · Winter" and game.hud._panel_kind == "winter" and game.hud._modal_title.text == "Winter · Year 10", "ordinary refresh repairs a missed final Winter transition without reload")
+	game.hud.update_state(game.state)
+	check(game.hud._panel_kind == "accounts" and game.state.accounts_open, "ordinary HUD refresh repairs a missed accounts transition")
+	game.hud.close_panel(); game.state.update(150); game._process(0.01)
+	check(game.hud._panel_kind == "run_summary", "ordinary HUD refresh repairs missed completion without restarting")
 	game.queue_free()
 	await process_frame
-	await create_timer(0.1).timeout
+	await create_timer(0.25).timeout

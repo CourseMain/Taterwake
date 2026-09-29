@@ -61,7 +61,7 @@ func run() -> void:
 	farm.reset_game()
 	farm.coins = 50000.0
 	farm.update(3600.0)
-	check(farm.elapsed == 450.0 and farm.season_clock.winter_menu and farm.coins == 50000.0 - farm.ledger.fixed_cost_total(), "a full working year charges only the annual fixed costs")
+	check(farm.elapsed == 3600.0 and farm.season_clock.year == 7 and farm.season_clock.season == 0 and farm.coins == 50000.0 - 6 * farm.ledger.fixed_cost_total(), "six full working years charge exactly six annual bills")
 	for path: String in [SAVE, farm.backup_path(SAVE), farm.rejected_path(SAVE)]:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	farm.free()

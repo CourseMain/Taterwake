@@ -277,7 +277,7 @@ func update_interaction_prompt() -> void:
 func _process(delta: float) -> void:
 	update_interaction_prompt()
 	var hud = game.hud
-	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["winter", "run_summary"]) or hud._run_end.visible
+	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
 	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
 	if OS.has_feature("web"):
 		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")

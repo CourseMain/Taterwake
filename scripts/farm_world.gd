@@ -501,7 +501,6 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var winter_changed: bool = _winter_visible != winter
 	_winter_visible = winter
 	_day_elapsed = clampf(elapsed, 0.0, DAY_CYCLE_SECONDS)
-	if winter: _day_elapsed = DAY_CYCLE_SECONDS
 	if is_instance_valid(player): _set_winter_cover(winter)
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
@@ -512,17 +511,17 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var height: float = sin(phase * PI)
 	var daylight: float = 0.25 + 0.75 * height
 	var twilight: float = pow(1.0 - height, 3.0)
-	_sun.rotation_degrees = Vector3(-lerpf(25.0, 70.0, height), lerpf(-70.0, 70.0, phase), 0)
+	_sun.rotation_degrees = Vector3(-lerpf(15.0 if winter else 25.0, 40.0 if winter else 70.0, height), lerpf(-70.0, 70.0, phase), 0)
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
-	var day_sun: Color = Color("f0f6ff") if current_island == 3 else Color("fff8ed")
-	var dusk_sun: Color = Color("ffcddc") if current_island == 3 else Color("ffd1a0")
+	var day_sun: Color = Color("f0f6ff") if winter or current_island == 3 else Color("fff8ed")
+	var dusk_sun: Color = Color("ffcddc") if winter or current_island == 3 else Color("ffd1a0")
 	_day_environment.background_color = night_sky.lerp(day_sky, daylight).lerp(dusk_sky, twilight * 0.72)
 	_day_environment.ambient_light_color = Color("9dafd0").lerp(Color("f0f3e8"), daylight).lerp(dusk_sun, twilight * 0.25)
 	_day_environment.ambient_light_energy = lerpf(0.44, 0.45, daylight)
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
-	_sun.light_energy = 0.65 * daylight
+	_sun.light_energy = (0.48 if winter else 0.65) * daylight
 	_moon.light_energy = 0.48 * (1.0 - daylight)
 	if _weather_strength > 0.0:
 		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), _weather_strength * 0.85)

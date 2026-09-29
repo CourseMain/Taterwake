@@ -88,4 +88,6 @@ func run() -> void:
 	print("NPC PROMPTS: %d checks, %d failures" % [checks, failures])
 	game.queue_free()
 	await frames()
+	# Headless frames can finish before the audio mixer releases stopped playback.
+	await create_timer(0.25).timeout
 	quit(1 if failures else 0)

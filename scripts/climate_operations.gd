@@ -51,11 +51,12 @@ static func relieve(farm, index: int, amount: float) -> void:
 	op.stress[key] = maxf(0.0, before - amount)
 
 static func frozen(farm, index: int) -> bool:
-	return farm.climate.data.operations.ice.has(str(index))
+	return bool(farm.plots[index].get("winter_ice", false)) or farm.climate.data.operations.ice.has(str(index))
 
 static func tool(farm, index: int, action: String) -> bool:
 	if frozen(farm, index):
 		if action != "hoe": return false
+		farm.plots[index].winter_ice = false
 		farm.climate.data.operations.ice.erase(str(index))
 		farm.climate.data.operations.rescued[str(index)] = true
 		relieve(farm, index, 1.0)
@@ -159,7 +160,7 @@ static func _tick(farm, dt: float) -> void:
 	op.flash = maxf(0.0, float(op.flash) - dt)
 	op.pulse = maxf(0.0, float(op.pulse) - dt)
 	if c.data.phase != "active" or c.data.event != "drought":
-		op.supply.water = minf(capacity(farm), float(op.supply.water) + dt * 6.0)
+		op.supply.water = minf(capacity(farm), float(op.supply.water) + dt * 6.0 * (0.25 if farm.season_clock.season == 3 else 1.0))
 	if c.data.phase != "active": op.supply.spray = minf(18.0, float(op.supply.spray) + dt * 3.0)
 	if c.data.phase != "active": return
 	var field: Array = farm.plots

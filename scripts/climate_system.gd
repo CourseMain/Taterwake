@@ -37,7 +37,7 @@ func reset() -> void:
 	data = fresh_data()
 
 func clock_running(farm) -> bool:
-	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over and not farm.season_clock.winter_menu
+	return not farm.tutorial_active and not Lesson.active(farm) and not farm.run_over
 
 func protection(event: String, kind: String) -> float:
 	var reduction: float = 0.0
@@ -56,7 +56,7 @@ func factor(kind: String) -> float:
 	return lerpf(1.0, float(EVENTS[data.event][kind]), weight)
 
 func begin_warning(farm, event: String = "", severity: float = -1.0) -> bool:
-	if farm.run_over or farm.season_clock.winter_menu or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
+	if farm.run_over or farm.season_clock.season == 3 or farm.tutorial_active or Lesson.active(farm) or data.phase != "calm":
 		return false
 	var ids: Array = EVENTS.keys()
 	if event.is_empty():
@@ -94,7 +94,7 @@ func update(farm, delta: float) -> bool:
 	return operated
 
 func start_season(farm) -> void:
-	if data.phase == "calm" and farm.rng.randf() < DISASTER_CHANCE: begin_warning(farm)
+	if farm.season_clock.season != 3 and data.phase == "calm" and farm.rng.randf() < DISASTER_CHANCE: begin_warning(farm)
 
 func end_working_year() -> void:
 	data.phase = "calm"
@@ -162,7 +162,9 @@ func info(farm) -> Dictionary:
 	result.rescued = data.operations.rescued.size()
 	result.available = true
 	result.name = str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
-	result.frozen_crops = data.operations.get("ice", {}).size()
+	for index in range(farm.plots.size()):
+		if bool(farm.plots[index].get("winter_ice", false)): result.operations.ice[str(index)] = true
+	result.frozen_crops = result.operations.ice.size()
 	result.prepare = str(EVENTS.get(data.event, {}).get("prepare", "Fund local protection before the next warning."))
 	Lesson.present(farm, result)
 	return result

@@ -683,7 +683,7 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "winter", "run_summary", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
@@ -1134,15 +1134,17 @@ func update_state(state: Node) -> void:
 	var quote: Dictionary = markets.get(crop, {})
 	var seeds: Dictionary = state.get("seed_inventory")
 	var storage: Dictionary = state.get("storage")
-	var calendar: String = "%d:%d" % [state.season_clock.year, state.season_clock.season]
+	var calendar: String = "%d:%d:%s" % [state.season_clock.year, state.season_clock.season, state.run_outcome]
 	var calendar_changed: bool = calendar != _displayed_calendar
 	_displayed_calendar = calendar
 	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]]
 	# Reconcile from state on ordinary refreshes too, after the boundary save.
 	# Remember the calendar so Escape can dismiss Winter without reopening it.
 	if calendar_changed and state.run_outcome != "foreclosed":
-		if state.season_clock.winter_menu: show_panel("winter", state)
-		elif _panel_kind == "winter": close_panel()
+		if state.run_outcome == "completed": show_panel("run_summary", state)
+		elif state.season_clock.season == 3: show_panel("accounts", state)
+		elif _panel_kind == "accounts": close_panel()
+		elif _panel_kind in ["menu", "pause"]: show_panel(_panel_kind, state)
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
@@ -1385,6 +1387,7 @@ func is_panel_open() -> bool:
 	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible)
 
 func close_panel() -> void:
+	if is_instance_valid(_state): _state.accounts_open = false
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
 	if is_instance_valid(_conversation) and _conversation.visible: _conversation.finish()
 	if is_instance_valid(_modal):
@@ -1397,12 +1400,13 @@ func close_panel() -> void:
 
 func show_panel(kind: String, state: Node) -> void:
 	_state = state
+	_state.accounts_open = kind == "accounts"
 	if not is_instance_valid(root):
 		build_ui()
 	if kind != _panel_kind:
 		_reset_pending = false
 	_panel_kind = kind
-	var paper: bool = kind in ["winter", "run_summary"]
+	var paper: bool = kind in ["accounts", "run_summary"]
 	(_modal.get_child(0) as ColorRect).color = CREAM if paper else Color(0.06, 0.13, 0.10, 0.58)
 	_modal.z_index = 150 if paper else 0
 	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
@@ -1448,7 +1452,7 @@ func show_panel(kind: String, state: Node) -> void:
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
-		"winter": _build_winter()
+		"accounts": _build_winter()
 		"run_summary": _build_run_summary()
 		"dex": _build_dex()
 		"quests": _build_quests()
@@ -1750,11 +1754,11 @@ func _paper_page() -> void:
 func _build_winter() -> void:
 	_paper_page()
 	var clock = _state.season_clock
-	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Spud Valley")
+	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Time paused")
 	var net: float = _state.ledger.total(clock.year)
 	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
 	_body.add_child(_refs.accounts_net)
-	_body.add_child(_wrap(_state.winter_notice(), 16, INK))
+	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
 	var columns := _hbox(44)
 	_body.add_child(columns)
 	var categories := _vbox(2)
@@ -1772,12 +1776,7 @@ func _build_winter() -> void:
 	_refs.accounts_balance = _wrap("", 16, INK)
 	_body.add_child(_refs.accounts_balance)
 	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
-	if clock.year < clock.LAST_YEAR:
-		_modal_trade_footer.add_child(_button("Start next year", "next_year", true))
-	else:
-		_body.add_child(_label("Ten years complete", 22, GREEN, true))
-		_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true))
-	_modal_trade_footer.add_child(_button("Farm menu", "menu"))
+	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))
 	_modal_trade_footer.show()
 
 func _refresh_accounts() -> void:
@@ -1803,13 +1802,14 @@ func _build_run_summary() -> void:
 	_account_row(_body, "Loan remaining", _state.money(_state.ledger.loan_remaining()))
 	_body.add_child(_wrap("The epilogue is still to come.", 24, MUTED, true))
 	_modal_trade_footer.add_child(_button("New Run", "reset", true))
-	_modal_trade_footer.add_child(_button("Year 10 accounts", "winter"))
+	_modal_trade_footer.add_child(_button("Year 10 accounts", "accounts"))
 	_modal_trade_footer.show()
 
 
 func _build_pause() -> void:
 	_heading("Your farm", "")
-	if _state.season_clock.winter_menu: _body.add_child(_button("Winter · Ten years complete" if _state.season_clock.year == 10 else "Winter · Review & start next year", "winter", true))
+	if _state.season_clock.season == 3: _body.add_child(_button("Annual accounts", "accounts", true))
+	if _state.run_outcome == "completed": _body.add_child(_button("Ten-year summary", "run_summary", true))
 	var menu: GridContainer = GridContainer.new()
 	menu.columns = 3
 	menu.add_theme_constant_override("h_separation", 10)
@@ -1890,7 +1890,7 @@ func _refresh_graphics() -> void:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
-	if _panel_kind == "winter":
+	if _panel_kind == "accounts":
 		_refresh_accounts()
 		return
 	if _panel_kind == "climate":

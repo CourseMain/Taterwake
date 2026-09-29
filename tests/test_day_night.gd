@@ -39,6 +39,13 @@ func run() -> void:
 		world.set_day_time(invalid)
 		check(world.day_cycle_info().phase == 1, "invalid time cannot corrupt lighting")
 	world.set_day_time(0, true)
+	check(world.day_cycle_info().phase == 0, "Winter starts at dawn instead of holding at dusk")
+	var winter_dawn: Vector3 = world._sun.rotation_degrees
+	world.set_day_time(75, true)
+	check(world.day_cycle_info().phase == 0.5 and world._sun.rotation_degrees.x > noon.x and world._sun.rotation_degrees.y > winter_dawn.y, "Winter sun moves across a lower arc")
+	check(world._sun.light_color.b > 0.95 and world._sun.light_energy < 0.65, "Winter sunlight is pale and weaker")
+	world.set_day_time(150, true)
+	check(world.day_cycle_info().phase == 1 and world._sun.rotation_degrees.y > winter_dawn.y, "Winter reaches dusk at the season end")
 	check(world._winter_cover.visible and world._snowflakes.size() == 28, "Winter reuses snow surface, roof and falling flakes")
 	var flake_y: float = world._snowflakes[0].position.y
 	world.animate(0.1, false)

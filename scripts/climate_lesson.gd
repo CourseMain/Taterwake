@@ -7,7 +7,7 @@ static func fresh(stage: String = "off") -> Dictionary:
 static func active(farm) -> bool:
 	return farm.climate.data.lesson.stage in ["water", "area", "success"]
 static func start(farm) -> String:
-	if farm.climate.data.phase != "calm" or farm.run_over or farm.tutorial_active or farm.season_clock.winter_menu:
+	if farm.climate.data.phase != "calm" or farm.run_over or farm.tutorial_active or farm.season_clock.season == 3:
 		return farm._finish("Try the water lesson when the farm is calm.")
 	if int(farm.climate.data.projects.get("irrigation", 0)) == 0: return farm._finish("Buy Sprinklers & Irrigation at the weather station before sprinkler practice.")
 

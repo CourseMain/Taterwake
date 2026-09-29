@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 29
+const MECHANICS_REVISION: int = 30
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -47,6 +47,8 @@ const Ledger = preload("res://scripts/ledger.gd")
 const OVERDRAFT_LIMIT: float = Ledger.OVERDRAFT_LIMIT
 var ledger = Ledger.new()
 var run_outcome: String = ""
+# Transient presentation pause, never part of a save.
+var accounts_open: bool = false
 const DEBUG_MONEY_LIMIT: float = 100000.0
 const QUEST_REWARD: float = 100.0
 const MAX_MONEY: float = 100000.0
@@ -100,7 +102,7 @@ func _build_starters() -> void:
 	plots = []
 	for index in range(24):
 		var stage: int = 3 if index < 2 else (2 if index < 4 else 0)
-		plots.append({"unlocked": index < 12, "stage": stage, "watered": stage > 0,
+		plots.append({"unlocked": index < 12, "winter_ice": false, "stage": stage, "watered": stage > 0,
 			"elapsed": float(CROPS.russet.grow) if stage == 3 else (float(CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
 			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0})
 	market.clear()
@@ -347,7 +349,7 @@ func _update_tutorial(delta: float) -> void:
 
 func update(delta: float) -> void:
 	if ClimateSystem.Lesson.active(self): return
-	if run_over or season_clock.winter_menu or not is_finite(delta) or delta <= 0.0:
+	if run_over or accounts_open or not is_finite(delta) or delta <= 0.0:
 		return
 	if tutorial_active:
 		if not bool(tutorial_progress.get("tour_only", false)):
@@ -360,7 +362,7 @@ func update(delta: float) -> void:
 	# Resolve farming and weather boundaries in order.
 	var remaining: float = minf(delta, 3600.0)
 	var dirty: bool = false
-	while remaining >= 0.000001 and not season_clock.winter_menu:
+	while remaining >= 0.000001 and not run_over and not accounts_open:
 		if season_clock.seconds == 0.0: climate.start_season(self)
 		farm_help.refresh_pests(self)
 		var step: float = minf(remaining, season_clock.remaining())
@@ -385,7 +387,7 @@ func update(delta: float) -> void:
 		var farm_growth: float = _growth_speed()
 		for plot_index in range(plots.size()):
 			var plot: Dictionary = plots[plot_index]
-			if ClimateSystem.Operations.frozen(self, plot_index): continue
+			if season_clock.season == 3 or ClimateSystem.Operations.frozen(self, plot_index): continue
 			var growth_speed: float = maxf(farm_growth, float(CROPS[plot.crop].grow) / MAX_GROW_SECONDS)
 			var ripe_step: float = step if int(plot["stage"]) == 3 else 0.0
 			if int(plot.stage) > 0: plot["plant_age"] = minf(1e9, float(plot.get("plant_age", 0)) + step)
@@ -431,17 +433,20 @@ func update(delta: float) -> void:
 
 func _season_boundary() -> void:
 	var was_over: bool = run_over
-	if season_clock.winter_menu:
+	if season_clock.finished():
+		_end_run("completed")
+		news = "Ten years complete."
+	elif season_clock.season == 3:
 		season_clock.autumn_loss = 0
 		for plot in plots:
 			if int(plot.stage) > 0: season_clock.autumn_loss += 1
 			_clear_crop(plot)
 			plot.tilled = false
+			plot.winter_ice = true
 		climate.end_working_year()
 		farm_help.refresh_pests(self)
 		ledger.post_fixed_costs(season_clock.year)
 		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
-		elif season_clock.year == SeasonClock.LAST_YEAR: _end_run("completed")
 		news = winter_notice()
 	else:
 		news = "Year %d · %s" % [season_clock.year, SeasonClock.NAMES[season_clock.season]]
@@ -449,17 +454,10 @@ func _season_boundary() -> void:
 	if not boundary_save_path.is_empty(): save_game(boundary_save_path)
 	season_changed.emit()
 	if run_over and not was_over: run_ended.emit()
-	if season_clock.winter_menu: notified.emit(news)
+	if season_clock.season == 3: notified.emit(news)
 
 func winter_notice() -> String:
 	return "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. No unharvested crops remained in the fields."
-
-func start_next_year() -> bool:
-	if run_over or not season_clock.start_next_year(): return false
-	_season_boundary()
-	_finish("Year %d · Spring. Tilling and planting are open." % season_clock.year)
-	return true
-
 
 func _pest_damage_tick(plot: Dictionary) -> void:
 	if tutorial_active or farm_help.protected_pest(self, plot):
@@ -539,7 +537,7 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 
 
 func interact_plot(index: int, tool: String = "hoe") -> String:
-	if season_clock.winter_menu: return _finish("The fields rest in Winter. Start next year from the Winter menu.")
+	if accounts_open: return "Close the accounts to return to the farm."
 	if tool == "plant" and not season_clock.can_plant(): return _finish("Planting is open in Spring and Summer. Bring in your crops before Winter.")
 	if ClimateSystem.Lesson.active(self): return ClimateSystem.Lesson.water(self, index, tool)
 	if run_over:
@@ -603,9 +601,9 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 				harvested += count
 	farm_help.refresh_pests(self)
 	if climate_thawed > 0:
-		return _finish("Cleared ice from %d crops." % climate_thawed)
+		return _finish("Cleared ice from %d beds." % climate_thawed)
 	if ice_blocked and affected == 0:
-		return _finish("Frozen crops · Use Hoe [1] to clear the ice.")
+		return _finish("Frozen beds · Use Hoe [1] to clear the ice.")
 
 	if affected == 0:
 		if action == "hoe" and not season_clock.can_plant(): return _finish("Tilling is open in Spring and Summer. Harvest before Winter.")
@@ -893,6 +891,7 @@ func _reject_purchase(message: String) -> String:
 
 
 func reset_game() -> void:
+	accounts_open = false
 	ledger = Ledger.new()
 	run_outcome = ""
 	season_clock = SeasonClock.new()
@@ -958,6 +957,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
 	ledger.load_data(data.ledger)
+	accounts_open = false
 	run_outcome = data.run_outcome
 	run_over = data.run_over
 	tutorial_progress = data.tutorial_progress.duplicate(true)
@@ -1054,17 +1054,18 @@ func _valid_save(raw: Variant) -> bool:
 	if data.get("run_outcome") not in ["", "foreclosed", "completed"] or data.run_over != (data.run_outcome != ""): return false
 	var saved_ledger = Ledger.new()
 	saved_ledger.load_data(data.ledger)
-	if data.season_clock.winter_menu and not saved_ledger.is_closed(int(data.season_clock.year)): return false
-	if data.run_over and not data.season_clock.winter_menu: return false
-	if data.season_clock.winter_menu and int(data.season_clock.year) == 10 and not data.run_over: return false
+	if (int(data.season_clock.season) == 3) and not saved_ledger.is_closed(int(data.season_clock.year)): return false
+	if data.run_over and not (int(data.season_clock.season) == 3): return false
+	var finished: bool = int(data.season_clock.year) == 10 and int(data.season_clock.season) == 3 and float(data.season_clock.seconds) == SeasonClock.SEASON_SECONDS
+	if finished != (data.run_outcome == "completed"): return false
 	if data.run_outcome == "foreclosed":
 		var report: Dictionary = data.climate.collapse
 		if saved_ledger.balance() >= OVERDRAFT_LIMIT or report.get("year") != data.season_clock.year: return false
 		if not is_equal_approx(float(report.get("balance", NAN)), saved_ledger.balance()): return false
 		if not _number(report.get("year_net"), -INF, INF) or not is_equal_approx(float(report.year_net), saved_ledger.total(int(data.season_clock.year))): return false
 		if report.get("categories") != saved_ledger.category_totals(int(data.season_clock.year)): return false
-	if data.run_outcome == "completed" and (int(data.season_clock.year) != 10 or saved_ledger.balance() < OVERDRAFT_LIMIT): return false
-	if data.season_clock.winter_menu and not data.run_over and saved_ledger.balance() < OVERDRAFT_LIMIT: return false
+	if data.run_outcome == "completed" and (not finished or saved_ledger.balance() < OVERDRAFT_LIMIT): return false
+	if (int(data.season_clock.season) == 3) and not data.run_over and saved_ledger.balance() < OVERDRAFT_LIMIT: return false
 	for key in ["selected_crop", "news", "rng_seed", "rng_state"]:
 		if not data.get(key) is String or data[key].length() > 4096: return false
 	if not data.rng_seed.is_valid_int() or not data.rng_state.is_valid_int() or not data.selected_crop in CROP_IDS: return false
@@ -1080,7 +1081,7 @@ func _valid_save(raw: Variant) -> bool:
 		if not _number(data.tools.get(key), 0, 3, true): return false
 	if float(data.climate.operations.supply.can) > 16.0 + 16.0 * int(data.tools.water): return false
 	if not _valid_plots(data.get("plots"), data): return false
-	if data.season_clock.winter_menu:
+	if (int(data.season_clock.season) == 3):
 		if data.climate.phase != "calm": return false
 		for plot in data.plots:
 			if int(plot.stage) != 0 or plot.tilled: return false
@@ -1109,7 +1110,7 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 		if not raw[index] is Dictionary:
 			return false
 		var plot: Dictionary = raw[index]
-		for key in ["unlocked", "watered", "tilled"]:
+		for key in ["unlocked", "watered", "tilled", "winter_ice"]:
 			if not plot.has(key) or not plot[key] is bool:
 				return false
 		if not plot.has("crop") or not plot["crop"] is String or not CROPS.has(plot["crop"]):
