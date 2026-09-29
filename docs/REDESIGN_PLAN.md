@@ -688,8 +688,27 @@ subtitle and skip mechanics) with a headline that grows grimmer by year
 and a ten-year climate strip showing each past year's disasters as icons.
 The same strip lives in the Winter accounts.
 
+Season character: Spring, Summer and Autumn must look different at a
+glance, not only through the sky. Spring: blossom on the fruit trees,
+fresh green grass tint, small flowers in the verges. Summer: warmer grass,
+a faint heat haze over the field on hot days, the tank level visibly
+mattering. Autumn: orange and brown tree canopies, fallen leaves on the
+paths, longer dusk. Winter keeps the Segment 8 snow. Implement as per-season
+tints and a few swapped meshes in farm_world.gd, driven by the season
+clock, with a one-second crossfade at each boundary so the sky and grass
+do not snap. Foreshadowing signals sit on top of these looks. Later years
+should also show the trend: by year 6 the Summer grass is drier and the
+haze stronger even in calm seasons, so the villain is visible without a
+disaster.
+
+Frequency cap: warning 45 s + active 30 s + recovery 75 s fills one
+150 s season, so at most one disaster per season and three per year. Keep
+that cap in this segment. Shortening the phases to allow more is a
+decision for after Segment 14's tuning results.
+
 Tests: test_climate_curve.gd (chance and severity by year, event mix,
-foreshadowing rate over many seeded seasons).
+foreshadowing rate over many seeded seasons, season tint values by season
+and by year).
 
 Acceptance: suite green; game boots.
 ```
