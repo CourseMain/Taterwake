@@ -935,3 +935,5 @@ Cute snow item 2: continuous scalloped mesh lips edge paths, beds and wall tops.
 Cute snow item 3: fence posts and branch tips wear oversized rounded caps; continuous rounded rail caps, a broad tank-lid pillow and an oval canvas cap keep silhouettes soft. Captured in `artifacts/cute-snow-step3-detail.png`. Footprint opacity is exposed from its real-time age so headless checks do not depend on the dummy renderer returning instance colours.
 
 Cute snow item 4: roof caps use rounded, bevelled slab geometry, with three or four short icicles on each eave. Up to fourteen tiny star meshes twinkle slowly in one instanced batch. The native capture is `artifacts/cute-snow-step4-detail.png`.
+
+Cute snow item 5: one instanced batch lays three rounded snow ridges over each opened icy bed. It leaves locked beds plain and removes a bed’s ridges when its ice is cleared. The glaze stays grey-white. Captured in `artifacts/cute-snow-step5-detail.png`.

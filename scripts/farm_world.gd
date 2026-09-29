@@ -793,6 +793,7 @@ func update_plots(plots: Array) -> void:
 			_ripe_sparkles.append(sparkle)
 		_geometry_batcher.batch_siblings(root)
 	_update_pest_caption_density()
+	if is_instance_valid(visuals): visuals.update_bed_snow(plots)
 
 func _update_unused_ground_tint() -> void:
 	if _unused_ground_material == null: return

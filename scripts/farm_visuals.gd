@@ -11,6 +11,7 @@ var snow_material: ShaderMaterial
 var sparkles: MultiMeshInstance3D
 var sparkle_points: Array[Vector3] = []
 var sparkle_time := 0.0
+var bed_snow: MultiMeshInstance3D
 var snow_ground: MeshInstance3D
 var snow_exposed_fraction := 0.0
 var drift_specs: Array[Dictionary] = []
@@ -50,6 +51,11 @@ func setup(w) -> void:
 	name = "FarmVisuals"
 	snow = _group("WinterSnow")
 	snow.hide()
+	snow_material = ShaderMaterial.new()
+	snow_material.shader = preload("res://scripts/winter_ground.gdshader")
+	snow_material.set_shader_parameter("ground_surface",false)
+	var ridge_shape:=SphereMesh.new(); ridge_shape.radius=1; ridge_shape.height=2; ridge_shape.radial_segments=12; ridge_shape.rings=6
+	bed_snow=_instances("SnowFurrowRidges",ridge_shape,snow_material,world.plot_positions.size()*3)
 	for grade in Quality.GRADES:
 		var prototype := _group("GradePrototype")
 		world._box(prototype,Vector3(0,.31,0),Vector3(.07,.60,.07),WOOD)
@@ -112,6 +118,7 @@ func set_winter(enabled: bool) -> void:
 	if winter and winter_dirty: _build_snow()
 	snow.visible=winter
 	sparkles.visible=winter
+	update_bed_snow(world._live_plots)
 	footprints.visible=winter
 	stores.visible=winter and stored_count>0
 	spoiled.visible=winter and spoiled_count>0 and spoil_seconds<14
@@ -120,6 +127,17 @@ func set_winter(enabled: bool) -> void:
 		print_ages.fill(PRINT_SECONDS)
 		footprints.multimesh.visible_instance_count=0
 
+func update_bed_snow(plots: Array) -> void:
+	var count:=0
+	if winter:
+		for i in range(mini(plots.size(),world.plot_positions.size())):
+			if not plots[i].get("unlocked",true) or not world._ice_roots[i].visible: continue
+			for x in [-.56,0,.56]:
+				var p: Vector3=world.plot_positions[i]+Vector3(x,.32,0)
+				bed_snow.multimesh.set_instance_transform(count,Transform3D(Basis.IDENTITY.scaled(Vector3(.18,.11,.84)),p))
+				count+=1
+	bed_snow.multimesh.visible_instance_count=count
+
 func _flatten_static(root: Node3D) -> void:
 	# Bake all snow together, including roof-local transforms, into one surface.
 	for mesh: MeshInstance3D in root.find_children("*","MeshInstance3D",true,false):
@@ -127,10 +145,6 @@ func _flatten_static(root: Node3D) -> void:
 	for child in root.get_children():
 		if not child is MeshInstance3D: child.free()
 	world._geometry_batcher.batch_siblings(root)
-	if snow_material == null:
-		snow_material = ShaderMaterial.new()
-		snow_material.shader = preload("res://scripts/winter_ground.gdshader")
-		snow_material.set_shader_parameter("ground_surface",false)
 	for mesh: MeshInstance3D in root.get_children(): mesh.material_override=snow_material
 
 func _build_snow() -> void:
