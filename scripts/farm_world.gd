@@ -105,6 +105,15 @@ const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
 const DAY_CYCLE_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
+var _season_year: int = 1
+var _season_index: int = 0
+var _season_signal: String = ""
+var _season_key: String = ""
+var _season_blend: float = 1.0
+var _season_from: Dictionary = {}
+var _season_light: Dictionary = {}
+var _season_materials: Array[Dictionary] = []
+var _season_palette: Dictionary = {}
 var _winter_visible: bool = false
 var _winter_cover: Node3D
 var _winter_roofs: Array[Node3D] = []
@@ -191,6 +200,7 @@ func build_world() -> void:
 	harvest_feedback = preload("res://scripts/harvest_feedback.gd").new()
 	add_child(harvest_feedback)
 	harvest_feedback.setup(self)
+	_apply_season()
 
 
 static func layout_point(point: Vector3) -> Vector3:
@@ -377,6 +387,9 @@ func _clear_world() -> void:
 	_pest_visuals.clear()
 	_pest_focus = -1
 	_snowflakes.clear()
+	_season_materials.clear()
+	_season_key = ""
+	_season_palette.clear()
 	_winter_cover = null
 	_winter_roofs.clear()
 	_ducks.clear()
@@ -517,7 +530,7 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var phase: float = _day_elapsed / DAY_CYCLE_SECONDS
 	var height: float = sin(phase * PI)
 	var daylight: float = 0.25 + 0.75 * height
-	var twilight: float = pow(1.0 - height, 3.0)
+	var twilight: float = pow(1.0 - height, 2.0 if _season_index == 2 else 3.0)
 	_sun.rotation_degrees = Vector3(-lerpf(15.0 if winter else 25.0, 40.0 if winter else 70.0, height), lerpf(-70.0, 70.0, phase), 0)
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
@@ -537,6 +550,12 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 		if _weather_drought:
 			_sun.light_energy = maxf(_sun.light_energy, 0.95 * _weather_strength)
 			_sun.light_color = Color("ffe0a0")
+	if _season_blend < 1.0 and not _season_light.is_empty():
+		_day_environment.background_color = _season_light.sky.lerp(_day_environment.background_color, _season_blend)
+		_day_environment.ambient_light_color = _season_light.ambient.lerp(_day_environment.ambient_light_color, _season_blend)
+		_sun.light_color = _season_light.sun.lerp(_sun.light_color, _season_blend)
+		_sun.light_energy = lerpf(_season_light.energy, _sun.light_energy, _season_blend)
+		_sun.rotation_degrees = _season_light.rotation.lerp(_sun.rotation_degrees, _season_blend)
 	if is_instance_valid(coast): coast.sync_light()
 
 
@@ -549,7 +568,7 @@ func day_cycle_info() -> Dictionary:
 func _island() -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 39.5, 30.0, 1.7, Color("8a6346"))
 	_prism(self, Vector3(0.0, -0.58, 0.0), 40.0, 30.4, 0.55, Color("b68b59"))
-	_prism(self, Vector3(0.0, -0.17, 0.0), 40.3, 30.7, 0.3, GRASS)
+	_season_mesh(_prism(self, Vector3(0.0, -0.17, 0.0), 40.3, 30.7, 0.3, GRASS), "grass")
 	var ground := StaticBody3D.new()
 	ground.name = "Ground"
 	ground.set_meta("ground", true)
@@ -913,6 +932,7 @@ func _scenery() -> void:
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(12, 0, 12), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
 			_sphere(self, pos + Vector3(float(i) * 0.53, 0.38, 0.0), Vector3(0.65, 0.59, 0.6), Color("63905c"))
+	_season_verges()
 	for i in range(70):
 		var x: float = _rng.randf_range(-18.0, 18.0)
 		var z: float = _rng.randf_range(9.2, 13.1) if i < 40 else _rng.randf_range(-12.9, 10.0)
@@ -968,11 +988,15 @@ func _tree(pos: Vector3, size: float) -> void:
 	var root := _root("OrchardTree", pos)
 	root.scale = Vector3.ONE * size
 	_cylinder(root, Vector3(0.0, 1.1, 0.0), 0.22, 0.13, 2.2, Color("876346"), 7)
-	_sphere(root, Vector3(0.0, 2.8, 0.0), Vector3(1.36, 1.7, 1.30), Color("6b965b"))
-	_sphere(root, Vector3(-0.72, 2.4, 0.18), Vector3(0.88, 1.03, 0.9), Color("80a768"))
-	_sphere(root, Vector3(0.68, 2.5, 0.1), Vector3(0.85, 1.2, 0.87), Color("8eae6b"))
+	_season_mesh(_sphere(root, Vector3(0.0, 2.8, 0.0), Vector3(1.36, 1.7, 1.30), Color("6b965b")), "canopy")
+	_season_mesh(_sphere(root, Vector3(-0.72, 2.4, 0.18), Vector3(0.88, 1.03, 0.9), Color("80a768")), "canopy")
+	_season_mesh(_sphere(root, Vector3(0.68, 2.5, 0.1), Vector3(0.85, 1.2, 0.87), Color("8eae6b")), "canopy")
 	for i in range(3):
 		_sphere(root, Vector3(-0.65 + float(i) * 0.58, 2.45 + float(i % 2) * 0.65, 1.03), Vector3(0.15, 0.16, 0.15), Color("d5a660"))
+
+	for i in range(9):
+		var point := Vector3(sin(i * 2.4) * 1.08, 2.6 + cos(i * 1.7) * 0.8, cos(i * 2.4) * 1.05)
+		_season_mesh(_sphere(root, point, Vector3.ONE * 0.22, Color("f3c4d2")), "blossom")
 
 func _staff_stalls() -> void:
 	# Each keeper has a reason to stand here: serve the counter, mind the
@@ -1691,7 +1715,12 @@ func _set_winter_cover(enabled: bool) -> void:
 			barn.add_child(roof)
 			_snow_roof(roof, 6.0, 5.0, 3.85, 1.4)
 			_winter_roofs.append(roof)
-	if is_instance_valid(_winter_cover): _winter_cover.visible = enabled
+	if is_instance_valid(_winter_cover):
+		var snow_weight: float = float(_season_palette.get("snow", 1.0 if enabled else 0.0)) if not _season_key.is_empty() else (1.0 if enabled else 0.0)
+		_winter_cover.visible = enabled or snow_weight > 0.001
+		var surface: ShaderMaterial = _winter_cover.get_child(0).material_override
+		surface.set_shader_parameter("snow_cover", snow_weight)
+		surface.set_shader_parameter("exposed_ground", _season_palette.get("grass", GRASS))
 	for roof in _winter_roofs: roof.visible = enabled
 
 
@@ -2038,3 +2067,89 @@ func _retire_climate_node(node: Node3D) -> void:
 		if _tutorial_station_roots[station].is_empty(): _tutorial_station_roots.erase(station)
 	remove_child(node)
 	node.queue_free()
+
+## Calendar presentation is deterministic; only the one-second blend uses real time.
+static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
+	var age: float = clampf((year - 1) / 9.0, 0, 1)
+	var grass: Color = [Color("8daa68"), Color("adab65"), Color("b8995b"), Color("ccd7cd")][season]
+	if season == 1: grass = grass.lerp(Color("c4a16d"), age * 0.85)
+	if hint == "drought": grass = grass.lerp(Color("c5ad7c"), 0.42)
+	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
+		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
+		"snow": 1.0 if season == 3 else 0.0, "haze": (0.06 + age * 0.32) if season == 1 else 0.0}
+
+func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
+	for entry in _season_materials:
+		if entry.kind == kind and entry.base == mesh.material_override.albedo_color:
+			mesh.material_override = entry.material
+			return
+	var material: StandardMaterial3D = mesh.material_override.duplicate()
+	mesh.material_override = material
+	material.set_meta("season_tint", true)
+	if kind in ["blossom", "flower", "leaf"]:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_season_materials.append({"material": material, "kind": kind, "base": material.albedo_color})
+
+func _season_verges() -> void:
+	var flowers := _root("SpringFlowers", Vector3.ZERO)
+	var leaves := _root("AutumnLeaves", Vector3.ZERO)
+	for i in range(36):
+		var side: float = -1.0 if i % 2 == 0 else 1.0
+		var pos := Vector3(-16.0 + (i / 2) * 1.85, 0.12, side * 10.8)
+		_season_mesh(_sphere(flowers, pos, Vector3(0.13, 0.16, 0.13), Color("edd998") if i % 3 == 0 else Color("f2c5d2")), "flower")
+		var leaf := _sphere(leaves, Vector3(pos.x, 0.22, side * 8.6 + sin(i) * 0.7), Vector3(0.30, 0.025, 0.16), Color("ba693b") if i % 2 == 0 else Color("8e6241"))
+		leaf.rotation.y = i * 1.3
+		_season_mesh(leaf, "leaf")
+
+func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> void:
+	var key: String = "%d/%d/%s" % [year, season, hint]
+	if key != _season_key:
+		var first: bool = _season_key.is_empty()
+		_season_from = season_tints(year, season, hint) if first else _season_palette.duplicate()
+		if is_instance_valid(_sun) and _day_environment != null:
+			_season_light = {"sky": _day_environment.background_color, "ambient": _day_environment.ambient_light_color, "sun": _sun.light_color, "energy": _sun.light_energy, "rotation": _sun.rotation_degrees}
+		_season_key = key
+		_season_year = year; _season_index = season; _season_signal = hint
+		_season_blend = 1.0 if first else 0.0
+		_apply_season()
+		_applied_day_time = -1.0
+	set_day_time(seconds, season == 3)
+
+func _process(delta: float) -> void:
+	if _season_blend >= 1.0: return
+	_season_blend = minf(1.0, _season_blend + delta)
+	_apply_season()
+	_applied_day_time = -1.0
+	set_day_time(_day_elapsed, _season_index == 3)
+
+func _apply_season() -> void:
+	var target: Dictionary = season_tints(_season_year, _season_index, _season_signal)
+	for key in target:
+		_season_palette[key] = _season_from.get(key, target[key]).lerp(target[key], _season_blend) if target[key] is Color else lerpf(float(_season_from.get(key, target[key])), float(target[key]), _season_blend)
+	for entry in _season_materials:
+		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass
+		elif entry.kind == "canopy":
+			entry.material.albedo_color = _season_palette.canopy.darkened(clampf((0.68 - entry.base.g) * 1.8, 0, 0.24))
+		else:
+			var color: Color = entry.base
+			color.a = _season_palette[entry.kind]
+			entry.material.albedo_color = color
+
+func draw_season_signals(v, time: float) -> void:
+	var haze: float = float(_season_palette.get("haze", 0)) + (_weather_strength * 0.20 if _weather_drought else 0.0)
+	if haze > 0:
+		for band in range(5):
+			for j in range(15):
+				var x: float = plot_positions[0].x + j * 0.8
+				var z: float = plot_positions[0].z + band * 1.6
+				v._line(Vector3(x, 0.75 + sin(time * 2.1 + j + band) * 0.08, z), Vector3(x + 0.8, 0.75 + sin(time * 2.1 + j + 1 + band) * 0.08, z), 0.08, Color(1.0, 0.86, 0.62, haze * 0.18), true)
+	if _season_signal == "flood" and fposmod(time, 8.0) < 5.0:
+		for i in range(48):
+			var p := Vector3(plot_positions[0].x + fposmod(i * 1.71, 13), 0.3 + fposmod(i * 0.41 - time * 4, 4.5), plot_positions[0].z + fposmod(i * 1.33, 8))
+			v._line(p, p + Vector3(-0.04, -0.38, 0), 0.022, Color(0.74, 0.88, 0.94, 0.48), true)
+	if _season_signal == "storm":
+		for i in range(7):
+			var x: float = plot_positions[0].x - 3 + fposmod(time * 4 + i * 2.8, 19)
+			for j in range(8):
+				var p := Vector3(x + j * 0.3, 1.4 + sin(time + j * 0.3) * 0.16, plot_positions[0].z + i * 1.2)
+				v._line(p, p + Vector3(0.31, cos(time + j * 0.3) * 0.04, 0), 0.025, Color(0.9, 0.9, 0.78, 0.4), true)

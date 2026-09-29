@@ -134,6 +134,7 @@ func _refresh() -> void:
 			var size: float = recovery * lerpf(1.4, 0.75, loop.gate_open)
 			water.multimesh.set_instance_transform(world.plot_positions.size() + i, Transform3D(Basis.IDENTITY.scaled(Vector3(size, 1, size * 1.4)), point))
 			water.multimesh.set_instance_custom_data(world.plot_positions.size() + i, Color(recovery * 0.8, i / 8.0, 0, 1))
+	world.draw_season_signals(self, time)
 	loop.draw_connections(self)
 	_finish_mesh(markings)
 	if local_weather and info.event == "storm" and float(op.flash) > 0 and int(op.strike_row) >= 0:

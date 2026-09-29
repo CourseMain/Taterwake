@@ -1756,6 +1756,9 @@ func _build_winter() -> void:
 	var clock = _state.season_clock
 	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Time paused")
 	var net: float = _state.ledger.total(clock.year)
+	var strip = preload("res://scripts/climate_strip.gd").new()
+	strip.setup(_state.climate.data.outlook.records, clock.year)
+	_body.add_child(strip)
 	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
 	_body.add_child(_refs.accounts_net)
 	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))

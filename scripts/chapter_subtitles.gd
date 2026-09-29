@@ -1,5 +1,5 @@
 extends Control
-## Reusable timed chapter subtitle and skip control, reserved for year-start pages.
+## Reusable timed chapter subtitle and skip control, shared with the annual climate front page.
 signal finished
 const Type = preload("res://scripts/ui_type.gd")
 const DURATION: float = 12.0
@@ -41,11 +41,14 @@ func _input(event: InputEvent) -> void:
 		finished.emit()
 
 func _process(delta: float) -> void:
-	elapsed = minf(DURATION, elapsed+delta)
+	_tick(delta)
 	chapter.position = Vector2(30,100)
 	chapter.size = Vector2(maxf(180,size.x-60),60)
 	skip.position = Vector2(size.x-154,18)
 	skip.size = Vector2(130,68)
+
+func _tick(delta: float) -> void:
+	elapsed = minf(DURATION, elapsed + delta)
 	if elapsed>=DURATION:
 		stop()
 		finished.emit()

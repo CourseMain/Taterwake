@@ -73,6 +73,7 @@ var graphics_quality: String = "balanced"
 var climate_audio: Node
 var climate_target: String = ""
 var pending_refill: bool = false
+var year_intro: Control
 var empty_can_prompted: bool = false
 var equipment_prompt_time: float = 0.0
 var climate_shake: float = 0.0
@@ -108,7 +109,7 @@ func _ready() -> void:
 	_reset_camera_view()
 	get_tree().root.size_changed.connect(_stop_map_navigation)
 	get_tree().root.focus_exited.connect(_stop_map_navigation)
-	world.set_day_time(state.season_clock.seconds, (state.season_clock.season == 3))
+	world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
 	world.pest_warning.connect(_on_pest_warning)
 	hud = HudScript.new()
 	hud.name = "GameHUD"
@@ -153,6 +154,16 @@ func _ready() -> void:
 			tutorial.start()
 		elif returning:
 			hud.show_toast("Your farm is restored. The market is open!")
+	year_intro = load("res://scripts/climate_intro.gd").new()
+	var report_layer := CanvasLayer.new()
+	report_layer.layer = 40
+	add_child(report_layer)
+	report_layer.add_child(year_intro)
+	year_intro.finished.connect(func():
+		state.climate_report_open = false
+		state.climate.data.outlook.seen_year = state.season_clock.year
+		_save_checkpoint.call_deferred()
+	)
 	get_tree().auto_accept_quit = false
 
 func _register_inputs() -> void:
@@ -171,6 +182,10 @@ func _register_inputs() -> void:
 
 func _process(delta: float) -> void:
 	if world == null or hud == null:
+		return
+	if is_instance_valid(year_intro) and year_intro.visible: return
+	if not test_mode and not state.run_over and not state.tutorial_active and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
+		_show_year_start()
 		return
 	if state.run_over:
 		hud.update_state(state)
@@ -206,7 +221,7 @@ func _process(delta: float) -> void:
 	_update_equipment_card(delta)
 	var climate_info: Dictionary = state.climate_info()
 	world.set_climate(climate_info)
-	world.set_day_time(state.season_clock.seconds, (state.season_clock.season == 3))
+	world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
 	climate_audio.set_weather(climate_info, state.tutorial_active or state.run_over)
 	_update_camera_zoom(delta)
 	_update_weather_shake(delta)
@@ -310,7 +325,7 @@ func _simulation_delta(delta: float) -> float:
 	return step
 
 func _advance_simulation(delta: float) -> void:
-	if state.run_over or state.accounts_open or state.ClimateSystem.Lesson.active(state):
+	if state.run_over or state.accounts_open or state.climate_report_open or state.ClimateSystem.Lesson.active(state):
 		return
 	if _tutorial_active():
 		state.update(delta)
@@ -320,7 +335,7 @@ func _advance_simulation(delta: float) -> void:
 		var step: float = remaining
 		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
 		state.update(step)
-		if state.run_over or state.accounts_open:
+		if state.run_over or state.accounts_open or state.climate_report_open:
 			return
 		remaining = maxf(0.0, remaining - step)
 
@@ -417,6 +432,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(year_intro) and year_intro.visible: return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
 		touch_controls.toggle_fullscreen()
 		return
@@ -876,7 +892,7 @@ func _on_state_changed() -> void:
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
-		world.set_day_time(state.season_clock.seconds, (state.season_clock.season == 3))
+		world.set_calendar(state.season_clock.year, state.season_clock.season, state.season_clock.seconds, state.climate.data.outlook.signal)
 	if hud != null:
 		hud.update_state(state)
 		_hud_update_frame = Engine.get_process_frames()
@@ -954,6 +970,7 @@ func _climate_action(action: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_action(action: String) -> void:
+	if is_instance_valid(year_intro) and year_intro.visible: return
 	if is_instance_valid(conversation) and conversation.visible: return
 	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu"] and not action.begins_with("graphics"):
 		state.ClimateSystem.Lesson.finish(state)
@@ -1099,6 +1116,7 @@ func _on_climate_changed(phase: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_season_changed() -> void:
+	if state.season_clock.season == 0 and not state.run_over and not test_mode: _show_year_start()
 	if state.season_clock.season == 3 and not state.run_over: state.accounts_open = true
 	_cancel_walk()
 	_close_equipment()
@@ -1294,3 +1312,11 @@ func _queue_project(id: String) -> void:
 	pending_project = id
 	_start_walk(world.ClimateProjects.site_position(world, id))
 	hud.show_farm_hint("Walk to %s · one work action on arrival" % state.ClimateSystem.PROJECTS[id].name)
+
+func _show_year_start() -> void:
+	if not is_instance_valid(year_intro) or state.run_over or state.tutorial_active: return
+	_stop_map_navigation()
+	_cancel_walk()
+	hud.close_panel()
+	state.climate_report_open = true
+	year_intro.present(state)

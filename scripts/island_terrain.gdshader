@@ -2,6 +2,8 @@ shader_type spatial;
 render_mode diffuse_burley;
 
 uniform bool snow = false;
+uniform float snow_cover = 1.0;
+uniform vec4 exposed_ground : source_color = vec4(0.6, 0.65, 0.4, 1.0);
 uniform vec2 half_extent = vec2(23.15, 18.15);
 varying vec3 terrain_position;
 varying float upper_surface;
@@ -55,4 +57,5 @@ void fragment() {
 		ROUGHNESS = mix(0.72, 0.98, dry);
 		SPECULAR = 0.12;
 	}
+	if (snow) ALBEDO = mix(exposed_ground.rgb, ALBEDO, snow_cover);
 }

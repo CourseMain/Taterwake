@@ -11,6 +11,7 @@ func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 			continue
 		var item := node as MeshInstance3D
 		var mat := item.material_override as StandardMaterial3D
+		if mat != null and mat.get_meta("season_tint", false): continue
 		if not item.visible or item.get_child_count() > 0 or item.get_script() != null or item.has_meta("terrain_shell"):
 			continue
 		# Mirrored transforms need winding changes; keep their original renderer.
