@@ -1,5 +1,5 @@
 extends RefCounted
-## The purse is always opening cash plus the journal. No stored balance.
+## The purse caches opening cash plus the journal; saves contain only entries.
 const STARTING_CASH: float = 2000.0
 const OVERDRAFT_LIMIT: float = -5000.0
 const INITIAL_LOAN: float = 20000.0
@@ -14,6 +14,7 @@ const FIXED_COSTS: Array[Dictionary] = [
 	{"category": "upkeep", "label": "Annual equipment upkeep", "amount": -500.0},
 ]
 var _entries: Array[Dictionary] = []
+var _balance: float = STARTING_CASH
 var _closed_years: Array[int] = []
 var entries: Array[Dictionary]:
 	get: return _entries.duplicate(true)
@@ -21,7 +22,9 @@ var entries: Array[Dictionary]:
 func post(year: int, season: int, category: String, label: String, amount: float, record_zero: bool = false) -> bool:
 	if year < 1 or year > 10 or season < 0 or season > 3 or category not in CATEGORIES: return false
 	if label.is_empty() or label.length() > 256 or not is_finite(amount) or not is_finite(balance() + amount): return false
-	if amount != 0.0 or record_zero: _entries.append({"year": year, "season": season, "category": category, "label": label, "amount": amount})
+	if amount != 0.0 or record_zero:
+		_entries.append({"year": year, "season": season, "category": category, "label": label, "amount": amount})
+		_balance += amount
 	return true
 
 func entry_count() -> int:
@@ -34,7 +37,7 @@ func total(year: int = 0, category: String = "") -> float:
 	return result
 
 func balance() -> float:
-	return STARTING_CASH + total()
+	return _balance
 
 func category_totals(year: int) -> Dictionary:
 	var result: Dictionary = {}
@@ -89,10 +92,12 @@ func save_data() -> Dictionary:
 
 func load_data(data: Dictionary) -> void:
 	_entries.assign(data.entries.duplicate(true))
+	_balance = STARTING_CASH
 	for entry in _entries:
 		entry.year = int(entry.year)
 		entry.season = int(entry.season)
 		entry.amount = float(entry.amount)
+		_balance += entry.amount
 	_closed_years.clear()
 	for year in data.closed_years: _closed_years.append(int(year))
 
