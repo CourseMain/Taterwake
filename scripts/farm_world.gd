@@ -161,6 +161,7 @@ func build_world() -> void:
 	_activity_station()
 	_staff_stalls()
 	_expand_village()
+	_extended_fields()
 	_garden()
 	coast = preload("res://scripts/coastal_world.gd").new()
 	add_child(coast)
@@ -297,13 +298,18 @@ func station_position(station: String) -> Vector3:
 
 
 func farm_bounds() -> Rect2:
-	var bounds := Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-17, -5, 35, 17))
+	var bounds := Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-35.5, -5, 70, 17))
 	return Rect2(bounds.position * LAND_SPACING, bounds.size * LAND_SPACING)
 
 
 func clamp_walk_position(point: Vector3) -> Vector3:
 	var bounds: Rect2 = farm_bounds()
-	return Vector3(clampf(point.x, bounds.position.x, bounds.end.x), 0, clampf(point.z, bounds.position.y, bounds.end.y))
+	var x: float = clampf(point.x, bounds.position.x, bounds.end.x)
+	var far_edge: float = 9.0 if absf(x) > 23.0 else bounds.end.y
+	return Vector3(x, ground_height(x), clampf(point.z, bounds.position.y, far_edge))
+
+static func ground_height(x: float) -> float:
+	return 2.0 * clampf((-x - 18.0) / 5.0, 0.0, 1.0)
 
 func walk_route(_from: Vector3, to: Vector3) -> Array[Vector3]:
 	return [clamp_walk_position(to)]
@@ -448,7 +454,7 @@ func _lighting() -> void:
 	camera = Camera3D.new()
 	camera.name = "DioramaCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = (49.0 if current_island == 3 else (43.0 if current_island == 2 else 38.0)) * LAND_SPACING
+	camera.size = (49.0 if current_island == 3 else (43.0 if current_island == 2 else 62.0)) * LAND_SPACING
 	camera.position = Vector3(23.0, 31.0, 33.0) * LAND_SPACING
 	add_child(camera)
 	camera.look_at(Vector3(0.0, 0.3, 0.5) if current_island == 3 else (Vector3(0.0, 0.3, -1.0) if current_island == 2 else Vector3(-0.3, 0.3, -1.2)))
@@ -598,18 +604,55 @@ func _paths() -> void:
 		var pos := Vector3(7.0 + _rng.randf_range(-0.4, 0.4), 0.085, -3.9 + float(i) * 0.8)
 		_box(self, pos, Vector3(0.8, 0.055, 0.48), Color("e4ce98"))
 
+func _field_ground(builder: Callable, center: Vector3, size: Vector3) -> void:
+	var first: int = get_child_count()
+	builder.call()
+	for i in range(first, get_child_count()):
+		var node := get_child(i) as Node3D
+		node.position = node.position * size + center
+		node.scale *= size
+		node.set_meta("land_layout", true)
+
+func _extended_fields() -> void:
+	# The preserved shore strata and upland rock are joined to the Home island.
+	_field_ground(_tropical_island, Vector3(30.25, 0, 0), Vector3(0.52, 1, 0.58))
+	_field_ground(_winter_island.bind(true), Vector3(-33.75, 2, 0), Vector3(0.40, 1, 0.48))
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for point: Vector3 in [Vector3(-23,2,-10), Vector3(-23,2,10), Vector3(-18,0,10), Vector3(-23,2,-10), Vector3(-18,0,10), Vector3(-18,0,-10)]:
+		surface.add_vertex(point)
+	surface.generate_normals()
+	var ramp := MeshInstance3D.new()
+	ramp.name = "HillApproach"
+	ramp.mesh = surface.commit()
+	ramp.material_override = _mat(Color("a6a077"))
+	add_child(ramp)
+	ramp.create_trimesh_collision()
+	ramp.get_child(0).set_meta("ground", true)
+	_box(self, Vector3(23, 0.025, 7.7), Vector3(23, 0.065, 2.15), Color("d4bc82"))
+	_palm(self, Vector3(39, 0, 6.8), 0.7)
+	_tree(Vector3(-42, 2, 6.8), 0.8)
+
 func _garden() -> void:
+	_garden_field(Vector3.ZERO, 0)
+	_garden_field(Vector3(32, 0, 0), 24)
+	_garden_field(Vector3(-32, 2, 0), 48)
+	for entry: Array in [["Home Field · Sheltered", Vector3(-2, 0, -3.6)], ["Low Field · Floods first", Vector3(30, 0, -3.6)], ["Hill Field · Dries first", Vector3(-34, 2, -3.6)]]:
+		_sign(entry[1], entry[0], Color("587653"))
+
+func _garden_field(offset: Vector3, first_index: int) -> void:
 	var tropical: bool = current_island == 2
 	var winter: bool = current_island == 3
 	var columns: int = 10 if winter else (8 if tropical else 6)
 	var rows: int = 8 if winter else (6 if tropical else 4)
 	var field_center: Vector3 = Vector3(-0.45, 0.025, 2.55) if winter else (Vector3(-0.35, 0.025, 1.95) if tropical else Vector3(-1.75, 0.025, 1.45))
 	var field_size: Vector3 = Vector3(23.3, 0.08, 18.7) if winter else (Vector3(18.75, 0.08, 14.1) if tropical else Vector3(14.25, 0.08, 9.0))
-	_box(self, field_center, field_size, Color("acbbc0") if winter else (Color("d2b676") if tropical else Color("b9ad71")))
+	_box(self, field_center + offset, field_size, Color("acbbc0") if winter else (Color("d2b676") if tropical else Color("b9ad71")))
 	for row in range(rows):
 		for col in range(columns):
-			var index: int = row * columns + col
+			var index: int = first_index + row * columns + col
 			var pos := Vector3((-10.8 if winter else (-8.4 if tropical else -7.5)) + float(col) * 2.3, 0.0, (-5.5 if winter else (-3.8 if tropical else -2.0)) + float(row) * 2.3)
+			pos += offset
 			plot_positions.append(pos)
 			var root := Node3D.new()
 			root.name = "Plot_%02d" % index
@@ -657,6 +700,7 @@ func _garden() -> void:
 			_pest_visuals.append({"active": false, "ticks": 0, "destroyed": false, "caption_time": 0.0, "shake_time": 0.0})
 			_plot_states.append("")
 			_target(root, Vector3(0.0, 0.17, 0.0), Vector3(2.08, 0.5, 2.08), "plot_index", index)
+	if first_index > 0: return
 	# Low, open fence leaves each individual plot accessible to the camera.
 	if winter:
 		_fence(Vector3(-12.4, 0.0, -6.8), Vector3(-12.4, 0.0, 12.0), 9)
@@ -785,7 +829,7 @@ func set_player_position(pos: Vector3) -> void:
 	var direction: Vector3 = pos - player.position
 	if Vector2(direction.x, direction.z).length() > 0.005:
 		_player_heading = atan2(direction.x, direction.z)
-	player.position = Vector3(pos.x, 0.0, pos.z)
+	player.position = Vector3(pos.x, ground_height(pos.x), pos.z)
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
@@ -1632,12 +1676,15 @@ func _shores_jetty() -> void:
 		_box(flag_root, Vector3(0.43, 2.7, 0.0), Vector3(0.86, 0.53, 0.055), GOLD)
 		_sphere(flag_root, Vector3(0.44, 2.71, 0.05), Vector3(0.13, 0.16, 0.035), Color("fff2bc"))
 
-func _winter_island() -> void:
+func _winter_island(bare: bool = false) -> void:
 	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
 	_prism(self, Vector3(0.0, -0.59, 0.0), 55.8, 43.8, 0.57, Color("b4c4ca"))
 	var snow := _prism(self, Vector3(0.0, -0.15, 0.0), 56.2, 44.2, 0.34, Color("e6eef0"))
-	snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(56.2, 44.2))
-	preload("res://scripts/island_terrain.gd").snowbanks(self)
+	if bare:
+		snow.material_override = _mat(Color("8d9b80"))
+	else:
+		snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(56.2, 44.2))
+		preload("res://scripts/island_terrain.gd").snowbanks(self)
 	var ground := StaticBody3D.new()
 	ground.name = "FrosthollowGround"
 	ground.set_meta("ground", true)
@@ -1648,6 +1695,7 @@ func _winter_island() -> void:
 	collision.shape = shape
 	collision.position.y = -0.07
 	ground.add_child(collision)
+	if bare: return
 	for i in range(24):
 		var x: float = -25.0 + float(i) * 2.15
 		var icicle := _cylinder(self, Vector3(x, -0.65, 21.98), 0.02, 0.14, _rng.randf_range(0.45, 0.85), Color("d4e8f0"), 5)

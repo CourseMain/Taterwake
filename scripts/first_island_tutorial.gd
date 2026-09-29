@@ -6,8 +6,8 @@ const STEPS: Array[Dictionary] = [
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
-	{"id": "grow", "title": "Spring into Summer", "body": "The calendar is running. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
-	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. Two tonnes lost; one left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
+	{"id": "grow", "title": "Spring into Summer", "body": "The calendar runs at 3× while you wait. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
+	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. One tonne lost; two left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
 	{"id": "sell", "title": "Sell now or store?", "body": "Sell your Russet in the barn [F] for cash now. Or keep it: Winter charges storage and spoilage, while prices rise. Either choice leads to the same honest accounts.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
 	{"id": "winter", "title": "The bills are coming", "body": "Time is running through Autumn. Nell will open the accounts at Winter. Unsold crops stay in the barn; crops left in the field face the cold."},
@@ -165,7 +165,7 @@ func refresh() -> void:
 	if not _tour_only() and current_id() in ["hoe", "plant", "water", "grow", "harvest"]:
 		focus = "plot:%d" % _plot_index()
 	if current_id() == "grow":
-		body = "Spring → Summer. The calendar is running.\nIris will warn us before the small storm. Your first crop's quality and pests are protected while you learn."
+		body = "Spring → Summer. The calendar runs at 3× while you wait.\nIris will warn us before the small storm. Your first crop's quality and pests are protected while you learn."
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "id": current_id(), "key": str(step.get("key", "")),

@@ -193,6 +193,7 @@ func refresh() -> void:
 	hud._refs.cover_all.disabled = farm.ClimateSystem.Protection.coverable_beds(farm).is_empty()
 	hud._refs.cover_all.tooltip_text = "Winter only · build frost covers, then clear bed ice with Hoe."
 	hud._refs.forecast_range.text = "Next %s: disaster chance %d to %d%%." % [farm.SeasonClock.NAMES[int(forecast.season)], roundi(forecast.low * 100), roundi(forecast.high * 100)]
+	hud._refs.forecast_range.text += "\nHome Field · Sheltered\nLow Field · Floods first · yield +25%\nHill Field · Dries first"
 	if not forecast.events.is_empty():
 		for event in forecast.events:
 			var risk: Dictionary = forecast.events[event]

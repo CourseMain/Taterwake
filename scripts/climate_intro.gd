@@ -53,6 +53,7 @@ func present(farm) -> void:
 	subtitle.text = "Disaster chance per season: %d%%. Mean severity: %d%%.\nAt most one disaster each season, three this year.\nDry ground, extra rain and wind can hint at next season; they are no promise." % [roundi(farm.ClimateSystem.chance(year) * 100), roundi(farm.ClimateSystem.severity_mean(year) * 100)]
 	if farm.guided_first_year():
 		subtitle.text = "Guided Spring–Autumn: one Summer storm at 20% severity.\nAfter the first accounts, seasonal forecasts use the normal climate odds.\nDry ground, extra rain and wind can hint at next season; they are no promise."
+	subtitle.text += "\nHome Field · Sheltered   |   Low Field · Floods first   |   Hill Field · Dries first"
 	forecaster.text = "Iris · Weather forecaster\n" + farm.NpcRoster.forecast_line(farm)
 	portrait.show()
 	portrait.show_person("iris")

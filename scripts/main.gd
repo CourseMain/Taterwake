@@ -325,7 +325,8 @@ func _simulation_delta(delta: float) -> float:
 	# especially when the previous scenario left accelerated time enabled.
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
-	var step: float = minf(delta * multiplier, MAX_ACCELERATED_STEP if multiplier > 1.0 else 3600.0)
+	if state.guided_first_year(): multiplier = 3.0 if state._tutorial_clock_running() else 1.0
+	var step: float = minf(delta * multiplier, MAX_ACCELERATED_STEP if debug_unlocked and debug_time_multiplier > 1.0 else 3600.0)
 	return step
 
 func _advance_simulation(delta: float) -> void:
@@ -550,7 +551,7 @@ func _finish_conversation(service: String) -> void:
 	else: hud.update_state(state)
 
 func _camera_zoom_max() -> float:
-	return (74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 56.0)) * world.LAND_SPACING
+	return (74.0 if world.current_island == 3 else (64.0 if world.current_island == 2 else 90.0)) * world.LAND_SPACING
 
 func _reset_camera_zoom() -> void:
 	_zoom_target_size = clampf(world.camera.size, CAMERA_ZOOM_MIN, _camera_zoom_max())
@@ -609,7 +610,7 @@ func _handle_map_pan(event: InputEvent) -> bool:
 
 func _camera_pan_limit() -> Vector2:
 	# The view's focus stays over the island, even at the closest zoom.
-	return (Vector2(28, 22) if world.current_island == 3 else (Vector2(23, 18) if world.current_island == 2 else Vector2(20, 15))) * world.LAND_SPACING
+	return (Vector2(28, 22) if world.current_island == 3 else (Vector2(23, 18) if world.current_island == 2 else Vector2(39, 17))) * world.LAND_SPACING
 
 func _pan_camera_by(screen_delta: Vector2) -> void:
 	if not screen_delta.is_finite() or screen_delta.is_zero_approx() or not is_instance_valid(world.camera): return
@@ -861,8 +862,9 @@ func _update_hover_at(screen_position: Vector2) -> void:
 		elif bool(plot.get("pests", false)):
 			context_text = "Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0)))
 		elif not plot.unlocked:
-			var land: Dictionary = state.field_expansion_info()
-			context_text = "%d more beds · Tools · %s" % [int(land.remaining), state.money(float(land.cost))]
+			var field: String = str(plot.field)
+			var land: Dictionary = state.field_expansion_info(field)
+			context_text = state.Land.NAMES[field] + (" · Rent at Winter accounts" if not state.Land.active(state, field) else " · Open 12 beds at Winter accounts · " + state.money(float(land.cost)))
 		elif int(plot.stage) == 3:
 			context_text = "%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action]
 		elif int(plot.stage) > 0 and bool(plot.watered):
@@ -1097,8 +1099,13 @@ func _on_action(action: String) -> void:
 		"upgrade":
 			match parts[1]:
 				"barn": state.upgrade_barn()
-				"expansion": state.expand_field()
+				"expansion":
+					state.expand_field(parts[2] if parts.size() > 2 else "home")
+					if hud._panel_kind == "accounts": hud.show_panel("accounts", state)
 				_: state.upgrade_tool(parts[1])
+		"lease":
+			state.rent_field(parts[1], not state.land[parts[1]].rented)
+			hud.show_panel("accounts", state)
 		"save":
 			if not test_mode:
 				hud.show_toast("Farm saved. Your crops are tucked away." if state.save_game() else "Could not save. Check the available disk space.")

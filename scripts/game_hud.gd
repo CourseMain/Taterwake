@@ -1799,6 +1799,16 @@ func _build_winter() -> void:
 	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
 	for word in _state.Quality.GRADES:
 		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
+	_body.add_child(_label("FIELDS · leases for the coming year", 18, INK, true))
+	_body.add_child(_wrap("Rent renews each Winter. Cancel any Winter for a refund of that renewal; standing crops are cleared. Bed expansions are kept.", 14, MUTED))
+	for field in _state.Land.IDS:
+		_body.add_child(_wrap(_state.Land.NAMES[field] + " · " + _state.Land.WORDS[field], 16, INK))
+		var row := _hbox(12)
+		_body.add_child(row)
+		if field != "home":
+			row.add_child(_button(("Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year"), "lease:" + field))
+		if _state.Land.active(_state, field) and not _state.field_expansion_info(field).complete:
+			row.add_child(_button("Open 12 beds · " + _state.money(_state.FIELD_EXPANSION_COST), "upgrade:expansion:" + field))
 	_build_diversification()
 	_build_loss_cards(_body, clock.year)
 	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))

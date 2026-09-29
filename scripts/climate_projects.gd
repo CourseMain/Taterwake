@@ -19,7 +19,7 @@ static func outlet_position(w) -> Vector3:
 	return Vector3(drain_position(w).x, 0.13, (22.45 if w.current_island == 3 else 18.5) * w.LAND_SPACING)
 
 static func trees_position(w) -> Vector3:
-	return Vector3((w.plot_positions[0].x + w.plot_positions[-1].x) * 0.5, 0, w.plot_positions[0].z - 1.65)
+	return Vector3((w.plot_positions[0].x + w.plot_positions[23].x) * 0.5, 0, w.plot_positions[0].z - 1.65)
 
 static func sprinkler_position(w, patch: int) -> Vector3:
 	for i in range(w.plot_positions.size()):
@@ -84,7 +84,7 @@ static func _channel(w, root: Node3D, pos: Vector3, length: float, sideways: boo
 
 static func _drainage(w, root: Node3D, level: int) -> void:
 	var gate: Vector3 = drain_position(w)
-	var right: float = w.plot_positions[-1].x + 1.5
+	var right: float = w.plot_positions[23].x + 1.5
 	var back: float = w.plot_positions[0].z - 1.15
 	_channel(w, root, Vector3(gate.x, 0, (gate.z + back) * 0.5), gate.z - back)
 	_channel(w, root, Vector3((gate.x + right) * 0.5, 0, gate.z), right - gate.x, true)
@@ -131,9 +131,15 @@ static func bed_cover(w, index: int) -> Node3D:
 	return root
 
 static func _windbreaks(w, root: Node3D, level: int) -> void:
-	root.position = trees_position(w)
+	for offset: Vector3 in [Vector3.ZERO, Vector3(32, 0, 0), Vector3(-32, 2, 0)]:
+		var row := Node3D.new()
+		root.add_child(row)
+		_windbreak_row(w, row, level, offset)
+
+static func _windbreak_row(w, root: Node3D, level: int, offset: Vector3) -> void:
+	root.position = trees_position(w) + offset
 	var winter: bool = w.current_island == 3
-	var width: float = w.plot_positions[-1].x - w.plot_positions[0].x + 0.6
+	var width: float = w.plot_positions[23].x - w.plot_positions[0].x + 0.6
 	var count: int = (10 if winter else 8) if level >= 2 else (8 if winter else 6)
 	for index: int in range(count):
 		var x: float = -width * 0.5 + width * index / float(count - 1)

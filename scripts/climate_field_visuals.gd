@@ -127,7 +127,7 @@ func _refresh() -> void:
 
 	if water.visible:
 		var first: Vector3 = world.plot_positions[0]
-		var last: Vector3 = world.plot_positions[-1]
+		var last: Vector3 = world.plot_positions[23]
 		for i in range(8):
 			var side: float = first.x - 1.8 if i < 4 else last.x + 1.8
 			var point := Vector3(side, 0.25, lerpf(first.z - 0.3, last.z + 0.6, float(i % 4) / 3.0))
