@@ -11,11 +11,11 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-indevelopment`, published as the GitHub prerelease **v2.0.0 (in development) — Game redesign** from the `redesign` branch. It covers Segments 1–8. The public browser build remains v1.0.3.1; this source prerelease does not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-indevelopment`, published as the GitHub prerelease **v2.0.0 (in development) — Game redesign** from the `redesign` branch. The published tag covers Segments 1–8; the working source now includes Segment 9’s ledger. The public browser build remains v1.0.3.1; this source prerelease does not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 28. Saves without the new calendar, including revision 27, are set aside as incompatible. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 29. Pre-ledger saves, including revision 28, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -38,9 +38,17 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 8 — current
+#### Segment 9 — current
 
-Godot 4.7.2, `tools/run_tests.sh -j 1`: **72 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (118 checks), `test_day_night` (314) and `test_game` (39). No tests are skipped or disabled. The latest complete serial result is `artifacts/season-display-baseline.txt`; the initial Segment 8 result remains in `artifacts/segment8-baseline.txt`.
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **73 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_ledger` (108 checks), `test_season_clock` (118) and `test_game` (39). No tests are skipped or disabled. The complete serial result is `artifacts/segment9-baseline.txt`.
+
+Older fixtures now expect journal saves, bounded overdraft purchases and foreclosure after the complete Winter bill. Funded calendar fixtures cover ten years without accidentally foreclosing. The conversation fixture pauses the main loop before its first frame and uses a deterministic RNG: previously a random Spring warning followed by a manual calm phase could create an invalid save. Ledger scene teardown allows the audio mixer to release its final playback before exit.
+
+The explicit headless boot passes all 39 checks (Godot still reports an ObjectDB teardown warning). Native GL Compatibility passes 108 ledger checks on desktop and 110 with touch controls. Desktop accounts and portrait accounts, foreclosure and ten-year summary captures were visually inspected. A temporary Web resource pack also passes all 108 ledger checks; this is packed-resource validation, not a browser runtime test. Published `docs/index.*` and `web/` remain unchanged.
+
+#### Segment 8 — historical
+
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **72 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (118 checks), `test_day_night` (314) and `test_game` (39). No tests are skipped or disabled. That segment’s complete serial result is `artifacts/season-display-baseline.txt`; the initial Segment 8 result remains in `artifacts/segment8-baseline.txt`.
 
 Growth fixtures now use seasonal durations, sky checks follow the moving sun, and market simulation stops at Winter. Fixtures for explicit weather and practice scenarios begin with a deterministic calm Spring; separate state tests still exercise the 15% disaster draw and saved RNG continuity. Scene teardown allows audio playback to finish releasing before engine exit.
 
@@ -319,11 +327,11 @@ Shop filler quotes and all-island duck-limit lists are removed. `duck_pond_view.
 Run `tools/run_tests.sh -j 1 test_harvest_identity test_village_identity test_crop_growth` for first-harvest yield, save/reload, partial/full barns, continuous growth, matching harvest models, animation cleanup and budgets, audio samples and bed/shop picking on the Valley farm. Native `--capture` records screenshots in `artifacts/`.
 
 
-### Cash purchases and weather console
+### Purchases and weather console
 
-`GameState.can_purchase()` accepts finite, nonnegative costs only when the farm has enough cash and the run is active. Shop buttons share that predicate; failed actions emit rejection feedback without inventory changes or success receipts. Account warnings, review overlays and recovery orders are removed.
+`GameState.can_purchase()` accepts finite, nonnegative costs only when the resulting balance stays at or above the ledger’s −5,000 overdraft limit and the run is active. Shop buttons share that predicate; failed actions emit rejection feedback without inventory changes or success receipts. Account warnings, review overlays and recovery orders are removed.
 
-`weather_pages.gd` retains the navy/cyan dashboard with live tank levels, physical protection, costs and timers. `test_weather_dashboard.gd` checks telemetry, cash checkout, warnings and desktop/phone layout; native `--capture` writes isolated previews.
+`weather_pages.gd` retains the navy/cyan dashboard with live tank levels, physical protection, costs and timers. `test_weather_dashboard.gd` checks telemetry, purchase limits, warnings and desktop/phone layout; native `--capture` writes isolated previews.
 
 ### Island surfaces and camera movement
 
@@ -374,7 +382,7 @@ The tax cycle, account purchasing, recovery orders, timed harvest chains, master
 
 Starting cash is 2,000. Base prices are Russet 15, Giant 18, Golden 21, Radioactive 24, Sunburst 27 and Icecap 30. The 75% base seed ratio, bounded seasonal drift, twelve-quote sparklines and signed percentage remain. Tool upgrades cost 300–1,500; each field expansion costs 1,200. Three barn upgrades cost 300/800/2,000, giving 400/1,200/4,400 capacity. All money labels use rounded integers, thousands separators and the Spudion glyph; actual fractional seed costs and sale proceeds are retained.
 
-Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-money suites are deleted. Mixed suites retain ordinary purchase, weather, layout and save coverage with the new values. `test_economy_scale.gd` covers prices, yields across all islands, exact seed ratio, starting funds, upgrades, integer display, cash-only purchases, overdraft persistence and legacy-field removal.
+Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-money suites are deleted. Mixed suites retain ordinary purchase, weather, layout and save coverage with the new values. `test_economy_scale.gd` covers prices, yields, exact seed ratio, starting funds, upgrades, integer display, bounded overdraft purchases, Winter foreclosure and legacy-field removal.
 
 
 ### One farm (Segment 7)
@@ -400,3 +408,16 @@ Run `tools/run_tests.sh -j 1 test_season_clock test_day_night test_game` for the
 
 
 The accelerated calendar regression plays all ten years through the real 30× debug control and next-year buttons, checking each boundary save, both year displays, dismissal and completion. It also deliberately misses state notifications to verify recovery on the next regular HUD refresh. A fresh run did not reproduce the reported original display glitch; this test covers the missed-presentation failure mode without assuming its original trigger. After this change, all 72 suites pass serially and the explicit headless boot passes 39 checks. The touch-input harvest fixture now starts in calm weather so a random Spring disaster cannot obscure its input assertions.
+
+
+### Segment 9: annual ledger
+
+`ledger.gd` owns signed entries `{year, season, category, label, amount}` and the constants from REDESIGN_PLAN §6: 2,000 opening cash, a −5,000 overdraft, the 20,000 original loan and all five fixed-cost postings. It supplies category/year totals, closed years, years in profit and best/worst year. The annual 4,500 bill includes two mortgage entries (1,000 interest and 1,000 principal), 500 rent/tax, 1,500 living and 500 upkeep. Loan principal falls by 1,000 for each billed Winter.
+
+`GameState.coins` is a getter over starting cash plus `ledger.total()`. Production transactions use `post_money()` with their category and label, including climate protection and duck purchases. Debug/fixture assignments to `coins` post an adjustment; they never store a second balance. Sales post their full actual receipts without the former wallet cap. Returned entries are deep copies so presentation cannot mutate the journal. Ended runs reject further state transactions.
+
+Autumn clearing and all fixed costs finish before the boundary save and notifications. Closed-year markers prevent duplicate bills after reload. A balance strictly below −5,000 then sets `run_outcome = "foreclosed"`; equality survives. A surviving year-10 Winter sets `completed`. Foreclosure reports include the same ledger year, net, categories and balance. Save validation rejects independent balances, future or malformed entries, inconsistent closure/cost records and outcomes that disagree with the calendar or journal.
+
+Winter’s cream accounts page shows all thirteen categories, a ten-year table and a large net figure. Its opaque background hides HUD chrome, including fullscreen controls; phone layouts scroll the body while keeping navigation reachable. The completed run opens year-10 accounts first, then offers the ten-year summary and New Run. Regular HUD refreshes still reconcile the calendar after missed callbacks, including the final transition at 30× debug speed. Before year 10, Debug recovery posts an adjustment and returns to Winter without erasing history or charging bills again; finished year-10 runs require a new farm.
+
+Run `tools/run_tests.sh -j 1 test_ledger test_season_clock test_game` for journal/purse equality, actual transaction categories, annual billing, exact foreclosure boundaries, boundary-save ordering, reload idempotence, ten-year completion and accounts navigation. Native `test_ledger.gd -- --integration-test --capture` writes accounts, foreclosure and final-summary previews to `artifacts/`; add `--touch-controls` for portrait bounds and reachable actions.

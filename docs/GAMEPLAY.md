@@ -62,7 +62,7 @@ The farm keeps its angled orthographic 3D view. Drag anywhere on the island to s
 
 The run lasts **ten years**. Spring, Summer and Autumn each last **150 seconds** of working time. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
 
-**Winter pauses the farm** and opens a review menu. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. Year 10 ends with **Ten years complete**; menus and New farm remain available. Every season boundary saves before its menu opens. The year strip and Winter panel follow the current calendar even at accelerated debug speed; dismissing Winter keeps it closed until you reopen it.
+**Winter pauses the farm** and opens the annual accounts: every income and spending category, the year’s net and a running ten-year table on a plain cream page. Press **Start next year** to return to Spring. Escape still closes the panel, and the farm menu always offers a route back to Winter. After year 10’s accounts, **Ten-year summary** shows the total net, years in profit, best and worst year, final purse and remaining loan. The epilogue is still to come; **New Run** starts over. Every season boundary saves before its menu opens, including the Winter bill and any foreclosure. The year strip and Winter panel follow the current calendar even at accelerated debug speed; dismissing Winter keeps it closed until you reopen it.
 
 Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Radioactive **165s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry or frozen crops wait for water or thawing.
 
@@ -73,6 +73,25 @@ Ordinary shop and menu panels keep working time running. Conversations, weather 
 Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
 Pests use independent timers for each bed, rather than farm-wide waves. Each crop is protected for its first 40 seconds after planting. On becoming harvest-ready, it receives a uniformly random 15–90-second pest delay; pests appear only after both the crop-age protection and that delay have elapsed. Sprayers and ducks reset the bed’s delay, and saved games preserve the timers. Each 5-second attack removes one third of the crop’s original maximum yield: 3/3 → 2/3 → 1/3 → destroyed at 15 seconds. Spraying cannot restore eaten potatoes. Visible insects, bite particles, shaking crops, yield labels and warning sounds make attacks clear. Use the bug sprayer on the affected bed to stop further damage; clearing pests gives a fresh grace period. A separate three-chirp alarm warns about pests, repeats every six seconds while they remain, and stops when you clear them. Simultaneous attacks share one alarm; crop loss has its own descending sound. Tool audio cannot cut these warnings off. Insects remain clickable through the same bed target. A destroyed crop shows a brief “Crop lost” notice, then clears its label completely; reloading does not resurrect old notices.
+
+## Annual accounts
+
+Your purse is **2,000 starting Spudions plus every ledger entry**. Sales, seeds, upgrades, protection, ducks, quest payments and Debug adjustments all enter that same journal. The accounts show cash flow, including mortgage principal; net means income minus every payment that year. Opening cash is not income.
+
+Every Winter posts these fixed costs once:
+
+| Cost | Spudions per year |
+| --- | ---: |
+| Mortgage interest | 1,000 |
+| Mortgage principal | 1,000 |
+| Rent and land tax | 500 |
+| Living costs | 1,500 |
+| Equipment upkeep | 500 |
+| **Total** | **4,500** |
+
+The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
+
+Ledger saves use mechanics revision **29**. Pre-ledger saves, including revision 28, are incompatible and are set aside with the existing rejected-save protection; they are not converted into invented transaction histories.
 
 ## The live crop market
 
@@ -133,17 +152,17 @@ To load a newly published version, close all Taterland tabs and reopen the play 
 
 Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again.
 
-After bankruptcy, **Debug access** still accepts the session code. **Recover test farm** restores the chosen positive balance, keeps crops, inventory and progression, and clears the final receipt at 1× time. **Try Again** instead starts a new farm.
+After foreclosure, **Debug access** still accepts the session code. Before year 10, **Recover test farm** posts a balance adjustment, keeps the journal and paid Winter bills, and returns to the Winter accounts at 1× time. Press **Start next year** to resume farming. Year 10 remains finished. **Try Again** starts a new farm with an empty journal.
 
 ### Climate action and bankruptcy
 
 Weather can threaten Spud Valley from the first season. For now, each working season has a **15% chance** of starting a disaster when weather is calm. Winter ends active weather and has no disaster draw. Drought, flood, severe storm and deep freeze can all occur here. Each gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. Open the **Weather & protection** station or menu page to buy irrigation, a larger tank, drainage, barn reinforcement and windbreaks. Protection reduces losses; each project has two levels.
 
-Purchases require enough cash. A balance **strictly below −5,000 Spudions** ends the run; equality remains playable. Ordinary crop sales can cover debt. This temporary overdraft rule will be replaced by the annual ledger.
+The bank lets purchases take the purse down to **−5,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, the complete Winter bill is posted first; a resulting balance **strictly below −5,000** forecloses the farm. Exactly −5,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
 
 The Weather Station has a scanning sensor tower and a navy/cyan console with live tank levels and a compact protection table. Equipment modules show their effect and purchase action; extra timing data is folded away.
 
-A collapse shows the cause, debt limit, weather losses and the final balance. **View Run Summary** reveals the run totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather pressure.
+The foreclosure page shows the accounting year, cause, year net, Winter bill, debt limit, weather losses and final balance. **View Run Summary** reveals that year’s category totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather pressure.
 
 
 ### Connected equipment and isolated testing
