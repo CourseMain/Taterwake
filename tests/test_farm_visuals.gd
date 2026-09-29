@@ -22,8 +22,29 @@ func shot(label: String, point: Vector3=Vector3.ZERO, zoom: float=0) -> void:
 	game.hud._climate_alert.dismiss()
 	await frames(12)
 	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("res://artifacts/farm-visuals-"+label+".png")
+	root.get_texture().get_image().save_png("res://artifacts/farm-corrections-native-"+label+".png")
 	camera.transform=transform; camera.size=size
+func plant_colors(node: Node) -> PackedColorArray:
+	var result := PackedColorArray()
+	for mesh in node.find_children("*","MeshInstance3D",true,false):
+		for surface in range(mesh.mesh.get_surface_count()):
+			result.append_array(mesh.mesh.surface_get_arrays(surface)[Mesh.ARRAY_COLOR])
+	return result
+func unused_ground(w, winter: bool) -> void:
+	for index in [12,24,48]:
+		var patch: MeshInstance3D=w._soil_meshes[index]
+		check(is_equal_approx(patch.scale.y,.12),"locked and unrented beds are flat ground patches")
+		check(w._crop_roots[index].get_meta("unused_blades")== (0 if winter else 3),"unused ground has at most three thin blades, none in Winter")
+		check(not w._ice_roots[index].visible,"locked and unrented beds never draw an ice glaze")
+		check(not w._furrow_roots[index].visible,"unused ground never shows tilled furrows")
+		var vertices:=0
+		for mesh in w._crop_roots[index].find_children("*","MeshInstance3D",true,false):
+			vertices+=mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size()
+			check(mesh.mesh.get_aabb().size.y<.36,"unused blades stay low instead of crop-shaped tufts")
+		check(vertices<=18,"unused grass contains only thin blades, without stone lumps")
+		if winter:
+			var color: Color=patch.material_override.albedo_color
+			check(minf(color.r,minf(color.g,color.b))>.85 and absf(color.b-color.r)<.08,"unused Winter ground is near-white snow")
 func plant(index: int, quality: int=100) -> void:
 	var plot: Dictionary=game.state.plots[index]
 	game.state._clear_crop(plot)
@@ -59,18 +80,33 @@ func run() -> void:
 	farm._clear_crop(farm.plots[0]); game._on_state_changed()
 	check(not art.grades.has(0),"empty bed has no grade marker")
 	w.grade_tag.hide()
+	unused_ground(w,false)
 	for season in range(4):
 		calendar(season)
 		check(art.snow.visible==(season==3),"snow accumulations follow Winter")
 		check(w._player_body.outfit_season==season,"fixed farmer outfit follows season")
 		check(w._tree_specs.all(func(tree): return tree.canopy.visible==(season!=3)),"fruit trees are bare only in Winter")
-		check(art.snow.find_children("*","MeshInstance3D",true,false).size()<=30,"static snow compiles into one layer plus bounded flakes")
+		check(art.snow.find_children("*","MeshInstance3D",true,false).size()<=30,"snow uses two static surfaces plus bounded flakes")
+		if season==3: unused_ground(w,true)
 		await frames()
 		var calls: int=int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 		if DisplayServer.get_name()!="headless": check(calls<=1800,"season draw calls stay near 1538/1585 baseline: %d" % calls)
 		print("FARM ART season ",season," draw calls ",calls)
 		if season<3: await shot("season%d" % season)
-	check(not art.snow.find_children("*","MeshInstance3D",true,false).any(func(mesh): return mesh.material_override is ShaderMaterial),"no island-wide snow sheet remains")
+	check(is_instance_valid(art.snow_ground) and art.snow_ground.visible,"Winter has a continuous snow ground mesh")
+	check(art.snow_ground.mesh.get_aabb().size.y>2,"snow follows all three terraces rather than forming a flat sheet")
+	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"noise leaves about fifteen percent of the ground exposed")
+	check(art.drift_specs.size()>0 and art.drift_specs.size()<=10,"Winter has no more than ten corner drifts")
+	for drift in art.drift_specs:
+		check(drift.corner in ["barn","terrace","gate"],"drifts are restricted to building, terrace and gate corners")
+	# A stale saved or weather ice flag must not put glaze on unopened land.
+	farm.plots[12].winter_ice=true
+	farm.climate.data.operations.ice["24"]=true
+	game._on_state_changed()
+	unused_ground(w,true)
+	farm.plots[12].winter_ice=false
+	farm.climate.data.operations.ice.erase("24")
+	game._on_state_changed()
 	# Footprints originate only from real movement along lanes and stay bounded.
 	w.player.position=Vector3(-14.7,0,15)
 	for i in range(240):
@@ -122,17 +158,31 @@ func run() -> void:
 	# Different hazards change plant geometry and colour, not only the danger ring.
 	calendar(1)
 	plant(0); plant(1,60); plant(2,20)
-	var healthy: Array=[]
 	game._on_state_changed()
-	for mesh in w._crop_tubers[0].node.find_children("*","MeshInstance3D",true,false): healthy.append(mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR])
+	var healthy: PackedColorArray=plant_colors(w._crop_tubers[0].node)
 	for event in ["drought","flood","freeze"]:
 		farm.climate.data.event=event
+		farm.climate.data.phase="active"
 		farm.climate.data.operations.stress={"0":.85,"1":.6,"2":.9}
 		game._on_state_changed()
+		w._climate_field._refresh()
 		check(w._crop_tubers[0].event==event,"plant follows live "+event+" stress")
-		var changed: Array=[]
-		for mesh in w._crop_tubers[0].node.find_children("*","MeshInstance3D",true,false): changed.append(mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR])
-		check(changed!=healthy,"hazard changes compiled plant colours "+event)
+		var changed: PackedColorArray=plant_colors(w._crop_tubers[0].node)
+		var recolored:=0
+		for i in range(mini(changed.size(),healthy.size())):
+			if changed[i]!=healthy[i]: recolored+=1
+		check(recolored>healthy.size()*.65,"overview stress tints most plant vertices, including the potato body: "+event)
+		var border_colors: PackedColorArray=w._climate_field.markings.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+		check(border_colors.has(w.STRESS_BORDER_TINTS[event]),"overview stress has a strong existing border: "+event)
+		farm.climate.data.operations.stress={"0":.3,"1":.31}
+		game._on_state_changed()
+		check(not w._crop_tubers[0].overview_stress and w._crop_tubers[1].overview_stress,"overview stress starts above .3 without waiting for a quantized half-step: "+event)
+		farm.climate.data.phase="recovery"
+		w._climate_field.set_weather(farm.climate_info()); w._climate_field._refresh()
+		border_colors=w._climate_field.markings.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+		check(border_colors.has(w.STRESS_BORDER_TINTS[event]),"remaining stress stays readable during recovery: "+event)
+		farm.climate.data.operations.stress={"0":.85,"1":.6,"2":.9}
+		game._on_state_changed()
 		await shot("stress-"+event,w.plot_positions[1]+Vector3(0,.7,0),9)
 	farm.climate.data.event=""; farm.climate.data.operations.stress.clear(); game._on_state_changed()
 	check(w._crop_tubers[0].event=="" and is_zero_approx(w._crop_tubers[0].node.rotation.z),"rescued plant loses hazard deformation")

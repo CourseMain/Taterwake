@@ -108,12 +108,15 @@ func _refresh() -> void:
 			if int(projects.get("drainage", 0)) > 0: depth *= lerpf(1.0, 0.45, loop.gate_open)
 			water.multimesh.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * (0.95 + depth * 0.85)), pos + Vector3(0, 0.12 + depth * 0.38, 0)))
 			water.multimesh.set_instance_custom_data(i, Color(depth, float(i % 13) / 13.0, 0, 1))
-		if stress > 0.03 and active:
-			var tint := Color("f1be59").lerp(Color("ef6e4b"), stress)
-			for j in range(ceili(stress * 24)):
+		var opened: bool = i < world._live_plots.size() and world._live_plots[i].get("unlocked",true)
+		var strong_border: bool = stress > .3 and world.STRESS_BORDER_TINTS.has(info.event)
+		if opened and ((stress > 0.03 and active) or strong_border):
+			var tint: Color = world.STRESS_BORDER_TINTS[info.event] if strong_border else Color("f1be59").lerp(Color("ef6e4b"), stress)
+			for j in range(24 if strong_border else ceili(stress * 24)):
 				var a: float = float(j) / 24.0 * TAU
 				var b: float = float(j + 1) / 24.0 * TAU
-				_line(pos + Vector3(cos(a), 0.62, sin(a)) * 1.02, pos + Vector3(cos(b), 0.62, sin(b)) * 1.02, 0.06, tint)
+				var lift: float = .78 if strong_border else .62
+				_line(pos + Vector3(cos(a)*1.02,lift,sin(a)*1.02), pos + Vector3(cos(b)*1.02,lift,sin(b)*1.02), .18 if strong_border else .06, tint)
 		if local_weather and info.event == "drought" and stress > 0.15:
 			for j in range(3):
 				var start: Vector3 = pos + Vector3(-0.75 + j * 0.6, 0.025, -0.65)

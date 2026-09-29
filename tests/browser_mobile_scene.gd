@@ -4,6 +4,7 @@ const Stock = preload("res://scripts/graded_stock.gd")
 var game
 var callback
 var art_camera_fixed := false
+var art_view := ""
 func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child(game)
@@ -96,7 +97,12 @@ func command(args: Array) -> void:
 	report.art = {"winter":game.world.visuals.winter,"grades":game.world.visuals.grades,
 		"stored":game.world.visuals.stored_count,"seed":game.world.visuals.seed_count,
 		"outfit":game.world._player_body.outfit_season,
-		"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}
+		"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		"view":art_view,"stress_indices":game.state.climate.data.operations.stress.keys(),
+		"default_zoom":is_equal_approx(game.world.camera.size,game.world.overview_size()),
+		"camera_size":game.world.camera.size,"overview_size":game.world.overview_size(),
+		"locked_beds":game.state.plots.filter(func(plot): return not plot.unlocked).size(),
+		"locked_ice":locked_ice_count()}
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
 	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"step":game.tutorial.current_id(),"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
 	report.labels = []
@@ -112,7 +118,14 @@ func command(args: Array) -> void:
 	collect_buttons(game.conversation, report.buttons)
 	JavaScriptBridge.eval("window.mobileReport=" + JSON.stringify(report),true)
 
+func locked_ice_count() -> int:
+	var count := 0
+	for i in range(game.state.plots.size()):
+		if not game.state.plots[i].unlocked and game.world._ice_roots[i].visible: count += 1
+	return count
+
 func art_scene(view: String) -> void:
+	art_view = view
 	art_camera_fixed = true
 	game.set_process(false)
 	game.conversation.finish()
@@ -121,20 +134,23 @@ func art_scene(view: String) -> void:
 	farm.tutorial_progress.completed = true
 	farm.set_tutorial_active(false)
 	farm.coins = 1200000
-	farm.season_clock.season = 1 if view == "stress" else 3
+	farm.season_clock.season = 1 if view in ["stress","summer"] else 3
 	farm.season_clock.seconds = 75
 	for plot in farm.plots: farm._clear_crop(plot)
-	for i in range(3):
-		farm.plots[i].merge({"unlocked":true,"tilled":true,"stage":2,"crop":"russet","watered":true,"quality":[100,60,20][i],"elapsed":45.0},true)
+	for i in range(12 if view == "summer" else 3):
+		farm.plots[i].merge({"unlocked":true,"tilled":true,"stage":2,"crop":"russet" if view in ["stress","summer"] else "icecap","watered":true,"quality":[100,60,20][i % 3],"elapsed":45.0},true)
 	for id in ["rainwater","drainage","windbreaks","frost"]: farm.climate.data.projects[id] = 1
 	Stock.add(farm.storage,"russet",80,90)
 	farm.trading.keep_seed(farm,"russet","Table",3)
-	if view == "stress":
+	if view in ["stress","summer"]:
 		farm.climate.data.event = "drought"
-		farm.climate.data.operations.stress = {"0":.85,"1":.6,"2":.9}
+		farm.climate.data.phase = "active"
+		farm.climate.data.severity = .5
+		farm.climate.data.timer = 25
+		farm.climate.data.operations.stress = {"0":.85,"1":.6,"2":.9} if view == "stress" else {"7":.85,"9":.65}
 	else:
 		farm.trading.begin_winter(farm)
-		farm.plots[4].winter_ice = true
+		for i in range(12): farm.plots[i].winter_ice = true
 	game._on_state_changed()
 	game.hud.close_panel()
 	game.hud._climate_alert.dismiss()

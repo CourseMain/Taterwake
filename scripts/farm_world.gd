@@ -107,6 +107,8 @@ const LEAF := Color("517e43")
 const TEAL := Color("367b7d")
 const CREAM := Color("f7e4b6")
 const GOLD := Color("efbe53")
+const STRESS_TINTS := {"drought":Color("99683e"), "flood":Color("d1d76b"), "freeze":Color("e1e6e6")}
+const STRESS_BORDER_TINTS := {"drought":Color("d84a24"), "flood":Color("087f83"), "freeze":Color("666caf")}
 const DAY_CYCLE_SECONDS: float = preload("res://scripts/season_clock.gd").SEASON_SECONDS
 var _season_year: int = 1
 var _season_index: int = 0
@@ -126,6 +128,8 @@ var _fence_specs: Array[Dictionary] = []
 var _path_segments: Array[Dictionary] = []
 var _live_plots: Array = []
 var _plant_weather: Dictionary = {}
+var _unused_ground_material: StandardMaterial3D
+var _bed_winter := false
 
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
@@ -395,6 +399,8 @@ func _clear_world() -> void:
 	_path_segments.clear()
 	_live_plots = []
 	_plant_weather.clear()
+	_unused_ground_material = null
+	_bed_winter = false
 	_ducks.clear()
 	_duck_bodies.clear()
 	_materials.clear()
@@ -512,7 +518,7 @@ func set_climate(info: Dictionary) -> void:
 	if is_instance_valid(weather_station): weather_station.set_forecast(info.get("forecast", {}))
 	_climate_ice = info.get("operations", {}).get("ice", {})
 	for i in range(_ice_roots.size()):
-		_ice_roots[i].visible = _climate_ice.has(str(i))
+		_ice_roots[i].visible = i < _live_plots.size() and _live_plots[i].get("unlocked",true) and _climate_ice.has(str(i))
 	set_climate_projects(info.get("projects", {}))
 	set_protection_work(info.get("protection", {}))
 	if not _live_plots.is_empty(): update_plots(_live_plots)
@@ -676,12 +682,12 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 			root.add_child(ice)
 			_ice_roots.append(ice)
 			# Thin polygonal glaze; dark branching seams remain readable under snow.
-			_box(ice, Vector3(0,0.255,0),Vector3(1.88,0.055,1.88),Color("a9cbd4"))
+			_box(ice, Vector3(0,0.255,0),Vector3(1.88,0.055,1.88),Color("dce0de"))
 			for branch in range(6):
 				var a := Vector3(-0.8+branch*0.30,0.289,-0.88)
 				var b := a+Vector3(0.18,0,0.85)
-				_bar(ice,a,b,0.023,Color("698c9e"))
-				_bar(ice,b,b+Vector3(-0.25,0,0.78),0.018,Color("eef7f5"))
+				_bar(ice,a,b,0.023,Color("858e8d"))
+				_bar(ice,b,b+Vector3(-0.25,0,0.78),0.018,Color("f1f2ef"))
 			ice.visible = false
 			var pests := Node3D.new()
 			pests.name = "CropPests"
@@ -718,6 +724,9 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 
 func update_plots(plots: Array) -> void:
 	_live_plots = plots
+	if _unused_ground_material == null:
+		_unused_ground_material = _mat(GRASS.lightened(.08)).duplicate()
+	_update_unused_ground_tint()
 	if is_instance_valid(visuals): visuals.update_grades(plots)
 	for j in range(_lease_boards.size()):
 		_lease_boards[j].visible = plots.size() > (j+1)*24 and not plots[(j+1)*24].get("unlocked", false)
@@ -725,9 +734,9 @@ func update_plots(plots: Array) -> void:
 		var data: Dictionary = plots[i]
 		# Loading can replace a plot dictionary without changing its visual key.
 		if _crop_tubers.has(i): _crop_tubers[i].plot = data
-		if i < _ice_roots.size():
-			_ice_roots[i].visible = _climate_ice.has(str(i))
 		var unlocked: bool = bool(data.get("unlocked", true))
+		if i < _ice_roots.size():
+			_ice_roots[i].visible = unlocked and _climate_ice.has(str(i))
 		var stage: int = int(data.get("stage", 0))
 		var infested: bool = unlocked and stage > 0 and bool(data.get("pests", false))
 		var pest_damage: float = clampf(float(data.get("pest_damage", 0.0)), 0.0, 1.0)
@@ -736,37 +745,33 @@ func update_plots(plots: Array) -> void:
 		var watered: bool = bool(data.get("watered", false))
 		var tilled: bool = bool(data.get("tilled", true))
 		var crop_kind: String = str(data.get("crop", "russet"))
-		var crop_color: Color = _crop_appearance(data).crop
 		# Only the plant grows. Soil marks and the pest-shaking parent stay fixed.
 		_crop_roots[i].scale = Vector3.ONE
 		var key: String = "%s/%d/%s/%s/%s/%s/%d/%s" % [str(unlocked), stage, str(watered), str(tilled), crop_kind, str(infested), damage_level, str(data.get("pest_destroyed", false))]
-		var stress: float = floorf(float(_plant_weather.get("stress", {}).get(str(i),0))*4)/4.0
+		var raw_stress: float = float(_plant_weather.get("stress", {}).get(str(i),0))
+		var stress: float = floorf(raw_stress*4)/4.0
 		var event: String = str(_plant_weather.get("event", "")) if stress > 0 else ""
-		key += "/%s/%.2f" % [event,stress]
+		var overview_stress: bool = raw_stress > .3 and STRESS_TINTS.has(event)
+		key += "/%s/%.2f/%s/%s" % [event,stress,overview_stress,_bed_winter]
 		if key == _plot_states[i]:
 			if _crop_tubers.has(i): _update_crop_tuber(_crop_tubers[i])
 			continue
 		_plot_states[i] = key
 		_crop_tubers.erase(i)
 		var root: Node3D = _crop_roots[i]
+		root.set_meta("unused_blades",0)
 		for child in root.get_children():
 			root.remove_child(child)
 			child.queue_free()
 		_furrow_roots[i].visible = unlocked and tilled
+		_soil_meshes[i].position.y = .105 if unlocked else (.145 if _bed_winter else .027)
+		_soil_meshes[i].scale.y = 1.0 if unlocked else .12
 		_soil_meshes[i].material_override = _mat(Color("66513b") if watered else (SOIL if tilled else Color("8d9c70")))
 		if not unlocked:
-			_soil_meshes[i].material_override = _mat(GRASS.darkened(0.06))
-			for point in [Vector3(-0.55, 0.25, -0.35), Vector3(0.42, 0.26, 0.42)]:
-				_sphere(root, point, Vector3(0.32, 0.2, 0.25), Color("969888"))
-			for weed in range(7):
-				_leaf(root,Vector3(-0.7+(weed%3)*0.6,0.28,(weed/3)*0.5-0.5),Vector3(0.10,0.4,0.08),LEAF.lightened(0.15),0.3)
-			_geometry_batcher.batch_siblings(root)
+			_soil_meshes[i].material_override = _unused_ground_material
+			if not _bed_winter: _unused_blades(root,.04)
 			continue
-		if not tilled and stage == 0:
-			for weed_index in range(3):
-				var weed_pos := Vector3(-0.55 + float(weed_index) * 0.53, 0.30, 0.2 * sin(float(weed_index) * 3.0))
-				_leaf(root, weed_pos, Vector3(0.08, 0.23, 0.08), Color("809d61"), -0.3)
-				_leaf(root, weed_pos + Vector3(0.10, 0.03, 0.0), Vector3(0.08, 0.25, 0.08), Color("9bab75"), 0.3)
+		if not tilled and stage == 0 and not _bed_winter: _unused_blades(root,.22)
 		if watered and stage < 3:
 			for p in range(4):
 				_sphere(root, Vector3(-0.65 + float(p % 2) * 1.3, 0.225, -0.6 + float(p / 2) * 1.2), Vector3(0.13, 0.025, 0.18), Color("8ba39a"))
@@ -779,15 +784,36 @@ func update_plots(plots: Array) -> void:
 					_sphere(root, remains + Vector3(0.10, -0.08, 0.16), Vector3(0.14, 0.055, 0.09), Color("ad8545"))
 			_geometry_batcher.batch_siblings(root)
 			continue
-		var tuber: Node3D = _create_crop_tuber(root, data, event, stress)
+		var tuber: Node3D = _create_crop_tuber(root, data, event, stress, overview_stress)
 		tuber.position = Vector3(0, .25, 0)
-		_crop_tubers[i] = {"node": tuber, "plot": data, "stress":stress, "event":event}
+		_crop_tubers[i] = {"node": tuber, "plot": data, "stress":stress, "event":event, "overview_stress":overview_stress}
 		_update_crop_tuber(_crop_tubers[i])
 		if stage == 3:
 			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), GOLD, 0.12)
 			_ripe_sparkles.append(sparkle)
 		_geometry_batcher.batch_siblings(root)
 	_update_pest_caption_density()
+
+func _update_unused_ground_tint() -> void:
+	if _unused_ground_material == null: return
+	_unused_ground_material.albedo_color = Color("f0f1f0") if _bed_winter else Color(_season_palette.get("grass",GRASS)).lightened(.08)
+
+func _unused_blades(parent: Node3D, base: float) -> void:
+	# Three narrow, bent blades, with no rounded tufts or rock silhouettes.
+	var surface := SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(3):
+		var p := Vector3(-.55+i*.54,base,sin(i*2.6)*.40)
+		var a: Vector3 = p+Vector3(-.018,0,0)
+		var b: Vector3 = p+Vector3(.018,0,0)
+		var tip: Vector3 = p+Vector3(.09,.25+float(i%2)*.035,.045)
+		for vertex: Vector3 in [a,b,tip,tip,b,a]: surface.add_vertex(vertex)
+	surface.generate_normals()
+	var blades := MeshInstance3D.new(); blades.name = "UnusedGrassBlades"
+	blades.mesh = surface.commit()
+	blades.material_override = _mat(Color("b0aa79"))
+	parent.add_child(blades)
+	parent.set_meta("unused_blades",3)
+	_geometry_batcher.batch_siblings(parent)
 
 func _crop_appearance(plot: Dictionary) -> Dictionary:
 	var crop_kind: String = str(plot.get("crop", "russet"))
@@ -799,7 +825,7 @@ func _crop_appearance(plot: Dictionary) -> Dictionary:
 func _crop_tuber_size(plot: Dictionary) -> float:
 	return float({"giant": .90, "sunburst": .70, "icecap": .72}.get(str(plot.get("crop", "russet")), .62))
 
-func _create_crop_tuber(parent: Node3D, plot: Dictionary, event: String = "", stress: float = 0.0) -> Node3D:
+func _create_crop_tuber(parent: Node3D, plot: Dictionary, event: String = "", stress: float = 0.0, overview_stress: bool = false) -> Node3D:
 	# The intro, ordinary growth and harvest all use this same potato.
 	var tuber := Node3D.new()
 	tuber.name = "PotatoTuber"
@@ -808,6 +834,9 @@ func _create_crop_tuber(parent: Node3D, plot: Dictionary, event: String = "", st
 	if event == "flood": appearance.foliage = appearance.foliage.lerp(Color("d3bd53"),stress)
 	if event == "drought": appearance.foliage = appearance.foliage.lerp(Color("a18b4f"),stress*0.65)
 	if event == "freeze": appearance.foliage = appearance.foliage.lerp(Color("cde8ee"),stress)
+	if overview_stress:
+		appearance.crop = appearance.crop.lerp(STRESS_TINTS[event],.78)
+		appearance.foliage = appearance.foliage.lerp(STRESS_TINTS[event],.55)
 	var color: Color = appearance.crop
 	_sphere(tuber, Vector3(0,.58,0), Vector3(1.03,.87,.83), color)
 	_sphere(tuber, Vector3(-.65,.48,.03), Vector3(.45,.52,.59), color.darkened(.07))
@@ -1589,6 +1618,10 @@ func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 		_snowflakes.append(snowflake)
 
 func _set_winter_cover(enabled: bool) -> void:
+	if _bed_winter != enabled:
+		_bed_winter = enabled
+		if not _live_plots.is_empty(): update_plots(_live_plots)
+	_update_unused_ground_tint()
 	if is_instance_valid(visuals):
 		visuals.set_winter(enabled)
 		_winter_cover = visuals.snow

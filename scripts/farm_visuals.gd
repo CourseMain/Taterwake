@@ -1,12 +1,15 @@
 extends Node3D
 ## State-driven island art. Static layers compile together; bounded pools move.
 const Quality = preload("res://scripts/crop_quality.gd")
-const SNOW := Color("e7eef0")
+const SNOW := Color("f0f1f0")
 const WOOD := Color("a78150")
 const PRINT_LIMIT := 96
 const SHARD_LIMIT := 48
 var world
 var snow: Node3D
+var snow_ground: MeshInstance3D
+var snow_exposed_fraction := 0.0
+var drift_specs: Array[Dictionary] = []
 var winter_dirty := true
 var winter := false
 var grades: Dictionary = {}
@@ -54,7 +57,7 @@ func setup(w) -> void:
 	var print_shape := BoxMesh.new(); print_shape.size = Vector3(.16,.014,.31)
 	footprints = _instances("SnowFootprints",print_shape,world._mat(Color("7b939a")),PRINT_LIMIT)
 	var shard_shape := CylinderMesh.new(); shard_shape.bottom_radius=.15; shard_shape.top_radius=.04; shard_shape.height=.045; shard_shape.radial_segments=3
-	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("d2e9ed")),SHARD_LIMIT)
+	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("e2e6e5")),SHARD_LIMIT)
 	stores = _group("WinterBarnSacks")
 	seed_crate = _group("KeptSeedCrate")
 	spoiled = _group("SpoiledSacks")
@@ -128,7 +131,6 @@ func _build_snow() -> void:
 	for tree in world._tree_specs:
 		if not is_instance_valid(tree.parent): continue
 		var cap := _group("BranchSnow",snow); cap.global_transform=tree.parent.global_transform
-		world._sphere(snow,tree.parent.position+Vector3(.55,.08,-.3),Vector3(1.6,.22,1.0),SNOW)
 		for branch in range(5):
 			var tip := Vector3(sin(branch*2.1)*1.05,2.5+float(branch%2)*.65,cos(branch*2.1)*.9)
 			world._bar(cap,Vector3(0,1.6,0),tip+Vector3(0,.075,0),.085,SNOW)
@@ -137,62 +139,58 @@ func _build_snow() -> void:
 		if not is_instance_valid(fence.parent): continue
 		var a: Vector3 = fence.parent.to_global(fence.a)
 		var b: Vector3 = fence.parent.to_global(fence.b)
-		for i in range(maxi(1,ceili(a.distance_to(b)/1.65))):
-			var p: Vector3 = a.lerp(b,float(i)/maxf(1,ceili(a.distance_to(b)/1.65)))
-			var drift: MeshInstance3D=world._sphere(snow,p+Vector3(.13,.09,.18),Vector3(1.25,.30,.45),SNOW)
-			drift.rotation.y=-atan2((b-a).z,(b-a).x)
 		world._bar(snow,a+Vector3(0,.82,0),b+Vector3(0,.82,0),.10,SNOW)
-	for edge: float in world.Surface.STEPS:
-		for x in [-29,-20,-10,0,10,20,29]:
-			var p:=Vector3(x,world.ground_height(x,edge+.24)+.04,edge+.24)
-			world._sphere(snow,p,Vector3(4.1,.24,.45),SNOW)
-	for x in range(-25,27,2):
-		var p := Vector3(x,world.ground_height(x,-24.6),-24.6)
-		world._sphere(snow,p+Vector3(0,.18,0),Vector3(1.5,.40,.65),SNOW)
-	# Small overlapping banks leave exposed grass and the coast visible.
-	for lane in world._path_segments:
-		var a: Vector3=lane.a; var b: Vector3=lane.b
-		var side: Vector3=(b-a).normalized().cross(Vector3.UP)
-		for i in range(ceili(a.distance_to(b)/2.5)):
-			var p: Vector3=a.lerp(b,float(i)/maxf(1,ceili(a.distance_to(b)/2.5)))
-			for sign_value in [-1,1]:
-				var edge: Vector3=p+side*(float(lane.width)*.5+.18)*sign_value
-				edge+=side*sin(i*1.8)*.12
-				edge.y=world.ground_height(edge.x,edge.z)+.09
-				var drift: MeshInstance3D=world._sphere(snow,edge,Vector3(1.8,.20+float(i%3)*.025,.27+float(i%4)*.055),SNOW)
-				drift.rotation.y=-atan2((b-a).z,(b-a).x)
-		_packed_path(a,b,float(lane.width)*.68)
-	for index in range(world.plot_positions.size()):
-		world._sphere(snow,world.plot_positions[index]+Vector3(-.89,.24,0),Vector3(.12,.12,.85),SNOW)
+	for cap in world.get_meta("ridge_wall_caps",[]):
+		world._box(snow,cap.position,Vector3(1.05,.09,.61),SNOW).rotation.y=cap.angle
+	# Wind only heaps snow into sheltered corners, never strings of lane blobs.
+	drift_specs.clear()
+	var barn: Vector3=world.get_node("RedBarn").position
+	_corner_drift(barn+Vector3(-2.95,0,2.15),Vector2(1.20,.75),.36,"barn")
+	_corner_drift(barn+Vector3(2.95,0,-1.8),Vector2(.85,1.1),.29,"barn")
+	for i in range(world.Surface.STEPS.size()):
+		_corner_drift(Vector3(-24.8 if i%2==0 else -21.2,0,world.Surface.STEPS[i]+.41),Vector2(.88,.35),.25,"terrace")
+	for field_offset in [Vector3.ZERO,Vector3(18,0,13),Vector3(1,0,-23)]:
+		_corner_drift(field_offset+Vector3(-1.25,0,6.25),Vector2(.85,.58),.24,"gate")
 	var tank: Vector3=world.ClimateProjects.tank_position(world)
 	var tank_scale: Vector3=world.ClimateProjects.tank_scale(int(world._project_levels.get("rainwater",1)))
-	world._cylinder(snow,tank+Vector3(0,3.57,0),1.30*tank_scale.x,1.30*tank_scale.x,.07,Color("afcdd7"),20)
-	for i in range(5): world._bar(snow,tank+Vector3(-1.0+i*.4,3.615,-.6),tank+Vector3(-.7+i*.4,3.615,.65),.023,Color("eef7f6"))
+	world._cylinder(snow,tank+Vector3(0,3.57,0),1.30*tank_scale.x,1.30*tank_scale.x,.07,Color("d8dedf"),20)
+	for i in range(5): world._bar(snow,tank+Vector3(-1.0+i*.4,3.615,-.6),tank+Vector3(-.7+i*.4,3.615,.65),.023,Color("f3f4f2"))
 	# Evergreen protection trees keep their crowns and collect snow on top.
 	if world._project_nodes.has("windbreaks"):
 		for p in world._project_nodes.windbreaks.get_meta("crowns",[]):
 			world._sphere(snow,p,Vector3(.60,.17,.46),SNOW)
 	_flatten_static(snow)
+	# This single shader surface shares the terrain triangles. Its calibrated
+	# noise holes expose real grass, while all the snow props above are batched.
+	snow_ground=preload("res://scripts/winter_ground.gd").build()
+	snow.add_child(snow_ground)
+	snow_exposed_fraction=float(snow_ground.get_meta("exposed_fraction"))
+	snow.set_meta("exposed_fraction",snow_exposed_fraction)
+	snow.set_meta("drift_count",drift_specs.size())
+	snow.set_meta("drift_specs",drift_specs)
 	world._snowflakes.clear()
 	world._falling_snow(snow,world.Surface.EXTENT*.48)
 
-func _packed_path(a: Vector3, b: Vector3, width: float) -> void:
-	# A continuous top avoids overlapping tile faces flickering in WebGL.
-	var count: int=ceili(a.distance_to(b)/.6)
-	var side: Vector3=(b-a).normalized().cross(Vector3.UP)*width*.5
+func _corner_drift(point: Vector3, extent: Vector2, height: float, corner: String) -> void:
+	point.y=world.ground_height(point.x,point.z)
+	drift_specs.append({"position":point,"extent":extent,"height":height,"corner":corner})
 	var surface:=SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var count:=9
+	var ridge: Vector3=point+Vector3(-extent.x*.18,.13+height,extent.y*.08)
+	var rim: Array[Vector3]=[]
 	for i in range(count):
-		var start: Vector3=a.lerp(b,float(i)/count)
-		var finish: Vector3=a.lerp(b,float(i+1)/count)
-		var middle: Vector3=(start+finish)*.5
-		if middle.z< -12 and middle.z> -16 and absf(middle.x+23)<2: continue
-		for p: Vector3 in [start-side,finish+side,start+side,start-side,finish-side,finish+side]:
-			p.y=world.ground_height(p.x,p.z)+.13
-			surface.add_vertex(p)
+		var angle: float=TAU*i/count
+		var radius: float=.80+.20*sin(i*3.17+drift_specs.size())
+		var p: Vector3=point+Vector3(cos(angle)*extent.x*radius,0,sin(angle)*extent.y*radius)
+		p.y=world.ground_height(p.x,p.z)+.132
+		rim.append(p)
+	for i in range(count):
+		for p in [ridge,rim[i],rim[(i+1)%count]]: surface.add_vertex(p)
 	surface.generate_normals()
-	var path:=MeshInstance3D.new(); path.mesh=surface.commit()
-	path.material_override=world._mat(Color("d0d8cf"))
-	snow.add_child(path)
+	var drift:=MeshInstance3D.new(); drift.mesh=surface.commit()
+	drift.name="CornerSnow"
+	drift.material_override=world._mat(SNOW)
+	snow.add_child(drift)
 
 func on_path(point: Vector3) -> bool:
 	var p := Vector2(point.x,point.z)

@@ -82,6 +82,7 @@ static func _orchard(w) -> void:
 	for x in [1.65,3.35]: w._box(store,Vector3(x,0.35,0),Vector3(0.12,0.7,0.5),WOOD.darkened(0.18))
 
 static func _ridge(w) -> void:
+	var wall_caps: Array[Dictionary] = []
 	for x in [-25,-19,-13,12,19,25]:
 		var first: int = w.get_child_count()
 		w._tree(Vector3(x,w.ground_height(x,-22.6),-22.6),0.85)
@@ -95,6 +96,8 @@ static func _ridge(w) -> void:
 			p.y = w.ground_height(p.x,p.z)+0.22
 			w._box(w,p,Vector3(1.10,0.44,0.50),STONE).rotation.y = -atan2(b.z-a.z,b.x-a.x)
 			w._box(w,p+Vector3(0,0.28,0),Vector3(1.02,0.16,0.58),STONE.lightened(0.06)).rotation.y = -atan2(b.z-a.z,b.x-a.x)
+			wall_caps.append({"position":p+Vector3(0,0.38,0),"angle":-atan2(b.z-a.z,b.x-a.x)})
+	w.set_meta("ridge_wall_caps",wall_caps)
 
 static func _yard(w) -> void:
 	w._ground_path(Vector3(27,0,0),Vector3(33,0,0),1.8)
