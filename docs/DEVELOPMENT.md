@@ -11,7 +11,7 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-undeveloped-b`, published as the GitHub prerelease **v2.0.0(undeveloped:b)** from the `redesign` branch. This tag covers Segments 1–11 and the purchase-receipt Spudion font fix. The earlier `v2.0.0-indevelopment` tag remains available for Segments 1–8. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-undeveloped-c`, published as the GitHub prerelease **v2.0.0(undeveloped:c)** from the `redesign` branch. This tag covers Segments 1–12, including Winter protection, insurance, forecasts, cause cards and the Autumn collection/storage follow-up. The earlier `v2.0.0-undeveloped-b` tag covers Segments 1–11. The earlier `v2.0.0-indevelopment` tag remains available for Segments 1–8. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 

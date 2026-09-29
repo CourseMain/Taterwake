@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0-undeveloped-c
+
+**Game redesign — unfinished source prerelease.** Covers Segments 1–12, including Winter protection and the Autumn collection/storage follow-up. The live browser game remains v1.0.3.1.
+
+- Added two-level rainwater tanks, drainage, windbreaks and frost covers. Reserve projects in Winter, walk to their sites and complete three work actions; unfinished work carries to the next Winter.
+- Added per-bed Winter frost covers for the following Spring, 50% / 75% disaster field-loss reductions and 100 yearly upkeep per completed protection.
+- Added annual crop insurance: 400 in Spring, paying 40% of subsequent Spring–Autumn field losses at base prices when Winter begins.
+- Added next-season forecast ranges with ±20 / ±10 / ±5 percentage points at station levels 0 / 1 / 2. Climate probability remains constant until the next redesign segment.
+- Added crop-loss cause cards to seasonal notices and Winter accounts, including counterfactual savings computed from the same loss formula.
+- Moved buyer collection to the end of Autumn, before spoilage and storage fees. All sacks left in the barn enter Winter storage automatically.
+- Fixed spoilage to round 10% of the whole barn, taking from the largest pile first; a lone sack survives. Cached ledger balances make purse reads constant-time while validation still recomputes entries.
+- Preserved the manual water loop, potato farmer, villagers, handmade farm and cream UI. Removed obsolete reinforced-barn protection and its dedicated assets.
+- Validation: all 76 headless suites pass serially; protection passes 207 checks and the explicit boot passes 39. Native GL Compatibility and desktop/phone protection pages were checked.
+
+Use Godot 4.7.2 to run the source. Saves use the v4 path and mechanics revision 34; incompatible older saves are safely set aside. Later redesign segments remain unfinished. This release does not replace the published browser build.
+
 ## 2.0.0-undeveloped-b
 
 **Game redesign — unfinished source prerelease.** Covers Segments 1–11 and the purchase-receipt currency-symbol fix. The live browser game remains v1.0.3.1.

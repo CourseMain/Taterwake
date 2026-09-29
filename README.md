@@ -1,10 +1,10 @@
 # Taterland
 
-**v2.0.0(undeveloped:b) — Game redesign**
+**v2.0.0(undeveloped:c) — Game redesign**
 
-Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-b).
+Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-c).
 
-The `v2.0.0-undeveloped-b` source prerelease implements redesign Segments 1–11:
+The `v2.0.0-undeveloped-c` source prerelease implements redesign Segments 1–12:
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
@@ -12,8 +12,9 @@ The `v2.0.0-undeveloped-b` source prerelease implements redesign Segments 1–11
 - Five crop cards with water, heat and cold dials; Icecap plants in Autumn and grows through Winter ice.
 - Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
 - Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
-- Winter storage prices, fees and spoilage; one Spring buyer contract due at Autumn start.
-- Warned climate disasters, water management and protection projects.
+- Winter storage prices, fees and spoilage; one Spring buyer contract collected at the end of Autumn.
+- Warned climate disasters, manual water management, Winter protection construction and per-bed frost covers.
+- Annual crop insurance, protection upkeep, forecast ranges and crop-loss cause cards.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
 Deeper climate systems and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
@@ -32,7 +33,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `redesign` branch or the `v2.0.0-undeveloped-b` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch or the `v2.0.0-undeveloped-c` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
