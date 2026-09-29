@@ -621,21 +621,23 @@ suite green; game boots.
 Goal: the second decision.
 
 Selling at harvest pays the current (glut) price. Storing costs 200 per
-Winter, loses 10% of stored sacks to spoilage, and stored sacks sell in
-the next Spring at base × (1.2 to 1.6 depending on volatility). Storage
+Winter, loses 10% of stored sacks to spoilage, and the stored price climbs
+through Winter from base × 1.0 at the start to base × (1.2 to 1.6 depending
+on volatility) by late Winter, then falls back at Spring. Selling stored
+sacks is a Winter action at the barn, so timing within Winter matters. Storage
 capacity is the barn level. Contracts: in Spring, one buyer offers a fixed
 price per sack (base × 1.1) for a quantity due at Autumn; a shortfall costs
 5 per sack. One contract at a time.
 
 UI: the Sell Potatoes page shows per variety: sell now at X, or store; the
 card's sparkline (kept in Segment 4) gains a dashed marker for the expected
-Spring storage price and the signed percentage against base stays beside
+late-Winter storage price and the signed percentage against base stays beside
 the live price; the Winter accounts show storage cost and spoilage; a
 Contracts panel on the buyer board (reuse the Golden Shores board visuals).
 
 Ledger: sales, storage, contracts categories.
 
-Tests: test_market_decisions.gd: storing then selling in Spring pays more
+Tests: test_market_decisions.gd: storing then selling in late Winter pays more
 than selling at harvest in a calm year; spoilage and fee are posted;
 contract shortfall penalty posts; capacity is enforced.
 

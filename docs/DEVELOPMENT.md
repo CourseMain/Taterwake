@@ -15,7 +15,7 @@ The redesign source is version `2.0.0-indevelopment`, published as the GitHub pr
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 31. Earlier saves, including revision 30, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 32. Earlier saves, including revision 31, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -38,7 +38,15 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Segment 10 — current
+#### Segment 11 — current
+
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **75 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including the new `test_market_decisions` (75 checks in the serial baseline), `test_ledger` (110), `test_season_clock` (123) and `test_game` (39). The final retained-sale-quest regression then passes 76 market-decision checks plus all seven quest HUD checks in a focused runner pass. No tests are skipped or disabled. The complete serial report is `artifacts/segment11-baseline.txt`.
+
+The first serial run exposed an old recovery assertion that expected pre-spoilage stock, overlapping buyer/duck interaction targets, and a phone fixture using desktop logical scaling. Recovery now checks surviving stores, the restored board sits beside the northern shops, and the phone fixture uses the game's minimum logical width. The calendar fixture now expects Winter spoilage. All affected suites pass.
+
+The explicit headless boot passes 39 checks, with the existing ObjectDB teardown warning. Native GL Compatibility passes the desktop/phone market-decision checks with touch controls; the dashed price marker, reachable storage actions, buyer result and Winter fee/spoilage account lines were visually inspected. The temporary Web resource pack passes all 76 market-decision checks. Browser runtime automation was not rerun. Published `docs/index.*` and `web/` remain untouched.
+
+#### Segment 10 — historical
 
 Godot 4.7.2, `tools/run_tests.sh -j 1`: **74 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_crop_table` (136 checks), `test_simulation` (54), `test_season_clock` (123), `test_seed_market` (216) and `test_game` (39). No tests are skipped or disabled. The serial report is `artifacts/segment10-baseline.txt`.
 
@@ -371,7 +379,7 @@ Mechanics revision 22 removes random reward purchases, their UI and world buildi
 
 Mechanics revision 23 drops the item catalogue, wearable slots, passive collectibles, item multipliers and mutation discovery/quest fields. `assets/retired_save_fields.json` names legacy crop-storage and order fields solely for conversion; export presets include it. Stored special potatoes merge into ordinary storage by crop and quantity before validation. Malformed quantities and overflow are rejected through the existing rejected-save path. New saves contain no retired fields.
 
-Barn capacity is recomputed from purchased barn levels alone. Existing crops are preserved even when the removed bonuses leave storage over capacity; further harvesting waits until room is available. Current saves therefore permit stored totals above capacity, bounded by `MAX_INVENTORY`, and overfull farms can save/reload. An unfinished special-crop order becomes a bulk order with its original target, delivered count and earned credit. Remaining shipments use ordinary quotes and the normal 25% premium. New bulk offers still start at 400 potatoes.
+Barn capacity is recomputed from purchased barn levels alone. Existing crops are preserved even when the removed bonuses leave storage over capacity; further harvesting waits until room is available. Current saves therefore permit stored totals above capacity, bounded by `MAX_INVENTORY`, and overfull farms can save/reload. Those migration-era orders were removed with the islands. Segment 11 introduces a new single-farm contract format.
 
 Inventory contains crop/seed shelves and five usable tools. The PotatoDex shows the five crop varieties without a discovery tab. The farmer keeps its base body, face and walk/turn animation. Fixed villager costumes live in `npc_avatar.gd`; `npc_portrait.gd` owns only the conversation viewport, lighting and adaptive resolution. The wardrobe preview, wearable meshes and clothing icon families are deleted.
 
@@ -442,10 +450,25 @@ Run `tools/run_tests.sh -j 1 test_ledger test_season_clock test_game` for journa
 
 `crop_table.gd` is the single source for the five varieties, seed costs, base prices, volatility, water/heat/cold dials, grow seasons, growth seconds and sacks per bed. State, HUD, world growth and fixtures read that table. Radioactive is removed, including its icon and field decoration. Base growth is 75–225 seconds, within the stated one- or two-season budget. Combined resilience is `(4 − water_need) + heat_tolerance + cold_tolerance`: 9/8/7/6/5 as prices rise from Russet to Icecap. High water need means lower resilience; high heat/cold tolerance means higher resilience.
 
-Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm rates and protection still apply as before. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 spring storage factors for Segment 11; no storage transactions are implemented here.
+Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm rates and protection still apply as before. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 `storage_peak_factor` values used by the Winter storage curve in Segment 11.
 
 Icecap can be planted in prepared Autumn beds. Autumn clearing preserves its live crop, water and growth, and the Winter notice explains the exception. `crop_frozen()` distinguishes disaster ice from seasonal ice, letting Icecap grow, receive water and be harvested in Winter or early Spring without hoeing. An empty iced bed still needs clearing before new planting. Winter save validation permits Icecap; mechanics revision 31 rejects older crop tables through the existing save protection.
 
-Buy Seeds shows five cards in a desktop row and a scrolling column at phone width. Each has three short bar dials, seed cost, live sack price/percentage, twelve-quote sparkline, growth/yield and last year’s average. Clicking a card selects the seed tool without a purchase. The previous annual mean is base under the current deterministic 600-second sine curve; year one shows a dash. This is a price average, not a realized sale receipt, and must be revised when Segment 11 changes the price model. The existing seed hotbar remains.
+Buy Seeds shows five cards in a desktop row and a scrolling column at phone width. Each has three short bar dials, seed cost, live sack price/percentage, twelve-quote sparkline, growth/yield and last year’s average. Clicking a card selects the seed tool without a purchase. The previous annual mean is base under the current deterministic 600-second sine curve; year one shows a dash. This is a price average, not a realized sale receipt, and remains valid for ordinary sale quotes; the separate Winter storage quote is not part of this average. The existing seed hotbar remains.
 
 Run `tools/run_tests.sh -j 1 test_crop_table test_simulation test_season_clock test_seed_market test_game` for table bounds, resilience ordering, growth budgets, stress, volatility, planting gates, Winter saves/harvests and card layout. Native `test_crop_table.gd -- --integration-test --capture` writes desktop/phone card captures to `artifacts/`; add `--touch-controls` to check the real touch layout.
+
+
+### Segment 11: storage and buyer orders
+
+`market_decisions.gd`, owned by GameState as `trading`, stores commitments (`held`, a subset of `storage`), yearly Winter reports, one active contract and settled orders. Harvest capacity is still the purchased barn capacity; commitments never duplicate sacks or create extra capacity. Climate barn damage and ordinary sales clamp commitments to surviving stock. Holding any harvest over Winter start automatically counts as storage, even without pressing Store. Empty barns pay nothing; other barns pay 200 and lose `ceil(sacks × 0.10)` per variety. Fee and spoilage finish before fixed costs, foreclosure, the boundary save and accounts opening. Reports prevent repeated charges after reload.
+
+Cash charges go through the ledger’s storage category. Spoilage uses `ledger.post(..., 0, true)` to retain a non-cash journal note, with the lost sack count in its label; purse and net are unchanged by that note. Validation checks report/fee/spoilage agreement. Ordinary and stored sales use sales; buyer deliveries and penalties use contracts. No separate coin balance was added.
+
+Stored quotes interpolate linearly from base at Winter second 0 toward base × `storage_peak_factor` (1.2/1.4/1.6) at second 150. `sell_stored()` is gated to Winter and exposed through the barn’s stores panel. Generic sales and F cannot sell that pool in Winter. Icecap harvested during Winter remains ordinary stock. Spring releases unsold stores to ordinary inventory and removes the premium. The user’s Winter-selling amendment takes precedence over the old Spring-sale test/marker wording: the new test compares a late-Winter sale, net of fee and spoilage, with the calm harvest sale and separately verifies Spring reset.
+
+The Sell Potatoes card retains its live signed percentage and history; `price_sparkline.gd` draws a labelled, dashed expected late-Winter level within its scale. Store uses the existing quantity control. The barn lists stored quantities and changing Winter quotes. Annual accounts include storage fee and spoiled sacks. The restored Golden Shores board geometry sits beside the Valley’s northern shops, clear of the duck station and weather controls; it opens Contracts through the same station interaction path. No gacha props were restored.
+
+One Spring offer per year requests 20 sacks, rotates varieties by year, and fixes base × 1.1. The card explicitly states collection at Autumn start. Settlement takes available sacks once, pays for deliveries, and charges 5 per missing sack. Active and settled orders round-trip; malformed prices, quantities, future records and inconsistent postings are rejected. Mechanics revision 32 sets older saves aside through the existing protection.
+
+Run `tools/run_tests.sh -j 1 test_market_decisions test_ledger test_season_clock test_seed_market test_game`. New checks cover net storage benefit, monotonic quotes, Spring reset, new Winter harvests, spoilage notes, fee idempotence, overdraft boundaries including storage, shared capacity, contract collection/penalties, save corruption and UI actions. Native `test_market_decisions.gd -- --integration-test --capture --touch-controls` writes desktop/phone market, board, stores and accounts captures to `artifacts/`.
