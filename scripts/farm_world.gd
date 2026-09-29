@@ -66,7 +66,10 @@ var _cylinder_meshes: Dictionary = {}
 var _sphere_mesh: SphereMesh
 var _geometry_batcher := GeometryBatcher.new()
 var graphics_quality: String = "balanced"
-## Dormant region builders remain available for future regions. Gameplay uses Valley.
+## One Valley landmass; geometry and movement share the same surface.
+const Surface = preload("res://scripts/farm_surface.gd")
+var _ground_material: ShaderMaterial
+var _lease_boards: Array[Node3D] = []
 const REGION: int = 1
 var current_island: int = REGION
 var _ice_roots: Array[Node3D] = []
@@ -126,38 +129,20 @@ const TUTORIAL_STATION_NAMES: Dictionary = {
 
 func build_world() -> void:
 	_clear_world()
+	_geometry_batcher = GeometryBatcher.new()
 	current_island = REGION
 	_rng.seed = 8105 if current_island == 1 else (20482 if current_island == 2 else 31803)
 	_lighting()
-	if current_island == 1:
-		_build_land(_island)
-		_build_land(_paths)
-		_barn(Vector3(-12.0, 0.0, -8.0))
-		_market(Vector3(0.0, 0.0, -9.0))
-		_tool_upgrade_station(Vector3(-6.4, 0.0, -8.5))
-		_windmill(Vector3(-13.2, 0.0, 4.0))
-		_scenery()
-		_valley_dock()
-		_quest_board(Vector3(-12.0, 0.0, 8.1))
-		_buyer_board()
-	elif current_island == 2:
-		_build_land(_tropical_island)
-		_build_land(_tropical_paths)
-		_barn(Vector3(-15.0, 0.0, -10.0))
-		_market(Vector3(-1.0, 0.0, -11.0))
-		_tool_upgrade_station(Vector3(-8.0, 0.0, -10.6))
-		_tropical_scenery()
-		_quest_board(Vector3(-12.0, 0.0, 11.0))
-		_shores_jetty()
-	else:
-		_build_land(_winter_island)
-		_build_land(_winter_paths)
-		_barn(Vector3(-18.0, 0.0, -12.0))
-		_market(Vector3(-3.0, 0.0, -14.0))
-		_winter_scenery()
-		_quest_board(Vector3(-15.0, 0.0, 14.0))
-		_winter_jetty()
-		_ice_forge(Vector3(18.0, 0.0, 2.0))
+	_island()
+	_build_land(_paths)
+	_barn(Vector3(-12.0, 0.0, -8.0))
+	_market(Vector3(0.0, 0.0, -9.0))
+	_tool_upgrade_station(Vector3(-6.4, 0.0, -8.5))
+	_windmill(Vector3(-13.2, 0.0, 4.0))
+	_scenery()
+	_valley_dock()
+	_quest_board(Vector3(-12.0, 0.0, 8.1))
+	_buyer_board()
 	_activity_station()
 	_staff_stalls()
 	_expand_village()
@@ -298,21 +283,16 @@ func station_position(station: String) -> Vector3:
 
 
 func farm_bounds() -> Rect2:
-	var bounds := Rect2(-25, -8, 50, 26) if current_island == 3 else (Rect2(-20, -6, 40, 20) if current_island == 2 else Rect2(-35.5, -5, 70, 17))
-	return Rect2(bounds.position * LAND_SPACING, bounds.size * LAND_SPACING)
-
+	return Rect2(-Surface.EXTENT * 0.5, Surface.EXTENT)
 
 func clamp_walk_position(point: Vector3) -> Vector3:
-	var bounds: Rect2 = farm_bounds()
-	var x: float = clampf(point.x, bounds.position.x, bounds.end.x)
-	var far_edge: float = 9.0 if absf(x) > 23.0 else bounds.end.y
-	return Vector3(x, ground_height(x), clampf(point.z, bounds.position.y, far_edge))
+	return Surface.clamp_point(point)
 
-static func ground_height(x: float) -> float:
-	return 2.0 * clampf((-x - 18.0) / 5.0, 0.0, 1.0)
+static func ground_height(x: float, z: float = 0.0) -> float:
+	return Surface.height_at(x, z)
 
-func walk_route(_from: Vector3, to: Vector3) -> Array[Vector3]:
-	return [clamp_walk_position(to)]
+func walk_route(from: Vector3, to: Vector3) -> Array[Vector3]:
+	return Surface.route(from, to)
 
 func set_tutorial_focus(station: String, show_labels: bool = false) -> void:
 	_tutorial_focus = station
@@ -429,6 +409,10 @@ func _clear_world() -> void:
 	_tutorial_plot_outline = null
 	_tutorial_trail.clear()
 
+func overview_size() -> float:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	return maxf(76.0, 110.0 * view.y / maxf(view.x, 1.0))
+
 func _lighting() -> void:
 	var environment_node := WorldEnvironment.new()
 	environment_node.name = "DayNightEnvironment"
@@ -454,13 +438,16 @@ func _lighting() -> void:
 	camera = Camera3D.new()
 	camera.name = "DioramaCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = (49.0 if current_island == 3 else (43.0 if current_island == 2 else 62.0)) * LAND_SPACING
-	camera.position = Vector3(23.0, 31.0, 33.0) * LAND_SPACING
+	camera.size = overview_size()
+	camera.position = Vector3(14.0, 35.0, 43.0) * LAND_SPACING
 	add_child(camera)
-	camera.look_at(Vector3(0.0, 0.3, 0.5) if current_island == 3 else (Vector3(0.0, 0.3, -1.0) if current_island == 2 else Vector3(-0.3, 0.3, -1.2)))
+	camera.look_at(Vector3(-1.0, 0.3, -5.0))
+	# Orthographic scale is unchanged by backing away along the viewing axis.
+	# Keep even the lowest portrait ray above sea level.
+	camera.position += camera.basis.z * 190.0
 	camera.current = true
-	# Include the expanded shore and offshore previews in the camera depth.
-	camera.far = 140.0
+	# Portrait overview rays must still reach the surrounding ocean.
+	camera.far = 800.0
 
 
 func set_graphics_quality(mode: String) -> void:
@@ -474,7 +461,7 @@ func _apply_graphics_quality() -> void:
 	# One map suits this orthographic diorama; four perspective shadow splits
 	# waste detail and introduce visible boundaries across the flat island.
 	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	_sun.directional_shadow_max_distance = 140.0
+	_sun.directional_shadow_max_distance = 400.0
 	_sun.directional_shadow_fade_start = 1.0
 	# Large unsubdivided terrain near a shadow frustum can produce triangular
 	# pancake artifacts. Keep the full geometry inside the shadow projection.
@@ -573,24 +560,19 @@ func day_cycle_info() -> Dictionary:
 		"daylight": 0.25 + 0.75 * sin(phase * PI)}
 
 func _island() -> void:
-	_prism(self, Vector3(0.0, -1.35, 0.0), 39.5, 30.0, 1.7, Color("8a6346"))
-	_prism(self, Vector3(0.0, -0.58, 0.0), 40.0, 30.4, 0.55, Color("b68b59"))
-	_season_mesh(_prism(self, Vector3(0.0, -0.17, 0.0), 40.3, 30.7, 0.3, GRASS), "grass")
-	var ground := StaticBody3D.new()
-	ground.name = "Ground"
-	ground.set_meta("ground", true)
+	var ground := MeshInstance3D.new()
+	ground.name = "IslandTerrainShell"
+	ground.mesh = Surface.mesh()
+	_ground_material = preload("res://scripts/island_terrain.gd").material(false)
+	_ground_material.set_shader_parameter("farm", true)
+	ground.material_override = _ground_material
+	ground.set_meta("terrain_shell", true)
+	ground.set_meta("land_layout", true)
+	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ground)
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(40.0, 0.15, 30.0)
-	var collision := CollisionShape3D.new()
-	collision.shape = shape
-	collision.position.y = -0.08
-	ground.add_child(collision)
-	# Repeated strata and embedded stones make the floating soil edge readable.
-	for i in range(24):
-		var x: float = -17.0 + float(i) * 1.45
-		var stone := _sphere(self, Vector3(x, -0.98, 15.05), Vector3(0.26, 0.13, 0.07), Color("bd9668"))
-		stone.rotation.z = _rng.randf_range(-0.6, 0.6)
+	ground.create_trimesh_collision()
+	ground.get_child(0).name = "Ground"
+	ground.get_child(0).set_meta("ground", true)
 
 func _paths() -> void:
 	_box(self, Vector3(0.0, 0.025, -4.7), Vector3(30.0, 0.065, 2.0), Color("d4bc82"))
@@ -604,55 +586,52 @@ func _paths() -> void:
 		var pos := Vector3(7.0 + _rng.randf_range(-0.4, 0.4), 0.085, -3.9 + float(i) * 0.8)
 		_box(self, pos, Vector3(0.8, 0.055, 0.48), Color("e4ce98"))
 
-func _field_ground(builder: Callable, center: Vector3, size: Vector3) -> void:
-	var first: int = get_child_count()
-	builder.call()
-	for i in range(first, get_child_count()):
-		var node := get_child(i) as Node3D
-		node.position = node.position * size + center
-		node.scale *= size
-		node.set_meta("land_layout", true)
-
-func _extended_fields() -> void:
-	# The preserved shore strata and upland rock are joined to the Home island.
-	_field_ground(_tropical_island, Vector3(30.25, 0, 0), Vector3(0.52, 1, 0.58))
-	_field_ground(_winter_island.bind(true), Vector3(-33.75, 2, 0), Vector3(0.40, 1, 0.48))
+func _ground_path(a: Vector3, b: Vector3, width: float = 1.8) -> void:
+	var count: int = ceili(a.distance_to(b) / 0.22)
+	var side: Vector3 = (b - a).normalized().cross(Vector3.UP) * width * 0.5
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for point: Vector3 in [Vector3(-23,2,-10), Vector3(-23,2,10), Vector3(-18,0,10), Vector3(-23,2,-10), Vector3(-18,0,10), Vector3(-18,0,-10)]:
-		surface.add_vertex(point)
+	for i in range(count):
+		var start: Vector3 = a.lerp(b, float(i) / count)
+		var finish: Vector3 = a.lerp(b, float(i + 1) / count)
+		for p: Vector3 in [start-side, finish+side, start+side, start-side, finish-side, finish+side]:
+			p.y = ground_height(p.x, p.z) + 0.045
+			surface.add_vertex(p)
 	surface.generate_normals()
-	var ramp := MeshInstance3D.new()
-	ramp.name = "HillApproach"
-	ramp.mesh = surface.commit()
-	ramp.material_override = _mat(Color("a6a077"))
-	add_child(ramp)
-	ramp.create_trimesh_collision()
-	ramp.get_child(0).set_meta("ground", true)
-	_box(self, Vector3(23, 0.025, 7.7), Vector3(23, 0.065, 2.15), Color("d4bc82"))
-	_palm(self, Vector3(39, 0, 6.8), 0.7)
-	_tree(Vector3(-42, 2, 6.8), 0.8)
+	var path := MeshInstance3D.new()
+	path.name = "FarmPath"
+	path.mesh = surface.commit()
+	path.material_override = _mat(Color("d4bc82"))
+	add_child(path)
+
+func _extended_fields() -> void:
+	preload("res://scripts/farm_landscape.gd").build(self)
 
 func _garden() -> void:
-	_garden_field(Vector3.ZERO, 0)
-	_garden_field(Vector3(32, 0, 0), 24)
-	_garden_field(Vector3(-32, 2, 0), 48)
-	for entry: Array in [["Home Field · Sheltered", Vector3(-2, 0, -3.6)], ["Low Field · Floods first", Vector3(30, 0, -3.6)], ["Hill Field · Dries first", Vector3(-34, 2, -3.6)]]:
-		_sign(entry[1], entry[0], Color("587653"))
+	_lease_boards.clear()
+	for entry: Array in [[Vector3.ZERO,0,"Home Field · Sheltered"], [Vector3(18,0,13),24,"Low Field · Floods first"], [Vector3(1,0,-23),48,"Hill Field · Dries first"]]:
+		var offset: Vector3 = entry[0]
+		_garden_field(offset, entry[1])
+		var sign_pos: Vector3 = offset + Vector3(1.5,0,6.7)
+		sign_pos.y = ground_height(sign_pos.x,sign_pos.z)
+		_sign(sign_pos,entry[2],Color("587653"))
+		if entry[1] > 0:
+			var board := _root("FieldToLet",sign_pos+Vector3(-5,0,0))
+			board.rotation.z = -0.10
+			_box(board,Vector3(0,0.6,0),Vector3(0.13,1.2,0.13),Color("95744e"))
+			_box(board,Vector3(0,1.0,0),Vector3(2.6,0.7,0.12),Color("baa174"))
+			_label(board,"To let",Vector3(0,1.05,0.09),28,CREAM)
+			for i in range(5): _leaf(board,Vector3(-0.8+i*0.4,0.35,0),Vector3(0.18,0.75,0.12),LEAF,0.3)
+			_lease_boards.append(board)
 
 func _garden_field(offset: Vector3, first_index: int) -> void:
-	var tropical: bool = current_island == 2
-	var winter: bool = current_island == 3
-	var columns: int = 10 if winter else (8 if tropical else 6)
-	var rows: int = 8 if winter else (6 if tropical else 4)
-	var field_center: Vector3 = Vector3(-0.45, 0.025, 2.55) if winter else (Vector3(-0.35, 0.025, 1.95) if tropical else Vector3(-1.75, 0.025, 1.45))
-	var field_size: Vector3 = Vector3(23.3, 0.08, 18.7) if winter else (Vector3(18.75, 0.08, 14.1) if tropical else Vector3(14.25, 0.08, 9.0))
-	_box(self, field_center + offset, field_size, Color("acbbc0") if winter else (Color("d2b676") if tropical else Color("b9ad71")))
+	var columns: int = 6
+	var rows: int = 4
 	for row in range(rows):
 		for col in range(columns):
 			var index: int = first_index + row * columns + col
-			var pos := Vector3((-10.8 if winter else (-8.4 if tropical else -7.5)) + float(col) * 2.3, 0.0, (-5.5 if winter else (-3.8 if tropical else -2.0)) + float(row) * 2.3)
-			pos += offset
+			var pos := Vector3(-7.5 + col * 2.3, 0, -2.0 + row * 2.3) + offset
+			pos.y = ground_height(pos.x, pos.z)
 			plot_positions.append(pos)
 			var root := Node3D.new()
 			root.name = "Plot_%02d" % index
@@ -700,19 +679,22 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 			_pest_visuals.append({"active": false, "ticks": 0, "destroyed": false, "caption_time": 0.0, "shake_time": 0.0})
 			_plot_states.append("")
 			_target(root, Vector3(0.0, 0.17, 0.0), Vector3(2.08, 0.5, 2.08), "plot_index", index)
-	if first_index > 0: return
-	# Low, open fence leaves each individual plot accessible to the camera.
-	if winter:
-		_fence(Vector3(-12.4, 0.0, -6.8), Vector3(-12.4, 0.0, 12.0), 9)
-		_fence(Vector3(-12.4, 0.0, 12.0), Vector3(11.5, 0.0, 12.0), 11)
-	elif tropical:
-		_fence(Vector3(-10.0, 0.0, -5.0), Vector3(-10.0, 0.0, 9.0), 7)
-		_fence(Vector3(-10.0, 0.0, 9.0), Vector3(9.1, 0.0, 9.0), 9)
-	else:
-		_fence(Vector3(-9.05, 0.0, -3.2), Vector3(-9.05, 0.0, 6.3), 5)
-		_fence(Vector3(-9.05, 0.0, 6.3), Vector3(5.45, 0.0, 6.3), 7)
+	# A full fence with an open, swung gate on the connecting path.
+	var corners: Array[Vector3] = [Vector3(-9.05,0,-3.2),Vector3(5.45,0,-3.2),Vector3(5.45,0,6.3),Vector3(-9.05,0,6.3)]
+	for j in range(4):
+		var a: Vector3 = corners[j]+offset
+		var b: Vector3 = corners[(j+1)%4]+offset
+		a.y = ground_height(a.x,a.z); b.y = ground_height(b.x,b.z)
+		if j == 2:
+			var mid: Vector3 = a.lerp(b,0.35)
+			_fence(a,mid+Vector3(1.25,0,0),2)
+			_fence(mid-Vector3(1.25,0,0),b,4)
+			_fence(mid-Vector3(1.25,0,0),mid+Vector3(-1.25,0,1.6),1)
+		else: _fence(a,b,7 if j % 2 == 0 else 5)
 
 func update_plots(plots: Array) -> void:
+	for j in range(_lease_boards.size()):
+		_lease_boards[j].visible = plots.size() > (j+1)*24 and not plots[(j+1)*24].get("unlocked", false)
 	for i in range(mini(plots.size(), _crop_roots.size())):
 		var data: Dictionary = plots[i]
 		# Loading can replace a plot dictionary without changing its visual key.
@@ -744,11 +726,11 @@ func update_plots(plots: Array) -> void:
 		_furrow_roots[i].visible = unlocked and tilled
 		_soil_meshes[i].material_override = _mat(Color("66513b") if watered else (SOIL if tilled else Color("8d9c70")))
 		if not unlocked:
-			_soil_meshes[i].material_override = _mat(Color("89916a"))
+			_soil_meshes[i].material_override = _mat(GRASS.darkened(0.06))
 			for point in [Vector3(-0.55, 0.25, -0.35), Vector3(0.42, 0.26, 0.42)]:
 				_sphere(root, point, Vector3(0.32, 0.2, 0.25), Color("969888"))
-			_box(root, Vector3(0.0, 0.43, 0.0), Vector3(1.15, 0.12, 0.16), Color("bc9d6d")).rotation.z = 0.46
-			_box(root, Vector3(0.0, 0.43, 0.0), Vector3(1.15, 0.12, 0.16), Color("bc9d6d")).rotation.z = -0.46
+			for weed in range(7):
+				_leaf(root,Vector3(-0.7+(weed%3)*0.6,0.28,(weed/3)*0.5-0.5),Vector3(0.10,0.4,0.08),LEAF.lightened(0.15),0.3)
 			_geometry_batcher.batch_siblings(root)
 			continue
 		if not tilled and stage == 0:
@@ -829,7 +811,7 @@ func set_player_position(pos: Vector3) -> void:
 	var direction: Vector3 = pos - player.position
 	if Vector2(direction.x, direction.z).length() > 0.005:
 		_player_heading = atan2(direction.x, direction.z)
-	player.position = Vector3(pos.x, ground_height(pos.x), pos.z)
+	player.position = Surface.move(player.position, pos)
 
 func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	_time += delta
@@ -890,7 +872,7 @@ func pick(screen_pos: Vector2) -> Dictionary:
 	if camera == null or not is_inside_tree():
 		return {}
 	var origin: Vector3 = camera.project_ray_origin(screen_pos)
-	var end: Vector3 = origin + camera.project_ray_normal(screen_pos) * 200.0
+	var end: Vector3 = origin + camera.project_ray_normal(screen_pos) * camera.far
 	var query := PhysicsRayQueryParameters3D.create(origin, end)
 	var result: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
 	if result.is_empty():
@@ -972,9 +954,9 @@ func _windmill(pos: Vector3) -> void:
 	_sphere(_rotor, Vector3(0.0, 0.0, 0.14), Vector3(0.27, 0.27, 0.18), GOLD)
 
 func _scenery() -> void:
-	for pos in [Vector3(-17.1, 0, -11), Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3, 0, -0.5), Vector3(14.7, 0, 9.7), Vector3(9.2, 0, 12.4)]:
+	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3, 0, -0.5)]:
 		_tree(pos, _rng.randf_range(0.85, 1.2))
-	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(12, 0, 12), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
+	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
 			_sphere(self, pos + Vector3(float(i) * 0.53, 0.38, 0.0), Vector3(0.65, 0.59, 0.6), Color("63905c"))
 	_season_verges()
@@ -987,10 +969,6 @@ func _scenery() -> void:
 		_cylinder(self, pos, 0.025, 0.02, 0.32, Color("567e4b"), 4)
 		var flower_color: Color = Color("f8daa2") if i % 3 == 0 else (Color("d8a3a0") if i % 3 == 1 else Color("f7f0cd"))
 		_sphere(self, pos + Vector3(0.0, 0.19, 0.0), Vector3(0.13, 0.07, 0.13), flower_color)
-	# Leave a proper opening beside the northern path.
-	_fence(Vector3(-15.7, 0.0, -13.0), Vector3(10.0, 0.0, -13.0), 12)
-	_fence(Vector3(13.0, 0.0, -13.0), Vector3(14.6, 0.0, -13.0), 1)
-	_fence(Vector3(18.6, 0.0, -11.3), Vector3(18.6, 0.0, 9.0), 10)
 	# A pond, bridge and dock form a quiet corner beside the village.
 	var pond := _sphere(self, Vector3(12.0, 0.0, 4.5), Vector3(3.45, 0.055, 2.6), Color("729f96"))
 	pond.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1305,31 +1283,6 @@ func _roof(parent: Node3D, width: float, depth: float, base: float, rise: float,
 	_bar(parent, verts[5], verts[4], 0.065, CREAM)
 	_bar(parent, verts[2], verts[5], 0.075, color.lightened(0.15))
 
-func _prism(parent: Node3D, pos: Vector3, width: float, depth: float, height: float, color: Color) -> MeshInstance3D:
-	var x: float = width * 0.5
-	var z: float = depth * 0.5
-	var cut: float = 2.3
-	var points: Array[Vector3] = [Vector3(-x + cut, 0, -z), Vector3(x - cut, 0, -z), Vector3(x, 0, -z + cut), Vector3(x, 0, z - cut), Vector3(x - cut, 0, z), Vector3(-x + cut, 0, z), Vector3(-x, 0, z - cut), Vector3(-x, 0, -z + cut)]
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in range(points.size()):
-		var a: Vector3 = points[i]
-		var b: Vector3 = points[(i + 1) % points.size()]
-		for vertex in [a + Vector3.UP * height / 2, b + Vector3.UP * height / 2, Vector3(0, height / 2, 0), b + Vector3.UP * height / 2, a + Vector3.UP * height / 2, a - Vector3.UP * height / 2, b - Vector3.UP * height / 2, b + Vector3.UP * height / 2, a - Vector3.UP * height / 2]:
-			surface.add_vertex(vertex)
-	surface.generate_normals()
-	var instance := MeshInstance3D.new()
-	instance.mesh = surface.commit()
-	instance.material_override = _mat(color)
-	instance.position = pos
-	# The broad island shells receive prop shadows but do not cast enormous
-	# low-poly silhouettes onto the ocean or their own thin shoreline layers.
-	instance.name = "IslandTerrainShell"
-	instance.set_meta("terrain_shell", true)
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(instance)
-	return instance
-
 func highlight_tiles(indices: Array[int]) -> void:
 	if not is_instance_valid(_area_selection):
 		return
@@ -1526,7 +1479,8 @@ func _die(parent: Node3D, pos: Vector3, size: float, angle: float) -> void:
 
 func _valley_dock() -> void:
 	# Decorative jetty; no boarding route or interaction.
-	var dock := _root("GoldenShoresDock", Vector3(11.5, 0.0, -14.0))
+	var dock := _root("GoldenShoresDock", Vector3(-12.0, 0.0, 20.0))
+	dock.rotation.y = PI
 	for i in range(10):
 		_box(dock, Vector3(0.0, 0.13, -float(i) * 0.44), Vector3(1.9, 0.15, 0.39), Color("b79867"))
 	for x in [-0.87, 0.87]:
@@ -1538,92 +1492,6 @@ func _valley_dock() -> void:
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
 	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 1.85, -0.4))
-
-
-func _tropical_island() -> void:
-	_prism(self, Vector3(0.0, -1.35, 0.0), 45.7, 35.5, 1.6, Color("9d8668"))
-	_prism(self, Vector3(0.0, -0.58, 0.0), 46.0, 36.0, 0.55, Color("b9a884"))
-	var sand := _prism(self, Vector3(0.0, -0.17, 0.0), 46.3, 36.3, 0.30, Color("e5d4ac"))
-	sand.material_override = preload("res://scripts/island_terrain.gd").material(false, Vector2(46.3, 36.3))
-	var ground := StaticBody3D.new()
-	ground.name = "GoldenShoresGround"
-	ground.set_meta("ground", true)
-	add_child(ground)
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(46.0, 0.15, 36.0)
-	var collision := CollisionShape3D.new()
-	collision.shape = shape
-	collision.position.y = -0.08
-	ground.add_child(collision)
-
-
-func _tropical_paths() -> void:
-	_box(self, Vector3(0.0, 0.027, -6.6), Vector3(35.0, 0.07, 2.0), Color("c9b99a"))
-	_box(self, Vector3(10.2, 0.029, 2.0), Vector3(2.0, 0.07, 18.0), Color("c9b99a"))
-	_box(self, Vector3(1.0, 0.032, 10.6), Vector3(30.5, 0.07, 2.1), Color("c9b99a"))
-	for i in range(29):
-		_box(self, Vector3(-15.5 + float(i) * 1.1, 0.075, -6.6 + _rng.randf_range(-0.35, 0.35)), Vector3(0.60, 0.035, 0.65), Color("e4d6b6"))
-	for i in range(15):
-		var paver := _box(self, Vector3(10.2, 0.078, -5.5 + float(i) * 1.02), Vector3(0.76, 0.036, 0.42), Color("e4d6b6"))
-		paver.rotation.y = _rng.randf_range(-0.1, 0.1)
-
-
-func _tropical_scenery() -> void:
-	for point in [Vector3(-21.0, 0.0, -12.5), Vector3(-20.0, 0.0, -3.0), Vector3(-20.3, 0.0, 9.5), Vector3(-16.2, 0.0, 14.7), Vector3(20.1, 0.0, -12.5), Vector3(21.2, 0.0, 3.5), Vector3(20.0, 0.0, 14.6), Vector3(10.9, 0.0, 15.7)]:
-		_palm(self, point, _rng.randf_range(0.9, 1.25))
-	preload("res://scripts/island_terrain.gd").beach_shells(self)
-	for point in [Vector3(-19.0, 0.0, 5.0), Vector3(-17.8, 0.0, -15.0), Vector3(17.1, 0.0, -15.0), Vector3(17.8, 0.0, 13.9)]:
-		for index in range(4):
-			var angle: float = float(index) * 1.9
-			var leaf := _sphere(self, point + Vector3(cos(angle) * 0.35, 0.40, sin(angle) * 0.3), Vector3(0.70, 0.12, 0.28), Color("78a76e"))
-			leaf.rotation = Vector3(0.0, -angle, 0.6)
-		_sphere(self, point + Vector3(0.0, 0.53, 0.0), Vector3(0.17, 0.15, 0.17), Color("f0a269"))
-	for data in [[Vector3(-12.0, 0.0, -6.4), Color("d3a268"), Color("4baca3")], [Vector3(13.5, 0.0, 4.0), Color("dca76e"), Color("88b194")], [Vector3(-14.0, 0.0, 9.0), Color("bd8f61"), Color("63a9b9")]]:
-		var id: String = "nell" if data[0].x == -12 else "edwin" if data[0].x == 13.5 else "tess"
-		var villager := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
-		villager.rotation.y = _rng.randf_range(-0.8, 0.7)
-		_villagers.append(villager)
-	# A beach umbrella and chairs sit clear of the harvest rows.
-	var umbrella := _root("BeachUmbrella", Vector3(-16.2, 0.0, 3.2))
-	_cylinder(umbrella, Vector3(0.0, 1.55, 0.0), 0.045, 0.045, 3.1, Color("a98959"), 6)
-	_cylinder(umbrella, Vector3(0.0, 2.83, 0.0), 1.9, 0.0, 0.62, Color("f0a177"), 10)
-	for x in [-0.7, 0.7]:
-		_box(umbrella, Vector3(x, 0.38, 0.65), Vector3(0.62, 0.12, 1.7), Color("f5e6b9"))
-		var back := _box(umbrella, Vector3(x, 0.76, -0.25), Vector3(0.62, 0.95, 0.12), Color("60b0a4"))
-		back.rotation.x = -0.2
-	for point in [Vector3(-11.5, 0.32, -10.3), Vector3(-11.5, 0.87, -10.3), Vector3(3.0, 0.3, -10.0), Vector3(4.3, 0.3, -10.1)]:
-		_crate(self, point, true)
-	for point in [Vector3(24.2, -0.15, 14.0), Vector3(25.3, -0.15, -5.0), Vector3(-24.8, -0.15, 8.0)]:
-		var buoy := _root("SeaBuoy", point)
-		_sphere(buoy, Vector3.ZERO, Vector3(0.28, 0.34, 0.28), Color("ef906c"))
-		_cylinder(buoy, Vector3(0.0, 0.38, 0.0), 0.06, 0.045, 0.55, CREAM, 6)
-	for i in range(3):
-		var cloud := _root("SeaCloud", Vector3(-21.0 + float(i) * 19.0, 11.0, -23.0))
-		_clouds.append(cloud)
-		for j in range(4):
-			var puff := _sphere(cloud, Vector3(float(j) * 1.1, 0.2 if j % 2 == 0 else 0.0, 0.0), Vector3(1.3, 0.6, 0.75), Color("fbefd4"))
-			puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_sign(Vector3(-5.0, 0.0, 13.2), "GOLDEN SHORES", Color("497f70"))
-
-
-func _palm(parent: Node3D, pos: Vector3, size: float) -> void:
-	var palm := Node3D.new()
-	palm.name = "GoldenPalm"
-	palm.position = pos
-	palm.scale = Vector3.ONE * size
-	parent.add_child(palm)
-	for section in range(5):
-		var fraction: float = float(section) / 5.0
-		var trunk := _cylinder(palm, Vector3(fraction * 0.38, 0.38 + float(section) * 0.64, 0.0), 0.20 - fraction * 0.055, 0.18 - fraction * 0.05, 0.76, Color("aa8755") if section % 2 == 0 else Color("bc9962"), 7)
-		trunk.rotation.z = -0.11
-	for leaf_index in range(8):
-		var angle: float = float(leaf_index) * TAU / 8.0
-		var frond := _sphere(palm, Vector3(0.38 + cos(angle) * 0.86, 3.52, sin(angle) * 0.86), Vector3(1.75, 0.18, 0.46), Color("7aab66") if leaf_index % 2 == 0 else Color("a8ba65"))
-		frond.rotation = Vector3(0.0, -angle, 0.17)
-		var tip := _sphere(palm, Vector3(0.38 + cos(angle) * 1.95, 3.28, sin(angle) * 1.95), Vector3(0.80, 0.13, 0.28), Color("9ebb70"))
-		tip.rotation = Vector3(0.0, -angle, 0.4)
-	for offset in [Vector3(-0.12, 3.24, 0.1), Vector3(0.36, 3.19, 0.2), Vector3(0.13, 3.30, -0.25)]:
-		_sphere(palm, offset + Vector3(0.25, 0.0, 0.0), Vector3(0.22, 0.25, 0.23), Color("a17b4b"))
 
 
 func _sunburst_bloom(parent: Node3D, pos: Vector3) -> void:
@@ -1650,71 +1518,6 @@ func _quest_board(pos: Vector3) -> void:
 	_target(board, Vector3(0.0, 1.35, 0.05), Vector3(2.9, 2.9, 1.05), "station", "quests")
 
 
-func _shores_jetty() -> void:
-	var dock := _root("GoldenShoresHarbor", Vector3(16.0, 0.0, 7.0))
-	for i in range(14):
-		_box(dock, Vector3(0.0, 0.18, -1.8 + float(i) * 0.46), Vector3(3.3, 0.18, 0.41), Color("bd9c67") if i % 2 == 0 else Color("cba974"))
-	# A narrow pier continues from the land-side boarding area over the water.
-	for i in range(20):
-		_box(dock, Vector3(0.60 + float(i) * 0.42, 0.17, 1.65), Vector3(0.37, 0.16, 1.8), Color("bc9b68") if i % 2 == 0 else Color("caaa74"))
-	for x in [3.0, 6.0, 8.35]:
-		for z in [0.85, 2.43]:
-			_cylinder(dock, Vector3(x, -0.05, z), 0.10, 0.10, 1.6, Color("8e704b"), 6)
-	for x in [-1.48, 1.48]:
-		for z in [-1.7, 1.4, 4.0]:
-			_cylinder(dock, Vector3(x, 0.36, z), 0.14, 0.13, 1.30, Color("8e704b"), 7)
-			_cylinder(dock, Vector3(x, 0.87, z), 0.18, 0.18, 0.12, CREAM, 8)
-	_crate(dock, Vector3(-0.67, 0.60, -0.70), true)
-	_crate(dock, Vector3(-0.64, 1.14, -0.70), true)
-	_cylinder(dock, Vector3(0.62, 0.49, -0.60), 0.31, 0.31, 0.32, Color("92816a"), 10)
-	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 2.8, 0.8))
-	for z in [-1.6, 3.8]:
-		var flag_root := Node3D.new()
-		dock.add_child(flag_root)
-		flag_root.position = Vector3(1.50, 0.0, z)
-		_cylinder(flag_root, Vector3(0.0, 1.75, 0.0), 0.045, 0.045, 3.2, Color("a37d49"), 6)
-		_box(flag_root, Vector3(0.43, 2.7, 0.0), Vector3(0.86, 0.53, 0.055), GOLD)
-		_sphere(flag_root, Vector3(0.44, 2.71, 0.05), Vector3(0.13, 0.16, 0.035), Color("fff2bc"))
-
-func _winter_island(bare: bool = false) -> void:
-	_prism(self, Vector3(0.0, -1.35, 0.0), 55.4, 43.4, 1.7, Color("7d8c97"))
-	_prism(self, Vector3(0.0, -0.59, 0.0), 55.8, 43.8, 0.57, Color("b4c4ca"))
-	var snow := _prism(self, Vector3(0.0, -0.15, 0.0), 56.2, 44.2, 0.34, Color("e6eef0"))
-	if bare:
-		snow.material_override = _mat(Color("8d9b80"))
-	else:
-		snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(56.2, 44.2))
-		preload("res://scripts/island_terrain.gd").snowbanks(self)
-	var ground := StaticBody3D.new()
-	ground.name = "FrosthollowGround"
-	ground.set_meta("ground", true)
-	add_child(ground)
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(56.0, 0.15, 44.0)
-	var collision := CollisionShape3D.new()
-	collision.shape = shape
-	collision.position.y = -0.07
-	ground.add_child(collision)
-	if bare: return
-	for i in range(24):
-		var x: float = -25.0 + float(i) * 2.15
-		var icicle := _cylinder(self, Vector3(x, -0.65, 21.98), 0.02, 0.14, _rng.randf_range(0.45, 0.85), Color("d4e8f0"), 5)
-		icicle.rotation.z = 0.05
-
-
-func _winter_paths() -> void:
-	_box(self, Vector3(0.0, 0.035, -8.2), Vector3(40.0, 0.09, 2.0), Color("c4cbc9"))
-	_box(self, Vector3(12.8, 0.038, 3.0), Vector3(2.0, 0.09, 22.0), Color("c4cbc9"))
-	_box(self, Vector3(1.5, 0.040, 14.0), Vector3(38.0, 0.09, 2.2), Color("c4cbc9"))
-	for i in range(34):
-		var paver := _box(self, Vector3(-19.0 + float(i) * 1.12, 0.094, -8.2 + _rng.randf_range(-0.30, 0.30)), Vector3(0.67, 0.04, 0.59), Color("a9b5b9"))
-		paver.rotation.y = _rng.randf_range(-0.12, 0.12)
-	for i in range(17):
-		_box(self, Vector3(12.8, 0.097, -6.8 + float(i) * 1.16), Vector3(0.80, 0.035, 0.46), Color("e2e8e8"))
-	for i in range(20):
-		_box(self, Vector3(-13.0 + float(i) * 1.4, 0.105, 14.0 + (0.14 if i % 2 == 0 else -0.14)), Vector3(0.17, 0.026, 0.29), Color("b6c9d2"))
-
-
 func _snow_roof(parent: Node3D, width: float, depth: float, base: float, rise: float) -> void:
 	var half_width: float = width * 0.5
 	var angle: float = atan2(rise, half_width)
@@ -1726,36 +1529,6 @@ func _snow_roof(parent: Node3D, width: float, depth: float, base: float, rise: f
 		_cylinder(parent, Vector3(-width * 0.46 + float(i) * width * 0.153, base + 0.03, depth * 0.515), 0.01, 0.055, 0.25 + float(i % 3) * 0.08, Color("cce2eb"), 5)
 
 
-func _winter_scenery() -> void:
-	for point in [Vector3(-25,0,-17), Vector3(-25,0,-7), Vector3(-24,0,4), Vector3(-25,0,15), Vector3(-19,0,19), Vector3(25,0,-17), Vector3(25,0,-11), Vector3(25,0,1), Vector3(25,0,17), Vector3(17,0,19)]:
-		_snow_pine(point, _rng.randf_range(0.9, 1.2))
-	for point in [Vector3(-23.5,0,9), Vector3(-23,0,-19), Vector3(4,0,-19), Vector3(24,0,-2), Vector3(12,0,19), Vector3(-10,0,19)]:
-		for i in range(3):
-			var size: float = _rng.randf_range(0.62, 1.1)
-			var pos: Vector3 = point + Vector3(float(i) * 0.68, 0.34, float(i % 2) * 0.35)
-			_sphere(self, pos, Vector3(0.82, 0.65, 0.64) * size, Color("8999a4"))
-			_ground_bank(self, pos + Vector3(0.0, 0.34 * size, -0.02), Vector3(0.79, 0.31, 0.61) * size, Color("e9f0f1"))
-	# The frozen pond is decorative.
-	_sphere(self, Vector3(19.1, 0.00, -4.6), Vector3(4.0, 0.055, 2.35), Color("accedf"))
-	_sphere(self, Vector3(19.0, 0.045, -4.55), Vector3(3.68, 0.03, 2.06), Color("c6e1ed"))
-	for endpoints in [[Vector3(16.3,0.084,-4.2),Vector3(20.2,0.084,-4.8)],[Vector3(18.4,0.086,-6.2),Vector3(19.7,0.086,-3.2)],[Vector3(19.6,0.087,-3.7),Vector3(21.5,0.087,-4.0)]]:
-		_bar(self, endpoints[0], endpoints[1], 0.025, Color("94bbcf"))
-	for i in range(7):
-		_box(self, Vector3(15.3 + float(i) * 0.40, 0.19, -3.3), Vector3(0.34, 0.16, 1.3), Color("9f8e7a"))
-	for data in [[Vector3(-14,0,-8.2),Color("c89b6c"),Color("926d78")],[Vector3(15,0,11.8),Color("c5976d"),Color("9e8868")],[Vector3(-17,0,11.5),Color("d2a574"),Color("728a91")]]:
-		var id: String = "nell" if data[0].x == -14 else "edwin" if data[0].x == 15 else "tess"
-		var resident := _npc_person(self, data[0], id, NpcAvatar.Roster.PEOPLE[id].service)
-		resident.rotation.y = _rng.randf_range(-0.6, 0.65)
-		_villagers.append(resident)
-	for point in [Vector3(-13.8,0.33,-12.2),Vector3(-13.8,0.89,-12.2),Vector3(1.1,0.3,-12.8),Vector3(2.4,0.3,-12.8)]:
-		_crate(self, point, true)
-		_box(self, point + Vector3(0.0,0.55,0.0), Vector3(1.15,0.09,0.84), Color("eef3f3"))
-	for point in [Vector3(-13.8,0,-7.9),Vector3(12.6,0,12.4),Vector3(-16.2,0,14.4)]:
-		_winter_lantern(point)
-	_sign(Vector3(-4.0,0.0,16.0), "FROSTHOLLOW", Color("627d8d"))
-	_falling_snow(self, Vector2(25, 18))
-
-
 func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 	for i in range(28):
 		var snowflake := _sphere(parent, Vector3(_rng.randf_range(-extent.x, extent.x), _rng.randf_range(1.5, 8.0), _rng.randf_range(-extent.y, extent.y)), Vector3.ONE * 0.035, Color("f1f7f8"))
@@ -1765,10 +1538,13 @@ func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 func _set_winter_cover(enabled: bool) -> void:
 	if enabled and not is_instance_valid(_winter_cover):
 		_winter_cover = _root("WinterSnow", Vector3.ZERO)
-		var snow := _prism(_winter_cover, Vector3(0, 0.0, 0), 40.3 * LAND_SPACING, 30.7 * LAND_SPACING, 0.03, Color("e6eef0"))
-		snow.material_override = preload("res://scripts/island_terrain.gd").material(true, Vector2(40.3, 30.7) * LAND_SPACING)
+		var snow := MeshInstance3D.new()
+		snow.mesh = Surface.mesh()
+		snow.position.y = 0.025
+		_winter_cover.add_child(snow)
+		snow.material_override = preload("res://scripts/island_terrain.gd").material(true)
 		snow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_falling_snow(_winter_cover, Vector2(19, 14) * LAND_SPACING)
+		_falling_snow(_winter_cover, Surface.EXTENT * 0.48)
 		var barn: Node3D = get_node_or_null("RedBarn")
 		if is_instance_valid(barn):
 			var roof := Node3D.new()
@@ -1784,28 +1560,6 @@ func _set_winter_cover(enabled: bool) -> void:
 	for roof in _winter_roofs: roof.visible = enabled
 
 
-func _snow_pine(pos: Vector3, size: float) -> void:
-	var tree := _root("SnowPine", pos)
-	tree.scale = Vector3.ONE * size
-	_cylinder(tree, Vector3(0.0,1.5,0.0), 0.24,0.16,3.0,Color("897968"),7)
-	for tier in range(3):
-		var height: float = 1.55 + float(tier) * 1.18
-		var width: float = 1.68 - float(tier) * 0.37
-		_cylinder(tree,Vector3(0.0,height,0.0),width,0.05,2.10,Color("597d79"),8)
-		_cylinder(tree,Vector3(0.0,height+0.20,0.0),width*0.87,0.0,1.88,Color("e5eff1"),8)
-	_sphere(tree,Vector3(0.0,0.10,0.0),Vector3(0.95,0.17,0.85),Color("edf3f3"))
-
-
-func _winter_lantern(pos: Vector3) -> void:
-	var post := _root("WinterLantern",pos)
-	_cylinder(post,Vector3(0.0,1.13,0.0),0.09,0.07,2.26,Color("7d8077"),6)
-	_box(post,Vector3(0.0,2.36,0.0),Vector3(0.39,0.55,0.39),Color("ffe0a1"))
-	_cylinder(post,Vector3(0.0,2.72,0.0),0.35,0.0,0.28,Color("e6eef0"),4)
-	for x in [-0.20,0.20]:
-		for z in [-0.20,0.20]:
-			_box(post,Vector3(x,2.36,z),Vector3(0.035,0.61,0.035),Color("74858b"))
-
-
 func _icecap_bloom(parent: Node3D, pos: Vector3) -> void:
 	_sphere(parent,pos,Vector3(0.12,0.075,0.12),Color("78bada"))
 	for petal in range(6):
@@ -1813,18 +1567,6 @@ func _icecap_bloom(parent: Node3D, pos: Vector3) -> void:
 		var flake := _sphere(parent,pos+Vector3(cos(angle)*0.19,0.02,sin(angle)*0.19),Vector3(0.19,0.045,0.065),Color("eaf8ff"))
 		flake.rotation.y = -angle
 		_sphere(parent,pos+Vector3(cos(angle)*0.31,0.02,sin(angle)*0.31),Vector3(0.045,0.045,0.045),Color("b9e6fa"))
-
-
-func _winter_jetty() -> void:
-	var jetty := _root("FrosthollowJetty",Vector3(22.0,0.0,10.0))
-	for i in range(19):
-		_box(jetty,Vector3(float(i)*0.42-1.0,0.21,0.0),Vector3(0.37,0.20,2.7),Color("ac9980"))
-	for x in [-0.9,2.0,4.9,6.65]:
-		for z in [-1.22,1.22]:
-			_cylinder(jetty,Vector3(x,0.35,z),0.14,0.13,1.8,Color("8b7f70"),7)
-			_sphere(jetty,Vector3(x,1.30,z),Vector3(0.22,0.10,0.22),Color("edf4f5"))
-	_crate(jetty,Vector3(1.1,0.66,-0.75),true)
-	_dock_label = _shop_label(jetty, "Pier", Vector3(0.0,2.35,0.0))
 
 
 func _toolsmith(parent: Node3D, pos: Vector3) -> void:
@@ -1870,27 +1612,6 @@ func _tool_upgrade_station(pos: Vector3) -> void:
 	_toolsmith(shop, Vector3(1.15, 0.11, 0.69))
 	_shop_label(shop, "Tools", Vector3(0, 3.95, 0))
 	_target(shop, Vector3(0, 1.5, 0), Vector3(4.8, 3.2, 3.15), "station", "tools")
-
-
-func _ice_forge(pos: Vector3) -> void:
-	var forge := _root("IceForge",pos)
-	_box(forge,Vector3(0.0,0.18,0.0),Vector3(4.1,0.37,3.6),Color("9ba7aa"))
-	_box(forge,Vector3(0.0,1.40,-0.15),Vector3(3.35,2.45,2.7),Color("8f8b82"))
-	_roof(forge,4.0,3.4,2.70,0.85,Color("66818d"))
-	_snow_roof(forge,4.0,3.4,2.70,0.85)
-	_box(forge,Vector3(-0.6,1.1,1.23),Vector3(1.4,1.67,0.17),Color("59616a"))
-	_box(forge,Vector3(-0.6,0.95,1.34),Vector3(1.05,1.25,0.07),Color("efaf72"))
-	_box(forge,Vector3(-0.6,0.64,1.39),Vector3(0.9,0.38,0.045),Color("ffd993"))
-	_box(forge,Vector3(1.25,3.22,-0.35),Vector3(0.57,1.83,0.63),Color("8c9296"))
-	_box(forge,Vector3(1.25,4.16,-0.35),Vector3(0.73,0.17,0.77),Color("d9e7eb"))
-	_box(forge,Vector3(1.13,0.54,1.85),Vector3(0.6,0.8,0.66),Color("776f64"))
-	_box(forge,Vector3(1.13,1.03,1.85),Vector3(1.15,0.23,0.76),Color("829ba9"))
-	var horn := _cylinder(forge,Vector3(1.85,1.04,1.85),0.19,0.035,0.74,Color("a2b7c3"),6)
-	horn.rotation.z = -PI*0.5
-	_bar(forge,Vector3(0.78,1.15,1.89),Vector3(1.13,1.59,1.89),0.045,Color("c1a274"))
-	_box(forge,Vector3(1.16,1.61,1.89),Vector3(0.45,0.21,0.20),Color("b7cdd8"))
-	_toolsmith(forge, Vector3(-1.1, 0.0, 2.1))
-	_target(forge,Vector3(0.0,1.95,0.4),Vector3(4.6,4.0,4.5),"station","tools")
 
 
 func _animate_winter(delta: float) -> void:
@@ -2186,6 +1907,7 @@ func _apply_season() -> void:
 	var target: Dictionary = season_tints(_season_year, _season_index, _season_signal)
 	for key in target:
 		_season_palette[key] = _season_from.get(key, target[key]).lerp(target[key], _season_blend) if target[key] is Color else lerpf(float(_season_from.get(key, target[key])), float(target[key]), _season_blend)
+	if is_instance_valid(_ground_material): _ground_material.set_shader_parameter("grass_color", _season_palette.grass)
 	for entry in _season_materials:
 		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass
 		elif entry.kind == "canopy":

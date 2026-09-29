@@ -96,7 +96,6 @@ func run() -> void:
 	for button in game.hud._body.find_children("*", "Button", true, false):
 		check(not button.text.to_lower().contains("travel") and button.get_meta("action", "") != "island", "menu has no Travel entry")
 	check(game.world.plot_positions.size() == 72 and is_instance_valid(game.world.weather_station), "Valley geometry and weather station boot together")
-	check(game.world.has_method("_tropical_island") and game.world.has_method("_winter_island"), "dormant region builders retained")
 	for target in game.world._interaction_targets:
 		check(target.get_meta("station", "") != "island", "no jetty boarding interaction")
 	game.debug_unlocked = true

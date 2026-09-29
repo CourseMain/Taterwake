@@ -47,7 +47,7 @@ func _run() -> void:
 			for index: int in range(8):
 				var point: Vector3 = world.camera.global_transform.affine_inverse() * (geometry.global_transform * bounds.get_endpoint(index))
 				contained = contained and -point.z < world.camera.far
-		check(terrain >= 3 and contained, "tighter camera depth still contains all island and offshore geometry")
+		check(terrain == 1 and contained, "one terrain shell and all farm geometry fit the camera depth")
 		world.set_graphics_quality("balanced")
 		check(world._sun.shadow_enabled and world._sun.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL, "balanced uses one orthographic shadow map")
 		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and world._sun.shadow_opacity < 0.8, "balanced removes shadow pancaking and softens silhouette contrast")

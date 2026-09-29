@@ -7,7 +7,6 @@ uniform vec3 deep_color : source_color = vec3(0.19, 0.49, 0.56);
 uniform vec3 foam_color : source_color = vec3(0.84, 0.94, 0.80);
 uniform vec3 horizon_color : source_color = vec3(0.73, 0.84, 0.79);
 uniform float daylight = 1.0;
-uniform float icy = 0.0;
 varying vec2 sea_pos;
 void vertex() {
 	sea_pos = VERTEX.xz;
@@ -20,7 +19,7 @@ void fragment() {
 	float bend = sin(sea_pos.y * 0.30 + water_clock * 0.18) + cos(sea_pos.x * 0.22 - sea_pos.y * 0.10) * 0.45;
 	float ribbon = sin(sea_pos.x * 0.46 + sea_pos.y * 0.25 + bend * 2.2 - water_clock * 0.55);
 	float chop = sin(sea_pos.y * 0.9 - sea_pos.x * 0.3 + water_clock * 0.48);
-	float breaker = sin(shore * 3.0 - water_clock * (1.2 - icy * 0.35) + bend);
+	float breaker = sin(shore * 3.0 - water_clock * 1.2 + bend);
 	float breaks = smoothstep(-0.3, 0.7, sin(UV.y * 0.65 + water_clock * 0.15));
 	float foam = smoothstep(0.86, 0.99, breaker) * breaks * (1.0 - smoothstep(0.8, 4.2, shore));
 	float crest = smoothstep(0.975, 0.996, ribbon) * smoothstep(-0.15, 0.6, chop);
