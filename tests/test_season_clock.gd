@@ -66,7 +66,7 @@ func run() -> void:
 	farm.update(0.25)
 	check(farm.season_clock.season == 3 and farm.season_clock.autumn_loss == 2, "Autumn records both unharvested crops")
 	check(farm.plots.all(func(p): return p.stage == 0 and not p.tilled and p.winter_ice), "every bed freezes after crops and prepared soil are cleared")
-	check(farm.storage.russet == 7 and boundaries == [1, 2, 3], "Winter preserves the barn and saves once")
+	check(farm.storage.russet == 6 and farm.trading.winters["1"].spoiled.russet == 1 and boundaries == [1, 2, 3], "Winter applies barn spoilage and saves once")
 	check(notices.any(func(n): return "2 unharvested beds were lost" in n), "visible notice names Winter loss")
 	farm.climate.data.operations.supply.water = 0
 	farm.climate.data.operations.supply.can = 0

@@ -128,6 +128,7 @@ func _impact(farm) -> void:
 	for crop in farm.storage:
 		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
 		farm.storage[crop] = int(farm.storage[crop]) - lost
+	farm.trading.clamp_stock(farm)
 	var barn_lost: int = held - farm.storage_used()
 	data.field_lost = mini(100000, int(data.field_lost) + destroyed)
 	data.barn_lost = mini(farm.MAX_INVENTORY, int(data.barn_lost) + barn_lost)

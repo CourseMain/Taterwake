@@ -204,7 +204,7 @@ func fit_modal() -> void:
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
-	var height: float = minf(view.y - 24, 620.0) if trading else view.y - 112
+	var height: float = minf(view.y - 24, 1000.0) if trading else view.y - 112
 	if hud._panel_kind == "help":
 		height = minf(height, hud.modal_content_height())
 	elif hud._panel_kind in ["barn", "inventory", "tools"]:

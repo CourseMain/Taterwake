@@ -816,7 +816,7 @@ func _update_hover() -> void:
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
-		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
+		var descriptions: Dictionary = {"market": "Seeds · Click to buy or sell", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "contracts": "Buyer board · Spring orders", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol"
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
@@ -950,7 +950,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "run_summary":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "run_summary", "winter_stores", "contracts":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -981,6 +981,10 @@ func _on_action(action: String) -> void:
 		"forge":
 			_cancel_walk()
 			hud.show_panel("tools", state)
+		"store": state.trading.store(state, parts[1], int(parts[2]))
+		"stored_sell":
+			if hud._panel_kind == "winter_stores": state.trading.sell_stored(state, parts[1])
+		"contract_accept": state.trading.accept(state)
 		"quest": state.claim_quest(parts[1])
 		"close": hud.close_panel()
 		"crop":

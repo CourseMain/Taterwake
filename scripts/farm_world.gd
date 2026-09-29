@@ -109,7 +109,7 @@ var _winter_roofs: Array[Node3D] = []
 const TUTORIAL_STATION_NAMES: Dictionary = {
 	"barn": "Barn", "market": "Seeds", "tools": "Tools",
 	"duck_patrol": "Ducks",
-	"quests": "Quests", "activities": "Activities",
+	"contracts": "Contracts", "quests": "Quests", "activities": "Activities",
 }
 
 func build_world() -> void:
@@ -127,6 +127,7 @@ func build_world() -> void:
 		_scenery()
 		_valley_dock()
 		_quest_board(Vector3(-12.0, 0.0, 8.1))
+		_buyer_board()
 	elif current_island == 2:
 		_build_land(_tropical_island)
 		_build_land(_tropical_paths)
@@ -1990,3 +1991,17 @@ func _animate_activities(delta: float) -> void:
 		body.rotation.z = sin(clock * (11 if active else 2)) * (0.10 if active else 0.03)
 		body.position.y = absf(sin(clock * (11 if active else 2))) * (0.09 if active else 0.015)
 		body.rotation.x = sin(float(patrol.get("peck", 0)) * 18) * 0.35 if float(patrol.get("peck", 0)) > 0 else 0.0
+
+
+func _buyer_board() -> void:
+	# Reuse the Golden Shores buyer board on the Valley farm.
+	var booth: Node3D = _root("BuyerContracts", Vector3(8, 0, -9))
+	for x: float in [-1.25, 1.25]:
+		_box(booth, Vector3(x, 1.4, 0), Vector3(0.14, 2.8, 0.14), Color("826342"))
+	_box(booth, Vector3(0, 1.72, 0), Vector3(2.75, 1.75, 0.17), Color("87654b"))
+	for x: float in [-0.65, 0.65]:
+		_box(booth, Vector3(x, 1.76, 0.105), Vector3(1.03, 1.22, 0.055), Color("ffebbe"))
+		for y: float in [1.5, 1.7, 1.9]: _box(booth, Vector3(x, y, 0.14), Vector3(0.67, 0.04, 0.02), Color("bfaf7e"))
+	_roof(booth, 3.4, 1.55, 2.7, 0.5, Color("d19c54"))
+	_shop_label(booth, "Contracts", Vector3(0, 3.6, 0))
+	_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "contracts")

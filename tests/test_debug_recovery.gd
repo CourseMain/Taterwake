@@ -51,7 +51,7 @@ func run() -> void:
 	game._on_action("debug:recover:2000")
 	await settle()
 	check(not farm.run_over and farm.coins == 2000, "explicit debug recovery resumes farm")
-	check(farm.seed_inventory.russet == 37 and farm.storage.russet == 40 and farm.tools.water == 1, "recovery preserves crops, seeds and tools")
+	check(farm.seed_inventory.russet == 37 and farm.storage.russet == 36 and farm.trading.held.russet == 36 and farm.tools.water == 1, "recovery preserves surviving stores, seeds and tools after Winter spoilage")
 	check(farm.climate.data.collapse.is_empty() and not collapse.visible, "recovery clears stale final receipt")
 	game.hud.close_panel()
 	game._on_action("debug")

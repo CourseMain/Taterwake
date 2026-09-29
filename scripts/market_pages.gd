@@ -32,6 +32,8 @@ var crop_name: Label
 var crop_quote: Label
 var crop_change: Label
 var crop_history: Control
+var store_button: Button
+var storage_note: Label
 var crop_owned: Label
 var crop_image: Control
 var minus: Button
@@ -288,6 +290,11 @@ func _build_sell() -> void:
 	crop_owned.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hero_badges.add_child(crop_owned)
 	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
+	storage_note = _label("", 14, MUTED)
+	add_child(storage_note)
+	store_button = _local_button("Store selected sacks", "market_store", _store)
+	add_child(store_button)
+	add_child(hud._button("Barn stores · Winter selling", "winter_stores"))
 	_build_trade_bar()
 
 func _sparkline(parent: Control) -> Control:
@@ -341,7 +348,7 @@ func _build_trade_bar() -> void:
 	amount_row.add_child(quantity)
 	plus = _local_button("+", "quantity_plus", func() -> void: quantity.value += 1)
 	amount_row.add_child(plus)
-	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = int(hud._state.storage[selected]))
+	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = hud._state.trading.fresh_count(hud._state, selected))
 	amount_row.add_child(maximum)
 	quantity.value_changed.connect(func(_value: float) -> void: refresh())
 	_total_box = hud._vbox(2)
@@ -439,7 +446,7 @@ func refresh() -> void:
 	hud._sell_crop = selected
 	var quote: Dictionary = state.market.get(selected, {})
 	var price: float = float(quote.get("sell", 0.0))
-	var owned: int = int(state.storage.get(selected, 0))
+	var owned: int = state.trading.fresh_count(state, selected)
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
 	crop_name.text = hud._crop_name(selected) + " Potato"
@@ -447,6 +454,11 @@ func refresh() -> void:
 	crop_quote.tooltip_text = "Sale price per potato"
 	_show_price_change(crop_change, selected)
 	crop_history.set_history(quote.get("history", []), MUTED)
+	crop_history.set_expected_price(state.trading.peak_price(selected))
+	crop_history.tooltip_text = "Recent prices · dashed line: expected late-Winter storage price"
+	storage_note.text = "Sell now at %s per sack, or store. Late Winter: up to %s (dashed line). Storage: %s per Winter, 10%% spoilage. Spring resets the price. Set aside: %d sacks." % [state.market_money(price), state.market_money(state.trading.peak_price(selected)), state.money(state.MarketDecisions.STORAGE_FEE), int(state.trading.held[selected])]
+	store_button.disabled = state.run_over or state.season_clock.season == 3 or not quantity.valid or amount < 1 or amount > int(state.storage[selected]) - int(state.trading.held[selected]) or not hud._tutorial.is_empty()
+
 	crop_owned.text = "%s owned" % state.format_number(owned)
 	crop_image.crop = selected
 	crop_image.accent = ACCENTS[selected]
@@ -465,7 +477,7 @@ func navigate(direction: int) -> void:
 	if not selling or crops.size() < 2: return
 	quantity.release_focus()
 	selected = crops[posmod(crops.find(selected) + direction, crops.size())]
-	quantity.set_available(int(hud._state.storage[selected]))
+	quantity.set_available(hud._state.trading.fresh_count(hud._state, selected))
 	quantity.set_value_no_signal(1)
 	_receipt_left = 0
 	refresh()
@@ -477,6 +489,11 @@ func _sell() -> void:
 	refresh()
 	if sell_button.disabled: return
 	hud._act("sell:%s:%d" % [selected, int(quantity.value)])
+
+func _store() -> void:
+	if not quantity.apply(): return
+	refresh()
+	if not store_button.disabled: hud._act("store:%s:%d" % [selected, int(quantity.value)])
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return

@@ -1151,7 +1151,7 @@ func update_state(state: Node) -> void:
 	_top.price_change.add_theme_color_override("font_color", price_change_color(crop))
 	_top.price_change.show()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
-	var held: float = float(storage.get(crop, 0))
+	var held: float = state.trading.fresh_count(state, crop)
 	_quick_sell.text = "Sell held [F] · " + _money(held * float(quote.get("sell", 0)))
 	_quick_sell.disabled = held <= 0
 	var available: Array[String] = _market_crops()
@@ -1414,8 +1414,8 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind in ["market", "sell_potatoes"]:
 		_modal_card.offset_left = -500
 		_modal_card.offset_right = 500
-		_modal_card.offset_top = -220 if kind == "sell_potatoes" else -380
-		_modal_card.offset_bottom = 220 if kind == "sell_potatoes" else 380
+		_modal_card.offset_top = -320 if kind == "sell_potatoes" else -380
+		_modal_card.offset_bottom = 320 if kind == "sell_potatoes" else 380
 	_modal_title.add_theme_color_override("font_color", INK)
 	_modal_title.add_theme_font_override("font", _card_heading_font)
 	_modal_title.add_theme_font_size_override("font_size", 28)
@@ -1453,6 +1453,8 @@ func show_panel(kind: String, state: Node) -> void:
 		"run_summary": _build_run_summary()
 		"dex": _build_dex()
 		"quests": _build_quests()
+		"contracts": _build_contracts()
+		"winter_stores": _build_stores()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
@@ -1585,6 +1587,7 @@ func _build_barn() -> void:
 	_body.add_child(page)
 	_refs.shop_page = page
 	page.setup(self, true)
+	if not _first_harvest_barn(): _body.add_child(_button("Barn stores · Winter selling", "winter_stores", true))
 
 func _build_tools() -> void:
 	var page = ShopPages.new()
@@ -1756,6 +1759,7 @@ func _build_winter() -> void:
 	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
 	_body.add_child(_refs.accounts_net)
 	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
+	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
 	var columns := _hbox(44)
 	_body.add_child(columns)
 	var categories := _vbox(2)
@@ -1812,7 +1816,7 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("h_separation", 10)
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
-	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "coin"], ["Debug", "debug", "", "debug"], ["Duck patrol", "activities", "", "duck"], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["PotatoDex", "dex", "P", "magnify"]]
+	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Contracts", "contracts", "", "book"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "coin"], ["Debug", "debug", "", "debug"], ["Duck patrol", "activities", "", "duck"], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["PotatoDex", "dex", "P", "magnify"]]
 	if _tutorial.is_empty():
 		entries.append(["Weather & protection", "climate", "", "book"])
 	for entry: Array in entries:
@@ -1889,6 +1893,12 @@ func _refresh_graphics() -> void:
 func _refresh_panel() -> void:
 	if _panel_kind == "accounts":
 		_refresh_accounts()
+		return
+	if _panel_kind == "contracts":
+		_refresh_contracts()
+		return
+	if _panel_kind == "winter_stores":
+		_refresh_stores()
 		return
 	if _panel_kind == "climate":
 		_refresh_climate()
@@ -2096,7 +2106,7 @@ func _refresh_inventory() -> void:
 			"crop":
 				detail = "Current value " + _money(float(entry.sell_value))
 				if is_instance_valid(button):
-					button.text = "Sell potatoes"
+					button.text = "View Winter stores" if _state.season_clock.season == 3 and int(_state.trading.held.get(entry.crop, 0)) > 0 else "Sell potatoes"
 					button.disabled = int(entry.count) <= 0
 			"seed":
 				if is_instance_valid(button):
@@ -2415,3 +2425,46 @@ func modal_content_height() -> float:
 		if child != _body.get_parent(): extra += child.get_combined_minimum_size().y
 	extra += maxf(0, visible_children - 1) * column.get_theme_constant("separation")
 	return _body.get_combined_minimum_size().y + extra
+
+
+func _build_contracts() -> void:
+	_heading("Buyer board", "One Spring order · collection at Autumn start")
+	_info("contract_details", "", INK, 20)
+	_body.add_child(_wrap("The buyer automatically takes available sacks when Autumn begins, including sacks set aside for storage. Each missing sack costs %s. One order per year; accepting is binding." % _state.money(_state.MarketDecisions.SHORTFALL_FEE), 17, MUTED))
+	_refs.contract_accept = _button("Accept this order", "contract_accept", true)
+	_body.add_child(_refs.contract_accept)
+	_refresh_contracts()
+
+func _refresh_contracts() -> void:
+	var trade = _state.trading
+	var year: int = _state.season_clock.year
+	var order: Dictionary = trade.contract if not trade.contract.is_empty() else trade.offer(year)
+	var completed: Dictionary = trade.settled.get(str(year), {})
+	_refs.contract_details.text = "%s · %d sacks at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
+	if not completed.is_empty():
+		_refs.contract_details.text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
+	elif not trade.contract.is_empty():
+		_refs.contract_details.text += "\nAccepted · In barn: %d / %d" % [_state.storage[order.crop], order.quantity]
+	elif _state.season_clock.season != 0:
+		_refs.contract_details.text += "\nNext offer arrives in Spring."
+	_refs.contract_accept.disabled = _state.run_over or _state.season_clock.season != 0 or not trade.contract.is_empty() or not completed.is_empty()
+
+func _build_stores() -> void:
+	_heading("Barn stores", "Sell during Winter · prices rise until Spring resets them")
+	_body.add_child(_wrap("Holding a harvest across Winter start costs %s once, with 10%% spoilage rounded up per variety. New Winter harvests sell at the ordinary market. Barn capacity: %d sacks." % [_state.money(_state.MarketDecisions.STORAGE_FEE), _state.capacity], 16, MUTED))
+	for id in _state.CROP_IDS:
+		var card := _card(CREAM, 12)
+		_body.add_child(card)
+		var column := _vbox(5)
+		card.add_child(column)
+		_refs["stored:" + id] = _wrap("", 18, INK)
+		column.add_child(_refs["stored:" + id])
+		_refs["stored_sell:" + id] = _button("Sell these stores", "stored_sell:" + id, true)
+		column.add_child(_refs["stored_sell:" + id])
+	_body.add_child(_button("Back to barn", "barn"))
+	_refresh_stores()
+
+func _refresh_stores() -> void:
+	for id in _state.CROP_IDS:
+		_refs["stored:" + id].text = "%s · %d stored sacks\n%s each now · Late Winter %s" % [_crop_name(id), _state.trading.held[id], _state.market_money(_state.trading.stored_price(_state, id)), _state.market_money(_state.trading.peak_price(id))]
+		_refs["stored_sell:" + id].disabled = _state.run_over or _state.season_clock.season != 3 or int(_state.trading.held[id]) == 0

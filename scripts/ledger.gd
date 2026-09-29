@@ -18,10 +18,10 @@ var _closed_years: Array[int] = []
 var entries: Array[Dictionary]:
 	get: return _entries.duplicate(true)
 
-func post(year: int, season: int, category: String, label: String, amount: float) -> bool:
+func post(year: int, season: int, category: String, label: String, amount: float, record_zero: bool = false) -> bool:
 	if year < 1 or year > 10 or season < 0 or season > 3 or category not in CATEGORIES: return false
 	if label.is_empty() or label.length() > 256 or not is_finite(amount) or not is_finite(balance() + amount): return false
-	if amount != 0.0: _entries.append({"year": year, "season": season, "category": category, "label": label, "amount": amount})
+	if amount != 0.0 or record_zero: _entries.append({"year": year, "season": season, "category": category, "label": label, "amount": amount})
 	return true
 
 func entry_count() -> int:

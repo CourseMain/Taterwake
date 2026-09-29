@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 31
+const MECHANICS_REVISION: int = 32
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -30,6 +30,8 @@ const PEST_TICK_SECONDS: float = 5.0
 const QUEST_TARGETS: Dictionary = {"starter_crash": 10.0, "starter_spike": 10.0, "starter_combo": 12.0}
 const DEFAULT_SAVE_PATH: String = "user://taterland_save_v4.json"
 const PROTECTED_SAVE_PATHS: Array[String] = ["user://spud_valley_save.json", "user://spud_valley_save_v3.json"]
+const MarketDecisions = preload("res://scripts/market_decisions.gd")
+var trading = MarketDecisions.new()
 const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
 const MAX_GROW_SECONDS: float = 450.0
@@ -193,7 +195,7 @@ func inventory_info() -> Array[Dictionary]:
 		if int(seed_inventory[crop]) > 0:
 			entries.append({"id": "seed:" + crop, "kind": "seed", "crop": crop, "name": str(CropTable.CROPS[crop]["name"]) + " Seeds", "count": int(seed_inventory[crop]), "rarity": "seed", "description": "Plant in a prepared bed.", "effect": "Select these seeds for planting", "active": selected_crop == crop, "action": "crop:" + crop})
 		if int(storage[crop]) > 0:
-			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CropTable.CROPS[crop]["name"], "count": int(storage[crop]), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": float(market[crop]["sell"]) * int(storage[crop])})
+			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CropTable.CROPS[crop]["name"], "count": int(storage[crop]), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": crop_barn_value(crop)})
 	for tool in ["hoe", "plant", "water", "harvest", "pest"]:
 		var title: String = {"hoe": "Hoe", "plant": "Seed pouch", "water": "Watering can", "harvest": "Scythe", "pest": "Pest sprayer"}[tool]
 		entries.append({"id": "tool:" + tool, "kind": "tool", "name": title, "count": 1, "level": int(tools.get(tool, 0)) + 1, "effect": "Use this farming tool", "action": "tool:" + tool})
@@ -432,6 +434,8 @@ func update(delta: float) -> void:
 
 
 func _season_boundary() -> void:
+	if season_clock.season == 2: trading.settle(self)
+	if season_clock.season == 0: trading.held = CropTable.empty_stock()
 	var was_over: bool = run_over
 	if season_clock.finished():
 		_end_run("completed")
@@ -446,6 +450,7 @@ func _season_boundary() -> void:
 			plot.winter_ice = true
 		climate.end_working_year()
 		farm_help.refresh_pests(self)
+		trading.begin_winter(self)
 		ledger.post_fixed_costs(season_clock.year)
 		if coins < OVERDRAFT_LIMIT: _end_run("foreclosed")
 		news = winter_notice()
@@ -722,13 +727,15 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 		return "Run over. Start a new farm."
 	if not CropTable.CROPS.has(id) or quantity == 0 or quantity < -1:
 		return _finish("Choose a crop and an amount to sell.")
-	if quantity > int(storage[id]):
+	if quantity > trading.fresh_count(self, id):
 		return _finish("Not enough %s. You own %s; choose a smaller quantity." % [CropTable.CROPS[id]["name"], format_number(storage[id])])
-	var amount: int = int(storage[id]) if quantity == -1 else quantity
+	var amount: int = trading.fresh_count(self, id) if quantity == -1 else quantity
 	if amount <= 0:
+		if season_clock.season == 3 and int(trading.held[id]) > 0: return _finish("Sell stored sacks at Barn stores during Winter.")
 		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CropTable.CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
 	storage[id] = int(storage[id]) - amount
+	trading.clamp_stock(self)
 	post_money("sales", "Sold %d %s sacks" % [amount, id], earnings)
 	_record_sales(earnings)
 	var sold_quote: float = float(market[id]["sell"])
@@ -750,10 +757,14 @@ func storage_used() -> int:
 	return total
 
 
+func crop_barn_value(id: String) -> float:
+	var value: float = float(market[id].sell) * trading.fresh_count(self, id)
+	if season_clock.season == 3: value += trading.stored_price(self, id) * int(trading.held[id])
+	return value
+
 func barn_value() -> float:
 	var total: float = 0.0
-	for id in CROP_IDS:
-		total += float(market[id]["sell"]) * int(storage[id])
+	for id in CROP_IDS: total += crop_barn_value(id)
 	return minf(MAX_MONEY, total)
 
 
@@ -913,6 +924,7 @@ func reset_game() -> void:
 	selected_crop = "russet"
 	seed_inventory = CropTable.empty_stock()
 	storage = CropTable.empty_stock()
+	trading = MarketDecisions.new()
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
 	news = "Harvest your Russets. Catch a good price. Sell with F!"
@@ -927,7 +939,7 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
-		"ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
+		"trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
 		"pest_timer": pest_timer, "selected_crop": selected_crop,
@@ -959,6 +971,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
 	ledger.load_data(data.ledger)
+	trading.load_data(data.trading)
 	accounts_open = false
 	run_outcome = data.run_outcome
 	run_over = data.run_over
@@ -1078,6 +1091,7 @@ func _valid_save(raw: Variant) -> bool:
 		if not data.get(key) is Dictionary or data[key].size() != CROP_IDS.size(): return false
 		for id in CROP_IDS:
 			if not _number(data[key].get(id), 0, MAX_INVENTORY, true): return false
+	if not trading.valid(data.get("trading"), data): return false
 	if not data.get("tools") is Dictionary or data.tools.size() != 3: return false
 	for key in TOOL_COSTS:
 		if not _number(data.tools.get(key), 0, 3, true): return false

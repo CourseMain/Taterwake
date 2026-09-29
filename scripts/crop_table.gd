@@ -9,9 +9,9 @@ const CROPS: Dictionary = {
 	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 225.0, "yield": 3, "color": "aeeaff"},
 }
 const VOLATILITY: Dictionary = {
-	"low": {"drift": 0.05, "spring_storage_factor": 1.2},
-	"mid": {"drift": 0.10, "spring_storage_factor": 1.4},
-	"high": {"drift": 0.15, "spring_storage_factor": 1.6},
+	"low": {"drift": 0.05, "storage_peak_factor": 1.2},
+	"mid": {"drift": 0.10, "storage_peak_factor": 1.4},
+	"high": {"drift": 0.15, "storage_peak_factor": 1.6},
 }
 static func empty_stock() -> Dictionary:
 	var stock: Dictionary = {}

@@ -272,7 +272,7 @@ func _build_barn() -> void:
 		contents.add_child(detail)
 		hud._refs["item:" + id + ":detail"] = detail
 		var action: String = str(entry.get("action", ""))
-		if kind == "crop": action = "sell:" + str(entry.get("crop", "russet")) + ":-1"
+		if kind == "crop": action = "winter_stores" if hud._state.season_clock.season == 3 and int(hud._state.trading.held.get(entry.crop, 0)) > 0 else "sell:" + str(entry.get("crop", "russet")) + ":-1"
 		if not action.is_empty():
 			var button := _button("Select", action, GREEN if kind in ["crop"] else HONEY, kind == "crop")
 			contents.add_child(button)
