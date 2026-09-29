@@ -11,7 +11,7 @@ func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
 	check(farm.coins == 2000 and farm.bankruptcy_limit() == -5000, "starting funds and overdraft boundary")
-	var prices := {"russet":15.0, "giant":18.0, "golden":21.0, "sunburst":27.0, "icecap":30.0}
+	var prices := {"russet":15.0, "giant":20.0, "golden":28.0, "sunburst":38.0, "icecap":50.0}
 	for crop: String in prices:
 		check(State.CropTable.CROPS[crop].base == prices[crop], crop + " base price")
 		check(State.CropTable.CROPS[crop].seed == prices[crop] * 0.75 and farm.market[crop].seed == prices[crop] * 0.75, crop + " fixed seed ratio")

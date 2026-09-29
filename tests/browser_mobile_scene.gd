@@ -1,4 +1,5 @@
 extends Node
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Disposable browser QA only. No player saves or production debug bridge.
 var game
 var callback
@@ -10,7 +11,7 @@ func _ready() -> void:
 	game.state.capacity = 100000
 	game.state.pest_timer = 1000
 	for id in game.state.CROP_IDS:
-		game.state.storage[id] = 500
+		game.state.storage[id] = Stock.pile(500)
 		game.state.seed_inventory[id] = 100
 	game._on_state_changed()
 	callback = JavaScriptBridge.create_callback(command)
@@ -26,7 +27,7 @@ func command(args: Array) -> void:
 		game.set_process(false)
 		game.state.reset_game()
 		game.state.tutorial_progress = {"version": 2, "step": 7, "completed": false, "plot": 4}
-		game.state.storage.russet = 9
+		game.state.storage["russet"] = Stock.pile(9)
 		game.hud._inventory_tab = "tools"
 		game.tutorial.start()
 		game._on_action("barn")
@@ -41,7 +42,7 @@ func command(args: Array) -> void:
 		game.state.coins = 10000 if stocked else -1000.0
 		game.state.capacity = 100000 if stocked else 200
 		for id in game.state.CROP_IDS:
-			game.state.storage[id] = 500 if stocked else 0
+			game.state.storage[id] = Stock.pile(500 if stocked else 0)
 			game.state.seed_inventory[id] = 100 if stocked else 0
 		game._on_state_changed()
 	elif action == "tank": game._select_equipment("tank")
@@ -89,7 +90,7 @@ func command(args: Array) -> void:
 	report.frozen_crops = game.state.climate.data.operations.ice.size()
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
-	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":game.state.storage.russet,"coins":game.state.coins}
+	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
 	report.labels = []
 	collect_labels(game.hud._modal_card, report.labels)
 	collect_labels(game.conversation, report.labels)

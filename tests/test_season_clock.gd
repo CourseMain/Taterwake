@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const Clock = preload("res://scripts/season_clock.gd")
 const SAVE := "user://season_clock_test_only.json"
@@ -59,14 +60,14 @@ func run() -> void:
 	check(not farm.plots[5].tilled, "Autumn blocks tilling")
 	farm.plots[0].merge({"stage": 1, "tilled": true}, true)
 	farm.plots[1].merge({"stage": 3, "tilled": true, "watered": true, "elapsed": State.CropTable.CROPS.russet.grow}, true)
-	farm.storage.russet = 7
+	farm.storage["russet"] = Stock.pile(7)
 	var notices: Array = []
 	farm.notified.connect(func(message): notices.append(message))
 	farm.season_clock.seconds = 149.75
 	farm.update(0.25)
 	check(farm.season_clock.season == 3 and farm.season_clock.autumn_loss == 2, "Autumn records both unharvested crops")
 	check(farm.plots.all(func(p): return p.stage == 0 and not p.tilled and p.winter_ice), "every bed freezes after crops and prepared soil are cleared")
-	check(farm.storage.russet == 6 and farm.trading.winters["1"].spoiled.russet == 1 and boundaries == [1, 2, 3], "Winter applies barn spoilage and saves once")
+	check(Stock.count(farm.storage, "russet") == 7 and farm.trading.winters["1"].spoiled.russet == 0 and boundaries == [1, 2, 3], "Winter applies barn spoilage and saves once")
 	check(notices.any(func(n): return "2 unharvested beds were lost" in n), "visible notice names Winter loss")
 	farm.climate.data.operations.supply.water = 0
 	farm.climate.data.operations.supply.can = 0

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -33,7 +34,7 @@ func run() -> void:
 	game.state.coins = 100000
 	game.state.barn_level = 3
 	game.state._recompute_capacity()
-	game.state.storage.russet = 1000
+	game.state.storage["russet"] = Stock.pile(1000)
 	# Keep unrelated random pests outside this flood's preparation window.
 	game.state.pest_timer = 100.0
 	for plot in game.state.plots:

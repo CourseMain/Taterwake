@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 
 const State = preload("res://scripts/game_state.gd")
 const SAVE := "user://gacha_removal_test_only.json"
@@ -21,7 +22,7 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.coins = 4321.0
-	farm.storage.russet = 17
+	farm.storage["russet"] = Stock.pile(17)
 	farm.quest_progress.starter_combo = 5
 	check(farm.save_game(SAVE), "farm saves")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(SAVE))

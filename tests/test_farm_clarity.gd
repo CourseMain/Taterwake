@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Quiet feedback under repeated input, small contextual help and readable signs.
 var game
 var checks: int = 0
@@ -76,10 +77,10 @@ func run() -> void:
 	state.plots[5].stage = 3
 	state.plots[5].crop = "russet"
 	state.plots[5].tilled = true
-	state.storage.russet = state.capacity
+	state.storage["russet"] = Stock.pile(state.capacity)
 	game.perform_plot(5, "harvest")
 	check(hud._context.text == "Barn full · Sell crops [F]" and not hud._toast_box.visible, "full barn retains actionable feedback without a toast")
-	state.storage.russet = 0
+	state.storage["russet"] = Stock.pile(0)
 	game.perform_plot(6, "hoe")
 	check(hud._farm_hint_remaining == 0.0, "successful work clears the previous failure reminder")
 	hud._process(3.1)

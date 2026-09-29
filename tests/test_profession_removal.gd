@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Retired activities cannot return through saves, menus or world interactions.
 const State = preload("res://scripts/game_state.gd")
 const SAVE := "user://profession_removal_test_only.json"
@@ -22,7 +23,7 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.coins = 4321.0
-	farm.storage.russet = 17
+	farm.storage["russet"] = Stock.pile(17)
 	farm.quest_progress.starter_combo = 5
 	var saved: Dictionary = farm._save_data()
 	check(not saved.has("builds"), "saves omit build progression")
@@ -31,7 +32,7 @@ func run() -> void:
 	farm.reset_game()
 	farm.plots[0].merge({"tilled": true, "stage": 3, "crop": "russet", "watered": true, "elapsed": 10.0}, true)
 	farm.interact_plot(0, "harvest")
-	check(farm.storage.russet == 3, "ordinary first harvest has no build bonus")
+	check(Stock.count(farm.storage, "russet") == 3, "ordinary first harvest has no build bonus")
 	check(farm.affected_tiles(0, "hoe").size() == 1 and farm.crop_growth_speed("russet") == 1.0, "base tools and growth have no build bonus")
 	for island in [1]:
 		check(game.world.find_child("WashAndSortWorkshop", true, false) == null, "island %d has no workshop" % island)

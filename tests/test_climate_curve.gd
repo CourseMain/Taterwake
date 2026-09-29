@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const Climate = preload("res://scripts/climate_system.gd")
 const World = preload("res://scripts/farm_world.gd")
@@ -87,21 +88,21 @@ func run() -> void:
 	for event in Climate.WINTER_LOSS:
 		farm = fresh(); farm.rng.seed = 6
 		Protection.insure(farm)
-		farm.storage.russet = 100
+		farm.storage["russet"] = Stock.pile(100)
 		farm.season_clock.season = 2; farm.season_clock.seconds = 149.75; farm.update(0.25)
 		farm.climate.end_working_year()
-		farm.storage.icecap = 12 # Fresh Winter harvest is not part of stored sacks.
+		farm.storage["icecap"] = Stock.pile(12)# Fresh Winter harvest is not part of stored sacks.
 		farm.plots[0].merge({"stage":2, "crop":"icecap", "tilled":true, "watered":true, "elapsed":50.0}, true)
 		var empty: Dictionary = farm.plots[1].duplicate(true)
 		var before: float = farm.coins
 		check(farm.climate.begin_warning(farm, event, 1), "Winter warning begins")
 		farm.climate.update(farm, 45)
-		var barn_lost: int = roundi(90 * float(Climate.WINTER_LOSS[event]))
+		var barn_lost: int = roundi(95 * float(Climate.WINTER_LOSS[event]))
 		var field_lost: int = roundi(3 * float(Climate.WINTER_LOSS[event]))
-		check(farm.storage.russet == 90 - barn_lost and farm.trading.held.russet == farm.storage.russet, "Winter event removes and clamps actual stored sacks")
-		check(farm.storage.icecap == 12, "Winter barn damage only hits stored sacks, not fresh harvests")
+		check(Stock.count(farm.storage, "russet") == 95 - barn_lost and Stock.count(farm.trading.held, "russet") == Stock.count(farm.storage, "russet"), "Winter event removes and clamps actual stored sacks")
+		check(Stock.count(farm.storage, "icecap") == 12, "Winter barn damage only hits stored sacks, not fresh harvests")
 		check(Protection.remaining(farm.plots[0]) == 3 - field_lost and farm.plots[1] == empty, "Winter hits living Icecap and leaves empty beds untouched")
-		check(is_equal_approx(farm.coins - before, (barn_lost * 15 + field_lost * 30) * 0.4), "annual insurance pays Winter barn and field loss exactly once")
+		check(is_equal_approx(farm.coins - before, (barn_lost * 15 + field_lost * 50) * 0.4), "annual insurance pays Winter barn and field loss exactly once")
 		check(farm.save_game(SAVE) and farm.load_game(SAVE), "active Winter losses and insurance survive reload")
 		before = farm.coins; farm.climate.update(farm, 0.25)
 		check(farm.coins == before, "reload does not repeat impact or payout")

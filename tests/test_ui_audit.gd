@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Inspect every menu at both ends, including expanded sections and long rewards.
 var game
 var checks: int = 0
@@ -51,7 +52,7 @@ func run() -> void:
 	game.state.coins = 223e15
 	for crop: String in game.state.CROP_IDS:
 		game.state.seed_inventory[crop] = 30
-		game.state.storage[crop] = 10
+		game.state.storage[crop] = Stock.pile(10)
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
 	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help", "climate"]:

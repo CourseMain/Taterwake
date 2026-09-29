@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Real scene interactions; never touches the player's save.
 var game
 var checks: int = 0
@@ -86,7 +87,7 @@ func run() -> void:
 		await shot("ducks-%d-trained" % island)
 	game.state.selected_crop = "sunburst"
 	game.state.market.sunburst.sell = 90000
-	game.state.storage.sunburst = 100
+	game.state.storage["sunburst"] = Stock.pile(100)
 	game._on_action("activities")
 	root.size = Vector2i(960, 600)
 	game._on_action("duck_patrol")

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Committed harvests, interrupted receipts, ordinary crops and safe reloads.
 var game
 var checks: int = 0
@@ -74,7 +75,7 @@ func run() -> void:
 	ready_plot(6)
 	game.perform_plot(6, "harvest")
 	fx.animate(2)
-	game.state.storage.russet = game.state.capacity-1
+	game.state.storage["russet"] = Stock.pile(game.state.capacity-1)
 	ready_plot(5,true)
 	game.perform_plot(5,"harvest")
 	check(game.state.storage_used() == game.state.capacity and game.state.plots[5].stage == 3 and game.state.plots[5].pending > 0, "partial harvest retains uncollected inventory on its crop")
@@ -83,7 +84,7 @@ func run() -> void:
 	game.perform_plot(5,"harvest")
 	check(fx.active.is_empty(), "full barn produces no fake successful harvest")
 	check(game.tone_remaining == 0, "blocked harvest produces no success chime")
-	game.state.storage.russet -= 1
+	Stock.take(game.state.storage, "russet", 1)
 	game.perform_plot(5,"harvest")
 	check(fx.active.size() == 1, "partial harvest can resume while receipts remain cosmetic")
 	var batch: Dictionary = {}

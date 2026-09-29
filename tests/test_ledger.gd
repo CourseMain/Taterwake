@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const Ledger = preload("res://scripts/ledger.gd")
 const SAVE := "user://ledger_test_only.json"
@@ -28,7 +29,7 @@ func run() -> void:
 	farm.buy_seeds("russet", 2)
 	check(farm.ledger.total(1, "seeds") == -22.5, "seed purchase has its own signed category")
 	purse(farm)
-	farm.storage.russet = 3
+	farm.storage["russet"] = Stock.pile(3)
 	farm.sell_crop("russet", 2)
 	check(farm.ledger.total(1, "sales") == 30, "sale is posted at the actual quote")
 	purse(farm)
@@ -79,7 +80,7 @@ func run() -> void:
 	check(farm.ledger.total(1, "other") == other_before + farm.QUEST_REWARD, "quest cash is journaled")
 	purse(farm)
 	farm.reset_game()
-	farm.storage.russet = 10000
+	farm.storage["russet"] = Stock.pile(10000)
 	farm.sell_crop("russet")
 	check(farm.coins == 152000 and farm.ledger.total(1, "sales") == 150000, "sales never silently cap proceeds outside the journal")
 	purse(farm)

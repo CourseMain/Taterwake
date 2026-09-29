@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Transaction-level receipt checks. Creates fresh farms; never reads or writes saves.
 const State = preload("res://scripts/game_state.gd")
 const Activities = preload("res://scripts/island_activities.gd")
@@ -170,7 +171,7 @@ func _test_ducks_and_services() -> void:
 	_failure(func(): return activities.train_ducks(), "maximum duck speed")
 	_fresh()
 	_clear_signals()
-	state.storage.russet = 1
+	state.storage["russet"] = Stock.pile(1)
 	state.sell_crop("russet")
 	state.select_crop("giant")
 	check(receipts.is_empty() and rejected.is_empty(), "selling and selecting do not masquerade as purchases")

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const Ops = preload("res://scripts/climate_operations.gd")
 var game
 var checks := 0
@@ -66,7 +67,7 @@ func run() -> void:
 	farm.update(1)
 	check(farm.plots[0].elapsed == growth,"frozen crop growth stops")
 	farm.interact_plot(0,"hoe")
-	farm.storage.icecap = 0
+	farm.storage["icecap"] = Stock.pile(0)
 	game.hud.show_panel("activities",farm)
 	farm.interact_plot(0,"hoe")
 	check(not Ops.frozen(farm,0) and farm.plots[0].stage==2,"hoe clears ice and preserves crop")

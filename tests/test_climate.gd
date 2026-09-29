@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const Climate = preload("res://scripts/climate_system.gd")
 const SAVE: String = "user://taterland_climate_test_only.json"
@@ -29,7 +30,7 @@ func fresh() -> void:
 		plot.elapsed = 0.0
 		plot.crop = "russet"
 		plot.watered = false
-	state.storage.russet = 1000
+	state.storage["russet"] = Stock.pile(1000)
 	state._refresh_market()
 
 func save_load() -> void:
@@ -60,13 +61,13 @@ func run() -> void:
 		var before_field: int = state.plots.size()
 		var before_coins: float = state.coins
 		check(state.climate.begin_warning(state, event, 1.0), "start warned " + event)
-		check(state.climate.data.phase == "warning" and state.storage.russet == 1000 and state.climate.data.field_lost == 0 and state.coins == before_coins, "warning gives time to prepare without damage or tax collection")
+		check(state.climate.data.phase == "warning" and Stock.count(state.storage, "russet") == 1000 and state.climate.data.field_lost == 0 and state.coins == before_coins, "warning gives time to prepare without damage or tax collection")
 		state.update(44.999)
 		check(state.climate.data.phase == "warning" and state.climate.data.field_lost == 0, "disaster never arrives before its complete warning")
 		save_load()
 		state.update(0.001)
 		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
-		check(state.storage.russet == 1000, "weather leaves barn stock intact")
+		check(Stock.count(state.storage, "russet") == 1000, "weather leaves barn stock intact")
 		state._refresh_market()
 		check(state.market.russet.sell >= state.CropTable.CROPS.russet.base * 0.85 and state.market.russet.seed == state.CropTable.CROPS.russet.base * 0.75, "weather leaves seed prices at 75% of base")
 		state.update(30.0)

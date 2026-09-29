@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## A staged introduction stays calm, readable, and safe around every shop.
 const State = preload("res://scripts/game_state.gd")
 const HUD = preload("res://scripts/game_hud.gd")
@@ -119,7 +120,7 @@ func run() -> void:
 	var sale_guide: Dictionary = guide(["hoe", "plant", "water", "harvest"], ["coins", "market"], ["sell:russet:", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer", "close"])
 	sale_guide["id"] = "sell"
 	sale_guide["continue"] = false
-	state.storage.russet = 3
+	state.storage["russet"] = Stock.pile(3)
 	hud.set_tutorial(sale_guide)
 	hud.show_panel("sell_potatoes", state)
 	await settle()
@@ -130,7 +131,7 @@ func run() -> void:
 	actions.clear()
 	sale_page.quantity.value = 2
 	sale_page._sell()
-	check(actions == ["sell:russet:2"], "guided sale dispatches the selected quantity through the existing whitelist")
+	check(actions == ["sell:russet:2:Standard"], "guided sale dispatches the selected quantity through the existing whitelist")
 	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
 	state.coins = 1e9
 	for panel: String in ["barn", "inventory", "tools", "quests", "duck_patrol", "island", "pause"]:

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Optional help changes real mechanics: protect first pests, preserve quote timing,
 ## count independent farming, and never manufacture a major stock/tax event.
 const State = preload("res://scripts/game_state.gd")
@@ -43,7 +44,7 @@ func run() -> void:
 	state.update(float(state.CropTable.CROPS.russet.grow) + 0.1)
 	state.interact_plot(5, "harvest")
 	check(state.farm_help.data.independent == 3, "real independent crop waits for a sale")
-	state.storage.golden = 1
+	state.storage["golden"] = Stock.pile(1)
 	state.sell_crop("golden")
 	check(state.farm_help.data.independent == 3, "unrelated crop sale cannot complete the independent crop")
 	state.sell_crop("russet")

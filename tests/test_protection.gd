@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const Protection = preload("res://scripts/farm_protection.gd")
 const SAVE := "user://protection_test_only.json"
@@ -27,7 +28,7 @@ func run() -> void:
 			var stocked = fresh()
 			Protection.insure(stocked)
 			stocked.season_clock.season = season
-			for crop in State.CropTable.IDS: stocked.storage[crop] = 100
+			for crop in State.CropTable.IDS: stocked.storage[crop] = Stock.pile(100)
 			var stock: Dictionary = stocked.storage.duplicate()
 			stocked.climate.begin_warning(stocked, event, 1)
 			stocked.update(149.75)
@@ -35,7 +36,7 @@ func run() -> void:
 			check(stocked.climate.data.protection.losses.is_empty(), "weather on an empty field creates no barn cause cards")
 			check(stocked.save_game(SAVE) and stocked.load_game(SAVE), "safe barn stock and field-only weather history survive reload")
 			winter(stocked)
-			check(stocked.climate.data.protection.winters["1"].payout == 0 and stocked.storage_used() == 450, "Winter storage spoilage remains, without a weather insurance claim")
+			check(stocked.climate.data.protection.winters["1"].payout == 0 and stocked.storage_used() == 475, "Winter storage spoilage remains, without a weather insurance claim")
 			stocked.free()
 	for event in Protection.PROJECT_FOR:
 		for rank in range(3):
@@ -56,9 +57,9 @@ func run() -> void:
 			check(farm.save_game(SAVE) and farm.load_game(SAVE), "damaged crop and cause card round-trip")
 			if rank > 0:
 				farm.climate.data.operations.ice.clear()
-				farm.storage.icecap = 0
+				farm.storage["icecap"] = Stock.pile(0)
 				farm.interact_plot(0, "harvest")
-				check(farm.storage.icecap == quantity - lost, "surviving protected sacks can be harvested exactly once")
+				check(Stock.count(farm.storage, "icecap") == quantity - lost, "surviving protected sacks can be harvested exactly once")
 			farm.free()
 	for rank in range(3):
 		var field = fresh()

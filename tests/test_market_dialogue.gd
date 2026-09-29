@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Navigation must never masquerade as another visit to the seed seller.
 const SAVE := "user://taterwake_market_dialogue_test_only.json"
 var game
@@ -38,7 +39,7 @@ func run() -> void:
 	state.tutorial_progress.completed = true
 	state.npc_history.clear()
 	state.coins = 10000
-	state.storage.giant = 7
+	state.storage["giant"] = Stock.pile(7)
 	game.hud.close_panel()
 
 	# The first ordinary Buy entry retains the intended introduction.

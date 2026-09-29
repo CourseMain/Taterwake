@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const Table = preload("res://scripts/crop_table.gd")
 const State = preload("res://scripts/game_state.gd")
 const SAVE := "user://crop_table_test_only.json"
@@ -76,7 +77,7 @@ func run() -> void:
 		farm.update(75 + autumn_second)
 		check(farm.plots[5].stage == 3 and farm.plots[5].winter_ice and farm.season_clock.season == (3 if autumn_second == 0 else 0), "Icecap ripens through Winter ice or early Spring")
 		farm.interact_plot(5, "harvest")
-		check(farm.storage.icecap == 3 and farm.plots[5].winter_ice, "Icecap harvest works through uncleared bed ice")
+		check(Stock.count(farm.storage, "icecap") == 3 and farm.plots[5].winter_ice, "Icecap harvest works through uncleared bed ice")
 		check(farm.save_game(SAVE) and farm.load_game(SAVE), "harvested Icecap bed remains valid saved state")
 		var before: float = farm.coins
 		farm.sell_crop("icecap")

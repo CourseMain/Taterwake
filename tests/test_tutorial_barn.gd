@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## First-harvest sale remains reachable from a remembered inventory tab.
 var game
 var checks: int = 0
@@ -44,9 +45,9 @@ func check_crops() -> void:
 func sell_harvest() -> void:
 	var coins_before: float = game.state.coins
 	var sales_before: float = game.state.lifetime_sales
-	check(game.state.storage.russet > 0, "real harvest stored before selling")
+	check(Stock.count(game.state.storage, "russet") > 0, "real harvest stored before selling")
 	press("sell:russet:-1")
-	check(game.state.storage.russet == 0, "sale clears harvested Russets")
+	check(Stock.count(game.state.storage, "russet") == 0, "sale clears harvested Russets")
 	check(game.state.coins > coins_before and game.state.lifetime_sales > sales_before, "sale credits coins")
 	check(not game.tutorial.active and game.state.tutorial_progress.completed, "barn sale completes lesson")
 

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Real capacity changes, alert actions and warning visibility; isolated saves.
 var game
 var checks: int = 0
@@ -19,10 +20,10 @@ func run() -> void:
 	game.set_process(false)
 	game.state.tutorial_progress.completed = true
 	game.hud.set_tutorial({})
-	game.state.storage.russet = game.state.capacity - 1
+	game.state.storage["russet"] = Stock.pile(game.state.capacity - 1)
 	game.hud.update_state(game.state)
 	check(not game.hud._barn_full_alert.visible, "almost full storage does not show a full-barn alert")
-	game.state.storage.russet += 1
+	Stock.add(game.state.storage, "russet", 1, 60)
 	game.hud.update_state(game.state)
 	await settle()
 	check(game.hud._barn_full_alert.visible, "filling the barn shows a persistent banner")

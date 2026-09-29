@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -97,7 +98,7 @@ func _run() -> void:
 	check(game.selected_tool == "pest" and not game.state.plots[4].pests, "fifth hotbar tool walks over and removes pests")
 	check(is_equal_approx(game.state.plots[4].pest_damage, 1.0 / 3.0), "brushing stops further decay without duplicating lost yield")
 	await shot("tools-hotbar")
-	game.state.storage.russet = 20
+	game.state.storage["russet"] = Stock.pile(20)
 	game._on_action("inventory")
 	await shot("illustrated-inventory-crops")
 	press("inventory_tab:tools")

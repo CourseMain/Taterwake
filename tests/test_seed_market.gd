@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Isolated market regression: real transactions, gestures and layouts.
 const State = preload("res://scripts/game_state.gd")
 const SAVE := "user://taterland_seed_market_test_only.json"
@@ -36,7 +37,7 @@ func capture_polish() -> void:
 	state.tutorial_progress.completed = true
 	state.coins = 125000
 	for crop: String in ["russet", "giant", "golden"]:
-		state.storage[crop] = 24
+		state.storage[crop] = Stock.pile(24)
 	state.elapsed = 420.0
 	state._refresh_market()
 	game.hud.update_state(state)
@@ -127,8 +128,8 @@ func run() -> void:
 	game.hud._purchase_box.hide()
 	game.hud._toast_box.hide()
 	await shot("buy-desktop")
-	state.storage.russet = 12
-	state.storage.giant = 7
+	state.storage["russet"] = Stock.pile(12)
+	state.storage["giant"] = Stock.pile(7)
 	press(page, "sell_potatoes")
 	await settle()
 	page = game.hud._refs.market_page
@@ -138,7 +139,7 @@ func run() -> void:
 	check(page.payout.text == "\uE000 45", "quantity previews actual expected payout")
 	cash = state.coins
 	press(page, "market_sell")
-	check(state.storage.russet == 9 and state.coins == cash + 45, "sell commits chosen quantity at live price")
+	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 45, "sell commits chosen quantity at live price")
 	check(page.status.text.contains("sold") and page.status.text.contains("45"), "successful sale confirms committed payout")
 	page.quantity.value = 10
 	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "quantity is bounded by owned stock")
@@ -154,18 +155,18 @@ func run() -> void:
 	press(page, "quantity_minus")
 	check(page.quantity.value == 1 and page.minus.disabled, "minus stops at one")
 	state.sell_crop("russet", 10)
-	check(state.storage.russet == 9 and state.coins == cash + 45, "insufficient direct sale is rejected without partial payout")
+	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 45, "insufficient direct sale is rejected without partial payout")
 	press(page, "market_all")
 	check(page.quantity.value == 9 and page.payout.text == "\uE000 135", "Max selects available stock and previews its value")
 	page.quantity.get_line_edit().grab_focus()
 	page.quantity.get_line_edit().text = "4"
 	cash = state.coins
 	page._sell()
-	check(state.storage.russet == 5 and state.coins == cash + 60, "typed quantity commits before selling")
+	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 60, "typed quantity commits before selling")
 	press(page, "market_next")
 	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 owned", "arrow updates variety, chart, quantity and inventory together")
 	page.quantity.value = 2
-	check(page.payout.text == "\uE000 36", "navigated payout uses new crop")
+	check(page.payout.text == "\uE000 40", "navigated payout uses new crop")
 	press(page, "market_previous")
 	check(page.selected == "russet", "previous returns to Russet")
 	await settle()
@@ -193,12 +194,12 @@ func run() -> void:
 	press(page, "market_previous")
 	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "wrap and zero inventory work")
 	page.refresh()
-	state.storage.icecap = 2
+	state.storage["icecap"] = Stock.pile(2)
 	page.refresh()
 	check(not page.sell_button.disabled, "missing history still allows a real current-quote sale")
 	cash = state.coins
 	press(page, "market_sell")
-	check(state.storage.icecap == 1 and state.coins == cash + state.market.icecap.sell, "missing-history sale pays current quote")
+	check(Stock.count(state.storage, "icecap") == 1 and state.coins == cash + state.market.icecap.sell, "missing-history sale pays current quote")
 	press(page, "market_next")
 	game.hud._toast_box.hide()
 	await shot("sell-desktop")

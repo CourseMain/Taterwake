@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 var game
 var failures := 0
 var checks := 0
@@ -120,11 +121,11 @@ func run() -> void:
 	finger(4,use_point,false)
 	check(not game.state.plots[0].pests, "touch sprayer removes pests")
 	game.state.update(float(game.state.CropTable.CROPS.russet.grow) + 1.0)
-	var stored: int = game.state.storage.russet
+	var stored: int = Stock.count(game.state.storage, "russet")
 	game._select_tool("harvest")
 	finger(4,use_point,true)
 	finger(4,use_point,false)
-	check(game.state.storage.russet > stored, "touch harvest delivers crop to barn")
+	check(Stock.count(game.state.storage, "russet") > stored, "touch harvest delivers crop to barn")
 	game.queue_free()
 	await frames()
 	print("TOUCH CONTROLS: %d checks, %d failures" % [checks,failures])

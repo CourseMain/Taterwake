@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const SAVE: String = "user://spud_valley_test_only.json"
 var checks: int = 0
@@ -40,14 +41,14 @@ func _run() -> void:
 	farm.update(1.01)
 	check(farm.plots[4].stage == 3, "watered Russet ripens after half a season")
 	farm.interact_plot(4, "harvest")
-	check(farm.storage.russet == 3 and farm.plots[4].stage == 0, "harvest goes to storage, not automatic sales")
+	check(Stock.count(farm.storage, "russet") == 3 and farm.plots[4].stage == 0, "harvest goes to storage, not automatic sales")
 	var coins: float = farm.coins
-	var held: int = farm.storage.russet
+	var held: int = Stock.count(farm.storage, "russet")
 	farm.update(15.0)
-	check(farm.storage.russet == held and farm.coins == coins, "holding inventory never sells or generates passive income")
+	check(Stock.count(farm.storage, "russet") == held and farm.coins == coins, "holding inventory never sells or generates passive income")
 	var price: float = farm.market.russet.sell
 	farm.sell_crop("russet")
-	check(is_equal_approx(farm.coins, coins + held * price) and farm.storage.russet == 0, "selling uses the live quote")
+	check(is_equal_approx(farm.coins, coins + held * price * 1.5) and Stock.count(farm.storage, "russet") == 0, "selling uses the live quote")
 	price = farm.market.russet.seed
 	# Isolate quote accounting from affordability: a live price spike can exceed
 	# the starter purse. Insufficient funds are covered in the next transaction.
@@ -77,16 +78,16 @@ func _run() -> void:
 	check(farm.capacity == 400 and farm.barn_level == 1, "storage upgrade changes real capacity")
 	for index in range(6): ready_crop(index)
 	farm.interact_plot(0, "harvest")
-	check(farm.storage.russet == 18, "six healthy beds yield eighteen sacks without multipliers")
+	check(Stock.count(farm.storage, "russet") == 18, "six healthy beds yield eighteen sacks without multipliers")
 	farm.update(3.51)
 	farm.reset_game()
-	farm.storage.russet = 199
+	farm.storage["russet"] = Stock.pile(199)
 	ready_crop(0)
 	farm.interact_plot(0, "harvest")
 	check(farm.storage_used() == 200 and farm.plots[0].pending == 2, "full barn preserves uncollected crop on the plant")
 	farm.sell_crop("russet", 5)
 	farm.interact_plot(0, "harvest")
-	check(farm.plots[0].stage == 0 and farm.storage.russet == 197, "partial harvest preserves remaining sacks")
+	check(farm.plots[0].stage == 0 and Stock.count(farm.storage, "russet") == 197, "partial harvest preserves remaining sacks")
 	farm.reset_game()
 	for crop in farm.available_crops():
 		farm.reset_game()
@@ -147,7 +148,7 @@ func _run() -> void:
 	write_save(bad)
 	check(not farm.load_game(SAVE), "unknown crop rejected")
 	bad = saved.duplicate(true)
-	bad.storage.russet = farm.MAX_INVENTORY + 1
+	bad.storage["russet"] = Stock.pile(farm.MAX_INVENTORY + 1)
 	write_save(bad)
 	check(not farm.load_game(SAVE), "inventory beyond global limit rejected")
 	farm.reset_game()

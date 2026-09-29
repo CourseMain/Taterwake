@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 var game
 var checks: int = 0
 var failures: int = 0
@@ -44,16 +45,16 @@ func run() -> void:
 	check(game.selected_tool == "plant" and game.hud._crop_row.visible, "2 equips seeds and reveals seed choices without a second tracked-price strip")
 	var russet = game.hud._crop_buttons.russet
 	var old_seeds: int = game.state.seed_inventory.russet
-	var old_held: int = game.state.storage.russet
+	var old_held: int = Stock.count(game.state.storage, "russet")
 	game.state.seed_inventory.russet = 17
-	game.state.storage.russet = 9
+	game.state.storage["russet"] = Stock.pile(9)
 	game._on_state_changed()
 	await process_frame
 	check(russet.seed_count.text == "17" and russet.barn_count.text == "9", "seed slot separates actual seed inventory from potatoes held in barn")
 	var dividers: Array[Node] = russet.find_children("*", "VSeparator", true, false)
 	check(dividers.size() == 1 and dividers[0].is_visible_in_tree() and dividers[0].size.x > 0, "seed and barn quantities have a visible dividing line")
 	game.state.seed_inventory.russet = old_seeds
-	game.state.storage.russet = old_held
+	game.state.storage["russet"] = Stock.pile(old_held)
 	game._on_state_changed()
 	game.hud._crop_buttons.golden.pressed.emit()
 	check(game.state.selected_crop == "golden" and game.selected_tool == "plant" and game.hud._crop_buttons.golden.selected and not russet.selected, "seed tray selects the actual planting crop and marks the active packet")

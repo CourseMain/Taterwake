@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Authenticated test funding and recovery from the overdraft boundary.
 var game
 var checks: int = 0
@@ -30,7 +31,7 @@ func run() -> void:
 	game._on_action("debug:island:2")
 	check(farm.coins == 2000, "unlocking preserves cash and location")
 	farm.seed_inventory.russet = 37
-	farm.storage.russet = 40
+	farm.storage["russet"] = Stock.pile(40)
 	farm.tools.water = 1
 	farm.coins = -5000
 	check(not farm.run_over, "exact overdraft boundary survives")
@@ -51,7 +52,7 @@ func run() -> void:
 	game._on_action("debug:recover:2000")
 	await settle()
 	check(not farm.run_over and farm.coins == 2000, "explicit debug recovery resumes farm")
-	check(farm.seed_inventory.russet == 37 and farm.storage.russet == 36 and farm.trading.held.russet == 36 and farm.tools.water == 1, "recovery preserves surviving stores, seeds and tools after Winter spoilage")
+	check(farm.seed_inventory.russet == 37 and Stock.count(farm.storage, "russet") == 38 and Stock.count(farm.trading.held, "russet") == 38 and farm.tools.water == 1, "recovery preserves surviving stores, seeds and tools after Winter spoilage")
 	check(farm.climate.data.collapse.is_empty() and not collapse.visible, "recovery clears stale final receipt")
 	game.hud.close_panel()
 	game._on_action("debug")

@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 const State = preload("res://scripts/game_state.gd")
 const SAVE = "user://spud_valley_qol_test_only.json"
 var checks: int = 0
@@ -47,7 +48,7 @@ func run() -> void:
 	farm.update(5.0)
 	check(farm.plots[0].stage == 0 and farm.plots[0].pest_ticks == 3 and farm.plots[0].pest_destroyed and not farm.plots[0].pests, "fifteen seconds destroys the crop with a visible marker")
 	farm.interact_plot(0, "harvest")
-	check(farm.storage.russet == 0 and farm.harvested_total == 0, "destroyed crops give zero potatoes and mastery")
+	check(Stock.count(farm.storage, "russet") == 0 and farm.harvested_total == 0, "destroyed crops give zero potatoes and mastery")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.plots[0].pest_destroyed, "destroyed-crop marker survives save and load")
 	farm.interact_plot(0, "plant")
 	check(farm.plots[0].stage == 1 and farm.plots[0].pest_ticks == 0 and not farm.plots[0].pest_destroyed, "replanting clears all previous pest damage")
@@ -60,7 +61,7 @@ func run() -> void:
 		check(farm.harvested_total == 3 - ticks, "harvest correctly pays remaining thirds at tick %d" % ticks)
 	clean_farm()
 	ready_crop(0, "giant")
-	farm.storage.russet = 199
+	farm.storage["russet"] = Stock.pile(199)
 	farm.interact_plot(0, "harvest")
 	check(farm.plots[0].yield_total == 5 and farm.plots[0].yield_taken == 1 and farm.plots[0].pending == 4, "partial harvest captures original maximum yield")
 	farm.plots[0].pests = true
@@ -107,7 +108,7 @@ func run() -> void:
 	clean_farm()
 	ready_crop(0, "giant")
 	ready_crop(1)
-	farm.storage.giant = 1
+	farm.storage["giant"] = Stock.pile(1)
 	farm.harvested_total = 1
 	farm.coins = 84000
 	farm.pest_timer = 37.25

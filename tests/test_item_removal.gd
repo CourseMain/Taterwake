@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Inventory and ordinary crop sales have no retired item bonuses.
 var checks: int = 0
 var failures: int = 0
@@ -26,11 +27,11 @@ func run() -> void:
 	game.set_process(false)
 	var farm = game.state
 	farm.coins = 12345.0
-	farm.storage.russet = 195
+	farm.storage["russet"] = Stock.pile(195)
 	var saved: Dictionary = farm._save_data()
 	for field: String in ["inventory_items", "equipment", "mutations", "dex", "golden_hat", "shores_first_mutation"]:
 		check(not saved.has(field), "new save omits " + field)
-	farm.storage.golden = 3
+	farm.storage["golden"] = Stock.pile(3)
 	var quote: float = farm.market.golden.sell
 	var balance: float = farm.coins
 	farm.sell_crop("golden")

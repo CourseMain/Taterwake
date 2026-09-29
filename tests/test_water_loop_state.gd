@@ -1,4 +1,5 @@
 extends SceneTree
+const Stock = preload("res://scripts/graded_stock.gd")
 ## Resource conservation, useful actions, weather, and save compatibility.
 ## Every save is disposable; the player's default save is never opened.
 const State = preload("res://scripts/game_state.gd")
@@ -103,7 +104,7 @@ func test_can_and_farming() -> void:
 	farm.update(float(farm.CropTable.CROPS.russet.grow) + 0.1)
 	check(farm.plots[5].stage == 3 and farm.seed_inventory.russet == seeds - 1, "ordinary hoe, plant, finite water and growth loop remains playable")
 	farm.interact_plot(5, "harvest")
-	check(farm.storage.russet > 0 and farm.plots[5].stage == 0, "ordinary watered crops reach the barn")
+	check(Stock.count(farm.storage, "russet") > 0 and farm.plots[5].stage == 0, "ordinary watered crops reach the barn")
 	farm.set_tutorial_active(false)
 
 func test_upgrades_and_irrigation() -> void:
@@ -241,7 +242,7 @@ func test_save_validation() -> void:
 	fresh(true)
 	farm.tools.water = 3
 	farm.coins = 12345
-	farm.storage.russet = 21
+	farm.storage["russet"] = Stock.pile(21)
 	farm.seed_inventory.icecap = 9
 	farm.climate.data.projects.rainwater = 1
 	planted(7)
