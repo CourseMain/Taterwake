@@ -857,6 +857,41 @@ docs/REDESIGN_PLAN.md §6.
 Acceptance: test_tuning_bot.gd passes; the constants are documented.
 ```
 
+### Segment 14b: Farm-scale money (run before Segment 16)
+
+```
+Goal: the same economy in realistic units. The tuned numbers are the right
+shape but read like pocket money; a decade of careful farming ending at
+minus 1,400 is not a farm. Scale every money constant by one factor and
+rename the unit so the ledger reads like real accounts.
+
+Scale factor: 40. Apply it to every money constant in scripts/balance.gd
+and nowhere else: crop base and seed prices, opening cash, overdraft,
+loan, fixed costs, protection costs and upkeep, insurance premium,
+storage fee, shortfall fee, field expansion, business costs and incomes.
+Ratios, grade multipliers, volatility, climate constants and quantities
+stay exactly as they are. Also scale the debug money cap (MAX_MONEY) and
+the tuning bot's cash ceiling (8,000 becomes 320,000) and any other
+absolute money threshold in tests. Quantities are unchanged.
+
+Units: a "sack" becomes a "tonne" everywhere in copy (t on cards and
+receipts, "tonnes" in sentences). A bed yields 3 to 5 tonnes. Prices are
+per tonne. Money keeps the Spudion glyph and thousands separators; no
+decimals anywhere on screen.
+
+Expected result after scaling: Russet 360 per tonne, Icecap 1,200;
+opening cash 80,000; fixed costs 104,000 a year; overdraft 200,000;
+careful play ends the decade near minus 57,000, perfect play near plus
+220,000, naive play forecloses owing about 240,000.
+
+Tests: run the whole suite; the tuning bot must print the same survival
+counts and the same means multiplied by 40. Add a check that no balance
+constant is below 1 after scaling except quantities and rates.
+
+Acceptance: ledger and sell page show farm-sized figures with separators;
+tuning bot statistics are the old ones times 40; suite green.
+```
+
 ### Segment 15: Diversification and run titles
 
 ```
