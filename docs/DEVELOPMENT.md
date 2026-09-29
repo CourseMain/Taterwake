@@ -15,7 +15,7 @@ The redesign source is version `2.0.0-indevelopment`, published as the GitHub pr
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 30. Earlier saves, including revision 29, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 31. Earlier saves, including revision 30, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -38,7 +38,15 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 ### Baseline
 
-#### Working Winter correction — current
+#### Segment 10 — current
+
+Godot 4.7.2, `tools/run_tests.sh -j 1`: **74 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_crop_table` (136 checks), `test_simulation` (54), `test_season_clock` (123), `test_seed_market` (216) and `test_game` (39). No tests are skipped or disabled. The serial report is `artifacts/segment10-baseline.txt`.
+
+Fixtures now read the shared table and expect five varieties and per-variety drift. Windbreak comparisons use watered crops so ordinary dry stress does not obscure storm protection. The tutorial fixture uses single-farm protected-bed indices and a fixed RNG, clearing disaster ice before spraying; the initial serial run exposed its attempt to spray frozen beds.
+
+The explicit headless boot passes 39 checks, with the existing ObjectDB teardown warning. Native GL Compatibility checks pass all 136 crop checks at desktop and phone widths, including the actual touch layout. The five-card desktop row and readable phone dials were visually inspected. A temporary Web resource pack also passes 136 crop checks; this verifies packaged resources, not a browser runtime. Published `docs/index.*` and `web/` remain untouched.
+
+#### Working Winter correction — historical
 
 Godot 4.7.2, `tools/run_tests.sh -j 1`: **73 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. Every discovered suite passes, including `test_season_clock` (125 checks), `test_ledger` (110), `test_day_night` (318) and `test_game` (39). No tests are skipped or disabled. The serial report is `artifacts/working-winter-baseline.txt`.
 
@@ -263,7 +271,7 @@ The first natural infestation is harmless until cleared or harvested, even when 
 
 Contextual advice is available only through Help → Current farm help. The former FarmHelp overlay is an empty hidden compatibility node, so existing layout callers cannot restore the floating debt/tool reminders. Useful action feedback, bankruptcy information and full-barn alerts remain separate. Saved first-pest protection, independent farming progress are unchanged. Dismissing a suggestion records dismissal only, not learning.
 
-Base crop times are 75/105/135/165/195/225 seconds for Russet/Golden/Giant/Radioactive/Sunburst/Icecap. Active growth speed is bounded by `base_time / 450`, including weather penalties. Field updates and hover timers use the same bound. Dry/frozen crops and paused simulations do not consume growth time. The calendar format does not migrate earlier save revisions.
+Base crop times are 75/105/135/195/225 seconds for Russet/Golden/Giant/Sunburst/Icecap. Active growth speed is bounded by `base_time / 450`, including weather penalties. Field updates and hover timers use the same bound. Dry crops, disaster-frozen crops and paused simulations do not consume growth time. Icecap grows through seasonal bed ice. The calendar format does not migrate earlier save revisions.
 
 ### Quiet farming feedback and shop signs
 
@@ -365,7 +373,7 @@ Mechanics revision 23 drops the item catalogue, wearable slots, passive collecti
 
 Barn capacity is recomputed from purchased barn levels alone. Existing crops are preserved even when the removed bonuses leave storage over capacity; further harvesting waits until room is available. Current saves therefore permit stored totals above capacity, bounded by `MAX_INVENTORY`, and overfull farms can save/reload. An unfinished special-crop order becomes a bulk order with its original target, delivered count and earned credit. Remaining shipments use ordinary quotes and the normal 25% premium. New bulk offers still start at 400 potatoes.
 
-Inventory contains crop/seed shelves and five usable tools. The PotatoDex shows the six crop varieties without a discovery tab. The farmer keeps its base body, face and walk/turn animation. Fixed villager costumes live in `npc_avatar.gd`; `npc_portrait.gd` owns only the conversation viewport, lighting and adaptive resolution. The wardrobe preview, wearable meshes and clothing icon families are deleted.
+Inventory contains crop/seed shelves and five usable tools. The PotatoDex shows the five crop varieties without a discovery tab. The farmer keeps its base body, face and walk/turn animation. Fixed villager costumes live in `npc_avatar.gd`; `npc_portrait.gd` owns only the conversation viewport, lighting and adaptive resolution. The wardrobe preview, wearable meshes and clothing icon families are deleted.
 
 `test_item_removal.gd` covers crop conversion, retired-field removal, overfull saves, corrupted legacy crops, converted contract accounting, ordinary sale prices, inventory actions and crop references. `test_round_avatar.gd` retains body, geometry and animation checks. Dedicated equipment/wardrobe suites and assertions for removed systems are deleted; ordinary farming, climate machinery and quest tests remain.
 
@@ -388,14 +396,14 @@ The Builds menu, C shortcut, workshop, lab, exchange desk, stake table, professi
 
 The tax cycle, account purchasing, recovery orders, timed harvest chains, mastery bonuses and scientific coin storage are removed. Healthy beds yield 3–5 sacks. Harvest-bed quests count cumulative beds without a timer; every quest pays 100 Spudions.
 
-Starting cash is 2,000. Base prices are Russet 15, Giant 18, Golden 21, Radioactive 24, Sunburst 27 and Icecap 30. The 75% base seed ratio, bounded seasonal drift, twelve-quote sparklines and signed percentage remain. Tool upgrades cost 300–1,500; each field expansion costs 1,200. Three barn upgrades cost 300/800/2,000, giving 400/1,200/4,400 capacity. All money labels use rounded integers, thousands separators and the Spudion glyph; actual fractional seed costs and sale proceeds are retained.
+Starting cash is 2,000. Base prices are Russet 15, Giant 18, Golden 21, Sunburst 27 and Icecap 30. The 75% base seed ratio, bounded seasonal drift, twelve-quote sparklines and signed percentage remain. Tool upgrades cost 300–1,500; each field expansion costs 1,200. Three barn upgrades cost 300/800/2,000, giving 400/1,200/4,400 capacity. All money labels use rounded integers, thousands separators and the Spudion glyph; actual fractional seed costs and sale proceeds are retained.
 
 Obsolete blind, tax-credit-land, debt-credit, purchase-review and debug-large-money suites are deleted. Mixed suites retain ordinary purchase, weather, layout and save coverage with the new values. `test_economy_scale.gd` covers prices, yields, exact seed ratio, starting funds, upgrades, integer display, bounded overdraft purchases, Winter foreclosure and legacy-field removal.
 
 
 ### One farm (Segment 7)
 
-`FarmWorld.REGION` is fixed to 1. The Valley has one 24-bed array, twelve beds open initially and one 1,200-Spudion expansion for the remainder. All six varieties and all tool ranks are available here. The tropical and winter geometry builders, their terrain and decorative shore structures remain behind the region constant. Travel UI, boarding paths, ferry NPCs and regional state are removed.
+`FarmWorld.REGION` is fixed to 1. The Valley has one 24-bed array, twelve beds open initially and one 1,200-Spudion expansion for the remainder. All five varieties and all tool ranks are available here. The tropical and winter geometry builders, their terrain and decorative shore structures remain behind the region constant. Travel UI, boarding paths, ferry NPCs and regional state are removed.
 
 There is one flock of at most two ducks, one set of climate projects and one water supply. Export ships, buyer contracts, Frostbreak, the furnace and their dedicated tests are deleted. Mixed suites keep their surviving checks on Valley fixtures. Freeze ice is cleared directly with the hoe. The arrival cinematic is removed; `chapter_subtitles.gd` preserves its timed text and skip control for the later year-start page.
 
@@ -410,9 +418,9 @@ Weather uses a constant 15% probability at the beginning of each working season,
 
 State splits updates at every boundary, finishes clearing/billing, synchronously saves through `boundary_save_path`, then emits `season_changed`. At Winter start, Main sets the transient `accounts_open` pause before another simulation step can run; HUD opening/closing owns that pause thereafter. Accounts interrupt excess time even at 30×. Standalone state simulations without a UI can advance a complete 600-second year in one update. The pause is not serialized: opening a saved Winter displays accounts again, and closing them resumes its saved second. Conversations, practice and foreclosure retain their pauses.
 
-Autumn clears all growing/ripe crops and prepared soil, records the loss notice, preserves barn stock and calms weather. Each plot then receives a saved `winter_ice` boolean. `ClimateOperations.frozen()` combines that flag with disaster ice; Hoe clears either kind, with tilling requiring a later action. Weather resets, recovery and crop clearing cannot erase seasonal ice. Climate presentation combines both sources for the existing frost meshes. All plots freeze, including locked beds; normal access limits still apply.
+Autumn clears non-Icecap growing/ripe crops and prepared soil, records the loss notice, preserves living Icecap and barn stock, and calms weather. Each plot then receives a saved `winter_ice` boolean. `ClimateOperations.frozen()` combines that flag with disaster ice; Hoe clears either kind, with tilling requiring a later action. Weather resets, recovery and crop clearing cannot erase seasonal ice. Climate presentation combines both sources for the existing frost meshes. All plots freeze, including locked beds; normal access limits still apply.
 
-Tilling and planting remain Spring/Summer only. Nothing grows in Winter yet, including Icecap. Winter tank replenishment is 1.5 units per second versus the normal 6; there is no Winter disaster draw. The market and clock continue. Snow ground/roofs remain through the season, and the seasonal sun traverses a lower, paler arc instead of holding at dusk.
+Tilling remains Spring/Summer only. Icecap also plants in Autumn and grows and harvests through seasonal Winter ice; other varieties plant only in Spring/Summer. Winter tank replenishment is 1.5 units per second versus the normal 6; there is no Winter disaster draw. The market and clock continue. Snow ground/roofs remain through the season, and the seasonal sun traverses a lower, paler arc instead of holding at dusk.
 
 Run `tools/run_tests.sh -j 1 test_season_clock test_day_night test_ledger test_game` for four-season boundaries and saves, accounts pausing/reopening, automatic rollover, persistent ice and Spring labour, quarter-rate water, seasonal growth, final completion and rendering. The 30× regression plays all ten years and deliberately misses callbacks to verify HUD reconciliation for accounts and completion. Native `test_season_clock.gd -- --integration-test --capture` records the working Winter in `artifacts/working-winter.png`.
 
@@ -428,3 +436,16 @@ Autumn clearing and all fixed costs finish before the boundary save and notifica
 Winter’s cream accounts page shows all thirteen categories, a ten-year table and a large net figure. Its opaque background hides HUD chrome, including fullscreen controls; phone layouts scroll the body while keeping navigation reachable. Year-10 accounts open at Winter start; the final summary and New Run open after that Winter has been played. Regular HUD refreshes still reconcile the calendar after missed callbacks, including the final transition at 30× debug speed. Before year 10, Debug recovery posts an adjustment and returns to Winter without erasing history or charging bills again; finished year-10 runs require a new farm.
 
 Run `tools/run_tests.sh -j 1 test_ledger test_season_clock test_game` for journal/purse equality, actual transaction categories, annual billing, exact foreclosure boundaries, boundary-save ordering, reload idempotence, ten-year completion and accounts navigation. Native `test_ledger.gd -- --integration-test --capture` writes accounts, foreclosure and final-summary previews to `artifacts/`; add `--touch-controls` for portrait bounds and reachable actions.
+
+
+### Segment 10: crop cards
+
+`crop_table.gd` is the single source for the five varieties, seed costs, base prices, volatility, water/heat/cold dials, grow seasons, growth seconds and sacks per bed. State, HUD, world growth and fixtures read that table. Radioactive is removed, including its icon and field decoration. Base growth is 75–225 seconds, within the stated one- or two-season budget. Combined resilience is `(4 − water_need) + heat_tolerance + cold_tolerance`: 9/8/7/6/5 as prices rise from Russet to Icecap. High water need means lower resilience; high heat/cold tolerance means higher resilience.
+
+Ordinary unwatered stress accrues at `0.0025 × water_need` per second. Watering or sprinklers relieve that dry stress. Drought multiplies its existing rate by `(0.5 + 0.5 × water_need)` and the heat factor; freeze uses the cold factor. Each tolerance factor is `1.75 − 0.25 × tolerance`. Flood/storm rates and protection still apply as before. Price drift amplitudes are 5%/10%/15% for low/mid/high volatility. The same data holds 1.2/1.4/1.6 spring storage factors for Segment 11; no storage transactions are implemented here.
+
+Icecap can be planted in prepared Autumn beds. Autumn clearing preserves its live crop, water and growth, and the Winter notice explains the exception. `crop_frozen()` distinguishes disaster ice from seasonal ice, letting Icecap grow, receive water and be harvested in Winter or early Spring without hoeing. An empty iced bed still needs clearing before new planting. Winter save validation permits Icecap; mechanics revision 31 rejects older crop tables through the existing save protection.
+
+Buy Seeds shows five cards in a desktop row and a scrolling column at phone width. Each has three short bar dials, seed cost, live sack price/percentage, twelve-quote sparkline, growth/yield and last year’s average. Clicking a card selects the seed tool without a purchase. The previous annual mean is base under the current deterministic 600-second sine curve; year one shows a dash. This is a price average, not a realized sale receipt, and must be revised when Segment 11 changes the price model. The existing seed hotbar remains.
+
+Run `tools/run_tests.sh -j 1 test_crop_table test_simulation test_season_clock test_seed_market test_game` for table bounds, resilience ordering, growth budgets, stress, volatility, planting gates, Winter saves/harvests and card layout. Native `test_crop_table.gd -- --integration-test --capture` writes desktop/phone card captures to `artifacts/`; add `--touch-controls` to check the real touch layout.

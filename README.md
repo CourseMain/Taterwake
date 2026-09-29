@@ -4,17 +4,18 @@
 
 Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-indevelopment).
 
-The working `redesign` branch implements Segments 1–9 (the published prerelease tag contains Segments 1–8):
+The working `redesign` branch implements Segments 1–10 (the published prerelease tag contains Segments 1–8):
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
 - All four seasons last 150 seconds. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
+- Five crop cards with water, heat and cold dials; Icecap plants in Autumn and grows through Winter ice.
 - Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
 - Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
 - Warned climate disasters, water management and protection projects.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
-Deeper crop and climate systems and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
+Selling/storage choices, deeper climate systems and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — this is the previous game, not the v2 redesign. The live site and downloadable v1 build remain unchanged. To try v2, use the prerelease source with Godot 4.7.2 as described below.
 
@@ -60,7 +61,7 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | F | Sell the selected crop |
 | Escape / ☰ | Main menu and remaining activities |
 
-Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith for larger tool areas. Till and plant during Spring and Summer; bring every crop in before Winter.
+Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith for larger tool areas. Till during Spring and Summer. Icecap can also be planted into prepared Autumn beds and harvested through Winter ice; bring other crops in before Winter.
 
 See the [gameplay guide](docs/GAMEPLAY.md) for prices, local activities and Debug controls.
 

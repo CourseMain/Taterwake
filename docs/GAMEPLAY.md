@@ -66,11 +66,11 @@ The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 s
 
 The run finishes at the **end of year 10’s Winter**. The ten-year summary then shows total net, years in profit, best and worst year, final purse and remaining loan, with **New Run** to start over. The epilogue is still to come. Every season boundary saves before its screen opens, including the final Winter boundary. Calendar and accounts presentation stay synchronized at accelerated debug speed.
 
-Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Radioactive **165s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry or frozen crops wait for water or thawing.
+Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry crops wait for water, and disaster-frozen crops wait for thawing. Icecap grows through ordinary Winter bed ice.
 
-Till and plant only in **Spring and Summer**. Autumn is for tending and harvesting. At the end of Autumn, every unharvested crop is lost and prepared beds are cleared. The accounts report how many beds were lost to the cold. Potatoes already in the barn are safe from this seasonal clearing. Every bed then ices over. Use **Hoe [1]** to clear it during Winter; this removes ice without tilling. Cleared beds can be tilled as soon as Spring starts. Uncleared beds retain their ice and need a separate clearing action before tilling in Spring, even after other weather comes and goes.
+Till in **Spring and Summer**. All five varieties can be planted then; **Icecap can also be planted in Autumn**, into beds prepared earlier. At the end of Autumn, other unharvested crops are lost and their prepared beds are cleared. Living Icecap remains, with its growth progress and water. The accounts report the cold losses and surviving Icecap. Potatoes already in the barn are safe from this seasonal clearing. Every bed then ices over. Use **Hoe [1]** to clear it during Winter; this removes ice without tilling. Cleared beds can be tilled as soon as Spring starts. Uncleared beds retain their ice and need a separate clearing action before tilling in Spring, even after other weather comes and goes.
 
-Ordinary shop and menu panels keep working time running. Annual accounts, conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter remains playable: prices and tank replenishment advance, while fields stay empty and no variety grows yet. Snow refills the tank at **one quarter** the normal rain rate. There is no crop watering to do. Snow cover and roof snow last all Winter, and a lower, paler sun still moves from dawn to dusk. Closing the game adds no offline farming.
+Ordinary shop and menu panels keep working time running. Annual accounts, conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter remains playable: prices and tank replenishment advance, while Icecap keeps growing on its iced bed. It can be harvested through the ice in Winter or early Spring; planting at Autumn’s start leaves time for a Winter harvest. Snow refills the tank at **one quarter** the normal rain rate. Icecap still needs water, from the can or connected sprinklers; seasonal bed ice does not block it. An empty iced bed must be cleared before planting again in Spring. Snow cover and roof snow last all Winter, and a lower, paler sun still moves from dawn to dusk. Closing the game adds no offline farming.
 
 Manual tool upgrades increase the area of a single action. Each healthy bed yields **3–5 sacks**. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra sacks.
 
@@ -93,32 +93,33 @@ Every Winter posts these fixed costs once:
 
 The mortgage starts at **20,000**. Each Winter’s principal payment reduces it by 1,000; the ten-year model keeps interest at 1,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **30**. Earlier saves, including revision 29, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Current saves use mechanics revision **31**. Earlier saves, including revision 30, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
 
 ## The live crop market
 
-| Variety | Base Spudions per sack | Sacks per healthy bed |
-| --- | ---: | ---: |
-| Russet | 15 | 3 |
-| Giant | 18 | 5 |
-| Golden | 21 | 4 |
-| Radioactive | 24 | 4 |
-| Sunburst | 27 | 3 |
-| Icecap | 30 | 3 |
+| Variety | Seed cost | Base price / sack | Water need | Heat tolerance | Cold tolerance | Grow seasons | Sacks / bed | Price swings |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Russet | 11.25 | 15 | 1 | 3 | 3 | 1 | 3 | Low |
+| Giant | 13.50 | 18 | 1 | 3 | 2 | 1 | 5 | Low |
+| Golden | 15.75 | 21 | 1 | 2 | 2 | 1 | 4 | Mid |
+| Sunburst | 20.25 | 27 | 2 | 3 | 1 | 2 | 3 | High |
+| Icecap | 22.50 | 30 | 3 | 1 | 3 | 2 | 3 | High |
+
+More water bars mean a thirstier crop; more heat or cold bars mean better tolerance. Higher prices come with lower combined resilience. An unwatered bed builds stress faster when water need is high. Water need and heat tolerance affect drought damage; cold tolerance affects deep-freeze damage. Icecap is cold-tolerant but thirsty and vulnerable to heat.
 
 Tool upgrades cost **300–1,500 Spudions**. Opening the remaining beds costs **1,200** once. The barn has three upgrades costing **300, 800 and 2,000**, for capacities of **400, 1,200 and 4,400 sacks**.
 
-Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle between **85% and 115% of base**. This is a placeholder until the later sell/store redesign. Weather does not change these prices.
+Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This is a placeholder until the later sell/store redesign. Weather does not change these prices.
 
 Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
 
-**Buy Seeds** shows each seed price, the sale price per potato and owned quantities. Seeds cost **75% of the variety’s base price**, calculated to cents, throughout the cycle. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
+**Buy Seeds** has five variety cards in a desktop row, stacking vertically on a phone. Each shows three bar dials, growth time, yield, seed cost, the live sack price and owned quantities. Selecting a card selects that variety and the seed tool without spending money. **Last year avg** is blank in year one; later it shows the previous full cycle’s average, currently the base price under the temporary price model. Seeds cost **75% of the variety’s base price**, calculated to cents, throughout the cycle. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
 
 **Sell Potatoes** shows one variety at a time. Swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the actual payout. Inventory sales and the existing **F** shortcut still work. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
 
 Every Buy Seeds and Sell Potatoes card includes a small, unanimated sparkline of up to **12 recent sale quotes**. Beside the live sale price, a signed percentage compares it with the variety’s base price: green above base, red below, neutral at base. The top bar shows the same comparison for the selected crop. Seed costs stay fixed; their cards show the sale-price history to help choose what to plant.
 
-Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Radioactive → Sunburst → Icecap**. Buy Seeds offers all six varieties; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
+Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Sunburst → Icecap**. Buy Seeds offers all five varieties; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
 
 ## The Valley farm
 
@@ -140,7 +141,7 @@ The round potato farmer keeps a soft oval body, stubby limbs, blinking eyes and 
 
 ## PotatoDex
 
-Press **P** for **Crop varieties**, an illustrated reference for all six potatoes with base growth times and yield per bed. Golden and Radioactive remain ordinary crop varieties.
+Press **P** for **Crop varieties**, an illustrated reference for all five potatoes with base growth times and yield per bed.
 
 ## Graphics
 

@@ -591,7 +591,9 @@ Goal: the first player decision, with no theory.
 Data: a CROPS table with five varieties (Russet, Giant, Golden, Sunburst,
 Icecap) each with: seed cost, base price, price volatility (low/mid/high),
 water need (1 to 3), heat tolerance (1 to 3), cold tolerance (1 to 3), grow
-seasons (1 or 2), sacks per bed. Fragile varieties pay more. Put the table
+seasons (1 or 2), sacks per bed. Fragile varieties pay more. Icecap is the
+exception: it can be planted in Autumn and keeps growing through Winter
+on an iced bed, harvested in Winter or early Spring. Put the table
 in scripts/crop_table.gd and make game_state.gd read it; remove the old
 CROPS constants and GROW_TIMES.
 
