@@ -8,6 +8,9 @@ const SHARD_LIMIT := 48
 var world
 var snow: Node3D
 var snow_material: ShaderMaterial
+var sparkles: MultiMeshInstance3D
+var sparkle_points: Array[Vector3] = []
+var sparkle_time := 0.0
 var snow_ground: MeshInstance3D
 var snow_exposed_fraction := 0.0
 var drift_specs: Array[Dictionary] = []
@@ -65,6 +68,7 @@ func setup(w) -> void:
 	print_ages.resize(PRINT_LIMIT); print_ages.fill(PRINT_SECONDS)
 	var shard_shape := CylinderMesh.new(); shard_shape.bottom_radius=.15; shard_shape.top_radius=.04; shard_shape.height=.045; shard_shape.radial_segments=3
 	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("e2e6e5")),SHARD_LIMIT)
+	_build_sparkles()
 	stores = _group("WinterBarnSacks")
 	seed_crate = _group("KeptSeedCrate")
 	spoiled = _group("SpoiledSacks")
@@ -107,6 +111,7 @@ func set_winter(enabled: bool) -> void:
 	winter = enabled
 	if winter and winter_dirty: _build_snow()
 	snow.visible=winter
+	sparkles.visible=winter
 	footprints.visible=winter
 	stores.visible=winter and stored_count>0
 	spoiled.visible=winter and spoiled_count>0 and spoil_seconds<14
@@ -188,6 +193,23 @@ func _build_snow() -> void:
 	snow.set_meta("drift_specs",drift_specs)
 	world._snowflakes.clear()
 	world._falling_snow(snow,world.Surface.EXTENT*.48)
+	sparkle_points.clear()
+	for spec in world._roof_specs:
+		if is_instance_valid(spec.parent): sparkle_points.append(spec.parent.to_global(Vector3(spec.width*.2,spec.base+spec.rise*.65+.3,spec.depth*.2)))
+	for p in [Vector3(-19,0,1),Vector3(21,0,18),Vector3(-6,0,-18),Vector3(9,0,8)]:
+		p.y=world.ground_height(p.x,p.z)+.25; sparkle_points.append(p)
+	sparkles.multimesh.visible_instance_count=mini(14,sparkle_points.size())
+
+func _build_sparkles() -> void:
+	var surface:=SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(8):
+		var a: float=TAU*i/8; var b: float=TAU*(i+1)/8
+		for p in [Vector3.ZERO,Vector3(cos(a),sin(a),0)*(1.0 if i%2==0 else .18),Vector3(cos(b),sin(b),0)*(.18 if i%2==0 else 1.0)]: surface.add_vertex(p)
+	var mat:=StandardMaterial3D.new(); mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo=true; mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA; mat.cull_mode=BaseMaterial3D.CULL_DISABLED
+	sparkles=_instances("SlowSnowSparkles",surface.commit(),mat,14,true)
+	sparkles.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	sparkles.hide()
 
 func _build_scalloped_edges() -> void:
 	# Continuous rounded ribbons make a lip, not rows of separate snow balls.
@@ -354,6 +376,12 @@ func footprint_alpha(index: int) -> float:
 	return 1.0-print_ages[index]/PRINT_SECONDS
 
 func animate(delta: float) -> void:
+	if winter:
+		sparkle_time+=delta
+		for i in range(mini(14,sparkle_points.size())):
+			var pulse: float=pow(maxf(0,sin(sparkle_time*.55+i*1.8)),8)
+			sparkles.multimesh.set_instance_transform(i,Transform3D(world.camera.global_basis.scaled(Vector3.ONE*(.03+.13*pulse)),sparkle_points[i]))
+			sparkles.multimesh.set_instance_color(i,Color(1,1,1,pulse*.8))
 	if winter and print_count>0:
 		print_count=0
 		for i in range(PRINT_LIMIT):

@@ -933,3 +933,5 @@ Cute snow item 1: the terrain skin displaces vertices by up to 3.5 cm using broa
 Cute snow item 2: continuous scalloped mesh lips edge paths, beds and wall tops. Oval footprints stamp in left/right pairs and fade while the calendar is paused; the existing bounded visual animation now runs on its own node. The capture is `artifacts/cute-snow-step2-detail.png`.
 
 Cute snow item 3: fence posts and branch tips wear oversized rounded caps; continuous rounded rail caps, a broad tank-lid pillow and an oval canvas cap keep silhouettes soft. Captured in `artifacts/cute-snow-step3-detail.png`. Footprint opacity is exposed from its real-time age so headless checks do not depend on the dummy renderer returning instance colours.
+
+Cute snow item 4: roof caps use rounded, bevelled slab geometry, with three or four short icicles on each eave. Up to fourteen tiny star meshes twinkle slowly in one instanced batch. The native capture is `artifacts/cute-snow-step4-detail.png`.

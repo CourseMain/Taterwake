@@ -1604,10 +1604,32 @@ func _snow_roof(parent: Node3D, width: float, depth: float, base: float, rise: f
 	var angle: float = atan2(rise, half_width)
 	var roof_length: float = sqrt(half_width * half_width + rise * rise)
 	for side in [-1.0, 1.0]:
-		var snow := _box(parent, Vector3(side * width * 0.25, base + rise * 0.5 + 0.11, 0.0), Vector3(roof_length + 0.10, 0.15, depth + 0.16), Color("edf4f5"))
+		var snow := _rounded_snow_slab(parent,Vector2(roof_length+.30,depth+.32))
+		snow.position=Vector3(side*width*.25,base+rise*.5+.08,0)
 		snow.rotation.z = -side * angle
-	for i in range(7):
-		_cylinder(parent, Vector3(-width * 0.46 + float(i) * width * 0.153, base + 0.03, depth * 0.515), 0.01, 0.055, 0.25 + float(i % 3) * 0.08, Color("cce2eb"), 5)
+		var count: int = 4 if depth>3 else 3
+		for i in range(count):
+			_cylinder(parent,Vector3(side*width*.51,base-.04,lerpf(-depth*.36,depth*.36,float(i)/(count-1))),.006,.06,.18+float(i%2)*.04,Color("e1e9eb"),6)
+	_sphere(parent,Vector3(0,base+rise+.11,0),Vector3(.25,.20,depth*.54),Color("f0f1f0"))
+
+func _rounded_snow_slab(parent: Node3D, size: Vector2) -> MeshInstance3D:
+	var rim: Array[Vector3]=[]
+	var radius: float=minf(.32,size.x*.22)
+	for corner in range(4):
+		var centre:=Vector2((1 if corner in [0,3] else -1)*(size.x*.5-radius),(1 if corner<2 else -1)*(size.y*.5-radius))
+		for j in range(5):
+			var angle: float=(corner+j/4.0)*PI*.5
+			var p: Vector2=centre+Vector2(cos(angle),sin(angle))*radius
+			rim.append(Vector3(p.x,0,p.y))
+	var surface:=SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(rim.size()):
+		var a: Vector3=rim[i]; var b: Vector3=rim[(i+1)%rim.size()]
+		var inner_a:=Vector3(a.x*.91,.16,a.z*.94); var inner_b:=Vector3(b.x*.91,.16,b.z*.94)
+		for p in [Vector3(0,.21,0),inner_a,inner_b,a,b,inner_b,a,inner_b,inner_a]: surface.add_vertex(p)
+	surface.generate_normals()
+	var mesh:=MeshInstance3D.new(); mesh.mesh=surface.commit(); mesh.material_override=_mat(Color("f0f1f0"))
+	parent.add_child(mesh)
+	return mesh
 
 
 func _falling_snow(parent: Node3D, extent: Vector2) -> void:
