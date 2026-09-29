@@ -48,7 +48,11 @@ static func _rainwater(w, root: Node3D, level: int) -> void:
 	w._cylinder(root, Vector3(0, 1.85, 0), 1.5, 1.5, 3.15, steel, 20)
 	for y: float in [0.42, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.25]:
 		w._cylinder(root, Vector3(0, y, 0), 1.54, 1.54, 0.07, rim, 20)
-	w._cylinder(root, Vector3(0, 3.48, 0), 1.58, 0.9, 0.25, Color("d0ded4"), 20)
+	w._cylinder(root,Vector3(0,3.44,0),1.48,1.48,.06,Color("629299"),20)
+	for i in range(20):
+		var a: float=i*TAU/20; var b: float=(i+1)*TAU/20
+		w._bar(root,Vector3(cos(a)*1.52,3.51,sin(a)*1.52),Vector3(cos(b)*1.52,3.51,sin(b)*1.52),.065,rim)
+	w._bar(root,Vector3(-1.5,3.56,0),Vector3(1.5,3.56,0),.06,rim)
 	w._cylinder(root, Vector3(0, 3.67, 0), 0.34, 0.34, 0.17, steel, 12)
 	# A contrasting sight glass remains readable in both sunlight and rain.
 	w._box(root, Vector3(0.65, 1.86, 1.40), Vector3(0.36, 2.16, 0.13), Color("dce0c7"))
@@ -116,10 +120,29 @@ static func site_position(w, id: String) -> Vector3:
 		_: return w.plot_positions[-1] + Vector3(3.0, 0, 0)
 
 static func work_site(w, id: String, progress: int) -> Node3D:
-	var root: Node3D = w._root("Work_" + id, site_position(w, id))
-	for i in range(3): w._box(root, Vector3(0, 0.10 + i * 0.15, 0), Vector3(1.7, 0.13, 0.48), Color("b69564"))
-	w._shop_label(root, "%s · Work %d / 3" % [w.Climate.PROJECTS[id].name, progress], Vector3(0, 2.2, 0))
-	w._target(root, Vector3(0, 0.8, 0), Vector3(1.7, 1.6, 1.0), "station", "project:" + id)
+	var root: Node3D = w._root("Work_"+id,site_position(w,id))
+	root.position.y=w.ground_height(root.position.x,root.position.z)
+	for i in range(3): w._box(root,Vector3(-.6,.10+i*.15,.6),Vector3(1.7,.13,.48),Color("b69564"))
+	for x in [-1.25,1.25]:
+		w._box(root,Vector3(x,.7,0),Vector3(.12,1.4,.12),Color("a78962"))
+		w._box(root,Vector3(x,1.15,0),Vector3(.6,.17,.13),Color("e9c67b"))
+	match id:
+		"rainwater":
+			for y in range(progress+1): w._cylinder(root,Vector3(0,.25+y*.38,-.45),.72,.72,.15,Color("789497"),12)
+			w._bar(root,Vector3(-1.2,.2,-.8),Vector3(-1.2,2.1,-.8),.06,Color("a78962"))
+			w._bar(root,Vector3(1.2,.2,-.8),Vector3(1.2,2.1,-.8),.06,Color("a78962"))
+			w._bar(root,Vector3(-1.2,2.1,-.8),Vector3(1.2,2.1,-.8),.07,Color("a78962"))
+		"drainage":
+			w._box(root,Vector3(0,.025,-.3),Vector3(.65,.05,2.8),Color("5e6756"))
+			for i in range(progress+1): w._box(root,Vector3(.55,.2,-1+i*.65),Vector3(.3,.35,.6),Color("a7b1a0"))
+		"windbreaks":
+			for i in range(progress+1):
+				w._cylinder(root,Vector3(-.6+i*.6,.35,-.35),.18,.24,.5,Color("8a7154"),8)
+				w._sphere(root,Vector3(-.6+i*.6,.9,-.35),Vector3(.3,.6,.3),Color("7a9462"))
+		"frost":
+			for i in range(progress+1): w._cylinder(root,Vector3(0,.35+i*.30,-.4),.18,.18,1.6,Color("d9e7dd"),12).rotation.z=PI*.5
+	w._shop_label(root,"%s · Work %d / 3" % [w.Climate.PROJECTS[id].name,progress],Vector3(0,2.4,0))
+	w._target(root,Vector3(0,.8,0),Vector3(2.7,1.6,2.0),"station","project:"+id)
 	return root
 
 static func bed_cover(w, index: int) -> Node3D:
@@ -127,31 +150,29 @@ static func bed_cover(w, index: int) -> Node3D:
 	for z in [-0.65, 0.65]:
 		w._bar(root, Vector3(-0.85, 0.12, z), Vector3(0, 0.75, z), 0.045, Color("809b8e"))
 		w._bar(root, Vector3(0, 0.75, z), Vector3(0.85, 0.12, z), 0.045, Color("809b8e"))
-	w._box(root, Vector3(0, 0.56, 0), Vector3(1.7, 0.06, 1.65), Color("d5e4dc"))
+	for side in [-1,1]:
+		var cloth=w._box(root,Vector3(side*.43,.48,0),Vector3(1.02,.055,1.72),Color("d5e4dc"))
+		cloth.rotation.z=-side*.60
 	return root
 
 static func _windbreaks(w, root: Node3D, level: int) -> void:
-	for offset: Vector3 in [Vector3.ZERO, Vector3(32, 0, 0), Vector3(-32, 2, 0)]:
-		var row := Node3D.new()
-		root.add_child(row)
-		_windbreak_row(w, row, level, offset)
-
-static func _windbreak_row(w, root: Node3D, level: int, offset: Vector3) -> void:
-	root.position = trees_position(w) + offset
-	var winter: bool = w.current_island == 3
-	var width: float = w.plot_positions[23].x - w.plot_positions[0].x + 0.6
-	var count: int = (10 if winter else 8) if level >= 2 else (8 if winter else 6)
-	for index: int in range(count):
-		var x: float = -width * 0.5 + width * index / float(count - 1)
-		var height: float = 1.0 + sin(index * 2.3) * 0.12
-		w._cylinder(root, Vector3(x, 0.91, 0), 0.14, 0.10, 1.8, Color("82664e"), 7)
-		w._sphere(root, Vector3(x, 2.0 * height, 0), Vector3(0.94, 1.12 if level >= 2 else 0.90, 0.59), Color("407e68") if index % 2 == 0 else Color("5e946a"))
-		w._sphere(root, Vector3(x - 0.14, 2.64 * height, 0.02), Vector3(0.63, 0.58, 0.48), Color("80ab76"))
-		if winter:
-			w._sphere(root, Vector3(x - 0.14, 3.04 * height, 0.02), Vector3(0.57, 0.15, 0.43), Color("e5efec"))
-		if index > 0:
-			w._box(root, Vector3(x - width / float(count - 1) * 0.5, 0.6, 0.08), Vector3(width / float(count - 1), 0.09, 0.08), Color("a68c65"))
-	w._target(root, Vector3(0, 1.6, 0), Vector3(width + 1.0, 3.1, 1.1), "station", "equipment:trees")
+	var crowns: Array[Vector3]=[]
+	# One real row across the windward edge of each field; all share its height.
+	for field in range(3):
+		var first: Vector3=w.plot_positions[field*24]
+		var last: Vector3=w.plot_positions[field*24+23]
+		for i in range(6 if level==1 else 8):
+			var p:=Vector3(lerpf(first.x-.6,last.x+.6,float(i)/(5 if level==1 else 7)),0,first.z-1.6)
+			if field==2: p=Vector3(first.x-2.6,0,lerpf(first.z+.4,last.z,float(i)/(5 if level==1 else 7)))
+			p.y=w.ground_height(p.x,p.z)
+			w._cylinder(root,p+Vector3(0,.9,0),.13,.09,1.8,Color("82664e"),7)
+			w._sphere(root,p+Vector3(0,1.8,0),Vector3(.85,1.0 if level==1 else 1.3,.6),Color("567e5d"))
+			w._sphere(root,p+Vector3(-.12,2.55,0),Vector3(.6,.65,.48),Color("7d9d6b"))
+			crowns.append(p+Vector3(-.12,3.12,0))
+		var centre: Vector3=(first+last)*.5+Vector3(0,1.5,-(last.z-first.z)*.5-1.6)
+		if field==2: centre=Vector3(first.x-2.6,first.y+1.5,(first.z+last.z)*.5)
+		w._target(root,centre,Vector3(1.3,3,last.z-first.z+2) if field==2 else Vector3(last.x-first.x+2,3,1.3),"station","equipment:trees")
+	root.set_meta("crowns",crowns)
 
 static func _irrigation(w, root: Node3D, level: int) -> void:
 	var columns: int = 10 if w.current_island == 3 else (8 if w.current_island == 2 else 6)

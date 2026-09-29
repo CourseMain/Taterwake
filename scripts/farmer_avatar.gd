@@ -199,3 +199,32 @@ func _body_band(parent: Node3D, bottom: float, top: float, color: Color, inflate
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return _mesh(parent, Vector3.ZERO, mesh, color)
+
+var _season_outfits: Dictionary = {}
+var outfit_season: int = -1
+var _winter_sleeves: Array[Node3D] = []
+func set_season(season: int) -> void:
+	if not _built or outfit_season == season: return
+	outfit_season=season
+	if _season_outfits.is_empty():
+		var summer:=_group(_rig,"SummerStrawHat")
+		_cylinder(summer,Vector3(0,1.82,0),.88,.88,.075,Color("d7b96c"))
+		_cylinder(summer,Vector3(0,1.97,0),.49,.39,.32,Color("dfc684"))
+		_cylinder(summer,Vector3(0,1.86,0),.50,.49,.10,Color("867145"))
+		var winter:=_group(_rig,"WinterCoatAndHat")
+		_body_band(winter,.28,1.13,Color("477078"),1.06)
+		_body_band(winter,1.03,1.17,Color("e4d8ba"),1.10)
+		for y in [.48,.70,.92]: _sphere(winter,_front(0,y,.075),Vector3.ONE*.04,Color("d9bd7c"))
+		_sphere(winter,Vector3(0,1.78,-.06),Vector3(.57,.25,.48),Color("a85f45"))
+		_sphere(winter,Vector3(0,2.04,-.05),Vector3.ONE*.12,Color("e4d8ba"))
+		for side in [-1,1]: _sphere(winter,Vector3(side*.46,1.61,-.04),Vector3(.13,.23,.27),Color("a85f45"))
+		for arm in _arms:
+			_winter_sleeves.append(_sphere(arm,Vector3(0,-.12,.025),Vector3(.151,.21,.17),Color("477078")))
+		_season_outfits={1:summer,3:winter}
+		var batcher=preload("res://scripts/world_geometry_batcher.gd").new()
+		for outfit in _season_outfits.values():
+			for mesh in outfit.find_children("*","MeshInstance3D",true,false): mesh.material_override.set_meta("static_colour",true)
+			batcher.batch_tree(outfit,{})
+	for key in _season_outfits: _season_outfits[key].visible=int(key)==season
+	_neutral_body.visible=season!=3
+	for sleeve in _winter_sleeves: sleeve.visible=season==3
