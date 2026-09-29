@@ -24,7 +24,7 @@ Home, Low and Hill each contain 24 beds. Home starts with twelve open. Rent Low 
 
 Exposure multiplies weather stress and resulting loss. Protection projects share their levels across the farm; Spring frost covers can be placed on any rented bed. Loss cards name the field. Low Field's extra whole tonnes are distributed across four beds, giving each complete half-field exactly 25% more. Ducks patrol open beds in all rented fields.
 
-Walk, sprint or click around one continuous hexagonal Valley island with long angled coasts. Straight dirt lanes connect the village, field gates and pier in loops. Hill Field sits behind the village above three visible grass terraces, reached by one approach from the barn with four shallow treads per terrace flight, landings and handrails on both sides. Low Field lies closer to the village toward the front-right shore, beside reeds and a drainage ditch. A working orchard with a central lane, hedges and crates fills the west; a small compost and barrel yard sits to the east. All three fields use the same beds and soil; unrented land is rough grass with a To let board. The straighter overview keeps the whole island visible, and Home recentres it, including on a phone.
+Walk, sprint or click around one continuous hexagonal Valley island with long angled coasts. Straight dirt lanes connect the village, field gates and pier in loops. Hill Field sits behind the village above three visible grass terraces, reached by one approach from the barn with four shallow treads per terrace flight, landings and handrails on both sides. Low Field lies closer to the village toward the front-right shore, beside reeds and a drainage ditch. A working orchard with a central lane, hedges and crates fills the west; a small compost and barrel yard sits to the east. All three fields use the same beds and soil. Low has a mild wet, green tint; Hill is paler and windswept. Named exposure signs and gated fences mark the fields; unrented land is rough grass with an overgrown To let board. The straighter overview keeps the whole island visible, and Home recentres it, including on a phone.
 
 ## Three decisions
 
@@ -47,6 +47,8 @@ Growth takes **60 / 90 / 110 / 160 / 200 seconds** for Russet / Golden / Giant /
 
 Crops have **Table, Standard or Feed** quality, selling for **1.2×, 1× or 0.5×** the quote. Dry soil, weather, pests and late harvesting reduce quality. Water promptly, clear ice, spray pests and bring ripe crops in. A full barn leaves excess yield on the plant. Each planting has one pest chance, scheduled between **25% and 60%** of its growth time: **16% normally, 24% in Summer, zero in Winter**. No first infestation starts after ripening. Pest attacks remove one third of the original yield every five seconds; spraying stops further loss. The first naturally appearing pest group after the guide is protected until cleared, then ordinary pest damage applies.
 
+Growing beds carry a small grade peg matching the hover tag: a green leaf for Table, a plain plaque for Standard, and a brown leaf for Feed. Drought makes the plant wilt and lean; flooding yellows its leaves; freeze adds pale rime.
+
 ### When to sell
 
 Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. Prices and grade are visible before selling. No sale happens merely by opening a page.
@@ -55,11 +57,15 @@ Winter storage charges a flat **4,800**, spoils **5%** of held tonnes and remove
 
 The Contracts board offers a **20-tonne Spring order at 1.1× base price**. At Winter’s start, the buyer collects Standard or Table stock before storage costs and spoilage; each missing tonne costs **200**. Accepted orders cannot be cancelled. Keep Standard or Table tonnes as seed through **Barn → Barn stores** to convert each into one seed next Spring, excluding those tonnes from sale, storage ageing and spoilage.
 
+Accepted orders have tagged crates beside the village road; a cart arrives for collection and leaves with the delivered sacks. In Winter, stored sacks stack inside the open barn, kept seed has its own crate, and a dark spoilage heap dwindles outside. These displays reflect the existing inventory and settlement; they do not change it.
+
 ### What to protect
 
 Iris fronts each year’s weather page with a potato voice and the recorded climate strip. After the guided introduction, seasonal disaster chance starts at **15%**, adds **4 percentage points per year**, and caps at **60%**. Mean severity starts at **50%**, rises three points per year, and individual events vary. At most one disaster occurs per season and three per year.
 
-Spring grass stays green, and early Summer warms to dry green grass. Stronger Summer browning begins in year six. Spring brings flood or freeze; Summer drought or storm; Autumn storm or flood; Winter deep freeze or blizzard. Warnings last **45 seconds**, active danger **30**, then recovery **75**. Drier grass, rain and wind can hint at the next season, with false alarms and missed warnings. A better weather station narrows forecast uncertainty, not the weather itself.
+Spring grass stays green, and early Summer warms to dry green grass. Stronger Summer browning begins in year six. Spring brings flood or freeze; Summer drought or storm; Autumn storm or flood; Winter deep freeze or blizzard. Warnings last **45 seconds**, active danger **30**, then recovery **75**. Drier grass, rain and wind can hint at the next season, with false alarms and missed warnings. A better weather station narrows forecast uncertainty, not the weather itself. Its instrument face displays the same probability range as the forecast panel.
+
+Spring blossom, Summer heat shimmer, orange Autumn canopies and fallen leaves mark the seasons. Winter snow gathers on roofs, branches, fence lines, terrace walls and path verges. Fruit trees lose their leaves, tank water freezes, and walking leaves tracks on snowy paths. Hoe shatters the cracked glaze on frozen beds. The farmer wears a Winter coat and hat, and a straw hat in Summer.
 
 The water loop is **rain → tank → can or pipes → crops**. Click the tank to refill the can. Sprinklers share the reserve and water their connected beds; drought stops replenishment. Use Hoe to clear crop ice or drain a flooded bed. Purchased drains can be opened. Windbreaks reduce storm losses. Optional water practice at the weather station uses a paused, temporary demonstration.
 
@@ -71,7 +77,7 @@ The water loop is **rain → tank → can or pipes → crops**. Click the tank t
 | Frost cover | Spring freeze, covered beds only | 36,000 | 72,000 |
 
 
-Reserve protection materials in Winter, then complete **three walked work actions** at the construction site per level. Paid unfinished work persists. Completed levels reduce matching field yield loss by **50% or 75%**, with **2,400 annual upkeep per protection type**. Frost covers protect covered beds next Spring only: clear Winter ice, then use **Cover all cleared beds** or the nearby cover action. Covers expire in Summer.
+Reserve protection materials in Winter, then complete **three walked work actions** at the construction site per level. Paid unfinished work persists. Tank rings and scaffolding, drain sections, potted saplings and rolled covers show work in progress; completed tanks, channels, tree rows and pitched bed covers appear on the island. Completed levels reduce matching field yield loss by **50% or 75%**, with **2,400 annual upkeep per protection type**. Frost covers protect covered beds next Spring only: clear Winter ice, then use **Cover all cleared beds** or the nearby cover action. Covers expire in Summer.
 
 Spring crop insurance costs **9,600** and pays **40% of lost tonnes at base prices**. Subsequent field losses settle at Winter’s start; new Winter weather claims pay as they happen. Ordinary spoilage is excluded. Winter deep freeze and blizzard threaten stored crops and living Icecap. Selling stores or harvesting Icecap before impact reduces exposure.
 

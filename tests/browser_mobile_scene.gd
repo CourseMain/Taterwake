@@ -3,6 +3,7 @@ const Stock = preload("res://scripts/graded_stock.gd")
 ## Disposable browser QA only. No player saves or production debug bridge.
 var game
 var callback
+var art_camera_fixed := false
 func _ready() -> void:
 	game = load("res://scenes/main.tscn").instantiate()
 	add_child(game)
@@ -17,10 +18,11 @@ func _ready() -> void:
 	callback = JavaScriptBridge.create_callback(command)
 	JavaScriptBridge.get_interface("window").mobileQA = callback
 func _process(delta: float) -> void:
-	if is_instance_valid(game) and not game.is_processing(): game._update_camera_zoom(delta)
+	if is_instance_valid(game) and not game.is_processing() and not art_camera_fixed: game._update_camera_zoom(delta)
 
 func command(args: Array) -> void:
 	var action: String = str(args[0])
+	if not action.begins_with("art:") and action != "status": art_camera_fixed = false
 	if action == "tutorial":
 		game.tutorial.start(true)
 	elif action == "tutorial_sale":
@@ -45,6 +47,8 @@ func command(args: Array) -> void:
 			game.state.storage[id] = Stock.pile(500 if stocked else 0)
 			game.state.seed_inventory[id] = 100 if stocked else 0
 		game._on_state_changed()
+	elif action.begins_with("art:"):
+		art_scene(action.get_slice(":",1))
 	elif action == "tank": game._select_equipment("tank")
 	elif action == "guide_shop": game.hud.show_panel("market", game.state)
 	elif action == "near_market":
@@ -89,6 +93,10 @@ func command(args: Array) -> void:
 	report.voice = {"speaker":voice.speaker,"utterances":voice.utterances,"playing":voice.player.playing,"pitch":voice.player.pitch_scale,"take":voice.last_clip}
 	report.frozen_crops = game.state.climate.data.operations.ice.size()
 	report.equipment_visible = game.hud._climate_console.is_visible_in_tree()
+	report.art = {"winter":game.world.visuals.winter,"grades":game.world.visuals.grades,
+		"stored":game.world.visuals.stored_count,"seed":game.world.visuals.seed_count,
+		"outfit":game.world._player_body.outfit_season,
+		"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
 	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"step":game.tutorial.current_id(),"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
 	report.labels = []
@@ -103,6 +111,45 @@ func command(args: Array) -> void:
 	collect_buttons(game.touch_controls.root, report.buttons)
 	collect_buttons(game.conversation, report.buttons)
 	JavaScriptBridge.eval("window.mobileReport=" + JSON.stringify(report),true)
+
+func art_scene(view: String) -> void:
+	art_camera_fixed = true
+	game.set_process(false)
+	game.conversation.finish()
+	game.state.reset_game()
+	var farm = game.state
+	farm.tutorial_progress.completed = true
+	farm.set_tutorial_active(false)
+	farm.coins = 1200000
+	farm.season_clock.season = 1 if view == "stress" else 3
+	farm.season_clock.seconds = 75
+	for plot in farm.plots: farm._clear_crop(plot)
+	for i in range(3):
+		farm.plots[i].merge({"unlocked":true,"tilled":true,"stage":2,"crop":"russet","watered":true,"quality":[100,60,20][i],"elapsed":45.0},true)
+	for id in ["rainwater","drainage","windbreaks","frost"]: farm.climate.data.projects[id] = 1
+	Stock.add(farm.storage,"russet",80,90)
+	farm.trading.keep_seed(farm,"russet","Table",3)
+	if view == "stress":
+		farm.climate.data.event = "drought"
+		farm.climate.data.operations.stress = {"0":.85,"1":.6,"2":.9}
+	else:
+		farm.trading.begin_winter(farm)
+		farm.plots[4].winter_ice = true
+	game._on_state_changed()
+	game.hud.close_panel()
+	game.hud._climate_alert.dismiss()
+	game.hud._toast_box.hide()
+	game.hud._purchase_box.hide()
+	game.world._process(1)
+	game.world.player.position = game.world.ClimateProjects.barn_position(game.world)+Vector3(0,0,5)
+	game._recenter_camera()
+	for i in range(30): game._update_camera_zoom(.1)
+	if view in ["stress","tank"]:
+		var point: Vector3 = game.world.plot_positions[1]+Vector3(0,.7,0) if view == "stress" else game.world.ClimateProjects.tank_position(game.world)+Vector3(1,1,0)
+		game.world.camera.position = point+Vector3(14,19,25)
+		game.world.camera.look_at(point)
+		game._zoom_target_size = 9 if view == "stress" else 17
+		game.world.camera.size = game._zoom_target_size
 
 func collect_buttons(node: Node, out: Array) -> void:
 	if node is Button and node.is_visible_in_tree():
