@@ -41,7 +41,7 @@ func run() -> void:
 	w.set_player_position(Vector3(-14.7,0,15.6))
 	check(art.print_count==2,"one walked step stamps a pair of footprints")
 	art.animate(30)
-	check(is_equal_approx(art.footprints.multimesh.get_instance_color(0).a,.5),"tracks fade halfway after thirty seconds")
+	check(is_equal_approx(art.footprint_alpha(0),.5) and art.footprints.material_override.transparency==BaseMaterial3D.TRANSPARENCY_ALPHA,"tracks fade halfway after thirty seconds")
 	art.animate(31)
 	check(art.print_count==0,"tracks fade away after a minute")
 	for i in range(14): w.set_player_position(Vector3(-14.7,0,15+i*.6))

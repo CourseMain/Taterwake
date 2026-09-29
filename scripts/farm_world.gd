@@ -1176,7 +1176,7 @@ func _potato_person(parent: Node3D, pos: Vector3, skin: Color, clothes: Color, f
 func _fence(start: Vector3, end: Vector3, segments: int) -> void:
 	var fence := _root("Fence", Vector3.ZERO)
 	fence.set_meta("layout_stretch", true)
-	_fence_specs.append({"parent":fence,"a":start,"b":end})
+	_fence_specs.append({"parent":fence,"a":start,"b":end,"segments":segments})
 	for i in range(segments + 1):
 		var pos: Vector3 = start.lerp(end, float(i) / float(segments))
 		_box(fence, pos + Vector3(0.0, 0.48, 0.0), Vector3(0.16, 0.96, 0.16), Color("e3d4a8"))

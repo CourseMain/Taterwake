@@ -138,7 +138,7 @@ func _build_snow() -> void:
 	# Canvas stall and the conical windmill roof are not gabled roofs.
 	var market: Node3D = world.get_node("MarketStall")
 	var canvas := _group("CanvasSnow",snow); canvas.global_transform=market.global_transform
-	world._box(canvas,Vector3(0,3.39,-.23),Vector3(5.0,.16,2.9),SNOW)
+	world._sphere(canvas,Vector3(0,3.44,-.23),Vector3(2.72,.29,1.65),SNOW)
 	var mill: Node3D = world.get_node("Windmill")
 	var peak := _group("MillSnow",snow); peak.global_transform=mill.global_transform
 	world._cylinder(peak,Vector3(0,4.08,0),.87,0,1.12,SNOW,8)
@@ -148,12 +148,14 @@ func _build_snow() -> void:
 		for branch in range(5):
 			var tip := Vector3(sin(branch*2.1)*1.05,2.5+float(branch%2)*.65,cos(branch*2.1)*.9)
 			world._bar(cap,Vector3(0,1.6,0),tip+Vector3(0,.075,0),.085,SNOW)
-			world._sphere(cap,tip+Vector3(0,.07,0),Vector3(.32,.12,.24),SNOW)
+			world._sphere(cap,tip+Vector3(0,.13,0),Vector3(.50,.23,.40),SNOW)
 	for fence in world._fence_specs:
 		if not is_instance_valid(fence.parent): continue
 		var a: Vector3 = fence.parent.to_global(fence.a)
 		var b: Vector3 = fence.parent.to_global(fence.b)
-		world._bar(snow,a+Vector3(0,.82,0),b+Vector3(0,.82,0),.10,SNOW)
+		_snow_lip(a,b,.20,.18,a.y+.82)
+		for i in range(int(fence.segments)+1):
+			world._sphere(snow,a.lerp(b,float(i)/fence.segments)+Vector3(0,1.03,0),Vector3(.29,.18,.27),SNOW)
 	for cap in world.get_meta("ridge_wall_caps",[]):
 		world._box(snow,cap.position,Vector3(1.05,.09,.61),SNOW).rotation.y=cap.angle
 	_build_scalloped_edges()
@@ -170,6 +172,7 @@ func _build_snow() -> void:
 	var tank_scale: Vector3=world.ClimateProjects.tank_scale(int(world._project_levels.get("rainwater",1)))
 	world._cylinder(snow,tank+Vector3(0,3.57,0),1.30*tank_scale.x,1.30*tank_scale.x,.07,Color("d8dedf"),20)
 	for i in range(5): world._bar(snow,tank+Vector3(-1.0+i*.4,3.615,-.6),tank+Vector3(-.7+i*.4,3.615,.65),.023,Color("f3f4f2"))
+	world._sphere(snow,tank+Vector3(0,3.63,0),Vector3(1.60*tank_scale.x,.25,1.60*tank_scale.z),SNOW)
 	# Evergreen protection trees keep their crowns and collect snow on top.
 	if world._project_nodes.has("windbreaks"):
 		for p in world._project_nodes.windbreaks.get_meta("crowns",[]):
@@ -347,12 +350,15 @@ func _build_cart() -> void:
 func _process(delta: float) -> void:
 	animate(delta)
 
+func footprint_alpha(index: int) -> float:
+	return 1.0-print_ages[index]/PRINT_SECONDS
+
 func animate(delta: float) -> void:
 	if winter and print_count>0:
 		print_count=0
 		for i in range(PRINT_LIMIT):
 			print_ages[i]=minf(PRINT_SECONDS,print_ages[i]+delta)
-			footprints.multimesh.set_instance_color(i,Color(1,1,1,1-print_ages[i]/PRINT_SECONDS))
+			footprints.multimesh.set_instance_color(i,Color(1,1,1,footprint_alpha(i)))
 			if print_ages[i]<PRINT_SECONDS: print_count+=1
 	for i in range(flying_ice.size()-1,-1,-1):
 		var bit: Dictionary=flying_ice[i]; bit.age+=delta; bit.v.y-=delta*4; bit.p+=bit.v*delta
