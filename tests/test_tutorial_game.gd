@@ -48,6 +48,8 @@ func run() -> void:
 		return
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
+	# Reproduce the same infestation and weather while exercising ordinary controls.
+	game.state.rng.seed = 6
 	await process_frame
 	game.set_process(false)
 	game.tutorial.start()
@@ -74,7 +76,7 @@ func run() -> void:
 	lesson("water")
 	walk_plot("water", 4)
 	lesson("grow")
-	game._process(float(game.state.CROPS.russet.grow) + 0.1)
+	game._process(float(game.state.CropTable.CROPS.russet.grow) + 0.1)
 	lesson("harvest")
 	walk_plot("harvest", 4)
 	lesson("sell")
@@ -98,7 +100,7 @@ func run() -> void:
 	walk_plot("hoe", 5)
 	walk_plot("plant", 5)
 	walk_plot("water", 5)
-	game._process(float(game.state.CROPS.russet.grow) + 0.1)
+	game._process(float(game.state.CropTable.CROPS.russet.grow) + 0.1)
 	walk_plot("harvest", 5)
 	game._on_action("quick_sell")
 	check(game.state.farm_help.data.independent == 4, "second crop was planted, watered, harvested and sold independently")
@@ -109,11 +111,14 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	await shot("first-pests")
 	check(game.state.farm_help.data.pest_phase == 1, "first natural infestation is protected")
-	var target: int = int(str(game.state.farm_help.data.protected[0]).get_slice(":", 1))
+	var target: int = int(game.state.farm_help.data.protected[0])
 	game.state.update(30.0)
 	check(game.state.plots[target].pest_ticks == 0, "first pest cannot destroy its lesson crop")
 	for key: String in game.state.farm_help.data.protected.duplicate():
-		game.perform_plot(int(key.get_slice(":", 1)), "pest")
+		if game.state.climate.Operations.frozen(game.state, int(key)):
+			game.perform_plot(int(key), "hoe")
+			check(not game.state.climate.Operations.frozen(game.state, int(key)), "clear weather ice before spraying protected pests")
+		game.perform_plot(int(key), "pest")
 	check(game.state.farm_help.data.pest_phase == 2, "clearing first group returns to normal hazards")
 	game._on_action("help")
 	check(game.hud._modal_title.text == "Controls" and button("farm_help:details") == null, "controls page has no extra practice or help launcher")

@@ -30,13 +30,13 @@ func shape_bounds(tuber: Node3D) -> Array[AABB]:
 
 func shot(world, plots: Array) -> void:
 	if "--capture" not in OS.get_cmdline_user_args(): return
-	# Each row compares the same six varieties: planted, halfway and ripe.
+	# Each row compares the same five varieties: planted, halfway and ripe.
 	for row in range(3):
-		for column in range(6):
+		for column in range(State.CROP_IDS.size()):
 			var plot: Dictionary = plot_for(State.CROP_IDS[column])
 			plot.stage = 1 if row == 0 else (2 if row == 1 else 3)
 			plot.watered = row > 0
-			plot.elapsed = float(State.CROPS[plot.crop].grow) * (0.0 if row == 0 else (.5 if row == 1 else 1.0))
+			plot.elapsed = float(State.CropTable.CROPS[plot.crop].grow) * (0.0 if row == 0 else (.5 if row == 1 else 1.0))
 			plots[row * 6 + column] = plot
 	world.update_plots(plots)
 	world.set_tutorial_focus("")
@@ -73,7 +73,7 @@ func run() -> void:
 	for i in range(plots.size()):
 		growing_ids.append(world._crop_tubers[i].node.get_instance_id())
 		check(is_equal_approx(size_at(world, i), planted[i]), "watering plot %d does not jump to a different crop size" % i)
-		plots[i].elapsed = float(State.CROPS[plots[i].crop].grow) * .5
+		plots[i].elapsed = float(State.CropTable.CROPS[plots[i].crop].grow) * .5
 	world.update_plots(plots)
 	var midpoint: Array[float] = []
 	for i in range(plots.size()):
@@ -91,24 +91,24 @@ func run() -> void:
 	# A loaded save supplies new dictionaries without necessarily changing stage.
 	var previous: Array = plots
 	plots = plots.duplicate(true)
-	for plot: Dictionary in plots: plot.elapsed = float(State.CROPS[plot.crop].grow) * .65
+	for plot: Dictionary in plots: plot.elapsed = float(State.CropTable.CROPS[plot.crop].grow) * .65
 	world.update_plots(plots)
 	var loaded_sizes: Array[float] = []
 	for i in range(plots.size()):
 		loaded_sizes.append(size_at(world, i))
 		check(loaded_sizes[i] > midpoint[i] and world._crop_tubers[i].node.get_instance_id() == growing_ids[i], "same-stage load refreshes plot %d without replacing its tuber" % i)
-		previous[i].elapsed = float(State.CROPS[previous[i].crop].grow)
+		previous[i].elapsed = float(State.CropTable.CROPS[previous[i].crop].grow)
 	world.animate(1.0, false)
 	for i in range(plots.size()):
 		check(is_equal_approx(size_at(world, i), loaded_sizes[i]), "plot %d no longer follows the replaced save dictionary" % i)
-		plots[i].elapsed = float(State.CROPS[plots[i].crop].grow) * .999
+		plots[i].elapsed = float(State.CropTable.CROPS[plots[i].crop].grow) * .999
 	world.animate(.1, false)
 	var nearly_ripe: Array[float] = []
 	for i in range(plots.size()):
 		nearly_ripe.append(size_at(world, i))
 		check(nearly_ripe[i] > loaded_sizes[i], "plot %d follows new live elapsed time between state refreshes" % i)
 		plots[i].stage = 3
-		plots[i].elapsed = float(State.CROPS[plots[i].crop].grow)
+		plots[i].elapsed = float(State.CropTable.CROPS[plots[i].crop].grow)
 	world.update_plots(plots)
 	var snapshots: Dictionary = {}
 	for i in range(plots.size()):

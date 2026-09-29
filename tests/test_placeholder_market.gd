@@ -16,26 +16,26 @@ func run() -> void:
 		farm.elapsed = moment
 		farm._refresh_market()
 		for crop: String in State.CROP_IDS:
-			var base: float = State.CROPS[crop].base
+			var base: float = State.CropTable.CROPS[crop].base
 			check(farm.market[crop].sell >= base * 0.85 - 0.000001 and farm.market[crop].sell <= base * 1.15 + 0.000001, crop + " bounded drift")
 			check(farm.market[crop].seed == base * 0.75, crop + " fixed seed cost")
 			check(farm.price_percent(crop) == roundi((farm.market[crop].sell / base - 1.0) * 100.0), crop + " percentage is rounded against base")
 			check(farm.market[crop].history.size() >= 1 and farm.market[crop].history.size() <= 12 and farm.market[crop].history.back() == farm.market[crop].sell, crop + " bounded history ends at live quote")
 	farm.reset_game()
 	farm.update(1.0)
-	check(absf(farm.market.russet.sell / State.CROPS.russet.base - 1.0) < 0.002, "one second changes prices by less than 0.2 percent")
+	check(absf(farm.market.russet.sell / State.CropTable.CROPS.russet.base - 1.0) < 0.002, "one second changes prices by less than 0.2 percent")
 	farm.elapsed = 150.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 17.25), "quarter-cycle reaches upper bound")
+	check(is_equal_approx(farm.market.russet.sell, 15.75), "quarter-cycle reaches upper bound")
 	farm.elapsed = 450.0
 	farm._refresh_market()
-	check(is_equal_approx(farm.market.russet.sell, 12.75), "three-quarter-cycle reaches lower bound")
+	check(is_equal_approx(farm.market.russet.sell, 14.25), "three-quarter-cycle reaches lower bound")
 	for crop: String in State.CROP_IDS:
 		var history: Array = farm.market[crop].history
 		check(history.size() == 12, crop + " retains the last twelve quotes")
 		for index: int in range(12):
 			var seconds: float = 285.0 + index * 15.0
-			var price: float = State.CROPS[crop].base * (1.0 + 0.15 * sin(TAU * seconds / 600.0))
+			var price: float = State.CropTable.CROPS[crop].base * (1.0 + State.CropTable.drift(crop) * sin(TAU * seconds / 600.0))
 			check(is_equal_approx(history[index], price), crop + " chronological seasonal sample")
 	var expected: Dictionary = farm.market.duplicate(true)
 	farm.rng.seed = 54321
@@ -51,7 +51,7 @@ func run() -> void:
 	check(not saved.climate.collapse.has("market_crop") and not saved.climate.collapse.has("market_change") and not saved.climate.collapse.has("seed_factor") and not saved.climate.collapse.has("sell_factor"), "retired market context dropped from saved collapse report")
 	check(not saved.farm_help.has("practice_remaining") and "stocks" not in saved.farm_help.dismissed, "retired practice help dropped")
 	farm.reset_game()
-	check(farm.market.russet.history == [State.CROPS.russet.base], "fresh history contains only the initial quote")
+	check(farm.market.russet.history == [State.CropTable.CROPS.russet.base], "fresh history contains only the initial quote")
 	farm.elapsed = 13.0
 	farm._refresh_market()
 	var partial: Dictionary = farm.market.duplicate(true)

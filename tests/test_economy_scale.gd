@@ -11,15 +11,15 @@ func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
 	check(farm.coins == 2000 and farm.bankruptcy_limit() == -5000, "starting funds and overdraft boundary")
-	var prices := {"russet":15.0, "giant":18.0, "golden":21.0, "radioactive":24.0, "sunburst":27.0, "icecap":30.0}
+	var prices := {"russet":15.0, "giant":18.0, "golden":21.0, "sunburst":27.0, "icecap":30.0}
 	for crop: String in prices:
-		check(State.CROPS[crop].base == prices[crop], crop + " base price")
-		check(State.CROPS[crop].seed == prices[crop] * 0.75 and farm.market[crop].seed == prices[crop] * 0.75, crop + " fixed seed ratio")
+		check(State.CropTable.CROPS[crop].base == prices[crop], crop + " base price")
+		check(State.CropTable.CROPS[crop].seed == prices[crop] * 0.75 and farm.market[crop].seed == prices[crop] * 0.75, crop + " fixed seed ratio")
 		for island in [1]:
 			var bed: Dictionary = farm.plots[0].duplicate(true)
 			bed.merge({"crop":crop, "stage":3, "tilled":true, "watered":true}, true)
 			var count: int = farm._harvest_plot(bed)
-			check(count == State.CROPS[crop]["yield"] and count >= 3 and count <= 5, crop + " healthy yield stays 1x on island " + str(island))
+			check(count == State.CropTable.CROPS[crop]["yield"] and count >= 3 and count <= 5, crop + " healthy yield stays 1x on island " + str(island))
 	for costs: Array in State.TOOL_COSTS.values():
 		for cost: float in costs: check(cost >= 300 and cost <= 1500, "bounded tool prices")
 	check(State.FIELD_EXPANSION_COST == 1200, "flat field expansion cost")

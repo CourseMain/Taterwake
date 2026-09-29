@@ -35,7 +35,7 @@ func capture_polish() -> void:
 	state.reset_game()
 	state.tutorial_progress.completed = true
 	state.coins = 125000
-	for crop: String in ["russet", "giant", "golden", "radioactive"]:
+	for crop: String in ["russet", "giant", "golden"]:
 		state.storage[crop] = 24
 	state.elapsed = 420.0
 	state._refresh_market()
@@ -61,7 +61,7 @@ func check_price_information(state) -> void:
 		state._refresh_market()
 		game.hud.show_panel("market", state)
 		for crop: String in game.hud._refs.market_page.crops:
-			var expected: int = roundi((state.market[crop].sell / State.CROPS[crop].base - 1.0) * 100.0)
+			var expected: int = roundi((state.market[crop].sell / State.CropTable.CROPS[crop].base - 1.0) * 100.0)
 			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
 			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
 			var label: Label = game.hud._refs[crop + ":change"]
@@ -73,7 +73,7 @@ func check_price_information(state) -> void:
 			page.selected = crop
 			state.selected_crop = crop
 			game.hud.update_state(state)
-			var expected: int = roundi((state.market[crop].sell / State.CROPS[crop].base - 1.0) * 100.0)
+			var expected: int = roundi((state.market[crop].sell / State.CropTable.CROPS[crop].base - 1.0) * 100.0)
 			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
 			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
 			check(page.crop_change.text == text and page.crop_change.get_theme_color("font_color") == color, crop + " sell signed percentage and color")
@@ -86,8 +86,7 @@ func run() -> void:
 		return
 	create_timer(90).timeout.connect(func() -> void: push_error("Market check timed out"); quit(1))
 	capture = "--capture" in OS.get_cmdline_user_args()
-	check(State.seed_price_for(38) == 28.5 and is_equal_approx(State.seed_price_for(1.90), 1.43), "seed prices round to cents")
-	var expected: Array[String] = ["russet", "giant", "golden", "radioactive", "sunburst", "icecap"]
+	var expected: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
 	check(State.crops_by_base_price(State.CROP_IDS) == expected, "fixed ascending base order")
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
@@ -105,8 +104,8 @@ func run() -> void:
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
 	state.coins = 10000
 	for crop: String in State.CROP_IDS:
-		check(State.CROPS[crop].seed == State.CROPS[crop].base * 0.75, "base seed " + crop)
-		check(state.market[crop].seed == State.seed_price_for(State.CROPS[crop].base), "initial seed ratio " + crop)
+		check(State.CropTable.CROPS[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "base seed " + crop)
+		check(state.market[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "initial seed ratio " + crop)
 	game._on_action("market")
 	await settle()
 	var page = game.hud._refs.market_page
@@ -208,7 +207,7 @@ func run() -> void:
 	state.elapsed = 150.0
 	state._refresh_market()
 	game.hud.update_state(state)
-	check(page.quantity.value == 2 and page.payout.text == "\uE000 35" and page.crops == expected, "live refresh updates payout and preserves selection/order")
+	check(page.quantity.value == 2 and page.payout.text == "\uE000 32" and page.crops == expected, "live refresh updates payout and preserves selection/order")
 	check(state.save_game(SAVE) and state.load_game(SAVE), "new market and bounded history round-trip saves")
 	check(is_equal_approx(state.market.russet.seed, 11.25), "load recomputes 75% seed price")
 	if FileAccess.file_exists(SAVE): DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
@@ -216,7 +215,7 @@ func run() -> void:
 	state.climate._impact(state)
 	state._refresh_market()
 	for crop: String in State.CROP_IDS:
-		check(state.market[crop].seed == State.seed_price_for(State.CROPS[crop].base), "disaster seeds follow final quote " + crop)
+		check(state.market[crop].seed == State.CropTable.CROPS[crop].base * 0.75, "disaster seeds follow final quote " + crop)
 	game.hud.show_panel("market", state)
 	check(game.hud._refs.market_page.crops == State.crops_by_base_price(state.available_crops()), "buy preserves local island availability")
 	game.hud.show_panel("sell_potatoes", state)

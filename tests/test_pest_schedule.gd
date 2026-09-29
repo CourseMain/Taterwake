@@ -26,7 +26,7 @@ func run() -> void:
 		if not plot.unlocked: continue
 		plot.stage = 3
 		plot.tilled = true
-		plot.elapsed = farm.CROPS[plot.crop].grow
+		plot.elapsed = farm.CropTable.CROPS[plot.crop].grow
 		plot.watered = true
 		plot.plant_age = 40.0
 		farm._schedule_pest(plot)

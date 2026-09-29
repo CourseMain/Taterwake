@@ -702,15 +702,15 @@ func update_plots(plots: Array) -> void:
 		_crop_tubers[i] = {"node": tuber, "plot": data}
 		_update_crop_tuber(_crop_tubers[i])
 		if stage == 3:
-			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), crop_color if crop_kind == "radioactive" else GOLD, 0.12)
+			var sparkle := _gem(root, Vector3(0.0, .45 + 1.58 * _crop_tuber_size(data), 0.0), GOLD, 0.12)
 			_ripe_sparkles.append(sparkle)
 		_geometry_batcher.batch_siblings(root)
 	_update_pest_caption_density()
 
 func _crop_appearance(plot: Dictionary) -> Dictionary:
 	var crop_kind: String = str(plot.get("crop", "russet"))
-	var crop_color := Color(str({"russet":"dfb36f", "giant":"d7a37b", "golden":"f5cc38", "radioactive":"afff48", "sunburst":"ffa629", "icecap":"d8f1ff"}.get(crop_kind, "dfb36f")))
-	var foliage := Color(str({"russet":"749e44", "giant":"729758", "golden":"9ba149", "radioactive":"75c962", "sunburst":"83a746", "icecap":"759ba5"}.get(crop_kind, "749e44")))
+	var crop_color := Color(str({"russet":"dfb36f", "giant":"d7a37b", "golden":"f5cc38", "sunburst":"ffa629", "icecap":"d8f1ff"}.get(crop_kind, "dfb36f")))
+	var foliage := Color(str({"russet":"749e44", "giant":"729758", "golden":"9ba149", "sunburst":"83a746", "icecap":"759ba5"}.get(crop_kind, "749e44")))
 	var damage: int = int(clampf(float(plot.get("pest_damage", 0)), 0, 1) * 10)
 	return {"crop": crop_color.lerp(Color("9e8969"), damage * .035), "foliage": foliage.lerp(Color("988759"), damage * .065)}
 
@@ -738,7 +738,7 @@ func _create_crop_tuber(parent: Node3D, plot: Dictionary) -> Node3D:
 
 func _update_crop_tuber(entry: Dictionary) -> void:
 	var plot: Dictionary = entry.plot
-	var progress: float = 1.0 if int(plot.stage) == 3 else clampf(float(plot.get("elapsed", 0)) / float(FarmState.CROPS[str(plot.crop)].grow), 0, 1)
+	var progress: float = 1.0 if int(plot.stage) == 3 else clampf(float(plot.get("elapsed", 0)) / float(FarmState.CropTable.CROPS[str(plot.crop)].grow), 0, 1)
 	entry.node.scale = Vector3.ONE * _crop_tuber_size(plot) * lerpf(.375, 1.0, smoothstep(0, 1, progress))
 
 

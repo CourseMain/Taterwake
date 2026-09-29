@@ -94,7 +94,7 @@ static func valid(raw: Variant) -> bool:
 		if not (value is float or value is int) or not is_finite(float(value)) or float(value) < entry[1] or float(value) > entry[2]: return false
 		if float(value) != floor(float(value)): return false
 	for key: String in ["crop"]:
-		if raw.get(key) not in ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]: return false
+		if raw.get(key) not in ["russet", "golden", "giant", "sunburst", "icecap"]: return false
 	if not raw.get("dismissed") is Array or raw.dismissed.size() > TIP_IDS.size(): return false
 	for id: Variant in raw.dismissed:
 		if id not in TIP_IDS: return false

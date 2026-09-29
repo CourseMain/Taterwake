@@ -1,5 +1,6 @@
 extends RefCounted
 ## Saved, deterministic quarter-second field hazards and player-operated reserves.
+const CropTable = preload("res://scripts/crop_table.gd")
 const ZONES: Array[String] = ["Far beds", "Middle beds", "Near beds"]
 
 static func fresh() -> Dictionary:
@@ -53,6 +54,9 @@ static func relieve(farm, index: int, amount: float) -> void:
 static func frozen(farm, index: int) -> bool:
 	return bool(farm.plots[index].get("winter_ice", false)) or farm.climate.data.operations.ice.has(str(index))
 
+static func crop_frozen(farm, index: int) -> bool:
+	return farm.climate.data.operations.ice.has(str(index)) or (bool(farm.plots[index].get("winter_ice", false)) and farm.plots[index].crop != "icecap")
+
 static func tool(farm, index: int, action: String) -> bool:
 	if frozen(farm, index):
 		if action != "hoe": return false
@@ -84,7 +88,7 @@ static func water_cost(farm) -> float:
 
 static func needs_water(farm, index: int) -> bool:
 	var plot: Dictionary = farm.plots[index]
-	if not plot.unlocked or int(plot.stage) == 0 or frozen(farm, index): return false
+	if not plot.unlocked or int(plot.stage) == 0 or crop_frozen(farm, index): return false
 	if int(plot.stage) == 1 or not plot.watered: return true
 	return scarce(farm) and farm.climate.data.event == "drought" and (float(farm.climate.data.operations.stress.get(str(index), 0)) > 0.02 or float(farm.climate.data.operations.wet.get(str(index), 0)) < 1)
 
@@ -116,6 +120,8 @@ static func target(farm, index: int, action: String) -> String:
 				if scarce(farm) and farm.climate.data.event == "drought":
 					relieve(farm, i, 0.8)
 					farm.climate.data.operations.wet[str(i)] = 6.0
+				elif not scarce(farm):
+					relieve(farm, i, 1.0)
 				if int(farm.plots[i].stage) == 1:
 					farm.plots[i].stage = 2
 					farm.plots[i].watered = true
@@ -162,11 +168,10 @@ static func _tick(farm, dt: float) -> void:
 	if c.data.phase != "active" or c.data.event != "drought":
 		op.supply.water = minf(capacity(farm), float(op.supply.water) + dt * 6.0 * (0.25 if farm.season_clock.season == 3 else 1.0))
 	if c.data.phase != "active": op.supply.spray = minf(18.0, float(op.supply.spray) + dt * 3.0)
-	if c.data.phase != "active": return
 	var field: Array = farm.plots
 	var supply: Dictionary = op.supply
 	var projects: Dictionary = c.data.projects
-	var event: String = c.data.event
+	var event: String = c.data.event if c.data.phase == "active" else ""
 	var strength: float = c.data.severity
 	if event == "storm":
 		op.strike_in -= dt
@@ -192,20 +197,23 @@ static func _tick(farm, dt: float) -> void:
 			op.stress.erase(key)
 			op.wet.erase(key)
 			continue
+		var crop: String = str(field[index].crop)
+		var water_need: float = float(CropTable.CROPS[crop].water_need)
 		var stress: float = float(op.stress.get(key, 0.0))
+		if not field[index].watered: stress += dt * 0.0025 * water_need
 		var wet: float = maxf(0.0, float(op.wet.get(key, 0.0)))
 		op.wet[key] = wet
 		var exposure: float = 0.75 + float((index * 7) % 11) / 20.0
 		var protection: float = 1.0 - c.protection(event, "field")
 		if event == "drought":
-			if wet <= 0.0: stress += dt * 0.052 * strength * exposure * protection
+			if wet <= 0.0: stress += dt * 0.052 * strength * exposure * protection * (0.5 + 0.5 * water_need) * CropTable.heat_factor(crop)
 		elif event == "freeze":
-			if op.ice.has(key): stress += dt * 0.037 * strength * exposure * protection
+			if op.ice.has(key): stress += dt * 0.037 * strength * exposure * protection * CropTable.cold_factor(crop)
 		elif event == "flood":
 			stress += dt * 0.055 * strength * exposure * protection
 			if supply.gates and int(projects.get("drainage", 0)) > 0:
 				stress = maxf(0.0, stress - dt * 0.075 * int(projects.drainage))
-		else:
+		elif event == "storm":
 			var sheltered: bool = int(projects.get("windbreaks", 0)) > 0 and zone(index) == 0
 			var wind_rate: float = 0.009 * (1.0 - 0.3 * int(projects.get("windbreaks", 0))) if sheltered else 0.009
 			stress += dt * wind_rate * strength * protection
@@ -217,9 +225,11 @@ static func _tick(farm, dt: float) -> void:
 			op.scars[key] = true
 			op.stress.erase(key)
 			c.data.field_lost += 1
-			c.data.last.field_lost += 1
-			c.data.last.field_total = maxi(int(c.data.last.field_total), int(c.data.last.field_lost))
-			if not c.data.history.is_empty(): c.data.history[-1] = c.data.last.duplicate(true)
+			if not event.is_empty():
+				c.data.last.field_lost += 1
+				c.data.last.field_total = maxi(int(c.data.last.field_total), int(c.data.last.field_lost))
+				if not c.data.history.is_empty(): c.data.history[-1] = c.data.last.duplicate(true)
+			else: farm.notified.emit("A %s bed was lost without water." % str(CropTable.CROPS[crop].name))
 
 static func valid(raw: Variant) -> bool:
 	if not raw is Dictionary or not raw.get("supply") is Dictionary: return false

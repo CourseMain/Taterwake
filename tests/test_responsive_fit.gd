@@ -72,7 +72,7 @@ func run() -> void:
 				inside(button, tag + " seed choice")
 		await shot(tag + "-farm")
 		game.hud.show_panel("market", game.state)
-		game.hud.show_purchase({"kind": "seeds", "id": "radioactive", "name": "Radioactive", "quantity": 12500, "cost": 125000000.0, "total": 12506})
+		game.hud.show_purchase({"kind": "seeds", "id": "sunburst", "name": "Sunburst", "quantity": 12500, "cost": 125000000.0, "total": 12506})
 		await settle()
 		check_menu(tag + " market")
 		inside(game.hud._purchase_box, tag + " purchase receipt")

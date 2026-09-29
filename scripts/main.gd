@@ -806,7 +806,7 @@ func _update_hover() -> void:
 		elif int(plot.stage) == 3:
 			hud.set_context("%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action])
 		elif int(plot.stage) > 0 and bool(plot.watered):
-			var seconds: float = maxf(0.0, (float(state.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
+			var seconds: float = maxf(0.0, (float(state.CropTable.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
 			hud.set_context("%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds])
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()
@@ -983,7 +983,9 @@ func _on_action(action: String) -> void:
 			hud.show_panel("tools", state)
 		"quest": state.claim_quest(parts[1])
 		"close": hud.close_panel()
-		"crop": state.select_crop(parts[1])
+		"crop":
+			state.select_crop(parts[1])
+			_select_tool("plant")
 
 		"tool": _select_tool(parts[1])
 		"buy": state.buy_seeds(parts[1], int(parts[2]))

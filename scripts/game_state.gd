@@ -21,25 +21,17 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 30
+const MECHANICS_REVISION: int = 31
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
 const PRICE_QUOTE_SECONDS: float = 15.0
 const PEST_TICK_SECONDS: float = 5.0
-const SEED_PRICE_RATIO: float = 0.75
 const QUEST_TARGETS: Dictionary = {"starter_crash": 10.0, "starter_spike": 10.0, "starter_combo": 12.0}
 const DEFAULT_SAVE_PATH: String = "user://taterland_save_v4.json"
 const PROTECTED_SAVE_PATHS: Array[String] = ["user://spud_valley_save.json", "user://spud_valley_save_v3.json"]
-const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst", "icecap"]
-const CROPS: Dictionary = {
-	"russet": {"name": "Russet Potato", "seed": 11.25, "base": 15.0, "grow": 75.0, "yield": 3, "color": "a87b45"},
-	"golden": {"name": "Golden Potato", "seed": 15.75, "base": 21.0, "grow": 105.0, "yield": 4, "color": "efc74c"},
-	"giant": {"name": "Giant Potato", "seed": 13.5, "base": 18.0, "grow": 135.0, "yield": 5, "color": "c7855d"},
-	"radioactive": {"name": "Radioactive Potato", "seed": 18.0, "base": 24.0, "grow": 165.0, "yield": 4, "color": "b6f064"},
-	"sunburst": {"name": "Sunburst Potato", "seed": 20.25, "base": 27.0, "grow": 195.0, "yield": 3, "color": "ffab42"},
-	"icecap": {"name": "Icecap Potato", "seed": 22.5, "base": 30.0, "grow": 225.0, "yield": 3, "color": "aeeaff"},
-}
+const CropTable = preload("res://scripts/crop_table.gd")
+const CROP_IDS: Array[String] = CropTable.IDS
 const MAX_GROW_SECONDS: float = 450.0
 const TOOL_COSTS: Dictionary = {"hoe": [300.0, 600.0, 1200.0], "water": [400.0, 800.0, 1400.0], "harvest": [500.0, 1000.0, 1500.0]}
 const BARN_COSTS: Array[float] = [300.0, 800.0, 2000.0]
@@ -72,8 +64,8 @@ var coins: float:
 		if is_finite(value) and not run_over:
 			post_money("other", "Balance adjustment", clampf(value, -MAX_MONEY, MAX_MONEY) - coins)
 var selected_crop: String = "russet"
-var seed_inventory: Dictionary = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
-var storage: Dictionary = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
+var seed_inventory: Dictionary = CropTable.empty_stock()
+var storage: Dictionary = CropTable.empty_stock()
 var capacity: int = 200
 var tools: Dictionary = {"hoe": 0, "water": 0, "harvest": 0}
 var plots: Array[Dictionary] = []
@@ -99,18 +91,26 @@ func _init() -> void:
 
 
 func _build_starters() -> void:
+	seed_inventory.russet = 12
 	plots = []
 	for index in range(24):
 		var stage: int = 3 if index < 2 else (2 if index < 4 else 0)
 		plots.append({"unlocked": index < 12, "winter_ice": false, "stage": stage, "watered": stage > 0,
-			"elapsed": float(CROPS.russet.grow) if stage == 3 else (float(CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
+			"elapsed": float(CropTable.CROPS.russet.grow) if stage == 3 else (float(CropTable.CROPS.russet.grow) * 0.5 if stage == 2 else 0.0),
 			"crop": "russet", "tilled": index < 4, "pending": 0, "pests": false, "pest_damage": 0.0, "ripe_age": 0.0, "plant_age": 0.0, "pest_delay": 0.0, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_destroyed": false, "yield_total": 0, "yield_taken": 0})
 	market.clear()
 	_refresh_market()
 
 
+func can_plant_crop(id: String) -> bool:
+	return season_clock.can_plant() or (season_clock.season == 2 and id == "icecap")
+
+func last_year_price(id: String) -> float:
+	# A full four-season sine cycle averages to base, regardless of phase.
+	return float(CropTable.CROPS[id].base) if season_clock.year > 1 else 0.0
+
 func crop_grow_time(id: String) -> float:
-	return float(CROPS[id]["grow"]) / crop_growth_speed(id)
+	return float(CropTable.CROPS[id]["grow"]) / crop_growth_speed(id)
 
 
 func _growth_speed() -> float:
@@ -119,7 +119,7 @@ func _growth_speed() -> float:
 func crop_growth_speed(crop: String = "") -> float:
 	var speed: float = _growth_speed()
 	var id: String = selected_crop if crop.is_empty() else crop
-	return maxf(speed, float(CROPS[id].grow) / MAX_GROW_SECONDS)
+	return maxf(speed, float(CropTable.CROPS[id].grow) / MAX_GROW_SECONDS)
 
 
 func debug_info() -> Dictionary:
@@ -191,9 +191,9 @@ func inventory_info() -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	for crop in CROP_IDS:
 		if int(seed_inventory[crop]) > 0:
-			entries.append({"id": "seed:" + crop, "kind": "seed", "crop": crop, "name": str(CROPS[crop]["name"]) + " Seeds", "count": int(seed_inventory[crop]), "rarity": "seed", "description": "Plant in a prepared bed.", "effect": "Select these seeds for planting", "active": selected_crop == crop, "action": "crop:" + crop})
+			entries.append({"id": "seed:" + crop, "kind": "seed", "crop": crop, "name": str(CropTable.CROPS[crop]["name"]) + " Seeds", "count": int(seed_inventory[crop]), "rarity": "seed", "description": "Plant in a prepared bed.", "effect": "Select these seeds for planting", "active": selected_crop == crop, "action": "crop:" + crop})
 		if int(storage[crop]) > 0:
-			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CROPS[crop]["name"], "count": int(storage[crop]), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": float(market[crop]["sell"]) * int(storage[crop])})
+			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CropTable.CROPS[crop]["name"], "count": int(storage[crop]), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": float(market[crop]["sell"]) * int(storage[crop])})
 	for tool in ["hoe", "plant", "water", "harvest", "pest"]:
 		var title: String = {"hoe": "Hoe", "plant": "Seed pouch", "water": "Watering can", "harvest": "Scythe", "pest": "Pest sprayer"}[tool]
 		entries.append({"id": "tool:" + tool, "kind": "tool", "name": title, "count": 1, "level": int(tools.get(tool, 0)) + 1, "effect": "Use this farming tool", "action": "tool:" + tool})
@@ -339,8 +339,8 @@ func _update_tutorial(delta: float) -> void:
 	for plot in plots:
 		if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"]:
 			plot["stage"] = 2
-			plot["elapsed"] = minf(float(CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
-			if float(plot["elapsed"]) >= float(CROPS[plot["crop"]]["grow"]):
+			plot["elapsed"] = minf(float(CropTable.CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
+			if float(plot["elapsed"]) >= float(CropTable.CROPS[plot["crop"]]["grow"]):
 				plot["stage"] = 3
 				dirty = true
 	if dirty:
@@ -387,17 +387,17 @@ func update(delta: float) -> void:
 		var farm_growth: float = _growth_speed()
 		for plot_index in range(plots.size()):
 			var plot: Dictionary = plots[plot_index]
-			if season_clock.season == 3 or ClimateSystem.Operations.frozen(self, plot_index): continue
-			var growth_speed: float = maxf(farm_growth, float(CROPS[plot.crop].grow) / MAX_GROW_SECONDS)
+			if (season_clock.season == 3 and plot.crop != "icecap") or ClimateSystem.Operations.crop_frozen(self, plot_index): continue
+			var growth_speed: float = maxf(farm_growth, float(CropTable.CROPS[plot.crop].grow) / MAX_GROW_SECONDS)
 			var ripe_step: float = step if int(plot["stage"]) == 3 else 0.0
 			if int(plot.stage) > 0: plot["plant_age"] = minf(1e9, float(plot.get("plant_age", 0)) + step)
 			var was_infested: bool = bool(plot.get("pests", false))
 			if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"]:
 				plot["stage"] = 2
-				var until_ripe: float = (float(CROPS[plot["crop"]]["grow"]) - float(plot["elapsed"])) / growth_speed
+				var until_ripe: float = (float(CropTable.CROPS[plot["crop"]]["grow"]) - float(plot["elapsed"])) / growth_speed
 				ripe_step = maxf(0.0, step - until_ripe)
-				plot["elapsed"] = minf(float(CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
-				if float(plot["elapsed"]) >= float(CROPS[plot["crop"]]["grow"]):
+				plot["elapsed"] = minf(float(CropTable.CROPS[plot["crop"]]["grow"]), float(plot["elapsed"]) + step * growth_speed)
+				if float(plot["elapsed"]) >= float(CropTable.CROPS[plot["crop"]]["grow"]):
 					plot["stage"] = 3
 					dirty = true
 			if int(plot["stage"]) == 3:
@@ -439,9 +439,10 @@ func _season_boundary() -> void:
 	elif season_clock.season == 3:
 		season_clock.autumn_loss = 0
 		for plot in plots:
-			if int(plot.stage) > 0: season_clock.autumn_loss += 1
-			_clear_crop(plot)
-			plot.tilled = false
+			if plot.crop != "icecap" or int(plot.stage) == 0:
+				if int(plot.stage) > 0: season_clock.autumn_loss += 1
+				_clear_crop(plot)
+				plot.tilled = false
 			plot.winter_ice = true
 		climate.end_working_year()
 		farm_help.refresh_pests(self)
@@ -457,7 +458,12 @@ func _season_boundary() -> void:
 	if season_clock.season == 3: notified.emit(news)
 
 func winter_notice() -> String:
-	return "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. No unharvested crops remained in the fields."
+	var message: String = "Winter arrived: %d unharvested bed%s lost to the cold." % [season_clock.autumn_loss, " was" if season_clock.autumn_loss == 1 else "s were"] if season_clock.autumn_loss > 0 else "Winter arrived. No crops were lost to the cold."
+	var icecap_beds: int = 0
+	for plot in plots:
+		if plot.crop == "icecap" and int(plot.stage) > 0: icecap_beds += 1
+	if icecap_beds > 0: message += " Icecap survives in %d bed%s and grows through Winter ice." % [icecap_beds, "" if icecap_beds == 1 else "s"]
+	return message
 
 func _pest_damage_tick(plot: Dictionary) -> void:
 	if tutorial_active or farm_help.protected_pest(self, plot):
@@ -538,7 +544,7 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 
 func interact_plot(index: int, tool: String = "hoe") -> String:
 	if accounts_open: return "Close the accounts to return to the farm."
-	if tool == "plant" and not season_clock.can_plant(): return _finish("Planting is open in Spring and Summer. Bring in your crops before Winter.")
+	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Plant in Spring or Summer. Only Icecap can be planted in Autumn; prepare its beds before then.")
 	if ClimateSystem.Lesson.active(self): return ClimateSystem.Lesson.water(self, index, tool)
 	if run_over:
 		return "Run over. Start a new farm."
@@ -562,7 +568,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			if iced: climate_thawed += 1
 			affected += 1
 			continue
-		if iced:
+		if ClimateSystem.Operations.crop_frozen(self, target) or (iced and action == "plant"):
 			ice_blocked = true
 			continue
 		if action == "pest":
@@ -590,6 +596,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		elif action == "water" and int(plot["stage"]) in [1, 2] and not plot["watered"]:
 			if not ClimateSystem.Operations.pour(self): continue
 			plot["watered"] = true
+			ClimateSystem.Operations.relieve(self, target, 1.0)
 			plot["stage"] = 2
 			farm_help.observe_plot(self, target, "water")
 			affected += 1
@@ -634,7 +641,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if action == "hoe":
 		return _finish("Tilled %d patches. Plant your selected seeds next." % affected)
 	if action == "plant":
-		return _finish("Planted %d %s seeds. Water them to start growing." % [affected, CROPS[selected_crop]["name"]])
+		return _finish("Planted %d %s seeds. Water them to start growing." % [affected, CropTable.CROPS[selected_crop]["name"]])
 	return _finish("Watered %d patches. Growth is underway; check prices or prepare more soil." % affected)
 
 
@@ -645,7 +652,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 	var id: String = str(plot["crop"])
 	var first_cut: bool = int(plot.get("yield_total", 0)) == 0 and int(plot["pending"]) == 0
 	if first_cut:
-		plot["yield_total"] = int(CROPS[id]["yield"])
+		plot["yield_total"] = int(CropTable.CROPS[id]["yield"])
 		plot["yield_taken"] = 0
 		plot["pending"] = maxi(0, int(floor(float(plot["yield_total"]) * (3 - int(plot.get("pest_ticks", 0))) / 3.0)))
 		_progress_quest("starter_combo", 1.0)
@@ -664,20 +671,16 @@ func _harvest_plot(plot: Dictionary) -> int:
 
 func select_crop(id: String) -> String:
 	if not available_crops().has(id):
-		return _finish("Choose an available crop. Sunburst potatoes are exclusive to Golden Shores.")
+		return _finish("Choose one of the five varieties at Buy Seeds.")
 	selected_crop = id
-	return _finish("Selected %s. You have %s seeds ready to plant." % [CROPS[id]["name"], format_number(seed_inventory[id])])
-
-
-static func seed_price_for(base_price: float) -> float:
-	return snappedf(base_price * SEED_PRICE_RATIO + 1e-9, 0.01)
+	return _finish("Selected %s. You have %s seeds ready to plant." % [CropTable.CROPS[id]["name"], format_number(seed_inventory[id])])
 
 
 static func crops_by_base_price(ids: Array) -> Array[String]:
 	var result: Array[String] = []
 	for id: String in ids:
-		if CROPS.has(id): result.append(id)
-	result.sort_custom(func(a: String, b: String) -> bool: return float(CROPS[a].base) < float(CROPS[b].base))
+		if CropTable.CROPS.has(id): result.append(id)
+	result.sort_custom(func(a: String, b: String) -> bool: return float(CropTable.CROPS[a].base) < float(CropTable.CROPS[b].base))
 	return result
 
 
@@ -699,7 +702,7 @@ func purchase_refusal(cost: float = -1.0) -> String:
 func buy_seeds(id: String, quantity: int = 5) -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if not CROPS.has(id) or quantity < 1 or quantity > MAX_INVENTORY:
+	if not CropTable.CROPS.has(id) or quantity < 1 or quantity > MAX_INVENTORY:
 		return _reject_purchase("Choose a crop and a positive seed quantity.")
 	if not available_crops().has(id):
 		return _reject_purchase("Choose a crop variety from the seed shop.")
@@ -711,19 +714,19 @@ func buy_seeds(id: String, quantity: int = 5) -> String:
 	post_money("seeds", "Bought %d %s seeds" % [quantity, id], -cost)
 	seed_inventory[id] = int(seed_inventory[id]) + quantity
 	_progress_quest("starter_crash", float(quantity))
-	return _complete_purchase({"kind": "seeds", "id": id, "name": str(CROPS[id]["name"]).trim_suffix(" Potato"), "quantity": quantity, "cost": cost, "total": int(seed_inventory[id])}, "Bought %s %s seeds for %s at the seed counter." % [format_number(quantity), CROPS[id]["name"], money(cost)])
+	return _complete_purchase({"kind": "seeds", "id": id, "name": str(CropTable.CROPS[id]["name"]).trim_suffix(" Potato"), "quantity": quantity, "cost": cost, "total": int(seed_inventory[id])}, "Bought %s %s seeds for %s at the seed counter." % [format_number(quantity), CropTable.CROPS[id]["name"], money(cost)])
 
 
 func sell_crop(id: String, quantity: int = -1) -> String:
 	if run_over:
 		return "Run over. Start a new farm."
-	if not CROPS.has(id) or quantity == 0 or quantity < -1:
+	if not CropTable.CROPS.has(id) or quantity == 0 or quantity < -1:
 		return _finish("Choose a crop and an amount to sell.")
 	if quantity > int(storage[id]):
-		return _finish("Not enough %s. You own %s; choose a smaller quantity." % [CROPS[id]["name"], format_number(storage[id])])
+		return _finish("Not enough %s. You own %s; choose a smaller quantity." % [CropTable.CROPS[id]["name"], format_number(storage[id])])
 	var amount: int = int(storage[id]) if quantity == -1 else quantity
 	if amount <= 0:
-		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CROPS[id]["name"])
+		return _finish("No %s in the barn yet. Harvest some, then decide when to sell." % CropTable.CROPS[id]["name"])
 	var earnings: float = float(market[id]["sell"]) * amount
 	storage[id] = int(storage[id]) - amount
 	post_money("sales", "Sold %d %s sacks" % [amount, id], earnings)
@@ -731,7 +734,7 @@ func sell_crop(id: String, quantity: int = -1) -> String:
 	var sold_quote: float = float(market[id]["sell"])
 	farm_help.observe_sale(self, id)
 	_progress_quest("starter_spike", float(amount))
-	var message: String = _finish("Sold %s %s for %s at %s each." % [format_number(amount), CROPS[id]["name"], money(earnings), money(sold_quote)])
+	var message: String = _finish("Sold %s %s for %s at %s each." % [format_number(amount), CropTable.CROPS[id]["name"], money(earnings), money(sold_quote)])
 	sale_completed.emit({"id": id, "quantity": amount, "price": sold_quote, "total": earnings, "owned": int(storage[id])})
 	return message
 
@@ -812,31 +815,30 @@ func expand_field() -> String:
 	return _complete_purchase({"kind": "field", "id": "expansion", "name": "Garden beds", "quantity": int(info.remaining), "cost": float(info.cost), "total": int(info.total)}, "%d more beds open." % int(info.remaining))
 
 
-func seasonal_price_factor() -> float:
-	# Placeholder four-season cycle until the season clock owns this phase.
-	return _price_factor_at(elapsed)
+func seasonal_price_factor(id: String = "russet") -> float:
+	return _price_factor_at(elapsed, id)
 
 
-func _price_factor_at(seconds: float) -> float:
-	return 1.0 + 0.15 * sin(TAU * fposmod(seconds, PRICE_CYCLE_SECONDS) / PRICE_CYCLE_SECONDS)
+func _price_factor_at(seconds: float, id: String = "russet") -> float:
+	return 1.0 + CropTable.drift(id) * sin(TAU * fposmod(seconds, PRICE_CYCLE_SECONDS) / PRICE_CYCLE_SECONDS)
 
 
 func _refresh_market() -> void:
-	var drift: float = seasonal_price_factor()
 	for id in CROP_IDS:
-		var base: float = float(CROPS[id].base)
+		var drift: float = seasonal_price_factor(id)
+		var base: float = float(CropTable.CROPS[id].base)
 		# The deterministic curve lets us reconstruct real past quotes after loading,
 		# independent of frame rate. Keep the live quote as the final sample.
 		var history: Array = []
 		var end: int = ceili(elapsed / PRICE_QUOTE_SECONDS)
 		for index: int in range(maxi(0, end - PRICE_HISTORY_LIMIT + 1), end):
-			history.append(base * _price_factor_at(index * PRICE_QUOTE_SECONDS))
+			history.append(base * _price_factor_at(index * PRICE_QUOTE_SECONDS, id))
 		history.append(base * drift)
-		market[id] = {"seed": seed_price_for(base), "sell": base * drift, "history": history}
+		market[id] = {"seed": float(CropTable.CROPS[id].seed), "sell": base * drift, "history": history}
 
 
 func price_percent(id: String) -> int:
-	return roundi((float(market[id].sell) / float(CROPS[id].base) - 1.0) * 100.0)
+	return roundi((float(market[id].sell) / float(CropTable.CROPS[id].base) - 1.0) * 100.0)
 
 
 func price_percent_text(id: String) -> String:
@@ -909,8 +911,8 @@ func reset_game() -> void:
 	quest_progress = {"starter_crash": 0, "starter_spike": 0, "starter_combo": 0}
 	quest_claimed.clear()
 	selected_crop = "russet"
-	seed_inventory = {"russet": 12, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
-	storage = {"russet": 0, "golden": 0, "giant": 0, "radioactive": 0, "sunburst": 0, "icecap": 0}
+	seed_inventory = CropTable.empty_stock()
+	storage = CropTable.empty_stock()
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
 	news = "Harvest your Russets. Catch a good price. Sell with F!"
@@ -1084,7 +1086,7 @@ func _valid_save(raw: Variant) -> bool:
 	if (int(data.season_clock.season) == 3):
 		if data.climate.phase != "calm": return false
 		for plot in data.plots:
-			if int(plot.stage) != 0 or plot.tilled: return false
+			if plot.crop != "icecap" and (int(plot.stage) != 0 or plot.tilled): return false
 	if not data.get("quest_progress") is Dictionary or data.quest_progress.size() != QUEST_TARGETS.size(): return false
 	for id in QUEST_TARGETS:
 		if not _number(data.quest_progress.get(id), 0, QUEST_TARGETS[id], true): return false
@@ -1113,11 +1115,11 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 		for key in ["unlocked", "watered", "tilled", "winter_ice"]:
 			if not plot.has(key) or not plot[key] is bool:
 				return false
-		if not plot.has("crop") or not plot["crop"] is String or not CROPS.has(plot["crop"]):
+		if not plot.has("crop") or not plot["crop"] is String or not CropTable.CROPS.has(plot["crop"]):
 			return false
 		if not plot.has("stage") or not _number(plot["stage"], 0.0, 3.0, true):
 			return false
-		var saved_grow: float = float(CROPS[plot.crop].grow)
+		var saved_grow: float = float(CropTable.CROPS[plot.crop].grow)
 		if not plot.has("elapsed") or not _number(plot["elapsed"], 0.0, saved_grow):
 			return false
 		if not plot.has("pending") or not _number(plot["pending"], 0.0, 100000.0, true):

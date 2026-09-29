@@ -40,7 +40,7 @@ func run() -> void:
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
-	state.update(float(state.CROPS.russet.grow) + 0.1)
+	state.update(float(state.CropTable.CROPS.russet.grow) + 0.1)
 	state.interact_plot(5, "harvest")
 	check(state.farm_help.data.independent == 3, "real independent crop waits for a sale")
 	state.storage.golden = 1
@@ -52,7 +52,7 @@ func run() -> void:
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
-	state.update(float(state.CROPS.russet.grow) + 90.1)
+	state.update(float(state.CropTable.CROPS.russet.grow) + 90.1)
 	check(state.farm_help.data.pest_phase == 1 and state.plots[5].pests, "first naturally ripe infestation arms protection")
 	state.farm_help.dismiss("pests")
 	state.update(70.0)

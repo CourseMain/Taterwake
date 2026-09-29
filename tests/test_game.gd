@@ -56,7 +56,7 @@ func _run() -> void:
 	check(game.world.plot_positions.size() == 24, "original 24 farm plots preserved")
 	check(is_instance_valid(game.world.player) and game.world.camera.current, "original farmer and camera active")
 	check(not game.hud.is_panel_open(), "farm available immediately")
-	check(game.state.available_crops().size() == 6, "six crop varieties available")
+	check(game.state.available_crops().size() == 5, "five crop varieties available")
 	await shot("spud-valley")
 	for station in {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}:
 		var location: Vector3 = {"barn": Vector3(-12, 2, -8), "market": Vector3(0, 1.8, -9)}[station]
@@ -109,7 +109,7 @@ func _run() -> void:
 	game._process(12.0)
 	check(game.state.plots[5].stage != 3, "unwatered crops do not grow unattended")
 	game.perform_plot(5, "water")
-	game._process(game.state.CROPS.russet.grow + 0.1)
+	game._process(game.state.CropTable.CROPS.russet.grow + 0.1)
 	check(game.state.plots[5].stage == 3, "watered crop matures on continuous time")
 	game.state.coins = 100000.0
 	game._on_action("tools")

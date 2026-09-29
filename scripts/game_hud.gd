@@ -70,13 +70,10 @@ const PAPER: Color = Color("f3efdf")
 const GREEN: Color = Color("377858")
 const GOLD: Color = Color("d9a948")
 const CHERRY: Color = Color("bb654d")
-const CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive"]
-const ALL_CROP_IDS: Array[String] = ["russet", "golden", "giant", "radioactive", "sunburst"]
-const SHORES_PAPER: Color = Color("fff0d8")
-const CORAL: Color = Color("bf7058")
-const CROP_NAMES: Dictionary = {"russet": "Russet", "golden": "Golden", "giant": "Giant", "radioactive": "Radioactive", "sunburst": "Sunburst"}
-const CROP_COLORS: Dictionary = {"russet": Color("b48a52"), "golden": GOLD, "giant": Color("b16f50"), "radioactive": Color("71a557"), "sunburst": Color("da9334")}
-const GROW_TIMES: Dictionary = {"russet": 75, "golden": 105, "giant": 135, "radioactive": 165, "sunburst": 195, "icecap": 225}
+const CropTable = preload("res://scripts/crop_table.gd")
+const CROP_IDS: Array[String] = CropTable.IDS
+const ALL_CROP_IDS: Array[String] = CropTable.IDS
+
 const TOOL_COSTS: Dictionary = {"hoe": [300, 12000], "water": [450, 15000], "harvest": [600, 20000]}
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
@@ -1649,7 +1646,7 @@ func _refresh_dex() -> void:
 	_refs.dex_entries.text = "%d varieties" % _state.CROP_IDS.size()
 	for id: String in _state.CROP_IDS:
 		_refs["dex_status:" + id].text = "%ds base growth · Spud Valley" % _crop_grow(id)
-		_refs["dex_detail:" + id].text = "%d sacks per bed" % int(_state.CROPS[id]["yield"])
+		_refs["dex_detail:" + id].text = "%d sacks per bed" % int(_state.CropTable.CROPS[id]["yield"])
 
 func _build_quests() -> void:
 	_heading(str(_state.call("farm_name")).capitalize() + " quests", "")
@@ -2021,8 +2018,7 @@ func _update_quest_sidebar() -> void:
 
 func _sync_crop_catalog() -> void:
 	if _crop_defs.is_empty():
-		var constants: Dictionary = _state.get_script().get_script_constant_map()
-		_crop_defs = constants.get("CROPS", {})
+		_crop_defs = CropTable.CROPS
 	for id: String in _all_crop_ids():
 		if not _crop_buttons.has(id):
 			_add_crop_chip(id)
@@ -2045,15 +2041,15 @@ func _add_crop_chip(id: String) -> void:
 
 func _crop_name(id: String) -> String:
 	var definition: Dictionary = _crop_defs.get(id, {})
-	return str(definition.get("name", CROP_NAMES.get(id, id.capitalize()))).trim_suffix(" Potato")
+	return str(definition.get("name", id.capitalize())).trim_suffix(" Potato")
 
 func _crop_grow(id: String) -> int:
 	var definition: Dictionary = _crop_defs.get(id, {})
-	return int(definition.get("grow", GROW_TIMES.get(id, 10)))
+	return int(definition.get("grow", CropTable.CROPS[id].grow))
 
 func _crop_color(id: String) -> Color:
 	var definition: Dictionary = _crop_defs.get(id, {})
-	var value: Variant = definition.get("color", CROP_COLORS.get(id, GOLD))
+	var value: Variant = definition.get("color", CropTable.CROPS[id].color)
 	return value if value is Color else Color(str(value))
 
 func _tool_costs() -> Dictionary:

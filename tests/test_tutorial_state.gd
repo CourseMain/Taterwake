@@ -27,7 +27,7 @@ func _run() -> void:
 	check(state.tutorial_active, "controller can enable tutorial")
 	check(state.pest_timer >= 25.0 and state.pest_timer <= 100.0, "tutorial has fresh background countdowns")
 	for crop in State.CROP_IDS:
-		check(state.market[crop].sell == State.CROPS[crop].base, crop + " market and chart return to calm baseline")
+		check(state.market[crop].sell == State.CropTable.CROPS[crop].base, crop + " market and chart return to calm baseline")
 	var pest_wait: float = state.pest_timer
 	notices.clear()
 	state.update(600.0)
@@ -40,7 +40,7 @@ func _run() -> void:
 	state.interact_plot(5, "hoe")
 	state.interact_plot(5, "plant")
 	state.interact_plot(5, "water")
-	state.update(float(state.CROPS.russet.grow))
+	state.update(float(state.CropTable.CROPS.russet.grow))
 	check(state.plots[5].stage == 3, "hoe, plant, water and real crop growth remain playable")
 	check(not state.spawn_tutorial_pest(-1) and not state.spawn_tutorial_pest(24) and not state.spawn_tutorial_pest(6), "lesson pest rejects invalid, locked and empty patches")
 	check(state.spawn_tutorial_pest(5) and state.plots[5].pests, "controller can introduce the single demonstration pest")

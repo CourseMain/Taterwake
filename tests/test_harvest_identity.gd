@@ -23,7 +23,7 @@ func shot(label: String) -> void:
 
 func ready_plot(index: int, giant: bool = false) -> void:
 	game.state._clear_crop(game.state.plots[index])
-	game.state.plots[index].merge({"unlocked":true, "tilled":true, "stage":3, "crop":"giant" if giant else "russet", "watered":true, "elapsed":game.state.CROPS.giant.grow if giant else game.state.CROPS.russet.grow}, true)
+	game.state.plots[index].merge({"unlocked":true, "tilled":true, "stage":3, "crop":"giant" if giant else "russet", "watered":true, "elapsed":game.state.CropTable.CROPS.giant.grow if giant else game.state.CropTable.CROPS.russet.grow}, true)
 	game._on_state_changed()
 
 func run() -> void:
@@ -55,7 +55,7 @@ func run() -> void:
 	game.tutorial.start()
 	game._process(1)
 	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
-	game._process(float(game.state.CROPS.russet.grow) - 6.0 + 0.1)
+	game._process(float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1)
 	check(game.tutorial.current_id() == "harvest", "crop requires ordinary watering and growing time")
 	game.world.camera.size = 17
 	game.world.camera.position = game.world.plot_positions[4] + Vector3(11,15,17)

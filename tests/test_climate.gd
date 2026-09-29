@@ -68,7 +68,7 @@ func run() -> void:
 		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
 		check(state.storage.russet < 1000 and state.climate.data.barn_lost == 1000 - state.storage.russet, "barn losses match removed potatoes")
 		state._refresh_market()
-		check(state.market.russet.sell >= state.CROPS.russet.base * 0.85 and state.market.russet.seed == state.CROPS.russet.base * State.SEED_PRICE_RATIO, "weather leaves seed prices at 75% of base")
+		check(state.market.russet.sell >= state.CropTable.CROPS.russet.base * 0.85 and state.market.russet.seed == state.CropTable.CROPS.russet.base * 0.75, "weather leaves seed prices at 75% of base")
 		state.update(30.0)
 		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost

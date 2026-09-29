@@ -102,4 +102,4 @@ func _test_flocks() -> void:
 
 func _infest(index: int) -> void:
 	var plot: Dictionary = state.plots[index]
-	plot.merge({"stage": 2, "crop": "radioactive", "watered": true, "tilled": true, "elapsed": 0.0, "pests": true, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_damage": 0.0}, true)
+	plot.merge({"stage": 2, "crop": "sunburst", "watered": true, "tilled": true, "elapsed": 0.0, "pests": true, "pest_elapsed": 0.0, "pest_ticks": 0, "pest_damage": 0.0}, true)

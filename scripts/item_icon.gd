@@ -3,7 +3,7 @@ extends Control
 var item: Dictionary = {}
 const INK: Color = Color("30463a")
 const LEAF: Color = Color("5e7b50")
-const CROP: Dictionary = {"russet": Color("dfb36f"), "golden": Color("f5cc38"), "giant": Color("d7a37b"), "radioactive": Color("afff48"), "sunburst": Color("ffa629"), "icecap": Color("d8f1ff")}
+const CROP: Dictionary = {"russet": Color("dfb36f"), "golden": Color("f5cc38"), "giant": Color("d7a37b"), "sunburst": Color("ffa629"), "icecap": Color("d8f1ff")}
 
 func _ready() -> void:
 	if custom_minimum_size == Vector2.ZERO:
@@ -128,12 +128,6 @@ static func _potato(c: CanvasItem, crop: String, p: Vector2, factor: float, tint
 	if crop == "golden": _spark(c, p + Vector2(20, -24) * factor, Color("fff8c1"), 10 * factor)
 	if crop == "icecap":
 		for angle: float in [0.0, PI / 3, PI * 2 / 3]: c.draw_line(p + Vector2.from_angle(angle) * -15 * factor, p + Vector2.from_angle(angle) * 15 * factor, Color("edfdff"), 3 * factor, true)
-	if crop == "radioactive":
-		c.draw_circle(p, 6 * factor, INK)
-		for index: int in range(3):
-			var angle: float = index * TAU / 3.0
-			_poly(c, [p + Vector2.from_angle(angle) * 9 * factor, p + Vector2.from_angle(angle + 0.3) * 21 * factor, p + Vector2.from_angle(angle + 1.1) * 21 * factor], INK)
-
 static func _tool(c: CanvasItem, id: String) -> void:
 	match id:
 		"hoe", "harvest":

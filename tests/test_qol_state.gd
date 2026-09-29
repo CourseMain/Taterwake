@@ -23,7 +23,7 @@ func clean_farm() -> void:
 
 func ready_crop(index: int, crop: String = "russet") -> void:
 	farm._clear_crop(farm.plots[index])
-	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CROPS[crop].grow), "crop": crop, "tilled": true}, true)
+	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CropTable.CROPS[crop].grow), "crop": crop, "tilled": true}, true)
 
 func write_snapshot(data: Dictionary) -> void:
 	var file: FileAccess = FileAccess.open(SAVE, FileAccess.WRITE)

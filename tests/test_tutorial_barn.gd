@@ -70,7 +70,7 @@ func run() -> void:
 	walk_plot("hoe")
 	walk_plot("plant")
 	walk_plot("water")
-	game._process(float(game.state.CROPS.russet.grow) + 0.1)
+	game._process(float(game.state.CropTable.CROPS.russet.grow) + 0.1)
 	walk_plot("harvest")
 	check(game.tutorial.current_id() == "sell", "real growing and harvesting reaches first sale")
 	var path: String = "user://tutorial-barn-%d.json" % OS.get_process_id()

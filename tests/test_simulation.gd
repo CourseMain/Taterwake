@@ -15,7 +15,7 @@ func check(value: bool, description: String) -> void:
 		push_error("FAIL: " + description)
 
 func ready_crop(index: int, crop: String = "russet") -> void:
-	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CROPS[crop].grow), "crop": crop, "tilled": true, "pending": 0, "pests": false, "pest_damage": 0.0, "pest_ticks": 0, "pest_elapsed": 0.0, "pest_destroyed": false, "ripe_age": 0.0, "yield_total": 0, "yield_taken": 0}, true)
+	farm.plots[index].merge({"stage": 3, "watered": true, "elapsed": float(farm.CropTable.CROPS[crop].grow), "crop": crop, "tilled": true, "pending": 0, "pests": false, "pest_damage": 0.0, "pest_ticks": 0, "pest_elapsed": 0.0, "pest_destroyed": false, "ripe_age": 0.0, "yield_total": 0, "yield_taken": 0}, true)
 
 func write_save(data: Variant) -> void:
 	var file: FileAccess = FileAccess.open(SAVE, FileAccess.WRITE)
@@ -27,7 +27,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	check(farm.plots.size() == 24 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
-	check(farm.CROPS.size() == 6 and farm.available_crops().size() == 6 and farm.coins == 2000.0, "six crop economy starts with earned-currency budget")
+	check(farm.CropTable.CROPS.size() == 5 and farm.available_crops().size() == 5 and farm.coins == 2000.0, "five crop economy starts with earned-currency budget")
 	farm.interact_plot(4, "hoe")
 	check(farm.plots[4].tilled and farm.seed_inventory.russet == 12, "hoe is a separate manual action")
 	farm.interact_plot(4, "plant")
@@ -35,7 +35,7 @@ func _run() -> void:
 	farm.update(12.0)
 	check(farm.plots[4].elapsed == 0.0 and farm.plots[4].stage == 1, "dry crop does not grow with time")
 	farm.interact_plot(4, "water")
-	farm.update(float(farm.CROPS.russet.grow) - 1.0)
+	farm.update(float(farm.CropTable.CROPS.russet.grow) - 1.0)
 	check(farm.plots[4].stage == 2, "watered crop takes its full growth time")
 	farm.update(1.01)
 	check(farm.plots[4].stage == 3, "watered Russet ripens after half a season")
@@ -98,10 +98,22 @@ func _run() -> void:
 		farm.interact_plot(4, "plant")
 		farm.interact_plot(4, "water")
 		farm.pest_timer = 100.0
-		farm.update(float(farm.CROPS[crop].grow) - 0.1)
+		farm.update(float(farm.CropTable.CROPS[crop].grow) - 0.1)
 		check(farm.plots[4].stage == 2, crop + " keeps its distinct growth duration")
 		farm.update(0.11)
 		check(farm.plots[4].stage == 3, crop + " matures at its own timer")
+	farm.reset_game()
+	farm.season_clock.season = 2
+	for crop in farm.available_crops():
+		farm._clear_crop(farm.plots[5]); farm.plots[5].tilled = true
+		farm.seed_inventory[crop] = 1; farm.select_crop(crop)
+		farm.interact_plot(5, "plant")
+		check((farm.plots[5].stage == 1) == (crop == "icecap"), crop + " follows the Autumn planting rule")
+	farm.season_clock.season = 3
+	farm._clear_crop(farm.plots[5]); farm.plots[5].tilled = true
+	farm.seed_inventory.icecap = 1
+	farm.interact_plot(5, "plant")
+	check(farm.plots[5].stage == 0 and farm.seed_inventory.icecap == 1, "Winter grows established Icecap but never allows planting")
 	farm.reset_game()
 	farm.harvested_total = 100
 	farm.reset_game()

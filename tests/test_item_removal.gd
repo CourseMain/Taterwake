@@ -46,7 +46,7 @@ func run() -> void:
 	game.hud._refs["item:tool:hoe:action"].pressed.emit()
 	check(game.selected_tool == "hoe", "tool shelf selects a real farming tool")
 	game.hud.show_panel("dex", farm)
-	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 6, "crop reference retains all six ordinary varieties")
+	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 5, "crop reference retains all five ordinary varieties")
 	for quest: Dictionary in farm.quest_info():
 		check(quest.id != "mutation" and not quest.has("item"), "quests retain only cash and seed rewards")
 	for suffix: String in ["", ".bak", ".tmp", ".rejected"]:

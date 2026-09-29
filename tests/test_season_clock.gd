@@ -58,7 +58,7 @@ func run() -> void:
 	farm.interact_plot(5, "hoe")
 	check(not farm.plots[5].tilled, "Autumn blocks tilling")
 	farm.plots[0].merge({"stage": 1, "tilled": true}, true)
-	farm.plots[1].merge({"stage": 3, "tilled": true, "watered": true, "elapsed": State.CROPS.russet.grow}, true)
+	farm.plots[1].merge({"stage": 3, "tilled": true, "watered": true, "elapsed": State.CropTable.CROPS.russet.grow}, true)
 	farm.storage.russet = 7
 	var notices: Array = []
 	farm.notified.connect(func(message): notices.append(message))
@@ -96,7 +96,7 @@ func run() -> void:
 		farm = fresh()
 		farm.selected_crop = crop; farm.seed_inventory[crop] = 1
 		farm.interact_plot(5, "hoe"); farm.interact_plot(5, "plant"); farm.interact_plot(5, "water")
-		var duration: float = State.CROPS[crop].grow
+		var duration: float = State.CropTable.CROPS[crop].grow
 		check(duration >= 75 and duration <= 225, crop + " has a half- to one-and-a-half-season base duration")
 		farm.update(minf(74.5, duration - 0.5))
 		check(farm.plots[5].stage == 2, crop + " does not ripen in the old first minute")
