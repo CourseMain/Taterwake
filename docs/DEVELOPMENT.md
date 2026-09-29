@@ -42,24 +42,25 @@ The tuning bot simulates 150 runs; use a 1,500-second timeout and run it separat
 
 #### Pace and land — current
 
-Installed Godot **4.7 stable**: all **83 discovered GDScript suites pass** through
-`tools/run_tests.sh` (82 non-bot suites, then the 150-run tuning bot separately).
+Godot **4.7.2 stable**, GL Compatibility: **84 discovered GDScript suites pass**
+through the full `tools/run_tests.sh` run and corrected growth-timing fixture
+rerun, including the 150-run tuning bot.
 The required headless boot passes **39 checks**; final `test_pace_and_land`
-passes **672**, including walking to both rented fields and reaching the first
-accounts in **234.1 seconds** with a decision/reading allowance. The bot passes
+passes **673**, including walking to both rented fields and reaching the first
+accounts in **99.1 seconds** with a decision/reading allowance. The bot passes
 **1,651 checks**: naive 0/30, cautious 30/30, tidy 30/30, diversifier 26/30 and
 expander 30/30. Section 6 of `REDESIGN_PLAN.md` records cash, sales and the Low
 Field rent adjustment to 44,000. Hill Field stays 9,000.
 
-The consolidated report is `artifacts/pace-and-land-suites.json`; full logs and
+The consolidated report is `artifacts/segment18-validation.json`; full logs and
 per-seed ledgers are under `artifacts/test-results/`. No tests were skipped or
 disabled. The obsolete exact pre-scale outcome fixture was deleted because
 pacing changes outcomes; exact journal reconciliation remains tested.
 
 The local Web export builds into `dist/web` and `dist/Taterland-Web.zip`.
-Safari rendered the forecast with all three exposure labels and the connected
-three-field farm under GL Compatibility. Published `docs/index.*` and `web/`
-remain untouched. This machine has Godot 4.7 stable, not 4.7.2.
+Chromium renders the connected three-field farm at desktop and phone sizes
+without console or page errors. Published `docs/index.*` and `web/` remain
+untouched.
 
 #### Segment 16a farm-sized accounts — historical
 
@@ -636,7 +637,7 @@ Winter impact removes `round(stored tonnes × event rate × severity)` per varie
 
 `climate_intro.gd` reuses `chapter_subtitles.gd` timing and keyboard skip for a cream year-start front page. It sits above touch controls, pauses the simulation, and shows a worsening headline plus `climate_strip.gd`'s ten-year procedural disaster icons. Winter accounts reuse the strip. The seen-year marker prevents replay after a completed presentation; the transient presentation pause is cleared on reset/load.
 
-`farm_world.gd` owns calendar palettes and a one-second real-time blend of grass, sky and sunlight. Orchard canopy shades, blossoms, verge flowers and path leaves share mutable seasonal materials; static mesh compilation excludes those materials to preserve later recolouring. Winter ground snow blends through its existing terrain shader. Summer dryness and faint field haze increase with year even when weather is calm; Autumn extends twilight. Precursors overlay these seasonal looks. Existing tank level, can, sprinklers, villagers and farm geometry remain.
+`farm_world.gd` owns calendar palettes and a one-second real-time blend of grass, sky and sunlight. Orchard canopy shades, blossoms, verge flowers and path leaves share mutable seasonal materials; static mesh compilation excludes those materials to preserve later recolouring. Winter ground snow blends through its existing terrain shader. Spring uses a green grass base and early Summer a warmer green; stronger grass drying starts in year six. Faint field haze increases with year even when weather is calm; Autumn extends twilight. Precursors overlay these seasonal looks. Existing tank level, can, sprinklers, villagers and farm geometry remain.
 
 Run `tools/run_tests.sh -j 1 test_climate_curve test_protection test_season_clock test_day_night test_static_mesh_compiler test_world_rendering_optimization test_game`. Seeded curve tests cover chance, severity, event pools, frequency caps, 70% detection/10% false alarms, at least threefold conditional disaster risk for eligible signals, forecast independence from the hidden outcome, saved occurrence and cap enforcement, Winter claims and palette/crossfade values. Native `test_climate_curve.gd -- --integration-test --capture --touch-controls` captures all four seasons in years one and six and the desktop/phone front page under `artifacts/`. The curve is unchanged by Segment 14; its constants now live in `balance.gd`.
 
@@ -872,7 +873,7 @@ claim testing on that exact patch release.
 
 ## Segment 17: Cast and guided first year
 
-`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop at 3×. Decisions and cause cards immediately return the multiplier to 1× and pause the simulation. The guided year suppresses random events in favour of one severity-0.2 storm; its gust at Summer second 40 exposes one tonne on the selected bed through `FarmProtection.damage`, leaving two tonnes to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
+`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop at 30×. Decisions and cause cards immediately return the multiplier to 1× and pause the simulation. The guided year suppresses random events in favour of one severity-0.2 storm; its gust at Summer second 40 exposes one tonne on the selected bed through `FarmProtection.damage`, leaving two tonnes to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
 
 Tutorial entry/exit no longer resets pests, crop ages or RNG, and the unused demonstration-pest helper and separate frozen-calendar growth loop are removed. Version-2 progress remains readable and migrates at controller start; completed introductions remain completed. Optional Valley tours preserve the existing farm. Winter completion clears guide locks without closing the annual accounts. A save made at the settlement boundary completes the guide on resume.
 
@@ -891,19 +892,20 @@ Validation: all 82 GDScript suites passed across the full regression run and foc
 
 Pest deadlines are uniform between 0.25 and 0.60 of the crop's base grow duration. The season at arrival determines chance (0.16, Summer ×1.5, Winter zero). Simulation splits at each deadline and bite, so a large update cannot move first arrival past ripening. Spraying and ducks never schedule a second late attack; bites still deduct quality. Completed harvests leave untilled beds ready for immediate Hoe/plant. Tool areas stay inside their own six-by-four field.
 
-The map uses one continuous Valley prism, enlarged 1.6× in width and 1.4× in depth. `farm_surface.gd` shares the coastline and height map between geometry, picking and walking. Three evenly spaced 0.35-unit terraces rise behind the village; one approach from the barn crosses them with two broad treads per terrace flight, landings and handrails on both sides. Low Field dips 0.15 units toward the shore. The terrain shader applies mild dry/wet tints within one grass palette, and Winter snow follows the same surface. Beds retain common geometry and soil; lease boards and rough grass disappear when the field opens. Static geometry signatures rebuild with each world. The old regional ground, scenery builders and their exclusive helpers are removed. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
+The map uses one continuous Valley prism, enlarged 1.6× in width and 1.4× in depth, with a six-sided coastline and long straight angled shores. `farm_surface.gd` shares the coastline and height map between geometry, picking and walking. Three evenly spaced 0.8-unit terraces rise behind the village; one approach from the barn crosses them with four 0.2-unit treads per terrace flight, landings and handrails on both sides. Low Field dips 0.15 units toward the shore. The terrain shader applies mild dry/wet tints within one grass palette, and Winter snow follows the same surface. Beds retain common geometry and soil; lease boards and rough grass disappear when the field opens. Static geometry signatures rebuild with each world. The old regional ground, scenery builders and their exclusive helpers are removed. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
 
-The second map pass brings Hill behind the village at field offset `(1, -23)` and Low closer at `(18, 13)`, preserving Home and village positions. Orthogonal dirt lanes form continuous loops between the village, Low and pier. A western working orchard has a central lane, hedges and crates; the eastern service yard adds compost bays and barrels. The overview camera faces the farm more directly, while overview and recenter continue to adapt to viewport aspect ratio. This pass retains the island outline, seasonal palettes, shared soil and all 17b mechanics.
+The second map pass brings Hill behind the village at field offset `(1, -23)` and Low closer at `(18, 13)`, preserving Home and village positions. Orthogonal dirt lanes form continuous loops between the village, Low and pier. A western working orchard has a central lane, hedges and crates; the eastern service yard adds compost bays and barrels. The overview camera faces the farm more directly, while overview and recenter continue to adapt to viewport aspect ratio. The visual follow-up restores a stronger hexagonal outline, green Spring and early-Summer grass, and taller terraces while preserving shared soil and all 17b field mechanics. Guided waiting now runs at 30×.
 
-Run `tools/run_tests.sh --timeout 1500 test_pace_and_land test_pest_schedule test_tutorial_game test_tutorial_state test_tuning_bot` and the full suite. The pacing test follows real scene frames to the first open accounts in 234.1 seconds, including 84 seconds allocated to decisions and reading. The browser export is built under `dist/web`, leaving published `docs/index.*` and `web/` untouched.
+Run `tools/run_tests.sh --timeout 1500 test_pace_and_land test_pest_schedule test_tutorial_game test_tutorial_state test_tuning_bot` and the full suite. The pacing test follows real scene frames to the first open accounts in 99.1 seconds, including 84 seconds allocated to decisions and reading. The browser export is built under `dist/web`, leaving published `docs/index.*` and `web/` untouched.
 
-The 17b island follow-up adds `test_island_layout`: one shell, terrace heights, uphill/downhill path restrictions, all 72 bed elevations, lease visuals and desktop/phone coastline framing. Native `--capture --touch-controls` saves `artifacts/one-island-1440.png` and `artifacts/one-island-390.png`.
+The 17b island follow-up adds `test_island_layout`: one shell, terrace heights, uphill/downhill path restrictions, all 72 bed elevations, lease visuals and desktop/phone coastline framing. Native `--capture` saves the desktop seasonal comparisons; add `--touch-controls` for the portrait captures. Files use `artifacts/island-year{1,6}-season{0,1}-{1440,390}.png`, with Year 1 Spring/Summer and Year 6 Summer at the same noon lighting.
 
-Validated on Godot `4.7.2.stable.official.ed1daf0bf`, GL Compatibility: the full
-84-suite run passed, including all 1,651 tuning checks. After the final visual,
-walking and camera changes, all 82 ordinary/scene suites passed again; the
-unchanged tuning and epilogue simulations retain their full-run results.
-`test_island_layout` passes 133 checks, including repeated small keyboard steps,
+Validated on Godot `4.7.2.stable.official.ed1daf0bf`, GL Compatibility: all
+84 suites pass across the full run and one corrected timing-fixture rerun,
+including all 1,651 tuning checks. The harvest identity fixture now advances
+by crop-time seconds at the guide’s 30× speed, retaining all 19 growth, reload
+and harvest assertions. No tests were skipped or disabled.
+`test_island_layout` passes 135 checks, including repeated small keyboard steps,
 stair-shoulder collision heights and ocean coverage in portrait. The exact
 headless `test_game.gd -- --integration-test` boot passes 39 checks. Native
 desktop and touch-phone captures were inspected. The final export in `dist/web`

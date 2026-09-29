@@ -49,14 +49,14 @@ func run() -> void:
 	game.perform_plot(4,"water")
 	var tuber: Node3D = game.world._crop_roots[4].get_node("PotatoTuber")
 	var start_size: float = tuber.scale.x
-	game._process(5)
+	game._process(5.0 / game.tutorial.WAIT_SPEED)
 	check(tuber.scale.x > start_size, "plant visibly expands before it becomes ripe")
 	var midway_size: float = tuber.scale.x
 	check(game.state.save_game(path) and game.state.load_game(path), "same-stage growing crop reloads")
 	game.tutorial.start()
-	game._process(1)
+	game._process(1.0 / game.tutorial.WAIT_SPEED)
 	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
-	game._process(float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1)
+	game._process((float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1) / game.tutorial.WAIT_SPEED)
 	check(game.state.plots[4].stage == 3 and game.tutorial.current_id() == "grow", "crop uses ordinary growth before Summer lesson")
 	game._process(1000)
 	check(game.tutorial.current_id() == "loss", "guided storm precedes first harvest")
