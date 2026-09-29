@@ -1,90 +1,71 @@
 # Taterland gameplay guide
 
-This guide describes **v2.0.0 (in development)**, the redesign source prerelease. The [published browser game](https://coursemain.github.io/Taterwake/) still runs the previous v1.0.3.1 rules.
+**A farming game where you lose money.** This describes the current `redesign` source. The published browser build still uses the previous game’s rules.
 
-## Your first farm
+## Keep the farm for ten years
 
-Spud Valley is the only playable farm: **12 open beds and 12 locked beds** in one six-by-four field. New farms start with **80,000 Spudions** and one short, saved harvest lesson: buy a Russet seed, hoe, plant, water, harvest and sell. **Your first sale ends the lesson.** All tools and shops then open, so you can grow and sell another crop independently.
+You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open beds and twelve available through expansion. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 
-Plant Mara’s Russet seed, water it and pull the ripe crop into your barn. Harvests tug, pop and scatter soil; the ordinary Giant variety lands with a heavier thump.
+Spring is for planting, Summer for tending, Autumn for bringing crops in, and Winter for accounts and protection work. Each season lasts **150 seconds**; a farm shop reduces Summer to **120 seconds**. The accounts pause time at Winter’s start. Close them to clear ice and prepare the farm; Spring follows automatically. Saves preserve your farm across sessions, with no offline growth.
 
-Mara's seed counter has patched seed bags and mismatched crates. Sell Potatoes uses the exchange's chalk buying board, with price, quantity and a sale confirmation. Help is Nell’s pinned barn notes.
+The first-year guide buys one Russet crop card, tills a bed, plants and waters it. Time pauses for your decisions and runs while Spring advances into Summer. This introductory year has one disclosed, mild storm: a gust exposes two tonnes on your bed, leaving one to harvest. Tess reads its real cause card, including what a windbreak would have saved. The first crop’s quality and pest damage are protected while you learn; the seed, yield loss, sale, storage and annual bills are real.
 
-The lesson selects each tool for you and points at the bed. Click the gold bed to walk over and work it; choosing another empty bed at the hoe step moves the lesson there. Shops open by **clicking their building or sign** or using their shortcut. A small rounded E badge appears beside the nearest NPC or shop: press E or tap it to interact. Fields keep their normal tool action without a badge. Blocked or unsuccessful actions explain what to do. Use **× → End tutorial** to leave early.
+Harvest the survivor, then **sell now or choose Store for Winter**. Neither choice ends the guide early. Autumn advances to Winter, Nell opens the first accounts, and guidance ends. The gold cue follows your chosen bed; the correct tool is selected for each step. **× → End tutorial** leaves early without clearing existing hazards or refunding costs. Later help stays optional in **H**. The optional Valley tour pauses and preserves the farm; it does not replay the introductory disaster.
 
-Afterwards, help stays in **H → Help** instead of floating over the farm. The first naturally appearing pest group cannot damage crops until cleared; press **5**, then click an infested bed. Later pests deal normal damage.
+## Three decisions
 
-Automatic reminders to upgrade tools, hire ducks or recover debt no longer appear over the field. Open **H** for controls, farming instructions and current task help. Brief action feedback and red warnings still explain blocked actions, full storage or unavailable supplies.
+### What to plant
 
-The first lesson pauses random pests and weather; finishing starts fresh countdowns. **H → Optional Valley tour** lets you meet the NPCs whenever you choose. You may skip any stop or leave at any time. This informational tour pauses and preserves your existing farm, including pests and weather.
+Read Mara’s crop cards: seed cost, water need, heat and cold tolerance, growth and price volatility. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; prices are per tonne.
+
+| Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Russet | 270 | 360 | 1 | 3 | 3 | 1 | 3 | Low |
+| Giant | 360 | 480 | 1 | 3 | 2 | 1 | 5 | Low |
+| Golden | 504 | 672 | 1 | 2 | 2 | 1 | 4 | Mid |
+| Sunburst | 684 | 912 | 2 | 3 | 1 | 2 | 3 | High |
+| Icecap | 1,200 | 1,200 | 3 | 1 | 3 | 2 | 2 | High |
 
 
-Return to the [project README](../README.md) for downloads and setup. Spud Valley is your farm.
+More water bars mean thirstier crops; more heat or cold bars mean better tolerance. High prices come with vulnerabilities. Icecap’s two potential tonnes do not automatically make its expensive seed profitable. Till and plant ordinary crops in Spring and Summer. Icecap also plants into prepared Autumn beds and grows through Winter; clear its ice before working it. Other crops left in the field are lost at Winter’s start.
 
-## Farming and controls
+Crops have **Table, Standard or Feed** quality, selling for **1.2×, 1× or 0.5×** the quote. Dry soil, weather, pests and late harvesting reduce quality. Water promptly, clear ice, spray pests and bring ripe crops in. A full barn leaves excess yield on the plant. Pest attacks remove one third of the original yield every five seconds; spraying stops further loss. The first naturally appearing pest group after the guide is protected until cleared, then ordinary pest damage applies.
 
-The three-line menu opens the market, inventory, quests, upgrades, collection, settings and Debug. The farm view keeps only essential farming controls and live information on screen. All keyboard shortcuts still work. The movement reminder and floating island/field titles have been removed from the farm view; the controls remain in How to play.
+### When to sell
 
-Farming is manual. Select a tool, then click a bed to walk over and work it, or press E beside it. Tools never choose the next task automatically.
+Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. Prices and grade are visible before selling. No sale happens merely by opening a page.
 
-Spud Valley’s **Tool Upgrades** shop sits between the barn and market. Click Bram, his shop or its sign, or press **U**. All three upgrade ranks are available on the farm.
+Winter storage charges a flat **4,800**, spoils **5%** of held tonnes and removes **10 quality points** from survivors. An empty barn has no storage bill. These costs settle before foreclosure is checked. Winter-store prices rise from base toward **1.2× for Low, 1.4× for Mid or 1.6× for High volatility**, multiplied by current grade. Weather can destroy stores before you sell. Spring resets the premium. Fresh Icecap harvested in Winter uses the ordinary quote.
 
-Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Weather**.
+The Contracts board offers a **20-tonne Spring order at 1.1× base price**. At Winter’s start, the buyer collects Standard or Table stock before storage costs and spoilage; each missing tonne costs **200**. Accepted orders cannot be cancelled. Keep Standard or Table tonnes as seed through **Barn → Barn stores** to convert each into one seed next Spring, excluding those tonnes from sale, storage ageing and spoilage.
 
-Purchases show a short dark-and-gold confirmation card. Seed receipts show how many you bought, the actual price paid with the Spudion symbol and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
+### What to protect
 
-| Key | Action |
-| --- | --- |
-| WASD / arrows | Move |
-| 1 | Hoe / clear crop ice |
-| 2 | Select seeds and open seed choices |
-| 3 | Water |
-| 4 | Harvest |
-| 5 | Bug sprayer |
-| E / Space | Interact with nearby NPC/shop, use selected tool beside a bed |
-| B | Buy Seeds |
-| I / V | Illustrated inventory |
-| U | Equipment upgrades |
-| Q | Local challenges |
-| P | PotatoDex |
-| F | Sell held raw potatoes of the selected crop |
-| H / F1 | Guide |
-| Mouse drag / two-finger trackpad scroll | Pan the map |
-| One- or two-finger touch drag | Pan the map |
-| Pinch / mouse wheel | Smooth map zoom |
-| Home / Touch Tools → Recenter | Restore the camera |
-| Escape | Close panel / open main menu |
-| F5 / F9 | Save / load |
+Iris fronts each year’s weather page with a potato voice and the recorded climate strip. After the guided introduction, seasonal disaster chance starts at **15%**, adds **4 percentage points per year**, and caps at **60%**. Mean severity starts at **50%**, rises three points per year, and individual events vary. At most one disaster occurs per season and three per year.
 
-New farms use `user://taterland_save_v4.json`. Older farms are not loaded or migrated, and the original v2/v3 files stay untouched. Saving keeps one previous v4 farm in `.bak`. Damaged or incompatible candidates are set aside as `.rejected`; a fresh farm’s autosave leaves that rejected file intact. Each later rejected load replaces the older rejected file.
+Spring brings flood or freeze; Summer drought or storm; Autumn storm or flood; Winter deep freeze or blizzard. Warnings last **45 seconds**, active danger **30**, then recovery **75**. Drier grass, rain and wind can hint at the next season, with false alarms and missed warnings. A better weather station narrows forecast uncertainty, not the weather itself.
 
-The farm keeps its angled orthographic 3D view. Drag anywhere on the island to smoothly pan the view; two-finger trackpad scrolling pans too. On touch screens, drag one finger to pan, or use two fingers to pan and pinch. Blank-ground taps do not move the farmer. Mouse wheels and native pinch gestures zoom. Camera movement stays within the island bounds, and Home or **Tools → Recenter** restores the starting view. Menus keep their own scrolling and block camera movement.
+The water loop is **rain → tank → can or pipes → crops**. Click the tank to refill the can. Sprinklers share the reserve and water their connected beds; drought stops replenishment. Use Hoe to clear crop ice or drain a flooded bed. Purchased drains can be opened. Windbreaks reduce storm losses. Optional water practice at the weather station uses a paused, temporary demonstration.
 
-The run lasts **ten years**. Spring, Summer, Autumn and Winter each last **150 seconds** of working time; owning a farm shop reduces Summer to **120 seconds**. The top strip shows the season and year; the sun moves from dawn to dusk through each season, so the sky shows how much working time remains. The calendar and sun resume their saved position after loading.
+| Protection | Disaster | Level 1 | Level 2 |
+| --- | --- | ---: | ---: |
+| Rainwater tank | Drought | 36,000 | 72,000 |
+| Drainage | Flood | 48,000 | 96,000 |
+| Windbreak | Storm | 60,000 | 120,000 |
+| Frost cover | Spring freeze, covered beds only | 36,000 | 72,000 |
 
-**Annual accounts open at Winter start**, after buyer collection, storage charges, spoilage, business income, fixed costs and the foreclosure check have been saved. The accounts pause the simulation while open and show every category, crop sales split by grade with tonnes and totals, the year’s net and a running ten-year table on plain cream paper. **Return to farm** or Escape closes them and resumes Winter. The farm menu’s **Annual accounts** button reopens them throughout Winter. Winter ends automatically and Spring begins immediately; there is no next-year button.
 
-The run finishes at the **end of year 10’s Winter**. The ten-year summary then shows total net, years in profit, best and worst year, final purse and remaining loan, with **Fifty years on** to see the ending or **New Run** to start over. Every season boundary saves before its screen opens, including the final Winter boundary. Calendar and accounts presentation stay synchronized at accelerated debug speed.
+Reserve protection materials in Winter, then complete **three walked work actions** at the construction site per level. Paid unfinished work persists. Completed levels reduce matching field yield loss by **50% or 75%**, with **2,400 annual upkeep per protection type**. Frost covers protect covered beds next Spring only: clear Winter ice, then use **Cover all cleared beds** or the nearby cover action. Covers expire in Summer.
 
-**Fifty years on** continues the final farm through years 11–50 with no player input. A caretaker repeats the crops left in each bed, keeps the same protection levels and businesses, tends and harvests promptly, stores half the harvest, renews existing insurance and repairs equipment when cash covers the bill. The same seasonal farming, prices, losses and fixed costs continue; the inherited mortgage finishes after twenty principal payments. No new investments or free money are added. Crossing the Winter overdraft limit ends caretaker work, while climate and the property accounts continue to year fifty.
+Spring crop insurance costs **9,600** and pays **40% of lost tonnes at base prices**. Subsequent field losses settle at Winter’s start; new Winter weather claims pay as they happen. Ordinary spoilage is excluded. Winter deep freeze and blizzard threaten stored crops and living Icecap. Selling stores or harvesting Icecap before impact reduces exposure.
 
-The future depends on solvency, adaptation to the disasters that occurred, income beyond ordinary crop sales, and land health. Repeated weather wears the soil and equipment; trees slow erosion and maintained protection reduces exposure. **Dust**, **Drowned**, **Deserted**, **Sold to the estate**, **Holding on**, **The shop village** and **Thriving** show seven versions of the same farm. Thriving requires every axis strictly above 0.75. A fifty-year climate strip and five decade headlines frame the slowly panning farm, four verdicts and **Farm value, 50 years on**. **Screenshot** downloads a PNG in the browser or saves it locally in the native game; **Ten-year ledger** returns to the original accounts. The epilogue is a deterministic projection and never changes the saved ten-year farm.
+Every loss has a **cause card**: the event, variety, tonnes lost, missing protection or action, and the tonnes that alternative would have saved. Tess, the farmhand, reports the latest weather loss and its value at base prices. That value is forgone crop, not another cash debit. Read all cards at the weather station or in the annual accounts.
 
-Watered crops grow in real time. Base growth times are Russet **75s**, Golden **105s**, Giant **135s**, Sunburst **195s** and Icecap **225s**. Russet ripens in half a season; Icecap needs a season and a half. Weather can slow growth up to 450 seconds of active growing time; dry crops wait for water, and disaster-frozen crops wait for thawing. Icecap grows through ordinary Winter bed ice.
+## The ledger
 
-Till in **Spring and Summer**. All five varieties can be planted then; **Icecap can also be planted in Autumn**, into beds prepared earlier. At the end of Autumn, other unharvested crops are lost and their prepared beds are cleared. Living Icecap remains, with its growth progress and water. The accounts report the cold losses and surviving Icecap. Potatoes already in the barn survive field clearing, then incur Winter storage spoilage. Every bed then ices over. Use **Hoe [1]** to clear it during Winter; this removes ice without tilling. Cleared beds can be tilled as soon as Spring starts. Uncleared beds retain their ice and need a separate clearing action before tilling in Spring, even after other weather comes and goes.
+Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger itemises categories, grade sales, annual totals, stored crops, losses and remaining debt.
 
-Ordinary shop and menu panels keep working time running. Annual accounts, the year-start front page, conversations, weather practice and the collapse page pause it. The first-harvest lesson protects the calendar while its crops grow; the optional tour pauses all farming. Winter remains playable: prices and tank replenishment advance, while Icecap keeps growing on its iced bed. It can be harvested through the ice in Winter or early Spring; planting at Autumn’s start leaves time for a Winter harvest. Snow refills the tank at **one quarter** the normal rain rate. Icecap still needs water, from the can or connected sprinklers; seasonal bed ice does not block it. An empty iced bed must be cleared before planting again in Spring. Snow cover and roof snow last all Winter, and a lower, paler sun still moves from dawn to dusk. Closing the game adds no offline farming.
-
-Manual tool upgrades increase the area of a single action. Most healthy beds yield **3–5 tonnes**; Icecap retains its tuned **2-tonne** yield. A full barn leaves the uncollected part on the bed; harvesting the remainder never creates extra tonnes.
-
-Pests use independent timers for each bed, rather than farm-wide waves. Each crop is protected for its first 40 seconds after planting. On becoming harvest-ready, it receives a uniformly random 15–90-second pest delay; pests appear only after both the crop-age protection and that delay have elapsed. Sprayers and ducks reset the bed’s delay, and saved games preserve the timers. Each 5-second attack removes one third of the crop’s original maximum yield: 3/3 → 2/3 → 1/3 → destroyed at 15 seconds. Spraying cannot restore eaten potatoes. Visible insects, bite particles, shaking crops, yield labels and warning sounds make attacks clear. Use the bug sprayer on the affected bed to stop further damage; clearing pests gives a fresh grace period. A separate three-chirp alarm warns about pests, repeats every six seconds while they remain, and stops when you clear them. Simultaneous attacks share one alarm; crop loss has its own descending sound. Tool audio cannot cut these warnings off. Insects remain clickable through the same bed target. A destroyed crop shows a brief “Crop lost” notice, then clears its label completely; reloading does not resurrect old notices.
-
-## Annual accounts
-
-Your purse is **80,000 starting Spudions plus every ledger entry**. Sales, seeds, upgrades, protection, ducks, quest payments and Debug adjustments all enter that same journal. The accounts show cash flow, including mortgage principal; net means income minus every payment that year. Opening cash is not income.
-
-Every Winter posts these fixed costs once:
+Every Winter posts these fixed bills once:
 
 | Cost | Spudions per year |
 | --- | ---: |
@@ -95,13 +76,12 @@ Every Winter posts these fixed costs once:
 | Equipment upkeep | 12,000 |
 | **Total** | **104,000** |
 
-The mortgage starts at **480,000**. Each Winter’s principal payment reduces it by 24,000; the ten-year model keeps interest at 24,000 per year. Reloading the accounts never charges the bill again. Winter purchases still appear in that year’s accounts. Categories for later systems remain visible with zero totals until used.
 
-Current saves use mechanics revision **41**. Earlier saves, including revision 40, are incompatible and are set aside with the existing rejected-save protection; they are not migrated.
+Storage, insurance, protection upkeep, purchases and other transactions appear separately. Reloading cannot charge a settled bill again. Winter purchases remain in that year’s accounts.
 
-## Diversification and run titles
+The overdraft limit is **−200,000**. Edwin, the bank manager, appears when the purse falls **below −100,000**, more than halfway into it. He quotes the real balance and offers the same conversation choices as the other villagers. Purchases that would cross the overdraft limit are refused. At Winter settlement, income, claims and the bills settle before foreclosure is tested: **strictly below −200,000 ends the run; exactly −200,000 survives**.
 
-From **year three**, annual accounts offer three permanent businesses. Purchases work while accounts are paused and appear under their own labels. Construction and annual business income use Other; contract-grower collections and shortfalls use Contracts.
+From year three, the accounts offer a further decision: diversify or keep investing in crops and protection.
 
 | Business | Cost | Return and tradeoff |
 | --- | ---: | --- |
@@ -109,161 +89,23 @@ From **year three**, annual accounts offer three permanent businesses. Purchases
 | Contract grower | Free enrolment | Two simultaneous Spring orders, each at 1.2× the ordinary contract price; normal shortfall penalties apply. |
 | Lodging | 100,000 | 6,000 each Winter per completed protection type, up to 24,000. |
 
-Benefits start the following year: construction Winter pays no retroactive income. Lodging counts the tank, drainage, windbreak and frost cover separately, regardless of level; sprinklers do not count. With no protections, lodging earns nothing. Annual income settles before the Winter foreclosure check and cannot repeat on reload.
 
-Completed runs receive **Shopkeeper** when more than half of gross crop, contract and business receipts came from diversification, otherwise **Adapter** for at least three protection types, or **Stubborn** for none. One or two protections earn **Survivor**. Insurance and other payments do not count toward the income comparison. Foreclosure always gives **Sold Up**, including before year ten.
+Business benefits begin the following year. Lodging counts completed tank, drainage, windbreak and frost-cover projects separately. Contract growers receive two simultaneous premium orders at base × 1.32; shortfall penalties still apply. These incomes and costs use the same ledger.
 
-## The live crop market
+## Fifty years on
 
-Harvest quantities are **tonnes**, shown as **t** on cards and receipts; prices are per tonne. Monetary values are 40 times the original tuned economy, preserving every cost-to-income ratio. Displayed money has the Spudion glyph and thousands separators, with no decimal places.
+Survive the tenth Winter to read the ten-year summary, climate record and earned title. Then the ending simulates **forty further years** from your final farm. A caretaker keeps your crop mix, protections and diversification, and repairs when affordable, while the climate curve continues.
 
-| Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| Russet | 270 | 360 | 1 | 3 | 3 | 1 | 3 | Low |
-| Giant | 360 | 480 | 1 | 3 | 2 | 1 | 5 | Low |
-| Golden | 504 | 672 | 1 | 2 | 2 | 1 | 4 | Mid |
-| Sunburst | 684 | 912 | 2 | 3 | 1 | 2 | 3 | High |
-| Icecap | 1,200 | 1,200 | 3 | 1 | 3 | 2 | 2 | High |
+Four scores—**solvency, adaptation, diversification and land health**—determine one of seven futures: **Dust, Drowned, Deserted, Sold to the estate, Holding on, The shop village or Thriving**. Thriving requires **every score above 0.75**. The same final state produces the same future.
 
-More water bars mean a thirstier crop; more heat or cold bars mean better tolerance. Higher prices come with lower combined resilience. An unwatered bed builds stress faster when water need is high. Water need and heat tolerance affect drought damage; cold tolerance affects deep-freeze damage. Icecap is cold-tolerant but thirsty and vulnerable to heat. Its 1,200-Spudion seed buys only two potential tonnes; the highest tonne price does not mean the highest profit.
+The climate strip extends to fifty years with a headline for each decade. The camera fades up and slowly pans across the future farm: damaged beds, water and buildings show the result. Each score gets a verdict, followed by **“Farm value, 50 years on”** and a screenshot button. Your playable ten-year save stays intact.
 
-Tool upgrades cost **12,000–60,000 Spudions**. Opening the remaining beds costs **48,000** once. The barn has three upgrades costing **12,000, 32,000 and 80,000**, for capacities of **400, 1,200 and 4,400 tonnes**.
+## Living in the Valley
 
-Each variety has a fixed base price. Its live selling price follows a slow, deterministic ten-minute seasonal cycle with a range determined by volatility: **±5%** for Low, **±10%** for Mid and **±15%** for High. This is the Standard-grade quote; Table earns 1.2× and Feed earns 0.5× it. Weather does not change it; stored Winter tonnes use the separate price below.
+Mara sells seeds; Bram upgrades tools; Nell keeps the accounts and barn; Tess reports field losses; Pip tends the ducks; Iris watches the weather; Edwin visits over the overdraft. Their outfits, portraits, potato voices, personal stories and remembered replies remain. Conversations pause the farm. Reveal speech with Space or a tap; choose with the mouse, touch or 1–3; leave with Escape.
 
-Press **2** or click the Seeds hotbar slot to show crop choices. Selecting another tool hides the seed tray.
+Use WASD or arrows to walk and Shift to sprint. Click a bed to walk over and use the selected tool, or press E beside it. Tools are **1 Hoe, 2 Seeds, 3 Water, 4 Harvest, 5 Sprayer**. **B** opens seeds, **F** selling, **I** inventory and **H** optional help. Drag or scroll to pan, use wheel/pinch to zoom, and Home to recenter. Touch has a movement stick and Tools drawer. Graphics settings offer Balanced, Smooth and Crisp.
 
-**Buy Seeds** has five variety cards in a desktop row, stacking vertically on a phone. Each shows three bar dials, growth time, yield, seed cost, the live tonne price and owned quantities. Selecting a card selects that variety and the seed tool without spending money. **Last year avg** is blank in year one; later it shows the previous full cycle’s average, currently the base price under the temporary price model. Seed prices stay fixed throughout the cycle: **75% of base for Russet, Giant, Golden and Sunburst; 100% for Icecap**. Money displays as rounded integers with thousands separators and the Spudion glyph; transactions retain their exact fractional value. Choose **Buy 1** or **Buy 5** to confirm a purchase.
+Tool upgrades widen your reach. Expand the field for **48,000**; barn upgrades increase its initial **200-tonne** capacity. Pip hires up to two ducks to clear pests. Three local challenges pay **4,000** each and can be claimed once. These are optional purchases and goals; their costs and receipts still enter the ledger.
 
-**Sell Potatoes** shows one variety at a time, with selectable **Table, Standard and Feed** rows showing their tonnes and current prices. Select a grade, then swipe left/right or use the arrows; use **− / +**, edit the amount, or choose **Max**, then press the green **Sell** button. The amount stays within your selected grade’s available stock, and the payout follows the current quote while the page is open. Invalid amounts disable selling. A short receipt confirms the tonnes sold and actual payout. Tonnes left in the barn when Winter begins are stored automatically; the sell page states the fee, spoilage and dashed late-Winter price in one line. Inventory sales and **F** sell ordinary stock; in Winter, stored tonnes must be sold through **Barn stores**. Switching Buy/Sell tabs keeps the market session; completed Mara introductions stay remembered. Visit Mara's stall to talk again.
-
-Every Buy Seeds and Sell Potatoes card includes a small, unanimated sparkline of up to **12 recent sale quotes**. Beside the live sale price, a signed percentage compares it with the variety’s base price: green above base, red below, neutral at base. The top bar shows the same comparison for the selected crop. Seed costs stay fixed; their cards show the sale-price history to help choose what to plant.
-
-Both pages order varieties by their fixed base selling price: **Russet → Giant → Golden → Sunburst → Icecap**. Buy Seeds offers all five varieties; Sell Potatoes includes known varieties and crops held in the barn. Live prices never reorder the pages.
-
-## Crop quality and saved seed
-
-Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.2× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. “Table” means the best eating quality. Hovering a growing bed or standing beside it shows a small “Grade: Table” (or Standard/Feed) tag and a steady grade hint alongside the growth time; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
-
-Before variety and protection adjustments, deductions are:
-
-- Each pest bite: **6 points**.
-- Active drought or flood stress: **4 per 10 seconds** exposed.
-- Disaster ice on the bed: **15 once**, then **4 per 10 seconds** until cleared or thawed.
-- A lightning row hit: **25 once per disaster** on that bed.
-- Growing without water: **2 per 10 seconds**.
-- Left ripe: the first **30 seconds** are free, then **5 per 10 seconds**. Spraying and duck patrol do not reset this deadline.
-
-Deductions scale by **9 ÷ combined resilience**, using the same variety dials as the crop cards: Russet’s multiplier is 1, Icecap’s is 1.8. The scaled points are rounded, then matching protection cuts them by **50% / 75%** using the field-loss formula. Frost covers apply to Spring disaster ice; ordinary Winter bed ice still permits Icecap. Watering, timely spraying, ice clearing and prompt harvest avoid continued deductions. Quality never falls below zero, and a partial harvest leaves the remaining crop’s quality intact.
-
-At **Barn → Barn stores**, choose **Keep 1 Standard/Table tonne as seed**. It leaves saleable storage immediately and avoids spoilage, storage ageing and Winter barn disasters. Each kept tonne becomes **one seed of the same variety next Spring**. Feed cannot be kept. A barn holding only seed tonnes has no storage fee. Kept seeds and their Spring conversion survive saves without duplication.
-
-## Storing or selling
-
-Keeping any tonnes in the barn at **Winter start** costs **4,800 Spudions once** and loses **5% of the whole barn, rounded to the nearest whole tonne**, taken from the largest variety pile first (catalogue order breaks ties; lower-quality tonnes go first within it). A lone tonne does not spoil. Buyer collection happens first, so only the remaining tonnes count. An empty barn has no storage bill. Annual accounts show the charge and spoilage; the journal records spoiled tonnes as a zero-cash note, so the loss is not charged twice. These charges happen before foreclosure is checked. Reloading does not repeat them.
-
-Surviving tonnes lose **10 quality points each Winter** and are regraded before becoming **Winter stores**. A Table tonne at 85 becomes Standard at 75; a Table tonne at 100 remains Table at 90. Seed tonnes are excluded. Open **Barn → Barn stores** (also linked from Sell Potatoes) and sell during the working Winter. Prices rise steadily from base at Winter start toward **1.2× base for Low volatility, 1.4× for Mid and 1.6× for High** at Winter’s end, multiplied by the tonne’s current grade. The Sell Potatoes sparkline includes a dashed line for that expected late-Winter price; the signed live-market percentage remains beside the ordinary quote. Waiting can pay more, but the fee and spoilage can outweigh the gain on a small harvest.
-
-**Spring resets the storage premium.** Unsold stores become ordinary stock again. New Icecap harvests during Winter sell at the ordinary market quote and do not immediately earn the stored-crop premium. Fresh harvests and Winter stores share the same barn capacity: **200 initially**, then **400, 1,200 and 4,400** with upgrades. Excess harvest stays on the plant until room is available.
-
-## Buyer contracts
-
-The **Contracts** board beside the northern shops opens a buyer’s order; it is also reachable from the farm menu. Each Spring offers **20 tonnes of one variety at 1.1× its base price**. The variety rotates through the five crops by year. Accepting commits to that order; ordinary farms can accept one per year, and contract growers can accept two distinct orders at **1.2× the ordinary quote** (base × 1.32). There is no cancellation.
-
-At the **end of Autumn**, as Winter begins, the buyer automatically collects **Standard or Table tonnes, never Feed**, from the barn before spoilage and the storage fee. Autumn harvests can fill the order. Delivered tonnes earn the agreed price; each missing tonne costs **200 Spudions**. Both payment and penalty post under **Contracts** in the ledger. The board keeps the year’s result, and saving/reloading preserves the order without settling it twice.
-
-## The Valley farm
-
-A single **48,000-Spudion expansion** opens the twelve locked beds. Coins, crops, tools, water supplies and protection belong to this one farm. Sunburst and Icecap are ordinary varieties available at the seed counter.
-
-Visit Pip’s **Duck patrol** to hire up to **two ducks**. The first costs **20,000 Spudions**, the second **40,000**. Train the flock for **32,000** and **60,000** to reduce time per bed from **4s → 3s → 2s**. Ducks patrol distinct infested beds; their routes survive saving and loading.
-
-The quest board rewards buying ten seeds, selling ten tonnes and harvesting twelve beds. Claim each completed task once.
-
-## Inventory
-
-The bottom-center five-slot hotbar contains usable tools only. Click a slot or press 1–5 to equip it. Inventory [I] has **Crops** and **Tools** tabs: illustrated seeds and harvested potatoes, plus the five usable farm tools. Raw potatoes stay held until you sell them.
-
-## Quests and the farmer
-
-Each of the three quest-board tasks pays a flat **4,000 Spudions**. Each reward can be claimed once, including after reloading. Harvest-bed quests count cumulative manual harvests without a timing requirement.
-
-The round potato farmer keeps a soft oval body, stubby limbs, blinking eyes and smoothly blended walking and turning. Villagers retain their fixed outfits and animated conversation portraits.
-
-## PotatoDex
-
-Press **P** for **Crop varieties**, an illustrated reference for all five potatoes with base growth times and yield per bed.
-
-## Graphics
-
-Open **☰ → Graphics**, or use **⚙** on the tutorial card. **Balanced** keeps a clear farm with gentle shadows. **Smooth** draws a lighter farm without shadows. **Crisp** gives the sharpest farm and smoother edges, using more graphics power. Text, menus and icons stay sharp in every mode. Your choice is saved on this device separately from the farm.
-
-If movement in Safari seems capped at 30 FPS, check **System Settings → Battery → Low Power Mode** and use Automatic/Never instead of Low Power while playing. Low Power Mode can also be enabled while plugged in. Try Chrome/Firefox or run the native Godot project if browser performance is still poor. The Web ZIP is still a browser build, not a native app. [Godot's browser guidance](https://docs.godotengine.org/en/stable/tutorials/export/exporting_for_web.html), [Apple's power mode guide](https://support.apple.com/en-nz/101613).
-
-To load a newly published version, close all Taterland tabs and reopen the play link; keep the same browser profile to retain your farm.
-
-## Debug controls
-
-Open **☰ → Debug** and enter the access code to unlock the controls for this session. Wrong codes leave the controls locked. Starting a new session or a new farm locks them again. Exact test balances are capped at **4,000,000**; preset funds are **80,000 / 200,000 / 400,000**. The advanced multiplier is a ratio, so its range is unchanged.
-
-After foreclosure, **Debug access** still accepts the session code. Before year 10, **Recover test farm** posts a balance adjustment, keeps the journal and paid Winter bills, and returns to the Winter accounts at 1× time. Close the accounts to resume the timed Winter. Year-10 foreclosures still require a new farm. **Try Again** starts a new farm with an empty journal.
-
-### Climate action and bankruptcy
-
-Weather can threaten Spud Valley from the first season. Disaster chance is **15% + 4 percentage points per year after year one**, capped at **60%**: 15% in year one, 35% in year six and 51% in year ten. Mean severity rises from **50% by 3 points per year**, reaching 77% in year ten. Each event gives **45 seconds of warning**, **30 seconds of danger**, then **75 seconds of recovery**. There is at most **one disaster per season and three per year**, including Winter. Open **Weather & protection** to reserve Winter protection, buy manual sprinklers, insure crops and read next season’s forecast.
-
-Spring brings **flood or freeze**, Summer **drought or storm**, Autumn **storm or flood**, and Winter **deep freeze or blizzard**, equally likely within each pair. Winter events damage stored tonnes and living Icecap; empty beds and fresh Winter harvests in the barn are untouched. At impact, deep freeze loses **20% × severity**, blizzard **30% × severity**, rounded to whole tonnes per stored variety or Icecap bed. Sell stores or harvest ripe Icecap during the warning to reduce exposure. Winter claims are insurable; ordinary storage spoilage is not.
-
-The preceding season may hint at the next disaster: drought dries the grass and halves tank replenishment, flood brings frequent rain, and storm brings wind ribbons. The next season’s occurrence and type are decided together in advance. For these three event types, a signal appears **70% of the time when a disaster is coming**, but only **10% when the season will be calm**. Signals are useful evidence, with false alarms and missed warnings; freeze and Winter events have no precursor signal. The annual three-disaster cap still applies when the season begins. The weather station shows the probability curve, never the hidden outcome.
-
-Each year opens with a cream newspaper front page, a grimmer headline and a **ten-year strip of recorded disasters**. It pauses farming, closes after twelve seconds, and can be skipped with the button, Space or Escape. The same strip appears in Winter accounts. Spring has fresh grass, orchard blossom and verge flowers; Summer has warmer grass and faint field haze; Autumn has orange and brown canopies, path leaves and a longer dusk. Winter keeps its snow. Grass and sky blend over **one second** at a boundary. By year six, even calm Summers have drier grass and stronger haze. The tank’s visible water level remains part of reading the farm.
-
-The bank lets purchases take the purse down to **−200,000 Spudions**. A purchase that would cross that limit is refused. At the end of Autumn, buyer collection, storage, insurance payouts, protection upkeep, business income and the complete fixed Winter bill are settled first; a resulting balance **strictly below −200,000** forecloses the farm. Exactly −200,000 survives. Foreclosure is checked at that annual boundary, not on each midyear balance change.
-
-The Weather Station keeps its scanning sensor tower and uses a cream page with live tank levels, protection, construction progress and the **next season’s disaster probability range**. Station levels **0 / 1 / 2** give **±20 / ±10 / ±5 percentage points**, clipped to 0–100%. Sensor upgrades cost 20,000, then 40,000. The overall chance follows the next season’s year; each of its two possible disasters has half that probability. Both overall and per-disaster ranges are shown. After three disasters, remaining seasons that year have zero risk. Better instruments narrow uncertainty; they do not change the weather.
-
-### Winter protection work
-
-| Protection | Disaster | Level 1 | Level 2 |
-| --- | --- | ---: | ---: |
-| Rainwater tank | Drought | 36,000 | 72,000 |
-| Drainage | Flood | 48,000 | 96,000 |
-| Windbreak | Storm | 60,000 | 120,000 |
-| Frost cover | Spring freeze, covered beds only | 36,000 | 72,000 |
-
-**Reserve during Winter**, after closing accounts. Payment buys materials; protection begins only when the work is finished. Use **Walk to construction site**, or click the marked materials in the world, for one walked, 0.6-second hoe action. **Three actions finish each level.** Unfinished paid work keeps its progress through Spring and can resume next Winter. An upgrade keeps the completed lower level working meanwhile. Each completed protection costs **2,400 upkeep per year at Winter start**, regardless of level; work completed later that Winter is first billed the following Winter. Sprinklers remain a separate manual-water purchase at 20,000 / 40,000.
-
-Completed level 1 reduces the matching disaster’s field tonne loss by **50%**, level 2 by **75%**, rounded to the nearest whole tonne across affected beds of the same variety and protection level. At a bed’s danger threshold, surviving tonnes remain on the crop and can be harvested. One disaster cannot repeatedly charge that same bed’s loss. Watering, opening drains and clearing ice can prevent the danger threshold from being reached. Drought, flood, storm and freeze do not damage barn stock in Spring, Summer or Autumn. Winter-start storage spoilage still applies.
-
-After finishing the frost-cover project, use **Hoe [1]** to clear Winter ice. Then choose **Cover all cleared beds** on the weather page, or stand beside a cleared bed and use its **Cover bed** context action (E, the bed’s E badge, or the touch action button). Only unlocked, cleared beds receive covers. Hoe in Winter only clears ice; it never places covers. Repeating either cover action does not charge or duplicate covers. The cover protects that bed against freeze during the **following Spring**, and expires in Summer. Covers must be placed again each Winter. They do not save crops left unharvested at Autumn’s end; Icecap keeps its existing Winter exception.
-
-### Insurance and loss notices
-
-Buy **9,600-Spudion annual insurance in Spring**. It covers subsequent field crop losses and Winter weather losses in stored tonnes, paying **40% of lost tonnes × the crop’s fixed base price**. Spring–Autumn claims settle at Winter start before foreclosure; new Winter claims pay when the loss happens. Losses before purchase and storage spoilage are excluded. The premium and payouts post under Insurance without repeating on reload. Renewal is a new Spring decision.
-
-Every field crop loss, Winter stored-tonne loss and storage-spoilage loss records a **cause card**: year, season, event, variety, tonnes lost, missing protection or action, and how many tonnes that alternative would have saved. Open **This season’s loss notices** at the weather station; the list updates while open. Winter accounts retain all that year’s cards, including drought, flood, storm, freeze, dry beds, pests, Autumn cold, Winter deep freeze, blizzard and storage spoilage. Climate cards compare the same exposed tonnes with the next protection level; at maximum protection there is no further project saving. Where prevention is manual, the card names watering, spraying, harvesting, selling or ice clearing instead.
-
-The foreclosure page shows the accounting year, cause, year net, Winter bill, debt limit, weather losses and final balance. **View Run Summary** reveals that year’s category totals and climate context; **Try Again** starts a fresh farm. Authenticated **Debug access** can recover an isolated test farm while retaining its progress. Tutorials are protected from weather pressure.
-
-
-### Connected equipment and isolated testing
-
-The water loop is **rain → tank → can or pipes → crops**. A starter can waters 16 beds; upgrades increase its capacity. Click the tank, then **Refill watering can** to walk over and transfer water. Sprinklers and the can share the same reserve. Sprinklers water their fixed connected patch, while drought stops rain replenishment. Select equipment to see its source, pipes and affected beds.
-
-After purchasing irrigation, optional water practice is available at the weather station. It pauses the real farm and uses temporary crop visuals; it does not give free irrigation.
-
-**Deep Freeze** stops affected crops from growing, being watered or harvested. Use **Hoe [1]** to clear crop ice directly. Rescue prevents cold-stress losses; remaining ice melts after recovery.
-
-- **Drought:** water dry crops; the shared tank reserve now matters.
-- **Flood:** open purchased drains to send water through channels toward the sea; Hoe [1] drains individual planted beds.
-- **Storm:** completed windbreaks reduce field losses across the whole farm. Harvest the warned lightning row or rely on the built protection to preserve part of its crop.
-
-Double-click **Play Climate Lab.command** for disposable water practice, ordinary farming, upgrades and weather scenarios. It never reads or writes your saved farm. Hold **Shift** to sprint.
-
-## NPC conversations
-
-Interact with a staffed shop or station to greet its keeper in a close-up conversation, then choose their service to open it. Shop shortcuts follow the same order; the guided first-harvest tutorial keeps its direct steps. Mara, Bram, Nell, Tess, Pip, Iris and Edwin have different outfits, features and personalities. Stallholders stand at their counters or entrances and share their portrait appearances; Iris speaks through the weather station's radio link.
-
-Choose a personal topic, ask about the weather, or open the shop. Replies lead to different lines, and NPCs remember introductions and friendly exchanges across saves. Conversations do not spend coins or grant gameplay bonuses. Weather advice reflects the current weather event.
-
-Characters blink, gesture and move their mouths as text appears in an outlined speech bubble. Coloured name tags and golden service choices make the conversation easier to scan. Nearby interactions use a small white E keycap with a black outline. Tap the text or press **Space** to reveal the whole line; tap a choice, press **1–3**, or use **Tab / Enter**. **Leave × / Escape** ends the conversation. Farm, market and weather timers pause while talking, then resume when you leave. The portrait stops rendering when closed.
+See the [README](../README.md) for running or exporting the source and [development notes](DEVELOPMENT.md) for saves and tests.

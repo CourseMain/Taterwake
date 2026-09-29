@@ -1,31 +1,18 @@
+![The first Winter ledger: a negative year, itemised costs and Nell’s verdict](docs/images/annual-ledger.png)
+
 # Taterland
 
-**v2.0.0(undeveloped:e) — Game redesign**
+**A farming game where you lose money.**
 
-Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-e).
+Grow potatoes, watch the weather and try to keep the farm for ten years. Every Winter, Nell opens the accounts. Seeds, storage, repairs, mortgage and living costs all count. A full barn can still leave a negative number.
 
-The `v2.0.0-undeveloped-e` source prerelease implements Segments 1–15. The current `redesign` branch also includes Segment 16a’s farm-sized accounts and tonnes:
+Choose what to plant, when to sell and what to protect. From year three, decide whether to spend scarce money on a farm shop, contract growing or lodging. The climate keeps getting harder. Survive the tenth Winter to see forty more years play out under a caretaker—and find out what your farm becomes.
 
-- One Spud Valley farm, with 12 open beds and 12 available through expansion.
-- Farm-sized prices per tonne, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
-- Seasons last 150 seconds, or 120 for Summer with a farm shop. Annual accounts pause at Winter start; the year rolls over automatically after Winter. The tenth Winter ends the run.
-- Five crop cards with water, heat and cold dials; Icecap plants in Autumn and grows through Winter ice.
-- Seasonal crop growth, Autumn harvest losses, Winter ice clearing, changing sunlight and snow.
-- Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
-- Winter storage prices, fees and spoilage; Spring buyer contracts collected at the end of Autumn, with two premium orders for contract growers.
-- Warned climate disasters, manual water management, Winter protection construction and per-bed frost covers.
-- Annual crop insurance, including Winter weather losses, protection upkeep, forecast ranges and crop-loss cause cards.
-- A worsening climate curve, seasonal event mixes, foreshadowing, year-start headlines and a ten-year disaster record.
-- Spring blossom, Summer haze and drying grass, Autumn canopies and leaves, with smooth seasonal transitions.
-- Table, Standard and Feed harvest grades; wider crop prices, graded sales and contracts requiring Standard or better.
-- Keep Standard or Table tonnes as seed for next Spring; stored tonnes lose ten quality and suffer 5% spoilage each Winter.
-- Year-three farm shop, contract growing and lodging investments, separate ledger entries and earned run titles.
-- Shared balance constants, a uniform 40× money scale, and 120 seeded strategy runs with every annual ledger reconciled exactly.
-- Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
+The round potato farmer, villagers, handmade 3D island and cream interface remain. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-The fifty-year epilogue and remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
+This is the **v2 redesign source**, including the fifty-year ending and guided first year. Read the [gameplay guide](docs/GAMEPLAY.md), [store copy](docs/STORE_COPY.md) and [redesign plan](docs/REDESIGN_PLAN.md). The earlier `v2.0.0-undeveloped-e` source tag predates these changes; use the `redesign` branch for the current game.
 
-**[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — this is the previous game, not the v2 redesign. The live site and downloadable v1 build remain unchanged. To try v2, use the prerelease source with Godot 4.7.2 as described below.
+**[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — the published site still contains the previous game. To try this redesign, run or export the current source below.
 
 ## Download the previous browser release
 
@@ -39,7 +26,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `redesign` branch or the `v2.0.0-undeveloped-e` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
@@ -69,9 +56,9 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | F | Sell the selected crop |
 | Escape / ☰ | Main menu and remaining activities |
 
-Start by hoeing a bed, selecting seeds, planting and watering. Harvest a ripe crop, then sell it to buy your next round of seeds. Visit the toolsmith for larger tool areas. Till during Spring and Summer. Icecap can also be planted into prepared Autumn beds and harvested through Winter ice; bring other crops in before Winter.
+The first-year guide selects your tools and pauses at each decision. After the first accounts, close the ledger to work through Winter and prepare for Spring. **H** opens optional help and the Valley tour.
 
-See the [gameplay guide](docs/GAMEPLAY.md) for prices, local activities and Debug controls.
+See the [gameplay guide](docs/GAMEPLAY.md) for crop choices, the annual bills, climate protection and the ending.
 
 ## Build the browser edition
 

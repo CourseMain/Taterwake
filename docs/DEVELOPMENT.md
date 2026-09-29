@@ -381,11 +381,7 @@ After exporting an updated game, copy all `index.*` files and the license notice
 
 Patrick Hand, Fredoka, Oswald, Nunito Sans and Noto Sans Symbols are distributed under the SIL Open Font License; see the license files in `assets/fonts/`. Godot's engine license and third-party notices are in `assets/licenses/` and are included in browser packages. These notices describe their respective dependencies.
 
-### First-harvest lesson and contextual help
-
-`first_island_tutorial.gd` now has eight stages (welcome, seed purchase, hoe, plant, water, growth, harvest, sale). The first sale ends mandatory guidance. Tools are auto-equipped with one bed cue; another empty hoe target retargets the lesson. Blocked input explains the current action. Normal no-op field actions also show their result. `TOUR` is a separate optional NPC tour: Next never requires a shop visit, transactions are blocked, and all farm timers are preserved while paused.
-
-`farm_help.gd` stores optional tip dismissals, a tracked independent plant/water/harvest/sale cycle, first-infestation protection. New lessons enable help on completion or skip; established saves get no surprise tips. Tutorial version 1 stages through first sale map to version 2; later compulsory stops retire. Mechanics revision 13 saves help state, including protected field indices. Malformed help data is rejected before loading.
+### Optional contextual help
 
 The first natural infestation is harmless until cleared or harvested, even when its tip is dismissed or the farm reloads. Additional infestations wait until that group is resolved, then normal damage resumes.
 
@@ -860,3 +856,19 @@ the diversifier's real ten-year state simulated all forty years in 14.38 seconds
 showed The shop village, and returned to the unchanged ten-year ledger. This
 machine does not provide the requested 4.7.2 binary, so these results do not
 claim testing on that exact patch release.
+
+
+## Segment 17: Cast and guided first year
+
+`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop. The guided year suppresses random events in favour of one severity-0.2 storm; its first gust exposes two tonnes on the selected bed through `FarmProtection.damage`, leaving the Russet’s third tonne to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
+
+Tutorial entry/exit no longer resets pests, crop ages or RNG, and the unused demonstration-pest helper and separate frozen-calendar growth loop are removed. Version-2 progress remains readable and migrates at controller start; completed introductions remain completed. Optional Valley tours preserve the existing farm. Winter completion clears guide locks without closing the annual accounts. A save made at the settlement boundary completes the guide on resume.
+
+The existing NPC roster, portraits, memory and potato voice clips are retained. Nell reads two current ledger lines in Winter; Tess reports the latest weather loss and its base-price value, explicitly distinguishing crop value from cash expenditure. Edwin appears, gains a clickable body and permits conversation only below half the overdraft limit; his page quotes current debt and the limit. Iris presents the annual front page through the existing portrait and voice components, including the first guided year. No dialogue changes the farm RNG or grants funds.
+
+README and `STORE_COPY.md` lead with an actual first-year ledger capture. `GAMEPLAY.md` describes the current ten-year run, the three decisions, diversification, accounts and fifty-year ending. Published web assets are unchanged.
+
+
+Validation: all 82 GDScript suites passed across the full regression run and focused reruns with `tools/run_tests.sh`. The new Winter voice exposed audio-mixer teardown errors in three scene fixtures; those now allow stopped playback to release, and their reruns are clean. The final focused run includes all five `test_tutorial_*.gd` suites (243 checks), NPC conversations (277), climate projects, diversification, economy scale and the climate curve. No tests are skipped or disabled. The strategy bot still passes all 1,836 ledger and balance checks.
+
+`godot --headless --path . --script res://tests/test_game.gd -- --integration-test` passes all 39 checks. A native GL Compatibility run of `test_tutorial_game.gd -- --integration-test --capture` passes 57 checks, including real planting/walking, both sell/store paths, cause-card resume and the first accounts. Captures in `artifacts/guide-*.png` were inspected; `docs/images/annual-ledger.png` is the actual sell-path ledger. The forecast’s return button is visible at the top of the page. Browser fixture expectations are updated, but no browser export or published build was changed. Validation used the installed Godot 4.7 stable binary; this machine does not have 4.7.2.
