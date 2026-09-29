@@ -80,7 +80,7 @@ func run() -> void:
 	await create_timer(0.75).timeout
 	check(page.visible and page.headline.text == "FORECLOSED", "overdraft bankruptcy opens the editorial page")
 	check(page.detail.text.contains("overdraft") and page._event.text.contains("YEAR 1") and page._threshold.text.contains("5,000"), "foreclosure shows the overdraft boundary and accounting year")
-	check(page._metrics["FIELD LOST"].note.text.contains("24") and page._metrics["BARN LOST"].note.text.contains("300"), "loss metrics come from actual damage")
+	check(page._metrics["FIELD LOST"].note.text.contains("24"), "field loss metric comes from actual damage")
 	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")

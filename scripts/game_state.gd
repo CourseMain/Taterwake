@@ -21,7 +21,7 @@ const ClimateSystem = preload("res://scripts/climate_system.gd")
 const CURRENCY_NAME: String = "Spudions"
 const CURRENCY_SYMBOL: String = "\uE000"
 const SAVE_VERSION: int = 4
-const MECHANICS_REVISION: int = 34
+const MECHANICS_REVISION: int = 35
 const FIELD_EXPANSION_COST: float = 1200.0
 const PRICE_CYCLE_SECONDS: float = 600.0
 const PRICE_HISTORY_LIMIT: int = 12
@@ -566,8 +566,6 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 	if not plots[index]["unlocked"]:
 		return _finish("Unlock more beds at Tools · \uE000 1,200")
 	var action: String = tool
-	if action == "hoe" and season_clock.season == 3 and not ClimateSystem.Operations.frozen(self, index) and int(climate.data.projects.get("frost", 0)) > 0:
-		return ClimateSystem.Protection.cover(self, index)
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
 	if action == "plant" and not available_crops().has(selected_crop):

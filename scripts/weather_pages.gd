@@ -65,6 +65,8 @@ func setup(owner_hud) -> void:
 	hud._refs.insurance = _button("", "insure")
 	add_child(hud._refs.insurance)
 	add_child(_button("This season's loss notices", "loss_notices"))
+	hud._refs.cover_all = _button("Cover all cleared beds", "cover_all")
+	add_child(hud._refs.cover_all)
 	var protection := _panel(self)
 	var protections : VBoxContainer = hud._vbox(8)
 	protection.add_child(protections)
@@ -187,6 +189,8 @@ func refresh() -> void:
 			hud._refs["project_site:" + id].visible = pending
 			hud._refs["project_site:" + id].disabled = farm.season_clock.season != 3
 	var forecast: Dictionary = info.forecast
+	hud._refs.cover_all.disabled = farm.ClimateSystem.Protection.coverable_beds(farm).is_empty()
+	hud._refs.cover_all.tooltip_text = "Winter only · build frost covers, then clear bed ice with Hoe."
 	hud._refs.forecast_range.text = "Next %s: disaster chance %d to %d%%." % [farm.SeasonClock.NAMES[int(forecast.season)], roundi(forecast.low * 100), roundi(forecast.high * 100)]
 	if int(forecast.season) != 3:
 		for event in forecast.events:

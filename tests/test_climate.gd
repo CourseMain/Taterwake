@@ -66,24 +66,23 @@ func run() -> void:
 		save_load()
 		state.update(0.001)
 		check(state.climate.data.phase == "active" and state.climate.data.field_lost == 0, "onset preserves planted crops for a rescue window")
-		check(state.storage.russet < 1000 and state.climate.data.barn_lost == 1000 - state.storage.russet, "barn losses match removed potatoes")
+		check(state.storage.russet == 1000, "weather leaves barn stock intact")
 		state._refresh_market()
 		check(state.market.russet.sell >= state.CropTable.CROPS.russet.base * 0.85 and state.market.russet.seed == state.CropTable.CROPS.russet.base * 0.75, "weather leaves seed prices at 75% of base")
 		state.update(30.0)
 		check(state.climate.data.field_lost > 0 and state.climate.data.field_lost <= before_field, "unattended active weather progressively loses crops")
 		var unprotected_loss: int = state.climate.data.field_lost
-		var unprotected_barn: int = state.climate.data.barn_lost
 		save_load()
 		check(state.climate.data.phase == "recovery", "weather transitions to economic recovery")
 		save_load()
 		state.update(75.0)
 		check(state.climate.data.phase in ["calm", "warning"], "recovery ends before a possible next-season warning")
-		check(state.climate.data.field_lost == unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "losses do not repeat and weather losses persist through calm weather")
+		check(state.climate.data.field_lost == unprotected_loss, "losses do not repeat and weather losses persist through calm weather")
 		fresh()
 		state.climate.data.projects[{"drought":"rainwater", "flood":"drainage", "storm":"windbreaks"}[event]] = 2
 		state.climate.begin_warning(state, event, 1.0)
 		state.update(75.0)
-		check(state.climate.data.field_lost < unprotected_loss and state.climate.data.barn_lost == unprotected_barn, "completed protection preserves field crops without protecting barn stock: " + event)
+		check(state.climate.data.field_lost < unprotected_loss, "completed protection preserves field crops: " + event)
 		save_load()
 
 	fresh()
@@ -133,7 +132,7 @@ func run() -> void:
 	state.season_clock.seconds = 149.75
 	state.update(0.25)
 	var report: Dictionary = state.climate.data.collapse
-	check(report.cause.contains("overdraft") and report.field_lost > 0 and report.barn_lost > 0, "collapse records actual cause, lost crops and storage")
+	check(report.cause.contains("overdraft") and report.field_lost > 0, "collapse records actual cause and field losses")
 	check(report.phase == "calm" and report.event == "" and report.last_event == "storm", "collapse snapshots current phase and the last damaging disaster")
 	save_load()
 	var dead: String = JSON.stringify(state._save_data())

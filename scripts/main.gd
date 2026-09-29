@@ -724,7 +724,6 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 		before.append(state.plots[tile].duplicate(true))
 	hud.note_farm_action()
 	_working_plot = true
-	var covers_before: Dictionary = state.climate.data.protection.covers.duplicate(true)
 	var result: String = state.interact_plot(index, tool)
 	_working_plot = false
 	var changed_indices: Array[int] = []
@@ -736,8 +735,6 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 			if action == "harvest" and int(before[step].stage) == 3:
 				harvest_snapshots[tile] = before[step]
 	if lesson_before == "water" and state.climate.data.lesson.stage == "area": changed_indices.append(index)
-	if covers_before != state.climate.data.protection.covers:
-		changed_indices.append(index)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
 		else: hud.show_farm_hint(result)
@@ -770,9 +767,22 @@ func _interact_nearby() -> void:
 	if nearest >= 0:
 		_cancel_walk()
 		if not climate_target.is_empty(): _climate_choose(nearest)
+		elif state.ClimateSystem.Protection.can_cover(state, nearest): _on_action("cover_bed:%d" % nearest)
 		else: perform_plot(nearest, selected_tool)
 	else:
 		hud.show_farm_hint("Click a bed, or move closer to use E")
+
+func bed_context() -> Dictionary:
+	var nearest: int = -1
+	var distance: float = 2.8
+	for index in range(world.plot_positions.size()):
+		var candidate: float = world.player.position.distance_to(world.plot_positions[index])
+		if candidate < distance:
+			distance = candidate
+			nearest = index
+	if state.ClimateSystem.Protection.can_cover(state, nearest):
+		return {"plot_index": nearest, "point": world.plot_positions[nearest] + Vector3(0, 1.4, 0)}
+	return {}
 
 func _preview_area(index: int, tool: String) -> void:
 	if not hud._climate_console.equipment.is_empty():
@@ -819,6 +829,8 @@ func _update_hover() -> void:
 			hud.set_context("Danger %d%% · %s" % [roundi(float(state.climate.data.operations.stress[str(hover_plot)]) * 100), "Water [3] rescues this bed" if state.climate.data.event == "drought" else ("Hoe [1] drains this bed" if state.climate.data.event == "flood" else "Hoe [1] clears ice" if state.climate.data.event == "freeze" else "Harvest ripe crops before the next strike")])
 		elif bool(plot.get("frozen", false)):
 			hud.set_context("Frozen bed · Press 1, then click to break ice")
+		elif state.ClimateSystem.Protection.can_cover(state, hover_plot):
+			hud.set_context("Cleared bed · Walk beside it, then E / Cover bed to place a frost cover")
 		elif bool(plot.get("pests", false)):
 			hud.set_context("Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0))))
 		elif not plot.unlocked:
@@ -998,6 +1010,14 @@ func _on_action(action: String) -> void:
 				_climate_action(parts[1])
 				_save_checkpoint.call_deferred()
 		"insure": state.ClimateSystem.Protection.insure(state)
+		"cover_all":
+			state.ClimateSystem.Protection.cover_all(state)
+			_save_checkpoint.call_deferred()
+		"cover_bed":
+			var target: Dictionary = bed_context()
+			if parts.size() == 2 and not target.is_empty() and int(parts[1]) == int(target.plot_index):
+				state.ClimateSystem.Protection.cover(state, int(target.plot_index))
+				_save_checkpoint.call_deferred()
 		"station_upgrade": state.ClimateSystem.Protection.upgrade_station(state)
 		"project_site": _queue_project(parts[1])
 		"climate_fund":

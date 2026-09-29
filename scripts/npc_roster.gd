@@ -21,7 +21,7 @@ const PEOPLE := {
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
 		"help":"Can we make more room?", "advice":"Of course. There's a barn upgrade right above your stored crops. You can check the cost and extra space before buying.",
-		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops. Have a look at our barn protection at the weather station."},
+		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops."},
 	"tess": {"name":"Tess", "role":"Quest keeper", "service":"quests", "service_label":"Check local quests", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
 		"first":"You're the farmer everyone's talking about. I'm Tess. Sorry—let me put these notices down.",
 		"daily":["I came here to pin up one notice. That was an hour ago.", "Someone's asked me to organise a meeting about how many meetings we have."],

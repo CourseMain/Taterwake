@@ -22,6 +22,21 @@ func plant(farm, index: int, crop: String = "russet") -> void:
 	farm._clear_crop(farm.plots[index])
 	farm.plots[index].merge({"crop":crop, "tilled":true, "stage":3, "watered":true, "elapsed":State.CropTable.CROPS[crop].grow}, true)
 func run() -> void:
+	for season in range(3):
+		for event in Protection.PROJECT_FOR:
+			var stocked = fresh()
+			Protection.insure(stocked)
+			stocked.season_clock.season = season
+			for crop in State.CropTable.IDS: stocked.storage[crop] = 100
+			var stock: Dictionary = stocked.storage.duplicate()
+			stocked.climate.begin_warning(stocked, event, 1)
+			stocked.update(149.75)
+			check(stocked.storage == stock, "%s in season %d preserves every barn variety throughout its weather cycle" % [event, season])
+			check(stocked.climate.data.protection.losses.is_empty(), "weather on an empty field creates no barn cause cards")
+			check(stocked.save_game(SAVE) and stocked.load_game(SAVE), "safe barn stock and field-only weather history survive reload")
+			winter(stocked)
+			check(stocked.climate.data.protection.winters["1"].payout == 0 and stocked.storage_used() == 450, "Winter storage spoilage remains, without a weather insurance claim")
+			stocked.free()
 	for event in Protection.PROJECT_FOR:
 		for rank in range(3):
 			check(Protection.loss(20, Protection.REDUCTION[rank]) == [20, 10, 5][rank], "%s level %d cuts sack losses by 0/50/75 percent" % [event, rank])
@@ -103,7 +118,9 @@ func run() -> void:
 	check(not farm.climate.data.protection.covers.has("0"), "model refuses covers until bed ice is cleared")
 	farm.interact_plot(0, "hoe")
 	farm.interact_plot(0, "hoe")
-	check(farm.climate.data.protection.covers.has("0") and not farm.climate.data.protection.covers.has("1"), "Hoe clears ice then places a cover on just the selected bed")
+	check(farm.climate.data.protection.covers.is_empty() and not farm.plots[0].winter_ice and not farm.plots[0].tilled, "repeated Winter Hoe only clears ice, without tilling or placing covers")
+	Protection.cover(farm, 0)
+	check(farm.climate.data.protection.covers.has("0") and not farm.climate.data.protection.covers.has("1"), "explicit cover action protects just the chosen bed")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "placed covers survive Winter reload")
 	farm.season_clock.seconds = 149.75; farm.update(0.25)
 	check(Protection.level(farm, "freeze", 0) == 1 and Protection.level(farm, "freeze", 1) == 0, "cover protects only its bed in the following Spring")
@@ -114,6 +131,29 @@ func run() -> void:
 	opening = farm.coins
 	Protection.winter(farm)
 	check(farm.coins == opening and farm.save_game(SAVE) and farm.load_game(SAVE), "upkeep is idempotent across calls and saves")
+	farm.free()
+	farm = fresh()
+	farm.climate.data.projects.frost = 1
+	Protection.cover_all(farm)
+	check(farm.climate.data.protection.covers.is_empty(), "Spring cannot place covers")
+	farm.climate.data.projects.erase("frost")
+	winter(farm)
+	farm.interact_plot(0, "hoe"); farm.interact_plot(1, "hoe")
+	farm.plots[12].winter_ice = false
+	Protection.cover_all(farm)
+	check(farm.climate.data.protection.covers.is_empty(), "cover all requires a completed frost project")
+	farm.climate.data.projects.frost = 1
+	farm.accounts_open = true
+	Protection.cover_all(farm)
+	check(farm.climate.data.protection.covers.is_empty(), "accounts pause prevents cover placement")
+	farm.accounts_open = false
+	Protection.cover_all(farm)
+	check(farm.climate.data.protection.covers.size() == 2 and farm.climate.data.protection.covers.has("0") and farm.climate.data.protection.covers.has("1"), "cover all includes cleared open beds and excludes ice and locked beds")
+	var covers: Dictionary = farm.climate.data.protection.covers.duplicate(true)
+	opening = farm.coins
+	Protection.cover_all(farm)
+	check(farm.climate.data.protection.covers == covers and farm.coins == opening, "repeating cover all is idempotent and does not charge")
+	check(farm.save_game(SAVE) and farm.load_game(SAVE), "batch-placed covers survive reload")
 	farm.free()
 	farm = fresh()
 	plant(farm, 0)
@@ -181,9 +221,20 @@ func ui_checks() -> void:
 	check(game.state.climate.data.projects.get("rainwater", 0) == 1 and not game.world._work_nodes.has("rainwater"), "three walked, timed hoe actions finish the site")
 	game.state.climate.data.projects.frost = 1
 	game.perform_plot(0, "hoe"); game.perform_plot(0, "hoe")
-	check(game.world._cover_nodes.has("0"), "placed frost cover is visible on the actual bed")
+	check(not game.world._cover_nodes.has("0"), "world Hoe action never places frost covers")
+	game.world.set_player_position(game.world.plot_positions[0] + Vector3(0, 0, 0.65))
+	game.touch_controls.update_interaction_prompt()
+	check(game.bed_context().get("plot_index", -1) == 0 and game.touch_controls.interaction_prompt.tooltip_text.contains("Cover bed"), "cleared bed offers its own cover context action")
+	game.touch_controls.interaction_prompt.pressed.emit()
+	check(game.world._cover_nodes.has("0") and game.state.climate.data.protection.covers.size() == 1, "bed context action renders exactly one frost cover")
+	game._interact_nearby()
+	check(game.state.climate.data.protection.covers.size() == 1, "repeated nearby action cannot cover a different bed")
+	game.perform_plot(1, "hoe")
 	await world_shot("cover", game)
 	game._on_action("climate")
+	check(game.hud._refs.cover_all.text == "Cover all cleared beds" and not game.hud._refs.cover_all.disabled, "weather page offers the explicit batch cover control")
+	game.hud._refs.cover_all.pressed.emit()
+	check(game.world._cover_nodes.has("1") and game.state.climate.data.protection.covers.size() == 2 and game.hud._refs.cover_all.disabled, "weather control covers remaining cleared beds and disables when done")
 	check(game.hud._refs.forecast_range.text.contains("Next Spring") and game.hud._refs.insurance.disabled, "weather page shows next season and annual insurance gate")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size

@@ -87,7 +87,7 @@ func _init() -> void:
 	metrics.add_theme_constant_override("h_separation", 28)
 	metrics.add_theme_constant_override("v_separation", 18)
 	content.add_child(metrics)
-	for id in ["FIELD LOST", "BARN LOST", "DEBT LIMIT"]:
+	for id in ["FIELD LOST", "DEBT LIMIT"]:
 		var box := VBoxContainer.new()
 		box.custom_minimum_size.x = 200
 		metrics.add_child(box)
@@ -186,7 +186,7 @@ func show_report(farm) -> void:
 	detail.text = str(report.cause)
 	_threshold.text = "Foreclosure below " + farm.money(farm.bankruptcy_limit(), true)
 	_calculation.text = "Year %d net: %s. The complete Winter bill of %s has been posted." % [farm.season_clock.year, farm.money(farm.ledger.total(farm.season_clock.year)), farm.money(farm.ledger.fixed_cost_total())]
-	for pair in [["FIELD LOST", "field"], ["BARN LOST", "barn"]]:
+	for pair in [["FIELD LOST", "field"]]:
 		var lost: float = float(report[pair[1] + "_lost"])
 		var total: float = float(report[pair[1] + "_total"])
 		_metrics[pair[0]].value.text = "%.0f%%" % (lost / total * 100.0) if total > 0.0 else "None"

@@ -84,7 +84,7 @@ static func record(farm, event: String, crop: String, exposed: int, reduction: f
 	return card
 
 static func text(entry: Dictionary) -> String:
-	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter"}.get(entry.event, "Selling before impact")
+	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter"}.get(entry.event, "")
 	if entry.source == "field" and PROJECT_FOR.has(entry.event):
 		prevention = "Clearing ice in time" if float(entry.alternative) == 1.0 else "%s level %d" % [NAMES[PROJECT_FOR[entry.event]], 1 if float(entry.alternative) == 0.5 else 2]
 	var counterfactual: String = "%s would have saved %d sacks." % [prevention, entry.saved]
@@ -102,15 +102,36 @@ static func work(farm, id: String) -> String:
 	farm.climate_changed.emit("construction")
 	return farm._finish("%s completed. Level %d." % [farm.ClimateSystem.PROJECTS[id].name, farm.climate.data.projects[id]])
 
+static func can_cover(farm, index: int) -> bool:
+	var rank: int = int(farm.climate.data.projects.get("frost", 0))
+	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 3 or rank == 0: return false
+	if index < 0 or index >= farm.plots.size() or not farm.plots[index].unlocked or farm.ClimateSystem.Operations.frozen(farm, index): return false
+	var previous: Dictionary = farm.climate.data.protection.covers.get(str(index), {})
+	return int(previous.get("year", 0)) != farm.season_clock.year + 1 or int(previous.get("level", 0)) != rank
+
+static func coverable_beds(farm) -> Array[int]:
+	var beds: Array[int] = []
+	for index in range(farm.plots.size()):
+		if can_cover(farm, index): beds.append(index)
+	return beds
+
+static func _place_cover(farm, index: int) -> void:
+	farm.climate.data.protection.covers[str(index)] = {"year": farm.season_clock.year + 1, "level": int(farm.climate.data.projects.frost)}
+
+static func cover_all(farm) -> String:
+	var beds: Array[int] = coverable_beds(farm)
+	if beds.is_empty(): return farm._finish("No cleared beds need covers. Build frost covers and clear bed ice in Winter first.")
+	for index in beds: _place_cover(farm, index)
+	farm.climate_changed.emit("cover")
+	return farm._finish("Covered %d cleared beds for next Spring." % beds.size())
+
 static func cover(farm, index: int) -> String:
 	var rank: int = int(farm.climate.data.projects.get("frost", 0))
 	if farm.run_over or farm.accounts_open or farm.tutorial_active or farm.season_clock.season != 3 or rank == 0: return farm._finish("Build frost covers in Winter first.")
 	if index < 0 or index >= farm.plots.size() or not farm.plots[index].unlocked: return farm._finish("Choose an open bed.")
 	if farm.ClimateSystem.Operations.frozen(farm, index): return farm._finish("Clear this bed’s ice before placing a cover.")
-	var cover: Dictionary = {"year": farm.season_clock.year + 1, "level": rank}
-	var previous: Dictionary = farm.climate.data.protection.covers.get(str(index), {})
-	if int(previous.get("year", 0)) == int(cover.year) and int(previous.get("level", 0)) == rank: return farm._finish("This bed is already covered for next Spring.")
-	farm.climate.data.protection.covers[str(index)] = cover
+	if not can_cover(farm, index): return farm._finish("This bed is already covered for next Spring.")
+	_place_cover(farm, index)
 	farm.climate_changed.emit("cover")
 	return farm._finish("Bed %d covered for next Spring · %d%% freeze loss reduction." % [index + 1, roundi(REDUCTION[rank] * 100)])
 
@@ -189,7 +210,7 @@ static func valid(raw: Variant, saved: Dictionary) -> bool:
 		if not Rules.number(e.get("year"), 1, int(saved.season_clock.year), true) or not Rules.number(e.get("season"), 0, 3, true): return false
 		if int(e.year) == int(saved.season_clock.year) and int(e.season) > int(saved.season_clock.season): return false
 		if e.get("event") not in ["drought", "flood", "storm", "freeze", "dry_bed", "pests", "autumn_cold", "spoilage"] or e.get("crop") not in Table.IDS or e.get("source") not in ["field", "barn"]: return false
-		if (e.event == "spoilage" and e.source != "barn") or (e.event in ["dry_bed", "pests", "autumn_cold"] and e.source != "field"): return false
+		if (e.event == "spoilage") != (e.source == "barn"): return false
 		if not e.get("missing") is String or e.missing.length() > 160 or not e.get("insured") is bool: return false
 		for key in ["exposed", "sacks", "saved"]:
 			if not Rules.number(e.get(key), 0, 100000, true): return false

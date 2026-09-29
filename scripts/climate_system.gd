@@ -1,5 +1,5 @@
 extends RefCounted
-## Discrete warned disasters, physical crop and barn damage.
+## Discrete warned disasters and physical field-crop damage.
 const Lesson = preload("res://scripts/climate_lesson.gd")
 const Operations = preload("res://scripts/climate_operations.gd")
 const Protection = preload("res://scripts/farm_protection.gd")
@@ -11,17 +11,17 @@ const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
 const EVENTS: Dictionary = {
-	"freeze": {"name": "DEEP FREEZE", "barn": 0.12, "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
-	"drought": {"name": "DROUGHT", "barn": 0.06, "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
-	"flood": {"name": "FLOOD", "barn": 0.30, "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Build drainage during Winter."},
-	"storm": {"name": "SEVERE STORM", "barn": 0.22, "growth": 0.75, "prepare": "Harvest the gold lightning row. Winter-built windbreaks reduce storm field losses."},
+	"freeze": {"name": "DEEP FREEZE", "growth": 0.5, "prepare": "Hoe [1] clears ice from frozen crops."},
+	"drought": {"name": "DROUGHT", "growth": 0.6, "prepare": "Route stored water to thirsty beds. Water [3] rescues crops; tanks refill after the drought."},
+	"flood": {"name": "FLOOD", "growth": 0.7, "prepare": "Open drainage gates. Hoe [1] drains flooded beds. Build drainage during Winter."},
+	"storm": {"name": "SEVERE STORM", "growth": 0.75, "prepare": "Harvest the gold lightning row. Winter-built windbreaks reduce storm field losses."},
 }
 const PROJECTS: Dictionary = {
 	"irrigation": {"name": "Sprinklers & Irrigation", "cost": 500.0, "event": "", "detail": "Manual watering: 6 tank water per patch, 4 at level 2."},
 	"rainwater": {"name": Protection.NAMES["rainwater"], "cost": Protection.COSTS["rainwater"], "event": "drought", "detail": "Drought field loss −50% / −75%. Adds 36 water capacity per level. Winter construction; 100 yearly upkeep."},
 	"drainage": {"name": Protection.NAMES["drainage"], "cost": Protection.COSTS["drainage"], "event": "flood", "detail": "Flood field loss −50% / −75%. Open gates to drain stress. Winter construction; 100 yearly upkeep."},
 	"windbreaks": {"name": Protection.NAMES["windbreaks"], "cost": Protection.COSTS["windbreaks"], "event": "storm", "detail": "Storm field loss −50% / −75%. Winter construction; 100 yearly upkeep."},
-	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50% / −75% on covered beds. Build, then place with Hoe on cleared Winter beds. 100 yearly upkeep."},
+	"frost": {"name": Protection.NAMES["frost"], "cost": Protection.COSTS["frost"], "event": "freeze", "detail": "Spring freeze field loss −50% / −75% on covered beds. Build, then cover cleared Winter beds from this page or the bed context action. 100 yearly upkeep."},
 }
 const MAX_PROJECT_LEVEL: int = 2
 const EDUCATION: String = "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."
@@ -31,7 +31,7 @@ var data: Dictionary = fresh_data()
 static func fresh_data() -> Dictionary:
 	return {"lesson": Lesson.fresh(), "operations": Operations.fresh(), "phase": "calm", "timer": SEASON_SECONDS, "event": "",
 		"severity": 0.0, "projects": {}, "protection": Protection.fresh(),
-		"last": {}, "history": [], "field_lost": 0, "barn_lost": 0, "collapse": {}}
+		"last": {}, "history": [], "field_lost": 0, "collapse": {}}
 
 func reset() -> void:
 	data = fresh_data()
@@ -114,28 +114,13 @@ func _impact(farm) -> void:
 		for index in eligible:
 			data.operations.ice[str(index)] = true
 	# Field damage accumulates during active weather; players can rescue beds.
-	var destroyed: int = 0
-	var held: int = farm.storage_used()
-	var barn_rate: float = float(EVENTS[event].barn) * float(data.severity)
-	for crop in farm.storage:
-		var lost: int = lost_units(int(farm.storage[crop]), barn_rate)
-		Protection.record(farm, event, crop, lost, 0.0, 1.0, "Sell barn crops before impact", "barn")
-		farm.storage[crop] = int(farm.storage[crop]) - lost
-	farm.trading.clamp_stock(farm)
-	var barn_lost: int = held - farm.storage_used()
-	data.field_lost = mini(100000, int(data.field_lost) + destroyed)
-	data.barn_lost = mini(farm.MAX_INVENTORY, int(data.barn_lost) + barn_lost)
-	var record: Dictionary = {"event": event, "field_lost": destroyed,
-		"field_total": eligible.size() + destroyed, "barn_lost": barn_lost, "barn_total": held,
+	var record: Dictionary = {"event": event, "field_lost": 0,
+		"field_total": eligible.size(),
 		"at": farm.elapsed, "severity": data.severity}
 	data.last = record
 	data.history.append(record.duplicate(true))
 	if data.history.size() > 8: data.history.pop_front()
 	farm.climate_changed.emit("impact")
-
-static func lost_units(quantity: int, rate: float) -> int:
-	# Avoid a floating-point 59.999999999 loss when the intended count is 60.
-	return mini(quantity, int(floor(float(quantity) * rate + 0.000001)))
 
 func fund(farm, id: String) -> String:
 	if farm.run_over or farm.tutorial_active or not PROJECTS.has(id): return "Finish the farm tour before funding protection."
@@ -176,8 +161,7 @@ func capture_collapse(farm) -> void:
 		"cause": "Winter fixed costs left the farm below its overdraft limit.",
 		"year": farm.season_clock.year, "year_net": farm.ledger.total(farm.season_clock.year), "categories": farm.ledger.category_totals(farm.season_clock.year),
 		"field_lost": int(last.get("field_lost", 0)), "field_total": int(last.get("field_total", 0)),
-		"barn_lost": int(last.get("barn_lost", 0)), "barn_total": int(last.get("barn_total", 0)),
-		"elapsed": farm.elapsed, "total_field_lost": data.field_lost, "total_barn_lost": data.barn_lost,
+		"elapsed": farm.elapsed, "total_field_lost": data.field_lost,
 		"projects": data.projects.duplicate(true), "history": data.history.duplicate(true)}
 
 static func valid(raw: Variant, maximum: float) -> bool:
@@ -207,7 +191,7 @@ static func valid(raw: Variant, maximum: float) -> bool:
 			if not entry is Dictionary or entry.get("event") not in EVENTS: return false
 			if key == "history" and not valid_loss(entry, maximum): return false
 	if not raw.get("last") is Dictionary or (not raw.last.is_empty() and not valid_loss(raw.last, maximum)): return false
-	for key in ["field_lost", "barn_lost"]:
+	for key in ["field_lost"]:
 		if not Rules.number(raw.get(key), 0, maximum): return false
 	if not raw.get("collapse") is Dictionary: return false
 	if not raw.collapse.is_empty():
@@ -215,16 +199,16 @@ static func valid(raw: Variant, maximum: float) -> bool:
 			if not raw.collapse.get(key) is String or raw.collapse[key].length() > 256: return false
 		for key in ["balance"]:
 			if not Rules.number(raw.collapse.get(key), -INF, INF): return false
-		for key in ["field_lost", "field_total", "barn_lost", "barn_total", "elapsed", "total_field_lost", "total_barn_lost"]:
+		for key in ["field_lost", "field_total", "elapsed", "total_field_lost"]:
 			if not Rules.number(raw.collapse.get(key), 0, 1e15 if key == "elapsed" else maximum): return false
 		if not raw.collapse.get("history") is Array or not raw.collapse.get("projects") is Dictionary: return false
 	return true
 
 static func valid_loss(raw: Dictionary, maximum: float) -> bool:
 	if raw.get("event") not in EVENTS: return false
-	for key in ["field_lost", "field_total", "barn_lost", "barn_total", "at", "severity"]:
+	for key in ["field_lost", "field_total", "at", "severity"]:
 		if not Rules.number(raw.get(key), 0, 1e15 if key == "at" else maximum): return false
-	for key in ["field_lost", "field_total", "barn_lost", "barn_total"]:
+	for key in ["field_lost", "field_total"]:
 		if float(raw[key]) != floor(float(raw[key])): return false
 	if not Rules.number(raw.severity, 0.5, 1.0): return false
-	return float(raw.field_lost) <= float(raw.field_total) and float(raw.barn_lost) <= float(raw.barn_total)
+	return float(raw.field_lost) <= float(raw.field_total)

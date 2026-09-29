@@ -253,6 +253,7 @@ func update_interaction_prompt() -> void:
 		interaction_prompt.hide()
 		return
 	var target: Dictionary = game.world.nearby_station()
+	if target.is_empty(): target = game.bed_context()
 	if target.is_empty():
 		interaction_prompt.hide()
 		return
@@ -271,7 +272,7 @@ func update_interaction_prompt() -> void:
 			interaction_prompt.hide()
 			return
 	interaction_prompt.position = rect.position
-	interaction_prompt.tooltip_text = "Interact · E / tap"
+	interaction_prompt.tooltip_text = "Cover bed · E / tap" if target.has("plot_index") else "Interact · E / tap"
 	interaction_prompt.show()
 
 func _process(delta: float) -> void:
@@ -311,6 +312,7 @@ func _process(delta: float) -> void:
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
 		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
 		elif not game.world.nearby_station().is_empty() and game.climate_target.is_empty(): use_button.text = "Interact"
+		elif not game.bed_context().is_empty() and game.climate_target.is_empty(): use_button.text = "Cover bed"
 		sell_button.disabled = hud._quick_sell.disabled
 		if hud.is_panel_open(): fit_modal()
 		fit_auxiliary()
