@@ -52,6 +52,7 @@ func run() -> void:
 	await process_frame
 	check(hud._purchase_box.is_visible_in_tree() and hud.is_panel_open(), "purchase appears while exchange remains open")
 	check(hud._purchase_title.text == "+5 Russet seeds" and hud._purchase_detail.text == "Owned 17 · −\uE000 100", "receipt shows exact bought seeds, new total and actual spend")
+	check(hud._purchase_detail.get_theme_font("font").has_char(0xE000), "receipt font renders the Spudion glyph instead of a missing-character box")
 	check(hud._purchase_box.z_index > hud._modal.z_index, "receipt renders above modal shade")
 	check(not hud._purchase_box.get_global_rect().intersects(hud._modal_card.get_global_rect()), "receipt leaves modal and its purchase buttons unobscured")
 	check(ignores_mouse(hud._purchase_box), "receipt and every child pass mouse input through")

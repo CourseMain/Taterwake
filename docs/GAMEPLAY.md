@@ -31,7 +31,7 @@ Spud Valley’s **Tool Upgrades** shop sits between the barn and market. Click B
 
 Handwritten signs use short names: **Seeds**, **Barn**, **Tools**, **Quests**, **Ducks** and **Weather**.
 
-Purchases show a short dark-and-gold confirmation card. Seed receipts show how many you bought, the actual price paid and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
+Purchases show a short dark-and-gold confirmation card. Seed receipts show how many you bought, the actual price paid with the Spudion symbol and your new seed total. Repeated purchases of the same seed combine in one card instead of piling up. Tool, barn, field and duck upgrades also get confirmations; rejected purchases explain the problem without showing a success card.
 
 | Key | Action |
 | --- | --- |

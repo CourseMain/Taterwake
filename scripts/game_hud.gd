@@ -1023,7 +1023,7 @@ func _build_notices() -> void:
 	_purchase_title = _wrap("", 18, GOLD, true)
 	_purchase_detail = _wrap("", 13, CREAM)
 	_purchase_title.add_theme_font_override("font", _compact_heading_font())
-	_purchase_detail.add_theme_font_override("font", UI_FONT)
+	_purchase_detail.add_theme_font_override("font", _plain_font)
 	purchase_body.add_child(_purchase_title)
 	purchase_body.add_child(_purchase_detail)
 	_purchase_bar = ProgressBar.new()
