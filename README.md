@@ -1,10 +1,10 @@
 # Taterland
 
-**v2.0.0(undeveloped:c) — Game redesign**
+**v2.0.0(undeveloped:d) — Game redesign**
 
-Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-c).
+Taterland is being redesigned from a big-number market game into a farming survival game with a ten-year run and climate change as its central threat. This is an unfinished source prerelease on the `redesign` branch. Follow the [redesign plan](docs/REDESIGN_PLAN.md) and [release notes](CHANGELOG.md#200-undeveloped-d).
 
-The `v2.0.0-undeveloped-c` source prerelease implements redesign Segments 1–12:
+The `v2.0.0-undeveloped-d` source prerelease implements redesign Segments 1–13 plus harvest quality and seed saving:
 
 - One Spud Valley farm, with 12 open beds and 12 available through expansion.
 - Small prices, ordinary crops and tools; no gacha, gear multipliers, professions or market booms.
@@ -14,10 +14,14 @@ The `v2.0.0-undeveloped-c` source prerelease implements redesign Segments 1–12
 - Annual accounts, ledger-backed cash, fixed Winter costs, foreclosure and a ten-year summary.
 - Winter storage prices, fees and spoilage; one Spring buyer contract collected at the end of Autumn.
 - Warned climate disasters, manual water management, Winter protection construction and per-bed frost covers.
-- Annual crop insurance, protection upkeep, forecast ranges and crop-loss cause cards.
+- Annual crop insurance, including Winter weather losses, protection upkeep, forecast ranges and crop-loss cause cards.
+- A worsening climate curve, seasonal event mixes, foreshadowing, year-start headlines and a ten-year disaster record.
+- Spring blossom, Summer haze and drying grass, Autumn canopies and leaves, with smooth seasonal transitions.
+- Table, Standard and Feed harvest grades; wider crop prices, graded sales and contracts requiring Standard or better.
+- Keep Standard or Table sacks as seed for next Spring; stored sacks lose ten quality and suffer 5% spoilage each Winter.
 - Save backups, rejected-save protection and a separate v4 save file. Older farms are not migrated.
 
-Deeper climate systems and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
+Economy tuning, diversification and the remaining redesign segments are still to come. The round potato farmer, villagers, handmade 3D farm and cream interface remain.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — this is the previous game, not the v2 redesign. The live site and downloadable v1 build remain unchanged. To try v2, use the prerelease source with Godot 4.7.2 as described below.
 
@@ -33,7 +37,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `redesign` branch or the `v2.0.0-undeveloped-c` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `redesign` branch or the `v2.0.0-undeveloped-d` tag. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .

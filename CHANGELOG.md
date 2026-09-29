@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.0-undeveloped-d
+
+**Game redesign — unfinished source prerelease.** Covers Segments 1–13 plus harvest quality and seed saving, before economy tuning. The live browser game remains v1.0.3.1.
+
+- Added the rising seasonal climate curve, seasonal disaster pairs, 70% precursor signals and a cap of one disaster per season / three per year.
+- Added year-start newspaper headlines and a ten-year disaster strip shared with Winter accounts. Spring blossom, Summer dryness and haze, Autumn foliage and Winter snow now follow the calendar with one-second transitions.
+- Added Winter deep freeze and blizzard losses for stored sacks and living Icecap, with insured Winter claims. Growing-season disasters leave barn stock intact.
+- Gave frost covers dedicated weather-page and bed context controls; Hoe in Winter only clears ice.
+- Added Table / Standard / Feed grades with 1.5× / 1× / 0.5× price multipliers, treatment-based quality deductions and protection reductions. Beds show grade and downgrade cause; harvest pops show grade. The small “Grade:” tag and growth hint remain steady without flashing.
+- Widened variety base prices to 15 / 20 / 28 / 38 / 50; seeds remain 75% of base. Storage and sales retain grade and quality, and Winter accounts split sales by grade.
+- Added keeping Standard or Table sacks as next Spring’s seeds. Kept sacks avoid storage losses; ordinary stores lose ten quality per Winter and now suffer 5% spoilage. Buyer contracts refuse Feed.
+- Validation: all 78 headless suites pass; the grade suite passes 82 checks and the explicit boot passes 39. Native GL Compatibility and desktop/phone grade, barn and accounts views were checked.
+
+Use Godot 4.7.2 to run the source. Saves use the v4 path and mechanics revision 37; incompatible older saves are safely set aside. Economy tuning and the Segment 15 farm shop remain unfinished. This release does not replace the published browser build.
+
 ## 2.0.0-undeveloped-c
 
 **Game redesign — unfinished source prerelease.** Covers Segments 1–12, including Winter protection and the Autumn collection/storage follow-up. The live browser game remains v1.0.3.1.
