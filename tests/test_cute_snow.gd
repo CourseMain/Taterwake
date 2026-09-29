@@ -37,6 +37,12 @@ func run() -> void:
 	check(art.snow_ground.material_override.shader==art.snow_material.shader,"ground and caps share the two-band snow shader")
 	check(art.snow_ground.mesh.get_aabb().size.y>2,"pillows follow the terraced ground")
 	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"snow leaves fifteen percent exposed grass")
+	check(art.winter_charm.visible and art.winter_charm.get_child_count()==3,"Winter adds only the frozen pond, one snowman and one robin")
+	for duck in w._ducks:
+		check(duck.position.distance_to(w._duck_home+Vector3(0,.14,1))<1.6,"existing ducks stand within the frozen pond")
+	w._set_winter_cover(false)
+	check(not art.winter_charm.visible,"Spring removes Winter charm objects")
+	w._set_winter_cover(true)
 	check(art.bed_snow.multimesh.visible_instance_count==36,"only twelve opened icy beds have three soft snow ridges")
 	farm.plots[0].winter_ice=false; game._on_state_changed()
 	check(art.bed_snow.multimesh.visible_instance_count==33,"clearing ice removes that bed's snow ridges")
@@ -54,7 +60,8 @@ func run() -> void:
 		if arg.begins_with("--step="): step=arg.trim_prefix("--step=")
 	await capture("step"+step+"-overview")
 	var point: Vector3=Vector3(-14.7,0,18) if step=="2" else (w.plot_positions[7] if step=="5" else w.ClimateProjects.barn_position(w)+Vector3(0,1,3))
-	await capture("step"+step+"-detail",point,14 if step in ["2","5"] else 23)
+	if step=="6": point=w._duck_home+Vector3(1,1,1)
+	await capture("step"+step+"-detail",point,12 if step=="6" else (14 if step in ["2","5"] else 23))
 	game.queue_free(); await frames(); await create_timer(.4).timeout
 	print("CUTE SNOW: %d checks, %d failures" % [checks,failures])
 	quit(1 if failures else 0)

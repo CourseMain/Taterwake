@@ -1642,6 +1642,7 @@ func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 func _set_winter_cover(enabled: bool) -> void:
 	if _bed_winter != enabled:
 		_bed_winter = enabled
+		_animate_activities(1)
 		if not _live_plots.is_empty(): update_plots(_live_plots)
 	_update_unused_ground_tint()
 	if is_instance_valid(visuals):
@@ -1883,6 +1884,11 @@ func _animate_activities(delta: float) -> void:
 	for index in range(_ducks.size()):
 		var duck: Node3D = _ducks[index]
 		var body: Node3D = _duck_bodies[index]
+		if _bed_winter:
+			duck.position=_duck_home+Vector3((index-.5)*1.3,.14,1.65)
+			duck.rotation.y=(index-.5)*.6
+			body.position.y=0; body.rotation=Vector3.ZERO
+			continue
 		var patrol: Dictionary = patrols[index] if index < patrols.size() else {}
 		var target: int = int(patrol.get("target", -1))
 		var from: int = int(patrol.get("from", target))
@@ -1895,6 +1901,8 @@ func _animate_activities(delta: float) -> void:
 			if direction.length_squared() > 0.01:
 				duck.rotation.y = lerp_angle(duck.rotation.y, atan2(direction.x, direction.z), minf(1.0, delta * 10))
 			duck.position = duck.position.lerp(position_next, minf(1.0, delta * 16))
+		else:
+			duck.position=_duck_home+Vector3((index-.5)*1.0,.12,1.6)
 		var clock: float = _time + index * 0.7
 		body.rotation.z = sin(clock * (11 if active else 2)) * (0.10 if active else 0.03)
 		body.position.y = absf(sin(clock * (11 if active else 2))) * (0.09 if active else 0.015)

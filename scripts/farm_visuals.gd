@@ -11,6 +11,7 @@ var snow_material: ShaderMaterial
 var sparkles: MultiMeshInstance3D
 var sparkle_points: Array[Vector3] = []
 var sparkle_time := 0.0
+var winter_charm: Node3D
 var bed_snow: MultiMeshInstance3D
 var snow_ground: MeshInstance3D
 var snow_exposed_fraction := 0.0
@@ -75,6 +76,7 @@ func setup(w) -> void:
 	var shard_shape := CylinderMesh.new(); shard_shape.bottom_radius=.15; shard_shape.top_radius=.04; shard_shape.height=.045; shard_shape.radial_segments=3
 	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("e2e6e5")),SHARD_LIMIT)
 	_build_sparkles()
+	_build_winter_charm()
 	stores = _group("WinterBarnSacks")
 	seed_crate = _group("KeptSeedCrate")
 	spoiled = _group("SpoiledSacks")
@@ -118,6 +120,7 @@ func set_winter(enabled: bool) -> void:
 	if winter and winter_dirty: _build_snow()
 	snow.visible=winter
 	sparkles.visible=winter
+	winter_charm.visible=winter
 	update_bed_snow(world._live_plots)
 	footprints.visible=winter
 	stores.visible=winter and stored_count>0
@@ -126,6 +129,44 @@ func set_winter(enabled: bool) -> void:
 		print_count=0; print_cursor=0; walked_distance=0
 		print_ages.fill(PRINT_SECONDS)
 		footprints.multimesh.visible_instance_count=0
+
+func _build_winter_charm() -> void:
+	winter_charm=_group("WinterCharm")
+	winter_charm.hide()
+	var pond:=_group("FrozenPond",winter_charm)
+	pond.position=world._duck_home+Vector3(0,0,1)
+	world._cylinder(pond,Vector3(0,.20,0),1.86,1.86,.045,Color("b4cecf"),20)
+	for i in range(3):
+		var x: float=-.9+i*.64
+		world._bar(pond,Vector3(x-.25,.228,.05),Vector3(x+.40,.228,.86),.018,Color("e2ebeb"))
+	var snowman:=_group("Snowman",winter_charm)
+	snowman.position=world._duck_home+Vector3(3.2,0,1.5)
+	var snowballs:=_group("Snowballs",snowman)
+	world._sphere(snowballs,Vector3(0,.77,0),Vector3(.68,.70,.64),SNOW)
+	world._sphere(snowballs,Vector3(0,1.70,0),Vector3(.46,.45,.44),SNOW)
+	_flatten_static(snowballs)
+	world._cylinder(snowman,Vector3(0,2.09,0),.56,.56,.085,Color("354349"),12)
+	world._cylinder(snowman,Vector3(0,2.29,0),.36,.34,.36,Color("354349"),10)
+	world._cylinder(snowman,Vector3(0,1.35,0),.39,.37,.15,Color("af5749"),12)
+	world._box(snowman,Vector3(.22,1.08,.52),Vector3(.18,.51,.10),Color("af5749"))
+	for x in [-.16,.16]: world._sphere(snowman,Vector3(x,1.81,.395),Vector3(.045,.052,.035),Color("33413e"))
+	world._bar(snowman,Vector3(0,1.66,.4),Vector3(0,1.63,.83),.075,Color("df9647"))
+	for y in [.67,.94]: world._sphere(snowman,Vector3(0,y,.63),Vector3(.052,.052,.028),Color("46514a"))
+	for side in [-1,1]:
+		world._bar(snowman,Vector3(side*.49,1.12,0),Vector3(side*1.12,1.46,0),.042,Color("75614c"))
+		world._bar(snowman,Vector3(side*.93,1.36,0),Vector3(side*1.03,1.61,0),.031,Color("75614c"))
+	var robin:=_group("Robin",winter_charm)
+	robin.position=snowman.position+Vector3(1.14,1.48,0)
+	for x in [-.07,.07]: world._bar(robin,Vector3(x,0,0),Vector3(x,.15,0),.021,Color("614e3d"))
+	world._sphere(robin,Vector3(0,.31,0),Vector3(.26,.26,.28),Color("81705a"))
+	world._sphere(robin,Vector3(0,.30,.19),Vector3(.20,.19,.14),Color("ce6c49"))
+	world._sphere(robin,Vector3(0,.55,.04),Vector3(.19,.18,.18),Color("8c7c64"))
+	for side in [-1,1]:
+		world._sphere(robin,Vector3(side*.245,.31,-.055),Vector3(.045,.18,.19),Color("685f50"))
+		world._sphere(robin,Vector3(side*.15,.60,.14),Vector3(.028,.032,.025),Color("293b36"))
+	world._bar(robin,Vector3(0,.54,.17),Vector3(0,.53,.32),.034,Color("b29964"))
+	world._sphere(robin,Vector3(0,.26,-.32),Vector3(.12,.065,.23),Color("685f50")).rotation.x=-.25
+	world._geometry_batcher.batch_tree(winter_charm,{})
 
 func update_bed_snow(plots: Array) -> void:
 	var count:=0
