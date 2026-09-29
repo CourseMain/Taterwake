@@ -939,3 +939,5 @@ Cute snow item 4: roof caps use rounded, bevelled slab geometry, with three or f
 Cute snow item 5: one instanced batch lays three rounded snow ridges over each opened icy bed. It leaves locked beds plain and removes a bed’s ridges when its ice is cleared. The glaze stays grey-white. Captured in `artifacts/cute-snow-step5-detail.png`.
 
 Cute snow item 6: a frozen pond uses the existing two ducks, standing still on its surface. One snowman and one perched robin form the only extra charm objects; all static pieces compile through the existing batcher. These decorations hide in Spring and do not change duck patrol state. Captured in `artifacts/cute-snow-step6-detail.png`.
+
+Cute snow item 7: sixteen large rounded flakes fall slowly with a gentle sideways drift. Their real-time animation runs even while annual accounts pause the farm. They use shared primitive geometry and a plain unshaded colour; no image textures. Captured in `artifacts/cute-snow-step7-overview.png`.

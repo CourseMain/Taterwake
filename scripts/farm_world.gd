@@ -78,7 +78,9 @@ var _pest_borders: Array[Node3D] = []
 var _pest_labels: Array[Label3D] = []
 var _pest_visuals: Array[Dictionary] = []
 var _pest_focus: int = -1
+const SNOW_FLAKE_COUNT := 16
 var _snowflakes: Array[Node3D] = []
+var _snow_clock := 0.0
 var _dock_label: Label3D
 var _dock_gate: Node3D
 var _impact_root: Node3D
@@ -920,7 +922,6 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	if is_instance_valid(_rotor):
 		_rotor.rotation.z += delta * 0.38
 	_animate_effects(delta)
-	_animate_winter(delta)
 	_animate_pests(delta)
 	_animate_activities(delta)
 	for i in range(_ripe_sparkles.size() - 1, -1, -1):
@@ -1634,9 +1635,16 @@ func _rounded_snow_slab(parent: Node3D, size: Vector2) -> MeshInstance3D:
 
 
 func _falling_snow(parent: Node3D, extent: Vector2) -> void:
-	for i in range(28):
-		var snowflake := _sphere(parent, Vector3(_rng.randf_range(-extent.x, extent.x), _rng.randf_range(1.5, 8.0), _rng.randf_range(-extent.y, extent.y)), Vector3.ONE * 0.035, Color("f1f7f8"))
-		snowflake.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_snow_clock=0
+	var material:=_mat(Color("f1f4f3")).duplicate()
+	material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+	for i in range(SNOW_FLAKE_COUNT):
+		var position_next:=Vector3(_rng.randf_range(-extent.x,extent.x),_rng.randf_range(3,12),_rng.randf_range(-extent.y,extent.y))
+		position_next.x=clampf(position_next.x,-Surface.half_width(position_next.z),Surface.half_width(position_next.z))
+		var radius: float=.13+float(i%3)*.035
+		var snowflake := _sphere(parent,position_next,Vector3.ONE*radius,Color.WHITE)
+		snowflake.material_override=material
+		snowflake.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_snowflakes.append(snowflake)
 
 func _set_winter_cover(enabled: bool) -> void:
@@ -1708,14 +1716,18 @@ func _tool_upgrade_station(pos: Vector3) -> void:
 
 
 func _animate_winter(delta: float) -> void:
-	if current_island != 3 and not _winter_visible:
-		return
+	if not _winter_visible: return
+	_snow_clock+=delta
 	for i in range(_snowflakes.size()):
 		var snowflake: Node3D = _snowflakes[i]
-		snowflake.position.y -= delta*(0.26+float(i%3)*0.08)
-		snowflake.position.x += delta*sin(_time*0.6+float(i))*0.045
-		if snowflake.position.y < 0.35:
-			snowflake.position.y = 8.0
+		snowflake.position.y-=delta*(.18+float(i%3)*.035)
+		snowflake.position.x+=delta*(.22+sin(_snow_clock*.45+float(i))*.12)
+		snowflake.position.z+=delta*cos(_snow_clock*.3+float(i))*.035
+		var shore: float=Surface.half_width(snowflake.position.z)
+		if snowflake.position.y<Surface.height_at(snowflake.position.x,snowflake.position.z)+.25 or snowflake.position.x>shore:
+			snowflake.position.y=10+float(i%3)
+			snowflake.position.x=lerpf(-shore,shore,fmod(float(i)*.6180339,1))
+
 func _build_pest_swarm(parent: Node3D) -> void:
 	for i in range(3):
 		var bug := Node3D.new()
@@ -2003,6 +2015,7 @@ func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> 
 	set_day_time(seconds, season == 3)
 
 func _process(delta: float) -> void:
+	_animate_winter(delta)
 	if _season_blend >= 1.0: return
 	_season_blend = minf(1.0, _season_blend + delta)
 	_apply_season()

@@ -34,6 +34,12 @@ func run() -> void:
 	game._recenter_camera()
 	for i in range(30): game._update_camera_zoom(.1)
 	var art=w.visuals
+	check(w._snowflakes.size()==16,"snowfall is a sparse pool of sixteen large flakes")
+	var flake=w._snowflakes[0]
+	var before: Vector3=flake.position
+	w._process(1)
+	check(before.y-flake.position.y>.15 and before.y-flake.position.y<.3 and flake.position.x>before.x,"snow falls slowly and drifts sideways while game processing is paused")
+	check(flake.scale.x>=.129 and flake.scale.x<=.201,"large rounded flakes remain visible from the overview")
 	check(art.snow_ground.material_override.shader==art.snow_material.shader,"ground and caps share the two-band snow shader")
 	check(art.snow_ground.mesh.get_aabb().size.y>2,"pillows follow the terraced ground")
 	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"snow leaves fifteen percent exposed grass")
@@ -58,6 +64,7 @@ func run() -> void:
 	var step := "1"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--step="): step=arg.trim_prefix("--step=")
+	game.hud._climate_alert.dismiss()
 	await capture("step"+step+"-overview")
 	var point: Vector3=Vector3(-14.7,0,18) if step=="2" else (w.plot_positions[7] if step=="5" else w.ClimateProjects.barn_position(w)+Vector3(0,1,3))
 	if step=="6": point=w._duck_home+Vector3(1,1,1)
