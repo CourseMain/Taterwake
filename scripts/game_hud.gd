@@ -128,6 +128,7 @@ var _panel_crops: Array[String] = []
 var _tool_caption: Label
 var _context_box: PanelContainer
 var _hover_context: String = ""
+var _context_layout_key: String = ""
 var _farm_hint: String = ""
 var _farm_hint_remaining: float = 0.0
 var _farm_busy_remaining: float = 0.0
@@ -204,8 +205,7 @@ func _refresh_seed_visibility() -> void:
 		_crop_row.offset_left = -150.0 if first_seed else 28.0
 		_crop_row.offset_right = 150.0 if first_seed else -28.0
 	if is_instance_valid(_context_box):
-		_context_box.offset_top = -251 if showing else -152
-		_context_box.offset_bottom = -221 if showing else -122
+		_update_context()
 
 
 func build_ui() -> void:
@@ -1229,18 +1229,26 @@ func _update_context() -> void:
 	_context_box.set_meta("grade", text.contains("Table") or text.contains("Standard") or text.contains("Feed"))
 	_context.text = text
 	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
-	# Hug the single line instead of spanning the farm. Input passes through.
-	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 24.0, 120.0, 480.0)
+	var touch = get_parent().get("touch_controls")
+	var touch_enabled: bool = is_instance_valid(touch) and touch.enabled
+	if touch_enabled:
+		_context_box.visible = _context_box.visible and (warning or _context_box.get_meta("grade", false))
+	var seed_row: bool = is_instance_valid(_crop_row) and _crop_row.visible
+	var layout_key: String = "%s|%s|%s|%s" % [text, root.size.x, touch_enabled, seed_row]
+	if layout_key == _context_layout_key: return
+	_context_layout_key = layout_key
+	# Measure at the displayed font size; reflow only when the hint or layout changes.
+	var font_size: int = 20 if touch_enabled else 13
+	_context.add_theme_font_size_override("font_size", font_size)
+	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 24.0, 120.0, minf(480.0, root.size.x - 24.0))
 	_context_box.offset_left = -width * 0.5
 	_context_box.offset_right = width * 0.5
+	_context_box.offset_top = -310 if touch_enabled else (-251 if seed_row else -152)
+	_context_box.offset_bottom = -268 if touch_enabled else (-221 if seed_row else -122)
 	_context.size.x = width - 12
-	_context_box.size = Vector2(width, 0)
-	var touch = get_parent().get("touch_controls")
-	if is_instance_valid(touch) and touch.enabled:
-		_context_box.visible = _context_box.visible and (warning or _context_box.get_meta("grade", false))
-		_context_box.offset_top = -310
-		_context_box.offset_bottom = -268
-		_context.add_theme_font_size_override("font_size", 20)
+	_context_box.size.y = 0
+	# Wrapping updates minimum height during container layout; release the old height afterward.
+	_context_box.set_size.call_deferred(Vector2(width, 0))
 
 func _notice_is_warning(text: String) -> bool:
 	var lower := text.to_lower()

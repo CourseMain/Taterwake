@@ -829,7 +829,10 @@ func _preview_area(index: int, tool: String) -> void:
 		world.highlight_tiles(NO_TILES)
 
 func _update_hover() -> void:
-	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(get_viewport().get_mouse_position()))
+	_update_hover_at(get_viewport().get_mouse_position())
+
+func _update_hover_at(screen_position: Vector2) -> void:
+	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(screen_position))
 	hover_plot = int(hit.get("plot_index", -1))
 	_preview_area(pending_plot if walking and pending_plot >= 0 else hover_plot, pending_tool if walking else selected_tool)
 	if not climate_target.is_empty():
@@ -838,28 +841,29 @@ func _update_hover() -> void:
 	if state.ClimateSystem.Lesson.active(state):
 		hud.set_context("Water the glowing practice bed [3]" if state.climate.data.lesson.stage == "water" else "Click the near sprinkler to water its connected beds")
 		return
+	var context_text: String = ""
 	if hover_plot >= 0:
 		var plot: Dictionary = state.plots[hover_plot]
 		var action: String = selected_tool
 		if state.climate.data.phase == "active" and float(state.climate.data.operations.stress.get(str(hover_plot), 0)) > 0.1:
-			hud.set_context("Danger %d%% · %s" % [roundi(float(state.climate.data.operations.stress[str(hover_plot)]) * 100), "Water [3] rescues this bed" if state.climate.data.event == "drought" else ("Hoe [1] drains this bed" if state.climate.data.event == "flood" else "Hoe [1] clears ice" if state.climate.data.event == "freeze" else "Harvest ripe crops before the next strike")])
+			context_text = "Danger %d%% · %s" % [roundi(float(state.climate.data.operations.stress[str(hover_plot)]) * 100), "Water [3] rescues this bed" if state.climate.data.event == "drought" else ("Hoe [1] drains this bed" if state.climate.data.event == "flood" else "Hoe [1] clears ice" if state.climate.data.event == "freeze" else "Harvest ripe crops before the next strike")]
 		elif bool(plot.get("frozen", false)):
-			hud.set_context("Frozen bed · Press 1, then click to break ice")
+			context_text = "Frozen bed · Press 1, then click to break ice"
 		elif state.ClimateSystem.Protection.can_cover(state, hover_plot):
-			hud.set_context("Cleared bed · Walk beside it, then E / Cover bed to place a frost cover")
+			context_text = "Cleared bed · Walk beside it, then E / Cover bed to place a frost cover"
 		elif bool(plot.get("pests", false)):
-			hud.set_context("Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0))))
+			context_text = "Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0)))
 		elif not plot.unlocked:
 			var land: Dictionary = state.field_expansion_info()
-			hud.set_context("%d more beds · Tools · %s" % [int(land.remaining), state.money(float(land.cost))])
+			context_text = "%d more beds · Tools · %s" % [int(land.remaining), state.money(float(land.cost))]
 		elif int(plot.stage) == 3:
-			hud.set_context("%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action])
+			context_text = "%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action]
 		elif int(plot.stage) > 0 and bool(plot.watered):
 			var seconds: float = maxf(0.0, (float(state.CropTable.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
-			hud.set_context("%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds])
+			context_text = "%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds]
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()
-			hud.set_context("%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"])
+			context_text = "%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"]
 	elif hit.has("station"):
 		if str(hit.station).begins_with("project:"):
 			hud.set_context("Winter construction · Click to walk and work")
@@ -872,10 +876,9 @@ func _update_hover() -> void:
 		descriptions["activities"] = "Ducks · Click to hire pest patrol"
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
-		hud.set_context(descriptions.get(str(hit.station), "TATERLAND"))
+		context_text = descriptions.get(str(hit.station), "TATERLAND")
 	else:
-		hud.set_context("")
-
+		context_text = ""
 	var quality_index: int = hover_plot
 	if quality_index < 0:
 		var near_distance: float = 2.8
@@ -886,7 +889,8 @@ func _update_hover() -> void:
 	world.show_grade(quality_index, state.plots[quality_index] if quality_index >= 0 else {})
 	if quality_index >= 0 and int(state.plots[quality_index].stage) > 0:
 		var quality: String = state.Quality.description(state.plots[quality_index])
-		hud.set_context((hud._hover_context + " · " if hover_plot >= 0 else "") + quality)
+		context_text = (context_text + " · " if hover_plot >= 0 else "") + "Grade: " + quality
+	hud.set_context(context_text)
 
 func _on_state_changed() -> void:
 	# Activity boundaries and market ticks can signal within the same update.

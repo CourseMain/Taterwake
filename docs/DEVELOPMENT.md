@@ -11,7 +11,7 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-undeveloped-c`, published as the GitHub prerelease **v2.0.0(undeveloped:c)** from the `redesign` branch. This tag covers Segments 1–12, including Winter protection, insurance, forecasts, cause cards and the Autumn collection/storage follow-up. The earlier `v2.0.0-undeveloped-b` tag covers Segments 1–11. The earlier `v2.0.0-indevelopment` tag remains available for Segments 1–8. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-undeveloped-d`, published as the GitHub prerelease **v2.0.0(undeveloped:d)** from the `redesign` branch. This tag covers Segments 1–13 plus harvest quality and seed saving before economy tuning. The earlier `v2.0.0-undeveloped-c` tag covers Segments 1–12, `v2.0.0-undeveloped-b` covers Segments 1–11, and `v2.0.0-indevelopment` covers Segments 1–8. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
@@ -40,9 +40,9 @@ The runner imports once when `.godot/imported` is missing, discovers every `test
 
 #### Harvest grades — current
 
-Godot 4.7.2, `tools/run_tests.sh -j 4`: **78 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS** (`artifacts/grades-final-baseline.txt`). `test_grades` passes 79 checks. After final label and accounts placement adjustments, all seven affected suites pass again: grades, harvest identity, touch controls, HUD layout, ledger, season clock and boot (`artifacts/grades-visual-check.txt`).
+Godot 4.7.2, `tools/run_tests.sh -j 4`: **78 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS** (`artifacts/release-d-baseline.txt`). After the final hint sizing fix, all six affected suites pass again: grades, touch controls, HUD layout, farm interaction, branding and boot (`artifacts/grades-flicker-check.txt`). `test_grades` passes 82 checks, including growth/grade hover content, compact wrapping and stable hint geometry/visibility across repeated refreshes.
 
-The required explicit headless boot passes 39 checks (`artifacts/grades-boot.txt`). Native GL Compatibility with touch controls passes all 79 grade checks (`artifacts/grades-native.txt`). The bed grade/cause, harvest label, desktop/phone sale rows, barn seed controls and Winter grade totals were visually inspected. Browser runtime automation was not rerun. Published `docs/index.*` and `web/` remain untouched.
+The required explicit headless boot passes 39 checks (`artifacts/grades-flicker-boot.txt`). Native GL Compatibility with touch controls passes all 82 grade checks (`artifacts/grades-flicker-native.txt`). The smaller explicit grade tag, growth/grade hint, harvest label, desktop/phone sale rows, barn seed controls and Winter grade totals were visually inspected. Browser runtime automation was not rerun. Published `docs/index.*` and `web/` remain untouched.
 
 #### Segment 13 — historical
 
@@ -554,6 +554,6 @@ Base prices are Russet 15, Giant 20, Golden 28, Sunburst 38 and Icecap 50; seeds
 
 The barn’s per-grade seed action transfers Standard/Table sacks into `trading.kept_seed`, outside sales, capacity, spoilage, quality ageing and Winter barn damage. Winter-held sacks are removed from both inventories. Spring transfers each to one matching seed and clears the pending stock before saving. Seed purchases reserve capacity for pending seed. Existing return-to-Spring handling releases ordinary stores separately. The future Segment 15 farm shop must consume Table only at `base × 1.8`; that shop is not implemented in this segment.
 
-Sales post `Sold <sacks> <grade> <variety> sacks` under the existing Sales ledger category. Annual accounts derive grade sack counts and receipts directly from those entries; no duplicate sales journal is saved. Contracts remain in their own category. Sell Potatoes lists/selects each grade and scales its price, sparkline and Winter marker. Barn stores provide separate graded Winter-sale and seed actions. The existing hover/near-player context and a small world label show current grade and the largest deduction; harvest feedback includes a grade label.
+Sales post `Sold <sacks> <grade> <variety> sacks` under the existing Sales ledger category. Annual accounts derive grade sack counts and receipts directly from those entries; no duplicate sales journal is saved. Contracts remain in their own category. Sell Potatoes lists/selects each grade and scales its price, sparkline and Winter marker. Barn stores provide separate graded Winter-sale and seed actions. The hover/near-player hint is assembled once per refresh, with growth time and explicit “Grade:” wording; its layout is recalculated only when content, viewport or controls change. A smaller world tag also says “Grade:”. This avoids the growth-only/grade hint flicker and repeated container resizing. Downgraded hints name the largest deduction; harvest feedback includes a grade label.
 
 Run `tools/run_tests.sh -j 1 test_grades`. It covers thresholds, actual timed growth/pest/weather deductions, protection, deadline preservation after spraying, saved fractional clocks and markers, healthy and downgraded harvests, prices, cohort corruption, exact Winter downgrades, kept seed conversion/planting, Feed-refusing contracts, mixed fresh/stored sales and ledger reconciliation. Native `test_grades.gd -- --integration-test --capture --touch-controls` captures the desktop/phone grade market. Existing fixtures now use explicit Standard-quality cohorts where they test ordinary stock, and prices/spoilage assertions reflect the new economy. No tests are skipped or disabled; no tuning bot or farm-shop feature is introduced.

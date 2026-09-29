@@ -166,7 +166,7 @@ func ui_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate(); root.add_child(game); game.set_process(false)
 	game.state.coins = 100000
 	game.world.show_grade(0, game.state.plots[0])
-	check(game.world.grade_tag.visible and game.world.grade_tag.text == "Table", "bed context has a small grade tag")
+	check(game.world.grade_tag.visible and game.world.grade_tag.text == "Grade: Table", "bed context has a small grade tag")
 	game.world.harvest_feedback.harvest({0:game.state.plots[0].duplicate(true)})
 	check(game.world.harvest_feedback.active[0].node.get_node("HarvestGrade").text == "Table", "harvest pop names the grade")
 	game.world.grade_tag.hide()
@@ -178,10 +178,32 @@ func ui_checks() -> void:
 	Q.deduct(game.state,0,"pests",25)
 	game._update_hover()
 	for i in range(3): await process_frame
-	check(game.world.grade_tag.text == "Standard" and game.hud._context_box.visible and game.hud._hover_context.contains("Pests took it to Standard"), "near-player context exposes current grade and largest downgrade cause")
+	check(game.world.grade_tag.text == "Grade: Standard" and game.hud._context_box.visible and game.hud._hover_context.contains("Pests took it to Standard"), "near-player context exposes current grade and largest downgrade cause")
 	if "--capture" in OS.get_cmdline_user_args():
 		await create_timer(.1).timeout; RenderingServer.force_draw()
 		root.get_texture().get_image().save_png("res://artifacts/grades-bed.png")
+	# Keep an actual growing bed under the pointer across HUD and state refreshes.
+	game.state.plots[0].stage = 1
+	game.state.plots[0].watered = true
+	await physics_frame
+	var point: Vector2 = game.world.camera.unproject_position(game.world.plot_positions[0])
+	var pointer: Vector2 = point * root.get_visible_rect().size / Vector2(game.farm_viewport.size)
+	game._update_hover_at(pointer)
+	for i in range(4): await process_frame
+	check(game.hover_plot == 0 and game.hud._context.text.contains("Ready in") and game.hud._context.text.contains("Grade: Standard"), "hover combines growth time and an explicit grade (bed %d, %s)" % [game.hover_plot, game.hud._context.text])
+	if "--capture" in OS.get_cmdline_user_args():
+		RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-hover.png")
+	var changes := {"resize": 0, "visibility": 0}
+	game.hud._context_box.resized.connect(func(): changes.resize += 1)
+	game.hud._context_box.visibility_changed.connect(func(): changes.visibility += 1)
+	var stable_rect: Rect2 = game.hud._context_box.get_rect()
+	check(stable_rect.size.y <= game.hud._context.get_line_height() * game.hud._context.get_line_count() + 12, "growth and grade hint stays compact after wrapping (%s)" % stable_rect)
+	for i in range(12):
+		game._update_hover_at(pointer)
+		game.hud.update_state(game.state)
+		game.hud._process(0)
+		await process_frame
+	check(changes.resize == 0 and changes.visibility == 0 and game.hud._context_box.get_rect() == stable_rect, "unchanged growth and grade hint neither resizes nor flashes across refreshes")
 	for word in Q.GRADES: Stock.add(game.state.storage,"russet",4,{"Table":90,"Standard":60,"Feed":20}[word])
 	game.hud.show_panel("sell_potatoes",game.state)
 	await process_frame

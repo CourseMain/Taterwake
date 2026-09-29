@@ -123,7 +123,7 @@ Both pages order varieties by their fixed base selling price: **Russet → Giant
 
 ## Crop quality and saved seed
 
-Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.5× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. Hovering a growing bed or standing beside it shows its grade; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
+Every planted bed starts at **100 quality**. Its current score determines its grade at harvest: **Table 80–100 (1.5× price)**, **Standard 40–79 (1×)**, **Feed 0–39 (0.5×)**. “Table” means the best eating quality. Hovering a growing bed or standing beside it shows a small “Grade: Table” (or Standard/Feed) tag and a steady grade hint alongside the growth time; a downgraded bed also names its largest deduction, such as “Pests took it to Standard.” The harvest pop shows the grade. Different harvest qualities remain separate in the barn.
 
 Before variety and protection adjustments, deductions are:
 

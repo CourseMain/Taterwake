@@ -2160,12 +2160,12 @@ func show_grade(index: int, plot: Dictionary) -> void:
 		grade_tag = Label3D.new()
 		grade_tag.name = "BedGrade"
 		grade_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		grade_tag.font_size = 42
-		grade_tag.pixel_size = 0.026
+		grade_tag.font_size = 28
+		grade_tag.pixel_size = 0.019
 		grade_tag.no_depth_test = true
 		grade_tag.modulate = CREAM
 		add_child(grade_tag)
 	grade_tag.visible = index >= 0 and int(plot.get("stage", 0)) > 0
 	if grade_tag.visible:
-		grade_tag.text = preload("res://scripts/crop_quality.gd").grade(int(plot.quality))
+		grade_tag.text = "Grade: " + preload("res://scripts/crop_quality.gd").grade(int(plot.quality))
 		grade_tag.position = plot_positions[index] + Vector3(0, 1.9, 0)
