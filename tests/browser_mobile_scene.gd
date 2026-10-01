@@ -166,6 +166,7 @@ func art_scene(view: String) -> void:
 		game.world.camera.look_at(point)
 		game._zoom_target_size = 9 if view == "stress" else 17
 		game.world.camera.size = game._zoom_target_size
+		game.world.fit_camera_depth()
 
 func collect_buttons(node: Node, out: Array) -> void:
 	if node is Button and node.is_visible_in_tree():

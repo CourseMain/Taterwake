@@ -18,12 +18,14 @@ func shot(label: String, point: Vector3=Vector3.ZERO, zoom: float=0) -> void:
 		camera.position=point+Vector3(14,19,25)
 		camera.look_at(point)
 		camera.size=zoom
+		game.world.fit_camera_depth()
 	game.hud._toast_box.hide(); game.hud._purchase_box.hide()
 	game.hud._climate_alert.dismiss()
 	await frames(12)
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("res://artifacts/farm-corrections-native-"+label+".png")
 	camera.transform=transform; camera.size=size
+	game.world.fit_camera_depth()
 func plant_colors(node: Node) -> PackedColorArray:
 	var result := PackedColorArray()
 	for mesh in node.find_children("*","MeshInstance3D",true,false):
