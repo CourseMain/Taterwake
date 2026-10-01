@@ -768,7 +768,7 @@ func update_plots(plots: Array) -> void:
 		_furrow_roots[i].visible = unlocked and tilled
 		_soil_meshes[i].position.y = .105 if unlocked else (.145 if _bed_winter else .027)
 		_soil_meshes[i].scale.y = 1.0 if unlocked else .12
-		_soil_meshes[i].material_override = _mat(Color("66513b") if watered else (SOIL if tilled else Color("8d9c70")))
+		_soil_meshes[i].material_override = _unused_ground_material if _bed_winter else _mat(Color("66513b") if watered else (SOIL if tilled else Color("8d9c70")))
 		if not unlocked:
 			_soil_meshes[i].material_override = _unused_ground_material
 			if not _bed_winter: _unused_blades(root,.04)
@@ -1656,6 +1656,7 @@ func _set_winter_cover(enabled: bool) -> void:
 	if is_instance_valid(visuals):
 		visuals.set_winter(enabled)
 		_winter_cover = visuals.snow
+		get_node("IslandTerrainShell").material_override = visuals.snow_material if enabled else _ground_material
 	if is_instance_valid(_player_body): _player_body.set_season(3 if enabled else _season_index)
 	for tree in _tree_specs:
 		if is_instance_valid(tree.canopy): tree.canopy.visible = not enabled
@@ -1964,9 +1965,9 @@ func _retire_climate_node(node: Node3D) -> void:
 ## Calendar presentation is deterministic; only the one-second blend uses real time.
 static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
 	var age: float = clampf((year - 1) / 9.0, 0, 1)
-	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("829386")][season]
+	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("f0f1f0")][season]
 	if season == 1: grass = grass.lerp(Color("c4a16d"), clampf((year - 5) / 5.0, 0, 1) * 0.85)
-	if hint == "drought": grass = grass.lerp(Color("c5ad7c"), 0.42)
+	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
 		"haze": (0.12 + age * 0.26) if season == 1 else 0.0}

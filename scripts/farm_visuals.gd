@@ -14,7 +14,7 @@ var sparkle_time := 0.0
 var winter_charm: Node3D
 var bed_snow: MultiMeshInstance3D
 var snow_ground: MeshInstance3D
-var snow_exposed_fraction := 0.0
+var snow_paths: MeshInstance3D
 var drift_specs: Array[Dictionary] = []
 var winter_dirty := true
 var winter := false
@@ -238,12 +238,11 @@ func _build_snow() -> void:
 		for p in world._project_nodes.windbreaks.get_meta("crowns",[]):
 			world._sphere(snow,p,Vector3(.60,.17,.46),SNOW)
 	_flatten_static(snow)
-	# This single shader surface shares the terrain triangles. Its calibrated
-	# noise holes expose real grass, while all the snow props above are batched.
+	# One opaque near-white surface follows every upper terrain triangle.
 	snow_ground=preload("res://scripts/winter_ground.gd").build()
 	snow.add_child(snow_ground)
-	snow_exposed_fraction=float(snow_ground.get_meta("exposed_fraction"))
-	snow.set_meta("exposed_fraction",snow_exposed_fraction)
+	snow_paths=preload("res://scripts/winter_ground.gd").paths(world._path_segments)
+	snow.add_child(snow_paths)
 	snow.set_meta("drift_count",drift_specs.size())
 	snow.set_meta("drift_specs",drift_specs)
 	world._snowflakes.clear()

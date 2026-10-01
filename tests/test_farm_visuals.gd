@@ -86,7 +86,7 @@ func run() -> void:
 		check(art.snow.visible==(season==3),"snow accumulations follow Winter")
 		check(w._player_body.outfit_season==season,"fixed farmer outfit follows season")
 		check(w._tree_specs.all(func(tree): return tree.canopy.visible==(season!=3)),"fruit trees are bare only in Winter")
-		check(art.snow.find_children("*","MeshInstance3D",true,false).size()<=30,"snow uses two static surfaces plus bounded flakes")
+		check(art.snow.find_children("*","MeshInstance3D",true,false).size()<=30,"snow uses compiled surfaces plus bounded flakes")
 		if season==3: unused_ground(w,true)
 		await frames()
 		var calls: int=int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
@@ -95,7 +95,7 @@ func run() -> void:
 		if season<3: await shot("season%d" % season)
 	check(is_instance_valid(art.snow_ground) and art.snow_ground.visible,"Winter has a continuous snow ground mesh")
 	check(art.snow_ground.mesh.get_aabb().size.y>2,"snow follows all three terraces rather than forming a flat sheet")
-	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"noise leaves about fifteen percent of the ground exposed")
+	check(is_instance_valid(art.snow_paths) and art.snow_paths.mesh.get_aabb().size.z>30,"Winter keeps the compacted path network visible")
 	check(art.drift_specs.size()>0 and art.drift_specs.size()<=10,"Winter has no more than ten corner drifts")
 	for drift in art.drift_specs:
 		check(drift.corner in ["barn","terrace","gate"],"drifts are restricted to building, terrace and gate corners")

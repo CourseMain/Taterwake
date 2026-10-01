@@ -140,7 +140,10 @@ func scene_checks() -> void:
 	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.season == 3, "Winter saves before accounts open")
 	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "season strip and snow show Winter")
 	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return "Hoe [1]" in label.text), "accounts explain the Winter ice-clearing job in the scrolling body")
-	check(game.world._ice_roots.all(func(ice): return ice.visible), "frost meshes show ice on every bed")
+	var matching_ice := true
+	for i in range(game.state.plots.size()):
+		matching_ice = matching_ice and game.world._ice_roots[i].visible == game.state.plots[i].unlocked
+	check(matching_ice, "frost meshes show ice only on opened beds")
 	var snapshot: Dictionary = game.state._save_data()
 	game._process(10); game.state.update(10)
 	check(game.state._save_data() == snapshot, "accounts pause both controller and state simulation")

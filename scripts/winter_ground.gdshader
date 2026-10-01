@@ -1,15 +1,12 @@
 shader_type spatial;
 render_mode ambient_light_disabled, specular_disabled;
 
-uniform float exposure_threshold = 0.35;
 uniform vec4 snow_color : source_color = vec4(0.9412,0.9451,0.9412,1.0);
 uniform vec4 shadow_color : source_color = vec4(0.77,0.85,0.90,1.0);
 uniform bool ground_surface = true;
 uniform float pillow_height = 0.035;
-varying float snow_mask;
 
 void vertex() {
-	snow_mask = COLOR.r;
 	if (ground_surface) {
 		float x = VERTEX.x * 0.65;
 		float z = VERTEX.z * 0.52;
@@ -19,9 +16,6 @@ void vertex() {
 }
 
 void fragment() {
-	// Opaque cutouts reveal the real grass, rather than painting green spots
-	// over snow. The low Winter light supplies the faint blue in its shadows.
-	if (ground_surface && snow_mask < exposure_threshold) { discard; }
 	ALBEDO = snow_color.rgb;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.05;

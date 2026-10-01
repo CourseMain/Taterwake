@@ -42,7 +42,16 @@ func run() -> void:
 	check(flake.scale.x>=.129 and flake.scale.x<=.201,"large rounded flakes remain visible from the overview")
 	check(art.snow_ground.material_override.shader==art.snow_material.shader,"ground and caps share the two-band snow shader")
 	check(art.snow_ground.mesh.get_aabb().size.y>2,"pillows follow the terraced ground")
-	check(art.snow_exposed_fraction>=.12 and art.snow_exposed_fraction<=.18,"snow leaves fifteen percent exposed grass")
+	check("discard" not in art.snow_ground.material_override.shader.code,"Winter ground is opaque without terrain cutouts")
+	check(w.get_node("IslandTerrainShell").material_override==art.snow_material,"Winter terrain uses white snow instead of grass or soil shading")
+	var path_vertices: PackedVector3Array=art.snow_paths.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	for lane in w._path_segments:
+		var point: Vector3=lane.a.lerp(lane.b,.5)+Vector3(0,10,0)
+		var hit:=false
+		for i in range(0,path_vertices.size(),3):
+			if Geometry3D.ray_intersects_triangle(point,Vector3.DOWN,path_vertices[i],path_vertices[i+1],path_vertices[i+2])!=null:
+				hit=true; break
+		check(hit,"compacted snow keeps every lane connected")
 	check(art.winter_charm.visible and art.winter_charm.get_child_count()==3,"Winter adds only the frozen pond, one snowman and one robin")
 	for duck in w._ducks:
 		check(duck.position.distance_to(w._duck_home+Vector3(0,.14,1))<1.6,"existing ducks stand within the frozen pond")
