@@ -55,6 +55,9 @@ func setup(w) -> void:
 		world._box(solar,Vector3(0,0.045,-0.61+i*0.3),Vector3(0.66,0.015,0.015),CYAN)
 	status = world._shop_label(self,"Weather station",Vector3(0,4.35,0))
 	world._target(self,Vector3(0,1.5,0),Vector3(3.5,3.3,3.3),"station","climate")
+	# Only the moving dish loses casting; its housing and mast remain solid casters.
+	for mesh: GeometryInstance3D in dish.find_children("*", "GeometryInstance3D", true, false):
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	world._geometry_batcher.batch_tree(self,{})
 func _glow(mesh: MeshInstance3D) -> void:
 	var mat: StandardMaterial3D = mesh.material_override.duplicate()

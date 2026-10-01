@@ -1062,6 +1062,10 @@ func _windmill(pos: Vector3) -> void:
 		_box(blade, Vector3(0.30, 1.8, 0.035), Vector3(0.56, 1.60, 0.10), Color("f3e4bc"))
 		for r in range(4):
 			_box(blade, Vector3(0.30, 1.17 + float(r) * 0.42, 0.1), Vector3(0.58, 0.055, 0.04), Color("b99b68"))
+		# Thin moving sails should not flicker across the snow shadow map.
+		# Set this before batching; the hub and tower still cast their silhouettes.
+		for mesh: GeometryInstance3D in blade.find_children("*", "GeometryInstance3D", true, false):
+			mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_sphere(_rotor, Vector3(0.0, 0.0, 0.14), Vector3(0.27, 0.27, 0.18), GOLD)
 
 func _scenery() -> void:
