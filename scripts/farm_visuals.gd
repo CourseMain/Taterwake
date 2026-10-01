@@ -118,6 +118,7 @@ func update_grades(plots: Array) -> void:
 func set_winter(enabled: bool) -> void:
 	winter = enabled
 	if winter and winter_dirty: _build_snow()
+	set_shadow_mode(world.graphics_quality!="smooth")
 	snow.visible=winter
 	sparkles.visible=winter
 	winter_charm.visible=winter
@@ -129,6 +130,10 @@ func set_winter(enabled: bool) -> void:
 		print_count=0; print_cursor=0; walked_distance=0
 		print_ages.fill(PRINT_SECONDS)
 		footprints.multimesh.visible_instance_count=0
+
+func set_shadow_mode(enabled: bool) -> void:
+	for material in [snow_material, snow_ground.material_override if is_instance_valid(snow_ground) else null, snow_paths.material_override if is_instance_valid(snow_paths) else null]:
+		if material!=null: material.set_shader_parameter("single_light_pass",not enabled)
 
 func _build_winter_charm() -> void:
 	winter_charm=_group("WinterCharm")

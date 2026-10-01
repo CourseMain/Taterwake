@@ -494,6 +494,7 @@ func _apply_graphics_quality() -> void:
 	_sun.shadow_opacity = 0.68
 	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"
+	if is_instance_valid(visuals): visuals.set_shadow_mode(_sun.shadow_enabled)
 
 
 func set_climate_projects(projects: Dictionary) -> void:

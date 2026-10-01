@@ -1,9 +1,10 @@
 shader_type spatial;
-render_mode ambient_light_disabled, specular_disabled;
+render_mode specular_disabled;
 
 uniform vec4 snow_color : source_color = vec4(0.9412,0.9451,0.9412,1.0);
-uniform vec4 shadow_color : source_color = vec4(0.77,0.85,0.90,1.0);
+uniform vec4 shadow_color : source_color = vec4(0.788235,0.850980,0.890196,1.0);
 uniform bool ground_surface = true;
+uniform bool single_light_pass = false;
 uniform float pillow_height = 0.035;
 
 void vertex() {
@@ -17,14 +18,17 @@ void vertex() {
 
 void fragment() {
 	ALBEDO = snow_color.rgb;
+	// Keep ambient fill below clipping in the Compatibility additive pass.
+	AO = 0.12;
 	ROUGHNESS = 1.0;
 	SPECULAR = 0.05;
 }
 
 void light() {
-	// One white band and one pale-blue band. Actual shadow attenuation joins
-	// the shaded band; light energy does not turn clean snow into grey mud.
-	float lit = step(0.35, dot(NORMAL, LIGHT) * ATTENUATION);
-	float strength = clamp(max(LIGHT_COLOR.r, max(LIGHT_COLOR.g, LIGHT_COLOR.b)) * 3.0, 0.0, 1.0);
-	DIFFUSE_LIGHT += mix(shadow_color.rgb, snow_color.rgb, lit) * strength;
+	// Use Godot's lit surface path: real normals, radiance and shadow-map
+	// attenuation drive the two bands; the environment supplies ambient fill.
+	float normal_band = step(0.35, dot(NORMAL, LIGHT));
+	float lit = normal_band * ATTENUATION;
+	vec3 shade = shadow_color.rgb / max(snow_color.rgb, vec3(0.001));
+	DIFFUSE_LIGHT += mix(shade * 0.86, vec3(1.3), lit) * LIGHT_COLOR * 0.90 / PI * (single_light_pass ? 1.9 : 1.0);
 }
