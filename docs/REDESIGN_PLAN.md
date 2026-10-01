@@ -1100,6 +1100,20 @@ UI_STYLE.md, on desktop and phone.
   final ledger and the epilogue lead-in.
 - Season strip: a small four-segment bar under the wordmark with the
   current season lit and the year number.
+- Winter jobs card: when Winter opens (after the accounts close), a
+  pinned card under the season strip lists every Winter action that is
+  actually available, with live numbers, one line each: iced beds to
+  clear; stored tonnes with the current and late-Winter price; paid
+  projects with work done of three; cleared beds that can take a frost
+  cover; ripe Icecap; sacks that can be kept as seed; businesses on
+  offer from year three; and the blizzard warning when one is coming.
+  Each line is a button that walks the farmer there or opens the right
+  page. Lines tick off as they are done and the card collapses to a
+  single "Winter · N jobs left" line when the player wants it out of
+  the way. Move the Winter stores sale out of the barn sub-menu: the
+  barn's Winter page opens on the stores list with the rising price
+  first. The same card pattern may show at most two lines in other
+  seasons (a contract due, a disaster warning) but never a to-do list.
 - Phone layouts for every page above; touch targets at least 44 px.
 
 Remove leftover copy from the old game wherever it appears (stock words,
