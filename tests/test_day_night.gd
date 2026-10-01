@@ -7,6 +7,9 @@ func _initialize() -> void: call_deferred("run")
 func check(ok: bool, note: String) -> void:
 	checks += 1
 	if not ok: failures += 1; push_error("FAIL: " + note)
+func settle_sun(world) -> void:
+	world._animate_sun(3.0)
+	world._animate_sun(0.4)
 func run() -> void:
 	var world := World.new()
 	root.add_child(world)
@@ -30,21 +33,29 @@ func run() -> void:
 	check(world._day_environment.ambient_light_energy >= 0.35 and world._sun.light_energy > 0, "dusk remains readable for the final harvest")
 	check(world._day_environment.get_instance_id() == environment_id and world._sun.get_instance_id() == sun_id and world.get_child_count() == children, "sky changes reuse existing lights and environment")
 	world.set_day_time(0)
+	settle_sun(world)
 	var dawn: Vector3 = world._sun.rotation_degrees
 	world.set_day_time(75)
+	settle_sun(world)
 	var noon: Vector3 = world._sun.rotation_degrees
 	world.set_day_time(150)
+	settle_sun(world)
 	check(dawn.y < noon.y and noon.y < world._sun.rotation_degrees.y and noon.x < dawn.x, "sun direction shows progress from dawn through noon to dusk")
+	check(dawn.is_equal_approx(Vector3(-40,160,0)) and noon.is_equal_approx(Vector3(-60,180,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-40,200,0)), "working-season arc has the requested bounds")
 	for invalid in [NAN, INF, -1.0]:
 		world.set_day_time(invalid)
 		check(world.day_cycle_info().phase == 1, "invalid time cannot corrupt lighting")
 	world.set_day_time(0, true)
+	settle_sun(world)
 	check(world.day_cycle_info().phase == 0, "Winter starts at dawn instead of holding at dusk")
 	var winter_dawn: Vector3 = world._sun.rotation_degrees
 	world.set_day_time(75, true)
+	settle_sun(world)
 	check(world.day_cycle_info().phase == 0.5 and world._sun.rotation_degrees.x > noon.x and world._sun.rotation_degrees.y > winter_dawn.y, "Winter sun moves across a lower arc")
+	check(winter_dawn.is_equal_approx(Vector3(-30,160,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-55,180,0)), "Winter has a 30 degree floor and 55 degree peak")
 	check(world._sun.light_color.b > 0.95 and world._sun.light_energy < 0.65, "Winter sunlight is pale and weaker")
 	world.set_day_time(150, true)
+	settle_sun(world)
 	check(world.day_cycle_info().phase == 1 and world._sun.rotation_degrees.y > winter_dawn.y, "Winter reaches dusk at the season end")
 	check(world._winter_cover.visible and world._snowflakes.size() == 16, "Winter builds accumulated snow and falling flakes")
 	var flake_y: float = world._snowflakes[0].position.y
@@ -52,9 +63,25 @@ func run() -> void:
 	check(world._snowflakes[0].position.y != flake_y, "Winter snowfall animates independently of paused farm time")
 	world.set_day_time(0, false)
 	check(not world._winter_cover.visible and world.day_cycle_info().phase == 0, "next Spring reveals the Valley at dawn")
+	settle_sun(world)
+	world._sun_step_elapsed = 0.0
+	var held: Vector3 = world._sun.rotation_degrees
+	world.set_day_time(75)
+	var sky_at_noon: Color = world._day_environment.background_color
+	world._animate_sun(2.99)
+	check(world._sun.rotation_degrees.is_equal_approx(held), "sun direction is held between three-second steps")
+	world.set_day_time(76)
+	check(world._day_environment.background_color != sky_at_noon, "sky still follows continuous calendar time")
+	world._animate_sun(0.02)
+	check(world._sun.rotation_degrees.is_equal_approx(held), "new sun target begins without a jump")
+	world._animate_sun(0.2)
+	check(not world._sun.rotation_degrees.is_equal_approx(held) and not world._sun.rotation_degrees.is_equal_approx(world._sun_target), "sun eases between poses")
+	world._animate_sun(0.2)
+	check(world._sun.rotation_degrees.is_equal_approx(world._sun_target), "sun arrives after 0.4 seconds")
 	if "--capture" in OS.get_cmdline_user_args():
 		for moment in [0, 75, 150]:
 			world.set_day_time(moment)
+			settle_sun(world)
 			await create_timer(0.2).timeout
 			RenderingServer.force_draw()
 			root.get_texture().get_image().save_png("res://artifacts/season-sky-%d.png" % moment)

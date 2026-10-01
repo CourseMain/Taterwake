@@ -55,6 +55,14 @@ var _time: float = 0.0
 var _day_elapsed: float = 0.0
 var _applied_day_time: float = -1.0
 var _day_environment: Environment
+const SUN_STEP_SECONDS := 3.0
+const SUN_EASE_SECONDS := 0.4
+var _sun_step_elapsed := 0.0
+var _sun_ease_elapsed := SUN_EASE_SECONDS
+var _sun_pose_ready := false
+var _sun_desired := Vector3.ZERO
+var _sun_from := Vector3.ZERO
+var _sun_target := Vector3.ZERO
 var _sun: DirectionalLight3D
 var _moon: DirectionalLight3D
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -412,6 +420,9 @@ func _clear_world() -> void:
 	_day_environment = null
 	_applied_day_time = -1.0
 	_sun = null
+	_sun_pose_ready = false
+	_sun_step_elapsed = 0.0
+	_sun_ease_elapsed = SUN_EASE_SECONDS
 	_moon = null
 	coast = null
 	camera = null
@@ -554,7 +565,13 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var height: float = sin(phase * PI)
 	var daylight: float = 0.25 + 0.75 * height
 	var twilight: float = pow(1.0 - height, 2.0 if _season_index == 2 else 3.0)
-	_sun.rotation_degrees = Vector3(-lerpf(15.0 if winter else 25.0, 40.0 if winter else 70.0, height), lerpf(-70.0, 70.0, phase), 0)
+	# North-centred arc lights the treads while the south-facing risers stay shaded.
+	_sun_desired = Vector3(-lerpf(30.0 if winter else 40.0, 55.0 if winter else 60.0, height), 180.0 + lerpf(-20.0, 20.0, phase), 0)
+	if not _sun_pose_ready:
+		_sun_pose_ready = true
+		_sun_from = _sun_desired
+		_sun_target = _sun_desired
+		_sun.rotation_degrees = _sun_desired
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
@@ -578,7 +595,6 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 		_day_environment.ambient_light_color = _season_light.ambient.lerp(_day_environment.ambient_light_color, _season_blend)
 		_sun.light_color = _season_light.sun.lerp(_sun.light_color, _season_blend)
 		_sun.light_energy = lerpf(_season_light.energy, _sun.light_energy, _season_blend)
-		_sun.rotation_degrees = _season_light.rotation.lerp(_sun.rotation_degrees, _season_blend)
 	if is_instance_valid(coast): coast.sync_light()
 
 
@@ -2008,7 +2024,7 @@ func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> 
 		var first: bool = _season_key.is_empty()
 		_season_from = season_tints(year, season, hint) if first else _season_palette.duplicate()
 		if is_instance_valid(_sun) and _day_environment != null:
-			_season_light = {"sky": _day_environment.background_color, "ambient": _day_environment.ambient_light_color, "sun": _sun.light_color, "energy": _sun.light_energy, "rotation": _sun.rotation_degrees}
+			_season_light = {"sky": _day_environment.background_color, "ambient": _day_environment.ambient_light_color, "sun": _sun.light_color, "energy": _sun.light_energy}
 		_season_key = key
 		_season_year = year; _season_index = season; _season_signal = hint
 		_season_blend = 1.0 if first else 0.0
@@ -2016,7 +2032,23 @@ func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> 
 		_applied_day_time = -1.0
 	set_day_time(seconds, season == 3)
 
+func _animate_sun(delta: float) -> void:
+	if not is_instance_valid(_sun) or not _sun_pose_ready: return
+	_sun_step_elapsed += delta
+	if _sun_step_elapsed >= SUN_STEP_SECONDS:
+		_sun_step_elapsed = fmod(_sun_step_elapsed, SUN_STEP_SECONDS)
+		if not _sun_target.is_equal_approx(_sun_desired):
+			_sun_from = _sun.rotation_degrees
+			_sun_target = _sun_desired
+			_sun_ease_elapsed = 0.0
+			return
+	if _sun_ease_elapsed < SUN_EASE_SECONDS:
+		_sun_ease_elapsed = minf(SUN_EASE_SECONDS, _sun_ease_elapsed + delta)
+		var weight: float = smoothstep(0.0, SUN_EASE_SECONDS, _sun_ease_elapsed)
+		_sun.rotation_degrees = _sun_from.lerp(_sun_target, weight)
+
 func _process(delta: float) -> void:
+	_animate_sun(delta)
 	_animate_winter(delta)
 	if _season_blend >= 1.0: return
 	_season_blend = minf(1.0, _season_blend + delta)

@@ -30,5 +30,5 @@ void light() {
 	float normal_band = step(0.35, dot(NORMAL, LIGHT));
 	float lit = normal_band * ATTENUATION;
 	vec3 shade = shadow_color.rgb / max(snow_color.rgb, vec3(0.001));
-	DIFFUSE_LIGHT += mix(shade * 0.86, vec3(1.3), lit) * LIGHT_COLOR * 0.90 / PI * (single_light_pass ? 1.9 : 1.0);
+	DIFFUSE_LIGHT += mix(shade * 0.86, vec3(1.3), lit) * LIGHT_COLOR * 0.82 / PI * (single_light_pass ? 1.9 : 1.0);
 }

@@ -24,7 +24,7 @@ func run() -> void:
 	for i in range(12): game.state.plots[i].winter_ice=true; game.state.plots[i].tilled=true
 	game._on_state_changed(); game.hud.close_panel()
 	game.hud._climate_alert.dismiss(); game.hud._toast_box.hide(); game.hud._purchase_box.hide()
-	w._process(1); game._recenter_camera()
+	w._process(1); w._animate_sun(3.0); w._animate_sun(0.4); game._recenter_camera()
 	for i in range(30): game._update_camera_zoom(.1)
 	w.set_process(false); w.visuals.set_process(false)
 	var material: ShaderMaterial=w.visuals.snow_ground.material_override
@@ -37,7 +37,7 @@ func run() -> void:
 		check(w._sun.shadow_enabled==(mode!="smooth"),mode+" uses the same sun-shadow policy on snow as grass")
 	if DisplayServer.get_name()!="headless":
 		var probe: MeshInstance3D=w._box(w,Vector3(20,2,-8),Vector3(1.4,4,1.4),Color("6e645a"))
-		var point: Vector2=w.camera.unproject_position(Vector3(20,.18,-11.5))
+		var point: Vector2=w.camera.unproject_position(Vector3(20,.18,-5.8))
 		w.set_graphics_quality("balanced")
 		probe.hide()
 		var clear: Image=await frame_image()
