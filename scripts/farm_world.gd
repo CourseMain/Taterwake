@@ -47,6 +47,7 @@ var _climate_ice: Dictionary = {}
 var _project_levels: Dictionary = {}
 var _weather_strength: float = 0.0
 var _weather_drought: bool = false
+var _weather_dimming_limit := 1.0
 var _npc_actors: Dictionary = {}
 var _staff_by_station: Dictionary = {}
 var _villagers: Array[Node3D] = []
@@ -376,6 +377,7 @@ func _clear_world() -> void:
 	_ripe_sparkles.clear()
 	_clouds.clear()
 	_weather_strength = 0.0
+	_weather_dimming_limit = 1.0
 	_weather_drought = false
 	weather_station = null
 	_project_nodes.clear()
@@ -542,7 +544,9 @@ func set_climate(info: Dictionary) -> void:
 	elif info.phase == "active": strength = float(info.severity)
 	elif info.phase == "recovery": strength = float(info.severity) * float(info.timer) / Climate.RECOVERY_SECONDS
 	var drought: bool = info.event == "drought"
-	if not is_equal_approx(strength, _weather_strength) or drought != _weather_drought:
+	var dimming_limit: float = 0.05 if info.phase == "recovery" else (0.15 if info.event in ["blizzard", "deep_freeze"] else 1.0)
+	if not is_equal_approx(strength, _weather_strength) or drought != _weather_drought or dimming_limit != _weather_dimming_limit:
+		_weather_dimming_limit = dimming_limit
 		_weather_strength = strength
 		_weather_drought = drought
 		_applied_day_time = -1.0
@@ -584,9 +588,9 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	_sun.light_energy = (0.48 if winter else 0.65) * daylight
 	_moon.light_energy = 0.48 * (1.0 - daylight)
 	if _weather_strength > 0.0:
-		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), _weather_strength * 0.85)
-		_day_environment.ambient_light_color = _day_environment.ambient_light_color.lerp(Color("e9b36b") if _weather_drought else Color("8da5b9"), _weather_strength * 0.55)
-		_sun.light_energy *= 1.0 - _weather_strength * (0.10 if _weather_drought else 0.55)
+		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), minf(_weather_dimming_limit, _weather_strength * 0.85))
+		_day_environment.ambient_light_color = _day_environment.ambient_light_color.lerp(Color("e9b36b") if _weather_drought else Color("8da5b9"), minf(_weather_dimming_limit, _weather_strength * 0.55))
+		_sun.light_energy *= 1.0 - minf(_weather_dimming_limit, _weather_strength * (0.10 if _weather_drought else 0.55))
 		if _weather_drought:
 			_sun.light_energy = maxf(_sun.light_energy, 0.95 * _weather_strength)
 			_sun.light_color = Color("ffe0a0")

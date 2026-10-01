@@ -27,6 +27,17 @@ func run() -> void:
 	w._process(1); w._animate_sun(3.0); w._animate_sun(0.4); game._recenter_camera()
 	for i in range(30): game._update_camera_zoom(.1)
 	w.set_process(false); w.visuals.set_process(false)
+	var calm_energy: float = w._sun.light_energy
+	var weather: Dictionary = game.state.climate_info().duplicate(true)
+	for event in ["blizzard", "deep_freeze"]:
+		weather.event = event; weather.severity = 1.0; weather.timer = w.Climate.RECOVERY_SECONDS
+		weather.phase = "active"; w.set_climate(weather)
+		check(is_equal_approx(w._sun.light_energy, calm_energy * .85), event + " darkens sunlight by at most 15 percent")
+		weather.phase = "recovery"; w.set_climate(weather)
+		check(is_equal_approx(w._sun.light_energy, calm_energy * .95), event + " recovery darkens sunlight by at most 5 percent")
+		weather.timer = 0; w.set_climate(weather)
+		check(is_equal_approx(w._sun.light_energy, calm_energy), event + " recovery returns completely to calm light")
+	weather.phase = "calm"; weather.event = ""; weather.severity = 0; w.set_climate(weather)
 	var material: ShaderMaterial=w.visuals.snow_ground.material_override
 	check("unshaded" not in material.shader.code and "shadows_disabled" not in material.shader.code and "ambient_light_disabled" not in material.shader.code,"snow uses the ordinary lit surface and ambient path")
 	check("step(0.35, dot(NORMAL, LIGHT))" in material.shader.code,"snow normal band uses the requested 0.35 threshold")
@@ -56,6 +67,9 @@ func run() -> void:
 		probe.free()
 	w.set_graphics_quality("balanced")
 	for i in range(12): w.set_player_position(Vector3(-14.7,0,15+i*.6))
+	if "--blizzard" in OS.get_cmdline_user_args():
+		weather.event = "blizzard"; weather.phase = "active"; weather.severity = 1.0; weather.timer = 15.0
+		w.set_climate(weather)
 	if "--capture" in OS.get_cmdline_user_args():
 		var step:="1"
 		for arg in OS.get_cmdline_user_args():
