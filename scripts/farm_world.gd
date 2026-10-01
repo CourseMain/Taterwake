@@ -483,8 +483,17 @@ func _lighting() -> void:
 	# Keep even the lowest portrait ray above sea level.
 	camera.position += camera.basis.z * 190.0
 	camera.current = true
-	# Portrait overview rays must still reach the surrounding ocean.
-	camera.far = 800.0
+	fit_camera_depth()
+
+
+func fit_camera_depth() -> void:
+	if not is_instance_valid(camera): return
+	# Orthographic cameras ignore DirectionalLight3D's maximum distance.
+	# Fit the camera depth to the island instead; its scale and framing stay put.
+	# The ocean has its own far-depth projection so portrait views stay filled.
+	var depth: float = camera.global_basis.z.dot(camera.global_position - Vector3(0, 4, 0))
+	camera.near = maxf(0.1, depth - 35.0)
+	camera.far = depth + 35.0
 
 
 func set_graphics_quality(mode: String) -> void:
@@ -498,12 +507,13 @@ func _apply_graphics_quality() -> void:
 	# One map suits this orthographic diorama; four perspective shadow splits
 	# waste detail and introduce visible boundaries across the flat island.
 	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	_sun.directional_shadow_max_distance = 400.0
+	_sun.directional_shadow_max_distance = 70.0
 	_sun.directional_shadow_fade_start = 1.0
 	# Large unsubdivided terrain near a shadow frustum can produce triangular
 	# pancake artifacts. Keep the full geometry inside the shadow projection.
 	_sun.directional_shadow_pancake_size = 0.0
-	_sun.shadow_bias = 0.04
+	_sun.shadow_bias = 0.025
+	_sun.shadow_normal_bias = 0.4
 	_sun.shadow_opacity = 0.68
 	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"

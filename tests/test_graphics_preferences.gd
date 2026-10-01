@@ -57,6 +57,10 @@ func run() -> void:
 	await process_frame
 	game.hud._refs.graphics_balanced.pressed.emit()
 	check(game.world._sun.shadow_enabled, "Balanced restores world shadows")
+	check(game.world._sun.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL, "farm shadows use one map without cascade redraws")
+	check(ProjectSettings.get_setting_with_override("rendering/lights_and_shadows/directional_shadow/size") == 4096, "native Balanced and Crisp use the detailed 4096 shadow map")
+	check(ProjectSettings.get_setting_with_override("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality") == RenderingServer.SHADOW_QUALITY_SOFT_HIGH, "Compatibility uses its softest supported PCF13 filter")
+	check(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile") == RenderingServer.SHADOW_QUALITY_SOFT_HIGH, "phone platform defaults cannot silently replace PCF13 with hard shadows")
 	check(game.hud._refs.graphics_current.text == "Using Balanced", "panel reflects Balanced again")
 	game.hud.close_panel()
 	game.tutorial.start()

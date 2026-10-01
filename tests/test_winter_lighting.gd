@@ -27,8 +27,10 @@ func run() -> void:
 	w._process(1); w._animate_sun(3.0); w._animate_sun(0.4); game._recenter_camera()
 	for i in range(30): game._update_camera_zoom(.1)
 	w.set_process(false); w.visuals.set_process(false)
-	var calm_energy: float = w._sun.light_energy
 	var weather: Dictionary = game.state.climate_info().duplicate(true)
+	weather.phase = "calm"; weather.event = ""; weather.severity = 0; weather.timer = 0
+	w.set_climate(weather); w.set_day_time(75, true)
+	var calm_energy: float = w._sun.light_energy
 	for event in ["blizzard", "deep_freeze"]:
 		weather.event = event; weather.severity = 1.0; weather.timer = w.Climate.RECOVERY_SECONDS
 		weather.phase = "active"; w.set_climate(weather)

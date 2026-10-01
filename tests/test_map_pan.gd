@@ -12,6 +12,18 @@ func check(ok: bool, description: String) -> void:
 		failures += 1
 		push_error("FAIL: " + description)
 
+func check_shadow_depth(note: String) -> void:
+	var camera: Camera3D = game.world.camera
+	var depth_covers_island := true
+	var vertices: PackedVector3Array = game.world.Surface.mesh().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	for vertex: Vector3 in vertices:
+		var depth: float = -camera.to_local(vertex).z
+		depth_covers_island = depth_covers_island and depth > camera.near + .1 and depth < camera.far - .1
+	for cloud: Node3D in game.world._clouds:
+		var depth: float = -camera.to_local(cloud.global_position).z
+		depth_covers_island = depth_covers_island and depth > camera.near and depth < camera.far
+	check(is_equal_approx(camera.far - camera.near, 70.0) and depth_covers_island, note + ": the whole coastline, terraces and clouds stay inside the 70-unit shadow slice")
+
 func mouse_button(button: int, pressed: bool, point := Vector2(600, 350)) -> void:
 	var event := InputEventMouseButton.new()
 	event.button_index = button
@@ -61,6 +73,7 @@ func run() -> void:
 	game._cancel_walk()
 	var camera: Camera3D = game.world.camera
 	var original: Transform3D = camera.global_transform
+	check_shadow_depth("default overview")
 	var player: Vector3 = game.world.player.position
 	var plot: Vector3 = game.world.plot_positions[4]
 	var before: Vector2 = camera.unproject_position(plot)
@@ -77,6 +90,7 @@ func run() -> void:
 		smooth = smooth and next <= remaining
 		remaining = next
 	check(smooth and remaining < 0.001, "camera eases continuously to release without overshoot")
+	check_shadow_depth("eased pan")
 	home()
 	var screen_delta := Vector2(85, 40)
 	mouse_button(MOUSE_BUTTON_RIGHT, true)
@@ -95,6 +109,7 @@ func run() -> void:
 	check(camera.global_position == stopped, "motion after release cannot keep panning")
 	home()
 	check(camera.global_transform.is_equal_approx(original), "Home restores the original island view")
+	check_shadow_depth("recenter")
 	mouse_button(MOUSE_BUTTON_LEFT, true)
 	check(not game.walking and game.pending_plot == -1, "left press waits to distinguish a tap from a pan")
 	mouse_drag(Vector2(90, 40), MOUSE_BUTTON_LEFT)
@@ -142,6 +157,8 @@ func run() -> void:
 	game._pan_camera_by(Vector2(1e8, -1e8))
 	var limit: Vector2 = game._camera_pan_limit()
 	check(absf(game._camera_pan_offset.x) <= limit.x and absf(game._camera_pan_offset.z) <= limit.y, "large drags stop at the island bounds")
+	settle_pan()
+	check_shadow_depth("maximum pan")
 	stopped = camera.global_position
 	game._pan_camera_by(Vector2(NAN, INF))
 	check(camera.global_position == stopped, "invalid motion cannot corrupt the camera")
@@ -217,6 +234,12 @@ func run() -> void:
 		check(is_instance_valid(reset), "touch controls provide a recenter action")
 		if is_instance_valid(reset): reset.pressed.emit()
 		check(game._camera_pan_offset == Vector3.ZERO and not game.touch_controls.drawer.visible, "touch recenter restores the overview and closes the drawer")
+	for dimensions: Vector2i in [Vector2i(390, 844), Vector2i(844, 390), Vector2i(1280, 800)]:
+		root.size = dimensions
+		for i in range(4): await process_frame
+		game._update_camera_zoom(.1)
+		game._recenter_camera()
+		check_shadow_depth("viewport " + str(dimensions))
 	game.queue_free()
 	await process_frame
 	print("MAP PAN: %d checks, %d failures" % [checks, failures])

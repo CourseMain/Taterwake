@@ -53,6 +53,7 @@ func _process(delta: float) -> void:
 	pan_time += delta
 	world.camera.position = home + Vector3(sin(pan_time * 0.055) * 4.0, 0, cos(pan_time * 0.055) * 2.0)
 	world.camera.look_at(Vector3(0, 0, -1))
+	world.fit_camera_depth()
 	world.animate(delta, false)
 
 func present(ending: Dictionary) -> void:
@@ -62,6 +63,7 @@ func present(ending: Dictionary) -> void:
 	world.camera.position = home
 	world.camera.size = 64
 	world.camera.look_at(Vector3(0, 0, -1))
+	world.fit_camera_depth()
 	progress.hide()
 	top = _paper()
 	add_child(top)

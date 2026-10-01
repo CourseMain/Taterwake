@@ -577,6 +577,7 @@ func _recenter_camera() -> void:
 	_cancel_map_drag()
 	_camera_pan_offset = Vector3.ZERO
 	world.camera.global_position = _camera_home_position
+	world.fit_camera_depth()
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _map_navigation_allowed() -> bool:
@@ -642,6 +643,7 @@ func _update_camera_pan(delta: float) -> void:
 	world.camera.global_position = world.camera.global_position.lerp(target, 1.0 - exp(-CAMERA_PAN_RESPONSE * minf(delta, 0.1)))
 	if world.camera.global_position.distance_squared_to(target) < 0.00000001:
 		world.camera.global_position = target
+	world.fit_camera_depth()
 
 func _handle_map_zoom(event: InputEvent) -> bool:
 	if event is InputEventMagnifyGesture:
@@ -1408,6 +1410,7 @@ func _close_epilogue(restart: bool) -> void:
 	world.restore_present()
 	world.camera.transform = old_camera
 	world.camera.size = old_size
+	world.fit_camera_depth()
 	_reset_camera_view()
 	hud.show()
 	touch_controls.show()

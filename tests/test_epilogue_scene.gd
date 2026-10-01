@@ -59,6 +59,12 @@ func run() -> void:
 		var camera_before: Vector3 = game.world.camera.position
 		screen._process(1.0)
 		check(camera_before != game.world.camera.position, "slow pan plays")
+		var camera: Camera3D = game.world.camera
+		var bounds_fit := is_equal_approx(camera.far - camera.near, 70.0)
+		for point: Vector3 in game.world.Surface.mesh().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+			var depth: float = -camera.to_local(point).z
+			bounds_fit = bounds_fit and depth > camera.near and depth < camera.far
+		check(bounds_fit, "epilogue pan keeps every coastline edge inside the fitted shadow range")
 		check(var_to_str(game.state._save_data()) == before, "presentation leaves ten-year save untouched")
 		if "--capture" in OS.get_cmdline_user_args():
 			await create_timer(2.1).timeout
@@ -72,6 +78,8 @@ func run() -> void:
 		await frames()
 		check(not is_instance_valid(game.epilogue_screen) and game.world.future_outcome.is_empty(), "ledger restores original world")
 		check(game.hud._panel_kind == "run_summary", "returns to ten-year summary")
+		var restored_depth: float = -game.world.camera.to_local(Vector3.ZERO).z
+		check(restored_depth > game.world.camera.near and restored_depth < game.world.camera.far and is_equal_approx(game.world.camera.far - game.world.camera.near, 70.0), "returning to the ledger restores the original camera's fitted depth")
 	game.epilogue_result = fixture("Holding on")
 	game._on_user_action("epilogue")
 	await create_timer(2.1).timeout

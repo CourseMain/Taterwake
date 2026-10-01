@@ -11,6 +11,11 @@ varying vec2 sea_pos;
 void vertex() {
 	sea_pos = VERTEX.xz;
 	VERTEX.y += sin(VERTEX.x * 0.55 + water_clock * 1.1) * 0.022 + cos(VERTEX.z * 0.65 - water_clock * 0.8) * 0.018;
+	// The island camera uses a tight depth slice for detailed orthogonal shadows.
+	// Preserve the sea's screen shape but keep its non-shadow-casting surface
+	// behind the island in Compatibility's reverse-Z clip space (far is -1).
+	POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
+	POSITION.z = -0.9999 * POSITION.w;
 }
 void fragment() {
 	float shore = UV.x;
