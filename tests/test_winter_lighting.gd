@@ -48,6 +48,11 @@ func run() -> void:
 	for mode in ["balanced","crisp","smooth"]:
 		w.set_graphics_quality(mode)
 		check(w._sun.shadow_enabled==(mode!="smooth"),mode+" uses the same sun-shadow policy on snow as grass")
+		check(is_equal_approx(w._sun.shadow_opacity,.45),mode+" retains the soft Winter shadow opacity")
+	w.set_day_time(75,false)
+	check(is_equal_approx(w._sun.shadow_opacity,.68),"Spring restores its ordinary shadow opacity")
+	w.set_day_time(75,true)
+	check(is_equal_approx(w._sun.shadow_opacity,.45),"returning to Winter restores bounced-light shadows")
 	if DisplayServer.get_name()!="headless":
 		var probe: MeshInstance3D=w._box(w,Vector3(20,2,-8),Vector3(1.4,4,1.4),Color("6e645a"))
 		var point: Vector2=w.camera.unproject_position(Vector3(20,.18,-5.8))

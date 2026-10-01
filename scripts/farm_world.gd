@@ -514,7 +514,7 @@ func _apply_graphics_quality() -> void:
 	_sun.directional_shadow_pancake_size = 0.0
 	_sun.shadow_bias = 0.025
 	_sun.shadow_normal_bias = 0.4
-	_sun.shadow_opacity = 0.68
+	_sun.shadow_opacity = 0.45 if _winter_visible else 0.68
 	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"
 	if is_instance_valid(visuals): visuals.set_shadow_mode(_sun.shadow_enabled)
@@ -572,6 +572,8 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	if is_instance_valid(player): _set_winter_cover(winter)
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
+	if winter_changed:
+		_sun.shadow_opacity = 0.45 if winter else 0.68
 	if _day_elapsed == _applied_day_time and not winter_changed:
 		return
 	_applied_day_time = _day_elapsed
