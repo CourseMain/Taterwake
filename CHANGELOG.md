@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0-underdevelopment-h
+
+**Winter visual corrections — prerelease.** Keeps the farming mechanics and snow albedo unchanged. The published browser deployment remains v1.0.3.1.
+
+- Made unused beds read as flat grass in growing seasons and plain snow in Winter; retained glaze only on opened beds and strengthened visible plant stress.
+- Added the cute-snow pass: pillowy ground, scalloped edges, rounded caps, short icicles, slow sparkles, fading paired footprints, soft bed furrows, frozen pond, one snowman, one robin and sparse slow flakes. Removed exposed-ground patches.
+- Softened snow lighting toward light grey with a 0.35 toon threshold, a compact seasonal sun arc, three-second direction updates and 0.4-second easing.
+- Capped Winter weather dimming at 15% and recovery at 5%. Fitted soft 4096 shadows to the island, set Winter shadow opacity to 0.45, and removed casting from mill sails and the moving weather dish.
+- Validation: 15 affected headless suites and the exact 39-check boot pass. The phone-resolution Chrome/Metal check holds 16.67 ms median and p95 frame time in Balanced and Crisp with 4096 shadows, matching the pre-pass baseline. This is an emulated 390×844 phone view at DPR 3 on Apple M4, not a physical-phone measurement.
+
+Published `docs/index.*` and `web/` are unchanged. A separate Web export and visual review accompany this release.
+
 ## 2.0.0-undeveloped-g
 
 **Game redesign — source prerelease.** Adds the three-field farm and its seasonal art. The live browser game remains v1.0.3.1.

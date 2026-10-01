@@ -10,7 +10,7 @@ Choose what to plant, when to sell and what to protect. From year three, decide 
 
 The round potato farmer, villagers, handmade 3D island and cream interface remain. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-This is **v2.0.0(undeveloped:g)**, the redesign source prerelease including the connected three-field farm, faster guided waits and seasonal farm art. Read the [gameplay guide](docs/GAMEPLAY.md), [store copy](docs/STORE_COPY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use the `v2.0.0-undeveloped-g` tag for this prerelease or the `redesign` branch for ongoing work.
+This is **v2.0.0 (underdevelopment: h)**, the redesign prerelease with rounded Winter snow, softer grey-white lighting, readable terraces and stable farm shadows. Read the [gameplay guide](docs/GAMEPLAY.md), [store copy](docs/STORE_COPY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use the `v2.0.0-underdevelopment-h` tag for this prerelease or the `redesign` branch for ongoing work.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — the published site still contains the previous game. To try this redesign, run or export the current source below.
 
@@ -26,7 +26,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `v2.0.0-undeveloped-g` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `v2.0.0-underdevelopment-h` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
