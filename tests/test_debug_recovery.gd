@@ -62,5 +62,7 @@ func run() -> void:
 	check(farm.coins == 400000, "cash editor rejects amounts above the limit")
 	game.queue_free()
 	await settle()
+	# Let the audio mixer release the final stopped voice playback.
+	await create_timer(0.2).timeout
 	print("DEBUG RECOVERY: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
