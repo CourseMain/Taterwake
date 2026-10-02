@@ -7,6 +7,7 @@ var water_material: ShaderMaterial
 var clock: float = 0.0
 var water_enabled: bool = true
 const WATER_Y: float = -0.78
+const SEA_CLIP_DEPTH: float = -0.9999
 
 func setup(w) -> void:
 	world = w
@@ -28,6 +29,7 @@ func _build_water() -> void:
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	water_material = ShaderMaterial.new()
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
+	water_material.set_shader_parameter("sea_clip_depth", SEA_CLIP_DEPTH)
 	var colors: Array = [Color("91d8ca"), Color("5298a5"), Color("e3efd5")]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water.material_override = water_material

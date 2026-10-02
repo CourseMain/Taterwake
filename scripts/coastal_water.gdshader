@@ -2,6 +2,8 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, shadows_disabled;
 // One opaque coastal ring; no depth/screen textures, transparency or reflections.
 uniform float water_clock = 0.0;
+// Normalized clip depth, independent of the island's shadow camera slice.
+uniform float sea_clip_depth = -0.9999;
 uniform vec3 shallow_color : source_color = vec3(0.36, 0.72, 0.65);
 uniform vec3 deep_color : source_color = vec3(0.19, 0.49, 0.56);
 uniform vec3 foam_color : source_color = vec3(0.84, 0.94, 0.80);
@@ -15,7 +17,7 @@ void vertex() {
 	// Preserve the sea's screen shape but keep its non-shadow-casting surface
 	// behind the island in Compatibility's reverse-Z clip space (far is -1).
 	POSITION = PROJECTION_MATRIX * MODELVIEW_MATRIX * vec4(VERTEX, 1.0);
-	POSITION.z = -0.9999 * POSITION.w;
+	POSITION.z = sea_clip_depth * POSITION.w;
 }
 void fragment() {
 	float shore = UV.x;
