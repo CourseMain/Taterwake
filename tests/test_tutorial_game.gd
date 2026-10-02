@@ -113,7 +113,7 @@ func run() -> void:
 		check(game.state.accounts_open and game.hud._panel_kind == "accounts", "annual ledger is open: " + decision)
 		check(game.state.tutorial_progress.completed and not game.tutorial.active, "guidance ends at accounts: " + decision)
 		check(game.state.ledger.is_closed(1) and game.state.ledger.total(1) < -100000, "normal bills posted to honest negative ledger: " + decision)
-		check(game.hud._refs.accountant.text == "Nell · Accountant\n" + game.state.NpcRoster.ledger_lines(game.state), "accountant reads current ledger")
+		check(game.hud._refs.accountant.text == "Nell · Accountant" and game.hud._refs.accountant.tooltip_text == game.state.NpcRoster.ledger_lines(game.state), "accountant reads current ledger")
 		check(game.state.stock_count("russet") == (2 if decision == "store" else 0), "choice determines stored stock")
 		check(game.state._valid_save(game.state._save_data()), "first accounts save valid: " + decision)
 		stopped = game.state._save_data().duplicate(true)

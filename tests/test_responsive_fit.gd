@@ -25,7 +25,8 @@ func inside(control: Control, label: String) -> void:
 
 func shot(label: String) -> void:
 	if capture:
-		await RenderingServer.frame_post_draw
+		await create_timer(0.18).timeout
+		RenderingServer.force_draw()
 		check(root.get_texture().get_image().save_png("res://artifacts/responsive-" + label + ".png") == OK, "capture " + label)
 
 func check_menu(label: String) -> void:
@@ -45,7 +46,7 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.hud.set_process(false)
-	game.state.coins = 4e+21
+	game.state.coins = 80000
 	game.hud.update_state(game.state)
 	game.hud._toast_box.hide()
 	game.hud._reward_box.hide()
@@ -72,7 +73,7 @@ func run() -> void:
 				inside(button, tag + " seed choice")
 		await shot(tag + "-farm")
 		game.hud.show_panel("market", game.state)
-		game.hud.show_purchase({"kind": "seeds", "id": "sunburst", "name": "Sunburst", "quantity": 12500, "cost": 5000000000.0, "total": 12506})
+		game.hud.show_purchase({"kind": "seeds", "id": "sunburst", "name": "Sunburst", "quantity": 5, "cost": 3420.0, "total": 6})
 		await settle()
 		check_menu(tag + " market")
 		inside(game.hud._purchase_box, tag + " purchase receipt")
@@ -106,7 +107,103 @@ func run() -> void:
 			await settle()
 			check_menu("tool shelf")
 			await shot("tools-inventory")
+	await paper_pages()
 	game.queue_free()
 	await process_frame
+	# Let the audio mixer release the last year-start voice before exit.
+	await create_timer(0.25).timeout
 	print("RESPONSIVE FIT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+func paper_pages() -> void:
+	game.year_intro.stop()
+	game.state.climate_report_open = false
+	game.state.reset_game()
+	game.state.tutorial_progress.completed = true
+	game.state.tutorial_active = false
+	game.hud.set_tutorial({})
+	for crop in game.state.CROP_IDS:
+		game.state.storage[crop] = game.state.Stock.pile(12, 90)
+	game.state.season_clock.year = 3
+	game.state.update(450)
+	game.hud.close_panel()
+	for crop in game.state.CROP_IDS:
+		game.state.Stock.add(game.state.storage, crop, 6, 90)
+		game.state.Stock.add(game.state.storage, crop, 4, 60)
+		game.state.Stock.add(game.state.storage, crop, 2, 30)
+	if capture:
+		root.size = Vector2i(1280, 800)
+		await settle()
+		for kind in ["accounts", "market", "sell_potatoes", "contracts", "winter_stores", "barn", "climate", "loss_notices", "businesses", "run_summary"]:
+			game.hud.show_panel(kind, game.state)
+			await settle()
+			await shot("desktop-" + kind)
+			(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = int(game.hud._body.size.y)
+			await settle()
+			await shot("desktop-" + kind + "-end")
+		game.hud.close_panel()
+		game.year_intro.present(game.state)
+		await settle()
+		await shot("desktop-front-page")
+		game.year_intro.stop()
+		game.hud._season_jobs.refresh()
+		await settle()
+		await shot("desktop-winter-jobs")
+		game.hud._run_end.show_report(game.state)
+		await settle()
+		await shot("desktop-foreclosure")
+		game.hud._run_end.hide()
+	game.touch_controls.enabled = true
+	game.touch_controls._build_touch_sheets()
+	for requested: Vector2i in SIZES + [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]:
+		root.size = requested
+		await settle()
+		game.touch_controls.resize()
+		var tag: String = "%dx%d" % [requested.x, requested.y]
+		for kind: String in ["accounts", "market", "sell_potatoes", "contracts", "winter_stores", "barn", "climate", "loss_notices", "businesses", "run_summary"]:
+			game.hud.show_panel(kind, game.state)
+			await settle()
+			game.touch_controls.fit_modal()
+			await settle()
+			check_menu(tag + " " + kind)
+			if kind == "accounts":
+				for category in game.state.Ledger.CATEGORIES:
+					var amount: Label = game.hud._refs["accounts_" + category]
+					var row = amount.get_parent().get_parent()
+					if not row.visible: continue
+					check(amount.get_line_count() == 1 and absf(amount.global_position.y - row.caption.global_position.y) < 1, tag + " aligned ledger amount " + category)
+			var physical_scale: float = minf(float(root.size.x) / game.hud.root.size.x, float(root.size.y) / game.hud.root.size.y)
+			for button in game.hud._modal_card.find_children("*", "Button", true, false):
+				if not button.is_visible_in_tree(): continue
+				check(minf(button.size.x, button.size.y) * physical_scale >= 43.9, tag + " " + kind + " touch target " + button.text)
+			if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]:
+				await shot(tag + "-" + kind)
+				var scroll: ScrollContainer = game.hud._body.get_parent()
+				scroll.scroll_vertical = int(game.hud._body.size.y)
+				await settle()
+				await shot(tag + "-" + kind + "-end")
+			if kind == "accounts" and capture and requested == Vector2i(1280, 800):
+				scroll_to_top()
+				await settle()
+				game.hud._act("ledger_screenshot")
+				await settle()
+				check(FileAccess.file_exists(game.hud.last_screenshot_path), "screenshot button saves a real PNG to user folder")
+		game.hud.close_panel()
+		game.year_intro.present(game.state)
+		await settle()
+		inside(game.year_intro.skip, tag + " newspaper skip")
+		check(game.year_intro.skip.size.y * minf(float(root.size.x) / game.hud.root.size.x, float(root.size.y) / game.hud.root.size.y) >= 43.9, tag + " front page skip touch target")
+		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-front-page")
+		game.year_intro.stop()
+		game.hud._season_jobs.refresh()
+		await settle()
+		inside(game.hud._season_jobs, tag + " Winter jobs")
+		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-winter-jobs")
+		game.hud._run_end.show_report(game.state)
+		await settle()
+		inside(game.hud._run_end.find_child("TryAgain", true, false), tag + " foreclosure action")
+		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-foreclosure")
+		game.hud._run_end.hide()
+
+func scroll_to_top() -> void:
+	(game.hud._body.get_parent() as ScrollContainer).scroll_vertical = 0

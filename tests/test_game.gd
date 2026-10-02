@@ -96,9 +96,12 @@ func _run() -> void:
 	game._on_action("barn")
 	await shot("barn")
 	before_coins = game.state.coins
-	var sale_price: float = game.state.market.russet.sell
-	press("sell:russet:-1")
-	check(Stock.count(game.state.storage, "russet") == 0, "barn sell button consumes held crops")
+	press("sell_potatoes")
+	var sale = game.hud._refs.market_page
+	press("grade:russet:" + sale.selected_grade)
+	press("market_all")
+	press("market_sell")
+	check(Stock.count(game.state.storage, "russet") == 0, "barn Sell opens a grade sale that consumes held crops")
 	check(game.state.coins > before_coins, "barn sale pays farming proceeds")
 	game.hud.close_panel()
 	# Farming needs separate player actions to prepare, plant and water.
@@ -112,12 +115,12 @@ func _run() -> void:
 	game.perform_plot(5, "water")
 	game._process(game.state.CropTable.CROPS.russet.grow + 0.1)
 	check(game.state.plots[5].stage == 3, "watered crop matures on continuous time")
-	game.state.coins = 4000000.0
+	game.state.coins = 400000.0
 	game._on_action("tools")
 	await shot("tools")
 	press("upgrade:water")
 	check(game.state.tools.water == 1, "tool upgrade purchases manual area watering")
-	press("upgrade:expansion")
+	press("upgrade:expansion:home")
 	check(game.state.plots[23].unlocked, "field expansion opens lower plots")
 	check(game.state.affected_tiles(7, "water").size() == 9, "watering can works a 3-by-3 area")
 	press("upgrade:harvest")
@@ -135,13 +138,13 @@ func _run() -> void:
 		if game.state.plots[index].stage == 0:
 			cleared += 1
 	check(cleared == 6, "one manual scythe action clears an entire row")
-	await shot("harvest-combo")
+	await shot("row-harvest")
 	game._on_action("dex")
 	check(game.hud.is_panel_open(), "PotatoDex opens")
 	await shot("potatodex")
 	game.hud.close_panel()
 
-	await shot("golden-shores")
+	await shot("spud-valley-fields")
 	game.hud.close_panel()
 	game._on_action("help")
 	await shot("guide")
@@ -150,10 +153,10 @@ func _run() -> void:
 		game.state.update(21.0)
 		game._on_state_changed()
 		game._on_action("market")
-		await shot("market-spike")
+		await shot("seed-counter")
 	game.hud.close_panel()
 	game.queue_free()
 	await process_frame
-	await create_timer(0.1).timeout
+	await create_timer(0.4).timeout
 	print("SPUD VALLEY INTEGRATION: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

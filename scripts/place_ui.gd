@@ -11,6 +11,7 @@ static func skin(fill: Color = PAPER, padding: int = 12, radius: int = 8, edge: 
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]: s.set_content_margin(side, padding)
 	return s
 static func pill(button: Button, accent: Color, primary: bool = false) -> void:
+	button.custom_minimum_size.x = maxf(44, button.custom_minimum_size.x)
 	button.custom_minimum_size.y = maxf(44, button.custom_minimum_size.y)
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var fill: Color = accent if primary else PAPER
@@ -18,7 +19,7 @@ static func pill(button: Button, accent: Color, primary: bool = false) -> void:
 		if state == "pressed": fill = fill.darkened(.07)
 		if state == "disabled": fill = Color("e6dfcd")
 		button.add_theme_stylebox_override(state, skin(fill, 10, 100, accent if primary else Color("cfc3aa")))
-	for state in ["font_color", "font_hover_color", "font_pressed_color"]: button.add_theme_color_override(state, PAPER if primary else INK)
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: button.add_theme_color_override(state, PAPER if primary else INK)
 	button.add_theme_color_override("font_disabled_color", MUTED)
 	button.add_theme_stylebox_override("focus", skin(Color.TRANSPARENT, 10, 100, INK))
 static func header(hud, parent: Control, title: String, accent: Color, keeper: String = "") -> HBoxContainer:
@@ -39,18 +40,37 @@ static func header(hud, parent: Control, title: String, accent: Color, keeper: S
 static func help(hud, parent: Control, words: String) -> Button:
 	var button: Button = hud._button("?", "")
 	button.tooltip_text = words
+	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	button.custom_minimum_size = Vector2(44, 44)
 	pill(button, INK)
 	parent.add_child(button)
 	button.pressed.connect(func():
 		var dialog := AcceptDialog.new()
-		dialog.title = "Field notes"; dialog.dialog_text = words
+		dialog.title = "Field notes"; dialog.dialog_text = words; dialog.dialog_autowrap = true
+		dialog.borderless = true; dialog.exclusive = true
+		var font := Type.face(Type.BODY, 500); font.fallbacks = [Type.SPUDION]
+		dialog.add_theme_font_override("font", font)
+		dialog.add_theme_font_size_override("font_size", 22)
+		dialog.get_label().add_theme_font_override("font", font)
+		dialog.get_label().add_theme_font_size_override("font_size", 22)
+		dialog.get_label().add_theme_color_override("font_color", INK)
+		dialog.get_ok_button().text = "Close"
+		dialog.get_ok_button().add_theme_font_override("font", font)
+		dialog.get_ok_button().add_theme_font_size_override("font_size", 22)
 		dialog.add_theme_stylebox_override("panel", skin())
-		dialog.get_ok_button().custom_minimum_size.y = hud.touch_target()
+		dialog.get_ok_button().custom_minimum_size = Vector2(hud.touch_target(), hud.touch_target())
+		pill(dialog.get_ok_button(), INK)
+		# AcceptDialog resets the button minimum while laying out its children.
+		# Put the required height in the pill’s margins as well.
+		var padding: float = maxf(10, ceilf((hud.touch_target() - font.get_height(22)) / 2))
+		for state in ["normal", "hover", "pressed", "disabled"]:
+			var style: StyleBoxFlat = dialog.get_ok_button().get_theme_stylebox(state).duplicate()
+			style.content_margin_top = padding; style.content_margin_bottom = padding
+			dialog.get_ok_button().add_theme_stylebox_override(state, style)
 		hud.root.add_child(dialog)
 		dialog.confirmed.connect(dialog.queue_free)
 		dialog.canceled.connect(dialog.queue_free)
-		dialog.popup_centered(Vector2i(mini(480, hud.get_tree().root.size.x - 24), 180))
+		dialog.popup_centered(Vector2i(mini(480, int(hud.root.size.x) - 32), 240))
 	)
 	return button
 static func pips(level: int, count: int = 3) -> String:

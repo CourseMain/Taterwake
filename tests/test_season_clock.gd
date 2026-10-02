@@ -139,7 +139,7 @@ func scene_checks() -> void:
 	check(game.state.season_clock.season == 3 and game.state.season_clock.seconds == 0 and game.hud._panel_kind == "accounts", "accounts interrupt excess simulation exactly at Winter start")
 	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.season == 3, "Winter saves before accounts open")
 	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "season strip and snow show Winter")
-	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return "Hoe [1]" in label.text), "accounts explain the Winter ice-clearing job in the scrolling body")
+	check(not game.hud._season_jobs.visible, "Winter jobs wait until the accounts close")
 	var matching_ice := true
 	for i in range(game.state.plots.size()):
 		matching_ice = matching_ice and game.world._ice_roots[i].visible == game.state.plots[i].unlocked
@@ -151,6 +151,7 @@ func scene_checks() -> void:
 	game._unhandled_input(escape)
 	game._process(1)
 	check(not game.hud.is_panel_open() and game.state.season_clock.seconds == 1, "Escape closes accounts and resumes Winter")
+	check(game.hud._season_jobs.visible and game.hud._season_jobs.jobs.has("ice"), "closed accounts reveal the actual ice-clearing job")
 	game._on_action("menu")
 	check(game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Annual accounts"), "farm menu offers accounts during Winter")
 	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text.begins_with("Winter")), "old Winter menu entry is gone")

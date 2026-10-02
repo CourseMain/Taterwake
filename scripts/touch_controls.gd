@@ -235,7 +235,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 			node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if node is Button:
-			node.custom_minimum_size.x = maxf(68, node.custom_minimum_size.x)
+			node.custom_minimum_size.x = maxf(game.hud.touch_target(), node.custom_minimum_size.x)
 			node.custom_minimum_size.y = maxf(original.y, game.hud.touch_target())
 			if node is OptionButton:
 				node.fit_to_longest_item = false
