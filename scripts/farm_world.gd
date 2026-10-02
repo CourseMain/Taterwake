@@ -1607,7 +1607,7 @@ func _die(parent: Node3D, pos: Vector3, size: float, angle: float) -> void:
 
 func _valley_dock() -> void:
 	# Decorative jetty; no boarding route or interaction.
-	var dock := _root("GoldenShoresDock", Vector3(-12.0, 0.0, 20.0))
+	var dock := _root("FarmPier", Vector3(-12.0, 0.0, 20.0))
 	dock.rotation.y = PI
 	for i in range(10):
 		_box(dock, Vector3(0.0, 0.13, -float(i) * 0.44), Vector3(1.9, 0.15, 0.39), Color("b79867"))
@@ -2079,8 +2079,10 @@ func _process(delta: float) -> void:
 	_label_fit_clock += delta
 	if _label_fit_clock >= .25:
 		_label_fit_clock = 0
-		for label in _fitted_labels:
+		for index in range(_fitted_labels.size() - 1, -1, -1):
+			var label = _fitted_labels[index]
 			if is_instance_valid(label): fit_label(label)
+			else: _fitted_labels.remove_at(index)
 	_animate_sun(delta)
 	_animate_winter(delta)
 	if _season_blend >= 1.0: return
@@ -2226,7 +2228,7 @@ func show_future(ending: Dictionary) -> void:
 			_ground_bank(future_root, Vector3(-18 + j * 4.0, -0.05, 10), Vector3(5, 0.35, 2.4), Color("d4b77b"))
 	if flooded:
 		for j in range(5): _ground_bank(future_root, Vector3(-10 + j * 4, 0.05, -4.5), Vector3(3.5, 0.24, 1.3), Color("a99b76"))
-		for title in ["GoldenShoresDock"]:
+		for title in ["FarmPier"]:
 			var dock = get_node_or_null(title)
 			if dock != null: dock.hide()
 		_dock_gate.hide()

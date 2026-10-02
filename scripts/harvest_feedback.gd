@@ -41,11 +41,13 @@ func harvest(snapshots: Dictionary) -> void:
 		tag.text = preload("res://scripts/crop_quality.gd").grade(int(plot.get("quality", 100)))
 		tag.name = "HarvestGrade"
 		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		tag.font = world._shop_font
 		tag.font_size = 42
 		tag.pixel_size = 0.026
 		tag.no_depth_test = true
 		tag.position.y = 0.9
 		body.add_child(tag)
+		world.bind_label(tag, Vector2(2.8, .7))
 		body.position = origin
 		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "popped":false, "landed":false})
 	if not snapshots.is_empty(): audio.play_action("giant" if heavy_sound else "harvest")

@@ -50,6 +50,7 @@ func _label(parent: Node3D, point: Vector3, size: int) -> Label3D:
 	label.outline_size = 5
 	label.outline_modulate = Color("244d48")
 	label.modulate = Color("fff0cc")
+	world.bind_label(label)
 	return label
 
 func setup(w) -> void:

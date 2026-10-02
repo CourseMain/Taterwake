@@ -80,3 +80,4 @@ static func mara_stall(world, stall: Node3D) -> void:
 	world._box(nameboard, Vector3.ZERO, Vector3(1.75, .39, .065), Color("769078"))
 	var name_label: Label3D = world._label(nameboard, "MARA'S", Vector3(0, 0, .04), 26, Color("f7e4b6"), false)
 	name_label.pixel_size = .013
+	world.bind_label(name_label, Vector2(1.59, .29))

@@ -51,7 +51,7 @@ func run() -> void:
 		check(game.world.future_outcome == outcome, outcome + " rendered on same map")
 		match outcome:
 			"Dust": check(not game.world.get_node("RedBarn").visible and game.world._climate_field.info.supply.water == 0, "dust has a ruined barn and dry tank")
-			"Drowned": check(game.world._climate_field.water.visible and not game.world.get_node("GoldenShoresDock").visible, "flooded beds and missing jetty")
+			"Drowned": check(game.world._climate_field.water.visible and not game.world.get_node("FarmPier").visible, "flooded beds and missing jetty")
 			"Deserted", "Sold to the estate":
 				for resident in game.world._villagers: check(not resident.visible, "no residents in abandoned future")
 			"Holding on", "The shop village", "Thriving": check(game.world.future_root.find_children("PotatoTuber*", "Node3D", true, false).size() > 0, "occupied farm keeps its potato crops")

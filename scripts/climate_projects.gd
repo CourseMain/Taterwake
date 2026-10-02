@@ -110,7 +110,7 @@ static func _frost(w, root: Node3D, level: int) -> void:
 	root.position = site_position(w, "frost")
 	for side in [-1, 1]: w._box(root, Vector3(side * 0.75, 0.6, 0), Vector3(0.12, 1.2, 0.7), Color("92714b"))
 	for i in range(level + 1): w._cylinder(root, Vector3(0, 0.45 + i * 0.28, 0), 0.18, 0.18, 1.6, Color("d9e7dd"), 12).rotation.z = PI * 0.5
-	w._shop_label(root, "Frost covers · Weather page / bed context", Vector3(0, 2.2, 0))
+	w._shop_label(root, "Frost covers", Vector3(0, 2.2, 0))
 
 static func site_position(w, id: String) -> Vector3:
 	match id:

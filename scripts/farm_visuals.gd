@@ -379,6 +379,7 @@ func sync_state(farm) -> void:
 			for i in range(mini(4,seeds)): _sack(seed_crate,barn+Vector3(3.2+(i%2)*.45,.40+(i/2)*.5,3.2),Color("b9bd82"))
 			var label: Label3D=world._label(seed_crate,"SEED",barn+Vector3(3.5,1.75,3.2),24,world.CREAM,false)
 			label.pixel_size=.02
+			world.bind_label(label, Vector2(1.3, .6))
 			world._geometry_batcher.batch_siblings(seed_crate)
 	var report: Dictionary=farm.trading.winters.get(str(farm.season_clock.year),{})
 	var loss: int=0
@@ -399,6 +400,7 @@ func sync_state(farm) -> void:
 			world._box(order_crates,p+Vector3(0,1.16,.25),Vector3(1.85,.76,.12),Color("344b43"))
 			var tag: Label3D=world._label(order_crates,"%s\n%d t · AUTUMN" % [str(order.crop).capitalize(),int(order.quantity)],p+Vector3(0,1.19,.33),24,world.CREAM,false)
 			tag.pixel_size=.013
+			world.bind_label(tag, Vector2(1.69, .60))
 		world._geometry_batcher.batch_siblings(order_crates)
 	set_winter(farm.season_clock.season==3)
 

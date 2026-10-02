@@ -12,6 +12,8 @@ func run() -> void:
 	var game = load("res://scenes/main.tscn").instantiate(); root.add_child(game); await frames(); game.set_process(false)
 	game.hud.root.hide(); game.touch_controls.hide()
 	var world = game.world
+	for label in world.find_children("*", "Label3D", true, false):
+		check(label.has_meta("board_bounds"), "every world label has measured bounds")
 	var fields: Dictionary = {}
 	for label in world._fitted_labels:
 		if label.text in ["Home Field", "Low Field", "Hill Field"]: fields[label.text] = label
@@ -34,6 +36,7 @@ func run() -> void:
 	check(home.font_size == original_size, "short text restores its requested size")
 	if "--capture" in OS.get_cmdline_user_args():
 		root.min_size = Vector2i.ZERO
+		world.player.position = home.get_parent().global_position + Vector3(-10, 0, 0)
 		for dimensions in [Vector2i(1280,800), Vector2i(390,844)]:
 			root.size = dimensions; root.content_scale_size = dimensions; await frames()
 			world.camera.near = .1; world.camera.far = 100
