@@ -965,3 +965,5 @@ Segment 19 station captures are `artifacts/segment19-climate-*`. The weather das
 Segment 19 `buyer_slips.gd` draws compact pinned contracts and hides inapplicable delivery and penalty rows. The order and diversification suites verify binding acceptance and collection. Captures: `artifacts/segment19-contracts-*`.
 
 Segment 19 front-page weather history uses the shared ten-box `climate_strip.gd`, with no dash rows. A conditional Accounts box reads the previous closed year’s ledger total. The climate curve and guide suites check the annual report; desktop and phone previews are `artifacts/segment19-front_page-*`.
+
+Segment 19 `barn_crates.gd` provides Nell’s timber frame, cream crate grid and one Sell entrance. Stored sales and seed keeping share `market_pages.gd`; the old stores sub-menu is removed. `season_jobs.gd` lists available Winter actions with real work and prices, ticks completed jobs and collapses. Its cover action directly fits cleared beds. The guide, HUD, grading, storage and protection suites verify these paths. Captures: `artifacts/segment19-barn-*`.

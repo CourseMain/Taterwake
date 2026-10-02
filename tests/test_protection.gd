@@ -211,7 +211,7 @@ func ui_checks() -> void:
 	game.hud.show_panel("loss_notices", game.state)
 	var notices: String = ""
 	for label in game.hud._body.find_children("*", "Label", true, false): notices += label.text
-	check(notices.contains("Spring") and notices.contains("5 t lost") and notices.contains("Giant"), "season notice cards expose the actual crop loss")
+	check(notices.contains("Spring") and notices.contains("Lost 5 t") and notices.contains("Giant"), "season notice cards expose the actual crop loss")
 	game.hud.close_panel()
 	winter(game.state); game.hud.close_panel()
 	game._on_action("climate_fund:rainwater")
@@ -237,9 +237,12 @@ func ui_checks() -> void:
 	game.perform_plot(1, "hoe")
 	await world_shot("cover", game)
 	game._on_action("climate")
-	check(game.hud._refs.cover_all.text == "Cover all cleared beds" and not game.hud._refs.cover_all.disabled, "weather page offers the explicit batch cover control")
-	game.hud._refs.cover_all.pressed.emit()
-	check(game.world._cover_nodes.has("1") and game.state.climate.data.protection.covers.size() == 2 and game.hud._refs.cover_all.disabled, "weather control covers remaining cleared beds and disables when done")
+	check(not game.hud._refs.has("cover_all"), "weather station has no batch cover entrance")
+	game.hud.close_panel(); game.hud._season_jobs.refresh()
+	check(game.hud._season_jobs.available().get("covers", ["", ""])[1] == "cover_all", "Winter job offers batch frost covers")
+	game._on_action("cover_all")
+	check(game.world._cover_nodes.has("1") and game.state.climate.data.protection.covers.size() == 2, "Winter action covers remaining cleared beds")
+	game._on_action("climate")
 	check(game.hud._refs.forecast_range.text.contains("Next Spring") and game.hud._refs.insurance.disabled, "weather page shows next season and annual insurance gate")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
@@ -249,7 +252,7 @@ func ui_checks() -> void:
 			if page == "accounts":
 				var account_words: String = ""
 				for label in game.hud._body.find_children("*", "Label", true, false): account_words += label.text
-				check(account_words.contains("5 t lost") and account_words.contains("Water this bed"), "Winter accounts retain the Spring cause card")
+				check(account_words.contains("Lost 5 t") and account_words.contains("Watering in time"), "Winter accounts retain the Spring cause card")
 			for i in range(10): await process_frame
 			check(game.hud._body.get_combined_minimum_size().x <= game.hud._body.get_parent().size.x + 1, page + " fits available width")
 			if "--capture" in OS.get_cmdline_user_args():

@@ -176,6 +176,8 @@ var _weather_button: Button
 var _climate_alert: Control
 var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
+var _season_strip: Control
+var _season_jobs: PanelContainer
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -184,6 +186,7 @@ func _process(delta: float) -> void:
 	_farm_busy_remaining = maxf(0.0, _farm_busy_remaining - delta)
 	_update_context()
 	_update_farm_help()
+	_season_jobs.refresh()
 	if _purchase_remaining > 0.0:
 		_layout_purchase()
 		_purchase_remaining = maxf(0.0, _purchase_remaining - delta)
@@ -236,6 +239,9 @@ func build_ui() -> void:
 	_climate_effect = load("res://scripts/climate_effect.gd").new()
 	root.add_child(_climate_effect)
 	_build_top()
+	_season_jobs = preload("res://scripts/season_jobs.gd").new()
+	root.add_child(_season_jobs)
+	_season_jobs.setup(self)
 	_build_sidebar()
 	_build_footer()
 	_build_notices()
@@ -531,7 +537,7 @@ func _update_tutorial_pointer() -> void:
 	if not _tutorial_next.disabled:
 		target = _tutorial_next
 	elif is_panel_open():
-		var sale_action: String = "market_sell" if _panel_kind == "sell_potatoes" else "sell:russet:-1"
+		var sale_action: String = "market_sell" if _panel_kind == "sell_potatoes" else "sell_potatoes"
 		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else (sale_action if _tutorial.get("id") == "sell" else "")
 		for node: Node in _modal_card.find_children("*", "Button", true, false):
 			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
@@ -650,7 +656,7 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	button.set_meta("hud_action", action)
 	button.text = text
 	button.set_meta("action", action)
-	button.custom_minimum_size.y = 39
+	button.custom_minimum_size.y = 44
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_font_override("font", _heading_font)
@@ -767,6 +773,7 @@ func _place(control: Control, rect: Rect2) -> void:
 func _build_top() -> void:
 	var brand: VBoxContainer = _vbox(0)
 	_place(brand, Rect2(88, 20, 290, 70))
+	brand.name = "FarmWordmark"
 	brand.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var wordmark: BoxContainer = _hbox(8)
 	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -775,7 +782,11 @@ func _build_top() -> void:
 	wordmark.add_child(_label("/", 32, GOLD, true))
 	wordmark.add_child(_label("LAND", 32, INK, true))
 	_top["season"] = _label("Year 1 · Spring", 16, INK, true)
-	_place(_top.season, Rect2(88, 76, 290, 24))
+	brand.add_child(_top.season)
+	_top.season.hide()
+	_season_strip = preload("res://scripts/paper_detail.gd").new()
+	_season_strip.kind = "season"
+	_place(_season_strip, Rect2(88, 76, 330, 24))
 
 	var stats: PanelContainer = _card(CREAM, 12)
 	_stats_card = stats
@@ -1091,7 +1102,7 @@ func _build_modal() -> void:
 	titles.add_child(_modal_market_nav)
 	_modal_market_nav.hide()
 	var close: Button = _button("×", "close")
-	close.custom_minimum_size.x = 40
+	close.custom_minimum_size.x = 44
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	header.add_child(close)
 	_modal_fixed = _vbox(6)
@@ -1141,6 +1152,10 @@ func update_state(state: Node) -> void:
 		elif state.season_clock.season == 3: show_panel("accounts", state)
 		elif _panel_kind == "accounts": close_panel()
 		elif _panel_kind in ["menu", "pause"]: show_panel(_panel_kind, state)
+	_season_strip.year = state.season_clock.year
+	_season_strip.season = state.season_clock.season
+	_season_strip.queue_redraw()
+	_season_jobs.refresh()
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
@@ -1404,8 +1419,10 @@ func close_panel() -> void:
 	_reset_pending = false
 	_apply_tutorial_visibility()
 	_layout_purchase()
+	_season_jobs.refresh()
 
 func show_panel(kind: String, state: Node) -> void:
+	if kind == "winter_stores": kind = "sell_potatoes"
 	_state = state
 	_state.accounts_open = kind == "accounts"
 	if not is_instance_valid(root):
@@ -1413,6 +1430,7 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind != _panel_kind:
 		_reset_pending = false
 	_panel_kind = kind
+	_body.add_theme_constant_override("separation", 6 if kind == "accounts" else 10)
 	var paper: bool = kind in ["accounts", "run_summary"]
 	(_modal.get_child(0) as ColorRect).color = CREAM if paper else Color(0.06, 0.13, 0.10, 0.58)
 	_modal.z_index = 150 if paper else 0
@@ -1468,8 +1486,10 @@ func show_panel(kind: String, state: Node) -> void:
 		"dex": _build_dex()
 		"quests": _build_quests()
 		"contracts": _build_contracts()
+		"businesses":
+			_heading("A second income", "WINTER · Plans for the coming year")
+			_build_diversification()
 		"loss_notices": _build_loss_notices()
-		"winter_stores": _build_stores()
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
@@ -1495,6 +1515,7 @@ func show_panel(kind: String, state: Node) -> void:
 	_context_box.hide()
 	_farm_help_card.hide()
 	_refresh_seed_visibility()
+	_season_jobs.hide()
 	_modal.move_to_front()
 	_update_weather_ui()
 	_apply_tutorial_visibility()
@@ -1602,7 +1623,6 @@ func _build_barn() -> void:
 	_body.add_child(page)
 	_refs.shop_page = page
 	page.setup(self, true)
-	if not _first_harvest_barn(): _body.add_child(_button("Barn stores · Winter selling", "winter_stores", true))
 
 func _build_tools() -> void:
 	var page = ShopPages.new()
@@ -1699,6 +1719,10 @@ func _account_row(parent: Node, title: String, value: String) -> Label:
 	var amount := _label(value, 16, INK, true)
 	row.add_child(amount)
 	return amount
+
+func touch_target() -> float:
+	var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
+	return maxf(68, ceilf(44 / maxf(scale, 0.1)))
 
 func _paper_typography(node: Node) -> void:
 	if node is Label:
@@ -1886,11 +1910,11 @@ func _refresh_panel() -> void:
 	if _panel_kind == "loss_notices":
 		_refresh_loss_notices()
 		return
+	if _panel_kind == "businesses":
+		_refresh_diversification()
+		return
 	if _panel_kind == "contracts":
 		_refresh_contracts()
-		return
-	if _panel_kind == "winter_stores":
-		_refresh_stores()
 		return
 	if _panel_kind == "climate":
 		_refresh_climate()
@@ -2429,38 +2453,6 @@ func _refresh_diversification() -> void:
 			lines.append(entry.label + " · " + _state.money(entry.amount))
 	_refs.business_ledger.text = "\n".join(lines)
 
-func _build_stores() -> void:
-	_heading("Barn stores", "Keep seed or sell Winter stores by grade")
-	_body.add_child(_wrap("Winter storage: %s fee, 5%% spoilage (whole barn, nearest tonne; largest pile first), −10 quality. Kept seed avoids storage and becomes one seed per tonne next Spring. Fresh harvests sell on Sell Potatoes." % _state.money(_state.MarketDecisions.STORAGE_FEE), 16, MUTED))
-	for id in _state.CROP_IDS:
-		var card := _card(CREAM, 12)
-		_body.add_child(card)
-		var column := _vbox(5)
-		card.add_child(column)
-		_refs["stored:" + id] = _wrap("", 18, INK)
-		column.add_child(_refs["stored:" + id])
-		for word in _state.Quality.GRADES:
-			var key: String = id + ":" + word
-			_refs["stored_grade:" + key] = _wrap("", 16, INK)
-			column.add_child(_refs["stored_grade:" + key])
-			_refs["stored_sell:" + key] = _button("Sell " + word + " stores", "stored_sell:" + key, true)
-			column.add_child(_refs["stored_sell:" + key])
-			if word != "Feed":
-				_refs["keep_seed:" + key] = _button("Keep 1 " + word + " tonne as seed", "keep_seed:" + key)
-				column.add_child(_refs["keep_seed:" + key])
-	_body.add_child(_button("Back to barn", "barn"))
-	_refresh_stores()
-
-func _refresh_stores() -> void:
-	for id in _state.CROP_IDS:
-		_refs["stored:" + id].text = "%s · %d kept for next Spring" % [_crop_name(id), _state.trading.kept_seed[id]]
-		for word in _state.Quality.GRADES:
-			var key: String = id + ":" + word
-			var stored: int = _state.Stock.count(_state.trading.held, id, word)
-			_refs["stored_grade:" + key].text = "%s · %d t (%d stored) · %s each now · Late Winter %s" % [word, _state.stock_count(id, word), stored, _state.market_money(_state.trading.stored_price(_state, id, word)), _state.market_money(_state.trading.peak_price(id, word))]
-			_refs["stored_sell:" + key].disabled = _state.run_over or _state.season_clock.season != 3 or stored == 0
-			if word != "Feed": _refs["keep_seed:" + key].disabled = _state.run_over or _state.stock_count(id, word) == 0
-
 func _build_loss_notices() -> void:
 	_build_quests(true)
 func _refresh_loss_notices() -> void:
@@ -2484,7 +2476,3 @@ func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
 		var pin = preload("res://scripts/paper_detail.gd").new(); pin.kind = "pin"; card.add_child(pin); pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		count += 1
 	if count == 0: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))
-func touch_target() -> float:
-	var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
-	return maxf(68, ceilf(44 / maxf(scale, 0.1)))
-

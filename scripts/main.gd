@@ -1044,7 +1044,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices", "businesses":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1077,6 +1077,16 @@ func _on_action(action: String) -> void:
 				state.ClimateSystem.Protection.cover(state, int(target.plot_index))
 				_save_checkpoint.call_deferred()
 		"station_upgrade": state.ClimateSystem.Protection.upgrade_station(state)
+		"winter_walk":
+			if state.season_clock.season != 3 or state.accounts_open: return
+			for index in range(state.plots.size()):
+				if not state.plots[index].unlocked: continue
+				var match_bed: bool = state.ClimateSystem.Operations.frozen(state, index) if parts[1] == "ice" else state.plots[index].crop == "icecap" and state.plots[index].stage == 3
+				if match_bed:
+					hud.close_panel()
+					_select_tool("hoe" if parts[1] == "ice" else "harvest")
+					queue_plot(index)
+					break
 		"project_site": _queue_project(parts[1])
 		"climate_fund":
 			if parts.size() == 2:
@@ -1087,7 +1097,18 @@ func _on_action(action: String) -> void:
 			_cancel_walk()
 			hud.show_panel("tools", state)
 		"stored_sell":
-			if hud._panel_kind == "winter_stores": state.trading.sell_stored(state, parts[1], -1, parts[2] if parts.size() > 2 else "")
+			if hud._panel_kind == "sell_potatoes" and hud._refs.market_page.stored_mode:
+				state.trading.sell_stored(state, parts[1], int(parts[2]), parts[3])
+				_save_checkpoint.call_deferred()
+		"winter_seeds":
+			hud.show_panel("sell_potatoes", state)
+			var page = hud._refs.market_page
+			for crop in state.CROP_IDS:
+				for grade in ["Table", "Standard"]:
+					if state.stock_count(crop, grade) == 0: continue
+					page.stored_mode = state.Stock.count(state.trading.held, crop, grade) > 0
+					page.select_variety(crop, grade)
+					return
 		"keep_seed":
 			state.trading.keep_seed(state, parts[1], parts[2])
 			_save_checkpoint.call_deferred()

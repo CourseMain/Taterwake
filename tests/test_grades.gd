@@ -224,7 +224,8 @@ func ui_checks() -> void:
 		if "--capture" in OS.get_cmdline_user_args():
 			RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-market-%d.png" % size.x)
 	game.hud.show_panel("winter_stores", game.state)
-	game.hud._refs["keep_seed:russet:Table"].pressed.emit()
+	game.hud._refs.market_page.select_variety("russet", "Table")
+	game.hud._refs.market_page.seed_button.pressed.emit()
 	check(game.state.trading.kept_seed.russet == 1, "barn control keeps a Table tonne as seed")
 	for i in range(8): await process_frame
 	if "--capture" in OS.get_cmdline_user_args():

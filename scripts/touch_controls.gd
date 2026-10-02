@@ -102,20 +102,7 @@ func _ready() -> void:
 	scroll.add_child(drawer_body)
 	drawer_body.minimum_size_changed.connect(fit_drawer, CONNECT_DEFERRED)
 	drawer.hide()
-	if enabled:
-		equipment_sheet = ScrollContainer.new()
-		equipment_sheet.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		game.hud.root.add_child(equipment_sheet)
-		game.hud._climate_console.reparent(equipment_sheet)
-		game.hud._climate_console.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		equipment_sheet.hide()
-		guide_sheet = ScrollContainer.new()
-		guide_sheet.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		guide_sheet.z_index = 30
-		game.hud.root.add_child(guide_sheet)
-		game.hud._tutorial_card.reparent(guide_sheet)
-		game.hud._tutorial_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		guide_sheet.hide()
+	if enabled: _build_touch_sheets()
 	# Changing the logical size inside Window's resize notification leaves
 	# Godot's letterbox rectangle using the previous orientation. Wait until
 	# that notification finishes before choosing the new touch resolution.
@@ -126,6 +113,22 @@ func _ready() -> void:
 	# Browser shell owns its button so fullscreen is requested in a trusted DOM gesture.
 	fullscreen.visible = not OS.has_feature("web")
 	get_tree().root.focus_exited.connect(release_all)
+
+func _build_touch_sheets() -> void:
+	if is_instance_valid(equipment_sheet): return
+	equipment_sheet = ScrollContainer.new()
+	equipment_sheet.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	game.hud.root.add_child(equipment_sheet)
+	game.hud._climate_console.reparent(equipment_sheet)
+	game.hud._climate_console.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	equipment_sheet.hide()
+	guide_sheet = ScrollContainer.new()
+	guide_sheet.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	guide_sheet.z_index = 30
+	game.hud.root.add_child(guide_sheet)
+	game.hud._tutorial_card.reparent(guide_sheet)
+	game.hud._tutorial_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	guide_sheet.hide()
 
 func skin(color: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -171,7 +174,11 @@ func resize() -> void:
 	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
 	place(menu_button, Rect2(w - 134, 16, 112, 68))
 	place(sell_button, Rect2(w - 134, 94, 112, 68))
-	place(status, Rect2(96, 16, minf(w - 250, 500), 72))
+	place(status, Rect2(16, 132, minf(w - 32, 500), 48))
+	if enabled:
+		place(game.hud.root.get_node("FarmWordmark"), Rect2(96, 16, 300, 58))
+		place(game.hud._season_strip, Rect2(16, 92, minf(w - 32, 540), 32))
+		game.hud._season_jobs.layout()
 	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
 	place(guide_button, Rect2(96, 16, 204, 68))
 	fit_drawer()
@@ -201,6 +208,7 @@ func fit_modal() -> void:
 	# Existing game actions and transaction checks are shared with desktop.
 	adapt(hud._body, width - 64, true)
 	adapt(hud._modal_fixed, width - 64, true)
+	adapt(hud._modal_trade_footer, width - 64, true)
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
@@ -223,21 +231,21 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		if node is Label or node is Button or node is LineEdit:
 			if not node.has_meta("touch_font"): node.set_meta("touch_font", node.get_theme_font_size("font_size"))
 			node.add_theme_font_size_override("font_size", maxi(22, int(node.get_meta("touch_font"))))
-		if node is Label:
+		if node is Label and not node.has_meta("paper_stamp"):
 			node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if node is Button:
 			node.custom_minimum_size.x = maxf(68, node.custom_minimum_size.x)
-			node.custom_minimum_size.y = maxf(original.y, 68)
+			node.custom_minimum_size.y = maxf(original.y, game.hud.touch_target())
 			if node is OptionButton:
 				node.fit_to_longest_item = false
 				node.get_popup().add_theme_font_size_override("font_size", 22)
 				node.get_popup().add_theme_constant_override("v_separation", 38)
 			else: node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		if node is LineEdit: node.custom_minimum_size.y = maxf(original.y, 68)
+		if node is LineEdit: node.custom_minimum_size.y = maxf(original.y, game.hud.touch_target())
 		if node is GridContainer:
 			if not node.has_meta("touch_columns"): node.set_meta("touch_columns", node.columns)
-			node.columns = 1 if available < 650 else mini(2, int(node.get_meta("touch_columns")))
+			node.columns = int(node.get_meta("fixed_columns")) if node.has_meta("fixed_columns") else (1 if available < 650 else mini(2, int(node.get_meta("touch_columns"))))
 	for child in node.get_children():
 		# Decorative contents of buttons keep their icon/label composition.
 		adapt(child, available - (32 if node is PanelContainer else 0), stack and not node is Button)
@@ -306,7 +314,7 @@ func _process(delta: float) -> void:
 	if not hud._context_box.get_meta("warning", false) and not hud._context_box.get_meta("grade", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
-		status.text = "%s · %s\n%s" % [hud._top.coins.text, game.state.selected_crop.capitalize(), "Drag to move · pinch to zoom"]
+		status.text = "%s · %s" % [hud._top.coins.text, game.state.selected_crop.capitalize()]
 		var weather: Dictionary = game.state.climate_info()
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]

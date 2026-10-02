@@ -40,13 +40,15 @@ func check_crops() -> void:
 	check(button("inventory_tab:crops") != null and not button("inventory_tab:crops").disabled, "crop tab stays usable")
 	check(button("inventory_tab:tools").disabled, "unrelated tools stays locked during lesson")
 	check(game.tutorial.allows_action("inventory_tab:crops"), "controller permits crop tab")
-	check(button("sell:russet:-1") != null and not button("sell:russet:-1").disabled, "harvest sale available")
+	check(button("sell_potatoes") != null and not button("sell_potatoes").disabled, "one barn Sell entrance is available")
 
 func sell_harvest() -> void:
 	var coins_before: float = game.state.coins
 	var sales_before: float = game.state.lifetime_sales
 	check(Stock.count(game.state.storage, "russet") > 0, "real harvest stored before selling")
-	press("sell:russet:-1")
+	press("sell_potatoes")
+	press("market_all")
+	press("market_sell")
 	check(Stock.count(game.state.storage, "russet") == 0, "sale clears harvested Russets")
 	check(game.state.coins > coins_before and game.state.lifetime_sales > sales_before, "sale credits coins")
 	check(game.tutorial.current_id() == "winter" and not game.state.tutorial_progress.completed, "barn sale continues to Winter accounts")
@@ -60,6 +62,7 @@ func run() -> void:
 	await process_frame
 	game.set_process(false)
 	game.hud.show_panel("barn", game.state)
+	check(game.hud._panel_kind == "barn", "barn opens its crate page")
 	press("inventory_tab:tools")
 	game.hud.close_panel()
 	game.hud.show_panel("barn", game.state)
@@ -105,6 +108,7 @@ func run() -> void:
 	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
 	game._on_action("close")
 	game.hud.show_panel("barn", game.state)
+	check(game.hud._panel_kind == "barn", "barn opens its crate page")
 	press("inventory_tab:tools")
 	game.tutorial.start(true)
 	game._on_action("barn")

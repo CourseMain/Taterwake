@@ -1,5 +1,5 @@
 extends SceneTree
-## Compact left stock banner and clean farming view at both supported window sizes.
+## Farming masthead, live Winter work note and ledger presentation.
 var game
 var checks: int = 0
 var failures: int = 0
@@ -19,7 +19,7 @@ func shot(name: String) -> void:
 		return
 	await process_frame
 	await process_frame
-	await RenderingServer.frame_post_draw
+	RenderingServer.force_draw()
 	check(root.get_texture().get_image().save_png("res://artifacts/hud-layout-" + name + ".png") == OK, "render " + name)
 
 func noninteractive(node: Node) -> bool:
@@ -56,7 +56,7 @@ func run() -> void:
 	check(hint_removed, "persistent movement/zoom/inventory hint is removed")
 	check(not game.hud._tool_caption.visible, "equipped-tool control hint is absent from the persistent HUD")
 	check(game.hud._tool_buttons.size() == 5 and game.hud.root.get_node("MainMenuButton").visible, "five tools and menu remain available")
-	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree(), "money, selected market and luck remain visible")
+	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree(), "money and selected crop quote remain visible")
 	check(noninteractive(game.hud._top.coins.get_parent().get_parent().get_parent()), "noninteractive stats pass camera gestures through")
 	var hotbar: Control = game.hud.root.get_node("ToolHotbar")
 	await process_frame
@@ -95,8 +95,64 @@ func run() -> void:
 		drag_explained = drag_explained or label.text.contains("Hold click + drag")
 		zoom_explained = zoom_explained or label.text.contains("Mouse wheel / pinch")
 	check(drag_explained and zoom_explained, "controls explain held-click camera dragging and wheel or pinch zoom")
+	await winter_pages()
 	game.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout
 	print("HUD LAYOUT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+func winter_pages() -> void:
+	game.year_intro.stop()
+	game.state.climate_report_open = false
+	game.state.tutorial_active = false
+	game.state.tutorial_progress.completed = true
+	game.hud.set_tutorial({})
+	game.hud.close_panel()
+	game.state.reset_game()
+	game.state.tutorial_progress.completed = true
+	game.state.storage.russet = game.state.Stock.pile(20, 90)
+	game.state.season_clock.year = 3
+	game.state.update(450)
+	game.hud.update_state(game.state)
+	check(game.hud._panel_kind == "accounts", "accounts open before Winter jobs")
+	check(not game.hud._season_jobs.visible, "Winter jobs stay hidden while accounts pause")
+	check(game.hud._body.find_child("LedgerYearStamp", true, false) != null, "accounts stamp the year")
+	check(game.hud._refs.has("ledger_screenshot"), "annual accounts offer a screenshot")
+	check(game.hud._modal.get_child(0).color == game.hud.CREAM, "ledger has opaque cream behind it")
+	game.hud.close_panel()
+	game.state.climate.data.protection.pending.rainwater = 1
+	game.state.climate.data.projects.frost = 1
+	game.state.interact_plot(0, "hoe")
+	game.state.plots[1].crop = "icecap"
+	game.state.plots[1].stage = 3
+	game.state.plots[1].yield_total = 2
+	game.state.climate.begin_warning(game.state, "blizzard", 0.5)
+	game.hud.update_state(game.state)
+	var note = game.hud._season_jobs
+	check(note.visible, "Winter note appears after accounts close")
+	for key in ["ice", "stores:russet", "project:rainwater", "covers", "ripe", "seed", "business:grower", "blizzard"]:
+		check(note.jobs.has(key), "live Winter job: " + key)
+	check(note.jobs["project:rainwater"][0].contains("1 / 3"), "paid project shows actual work")
+	check(note.jobs["stores:russet"][0].contains("late Winter"), "stores show current and rising price")
+	note.heading.pressed.emit()
+	check(note.collapsed and not note.scroll.visible and note.heading.text.contains("jobs left"), "Winter card collapses with a live count")
+	note.heading.pressed.emit()
+	var first_ice: int = game.pending_plot
+	game.hud._act("winter_walk:ice")
+	check(game.pending_plot != first_ice and game.pending_tool == "hoe", "ice job walks to a frozen bed with Hoe")
+	game._cancel_walk()
+	game.hud._act("winter_walk:ripe")
+	check(game.pending_plot == 1 and game.pending_tool == "harvest", "Icecap job walks to ripe Winter crop")
+	game._cancel_walk()
+	game.state.climate.data.protection.pending.erase("rainwater")
+	note.refresh()
+	check(note.completed.has("project:rainwater") and not note.jobs.has("project:rainwater"), "completed project ticks off")
+	game.hud.show_panel("barn", game.state)
+	check(game.hud._panel_kind == "barn" and game.hud._refs.has("upgrade:barn"), "Winter barn keeps capacity and crate shelves")
+	game.hud._act("sell_potatoes")
+	check(game.hud._panel_kind == "sell_potatoes" and game.hud._refs.market_page.stored_mode, "barn Sell opens the market on rising stores")
+	game.hud.close_panel()
+	game.state.season_clock.season = 0
+	note.refresh()
+	check(not note.visible and note.jobs.is_empty(), "Spring has no Winter to-do list")

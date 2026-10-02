@@ -120,7 +120,7 @@ func ui_checks() -> void:
 		game.hud.show_panel("inventory", farm)
 		for frame in range(8): await process_frame
 		var barn = game.hud._refs.shop_page
-		check(barn._ledger.stored.text == "20 t" and barn._ledger.capacity.text.ends_with(" t"), "barn quantities and capacity use tonnes")
+		check(game.hud._refs.inventory_total.text == "20 / 200 t", "barn quantities and capacity use tonnes")
 		for entry in farm.inventory_info():
 			if entry.kind == "crop": check(barn._item_quantities[entry.id].text.ends_with(" t"), "crop bins use tonnes")
 	game.hud.close_panel()

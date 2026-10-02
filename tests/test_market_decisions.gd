@@ -195,7 +195,7 @@ func ui_checks() -> void:
 	game.hud.close_panel(); game._on_action("winter_stores")
 	game.state.season_clock.seconds = 140
 	game.hud.update_state(game.state)
-	check(not game.hud._refs["stored_sell:russet:Standard"].disabled, "Winter barn exposes stored sale action")
+	check(game.hud._refs.market_page.stored_mode and game.hud._refs.market_page.sale_rows.russet.grades.Standard.visible, "Winter market opens on stocked stores")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
 		if game.touch_controls.enabled: game.touch_controls.resize()
@@ -214,7 +214,9 @@ func ui_checks() -> void:
 				root.get_texture().get_image().save_png("res://artifacts/decisions-%s-%d.png" % [panel, size.x])
 	game.hud.show_panel("winter_stores", game.state)
 	var before: float = game.state.coins
-	game.hud._refs["stored_sell:russet:Standard"].pressed.emit()
+	game.hud._refs.market_page.select_variety("russet", "Standard")
+	game.hud._refs.market_page.maximum.pressed.emit()
+	game.hud._refs.market_page.sell_button.pressed.emit()
 	check(game.state.coins > before and Stock.count(game.state.trading.held, "russet") == 0, "Winter barn button sells at the live stored price")
 	game.queue_free()
 	await process_frame

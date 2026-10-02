@@ -112,7 +112,7 @@ func _features() -> Array[String]:
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "sell_potatoes", "market_previous", "market_next", "history_older", "history_newer", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "sell_potatoes", "grade:", "barn", "inventory", "winter_stores", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)

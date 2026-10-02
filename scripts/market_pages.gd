@@ -342,8 +342,7 @@ func _sell() -> void:
 	refresh()
 	if sell_button.disabled: return
 	if stored_mode:
-		hud._state.trading.sell_stored(hud._state, selected, int(quantity.value), selected_grade)
-		hud.update_state(hud._state)
+		hud._act("stored_sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
 	else: hud._act("sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
 
 func _sold(receipt: Dictionary) -> void:

@@ -19,6 +19,7 @@ func _ready() -> void:
 
 func _draw() -> void:
 	if not frame: return
+	for y: float in [8.0, size.y - 8.0]: draw_line(Vector2(4, y), Vector2(size.x - 4, y), Color(edge, .25), 2, true)
 	# Corner straps tie the rack together; the middle stays clear for stock.
 	for x: float in [4.0, size.x - 4.0]:
 		var direction := 1.0 if x < size.x / 2.0 else -1.0
