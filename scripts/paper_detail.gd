@@ -25,8 +25,8 @@ func _draw() -> void:
 			for x in range(int(a), int(b), 5): draw_circle(Vector2(x, size.y * 0.62), 0.65, RULE.darkened(0.2))
 			draw_line(Vector2(0, size.y - 1), Vector2(size.x, size.y - 1), RULE, 1)
 		"pin":
-			draw_circle(Vector2(size.x / 2 + 1, 8), 4, Color("17382d", 0.18))
-			draw_circle(Vector2(size.x / 2, 6), 3, Color("bb654d"))
+			draw_circle(Vector2(size.x / 2 + 1, 8), 6, Color("17382d", 0.18))
+			draw_circle(Vector2(size.x / 2, 6), 5, Color("bb654d"))
 		"range":
 			var scale: float = minf(float(get_tree().root.size.x) / get_viewport_rect().size.x, float(get_tree().root.size.y) / get_viewport_rect().size.y)
 			var factor: float = maxf(1, 1 / maxf(0.1, scale))

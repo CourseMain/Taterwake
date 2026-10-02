@@ -135,3 +135,5 @@ See the [README](../README.md) for running or exporting the source and [developm
 Tess keeps the map’s cork board. Quests and Losses are tabs on the same board, with cream pinned notes. Each loss note names the event and field, lost tonnes, base-price worth and one counterfactual. Losses cover the current year, so an earlier seasonal loss is never followed by an empty-season message. Her conversation and Iris’s station have no separate loss-notices entrance.
 
 Iris’s instrument panel combines radar, the next-season probability bracket and event names. Three field exposure chips sit above four protection tiles; each tile has level pips, its loss reduction and one build-or-work button. Spring insurance is one toggle row. The station upgrade is a small line. Frost-cover batch work is on the Winter jobs note.
+
+The buyer board displays each offer as a tacked paper slip: crop, tonnes, quote, Autumn-end due date and missing-tonne penalty. The Accept control stamps the order; a question mark holds the explanation.

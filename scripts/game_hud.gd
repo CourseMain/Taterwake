@@ -2395,32 +2395,9 @@ func modal_content_height() -> float:
 
 
 func _build_contracts() -> void:
-	var limit: int = _state.trading.order_limit(_state)
-	_heading("Buyer board", "%d Spring order%s · collection at Autumn end" % [limit, "s" if limit > 1 else ""])
-	_body.add_child(_wrap("The buyer takes Standard or Table tonnes (never Feed) at Autumn end, before Winter storage. Each missing tonne costs %s. Accepting is binding.%s" % [_state.money(_state.MarketDecisions.SHORTFALL_FEE), " Contract grower prices are %.1f× the ordinary contract quote." % _state.Diversification.Balance.GROWER_PRICE_FACTOR if limit == 2 else ""], 17, MUTED))
-	for slot in range(limit):
-		var suffix: String = "" if slot == 0 else ":%d" % slot
-		_info("contract_details" + suffix, "", INK, 20)
-		_refs["contract_accept" + suffix] = _button("Accept order %d" % (slot + 1), "contract_accept:%d" % slot, true)
-		_body.add_child(_refs["contract_accept" + suffix])
-	_refresh_contracts()
-
+	preload("res://scripts/buyer_slips.gd").build(self)
 func _refresh_contracts() -> void:
-	var trade = _state.trading
-	var year: int = _state.season_clock.year
-	for slot in range(trade.order_limit(_state)):
-		var suffix: String = "" if slot == 0 else ":%d" % slot
-		var active: Dictionary = trade.active_order(slot)
-		var completed: Dictionary = trade.completed_order(year, slot)
-		var order: Dictionary = active if not active.is_empty() else trade.offer(year, slot, trade.grower_active(_state))
-		var text: String = "%s · %d t at %s each" % [_crop_name(order.crop), order.quantity, _state.market_money(order.price)]
-		if not completed.is_empty():
-			text += "\nCollected %d · Shortfall %d · Penalty %s" % [completed.delivered, completed.shortfall, _state.money(completed.shortfall * _state.MarketDecisions.SHORTFALL_FEE)]
-		elif not active.is_empty():
-			text += "\nAccepted · Standard or better: %d / %d" % [trade.eligible_contract(_state, order.crop), order.quantity]
-		elif _state.season_clock.season != 0: text += "\nNext offer arrives in Spring."
-		_refs["contract_details" + suffix].text = text
-		_refs["contract_accept" + suffix].disabled = _state.run_over or _state.season_clock.season != 0 or not active.is_empty() or not completed.is_empty()
+	preload("res://scripts/buyer_slips.gd").refresh(self)
 
 func _build_diversification() -> void:
 	if _state.season_clock.year < _state.Diversification.Balance.DIVERSIFY_YEAR: return

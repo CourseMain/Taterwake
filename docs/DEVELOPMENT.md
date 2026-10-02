@@ -961,3 +961,5 @@ Segment 19 sell rows expose stocked grade chips, a bounded amount stepper and th
 Segment 19 Tess’s board lives in `tess_board.gd`; the legacy loss-panel action selects its Losses tab for the first-year guide. `farm_protection.gd` shares the counterfactual wording with notifications without changing ledger labels. Desktop and phone previews are `artifacts/segment19-quests-*` and `artifacts/segment19-loss_notices-*`.
 
 Segment 19 station captures are `artifacts/segment19-climate-*`. The weather dashboard, station, climate, protection and UI audit suites check its live warnings, purchase gates, four-tile shape and reachable controls.
+
+Segment 19 `buyer_slips.gd` draws compact pinned contracts and hides inapplicable delivery and penalty rows. The order and diversification suites verify binding acceptance and collection. Captures: `artifacts/segment19-contracts-*`.
