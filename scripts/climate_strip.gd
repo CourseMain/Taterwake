@@ -61,4 +61,3 @@ func _draw_future() -> void:
 		var tint: Color = Color("b8c3a0").lerp(Color("a65e44"), severity / 3.0)
 		draw_rect(Rect2((y - 1) * width, 2, maxf(1, width - 1), 5 + count * 6), tint)
 		if y % 10 == 0: draw_string(font, Vector2((y - 3) * width, 43), str(y), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("493d2b"))
-
