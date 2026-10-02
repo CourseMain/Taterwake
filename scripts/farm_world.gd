@@ -79,6 +79,8 @@ var graphics_quality: String = "balanced"
 const Surface = preload("res://scripts/farm_surface.gd")
 var _ground_material: ShaderMaterial
 var _lease_boards: Array[Node3D] = []
+var _fitted_labels: Array[Label3D] = []
+var _label_fit_clock: float = 0.0
 const REGION: int = 1
 var current_island: int = REGION
 var _ice_roots: Array[Node3D] = []
@@ -149,6 +151,7 @@ const TUTORIAL_STATION_NAMES: Dictionary = {
 }
 
 func build_world() -> void:
+	_fitted_labels.clear()
 	_clear_world()
 	_geometry_batcher = GeometryBatcher.new()
 	current_island = REGION
@@ -233,12 +236,12 @@ func _expand_village() -> void:
 		if not node is Node3D or node is Camera3D or node is Light3D or node is WorldEnvironment or node.has_meta("land_layout"):
 			continue
 		node.position = layout_point(node.position)
-		var building_scale: float = {"MarketStall": 1.16, "ToolUpgradeWorkshop": 1.14, "Windmill": 1.12, "IceForge": 1.16, "WashAndSortWorkshop": 1.10}.get(str(node.name), 1.0)
+		var building_scale: float = {"MarketStall": 1.16, "ToolUpgradeWorkshop": 1.14, "Windmill": 1.12}.get(str(node.name), 1.0)
 		node.scale *= building_scale
 		# Keep the toolsmith at the same human scale as the player.
 		for smith: Node3D in _toolsmiths:
 			if smith.get_parent() == node: smith.scale /= building_scale
-		if node.name in ["GoldenShoresDock", "GoldenShoresHarbor", "FrosthollowJetty"] or node.has_meta("layout_stretch"):
+		if node.has_meta("layout_stretch"):
 			node.scale *= Vector3(LAND_SPACING, 1, LAND_SPACING)
 		for actor in _npc_actors.values():
 			if actor.get_parent() == node:
@@ -673,18 +676,19 @@ func _extended_fields() -> void:
 
 func _garden() -> void:
 	_lease_boards.clear()
-	for entry: Array in [[Vector3.ZERO,0,"Home Field · Sheltered"], [Vector3(18,0,13),24,"Low Field · Wet / floods first"], [Vector3(1,0,-23),48,"Hill Field · Dry & windy"]]:
+	for entry: Array in [[Vector3.ZERO,0,"Home Field","home"], [Vector3(18,0,13),24,"Low Field","low"], [Vector3(1,0,-23),48,"Hill Field","hill"]]:
 		var offset: Vector3 = entry[0]
 		_garden_field(offset, entry[1])
 		var sign_pos: Vector3 = offset + Vector3(1.5,0,6.7)
 		sign_pos.y = ground_height(sign_pos.x,sign_pos.z)
-		_sign(sign_pos,entry[2],Color("587653"))
+		var field_sign: Node3D = _sign(sign_pos,entry[2],Color("587653"))
+		_exposure_icon(field_sign, entry[3])
 		if entry[1] > 0:
 			var board := _root("FieldToLet",sign_pos+Vector3(-5,0,0))
 			board.rotation.z = -0.10
 			_box(board,Vector3(0,0.6,0),Vector3(0.13,1.2,0.13),Color("95744e"))
 			_box(board,Vector3(0,1.0,0),Vector3(2.6,0.7,0.12),Color("baa174"))
-			_label(board,"To let",Vector3(0,1.05,0.09),28,CREAM)
+			bind_label(_label(board,"TO LET",Vector3(0,1.0,0.09),28,CREAM,false), Vector2(2.36, .5))
 			for i in range(5): _leaf(board,Vector3(-0.8+i*0.4,0.35,0),Vector3(0.18,0.75,0.12),LEAF,0.3)
 			_lease_boards.append(board)
 
@@ -1237,12 +1241,13 @@ func _crate(parent: Node3D, pos: Vector3, full: bool) -> void:
 		for i in range(5):
 			_sphere(parent, pos + Vector3(-0.39 + float(i % 3) * 0.38, 0.29, -0.16 + float(i / 3) * 0.35), Vector3(0.24, 0.18, 0.20), Color("d7aa69"))
 
-func _sign(pos: Vector3, title: String, color: Color) -> void:
+func _sign(pos: Vector3, title: String, color: Color) -> Node3D:
 	var root := _root("VillageSign", pos)
 	for x in [-1.08, 1.08]:
 		_box(root, Vector3(x, 0.75, 0.0), Vector3(0.16, 1.5, 0.16), Color("816544"))
 	_box(root, Vector3(0.0, 1.25, 0.0), Vector3(3.18, 0.8, 0.19), color)
-	_label(root, title, Vector3(0.0, 1.25, 0.13), 27, CREAM, false)
+	bind_label(_label(root, title, Vector3(0.0, 1.25, 0.13), 27, CREAM, false), Vector2(2.94, .6))
+	return root
 
 func _target(parent: Node3D, pos: Vector3, size: Vector3, key: String, value: Variant) -> void:
 	if key == "station":
@@ -1367,6 +1372,7 @@ func _shop_label(parent: Node3D, text: String, pos: Vector3, distant: bool = fal
 	label.outline_modulate = ink
 	label.outline_size = 7
 	label.set_meta("shop_label", true)
+	bind_label(label, Vector2(4.6, 1.2))
 	return label
 
 
@@ -1381,7 +1387,9 @@ func _label(parent: Node3D, text: String, pos: Vector3, font_size: int, color: C
 	label.outline_size = 6 if billboard else 0
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED if billboard else BaseMaterial3D.BILLBOARD_DISABLED
 	label.no_depth_test = billboard
+	label.font = _shop_font
 	parent.add_child(label)
+	bind_label(label)
 	return label
 
 func _roof(parent: Node3D, width: float, depth: float, base: float, rise: float, color: Color) -> void:
@@ -1960,7 +1968,7 @@ func _animate_activities(delta: float) -> void:
 
 
 func _buyer_board() -> void:
-	# Reuse the Golden Shores buyer board on the Valley farm.
+	# Paper orders hang on the village buyer board.
 	var booth: Node3D = _root("BuyerContracts", Vector3(8, 0, -9))
 	for x: float in [-1.25, 1.25]:
 		_box(booth, Vector3(x, 1.4, 0), Vector3(0.14, 2.8, 0.14), Color("826342"))
@@ -2068,6 +2076,11 @@ func _animate_sun(delta: float) -> void:
 		_sun.rotation_degrees = _sun_from.lerp(_sun_target, weight)
 
 func _process(delta: float) -> void:
+	_label_fit_clock += delta
+	if _label_fit_clock >= .25:
+		_label_fit_clock = 0
+		for label in _fitted_labels:
+			if is_instance_valid(label): fit_label(label)
 	_animate_sun(delta)
 	_animate_winter(delta)
 	if _season_blend >= 1.0: return
@@ -2121,10 +2134,13 @@ func show_grade(index: int, plot: Dictionary) -> void:
 		grade_tag.no_depth_test = true
 		grade_tag.modulate = CREAM
 		add_child(grade_tag)
+		grade_tag.font = _shop_font
+		bind_label(grade_tag, Vector2(2.8, .7))
 	grade_tag.visible = index >= 0 and int(plot.get("stage", 0)) > 0
 	if grade_tag.visible:
 		grade_tag.text = "Grade: " + preload("res://scripts/crop_quality.gd").grade(int(plot.quality))
 		grade_tag.position = plot_positions[index] + Vector3(0, 1.9, 0)
+		fit_label(grade_tag)
 
 var future_root: Node3D
 var future_outcome: String = ""
@@ -2256,3 +2272,51 @@ func restore_present() -> void:
 func _ground_bank(parent: Node3D, pos: Vector3, size: Vector3, tint: Color) -> void:
 	# Shared low rounded bank for snow, future silt and windblown sand.
 	_sphere(parent, pos, size, tint)
+
+func bind_label(label: Label3D, bounds: Vector2 = Vector2(4.6, 1.6)) -> void:
+	label.set_meta("board_bounds", bounds)
+	label.set_meta("label_font", label.font_size)
+	label.set_meta("label_pixel", label.pixel_size)
+	label.set_meta("fit_key", "")
+	if not _fitted_labels.has(label): _fitted_labels.append(label)
+	fit_label(label)
+
+func label_extent(label: Label3D, pixels: int) -> Vector2:
+	var width: float = 0
+	var lines: PackedStringArray = label.text.split("\n")
+	for line in lines: width = maxf(width, label.font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x)
+	return Vector2(width + label.outline_size * 2, label.font.get_height(pixels) * lines.size() + label.outline_size * 2)
+
+func fit_label(label: Label3D) -> void:
+	if label.text.is_empty(): return
+	if label.has_meta("fitted_font") and label.font_size != int(label.get_meta("fitted_font")): label.set_meta("label_font", label.font_size)
+	var bounds: Vector2 = label.get_meta("board_bounds", Vector2(4.6, 1.6))
+	var requested: int = label.get_meta("label_font", label.font_size)
+	var key: String = "%s:%d:%s" % [label.text, requested, str(bounds)]
+	if label.get_meta("fit_key", "") == key: return
+	label.set_meta("fit_key", key)
+	var pixel: float = label.get_meta("label_pixel", label.pixel_size)
+	var points: int = requested
+	while points > 6 and (label_extent(label, points) * pixel).x > bounds.x: points -= 1
+	while points > 6 and (label_extent(label, points) * pixel).y > bounds.y: points -= 1
+	var extent: Vector2 = label_extent(label, points) * pixel
+	label.pixel_size = pixel * minf(1, minf(bounds.x / maxf(.001, extent.x), bounds.y / maxf(.001, extent.y)))
+	label.font_size = points; label.set_meta("fitted_font", points)
+
+func _exposure_icon(sign_root: Node3D, field: String) -> void:
+	var marker := Node3D.new(); marker.name = "Exposure_" + field; sign_root.add_child(marker)
+	sign_root.set_meta("field_exposure", field)
+	sign_root = marker
+	var p := Vector3(-1.08, .58, .18)
+	var plate := _box(sign_root, p, Vector3(.48,.48,.04), CREAM); plate.name = "Exposure_" + field
+	var ink := Color("41675e")
+	if field == "home":
+		_box(sign_root, p + Vector3(0,-.035,.04), Vector3(.22,.18,.02), ink)
+		_bar(sign_root, p + Vector3(-.15,.06,.045), p + Vector3(0,.18,.045), .026, ink)
+		_bar(sign_root, p + Vector3(0,.18,.045), p + Vector3(.15,.06,.045), .026, ink)
+	elif field == "low":
+		for y in [-.12, 0.0, .12]:
+			_bar(sign_root, p + Vector3(-.17,y,.045), p + Vector3(0,y+.035,.045), .022, ink)
+			_bar(sign_root, p + Vector3(0,y+.035,.045), p + Vector3(.17,y,.045), .022, ink)
+	else:
+		for pair in [[Vector3(-.17,-.13,.045),Vector3(0,.17,.045)], [Vector3(0,.17,.045),Vector3(.17,-.13,.045)], [Vector3(.17,-.13,.045),Vector3(-.17,-.13,.045)]]: _bar(sign_root, p + pair[0], p + pair[1], .025, ink)

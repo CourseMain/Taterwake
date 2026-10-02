@@ -143,3 +143,5 @@ The year’s front page keeps its newspaper masthead and headline. A ten-box wea
 After the accounts close, a pinned **Winter jobs** card lists available work: iced beds; stored tonnes with current and late-Winter quotes; paid projects with work out of three; cleared beds ready for frost covers; ripe Icecap; tonnes eligible for seed; businesses from year three; and an approaching blizzard. Lines walk to the bed or site, open the market or fit covers. Finished work ticks off, and the note collapses to **Winter · N jobs left**. Nell’s lighter timber barn has cream crate tiles and one **Sell** button. In Winter, Sell opens the market on stores with the rising quote first. Other seasons do not have a to-do list.
 
 Bram’s pegboard has compact tool tiles with level pips and their current effect. Bed expansion says **Open 12 more beds** and names the next active field. Sprinklers and water practice live at the workbench. PotatoDex opens from the farm menu.
+
+Field boards print only the field’s name. A shelter, waves or hill symbol sits on the post; available fields have a **TO LET** board. World lettering is measured against the board and shrinks to fit.

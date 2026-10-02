@@ -21,6 +21,7 @@ func setup(w) -> void:
 	world._box(self, Vector3(0,1.25,0.66), Vector3(1.3,0.94,0.14), DARK)
 	# The instrument face shows the same honest range as the forecast panel.
 	forecast_label=world._label(self,"",Vector3(0,1.35,.76),26,WHITE,false)
+	world.bind_label(forecast_label, Vector2(2.2, .8))
 	forecast_label.pixel_size=.010
 	range_band=Node3D.new(); add_child(range_band)
 	range_band.position=Vector3(0,1.03,.77)
