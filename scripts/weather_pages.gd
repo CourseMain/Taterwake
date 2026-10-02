@@ -100,6 +100,9 @@ func _layout() -> void:
 	var scale: float = float(get_tree().root.size.x) / hud.root.size.x
 	_range.custom_minimum_size.y = 68 / minf(1, maxf(.1, scale))
 	_instrument.custom_minimum_size = Vector2(84, 110) if size.x < 650 else Vector2(128, 128)
-	for button in find_children("*", "Button", true, false): button.custom_minimum_size.y = hud.touch_target() if touch else 44
+	for button in find_children("*", "Button", true, false):
+		button.custom_minimum_size.y = hud.touch_target() if touch else 44
+		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, hud.touch_target() if touch else 44)
+		button.add_theme_font_size_override("font_size", 22 if touch else 15)
 	for label in find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(20, label.get_theme_font_size("font_size")))
