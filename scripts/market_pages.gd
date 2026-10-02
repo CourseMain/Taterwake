@@ -11,8 +11,6 @@ const MUTED := Color("705236")
 const GAIN := Color("436733")
 const LOSS := Color("a63529")
 const PAPER := Color("fffbed")
-const CANVAS := Color("ddc084")
-const PACKET := Color("e7c78b")
 const FRAME := Color("795b32")
 const PRICE_TAG := Color("f3efdf")
 const ACCENTS := {"russet": Color("df9c42"), "giant": Color("e87c59"), "golden": Color("dcad24"), "sunburst": Color("ed9737"), "icecap": Color("51aeca")}
@@ -92,21 +90,7 @@ func _style_button(button: Button, accent: Color = GAIN, filled: bool = false) -
 	button.custom_minimum_size.y = 46
 	button.add_theme_font_override("font", _body_font)
 	button.add_theme_font_size_override("font_size", 15)
-	var pigment: Color = accent
-	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = pigment if filled else PAPER
-		if state == "hover": fill = Color("f2ce78")
-		if state == "pressed": fill = Color("c9a25e")
-		if state == "disabled": fill = Color("cbbb92")
-		var skin: StyleBoxFlat = Place.skin(fill, 10, 100, Color("cfc3aa"))
-		skin.set_border_width_all(2)
-		skin.border_width_bottom = 3 if state != "pressed" else 2
-		skin.content_margin_top = 9
-		skin.content_margin_bottom = 9
-		button.add_theme_stylebox_override(state, skin)
-	for state: String in ["font_color", "font_hover_color", "font_pressed_color"]:
-		button.add_theme_color_override(state, INK)
-	button.add_theme_color_override("font_disabled_color", MUTED)
+	Place.pill(button, accent, filled)
 
 func _rule(vertical: bool = false) -> Separator:
 	var line: Separator = VSeparator.new() if vertical else HSeparator.new()
@@ -278,6 +262,7 @@ func _layout() -> void:
 	for button: Node in find_children("*", "Button", true, false) + hud._modal_trade_footer.find_children("*", "Button", true, false):
 		button.add_theme_font_override("font", _body_font)
 		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, hud.touch_target() if touch else 46)
+		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, hud.touch_target() if touch else 46)
 		if touch: button.add_theme_font_size_override("font_size", maxi(20, button.get_theme_font_size("font_size")))
 	for label: Node in find_children("*", "Label", true, false) + hud._modal_trade_footer.find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(18, label.get_theme_font_size("font_size")))
