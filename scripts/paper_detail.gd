@@ -46,10 +46,18 @@ func _draw() -> void:
 		"season":
 			var scale: float = minf(float(get_tree().root.size.x) / get_viewport_rect().size.x, float(get_tree().root.size.y) / get_viewport_rect().size.y)
 			var pixels: int = 11 if size.x < 400 else ceili(14 / maxf(scale, 0.1))
-			var width: float = (size.x - 78) / 4
+			var names: Array = ["Spring", "Summer", "Autumn", "Winter"]
+			var year_words: String = "YEAR %02d" % year
+			var year_width: float = maxf(78, font.get_string_size(year_words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x + 12)
+			var width: float = (size.x - year_width) / 4
+			while pixels > 10 and names.any(func(words): return font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x > width - 10):
+				pixels -= 1
+				year_width = maxf(78, font.get_string_size(year_words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x + 12)
+				width = (size.x - year_width) / 4
 			for index in range(4):
 				var rect := Rect2(index * width, 0, width - 3, size.y - 1)
 				draw_rect(rect, INK if index == season else Color("fffbed"))
 				draw_rect(rect, RULE, false)
-				draw_string(font, Vector2(rect.position.x + 5, size.y * 0.72), ["Spring", "Summer", "Autumn", "Winter"][index], HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color("fffbed") if index == season else INK)
-			draw_string(font, Vector2(size.x - 72, size.y * 0.72), "YEAR %02d" % year, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, INK)
+				draw_string(font, Vector2(rect.position.x + 5, size.y * 0.72), names[index], HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color("fffbed") if index == season else INK)
+			draw_rect(Rect2(size.x - year_width, 0, year_width, size.y - 1), Color("fffbed"))
+			draw_string(font, Vector2(size.x - year_width + 6, size.y * 0.72), year_words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, INK)

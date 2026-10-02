@@ -192,7 +192,9 @@ func paper_pages() -> void:
 		game.year_intro.present(game.state)
 		await settle()
 		inside(game.year_intro.skip, tag + " newspaper skip")
-		check(game.year_intro.skip.size.y * minf(float(root.size.x) / game.hud.root.size.x, float(root.size.y) / game.hud.root.size.y) >= 43.9, tag + " front page skip touch target")
+		var front_scale: float = minf(float(root.size.x) / game.year_intro.size.x, float(root.size.y) / game.year_intro.size.y)
+		for control in game.year_intro.find_children("*", "Button", true, false):
+			if control.is_visible_in_tree(): check(minf(control.size.x, control.size.y) * front_scale >= 43.9, tag + " newspaper target " + control.text)
 		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-front-page")
 		game.year_intro.stop()
 		game.hud._season_jobs.refresh()

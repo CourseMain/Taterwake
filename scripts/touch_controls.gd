@@ -133,7 +133,7 @@ func _build_touch_sheets() -> void:
 func skin(color: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(mini(radius, 5))
+	style.set_corner_radius_all(radius if radius >= 90 else mini(radius, 8))
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 6
@@ -148,6 +148,7 @@ func button(caption: String, callback: Callable, parent: Node = null) -> Button:
 	result.add_theme_color_override("font_color", Color("fff3cf"))
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		result.add_theme_stylebox_override(state, skin(Color("426c53") if state == "pressed" else Color("193c33"), 12))
+	preload("res://scripts/place_ui.gd").pill(result, Color("193c33"), true)
 	result.focus_mode = Control.FOCUS_NONE
 	(parent if parent != null else root).add_child(result)
 	result.pressed.connect(callback)
@@ -174,10 +175,10 @@ func resize() -> void:
 	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
 	place(menu_button, Rect2(w - 134, 16, 112, 68))
 	place(sell_button, Rect2(w - 134, 94, 112, 68))
-	place(status, Rect2(16, 132, minf(w - 32, 500), 48))
+	place(status, Rect2(16, 132, minf(w - 168, 500), 48))
 	if enabled:
 		place(game.hud.root.get_node("FarmWordmark"), Rect2(96, 16, 300, 58))
-		place(game.hud._season_strip, Rect2(16, 92, minf(w - 32, 540), 32))
+		place(game.hud._season_strip, Rect2(16, 92, minf(w - 168, 540), 32))
 		game.hud._season_jobs.layout()
 	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
 	place(guide_button, Rect2(96, 16, 204, 68))

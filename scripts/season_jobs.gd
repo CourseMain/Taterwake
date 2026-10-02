@@ -68,7 +68,7 @@ func available() -> Dictionary:
 	if ripe > 0: result.ripe = ["%d ripe Icecap beds · harvest →" % ripe, "winter_walk:ripe"]
 	if seeds > 0: result.seed = ["%d t can be kept as seed →" % seeds, "winter_seeds"]
 	for id in farm.Diversification.NAMES:
-		if farm.diversification.can_buy(farm, id): result["business:" + id] = [farm.Diversification.NAMES[id] + " · " + farm.money(farm.Diversification.Balance.BUSINESS_COSTS[id]) + " →", "businesses"]
+		if farm.diversification.can_buy(farm, id): result["business:" + id] = [farm.Diversification.NAMES[id] + " · " + ("Free enrolment" if id == "grower" else farm.money(farm.Diversification.Balance.BUSINESS_COSTS[id])) + " →", "businesses"]
 	if farm.climate.data.phase == "warning" and farm.climate.data.event == "blizzard":
 		result.blizzard = ["Blizzard in %ds · sell stores or harvest →" % ceili(farm.climate.data.timer), "climate"]
 	return result
