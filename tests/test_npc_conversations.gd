@@ -82,11 +82,11 @@ func run() -> void:
 		check(not talk.voice.player.playing and not talk.voice.is_processing(), "service transition leaves no voice playing " + id)
 		check(talk.portrait.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"hidden portrait stops rendering " + id)
 		game._on_action("talk:" + id)
-		check(farm.npc_history[id].kind and talk.speech.text == (Roster.advice(id, farm) if id in ["tess", "edwin"] else Roster.PEOPLE[id].thanks),"friendly memory preserves current reports " + id)
+		check(farm.npc_history[id].kind and talk.speech.text == (Roster.advice(id, farm) if id == "edwin" else Roster.PEOPLE[id].thanks),"friendly memory preserves current reports " + id)
 		var previous: String = talk.speech.text
 		talk.finish()
 		game._start_conversation(id)
-		check(talk.speech.text == previous if id in ["tess", "edwin"] else talk.speech.text != previous,"reports stay accurate; flavour greetings vary " + id)
+		check(talk.speech.text == previous if id == "edwin" else talk.speech.text != previous,"reports stay accurate; flavour greetings vary " + id)
 		talk.finish()
 	farm.coins = farm.bankruptcy_limit() * 0.5
 	game._on_state_changed()

@@ -23,12 +23,15 @@ func setup(owner_hud, show_losses: bool = false) -> void:
 	loss_notes = hud._vbox(14); add_child(loss_notes)
 	for q in hud._quests():
 		var note := PanelContainer.new(); note.name = "PinnedQuestNote"
-		note.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 7)); quest_notes.add_child(note)
+		note.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 7)); quest_notes.add_child(note); hud._refs["quest:" + q.id + ":card"] = note
 		var body: VBoxContainer = hud._vbox(8); note.add_child(body)
 		body.add_child(hud._wrap(q.description, 21, Place.INK, true))
 		var progress: ProgressBar = hud._meter(Place.INK, 8); body.add_child(progress); hud._refs["quest:" + q.id + ":bar"] = progress
 		var detail: Label = hud._wrap("", 15, Place.MUTED); body.add_child(detail); hud._refs["quest:" + q.id + ":detail"] = detail
-		var reward: Label = hud._wrap(q.reward_text, 15, Place.INK); body.add_child(reward)
+		var reward_row := HBoxContainer.new(); reward_row.add_theme_constant_override("separation", 12); body.add_child(reward_row)
+		var reward: Label = hud._wrap(hud._money(q.coins), 26, Place.INK, true); reward.custom_minimum_size.x = 120; reward_row.add_child(reward)
+		var extras: PackedStringArray = str(q.reward_text).split(" + ")
+		if extras.size() > 1: reward_row.add_child(hud._wrap(extras[1], 14, Place.MUTED))
 		var claim: Button = hud._button("Claim", "quest:" + q.id); Place.pill(claim, ACCENT, true); body.add_child(claim); hud._refs["quest:" + q.id] = claim
 		pin(note)
 	resized.connect(_layout); refresh(); _layout.call_deferred()
@@ -58,8 +61,11 @@ func refresh() -> void:
 func _layout() -> void:
 	if not is_inside_tree(): return
 	Place.compact(self)
-	var touch: bool = hud.get_parent().touch_controls.enabled
-	for button in find_children("*", "Button", true, false): button.custom_minimum_size.y = hud.touch_target() if touch else 44
+	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled
+	for button in find_children("*", "Button", true, false):
+		button.custom_minimum_size.y = hud.touch_target() if touch else 44
+		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, hud.touch_target() if touch else 44)
+		button.add_theme_font_size_override("font_size", 22 if touch else 15)
 	for label in find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(21, label.get_theme_font_size("font_size")))
 

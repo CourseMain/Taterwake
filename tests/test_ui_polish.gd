@@ -46,19 +46,19 @@ func run() -> void:
 	game.state.quest_progress.starter_crash = 10
 	game.state.quest_progress.starter_spike = 4
 	game.hud.show_panel("quests", game.state)
-	check(game.hud._refs["quest:starter_crash:status"].text == "Claim ready", "completed quest visibly awaits collection")
+	check(game.hud._refs["quest:starter_crash"].visible and not game.hud._refs["quest:starter_crash"].disabled, "completed quest visibly awaits collection")
 	check(game.hud._refs["quest:starter_spike:bar"].value == 4 and not game.hud._refs["quest:starter_spike"].visible, "partial progress cannot claim a reward")
 	await inspect("quests")
 	var before: float = game.state.coins
 	game.hud._refs["quest:starter_crash"].pressed.emit()
-	check(game.state.coins == before + game.state.QUEST_REWARD and game.hud._refs["quest:starter_crash:status"].text == "Claimed", "claim pays once and updates its status")
+	check(game.state.coins == before + game.state.QUEST_REWARD and game.hud._refs["quest:starter_crash:detail"].text.ends_with("Claimed") and not game.hud._refs["quest:starter_crash"].visible, "claim pays once and updates its status")
 	check(game.hud._refs["quest:starter_crash"].disabled, "claimed quest cannot pay twice")
 	game.state.coins = game.state.bankruptcy_limit()
 	game.hud.show_panel("duck_patrol", game.state)
 	check(game.hud._refs["activity:duck"].disabled and game.hud._refs["activity:duck:status"].text.begins_with("Need"), "unaffordable duck shows the missing coins")
 	check(game.hud._refs["activity:duck:speed:status"].text.begins_with("Locked"), "speed training explains the flock prerequisite")
 	await inspect("ducks-locked")
-	game.state.coins = 400000000
+	game.state.coins = 400000
 	game.hud.update_state(game.state)
 	game.hud._refs["activity:duck"].pressed.emit()
 	check(game.activities.duck_count() == 1 and game.hud._refs["activity:duck:status"].text == "Affordable", "hiring refreshes the remaining flock slot")
@@ -73,22 +73,15 @@ func run() -> void:
 	for kind: String in ["quests", "duck_patrol", "inventory"]:
 		game.hud.show_panel(kind, game.state)
 		await inspect("compact-" + kind)
-	for island in [1]:
-		game.hud.show_panel("quests", game.state)
-		await inspect("island-%d-quests" % island)
-		for quest: Dictionary in game.state.quest_info():
-			game.state.quest_progress[quest.id] = quest.target
-		game.hud.update_state(game.state)
-		var first: String = "quest:" + str(game.state.quest_info()[0].id)
-		game.hud._refs[first].pressed.emit()
-		check(game.hud._refs[first + ":status"].text == "Claimed", "island %d quest remains claimable after acknowledging arrival" % island)
-		game.hud.show_panel("market", game.state)
-		await inspect("island-%d-seeds" % island)
-		game.hud.show_panel("island", game.state)
-		var travel_scroll: ScrollContainer = game.hud._body.get_parent()
-		await settle()
-		travel_scroll.scroll_vertical = int(travel_scroll.get_v_scroll_bar().max_value)
-		await inspect("island-%d-destinations" % island)
+	game.hud.show_panel("quests", game.state)
+	game.state.quest_progress.starter_spike = game.state.QUEST_TARGETS.starter_spike
+	game.hud.update_state(game.state)
+	check(game.hud._refs["quest:starter_spike"].visible and not game.hud._refs["quest:starter_spike"].disabled, "completed pinned quest exposes Claim")
+	game.hud._refs["quest:starter_spike"].pressed.emit()
+	check(game.hud._refs["quest:starter_spike:detail"].text.ends_with("Claimed") and not game.hud._refs["quest:starter_spike"].visible, "claimed pinned quest removes its action")
+	await inspect("quests-claimed")
+	game.hud.show_panel("market", game.state)
+	await inspect("seed-packets")
 	game.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout
