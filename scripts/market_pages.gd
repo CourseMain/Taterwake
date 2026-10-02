@@ -169,10 +169,15 @@ func _sparkline(parent: Control) -> Control:
 	parent.add_child(chart)
 	return chart
 
-func _show_price_change(label: Label, crop: String) -> void:
+func _show_price_change(label: Label, crop: String, grade: String) -> void:
 	label.text = hud._state.price_percent_text(crop)
 	label.add_theme_color_override("font_color", hud.price_change_color(crop))
-	label.tooltip_text = "Compared with the variety's base price"
+	if stored_mode:
+		var base: float = float(State.CropTable.CROPS[crop].base) * State.Quality.MULTIPLIER[grade]
+		var percent: int = roundi((price_for(crop, grade) / base - 1.0) * 100.0)
+		label.text = ("+" if percent >= 0 else "−") + str(absi(percent)) + "%"
+		label.add_theme_color_override("font_color", GAIN if percent > 0 else (LOSS if percent < 0 else INK))
+	label.tooltip_text = "Change from this grade’s base quote"
 
 func _build_trade_bar() -> void:
 	footer = hud._card(PAPER, 12)
@@ -280,7 +285,7 @@ func refresh() -> void:
 		var crop_quote_data: Dictionary = state.market[crop]
 		entry.price.text = state.market_money(price_for(crop, selected_grade if crop == selected else "Standard")) + "/t"
 		entry.price.tooltip_text = "Sale price per tonne"
-		_show_price_change(entry.change, crop)
+		_show_price_change(entry.change, crop, selected_grade if crop == selected else "Standard")
 		entry.card.add_theme_stylebox_override("panel", Place.skin())
 		for word in entry.grades:
 			entry.grades[word].text = "%s %d t" % [word, stock(crop, word)]

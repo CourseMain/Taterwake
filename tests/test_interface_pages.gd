@@ -38,6 +38,7 @@ func run() -> void:
 				game.state.run_outcome = "completed"; game.state.season_clock.year = 10
 			game.state.season_clock.season = 3 if kind in ["climate", "winter_stores", "accounts", "run_summary"] else 0
 			if kind == "winter_stores":
+				game.state.season_clock.seconds = 140
 				for crop in game.state.CROP_IDS: game.state.trading.held[crop] = game.state.Stock.pile(8)
 			if kind == "foreclosure":
 				var saved_ledger: Dictionary = game.state.ledger.save_data()

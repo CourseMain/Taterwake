@@ -196,6 +196,12 @@ func ui_checks() -> void:
 	game.state.season_clock.seconds = 140
 	game.hud.update_state(game.state)
 	check(game.hud._refs.market_page.stored_mode and game.hud._refs.market_page.sale_rows.russet.grades.Standard.visible, "Winter market opens on stocked stores")
+	page = game.hud._refs.market_page
+	for grade in ["Table", "Standard", "Feed"]:
+		page.select_variety("russet", grade)
+		var base: float = State.CropTable.CROPS.russet.base * State.Quality.MULTIPLIER[grade]
+		var premium: int = roundi((page.price_for("russet", grade) / base - 1.0) * 100.0)
+		check(page.crop_change.text == "+%d%%" % premium and premium > 0, "Winter percentage uses the rising stored quote for " + grade)
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
 		if game.touch_controls.enabled: game.touch_controls.resize()
