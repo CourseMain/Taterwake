@@ -3,7 +3,6 @@ extends VBoxContainer
 const State = preload("res://scripts/game_state.gd")
 const Sparkline = preload("res://scripts/price_sparkline.gd")
 const Quantity = preload("res://scripts/market_quantity.gd")
-const Portrait = preload("res://scripts/item_icon.gd")
 const Seeds = preload("res://scripts/seed_packets.gd")
 const Place = preload("res://scripts/place_ui.gd")
 const Type = preload("res://scripts/ui_type.gd")

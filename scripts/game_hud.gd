@@ -1931,23 +1931,14 @@ func _refresh_panel() -> void:
 			_refresh_inventory()
 			_refs.shop_page.refresh()
 		"tools":
-			var levels: Dictionary = _state.get("tools")
-			for tool: String in ["hoe", "water", "harvest"]:
-				var costs: Array = _tool_costs().get(tool, [])
-				var level: int = clampi(int(levels.get(tool, 0)), 0, costs.size())
-				var areas: Array = TOOL_AREAS[tool]
+			for tool in ["hoe", "water", "harvest"]:
+				var level: int = int(_state.tools[tool]); var costs: Array = _tool_costs()[tool]
 				var maximum: bool = level >= costs.size()
-				_refs["upgrade:" + tool + ":detail"].text = "Now: %s per action.%s" % [areas[mini(level, areas.size() - 1)], " Fully upgraded." if maximum else " Next: " + str(areas[mini(level + 1, areas.size() - 1)]) + "."]
-				if tool == "water":
-					var carried: int = 16 + 16 * level
-					_refs["upgrade:water:detail"].text = "Carries %d water · %s per action." % [carried, areas[mini(level, areas.size() - 1)]]
-					if not maximum:
-						_refs["upgrade:water:detail"].text += "\nNext: %d water · %s%s" % [carried + 16, areas[mini(level + 1, areas.size() - 1)], "."]
-				var cost: float = float(costs[level]) if not maximum else 0.0
-				_set_purchase_button("upgrade:" + tool, "Fully upgraded" if maximum else ("Upgrade · " + _money(cost)), cost, maximum)
-			var land: Dictionary = _state.field_expansion_info()
-			_refs["upgrade:expansion:detail"].text = "All %d beds open" % int(land.total) if land.complete else "%d beds open · Unlock +%d" % [int(land.opened), int(land.remaining)]
-			_set_purchase_button("upgrade:expansion", "Open ✓" if land.complete else ("Open beds · " + _money(float(land.cost))), float(land.cost), land.complete)
+				var effect: String = "%s per action" % TOOL_AREAS[tool][mini(level, TOOL_AREAS[tool].size() - 1)]
+				if tool == "water": effect = "%d water · %s per action" % [16 + 16 * level, TOOL_AREAS[tool][mini(level, TOOL_AREAS[tool].size() - 1)]]
+				_refs["upgrade:" + tool + ":detail"].text = effect
+				var cost: float = 0.0 if maximum else costs[level]
+				_set_purchase_button("upgrade:" + tool, "Fully upgraded" if maximum else "Upgrade · " + _money(cost), cost, maximum)
 			_refs.shop_page.refresh()
 		"dex": _refresh_dex()
 

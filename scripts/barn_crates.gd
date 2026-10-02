@@ -56,7 +56,7 @@ static func refresh(page) -> void:
 	for section in hud._inventory_sections:
 		Place.pill(hud._refs["tab:" + section], ACCENT)
 static func layout(page) -> void:
-	var touch: bool = page.hud.get_parent().touch_controls.enabled
+	var touch: bool = is_instance_valid(page.hud.get_parent().get("touch_controls")) and page.hud.get_parent().touch_controls.enabled
 	for grid in page._grids: grid.columns = 1 if page.size.x < 650 else 3
 	Place.compact(page)
 	for button in page.find_children("*", "Button", true, false):

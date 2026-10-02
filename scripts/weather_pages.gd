@@ -95,7 +95,7 @@ func refresh() -> void:
 func _layout() -> void:
 	if not is_inside_tree() or is_queued_for_deletion(): return
 	Place.compact(self)
-	var touch: bool = hud.get_parent().touch_controls.enabled
+	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled
 	_grid.columns = 1 if size.x < 650 else 2
 	var scale: float = float(get_tree().root.size.x) / hud.root.size.x
 	_range.custom_minimum_size.y = 68 / minf(1, maxf(.1, scale))
