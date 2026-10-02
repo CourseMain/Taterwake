@@ -83,7 +83,7 @@ func sell(farm, id: String, quantity: int, grade: String, stored: bool) -> Strin
 	if id not in Table.IDS or quantity == 0 or quantity < -1 or (not grade.is_empty() and grade not in Quality.GRADES): return farm._finish("Choose a crop, grade and amount.")
 	var owned: int = Stock.count(held, id, grade) if stored else fresh_count(farm, id, grade)
 	var amount: int = owned if quantity == -1 else quantity
-	if amount <= 0 or amount > owned: return farm._finish("Not enough tonnes of that grade. Sell stored tonnes at Barn stores during Winter.")
+	if amount <= 0 or amount > owned: return farm._finish("Not enough tonnes of that grade. Sell stored tonnes from the market’s Winter stores tab.")
 	var lots: Array = Stock.take(held if stored else farm.storage, id, amount, grade, {} if stored else held)
 	if stored: Stock.remove_lots(farm.storage, id, lots)
 	var earnings: float = 0
