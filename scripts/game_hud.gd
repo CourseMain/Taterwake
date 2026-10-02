@@ -806,7 +806,7 @@ func _build_top() -> void:
 	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(market_box)
 	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
-	_top["price"] = _label("—", 22, GREEN, true)
+	_top["price"] = _label("", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
 	var quote_row: BoxContainer = _hbox(8)
 	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
