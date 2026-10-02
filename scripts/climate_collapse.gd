@@ -4,9 +4,9 @@ signal restart_requested
 signal debug_requested
 const Climate = preload("res://scripts/climate_system.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const CREAM := Color("eee7d9")
-const MUTED := Color("baa995")
-const DEBT := Color("d07c6c")
+const INK := Color("17382d")
+const MUTED := Color("667569")
+const DEBT := Color("a63529")
 var headline: Label
 var detail: Label
 var _balance: Label
@@ -15,13 +15,12 @@ var _threshold: Label
 var _calculation: Label
 var _metrics: Dictionary = {}
 var _context: Label
-var _summary: Label
+var _final_rows: VBoxContainer
 var _summary_button: Button
 var _report: Dictionary = {}
 var _font: Font = Type.face(Type.BODY, 500)
 var _display: Font = Type.face(Type.EDITORIAL, 650)
 var _ledger: VBoxContainer
-var _tween: Tween
 var _scroll: ScrollContainer
 
 func _init() -> void:
@@ -33,11 +32,7 @@ func _init() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var background := ColorRect.new()
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var shader := Shader.new()
-	shader.code = "shader_type canvas_item; uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_linear; void fragment(){vec3 c=texture(screen_texture,SCREEN_UV).rgb; float g=dot(c,vec3(0.299,0.587,0.114)); COLOR=vec4(mix(vec3(g)*vec3(0.32,0.29,0.24),vec3(0.082,0.075,0.064),0.82),1.0);}"
-	var material := ShaderMaterial.new()
-	material.shader = shader
-	background.material = material
+	background.color = Color("fffbed")
 	add_child(background)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var margin := MarginContainer.new()
@@ -58,7 +53,7 @@ func _init() -> void:
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 12)
 	_scroll.add_child(content)
-	headline = label("BANKRUPT", 80, CREAM, true)
+	headline = label("BANKRUPT", 80, INK, true)
 	content.add_child(headline)
 	var amount_row := HFlowContainer.new()
 	amount_row.add_theme_constant_override("h_separation", 28)
@@ -73,13 +68,13 @@ func _init() -> void:
 	var reason := VBoxContainer.new()
 	reason.custom_minimum_size.x = 265
 	amount_row.add_child(reason)
-	detail = label("", 19, CREAM)
+	detail = label("", 19, INK)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	reason.add_child(detail)
-	_threshold = label("", 15, Color("e0b27d"))
+	_threshold = label("", 15, Color("896221"))
 	_threshold.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	reason.add_child(_threshold)
-	_calculation = label("", 18, CREAM)
+	_calculation = label("", 18, INK)
 	_calculation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	content.add_child(_calculation)
 	content.add_child(rule())
@@ -93,7 +88,7 @@ func _init() -> void:
 		metrics.add_child(box)
 		var caption := label(id, 12, MUTED)
 		box.add_child(caption)
-		var value: Label = label("", 34, Color("c6a986") if id != "DEBT LIMIT" else CREAM, true)
+		var value: Label = label("", 34, Color("896221") if id != "DEBT LIMIT" else INK, true)
 		box.add_child(value)
 		var note: Label = label("", 13, MUTED)
 		box.add_child(note)
@@ -104,12 +99,13 @@ func _init() -> void:
 	_context = label("", 15, MUTED)
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ledger.add_child(_context)
-	_summary = label("", 15, CREAM)
-	_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_ledger.add_child(_summary)
+	_final_rows = VBoxContainer.new()
+	_final_rows.name = "FinalLedgerRows"
+	_final_rows.add_theme_constant_override("separation", 2)
+	_ledger.add_child(_final_rows)
 	_ledger.add_child(rule())
-	_ledger.add_child(label("BEYOND THIS FARM", 12, Color("cbab78")))
-	var education := label(Climate.EDUCATION, 18, CREAM)
+	_ledger.add_child(label("BEYOND THIS FARM", 12, Color("896221")))
+	var education := label(Climate.EDUCATION, 18, INK)
 	education.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_ledger.add_child(education)
 	var source := label("FAO · Disasters, agriculture & food security", 12, MUTED)
@@ -139,7 +135,10 @@ func _init() -> void:
 	actions.add_child(debug)
 	debug.pressed.connect(func() -> void: debug_requested.emit())
 	resized.connect(func() -> void:
+		if not is_inside_tree(): return
 		headline.add_theme_font_size_override("font_size", clampi(int(size.x * 0.068), 36, 80))
+		var scale: float = minf(float(get_tree().root.size.x) / size.x, float(get_tree().root.size.y) / size.y)
+		for control in actions.get_children(): control.custom_minimum_size.y = maxf(45, ceilf(44 / maxf(scale, 0.1)))
 	)
 	hide()
 
@@ -166,11 +165,12 @@ func button(text: String, primary: bool = false) -> Button:
 	result.add_theme_font_size_override("font_size", 16)
 	for key in ["normal", "hover", "pressed"]:
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color("e1c495") if primary else (Color("423a30") if key != "normal" else Color.TRANSPARENT)
+		style.bg_color = Color("e1c495") if primary else (Color("e7e2d2") if key != "normal" else Color.TRANSPARENT)
 		style.border_color = MUTED
 		style.set_border_width_all(1)
 		result.add_theme_stylebox_override(key, style)
-	for key in ["font_color", "font_hover_color", "font_pressed_color"]: result.add_theme_color_override(key, Color("241e19") if primary else CREAM)
+	for key in ["font_color", "font_hover_color", "font_pressed_color"]: result.add_theme_color_override(key, Color("241e19") if primary else INK)
+	preload("res://scripts/place_ui.gd").pill(result, INK, primary)
 	return result
 
 func show_report(farm) -> void:
@@ -192,19 +192,22 @@ func show_report(farm) -> void:
 		_metrics[pair[0]].value.text = "%.0f%%" % (lost / total * 100.0) if total > 0.0 else "None"
 		_metrics[pair[0]].note.text = "%s / %s" % [farm.format_number(lost), farm.format_number(total)]
 		_metrics[pair[0]].note.visible = total > 0.0
+		_metrics[pair[0]].value.get_parent().visible = lost > 0
 	_metrics["DEBT LIMIT"].caption.text = "OVERDRAFT LIMIT"
 	_metrics["DEBT LIMIT"].value.text = farm.money(farm.bankruptcy_limit())
-	_metrics["DEBT LIMIT"].note.text = "Farm overdraft limit"
+	_metrics["DEBT LIMIT"].note.text = ""
+	_metrics["DEBT LIMIT"].note.hide()
 	_context.text = "Year %d · Category totals" % farm.season_clock.year
-	var lines := PackedStringArray()
+	for child in _final_rows.get_children():
+		_final_rows.remove_child(child); child.queue_free()
 	for category in farm.Ledger.CATEGORIES:
-		lines.append("%s   %s" % [farm.Ledger.LABELS[category], farm.money(farm.ledger.total(farm.season_clock.year, category))])
-	_summary.text = "\n".join(lines)
-	_ledger.hide()
+		if is_zero_approx(farm.ledger.total(farm.season_clock.year, category)): continue
+		var row := preload("res://scripts/ledger_row.gd").new()
+		_final_rows.add_child(row)
+		row.setup(get_parent().get_parent(), farm.Ledger.LABELS[category], farm.money(farm.ledger.total(farm.season_clock.year, category)))
+	_context.text += "\nThe books close here. The farm’s future starts with the state you leave behind."
+	_ledger.show()
 	_scroll.scroll_vertical = 0
-	_summary_button.text = "VIEW RUN SUMMARY"
+	_summary_button.text = "HIDE RUN SUMMARY"
 	show()
-	modulate.a = 0.0
-	if is_instance_valid(_tween): _tween.kill()
-	_tween = create_tween()
-	_tween.tween_property(self, "modulate:a", 1.0, 0.65)
+	modulate.a = 1.0

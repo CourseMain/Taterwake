@@ -145,3 +145,5 @@ After the accounts close, a pinned **Winter jobs** card lists available work: ic
 Bram’s pegboard has compact tool tiles with level pips and their current effect. Bed expansion says **Open 12 more beds** and names the next active field. Sprinklers and water practice live at the workbench. PotatoDex opens from the farm menu.
 
 Field boards print only the field’s name. A shelter, waves or hill symbol sits on the post; available fields have a **TO LET** board. World lettering is measured against the board and shrinks to fit.
+
+Foreclosure keeps the editorial page and opens on its final category ledger, with the real balance, overdraft limit and only applicable loss figures. The lead-in connects that final state to the farm’s future.

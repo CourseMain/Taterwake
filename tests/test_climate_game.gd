@@ -83,8 +83,11 @@ func run() -> void:
 	check(page._event.text.contains("SPUD VALLEY"), "collapse identifies the farm")
 	check(not game.hud._climate_effect.visible, "collapse clears ordinary HUD and weather effects")
 	await shot("climate-bankruptcy")
+	check(page._final_rows.is_visible_in_tree(), "foreclosure opens on the final ledger")
 	page._summary_button.pressed.emit()
-	check(page._summary.is_visible_in_tree() and page._summary.text.contains("Protection") and page._summary.text.contains("Mortgage"), "view accounts reveals protection and mortgage categories")
+	check(not page._final_rows.is_visible_in_tree(), "final ledger can collapse")
+	page._summary_button.pressed.emit()
+	check(page._final_rows.is_visible_in_tree() and page._final_rows.get_children().any(func(row): return row.caption.text == "Living costs") and page._final_rows.get_children().any(func(row): return row.caption.text == "Mortgage"), "view accounts reveals applicable living cost and mortgage categories")
 	await shot("climate-summary")
 	for dimensions: Vector2i in [Vector2i(1024, 600), Vector2i(1280, 800), Vector2i(1920, 1080)]:
 		root.size = dimensions
@@ -94,9 +97,9 @@ func run() -> void:
 		var screen: Rect2 = game.hud.root.get_global_rect().grow(1.0)
 		for item in [page.headline, page._balance, page._summary_button, page.find_child("TryAgain", true, false)]:
 			check(screen.encloses(item.get_global_rect()), "editorial content and actions fit " + str(dimensions))
-		page._scroll.ensure_control_visible(page._summary)
+		page._scroll.ensure_control_visible(page._final_rows)
 		await frames()
-		check(page._summary.get_global_rect().end.y <= page._scroll.get_global_rect().end.y + 1, "scroll reaches the last annual category at " + str(dimensions))
+		check(page._final_rows.get_global_rect().end.y <= page._scroll.get_global_rect().end.y + 1, "scroll reaches the last annual category at " + str(dimensions))
 	# Grouped balances must fit the same authored composition.
 	game.state.ledger.post(1, 3, "other", "Grouped balance fixture", -12345 - game.state.coins)
 	game.state.climate.capture_collapse(game.state)
