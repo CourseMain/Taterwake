@@ -85,7 +85,7 @@ Every loss has a **cause card**: the event, variety, tonnes lost, missing protec
 
 ## The ledger
 
-Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger itemises categories, grade sales, annual totals, stored crops, losses and remaining debt.
+Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger has ruled category rows, dot leaders, a large signed net, a filed-year stamp and a narrow ten-year column. The climate strip sits below the accounts; loss causes are pinned notes. Only categories with money, grades sold and closed years appear; their saved labels remain unchanged. Remaining debt is recorded below the ledger. Mortgage explanations sit behind a question mark. **Save screenshot** writes a PNG to the game’s user folder; the browser also downloads a copy. Accounts and the final summary have an opaque paper background covering the HUD.
 
 Every Winter posts these fixed bills once:
 

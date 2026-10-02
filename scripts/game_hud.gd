@@ -178,6 +178,7 @@ var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
 var _season_strip: Control
 var _season_jobs: PanelContainer
+var last_screenshot_path: String = ""
 
 func _process(delta: float) -> void:
 	_hud_clock += delta
@@ -667,11 +668,15 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		button.add_theme_stylebox_override(state, Cozy.button_style(state, primary))
 	button.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
+	preload("res://scripts/place_ui.gd").pill(button, GREEN, primary)
 	button.pressed.connect(func() -> void: _act(action))
 	return button
 
 func _act(action: String) -> void:
 	if action.is_empty(): return
+	if action == "ledger_screenshot":
+		_capture_ledger()
+		return
 	if action == "farm_help:details":
 		if not _farm_tip.is_empty() and _tutorial.is_empty() and not _state.run_over:
 			_opened_farm_tip = _farm_tip.duplicate(true)
@@ -1711,14 +1716,44 @@ func _build_help() -> void:
 		row.add_child(_label(entry[1], 16, INK))
 
 func _account_row(parent: Node, title: String, value: String) -> Label:
-	var row := _hbox(16)
+	var row := preload("res://scripts/ledger_row.gd").new()
 	parent.add_child(row)
-	var caption := _label(title, 16, INK)
-	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(caption)
-	var amount := _label(value, 16, INK, true)
-	row.add_child(amount)
-	return amount
+	row.setup(self, title, value)
+	return row.amount
+
+func _capture_ledger() -> void:
+	if _panel_kind not in ["accounts", "run_summary"]: return
+	if DisplayServer.get_name() == "headless":
+		_refs.screenshot_status.text = "A rendered window is needed for a screenshot."
+		return
+	var footer_visible: bool = _modal_trade_footer.visible
+	_modal_trade_footer.hide()
+	_refs.screenshot_status.hide()
+	await get_tree().process_frame
+	RenderingServer.force_draw()
+	var picture: Image = get_viewport().get_texture().get_image()
+	last_screenshot_path = "user://taterland-ledger-year-%02d-%s.png" % [_state.season_clock.year, str(Time.get_unix_time_from_system()).replace(".", "-")]
+	var error: Error = picture.save_png(last_screenshot_path)
+	if OS.has_feature("web") and error == OK:
+		JavaScriptBridge.download_buffer(picture.save_png_to_buffer(), last_screenshot_path.get_file(), "image/png")
+	_modal_trade_footer.visible = footer_visible
+	_refs.screenshot_status.show()
+	_refs.screenshot_status.text = "Saved to " + ProjectSettings.globalize_path(last_screenshot_path) if error == OK else "Could not save screenshot."
+
+func _ledger_actions() -> void:
+	var actions := GridContainer.new()
+	actions.columns = 2
+	actions.set_meta("fixed_columns", 2)
+	actions.add_theme_constant_override("h_separation", 8)
+	actions.add_theme_constant_override("v_separation", 8)
+	_refs.ledger_actions = actions
+	_modal_trade_footer.add_child(actions)
+	_refs.ledger_screenshot = _button("Save screenshot", "ledger_screenshot")
+	_refs.ledger_screenshot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(_refs.ledger_screenshot)
+	_refs.screenshot_status = _wrap("", 12, MUTED)
+	_refs.screenshot_status.hide()
+	_modal_trade_footer.add_child(_refs.screenshot_status)
 
 func touch_target() -> float:
 	var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
@@ -1736,18 +1771,34 @@ func _paper_page() -> void:
 	_modal_card.offset_right = 550
 	_modal_card.offset_top = -370
 	_modal_card.offset_bottom = 370
-	_modal_card.add_theme_stylebox_override("panel", _style(CREAM, 24))
+	_modal_card.add_theme_stylebox_override("panel", _style(CREAM, 24, 8))
 
 func _build_winter() -> void:
 	_paper_page()
 	var clock = _state.season_clock
-	_heading("Winter · Year %d" % clock.year, "ANNUAL ACCOUNTS · Time paused")
+	_heading("The annual accounts", "Winter · Time paused")
+	var stamp := _badge("FILED · YEAR %02d" % clock.year, "neutral")
+	stamp.name = "LedgerYearStamp"
+	stamp.set_meta("paper_stamp", true)
+	var stamp_ink: StyleBoxFlat = Cozy.box(Color.TRANSPARENT, 5, 2, CHERRY)
+	stamp_ink.set_border_width_all(2)
+	stamp.add_theme_stylebox_override("normal", stamp_ink)
+	stamp.add_theme_color_override("font_color", CHERRY)
+	var filing := HBoxContainer.new(); filing.add_theme_constant_override("separation", 12)
+	filing.add_child(stamp)
+	var spacer := Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; filing.add_child(spacer)
+	var portrait := preload("res://scripts/npc_portrait.gd").new()
+	portrait.custom_minimum_size = Vector2(52, 64); portrait.size_flags_horizontal = Control.SIZE_SHRINK_END; portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER; filing.add_child(portrait)
+	_body.add_child(filing)
+	portrait.show_person("nell")
 	var net: float = _state.ledger.total(clock.year)
-	_refs.accounts_net = _label("Year net  " + _state.money(net), 38, GREEN if net >= 0 else Color("a63529"), true)
+	_refs.accounts_net = _label(("+" if net >= 0 else "−") + _state.money(absf(net)), 42, GREEN if net >= 0 else Color("a63529"), true)
+	_refs.accountant = _wrap("Nell · Accountant", 14, MUTED)
 	_body.add_child(_refs.accounts_net)
-	_refs.accountant = _wrap("Nell · Accountant\n" + _state.NpcRoster.ledger_lines(_state), 16, INK)
-	_body.add_child(_refs.accountant)
-	var columns := _hbox(44)
+	_body.add_child(_label("NET FOR THE YEAR", 12, MUTED))
+	var columns := _hbox(32)
+	columns.name = "LedgerColumns"
+	columns.resized.connect(func(): columns.vertical = columns.size.x < 640)
 	_body.add_child(columns)
 	var categories := _vbox(2)
 	categories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1755,35 +1806,44 @@ func _build_winter() -> void:
 	categories.add_child(_label("THIS YEAR", 13, MUTED, true))
 	for category in _state.Ledger.CATEGORIES:
 		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
+		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(clock.year, category))
 	var years := _vbox(2)
-	years.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	years.custom_minimum_size.x = 245
+	years.size_flags_horizontal = Control.SIZE_FILL
 	columns.add_child(years)
 	years.add_child(_label("TEN-YEAR RECORD", 13, MUTED, true))
 	for year in range(1, 11):
-		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—")
-	_refs.accounts_balance = _wrap("", 16, INK)
-	_body.add_child(_refs.accounts_balance)
-	_body.add_child(_wrap("Mortgage: %s interest + %s principal on the original %s loan. All fixed costs: %s per year." % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())], 14, MUTED))
+		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "")
+		_refs["accounts_year_%d" % year].get_parent().get_parent().visible = _state.ledger.is_closed(year)
 	var strip = preload("res://scripts/climate_strip.gd").new()
+	strip.name = "AnnualClimateStrip"
 	strip.setup(_state.climate.data.outlook.records, clock.year)
 	_body.add_child(strip)
-	_body.add_child(_wrap(_state.winter_notice() + ("\nUse Hoe [1] to clear bed ice before Spring." if not _state.run_over else ""), 16, INK))
-	_body.add_child(_wrap(_state.trading.winter_text(_state), 16, INK))
+	_body.add_child(_refs.accountant)
+	_refs.accounts_balance = _wrap("", 16, INK)
+	var balance_row := HBoxContainer.new(); _body.add_child(balance_row)
+	_refs.accounts_balance.size_flags_horizontal = Control.SIZE_EXPAND_FILL; balance_row.add_child(_refs.accounts_balance)
+	_refs.accounts_loan = _wrap("", 16, INK)
+	_body.add_child(_refs.accounts_loan)
+	preload("res://scripts/place_ui.gd").help(self, balance_row, "Mortgage: %s interest + %s principal on the original %s loan. Fixed bills total %s per year.\n" % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())] + _state.NpcRoster.ledger_lines(_state))
 	for word in _state.Quality.GRADES:
 		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
-	_body.add_child(_label("FIELDS · leases for the coming year", 18, INK, true))
-	_body.add_child(_wrap("Rent renews each Winter. Cancel any Winter for a refund of that renewal; standing crops are cleared. Bed expansions are kept.", 14, MUTED))
+	var lease_heading := HBoxContainer.new(); _body.add_child(lease_heading)
+	var lease_title := _wrap("FIELDS · leases for the coming year", 18, INK, true); lease_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lease_heading.add_child(lease_title)
+	preload("res://scripts/place_ui.gd").help(self, lease_heading, "Rent renews each Winter. Cancel for a refund of that renewal; standing crops are cleared. Purchased bed expansions remain.")
 	for field in _state.Land.IDS:
-		_body.add_child(_wrap(_state.Land.NAMES[field] + " · " + _state.Land.WORDS[field], 16, INK))
+		if field == "home": continue
+		_body.add_child(_wrap(_state.Land.NAMES[field], 16, INK))
 		var row := _hbox(12)
 		_body.add_child(row)
 		if field != "home":
 			row.add_child(_button(("Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year"), "lease:" + field))
-		if _state.Land.active(_state, field) and not _state.field_expansion_info(field).complete:
-			row.add_child(_button("Open 12 beds · " + _state.money(_state.FIELD_EXPANSION_COST), "upgrade:expansion:" + field))
 	_build_diversification()
 	_build_loss_cards(_body, clock.year)
-	_modal_trade_footer.add_child(_button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true))
+	_ledger_actions()
+	var resume: Button = _button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true)
+	resume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_refs.ledger_actions.add_child(resume)
 	_modal_trade_footer.show()
 
 func _refresh_accounts() -> void:
@@ -1791,14 +1851,22 @@ func _refresh_accounts() -> void:
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
 	var net: float = _state.ledger.total(_state.season_clock.year)
-	_refs.accountant.text = "Nell · Accountant\n" + _state.NpcRoster.ledger_lines(_state)
-	_refs.accounts_net.text = "Year net  " + _state.money(net)
+	_refs.accountant.tooltip_text = _state.NpcRoster.ledger_lines(_state)
+	_refs.accounts_net.text = ("+" if net >= 0 else "−") + _state.money(absf(net))
 	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
-	for category in _state.Ledger.CATEGORIES: _refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
-	for year in range(1, 11): _refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "—"
+	for category in _state.Ledger.CATEGORIES:
+		_refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
+		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(_state.season_clock.year, category))
+	for year in range(1, 11):
+		_refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else ""
+		_refs["accounts_year_%d" % year].get_parent().get_parent().visible = _state.ledger.is_closed(year)
 	var grades: Dictionary = _state.Stock.sales(_state.ledger, _state.season_clock.year)
-	for word in grades: _refs["grade_sales:" + word].text = "%d t · %s" % [grades[word].sacks, _state.money(grades[word].total)]
-	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s · Loan remaining %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit()), _state.money(_state.ledger.loan_remaining())]
+	for word in grades:
+		_refs["grade_sales:" + word].text = "%d t · %s" % [grades[word].sacks, _state.money(grades[word].total)]
+		_refs["grade_sales:" + word].get_parent().get_parent().visible = grades[word].sacks > 0
+	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit())]
+	_refs.accounts_loan.text = "Loan remaining " + _state.money(_state.ledger.loan_remaining())
+	_refs.accounts_loan.visible = _state.ledger.loan_remaining() > 0
 
 func _build_run_summary() -> void:
 	_paper_page()
