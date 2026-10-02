@@ -4,6 +4,7 @@ var samples: Array = []
 var line_color: Color = Color("377858")
 var _signature: String = ""
 var expected_price: float = 0.0
+var font: Font = preload("res://scripts/ui_type.gd").face(preload("res://scripts/ui_type.gd").BODY)
 
 func set_expected_price(value: float) -> void:
 	if is_equal_approx(expected_price, value): return
@@ -39,4 +40,7 @@ func _draw() -> void:
 	if expected_price > 0:
 		var y: float = size.y - 4.0 - (expected_price - low) / spread * (size.y - 8.0)
 		for x in range(3, int(size.x) - 3, 8): draw_line(Vector2(x, y), Vector2(minf(x + 4, size.x - 3), y), Color(line_color, 0.85), 2.0)
+		var pixels: int = 12
+		if is_inside_tree(): pixels = maxi(12, ceili(12 * get_viewport_rect().size.x / get_tree().root.size.x))
+		draw_string(font, Vector2(size.x - 64 * pixels / 12.0, minf(size.y - 3, y + pixels + 2)), "Winter", HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, line_color)
 	draw_circle(points[points.size() - 1], 3.0, line_color)

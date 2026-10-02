@@ -98,7 +98,7 @@ func ui_checks() -> void:
 		root.size = size
 		game.hud.show_panel("market", farm)
 		for frame in range(8): await process_frame
-		check(game.hud._refs["russet:price"].text == "\uE000 360/t" and game.hud._refs["icecap:price"].text == "\uE000 1,200/t", "seed cards show grouped per-tonne prices")
+		check(game.hud._refs["russet:seed_price"].text == "\uE000 270" and game.hud._refs["icecap:seed_price"].text == "\uE000 1,200", "seed packets show grouped per-seed prices")
 		game.hud.show_panel("sell_potatoes", farm)
 		var page = game.hud._refs.market_page
 		page.selected = "icecap"
@@ -108,7 +108,7 @@ func ui_checks() -> void:
 		page.refresh()
 		for frame in range(8): await process_frame
 		check(page.crop_quote.text == "\uE000 1,200/t" and page.payout.text == "\uE000 3,600" and page.crop_quote.tooltip_text.contains("per tonne"), "sell page shows grouped integer quotes and totals")
-		check(page.grade_buttons.Standard.text.contains(" t ") and page.crop_owned.text.contains(" t owned"), "sell cards identify tonnes")
+		check(page.grade_buttons.Standard.text.contains(" t") and page.crop_owned.text.contains("fresh tonnes"), "sell cards identify tonnes")
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()), "market fits desktop and phone")
 		await capture("sell-%d" % size.x)
 		page._sold({"id":"icecap","quantity":3,"total":3600})

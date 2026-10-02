@@ -1424,8 +1424,8 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind in ["market", "sell_potatoes"]:
 		_modal_card.offset_left = -500
 		_modal_card.offset_right = 500
-		_modal_card.offset_top = -320 if kind == "sell_potatoes" else -380
-		_modal_card.offset_bottom = 320 if kind == "sell_potatoes" else 380
+		_modal_card.offset_top = -380
+		_modal_card.offset_bottom = 380
 	_modal_title.add_theme_color_override("font_color", INK)
 	_modal_title.add_theme_font_override("font", _card_heading_font)
 	_modal_title.add_theme_font_size_override("font_size", 28)

@@ -1,21 +1,21 @@
 extends VBoxContainer
 ## Seed and crop counters with prices, quantities and transaction confirmation.
-const Seeds = preload("res://scripts/seed_packets.gd")
 const State = preload("res://scripts/game_state.gd")
 const Sparkline = preload("res://scripts/price_sparkline.gd")
 const Quantity = preload("res://scripts/market_quantity.gd")
-const Portrait = preload("res://scripts/market_portrait.gd")
-const Surface = preload("res://scripts/exchange_surface.gd")
+const Portrait = preload("res://scripts/item_icon.gd")
+const Seeds = preload("res://scripts/seed_packets.gd")
+const Place = preload("res://scripts/place_ui.gd")
 const Type = preload("res://scripts/ui_type.gd")
 const INK := Color("3f2c1c")
 const MUTED := Color("705236")
 const GAIN := Color("436733")
 const LOSS := Color("a63529")
-const PAPER := Color("f1dca4")
+const PAPER := Color("fffbed")
 const CANVAS := Color("ddc084")
 const PACKET := Color("e7c78b")
 const FRAME := Color("795b32")
-const PRICE_TAG := Color("f4df9c")
+const PRICE_TAG := Color("f3efdf")
 const ACCENTS := {"russet": Color("df9c42"), "giant": Color("e87c59"), "golden": Color("dcad24"), "sunburst": Color("ed9737"), "icecap": Color("51aeca")}
 var hud
 var selling: bool = false
@@ -23,36 +23,31 @@ var crops: Array[String] = []
 var selected_grade: String = "Standard"
 var grade_buttons: Dictionary = {}
 var selected: String = ""
+var stored_mode: bool = false
+var trade_open: bool = false
+var seed_button: Button
+var sale_rows: Dictionary = {}
 var seed_cards: Dictionary = {}
 var grid: GridContainer
 var tabs: HBoxContainer
-var hero: PanelContainer
 var footer: PanelContainer
 var quantity: LineEdit
 var sell_button: Button
 var payout: Label
 var status: Label
-var crop_name: Label
 var crop_quote: Label
 var crop_change: Label
 var crop_history: Control
 var storage_note: Label
 var crop_owned: Label
-var crop_image: Control
 var minus: Button
 var plus: Button
 var maximum: Button
 var wallet: Label
-var _brand: Label
 var _trade_row: BoxContainer
 var _mobile_actions: HBoxContainer
 var _amount_box: VBoxContainer
 var _total_box: VBoxContainer
-var _hero_words: VBoxContainer
-var _hero_quote_row: HBoxContainer
-var _hero_badges: HBoxContainer
-var _finger: int = -1
-var _touch_start := Vector2.ZERO
 var _receipt_left: float = 0.0
 var _receipt: String = ""
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
@@ -63,10 +58,11 @@ func setup(owner_hud, sell_page: bool) -> void:
 	_body_font.fallbacks = [Type.SPUDION]
 	_title_font.fallbacks = [Type.SPUDION]
 	selling = sell_page
+	stored_mode = selling and hud._state.season_clock.season == 3
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 14)
-	Surface.apply_modal_frame(hud._modal_card, Color("c5a56b") if selling else CANVAS, FRAME)
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 3))
 	crops = State.crops_by_base_price(hud._known_crops() if selling else hud._market_crops())
 	hud._panel_crops = crops.duplicate()
 	_build_navigation()
@@ -84,26 +80,9 @@ func setup(owner_hud, sell_page: bool) -> void:
 	_layout.call_deferred()
 
 func _build_navigation() -> void:
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 16)
-	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hud._modal_market_nav.add_child(header)
-	hud._modal_market_nav.show()
-	_brand = _label("Spud Exchange" if selling else "Mara's seed counter", 25, INK, true)
-	_brand.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_brand.custom_minimum_size.x = 250
-	_brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(_brand)
 	tabs = HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 6)
-	tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(tabs)
-	for tab: Array in [["Buy Seeds", "market"], ["Sell Potatoes", "sell_potatoes"]]:
-		var active: bool = selling == (tab[1] == "sell_potatoes")
-		var button: Button = hud._button(tab[0], tab[1])
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_style_button(button, Color("c89644") if not selling else Color("9cac64"), active)
-		tabs.add_child(button)
+	add_child(tabs)
+	tabs.hide()
 
 func _label(text: String, font_size: int, color: Color = INK, display: bool = false) -> Label:
 	var label: Label = hud._wrap(text, font_size, color)
@@ -114,13 +93,13 @@ func _style_button(button: Button, accent: Color = GAIN, filled: bool = false) -
 	button.custom_minimum_size.y = 46
 	button.add_theme_font_override("font", _body_font)
 	button.add_theme_font_size_override("font_size", 15)
-	var pigment: Color = Color("9cac64") if accent == GAIN else accent
+	var pigment: Color = accent
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		var fill: Color = pigment if filled else PAPER
 		if state == "hover": fill = Color("f2ce78")
 		if state == "pressed": fill = Color("c9a25e")
 		if state == "disabled": fill = Color("cbbb92")
-		var skin: StyleBoxFlat = hud.Cozy.box(fill, 12, 3, FRAME)
+		var skin: StyleBoxFlat = Place.skin(fill, 10, 100, Color("cfc3aa"))
 		skin.set_border_width_all(2)
 		skin.border_width_bottom = 3 if state != "pressed" else 2
 		skin.content_margin_top = 9
@@ -140,72 +119,61 @@ func _rule(vertical: bool = false) -> Separator:
 	line.add_theme_constant_override("separation", 10)
 	return line
 
-func _stock_cell(parent: HBoxContainer, title: String) -> Label:
-	var cell: VBoxContainer = hud._vbox(1)
-	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(cell)
-	cell.add_child(_label(title, 11, MUTED))
-	var amount: Label = _label("", 16, INK)
-	cell.add_child(amount)
-	return amount
-
 func _build_buy() -> void:
 	Seeds.build(self)
 
 func _build_sell() -> void:
+	Place.header(hud, self, "THE HARVEST MARKET", GAIN)
+	var help_row := HBoxContainer.new(); add_child(help_row)
+	storage_note = _label("", 14, MUTED)
+	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
+	Place.help(hud, help_row, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
+	if hud._state.season_clock.season == 3:
+		tabs.show()
+		for mode in [true, false]:
+			var button := _local_button("Winter stores" if mode else "Fresh harvest", "sale_stock:" + str(mode), func(): stored_mode = mode; trade_open = false; _choose_grade(); refresh())
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tabs.add_child(button)
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
 	if selected not in crops: selected = crops[0]
 	_choose_grade()
-	hero = Surface.new()
-	hero.name = "ExchangeTradingBoard"
-	hero.chalkboard = true
-	hero.plain_frame = true
-	hero.add_theme_stylebox_override("panel", _board_skin())
-	add_child(hero)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 14)
-	hero.add_child(row)
-	row.add_child(_local_button("‹", "market_previous", func() -> void: navigate(-1)))
-	crop_image = Portrait.new()
-	crop_image.custom_minimum_size = Vector2(108, 108)
-	row.add_child(crop_image)
-	_hero_words = hud._vbox(2)
-	_hero_words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_hero_words)
-	crop_name = _label("", 30, INK, true)
-	_hero_words.add_child(crop_name)
-	_hero_quote_row = HBoxContainer.new()
-	_hero_quote_row.add_theme_constant_override("separation", 12)
-	_hero_words.add_child(_hero_quote_row)
-	crop_quote = _label("", 30, INK)
-	crop_quote.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	crop_quote.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_hero_quote_row.add_child(crop_quote)
-	crop_change = _label("", 16, INK)
-	crop_change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	crop_change.autowrap_mode = TextServer.AUTOWRAP_OFF
-	crop_change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_hero_quote_row.add_child(crop_change)
-	crop_history = _sparkline(_hero_words)
-	_hero_badges = HBoxContainer.new()
-	_hero_badges.add_theme_constant_override("separation", 8)
-	_hero_words.add_child(_hero_badges)
-	crop_owned = _label("", 13, INK)
-	crop_owned.autowrap_mode = TextServer.AUTOWRAP_OFF
-	crop_owned.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hero_badges.add_child(crop_owned)
-	row.add_child(_local_button("›", "market_next", func() -> void: navigate(1)))
-	var grades := VBoxContainer.new()
-	add_child(grades)
-	for word in State.Quality.GRADES:
-		var button := _local_button(word, "grade:" + word, func() -> void: selected_grade = word; quantity.set_value_no_signal(1); refresh())
-		button.toggle_mode = true
-		grades.add_child(button)
-		grade_buttons[word] = button
-	storage_note = _label("", 14, MUTED)
-	add_child(storage_note)
-	add_child(hud._button("Barn stores · Keep as seed / Winter selling", "winter_stores"))
+	for crop: String in crops:
+		var card := PanelContainer.new(); card.name = "SaleRow_" + crop
+		card.add_theme_stylebox_override("panel", Place.skin()); add_child(card)
+		var column := BoxContainer.new(); column.add_theme_constant_override("separation", 12); card.add_child(column)
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); column.add_child(row)
+		row.add_child(hud._icon({"kind": "crop", "crop": crop}, 54))
+		var words: VBoxContainer = hud._vbox(2); words.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(words)
+		var title := _label(hud._crop_name(crop), 20, INK, true); words.add_child(title)
+		var quotes := HBoxContainer.new(); quotes.add_theme_constant_override("separation", 8); words.add_child(quotes)
+		var price := _label("", 22); price.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quotes.add_child(price)
+		var change := _label("", 14); change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; change.autowrap_mode = TextServer.AUTOWRAP_OFF; change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		change.add_theme_stylebox_override("normal", Place.skin(Place.PAPER, 5, 100)); quotes.add_child(change)
+		var tail: VBoxContainer = hud._vbox(5); tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL; column.add_child(tail)
+		var history := _sparkline(tail); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL; history.custom_minimum_size.y = 32
+		var grades := HFlowContainer.new(); grades.add_theme_constant_override("h_separation", 8); tail.add_child(grades)
+		var buttons: Dictionary = {}
+		for word in State.Quality.GRADES:
+			var button := _local_button(word, "grade:" + crop + ":" + word, func(): select_variety(crop, word))
+			button.toggle_mode = true; grades.add_child(button); buttons[word] = button
+		var owned := _label("", 13, MUTED); column.add_child(owned); owned.hide()
+		sale_rows[crop] = {"card": card, "title": title, "price": price, "change": change, "history": history, "grades": buttons, "owned": owned}
 	_build_trade_bar()
+	seed_button = _local_button("Keep 1 t as seed", "market_keep_seed", func(): hud._act("keep_seed:" + selected + ":" + selected_grade))
+	footer.get_child(0).add_child(seed_button)
+
+func stock(crop: String, grade: String = "") -> int:
+	return hud._state.Stock.count(hud._state.trading.held, crop, grade) if stored_mode else hud._state.trading.fresh_count(hud._state, crop, grade)
+func price_for(crop: String, grade: String) -> float:
+	return hud._state.trading.stored_price(hud._state, crop, grade) if stored_mode else float(hud._state.market[crop].sell) * State.Quality.MULTIPLIER[grade]
+
+func select_variety(crop: String, grade: String = "") -> void:
+	selected = crop
+	trade_open = true
+	if grade.is_empty(): _choose_grade()
+	else: selected_grade = grade
+	quantity.set_value_no_signal(1)
+	_receipt_left = 0
+	refresh()
 
 func _sparkline(parent: Control) -> Control:
 	var chart := Sparkline.new()
@@ -218,16 +186,13 @@ func _sparkline(parent: Control) -> Control:
 	return chart
 
 func _show_price_change(label: Label, crop: String) -> void:
-	label.text = "· " + hud._state.price_percent_text(crop)
+	label.text = hud._state.price_percent_text(crop)
 	label.add_theme_color_override("font_color", hud.price_change_color(crop))
 	label.tooltip_text = "Compared with the variety's base price"
 
-func _board_skin() -> StyleBoxFlat:
-	return Surface.framed_skin(Color("d9c283"), FRAME, Color.TRANSPARENT, 20, 3)
-
 func _build_trade_bar() -> void:
 	footer = hud._card(PAPER, 12)
-	footer.add_theme_stylebox_override("panel", Surface.framed_skin(Color("dec488"), FRAME, Color.TRANSPARENT, 14, 3))
+	footer.add_theme_stylebox_override("panel", Place.skin(PAPER, 14, 8))
 	hud._modal_trade_footer.add_child(footer)
 	hud._modal_trade_footer.show()
 	var content: VBoxContainer = hud._vbox(8)
@@ -258,7 +223,7 @@ func _build_trade_bar() -> void:
 	amount_row.add_child(quantity)
 	plus = _local_button("+", "quantity_plus", func() -> void: quantity.value += 1)
 	amount_row.add_child(plus)
-	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = hud._state.trading.fresh_count(hud._state, selected, selected_grade))
+	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = stock(selected, selected_grade))
 	amount_row.add_child(maximum)
 	quantity.value_changed.connect(func(_value: float) -> void: refresh())
 	_total_box = hud._vbox(2)
@@ -291,25 +256,13 @@ func _layout() -> void:
 	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled
 	var available_width: float = minf(size.x, hud.root.size.x - 88.0)
 	var narrow: bool = available_width < 650
-	_brand.visible = size.x >= 750
 	for button: Node in tabs.get_children():
-		button.custom_minimum_size.y = 68 if touch else 46
+		button.custom_minimum_size.y = hud.touch_target() if touch else 46
 		button.add_theme_font_override("font", _body_font)
 	if not selling:
 		Seeds.layout(self, available_width, touch)
 	else:
-		var compact: bool = touch and get_viewport_rect().size.y < 700
-		add_theme_constant_override("separation", 6 if compact else 14)
-		# Keep the variety buttons clear of the fixed trade bar on short phones.
-		for panel: PanelContainer in [hero, footer]:
-			var skin: StyleBox = panel.get_theme_stylebox("panel")
-			var inset: int = (12 if compact else 20) if panel == hero else (10 if compact else 14)
-			skin.content_margin_top = inset
-			skin.content_margin_bottom = inset
-		if compact and not narrow and _hero_badges.get_parent() != _hero_quote_row:
-			_hero_badges.reparent(_hero_quote_row)
-		elif (not compact or narrow) and _hero_badges.get_parent() != _hero_words:
-			_hero_badges.reparent(_hero_words)
+		for entry in sale_rows.values(): entry.card.get_child(0).vertical = narrow
 		if narrow and sell_button.get_parent() != _mobile_actions:
 			sell_button.reparent(_mobile_actions)
 			_total_box.reparent(_mobile_actions)
@@ -318,18 +271,13 @@ func _layout() -> void:
 			_trade_row.move_child(sell_button, 0)
 			_total_box.reparent(_trade_row)
 		_mobile_actions.visible = narrow
-		crop_image.custom_minimum_size = Vector2.ONE * (74 if compact or narrow else 104)
-		crop_name.add_theme_font_size_override("font_size", 24 if narrow or compact else 30)
-		crop_quote.add_theme_font_size_override("font_size", 23 if compact or narrow else 30)
-		for control: Control in [quantity, minus, plus, maximum]: control.custom_minimum_size.y = 68 if touch else 46
-		for control: Control in [minus, plus, maximum]: control.custom_minimum_size.x = 68 if touch else 46
+		for control: Control in [quantity, minus, plus, maximum]: control.custom_minimum_size.y = hud.touch_target() if touch else 46
+		for control: Control in [minus, plus, maximum]: control.custom_minimum_size.x = hud.touch_target() if touch else 46
 		quantity.custom_minimum_size.x = 110 if touch else 84
-		_amount_box.get_child(0).visible = not compact
-		_total_box.get_child(0).visible = not compact
 	# Clear, compact numerals and controls; display face stays on headings only.
 	for button: Node in find_children("*", "Button", true, false) + hud._modal_trade_footer.find_children("*", "Button", true, false):
 		button.add_theme_font_override("font", _body_font)
-		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, 68 if touch else 46)
+		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, hud.touch_target() if touch else 46)
 		if touch: button.add_theme_font_size_override("font_size", maxi(20, button.get_theme_font_size("font_size")))
 	for label: Node in find_children("*", "Label", true, false) + hud._modal_trade_footer.find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(18, label.get_theme_font_size("font_size")))
@@ -342,29 +290,40 @@ func refresh() -> void:
 		Seeds.refresh(self)
 		return
 	hud._sell_crop = selected
+	for crop in sale_rows:
+		var entry: Dictionary = sale_rows[crop]
+		var crop_quote_data: Dictionary = state.market[crop]
+		entry.price.text = state.market_money(price_for(crop, selected_grade if crop == selected else "Standard")) + "/t"
+		entry.price.tooltip_text = "Sale price per tonne"
+		_show_price_change(entry.change, crop)
+		entry.card.add_theme_stylebox_override("panel", Place.skin())
+		for word in entry.grades:
+			entry.grades[word].text = "%s %d t" % [word, stock(crop, word)]
+			entry.grades[word].visible = stock(crop, word) > 0
+			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
+			Place.pill(entry.grades[word], GAIN)
+		var factor: float = State.Quality.MULTIPLIER[selected_grade] if crop == selected else 1.0
+		var history: Array = []
+		for point in crop_quote_data.history: history.append(float(point) * factor)
+		entry.history.set_history(history, MUTED)
+		entry.history.set_expected_price(state.trading.peak_price(crop, selected_grade if crop == selected else "Standard"))
+		entry.owned.text = "%d fresh tonnes" % stock(crop)
+	var chosen: Dictionary = sale_rows[selected]
+	crop_quote = chosen.price
+	crop_change = chosen.change
+	crop_history = chosen.history
+	crop_owned = chosen.owned
+	grade_buttons = chosen.grades
 	var quote: Dictionary = state.market.get(selected, {})
-	var price: float = float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[selected_grade]
-	for word in grade_buttons:
-		grade_buttons[word].text = "%s · %d t · %s/t" % [word, state.trading.fresh_count(state, selected, word), state.market_money(float(quote.get("sell", 0.0)) * State.Quality.MULTIPLIER[word])]
-		grade_buttons[word].set_pressed_no_signal(word == selected_grade)
-	var owned: int = state.trading.fresh_count(state, selected, selected_grade)
+	var price: float = price_for(selected, selected_grade)
+	var owned: int = stock(selected, selected_grade)
 	quantity.set_available(owned)
 	var amount: int = int(quantity.value)
-	crop_name.text = hud._crop_name(selected) + " Potato"
-	crop_quote.text = state.market_money(price) + "/t"
-	crop_quote.tooltip_text = "Sale price per tonne"
-	_show_price_change(crop_change, selected)
-	var grade_history: Array = []
-	for point in quote.get("history", []): grade_history.append(float(point) * State.Quality.MULTIPLIER[selected_grade])
-	crop_history.set_history(grade_history, MUTED)
-	crop_history.set_expected_price(state.trading.peak_price(selected, selected_grade))
-	crop_history.tooltip_text = "Recent prices · dashed line: expected late-Winter storage price"
-	storage_note.text = "All tonnes in the barn at Winter start are stored: %s fee · 5%% spoilage rounded to nearest · −10 quality · Late Winter %s/t (dashed)." % [state.money(state.MarketDecisions.STORAGE_FEE), state.market_money(state.trading.peak_price(selected, selected_grade))]
-
-	crop_owned.text = "%s t owned" % state.format_number(owned)
-	crop_image.crop = selected
-	crop_image.accent = ACCENTS[selected]
-	crop_image.queue_redraw()
+	storage_note.text = "Stored prices rise until Winter ends."
+	storage_note.visible = state.season_clock.season == 3
+	hud._modal_trade_footer.visible = trade_open
+	seed_button.visible = state.season_clock.season == 3 and selected_grade != "Feed" and state.stock_count(selected, selected_grade) > 0
+	seed_button.disabled = state.seed_inventory[selected] + state.trading.kept_seed[selected] >= State.MAX_INVENTORY
 	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else state.money(0)
 	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])
 	minus.disabled = not quantity.valid or amount <= 1
@@ -375,23 +334,16 @@ func refresh() -> void:
 	status.add_theme_color_override("font_color", LOSS if not quantity.valid else (GAIN if _receipt_left > 0 else MUTED))
 	_layout.call_deferred()
 
-func navigate(direction: int) -> void:
-	if not selling or crops.size() < 2: return
-	quantity.release_focus()
-	selected = crops[posmod(crops.find(selected) + direction, crops.size())]
-	_choose_grade()
-	quantity.set_available(hud._state.trading.fresh_count(hud._state, selected, selected_grade))
-	quantity.set_value_no_signal(1)
-	_receipt_left = 0
-	refresh()
-
 func _sell() -> void:
 	if not quantity.apply():
 		refresh()
 		return
 	refresh()
 	if sell_button.disabled: return
-	hud._act("sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
+	if stored_mode:
+		hud._state.trading.sell_stored(hud._state, selected, int(quantity.value), selected_grade)
+		hud.update_state(hud._state)
+	else: hud._act("sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return
@@ -411,27 +363,9 @@ func _process(delta: float) -> void:
 		_receipt_left = maxf(0, _receipt_left - delta)
 		if _receipt_left == 0: refresh()
 
-func _input(event: InputEvent) -> void:
-	if not selling or not is_visible_in_tree(): return
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			if _finger != -1:
-				_finger = -1
-				return
-			var swipe_rect: Rect2 = hero.get_global_rect()
-			if swipe_rect.has_point(event.position):
-				_finger = event.index
-				_touch_start = event.position
-		elif event.index == _finger:
-			_finger = -1
-			var movement: Vector2 = event.position - _touch_start
-			if absf(movement.x) >= 60 and absf(movement.x) > absf(movement.y) * 1.4:
-				navigate(1 if movement.x < 0 else -1)
-				get_viewport().set_input_as_handled()
-
 func _choose_grade() -> void:
 	selected_grade = "Standard"
 	for word in State.Quality.GRADES:
-		if hud._state.trading.fresh_count(hud._state, selected, word) > 0:
+		if stock(selected, word) > 0:
 			selected_grade = word
 			return

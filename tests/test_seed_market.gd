@@ -61,13 +61,6 @@ func check_price_information(state) -> void:
 		state.elapsed = moment
 		state._refresh_market()
 		game.hud.show_panel("market", state)
-		for crop: String in game.hud._refs.market_page.crops:
-			var expected: int = roundi((state.market[crop].sell / State.CropTable.CROPS[crop].base - 1.0) * 100.0)
-			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
-			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
-			var label: Label = game.hud._refs[crop + ":change"]
-			check(label.text == text and label.get_theme_color("font_color") == color, crop + " buy signed percentage and color")
-			check(game.hud._refs[crop + ":history"].samples == state.market[crop].history, crop + " buy sparkline samples")
 		game.hud.show_panel("sell_potatoes", state)
 		var page = game.hud._refs.market_page
 		for crop: String in page.crops:
@@ -75,11 +68,11 @@ func check_price_information(state) -> void:
 			state.selected_crop = crop
 			game.hud.update_state(state)
 			var expected: int = roundi((state.market[crop].sell / State.CropTable.CROPS[crop].base - 1.0) * 100.0)
-			var text: String = "· " + ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
+			var text: String = ("+" if expected >= 0 else "−") + str(absi(expected)) + "%"
 			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
 			check(page.crop_change.text == text and page.crop_change.get_theme_color("font_color") == color, crop + " sell signed percentage and color")
 			check(page.crop_history.samples == state.market[crop].history, crop + " sell navigation updates sparkline")
-			check(game.hud._top.price.text == state.market_money(state.market[crop].sell) and game.hud._top.price_change.text == text and game.hud._top.price_change.get_theme_color("font_color") == color, crop + " top bar live price, signed percentage and color")
+			check(game.hud._top.price.text == state.market_money(state.market[crop].sell) and game.hud._top.price_change.text == "· " + text and game.hud._top.price_change.get_theme_color("font_color") == color, crop + " top bar live price, signed percentage and color")
 
 func run() -> void:
 	if not "--integration-test" in OS.get_cmdline_user_args():
@@ -130,7 +123,7 @@ func run() -> void:
 	await shot("buy-desktop")
 	state.storage["russet"] = Stock.pile(12)
 	state.storage["giant"] = Stock.pile(7)
-	press(page, "sell_potatoes")
+	game.hud.show_panel("sell_potatoes", state)
 	await settle()
 	page = game.hud._refs.market_page
 	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
@@ -163,36 +156,18 @@ func run() -> void:
 	cash = state.coins
 	page._sell()
 	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 4 * state.market.russet.sell, "typed quantity commits before selling")
-	press(page, "market_next")
-	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 t owned", "arrow updates variety, chart, quantity and inventory together")
+	press(page, "grade:giant:Standard")
+	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 fresh tonnes", "variety row updates chart, quantity and inventory together")
 	page.quantity.value = 2
 	check(page.payout.text == state.money(2 * state.market.giant.sell), "navigated payout uses new crop")
-	press(page, "market_previous")
+	page.select_variety("russet")
 	check(page.selected == "russet", "previous returns to Russet")
 	await settle()
-	var point: Vector2 = page.hero.global_position + page.hero.size * 0.5
-	var down := InputEventScreenTouch.new()
-	down.index = 2
-	down.pressed = true
-	down.position = point
-	root.push_input(down, true)
-	var up := InputEventScreenTouch.new()
-	up.index = 2
-	up.position = point - Vector2(100, 0)
-	root.push_input(up, true)
-	check(page.selected == "giant", "left swipe navigates forward through real input dispatch")
-	down.position = point
-	root.push_input(down, true)
-	up.position = point + Vector2(100, 0)
-	root.push_input(up, true)
-	check(page.selected == "russet", "right swipe navigates back")
-	down.position = point
-	root.push_input(down, true)
-	up.position = point + Vector2(10, 100)
-	root.push_input(up, true)
-	check(page.selected == "russet", "vertical scrolling does not switch crops")
-	press(page, "market_previous")
-	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "wrap and zero inventory work")
+	check(page.sale_rows.size() == 5, "sell page lists every variety")
+	for crop in page.sale_rows:
+		check(page.sale_rows[crop].grades.size() == 3, crop + " has all three grade rows")
+	page.select_variety("icecap")
+	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "empty variety row shows disabled sale and zero inventory")
 	page.refresh()
 	state.storage["icecap"] = Stock.pile(2)
 	page.refresh()
@@ -200,7 +175,7 @@ func run() -> void:
 	cash = state.coins
 	press(page, "market_sell")
 	check(Stock.count(state.storage, "icecap") == 1 and state.coins == cash + state.market.icecap.sell, "missing-history sale pays current quote")
-	press(page, "market_next")
+	page.select_variety("russet")
 	game.hud._toast_box.hide()
 	await shot("sell-desktop")
 	# Price updates refresh a held page without losing quantity or fixed ordering.
@@ -245,9 +220,7 @@ func run() -> void:
 		await settle()
 		check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 0.5, "seed cards fit width " + str(dimensions))
 		for crop: String in game.hud._refs.market_page.crops:
-			var quote_label: Label = game.hud._refs[crop + ":price"]
-			var change_label: Label = game.hud._refs[crop + ":change"]
-			check(quote_label.get_line_count() == 1 and change_label.get_line_count() == 1 and quote_label.get_global_rect().end.x <= change_label.global_position.x, crop + " buy quote and percentage stay adjacent without overlap " + str(dimensions))
+			check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), crop + " packet excludes sale statistics")
 		await shot("buy-%dx%d" % [dimensions.x, dimensions.y])
 		game.hud.show_panel("sell_potatoes", state)
 		page = game.hud._refs.market_page

@@ -63,6 +63,15 @@ static func _box(color: Color, radius: int) -> StyleBoxFlat:
 
 static func _metric(c: CanvasItem, id: String) -> void:
 	match id:
+		"drop":
+			_poly(c, [Vector2(0, -33), Vector2(-22, 4), Vector2(-18, 24), Vector2(0, 32), Vector2(18, 24), Vector2(22, 4)], Color("508ba0"))
+		"sun":
+			c.draw_circle(Vector2.ZERO, 18, Color("bd783a"))
+			for i in range(8): c.draw_line(Vector2.from_angle(i * TAU / 8) * 23, Vector2.from_angle(i * TAU / 8) * 34, INK, 4, true)
+		"snowflake":
+			for i in range(6):
+				var direction := Vector2.from_angle(i * TAU / 6)
+				c.draw_line(Vector2.ZERO, direction * 32, Color("638396"), 4, true)
 		"coin":
 			c.draw_circle(Vector2.ZERO, 34, Color("c59632"))
 			c.draw_circle(Vector2(-2, -3), 27, Color("edc663"))

@@ -51,7 +51,7 @@ Growing beds carry a small grade peg matching the hover tag: a green leaf for Ta
 
 ### When to sell
 
-Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. Prices and grade are visible before selling. No sale happens merely by opening a page.
+Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. The harvest market lists each variety with its quote, signed percentage chip and price sparkline with a dashed late-Winter marker. Only grades you own have chips. Tap one to open the amount stepper and preview payment. The storage explanation is behind a question mark; Winter shows one reminder line and opens on stores. No sale happens merely by opening a page.
 
 Winter storage charges a flat **4,800**, spoils **5%** of held tonnes and removes **10 quality points** from survivors. An empty barn has no storage bill. These costs settle before foreclosure is checked. Winter-store prices rise from base toward **1.2× for Low, 1.4× for Mid or 1.6× for High volatility**, multiplied by current grade. Weather can destroy stores before you sell. Spring resets the premium. Fresh Icecap harvested in Winter uses the ordinary quote.
 

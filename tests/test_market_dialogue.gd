@@ -56,7 +56,7 @@ func run() -> void:
 	var prices: Dictionary = state.market.duplicate(true)
 	tab("sell_potatoes")
 	await settle()
-	game.hud._refs.market_page.navigate(1)
+	game.hud._refs.market_page.select_variety("giant")
 	var selected: String = game.hud._refs.market_page.selected
 	for _i in range(3):
 		tab("market")

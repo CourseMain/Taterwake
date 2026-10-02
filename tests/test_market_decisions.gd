@@ -177,7 +177,7 @@ func ui_checks() -> void:
 	game.state.storage["russet"] = Stock.pile(40)
 	game.hud.show_panel("sell_potatoes", game.state)
 	var page = game.hud._refs.market_page
-	check(is_equal_approx(page.crop_history.expected_price, game.state.trading.peak_price("russet")) and page.storage_note.text.contains("Winter start are stored") and page.storage_note.text.contains("5% spoilage") and page.storage_note.text.contains("dashed"), "sell card explains automatic storage beside the dashed Winter price")
+	check(is_equal_approx(page.crop_history.expected_price, game.state.trading.peak_price("russet")) and not page.storage_note.visible and page.find_children("*", "Button", true, false).any(func(button): return button.text == "?" and button.tooltip_text.contains("Winter start")), "storage explanation is behind a question mark outside Winter")
 	var store_actions: Array = page.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("action", "") == "market_store" or button.text == "Store selected tonnes")
 	check(store_actions.is_empty() and not page.storage_note.text.contains("Set aside"), "sell page has no Store button or held marker")
 	check(Stock.count(game.state.trading.held, "russet") == 0, "opening the sell page does not reserve tonnes")
@@ -185,7 +185,7 @@ func ui_checks() -> void:
 	check(game.hud._panel_kind == "contracts" and not game.hud._refs.contract_accept.disabled, "buyer board opens the Spring contract")
 	game.hud._refs.contract_accept.pressed.emit()
 	check(not game.state.trading.contracts.is_empty() and game.hud._refs.contract_accept.disabled, "accept button commits one order")
-	check(game.world.has_node("BuyerContracts"), "Golden Shores buyer board is reused on the Valley")
+	check(game.world.has_node("BuyerContracts"), "the buyer order board sits on the Spud Valley farm")
 	game.hud.close_panel()
 	game.state.season_clock.season = 1; game.state.season_clock.seconds = 149.75
 	game.state.update(.25)
