@@ -158,6 +158,7 @@ func _build_sell() -> void:
 		var owned := _label("", 13, MUTED); column.add_child(owned); owned.hide()
 		sale_rows[crop] = {"card": card, "title": title, "price": price, "change": change, "history": history, "grades": buttons, "owned": owned}
 	_build_trade_bar()
+	trade_open = hud._tutorial.get("id", "") == "sell"
 	seed_button = _local_button("Keep 1 t as seed", "market_keep_seed", func(): hud._act("keep_seed:" + selected + ":" + selected_grade))
 	footer.get_child(0).add_child(seed_button)
 

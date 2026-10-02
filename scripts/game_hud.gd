@@ -1666,61 +1666,9 @@ func _refresh_dex() -> void:
 		_refs["dex_status:" + id].text = "%ds base growth · Spud Valley" % _crop_grow(id)
 		_refs["dex_detail:" + id].text = "%d t per bed" % int(_state.CropTable.CROPS[id]["yield"])
 
-func _build_quests() -> void:
-	_heading(str(_state.call("farm_name")).capitalize() + " quests", "")
-	_info("quest_note", "", GREEN, 13)
-	var icons: Dictionary = {"starter_crash": {"kind": "seed", "crop": "golden"}, "starter_spike": {"kind": "crop", "crop": "russet"}, "starter_combo": {"kind": "tool", "id": "harvest"}}
-	for quest: Dictionary in _quests():
-		var id: String = str(quest.get("id", ""))
-		var key: String = "quest:" + id
-		var card := _surface("quest")
-		_body.add_child(card)
-		_refs[key + ":card"] = card
-		var body := _vbox(8)
-		card.add_child(body)
-		var header := _hbox(12)
-		body.add_child(header)
-		header.add_child(_icon(icons.get(id, {"kind": "tool", "id": "harvest"}), 52))
-		var titles := _vbox(3)
-		titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		header.add_child(titles)
-		titles.add_child(_wrap(str(quest.get("title", "Farm challenge")).capitalize(), 19, INK, true))
-		titles.add_child(_wrap(str(quest.get("description", "")), 13, MUTED))
-		var status := _badge("In progress")
-		header.add_child(status)
-		_refs[key + ":status"] = status
-		var progress_row := _hbox(12)
-		body.add_child(progress_row)
-		var progress := _meter(GREEN, 10)
-		progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		progress_row.add_child(progress)
-		_refs[key + ":bar"] = progress
-		var detail := _label("", 16, GREEN, true)
-		progress_row.add_child(detail)
-		_refs[key + ":detail"] = detail
-		var footer := _hbox(8)
-		body.add_child(footer)
-		var rewards := _vbox(6)
-		rewards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		footer.add_child(rewards)
-		rewards.add_child(_wrap(_money(float(quest.get("coins", 0))), 20, Color("896221"), true))
-		var reward_text: String = str(quest.get("reward_text", ""))
-		var extras: PackedStringArray = reward_text.split(" + ")
-		for index: int in range(1, extras.size()):
-			var special: String = extras[index]
-			var reward_row := _hbox(5)
-			rewards.add_child(reward_row)
-			var seed_crop: String = "icecap" if "Icecap" in special else ("sunburst" if "Sunburst" in special else "golden")
-			var icon_data: Dictionary = {"kind": "seed", "crop": seed_crop}
-			reward_row.add_child(_icon(icon_data, 26))
-			var words := _wrap(special, 13, INK, true)
-			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			reward_row.add_child(words)
-		var claim := _button("Claim reward", key, true)
-		claim.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		footer.add_child(claim)
-		_refs[key] = claim
+func _build_quests(show_losses: bool = false) -> void:
+	var page = preload("res://scripts/tess_board.gd").new()
+	_body.add_child(page); _refs.tess_board = page; page.setup(self, show_losses)
 
 func _build_help() -> void:
 	_heading("Controls", "")
@@ -1985,30 +1933,7 @@ func _refresh_panel() -> void:
 			_refresh_duck_patrol()
 		"debug":
 			_refresh_debug()
-		"quests":
-			var completed: int = 0
-			var ready: int = 0
-			for quest: Dictionary in _quests():
-				var id: String = str(quest.get("id", ""))
-				var progress: float = float(quest.get("progress", 0))
-				var target: float = maxf(1.0, float(quest.get("target", 1)))
-				var claimed: bool = bool(quest.get("claimed", false))
-				var complete: bool = bool(quest.get("complete", false))
-				var bar: ProgressBar = _refs.get("quest:" + id + ":bar") as ProgressBar
-				if not is_instance_valid(bar):
-					continue
-				bar.max_value = target
-				bar.value = minf(progress, target)
-				_refs["quest:" + id + ":detail"].text = "%s / %s" % [_number(minf(progress, target)), _number(target)]
-				Cozy.badge(_refs["quest:" + id + ":status"], "Claimed" if claimed else ("Claim ready" if complete else "In progress"), "active" if claimed else ("ready" if complete else "neutral"))
-				_refs["quest:" + id + ":card"].add_theme_stylebox_override("panel", Cozy.surface("quest", GREEN if claimed else GOLD, complete))
-				completed += 1 if claimed else 0
-				ready += 1 if complete and not claimed else 0
-				var claim: Button = _refs["quest:" + id]
-				claim.visible = complete and not claimed
-				claim.disabled = claimed or not complete
-				claim.text = "Claim reward"
-			_refs.quest_note.text = "%d / %d rewards collected%s" % [completed, _quests().size(), " · %d ready to claim!" % ready if ready > 0 else ""]
+		"quests": _refs.tess_board.refresh()
 	_apply_tutorial_buttons()
 
 func _set_button(key: String, text: String, disabled: bool) -> void:
@@ -2560,33 +2485,28 @@ func _refresh_stores() -> void:
 			if word != "Feed": _refs["keep_seed:" + key].disabled = _state.run_over or _state.stock_count(id, word) == 0
 
 func _build_loss_notices() -> void:
-	_refs.loss_list = _vbox(8)
-	_body.add_child(_refs.loss_list)
-	_refresh_loss_notices()
-
+	_build_quests(true)
 func _refresh_loss_notices() -> void:
-	var signature: String = "%d/%d/%d" % [_state.season_clock.year, _state.season_clock.season, _state.climate.data.protection.revision]
-	if _refs.loss_list.get_meta("signature", "") == signature: return
-	_refs.loss_list.set_meta("signature", signature)
-	for child in _refs.loss_list.get_children():
-		_refs.loss_list.remove_child(child); child.queue_free()
-	_heading("Crop loss notices", "Year %d · %s" % [_state.season_clock.year, _state.SeasonClock.NAMES[_state.season_clock.season]])
-	_refs.farmhand_report = _wrap("Tess · Farmhand\n" + _state.NpcRoster.weather_cost(_state), 18, INK)
-	_refs.loss_list.add_child(_refs.farmhand_report)
-	_build_loss_cards(_refs.loss_list, _state.season_clock.year, _state.season_clock.season)
-	if not _tutorial.is_empty() and _tutorial.get("id") == "loss":
-		_refs.loss_list.add_child(_button("Harvest what remains →", "tutorial:next", true))
+	_refs.tess_board.refresh()
 
 func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
+	var Place = preload("res://scripts/place_ui.gd")
 	var count: int = 0
 	for entry in _state.climate.data.protection.losses:
 		if int(entry.year) != year or (season >= 0 and int(entry.season) != season): continue
-		var card := _card(CREAM, 12)
-		parent.add_child(card)
-		card.add_child(_wrap(_state.ClimateSystem.Protection.text(entry), 16, INK))
+		var card := PanelContainer.new(); card.name = "PinnedCauseNote"
+		card.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 7)); parent.add_child(card)
+		var note := _vbox(8); card.add_child(note)
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); note.add_child(row)
+		row.add_child(_icon({"kind": "event", "id": entry.event}, 36))
+		row.add_child(_wrap("%s · %s" % [str(entry.event).replace("_", " ").capitalize(), _state.Land.NAMES.get(entry.field, "Barn")], 19, INK, true))
+		note.add_child(_wrap("Lost %d t of %s" % [entry.sacks, _crop_name(entry.crop)], 20, INK, true))
+		note.add_child(_wrap("Worth %s" % _money(entry.sacks * _state.CropTable.CROPS[entry.crop].base), 15, MUTED))
+		note.add_child(_wrap(_state.ClimateSystem.Protection.counterfactual(entry), 16, INK))
+		var stamp := _wrap("Year %d · %s" % [entry.year, _state.SeasonClock.NAMES[entry.season]], 13, MUTED); note.add_child(stamp)
+		var pin = preload("res://scripts/paper_detail.gd").new(); pin.kind = "pin"; card.add_child(pin); pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		count += 1
 	if count == 0: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))
-
 func touch_target() -> float:
 	var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
 	return maxf(68, ceilf(44 / maxf(scale, 0.1)))

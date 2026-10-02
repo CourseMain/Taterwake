@@ -34,6 +34,7 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_circle(Vector2.ZERO, 27, Color("30463a", 0.13))
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
+		"event": _event(c, id)
 		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id.trim_prefix("tool:"))))
 		"activity": _activity(c, id)
@@ -63,6 +64,11 @@ static func _box(color: Color, radius: int) -> StyleBoxFlat:
 
 static func _metric(c: CanvasItem, id: String) -> void:
 	match id:
+		"home":
+			_poly(c, [Vector2(-32,0), Vector2(0,-32), Vector2(32,0)], INK)
+			c.draw_rect(Rect2(-23,0,46,32), Color("b99d6c"))
+		"low": _event(c, "flood")
+		"hill": _poly(c, [Vector2(-38,30),Vector2(0,-32),Vector2(38,30)], INK)
 		"drop":
 			_poly(c, [Vector2(0, -33), Vector2(-22, 4), Vector2(-18, 24), Vector2(0, 32), Vector2(18, 24), Vector2(22, 4)], Color("508ba0"))
 		"sun":
@@ -212,3 +218,14 @@ static func _activity(c: CanvasItem, id: String) -> void:
 			c.draw_arc(Vector2(-4, 6), 17, 0.2, PI * 0.9, 20, Color("d4cbb5"), 5, true)
 			for x: int in [-9, 10]: c.draw_line(Vector2(x, 34), Vector2(x + 10, 34), Color("e8a137"), 7, true)
 		_: _spark(c, Vector2.ZERO, Color("d1ac52"), 31)
+
+static func _event(c: CanvasItem, event: String) -> void:
+	if event == "drought" or event == "dry_bed": _metric(c, "sun")
+	elif event in ["freeze", "autumn_cold", "deep_freeze", "blizzard"]:
+		_metric(c, "snowflake")
+		if event == "deep_freeze": c.draw_arc(Vector2.ZERO, 40, 0, TAU, 32, INK, 3, true)
+		if event == "blizzard": c.draw_line(Vector2(-40, 31), Vector2(40, 20), INK, 4, true)
+	elif event == "storm": _poly(c, [Vector2(12,-40), Vector2(-22,4), Vector2(5,0), Vector2(-10,40), Vector2(25,-5), Vector2(0,0)], INK)
+	elif event == "flood":
+		for y in [-22, 0, 22]: c.draw_polyline(PackedVector2Array([Vector2(-40,y), Vector2(-20,y-8), Vector2(0,y+3), Vector2(20,y-8), Vector2(40,y)]), Color("638396"), 5, true)
+	else: _metric(c, "weather")

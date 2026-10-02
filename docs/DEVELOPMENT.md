@@ -957,3 +957,5 @@ The Web shadow check uses a 390×844 CSS viewport at DPR 3 in hardware-accelerat
 Segment 19 seed packets use `seed_packets.gd` on a procedural chalkboard, with crop ribbons and `item_icon.gd` illustrations. Sale histories and grade thresholds are absent from the seed counter. `place_ui.gd` supplies paper edges, pill controls, small keeper portraits and tap-accessible question marks. Desktop and phone captures are under `artifacts/segment19-market-*`; transaction and interface suites exercise real purchases.
 
 Segment 19 sell rows expose stocked grade chips, a bounded amount stepper and the Winter marker. Winter opens on held stores and can switch to fresh Icecap; seed selection remains in the stepper. The retired market specimen and canvas-frame helpers are removed. Captures: `artifacts/segment19-sell_potatoes-*`.
+
+Segment 19 Tess’s board lives in `tess_board.gd`; the legacy loss-panel action selects its Losses tab for the first-year guide. `farm_protection.gd` shares the counterfactual wording with notifications without changing ledger labels. Desktop and phone previews are `artifacts/segment19-quests-*` and `artifacts/segment19-loss_notices-*`.

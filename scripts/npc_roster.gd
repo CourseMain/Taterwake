@@ -22,7 +22,7 @@ const PEOPLE := {
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
 		"help":"What goes in the accounts?", "advice":"Everything paid in and out. Seeds, sales, storage, mortgage, rent, living costs. Unsold potatoes are not income. I read the totals in Winter. Bring a chair.",
 		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops."},
-	"tess": {"name":"Tess", "role":"Farmhand", "service":"loss_notices", "service_label":"Read the cause cards", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
+	"tess": {"name":"Tess", "role":"Quest keeper", "service":"quests", "service_label":"Visit Tess’s board", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
 		"first":"Tess. I work the beds and count what the weather leaves. Those are two different jobs, lately.",
 		"daily":["Mud in both boots. That is the complete morning report.", "I sharpened the hoe. The clouds remain unimpressed."],
 		"topic":"Do you ever take a break?", "story":"I was going to have lunch with Pip. Then the drains backed up. Pip brought my lunch to the field instead. It had a duck feather in it.",
@@ -86,7 +86,6 @@ static func forecast_line(state) -> String:
 
 static func advice(id: String, state) -> String:
 	if id == "nell" and state.season_clock.season == 3: return ledger_lines(state)
-	if id == "tess": return weather_cost(state)
 	if id == "edwin": return bank_line(state)
 	return PEOPLE[id].advice
 
@@ -103,14 +102,12 @@ static func greeting(id: String, state, record: bool = false) -> String:
 	# Reports keep their figures even on repeated visits; flavour never replaces
 	# an unfavourable balance or turns a physical loss into fictional spending.
 	if id == "nell" and state.season_clock.season == 3: line = ledger_lines(state)
-	if id == "tess": line = weather_cost(state)
 	if id == "edwin": line = bank_line(state)
 	if record:
 		state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false))}
 	return line
 
 static func weather_line(id: String, state) -> String:
-	if id == "tess": return weather_cost(state)
 	var event: String = str(state.climate.data.event)
 	if state.climate.data.phase in ["warning", "active"]:
 		var advice: String = {"freeze":"Use your hoe to clear ice from frozen beds.", "drought":"Fill the tank and keep the beds watered. The weather station shows your protection.", "flood":"Check the drains and open the gates before the water builds up.", "storm":"Get ripe crops in before lightning hits. Check your protection at the station."}.get(event, "Check the latest forecast at the weather station.")

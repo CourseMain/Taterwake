@@ -131,3 +131,5 @@ Use WASD or arrows to walk and Shift to sprint. Click a bed to walk over and use
 Tool upgrades widen your reach. Open another half-field for **48,000**; barn upgrades increase its initial **200-tonne** capacity. Pip hires up to two ducks to clear pests. Three local challenges pay **4,000** each and can be claimed once. These are optional purchases and goals; their costs and receipts still enter the ledger.
 
 See the [README](../README.md) for running or exporting the source and [development notes](DEVELOPMENT.md) for saves and tests.
+
+Tess keeps the map’s cork board. Quests and Losses are tabs on the same board, with cream pinned notes. Each loss note names the event and field, lost tonnes, base-price worth and one counterfactual. Losses cover the current year, so an earlier seasonal loss is never followed by an empty-season message. Her conversation and Iris’s station have no separate loss-notices entrance.

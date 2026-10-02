@@ -93,14 +93,17 @@ static func record(farm, event: String, crop: String, exposed: int, reduction: f
 	if lost > previous: farm.notified.emit(text(entry))
 	return card
 
-static func text(entry: Dictionary) -> String:
+static func counterfactual(entry: Dictionary) -> String:
 	var prevention: String = {"dry_bed":"Watering in time", "pests":"Spraying in time", "autumn_cold":"Harvesting before Winter", "spoilage":"Selling before Winter", "lease_ended":"Harvesting before returning the field"}.get(entry.event, "")
 	if entry.event in ["deep_freeze", "blizzard"]: prevention = "Selling before impact" if entry.source == "barn" else "Harvesting before impact"
 	if entry.source == "field" and PROJECT_FOR.has(entry.event):
 		prevention = "Clearing ice in time" if float(entry.alternative) == 1.0 else "%s level %d" % [NAMES[PROJECT_FOR[entry.event]], 1 if float(entry.alternative) == 0.5 else 2]
 	var counterfactual: String = "%s would have saved %d t." % [prevention, entry.saved]
 	if float(entry.alternative) == float(entry.reduction): counterfactual = "Maximum project protection; no further project saving."
-	return "%s · Year %d · %s · %s · %s: %d t lost. %s. %s" % [Land.NAMES.get(entry.get("field", "home"), "Barn"), entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual]
+	return counterfactual
+
+static func text(entry: Dictionary) -> String:
+	return "%s · Year %d · %s · %s · %s: %d t lost. %s. %s" % [Land.NAMES.get(entry.get("field", "home"), "Barn"), entry.year, ["Spring", "Summer", "Autumn", "Winter"][int(entry.season)], str(entry.event).replace("_", " ").capitalize(), Table.CROPS[entry.crop].name, entry.sacks, entry.missing, counterfactual(entry)]
 
 static func work(farm, id: String) -> String:
 	var p: Dictionary = farm.climate.data.protection

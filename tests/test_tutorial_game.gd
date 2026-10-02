@@ -77,7 +77,7 @@ func run() -> void:
 	var loss: Dictionary = game.state.tutorial_loss()
 	check(loss.sacks == 1 and loss.saved == 1 and loss.missing == "Windbreak missing", "small disaster records real yield and prevention")
 	check(game.state.ClimateSystem.Protection.remaining(game.state.plots[4]) == 2, "storm leaves a harvest")
-	check(game.hud._panel_kind == "loss_notices" and game.hud._refs.farmhand_report.text.contains("360") and game.hud._refs.farmhand_report.text.contains("1 t"), "farmhand reports the base-value loss and cause")
+	check(game.hud._panel_kind == "loss_notices" and game.hud._refs.tess_board.loss_notes.find_children("*", "Label", true, false).any(func(label): return label.text.contains("360")) and game.hud._refs.tess_board.loss_notes.find_children("*", "Label", true, false).any(func(label): return label.text.contains("1 t")), "farmhand reports the base-value loss and cause")
 	game.tutorial.explain_block()
 	check(not game.hud._tutorial_body.text.is_empty(), "blocked input retains cause-card guidance")
 	await shot("cause-card")
