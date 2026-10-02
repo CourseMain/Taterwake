@@ -9,7 +9,7 @@ static func active(farm) -> bool:
 static func start(farm) -> String:
 	if farm.climate.data.phase != "calm" or farm.run_over or farm.tutorial_active or farm.season_clock.season == 3:
 		return farm._finish("Try the water lesson when the farm is calm.")
-	if int(farm.climate.data.projects.get("irrigation", 0)) == 0: return farm._finish("Buy Sprinklers & Irrigation at the weather station before sprinkler practice.")
+	if int(farm.climate.data.projects.get("irrigation", 0)) == 0: return farm._finish("Buy Sprinklers at Bram’s workbench before water practice.")
 
 	farm.climate.data.operations.supply.water = farm.climate.Operations.capacity(farm)
 	farm.climate.data.operations.supply.can = farm.climate.Operations.can_capacity(farm)
