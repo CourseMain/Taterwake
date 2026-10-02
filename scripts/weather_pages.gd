@@ -1,222 +1,105 @@
 extends VBoxContainer
 const Display = preload("res://scripts/weather_display.gd")
-const Type = preload("res://scripts/ui_type.gd")
-const BG := Color("f5ebd3")
-const PANEL := Color("eee0bd")
-const CYAN := Color("547351")
-const WHITE := Color("3f2c1c")
-const MUTED := Color("705236")
-const AMBER := Color("986c31")
+const Place = preload("res://scripts/place_ui.gd")
+const ACCENT := Color("588da5")
+const SHELL := Color("284550")
 var hud
 var _grid: GridContainer
-var _metrics: GridContainer
-var _hero: BoxContainer
+var _hero: HBoxContainer
 var _instrument: Control
-var _protection: GridContainer
+var _range: Control
+var _levels: Dictionary = {}
 var _values: Dictionary = {}
-var _font: FontVariation = Type.face(Type.BODY, 650)
 func setup(owner_hud) -> void:
-	hud = owner_hud
-	_font.fallbacks = [Type.SPUDION]
-	set_meta("market_responsive", true)
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 14)
-	hud._heading("WEATHER STATION", "")
-	hud._modal_title.add_theme_font_override("font", _font)
-	hud._modal_title.add_theme_color_override("font_color", WHITE)
-	var skin: StyleBoxFlat = hud.Cozy.box(BG, 18, 24, Color("355870"))
-	skin.set_border_width_all(2)
-	hud._modal_card.add_theme_stylebox_override("panel", skin)
-	hud._modal_card.offset_left = -530
-	hud._modal_card.offset_right = 530
-	hud._modal_card.offset_top = -380
-	hud._modal_card.offset_bottom = 380
-	var hero := _panel(self)
-	var hero_body : VBoxContainer = hud._vbox(9)
-	hero.add_child(hero_body)
-	_hero = BoxContainer.new()
-	_hero.add_theme_constant_override("separation", 20)
-	hero_body.add_child(_hero)
-	_instrument = Display.new()
-	_instrument.custom_minimum_size = Vector2(142, 142)
-	_hero.add_child(_instrument)
-	var status : VBoxContainer = hud._vbox(8)
-	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hero.add_child(status)
-	hud._refs.climate_status = _label("", 27, WHITE)
-	hud._refs.climate_market = _label("", 14, AMBER)
-	status.add_child(hud._refs.climate_status)
-	status.add_child(hud._refs.climate_market)
-	_metrics = GridContainer.new()
-	_metrics.columns = 3
-	_metrics.add_theme_constant_override("h_separation", 18)
-	status.add_child(_metrics)
-	for entry: Array in [["water","TANK"]]:
-		var col : VBoxContainer = hud._vbox(4)
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_metrics.add_child(col)
-		col.add_child(_label(entry[1], 10, MUTED))
-		_values[entry[0]] = _label("", 19, WHITE)
-		col.add_child(_values[entry[0]])
-	hud._refs.forecast_range = _label("", 18, WHITE)
-	add_child(hud._refs.forecast_range)
-	hud._refs.station_upgrade = _button("", "station_upgrade")
-	add_child(hud._refs.station_upgrade)
-	hud._refs.insurance = _button("", "insure")
-	add_child(hud._refs.insurance)
-	add_child(_button("This season's loss notices", "loss_notices"))
-	hud._refs.cover_all = _button("Cover all cleared beds", "cover_all")
-	add_child(hud._refs.cover_all)
-	var protection := _panel(self)
-	var protections : VBoxContainer = hud._vbox(8)
-	protection.add_child(protections)
-	protections.add_child(_label("DAMAGE REDUCTION", 11, CYAN))
-	protections.add_child(_label("Tonne losses round to the nearest whole tonne after protection.", 13, MUTED))
-	_protection = GridContainer.new()
-	_protection.columns = 2
-	_protection.add_theme_constant_override("h_separation", 12)
-	_protection.add_theme_constant_override("v_separation", 5)
-	protections.add_child(_protection)
-	hud._refs.protection_summary = protection
-	for words: String in ["", "FIELD LOSS REDUCTION"]: _protection.add_child(_label(words, 11, MUTED))
-	for event: String in ["drought","flood","storm","freeze"]:
-		_protection.add_child(_label(event.capitalize(), 14, WHITE))
-		for metric: String in ["field"]:
-			_values[event + metric] = _label("", 14, WHITE)
-			_protection.add_child(_values[event + metric])
-	add_child(_label("EQUIPMENT", 12, CYAN))
-	_grid = GridContainer.new()
-	_grid.columns = 2
-	_grid.add_theme_constant_override("h_separation", 12)
-	_grid.add_theme_constant_override("v_separation", 12)
-	add_child(_grid)
-	var titles := {"irrigation":"Sprinklers", "rainwater":"Rainwater tank", "drainage":"Drainage", "frost":"Frost cover", "windbreaks":"Windbreak"}
-	for id: String in hud._state.ClimateSystem.PROJECTS:
-		var panel := _panel(_grid)
-		panel.tooltip_text = hud._state.ClimateSystem.PROJECTS[id].detail
-		var column : VBoxContainer = hud._vbox(9)
-		panel.add_child(column)
-		var row : BoxContainer = hud._hbox(12)
-		column.add_child(row)
-		var schematic := Display.new()
-		schematic.kind = id
-		schematic.custom_minimum_size = Vector2(70,70)
-		row.add_child(schematic)
-		var heading : VBoxContainer = hud._vbox(3)
-		heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(heading)
-		heading.add_child(_label(titles[id], 19, WHITE))
-		var effect := _label("", 14, MUTED)
-		column.add_child(effect)
-		hud._refs["climate_effect:" + id] = effect
-		var buy := _button("", "climate_fund:" + id, true)
-		column.add_child(buy)
-		hud._refs["climate_fund:" + id] = buy
-		if id != "irrigation":
-			var work_button := _button("Walk to construction site", "project_site:" + id)
-			column.add_child(work_button)
-			hud._refs["project_site:" + id] = work_button
-	var actions := VBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	add_child(actions)
-	hud._refs.climate_practice = _button("Water practice", "climate_operate:lesson_start")
-	actions.add_child(hud._refs.climate_practice)
-	# Optional reference for the duration of each weather phase.
-	var details: VBoxContainer = hud._details_section("climate_details", "weather timings")
-	hud._refs.climate_details.reparent(self)
-	hud._refs["climate_details:toggle"].reparent(self)
-	move_child(hud._refs["climate_details:toggle"], get_child_count() - 2)
-	_style_button(hud._refs["climate_details:toggle"], false)
-	hud._refs.climate_details.add_theme_stylebox_override("panel", hud.Cozy.box(PANEL, 10, 14, Color("355870")))
-	details.add_child(_label("Warning 45s · Impact 30s · Recovery 75s", 13, MUTED))
-	resized.connect(_layout)
-	refresh()
-	_layout.call_deferred()
-func _label(words: String, pixels: int, color: Color) -> Label:
-	var label: Label = hud._wrap(words, pixels, color)
-	label.add_theme_font_override("font", _font)
-	label.set_meta("weather_font", pixels)
-	return label
+	hud = owner_hud; set_meta("market_responsive", true)
+	add_theme_constant_override("separation", 12)
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(SHELL, 18, 3, Color("476572")))
+	hud._modal_card.offset_left = -500; hud._modal_card.offset_right = 500
+	hud._modal_card.offset_top = -380; hud._modal_card.offset_bottom = 380
+	Place.header(hud, self, "WEATHER STATION", ACCENT, "iris")
+	var instrument := _panel(self); instrument.name = "ForecastInstrument"
+	_hero = HBoxContainer.new(); _hero.add_theme_constant_override("separation", 16); instrument.add_child(_hero)
+	_instrument = Display.new(); _instrument.custom_minimum_size = Vector2(128, 128); _hero.add_child(_instrument)
+	var forecast: VBoxContainer = hud._vbox(5); forecast.size_flags_horizontal = Control.SIZE_EXPAND_FILL; _hero.add_child(forecast)
+	hud._refs.forecast_range = hud._wrap("", 23, Place.INK, true); forecast.add_child(hud._refs.forecast_range)
+	_range = preload("res://scripts/paper_detail.gd").new(); _range.kind = "range"; _range.name = "ForecastBracket"
+	_range.custom_minimum_size = Vector2(140, 68); forecast.add_child(_range)
+	hud._refs.climate_status = hud._wrap("", 14, Place.MUTED); forecast.add_child(hud._refs.climate_status)
+	hud._refs.climate_market = hud._wrap("", 14, Place.INK); forecast.add_child(hud._refs.climate_market)
+	var fields := HFlowContainer.new(); fields.name = "FieldExposureChips"; fields.add_theme_constant_override("h_separation", 8); add_child(fields)
+	for entry in [["home", "Home · sheltered"], ["low", "Low · floods first"], ["hill", "Hill · dries first"]]:
+		var chip := _panel(fields); chip.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 8, 100))
+		var row := HBoxContainer.new(); chip.add_child(row)
+		row.add_child(hud._icon({"kind": "metric", "id": entry[0]}, 28)); row.add_child(hud._wrap(entry[1], 14, Place.INK))
+	_grid = GridContainer.new(); _grid.name = "ProtectionTiles"; _grid.columns = 2
+	_grid.add_theme_constant_override("h_separation", 12); _grid.add_theme_constant_override("v_separation", 12); add_child(_grid)
+	for id in ["rainwater", "drainage", "windbreaks", "frost"]:
+		var tile := _panel(_grid); tile.name = "Protection_" + id
+		var body: VBoxContainer = hud._vbox(8); tile.add_child(body)
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); body.add_child(row)
+		var drawing := Display.new(); drawing.kind = id; drawing.custom_minimum_size = Vector2(42, 42); row.add_child(drawing)
+		var title: Label = hud._wrap(hud._state.ClimateSystem.Protection.NAMES[id], 20, Place.INK, true); row.add_child(title)
+		var level: Label = hud._label("", 16, Place.INK); row.add_child(level); _levels[id] = level
+		var effect: Label = hud._wrap("", 15, Place.MUTED); body.add_child(effect); hud._refs["climate_effect:" + id] = effect
+		var button: Button = hud._button("", "")
+		button.pressed.connect(func(): hud._act("project_site:" + id if hud._state.climate.data.protection.pending.has(id) else "climate_fund:" + id))
+		Place.pill(button, ACCENT, true); body.add_child(button); hud._refs["climate_fund:" + id] = button
+	var insurance := _panel(self); insurance.name = "InsuranceToggleRow"
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 12); insurance.add_child(row)
+	hud._refs.insurance = hud._button("", "insure"); hud._refs.insurance.toggle_mode = true
+	hud._refs.insurance.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Place.pill(hud._refs.insurance, ACCENT); row.add_child(hud._refs.insurance)
+	Place.help(hud, row, "Spring insurance pays 40%% of lost tonnes at base prices. Field claims settle at Winter start; Winter crop and barn claims pay on loss. Protections must be paid for and built with three visits in Winter. Their upkeep is %s each year." % hud._state.money(hud._state.ClimateSystem.Protection.UPKEEP))
+	var station := HBoxContainer.new(); station.add_theme_constant_override("separation", 8); add_child(station)
+	hud._refs.station_upgrade = hud._button("", "station_upgrade"); hud._refs.station_upgrade.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	Place.pill(hud._refs.station_upgrade, ACCENT); station.add_child(hud._refs.station_upgrade)
+	_values.water = hud._wrap("", 13, Place.PAPER); station.add_child(_values.water)
+	resized.connect(_layout); refresh(); _layout.call_deferred()
 func _panel(parent: Control) -> PanelContainer:
-	var panel := PanelContainer.new()
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", hud.Cozy.box(PANEL, 12, 16, Color("2a4b63")))
-	parent.add_child(panel)
-	return panel
-func _button(words: String, action: String, primary: bool = false) -> Button:
-	var button: Button = hud._button(words, action)
-	_style_button(button, primary)
-	return button
-func _style_button(button: Button, primary: bool) -> void:
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size.y = 45
-	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	button.add_theme_font_size_override("font_size", 15)
-	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		var fill: Color = CYAN if primary else Color("d9c99f")
-		if state == "hover": fill = fill.lightened(0.1)
-		elif state == "pressed": fill = fill.darkened(0.15)
-		elif state == "disabled": fill = Color("dfd4b8")
-		button.add_theme_stylebox_override(state, hud.Cozy.box(fill, 8, 10, Color("355870")))
-	for state: String in ["font_color","font_hover_color","font_pressed_color"]: button.add_theme_color_override(state, BG if primary else WHITE)
-	button.add_theme_color_override("font_disabled_color", MUTED)
-	button.add_theme_stylebox_override("focus", hud.Cozy.box(Color.TRANSPARENT,8,0,AMBER))
+	var panel := PanelContainer.new(); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", Place.skin()); parent.add_child(panel); return panel
 func refresh() -> void:
 	if not is_instance_valid(_instrument): return
-	var farm = hud._state
-	var info: Dictionary = farm.climate_info()
+	var farm = hud._state; var info: Dictionary = farm.climate_info(); var forecast: Dictionary = info.forecast
 	_instrument.phase = info.phase
 	hud._refs.climate_status.text = "Clear skies" if info.phase == "calm" else "%s · %ds" % [str(info.name).capitalize(), ceili(info.timer)]
 	if info.phase == "recovery": hud._refs.climate_status.text = "Recovering · %ds" % ceili(info.timer)
-	var alerts := {"drought":"Water dry beds", "flood":"Open drainage gates", "storm":"Harvest the lightning row", "freeze":"Hoe clears ice from crops"}
-	hud._refs.climate_market.visible = info.phase != "calm"
-	hud._refs.climate_market.text = alerts.get(info.event, "") if info.phase == "warning" else "Prepare before the next weather warning."
-	_values.water.text = "%d / %d" % [int(info.supply.water), int(info.water_capacity)]
-	for event: String in ["drought", "flood", "storm", "freeze"]:
-		for metric: String in ["field"]:
-			if _values.has(event + metric): _values[event + metric].text = "%d%%" % roundi(farm.climate.protection(event)*100) + (" · covered Spring beds" if event == "freeze" else "")
-	for id: String in farm.ClimateSystem.PROJECTS:
-		var level: int = int(info.projects.get(id, 0))
-		var full: bool = level >= farm.ClimateSystem.MAX_PROJECT_LEVEL
-		var cost: float = float(farm.ClimateSystem.PROJECTS[id].cost) * (level + 1)
+	var alerts := {"drought":"Water dry beds", "flood":"Open drainage gates", "storm":"Harvest the lightning row", "freeze":"Hoe clears ice", "blizzard":"Sell stores before impact", "deep_freeze":"Harvest ripe Icecap"}
+	hud._refs.climate_market.visible = info.phase == "warning"
+	hud._refs.climate_market.text = alerts.get(info.event, "")
+	_values.water.text = "%d / %d water" % [int(info.supply.water), int(info.water_capacity)]
+	var events := PackedStringArray()
+	for event in forecast.events: events.append(str(event).replace("_", " ").capitalize())
+	hud._refs.forecast_range.text = "Next %s\n%s" % [farm.SeasonClock.NAMES[int(forecast.season)], " or ".join(events)]
+	_range.low = forecast.low; _range.high = forecast.high; _range.queue_redraw()
+	for id in _levels:
+		var level: int = int(info.projects.get(id, 0)); var full: bool = level >= 2
 		var pending: bool = info.protection.pending.has(id)
-		hud._refs["climate_effect:" + id].text = farm.ClimateSystem.PROJECTS[id].detail
-		if id != "irrigation": hud._refs["climate_effect:" + id].text += " Annual upkeep: " + farm.money(farm.ClimateSystem.Protection.UPKEEP)
-		if pending: hud._refs["climate_effect:" + id].text += "\nPaid · Work %d / 3. Unfinished work carries to next Winter." % int(info.protection.pending[id])
-		var winter_only: bool = id != "irrigation"
-		var caption: String = "Fully built" if full else ("Paid · Finish at site" if pending else ("Reserve" if winter_only else "Install") + " · " + farm.money(cost))
-		hud._set_purchase_button("climate_fund:" + id, caption, cost, full or pending or (winter_only and farm.season_clock.season != 3))
-		if winter_only:
-			hud._refs["project_site:" + id].visible = pending
-			hud._refs["project_site:" + id].disabled = farm.season_clock.season != 3
-	var forecast: Dictionary = info.forecast
-	hud._refs.cover_all.disabled = farm.ClimateSystem.Protection.coverable_beds(farm).is_empty()
-	hud._refs.cover_all.tooltip_text = "Winter only · build frost covers, then clear bed ice with Hoe."
-	hud._refs.forecast_range.text = "Next %s: disaster chance %d to %d%%." % [farm.SeasonClock.NAMES[int(forecast.season)], roundi(forecast.low * 100), roundi(forecast.high * 100)]
-	hud._refs.forecast_range.text += "\nHome Field · Sheltered\nLow Field · Floods first · yield +25%\nHill Field · Dries first"
-	if not forecast.events.is_empty():
-		for event in forecast.events:
-			var risk: Dictionary = forecast.events[event]
-			hud._refs.forecast_range.text += "\n%s %d to %d%%" % [str(event).replace("_", " ").capitalize(), roundi(risk.low * 100), roundi(risk.high * 100)]
-	var station: int = int(info.protection.station)
-	hud._refs.station_upgrade.text = "Station level %d · ±%d points" % [station, [20, 10, 5][station]] + (" · Upgrade " + farm.money(farm.ClimateSystem.Protection.STATION_COST * (station + 1)) if station < 2 else "")
-	hud._refs.station_upgrade.disabled = station >= 2 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.STATION_COST * (station + 1))
+		_levels[id].text = Place.pips(level, 2)
+		var effect: String = {"rainwater":"Drought", "drainage":"Flood", "windbreaks":"Storm", "frost":"Covered Spring freeze"}[id]
+		hud._refs["climate_effect:" + id].text = "%s loss −%d%%" % [effect, 75 if level == 2 else 50]
+		hud._refs["climate_effect:" + id].tooltip_text = "At level %d. " % maxi(1, level) + farm.ClimateSystem.PROJECTS[id].detail
+		var button: Button = hud._refs["climate_fund:" + id]
+		var cost: float = farm.ClimateSystem.PROJECTS[id].cost * (level + 1)
+		button.text = "Work %d / 3 →" % info.protection.pending[id] if pending else ("Built" if full else "Build%s · %s" % [" level 2" if level == 1 else "", farm.money(cost)])
+		button.set_meta("action", "project_site:" + id if pending else "climate_fund:" + id)
+		button.set_meta("hud_action", button.get_meta("action"))
+		button.disabled = farm.run_over or full or farm.season_clock.season != 3 or (not pending and not farm.can_purchase(cost))
 	var insured: bool = farm.ClimateSystem.Protection.insured(farm)
-	hud._refs.insurance.text = "Insured this year · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss" if insured else "Spring insurance · " + farm.money(farm.ClimateSystem.Protection.PREMIUM) + " · 40% at base prices · field losses paid at Winter start; Winter crop and barn claims paid on loss"
+	hud._refs.insurance.text = "● Insured this year" if insured else "○ Insurance this year · " + farm.money(farm.ClimateSystem.Protection.PREMIUM)
+	hud._refs.insurance.set_pressed_no_signal(insured)
 	hud._refs.insurance.disabled = insured or farm.season_clock.season != 0 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.PREMIUM)
-
-	if hud._refs.has("climate_practice"):
-		hud._refs.climate_practice.disabled = int(info.projects.get("irrigation", 0)) == 0
+	var level: int = info.protection.station
+	hud._refs.station_upgrade.text = "Station %s · ±%d" % [Place.pips(level, 2), [20,10,5][level]] + ("  Upgrade " + farm.money(farm.ClimateSystem.Protection.STATION_COST * (level + 1)) if level < 2 else "")
+	hud._refs.station_upgrade.disabled = level >= 2 or farm.run_over or not farm.can_purchase(farm.ClimateSystem.Protection.STATION_COST * (level + 1))
 func _layout() -> void:
-	if not is_instance_valid(_grid): return
-	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled
+	if not is_inside_tree() or is_queued_for_deletion(): return
+	Place.compact(self)
+	var touch: bool = hud.get_parent().touch_controls.enabled
 	_grid.columns = 1 if size.x < 650 else 2
-	_hero.vertical = size.x < 540
-	_instrument.visible = size.x >= 540
-	_metrics.columns = 1 if size.x < 330 else 3
-	for label: Node in find_children("*", "Label", true, false):
-		var font_size: int = int(label.get_meta("weather_font", 14))
-		label.add_theme_font_size_override("font_size", maxi(22, font_size) if touch else font_size)
-	for button: Node in find_children("*", "Button", true, false):
-		button.custom_minimum_size.y = 68 if touch else 45
-		button.add_theme_font_size_override("font_size", 24 if touch else 15)
+	var scale: float = float(get_tree().root.size.x) / hud.root.size.x
+	_range.custom_minimum_size.y = 68 / minf(1, maxf(.1, scale))
+	_instrument.custom_minimum_size = Vector2(84, 110) if size.x < 650 else Vector2(128, 128)
+	for button in find_children("*", "Button", true, false): button.custom_minimum_size.y = hud.touch_target() if touch else 44
+	for label in find_children("*", "Label", true, false):
+		if touch: label.add_theme_font_size_override("font_size", maxi(20, label.get_theme_font_size("font_size")))

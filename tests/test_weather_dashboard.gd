@@ -36,20 +36,16 @@ func run() -> void:
 	await shot("dashboard")
 	check(game.hud._refs.climate_status.text == "Clear skies", "forecast reads actual calm phase")
 	var page = game.hud._refs.weather_page
-	check(page._values.water.text == "%d / %d" % [int(farm.climate_info().supply.water),int(farm.climate_info().water_capacity)],"tank telemetry reads real supply")
+	check(page._values.water.text == "%d / %d water" % [int(farm.climate_info().supply.water),int(farm.climate_info().water_capacity)],"tank telemetry reads real supply")
 	check(not game.hud._refs.climate_market.visible, "calm forecast has no filler advice")
 	var scroll: ScrollContainer = game.hud._body.get_parent()
-	for id: String in farm.ClimateSystem.PROJECTS:
+	for id: String in ["rainwater", "drainage", "windbreaks", "frost"]:
 		var button: Button = game.hud._refs["climate_fund:"+id]
 		scroll.ensure_control_visible(button)
 		await settle()
 		check(scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "equipment action reachable: "+id)
-		check((not button.disabled and button.text.begins_with("Install")) if id == "irrigation" else (button.disabled and button.text.begins_with("Reserve")), "manual sprinklers buy now; construction waits for Winter: " + id)
-	for button: Node in page.find_children("*", "Button", true, false):
-		if button.is_visible_in_tree():
-			check(button.size.x >= scroll.size.x * 0.35 and button.size.y <= 120, "dashboard buttons have usable width and compact height: " + button.text)
-		else:
-			check(str(button.get_meta("action", "")).begins_with("project_site:") and farm.climate.data.protection.pending.is_empty(), "unreserved projects have no work action")
+		check(button.disabled and button.text.begins_with("Build"), "protection construction waits for Winter: " + id)
+	check(page._grid.get_child_count() == 4 and not game.hud._refs.has("cover_all") and not game.hud._refs.has("protection_summary"), "four tiles replace reduction table and batch cover entrance")
 	scroll.scroll_vertical = 100000
 	await shot("bottom")
 	farm.season_clock.season = 2; farm.season_clock.seconds = 149.75
@@ -81,7 +77,7 @@ func run() -> void:
 	for stroke in range(3): farm.climate.Protection.work(farm, "rainwater")
 	game.hud.show_panel("climate", farm)
 	page = game.hud._refs.weather_page
-	check(page._values.water.text.ends_with("72"),"tank telemetry updates after real purchase")
+	check(page._values.water.text.ends_with("72 water"),"tank telemetry updates after real purchase")
 	game._on_action("climate")
 	await settle()
 	scroll = game.hud._body.get_parent()

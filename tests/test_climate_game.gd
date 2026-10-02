@@ -45,9 +45,7 @@ func run() -> void:
 		plot.crop = "russet"
 	game._on_action("climate")
 	check(game.hud._panel_kind == "climate" and game.hud._refs.has("climate_fund:drainage"), "climate initiatives open from the controller")
-	var timing_reference: String = ""
-	for label: Label in game.hud._refs.climate_details.find_children("*", "Label", true, false): timing_reference += label.text
-	check(not game.hud._refs.has("climate_reference") and timing_reference.contains("Warning 45s") and not game.hud._refs.climate_details.is_visible_in_tree(), "weather timings remain optional without the unrelated stock-reference footer")
+	check(not game.hud._refs.has("climate_details") and game.hud._refs.weather_page.find_children("*", "Button", true, false).any(func(b): return b.text == "?" and b.tooltip_text.contains("Spring insurance")), "station explanations are behind a question mark")
 	game.state.climate.begin_warning(game.state, "flood", 1.0)
 	game.hud.update_state(game.state)
 	check(game.hud._refs.climate_status.text.contains("45s") and game.hud._refs.climate_status.text.to_upper().contains("FLOOD"), "warning names the disaster and preparation time")

@@ -65,15 +65,6 @@ func run() -> void:
 	game.hud.show_panel("dex", game.state)
 	await shot("dex-crops-top")
 	await shot("dex-crops-bottom", true)
-	for pair: Array in [["climate", "climate_details"]]:
-		game.hud.show_panel(pair[0], game.state)
-		var scroller: ScrollContainer = game.hud._body.get_parent()
-		await settle()
-		scroller.scroll_vertical = int(scroller.get_v_scroll_bar().max_value)
-		game.hud._act("toggle_details:" + pair[1])
-		await settle()
-		check(game.hud._refs[pair[1]].visible and scroller.get_global_rect().intersects(game.hud._refs[pair[1]].get_global_rect()), pair[1] + " reveals after expansion")
-		await shot(pair[1] + "-bottom", true)
 	for island: int in [1, 2]:
 		await page("activities", "activities-island-%d" % island)
 	game.state.climate.begin_warning(game.state, "storm", 1.0)

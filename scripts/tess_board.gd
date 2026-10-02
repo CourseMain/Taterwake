@@ -57,6 +57,7 @@ func refresh() -> void:
 	tabs[1].text = "Losses %d" % count if count > 0 else "Losses"
 func _layout() -> void:
 	if not is_inside_tree(): return
+	Place.compact(self)
 	var touch: bool = hud.get_parent().touch_controls.enabled
 	for button in find_children("*", "Button", true, false): button.custom_minimum_size.y = hud.touch_target() if touch else 44
 	for label in find_children("*", "Label", true, false):

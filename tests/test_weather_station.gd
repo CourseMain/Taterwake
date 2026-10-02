@@ -29,7 +29,7 @@ func run() -> void:
 	farm.coins = 4e+19
 	await frames()
 	game._on_action("climate")
-	check(game.hud._refs.protection_summary.visible,"protection stats are immediately visible")
+	check(game.hud._refs.weather_page._grid.get_child_count() == 4,"protection effects live on four instrument tiles")
 	check(not game.world._project_nodes.has("irrigation"),"no unbought sprinkler geometry")
 	farm.climate.Lesson.start(farm)
 	check(not farm.climate.Lesson.active(farm),"lesson cannot grant irrigation")

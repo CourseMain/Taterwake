@@ -55,3 +55,11 @@ static func help(hud, parent: Control, words: String) -> Button:
 	return button
 static func pips(level: int, count: int = 3) -> String:
 	return "●".repeat(clampi(level, 0, count)) + "○".repeat(maxi(0, count - level))
+static func compact(parent: Node) -> void:
+	for node in parent.find_children("*", "Control", true, false):
+		if not (node is Label or node is Button): continue
+		var existing: Font = node.get_theme_font("font")
+		var source: Font = Type.DISPLAY if existing is FontVariation and existing.base_font == Type.DISPLAY else Type.BODY
+		var font: FontVariation = Type.face(source, 650 if node is Button else 500)
+		font.fallbacks = [Type.SPUDION]
+		node.add_theme_font_override("font", font)
