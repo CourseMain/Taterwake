@@ -1872,8 +1872,17 @@ func _build_run_summary() -> void:
 	_paper_page()
 	_heading("Ten years on the farm", "FINAL ACCOUNTS · Spud Valley")
 	_refs.run_title = _label(_state.run_title(), 32, GREEN, true)
-	_body.add_child(_refs.run_title)
-	_body.add_child(_label("Ten-year net  " + _state.money(_state.ledger.total()), 40, INK, true))
+	var summary_header := HBoxContainer.new(); _body.add_child(summary_header)
+	_refs.run_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; summary_header.add_child(_refs.run_title)
+	var keeper := preload("res://scripts/npc_portrait.gd").new(); keeper.custom_minimum_size = Vector2(52, 64); keeper.size_flags_vertical = Control.SIZE_SHRINK_CENTER; summary_header.add_child(keeper); keeper.show_person("nell")
+	_body.add_child(_label(_state.money(_state.ledger.total()), 40, INK, true))
+	_body.add_child(_label("NET OVER TEN YEARS", 12, MUTED))
+	for category in _state.Ledger.CATEGORIES:
+		if not is_zero_approx(_state.ledger.total(0, category)): _account_row(_body, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(0, category)))
+	var final_strip := preload("res://scripts/climate_strip.gd").new()
+	final_strip.setup(_state.climate.data.outlook.records, 10)
+	_body.add_child(final_strip)
+	_ledger_actions()
 	_account_row(_body, "Years in profit", "%d / 10" % _state.ledger.years_in_profit())
 	var worst: Dictionary = _state.ledger.worst_year()
 	var best: Dictionary = _state.ledger.best_year()
@@ -1881,10 +1890,11 @@ func _build_run_summary() -> void:
 	_account_row(_body, "Best year", "Year %d · %s" % [best.year, _state.money(best.net)])
 	_account_row(_body, "Final purse", _state.money(_state.coins))
 	_account_row(_body, "Loan remaining", _state.money(_state.ledger.loan_remaining()))
-	_body.add_child(_wrap("Your choices continue for forty more years.", 24, MUTED, true))
-	_modal_trade_footer.add_child(_button("Fifty years on", "epilogue", true))
-	_modal_trade_footer.add_child(_button("New Run", "reset", true))
-	_modal_trade_footer.add_child(_button("Year 10 accounts", "accounts"))
+	_body.add_child(_wrap("The books close here. Your choices carry on for forty more years, under a sky that keeps changing.", 24, MUTED, true))
+	for entry in [["Fifty years on", "epilogue"], ["New Run", "reset"], ["Year 10 accounts", "accounts"]]:
+		var button := _button(entry[0], entry[1], entry[1] == "epilogue")
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_refs.ledger_actions.add_child(button)
 	_modal_trade_footer.show()
 
 

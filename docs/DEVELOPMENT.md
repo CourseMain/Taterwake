@@ -971,3 +971,5 @@ Segment 19 `barn_crates.gd` provides Nell’s timber frame, cream crate grid and
 Segment 19 `workbench_tiles.gd` replaces the large painted tool cards with a pegboard and compact tiles. Expansion chooses an active field with closed beds; the saved transaction labels stay untouched. Sprinklers retain their purchase and practice paths. Captures: `artifacts/segment19-tools-*`; water-loop, purchase and responsive suites check the paths.
 
 Segment 19 world labels register their board dimensions and requested font size. `farm_world.gd` measures width and height, shrinks long or changing text and restores shorter text to its fitted size. Field exposure uses post geometry; lease boards read TO LET. The world-sign suite also checks extreme long text. Captures: `artifacts/segment19-signs-*`.
+
+Segment 19’s ten-year summary adds the final ruled category ledger and climate strip, keeping only categories with money. The earned title, net, Nell’s small portrait and epilogue lead-in remain on the cream page; screenshot and ending actions stay reachable on phones. Captures: `artifacts/segment19-run_summary-*`.

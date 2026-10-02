@@ -116,7 +116,7 @@ Business benefits begin the following year. Lodging counts completed tank, drain
 
 ## Fifty years on
 
-Survive the tenth Winter to read the ten-year summary, climate record and earned title. Then the ending simulates **forty further years** from your final farm. A caretaker keeps your crop mix, protections and diversification, and repairs when affordable, while the climate curve continues.
+Survive the tenth Winter to read the earned title, final ledger and ten-box climate record. The summary keeps Nell’s portrait small, its total large and its epilogue lead-in above the fixed actions. Then the ending simulates **forty further years** from your final farm. A caretaker keeps your crop mix, protections and diversification, and repairs when affordable, while the climate curve continues.
 
 Four scores—**solvency, adaptation, diversification and land health**—determine one of seven futures: **Dust, Drowned, Deserted, Sold to the estate, Holding on, The shop village or Thriving**. Thriving requires **every score above 0.75**. The same final state produces the same future.
 
