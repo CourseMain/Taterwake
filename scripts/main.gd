@@ -512,13 +512,11 @@ func _interact_station(station: String) -> void:
 func _on_user_action(action: String) -> void:
 	if conversation.visible: return
 	if action in ["market", "sell_potatoes"]:
-		# Market tabs navigate the same shop session; they are not NPC visits.
 		# Use the existing saved memory for ordinary re-entry, so a completed
 		# introduction stays completed after loading, too. The stall and talk:mara
 		# still allow players to start a conversation deliberately.
-		var browsing_market: bool = hud._panel_kind in ["market", "sell_potatoes"]
 		var met_mara: bool = int(state.npc_history.get("mara", {}).get("visits", 0)) > 0
-		if browsing_market or met_mara:
+		if met_mara:
 			_on_action(action)
 			return
 	var id: String = state.NpcRoster.for_station(action)

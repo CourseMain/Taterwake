@@ -17,12 +17,15 @@ func check(ok: bool, message: String) -> void:
 func settle() -> void:
 	for _i in range(5): await process_frame
 
-func tab(action: String) -> void:
+func navigate(action: String) -> void:
+	game.hud.close_panel()
+	game._on_action("menu")
+	await settle()
 	for button: Node in game.hud._modal_card.find_children("*", "Button", true, false):
 		if str(button.get_meta("action", "")) == action:
 			button.pressed.emit()
 			return
-	check(false, "market tab exists: " + action)
+	check(false, "farm menu entry exists: " + action)
 
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args():
@@ -54,19 +57,19 @@ func run() -> void:
 	var seeds: Dictionary = state.seed_inventory.duplicate(true)
 	var cash: float = state.coins
 	var prices: Dictionary = state.market.duplicate(true)
-	tab("sell_potatoes")
+	await navigate("sell_potatoes")
 	await settle()
 	game.hud._refs.market_page.select_variety("giant")
 	var selected: String = game.hud._refs.market_page.selected
 	for _i in range(3):
-		tab("market")
+		await navigate("market")
 		await settle()
-		check(not game.conversation.visible and game.hud._panel_kind == "market", "Sell to Buy navigates without replaying dialogue")
-		tab("sell_potatoes")
+		check(not game.conversation.visible and game.hud._panel_kind == "market", "Buy re-entry opens without replaying dialogue")
+		await navigate("sell_potatoes")
 		await settle()
-		check(not game.conversation.visible and game.hud._panel_kind == "sell_potatoes", "Buy to Sell remains in the market")
-		check(game.hud._refs.market_page.selected == selected, "tab switch retains selected selling variety")
-	check(state.npc_history == memory, "tabs do not record extra NPC visits")
+		check(not game.conversation.visible and game.hud._panel_kind == "sell_potatoes", "Sell re-entry opens the harvest market")
+		check(game.hud._refs.market_page.selected == selected, "page re-entry retains selected selling variety")
+	check(state.npc_history == memory, "menu entries do not record extra NPC visits")
 	check(state.storage == inventory and state.seed_inventory == seeds and state.coins == cash, "navigation preserves inventory and wallet")
 	check(state.market == prices, "navigation preserves the live quotes and history")
 
@@ -92,19 +95,15 @@ func run() -> void:
 	check(game.conversation.visible and game.conversation.npc_id == "mara", "visiting Mara's stall deliberately talks again")
 	game.conversation.choose(0)
 
-	# A player may enter Sell before ever meeting Mara. Internal tabs still only
-	# navigate; they must not invent a completed introduction in the save.
+	# Selling has no keeper introduction; the next seed visit still meets Mara.
 	game.hud.close_panel()
 	state.npc_history.clear()
 	game._on_user_action("sell_potatoes")
 	await settle()
-	tab("market")
+	check(not game.conversation.visible and state.npc_history.is_empty(), "Sell does not fabricate a seed-counter introduction")
+	await navigate("market")
 	await settle()
-	check(not game.conversation.visible and game.hud._panel_kind == "market", "Sell-first session switches to Buy without interruption")
-	check(state.npc_history.is_empty(), "internal navigation does not fabricate an introduction")
-	game.hud.close_panel()
-	game._on_user_action("market")
-	check(game.conversation.visible and game.conversation.speech.text == state.NpcRoster.PEOPLE.mara.first, "unseen introduction remains available on a new Buy visit")
+	check(game.conversation.visible and game.conversation.speech.text == state.NpcRoster.PEOPLE.mara.first, "first seed entry still introduces Mara after selling")
 	game.conversation.finish()
 	state.reset_game()
 	check(state.npc_history.is_empty(), "new farm keeps existing NPC reset behavior")

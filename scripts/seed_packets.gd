@@ -70,10 +70,10 @@ static func refresh(page) -> void:
 		page.hud._refs[crop + ":seed_price"].text = state.market_money(state.market[crop].seed)
 		page.hud._refs[crop + ":quote"].text = "%d seeds owned" % state.seed_inventory[crop] if state.seed_inventory[crop] > 0 else ""
 		page.hud._refs[crop + ":quote"].visible = state.seed_inventory[crop] > 0
-		for count in [1, 5]: page.hud._set_purchase_button("buy:%s:%d" % [crop, count], "Buy %d" % count, state.market[crop].seed * count, int(state.seed_inventory[crop]) + int(state.trading.kept_seed[crop]) + count > page.State.MAX_INVENTORY)
+		for count in [1, 5]: page.hud._set_purchase_button("buy:%s:%d" % [crop, count], "Buy 1 Russet" if page.hud._tutorial_seed_market() and count == 1 else "Buy %d" % count, state.market[crop].seed * count, int(state.seed_inventory[crop]) + int(state.trading.kept_seed[crop]) + count > page.State.MAX_INVENTORY)
 static func layout(page, width: float, touch: bool) -> void:
 	# Packets keep their shape and swipe horizontally on a phone.
 	page.grid.columns = page.crops.size()
 	var narrow: bool = width < 700
-	page.grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if narrow else Control.SIZE_EXPAND_FILL
-	for card in page.seed_cards.values(): card.custom_minimum_size.x = 340 if narrow and touch else (220 if narrow else 164)
+	page.grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if narrow or page.crops.size() == 1 else Control.SIZE_EXPAND_FILL
+	for card in page.seed_cards.values(): card.custom_minimum_size.x = 340 if narrow and touch else (220 if narrow or page.crops.size() == 1 else 164)

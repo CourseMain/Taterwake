@@ -45,9 +45,6 @@ func run() -> void:
 			farm.elapsed = second; farm._refresh_market()
 			var expected: float = Table.CROPS[id].base * (1 + Table.drift(id) * (1 if second == 150 else -1))
 			check(is_equal_approx(farm.market[id].sell, expected), id + " volatility controls drift endpoints")
-	check(farm.last_year_price("russet") == 0, "first year does not invent a previous price")
-	farm.season_clock.year = 2
-	check(farm.last_year_price("icecap") == Table.CROPS.icecap.base, "full previous annual price cycle averages to base")
 	farm.free()
 	check(stress("icecap") > stress("sunburst") and stress("sunburst") > stress("russet"), "unwatered stress scales with water need")
 	check(stress("golden", "drought") > stress("russet", "drought"), "heat tolerance scales drought stress at equal water need")
@@ -117,8 +114,11 @@ func ui_checks() -> void:
 		for i in range(8): await process_frame
 		page._layout()
 		for i in range(8): await process_frame
-		check(page.grid.columns == ((3 if game.touch_controls.enabled else 5) if size.x == 1280 else 1), "five-card row becomes a phone column")
+		check(page.grid.columns == 5 and page.find_child("SeedPacketSwipe", true, false) != null, "packets remain a swipe row on a phone")
 		for id in Table.IDS:
+			var swipe: ScrollContainer = page.find_child("SeedPacketSwipe", true, false)
+			swipe.ensure_control_visible(page.seed_cards[id])
+			for frame in range(8): await process_frame
 			for dial in ["water_need", "heat_tolerance", "cold_tolerance"]:
 				var bars = page.find_child(id + "_" + dial, true, false)
 				check(bars.get_child_count() == 3 and bars.get_meta("value") == Table.CROPS[id][dial], "three readable bar segments reflect " + id + " " + dial)

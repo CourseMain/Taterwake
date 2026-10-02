@@ -115,10 +115,6 @@ func _build_starters() -> void:
 func can_plant_crop(id: String) -> bool:
 	return season_clock.can_plant() or (season_clock.season == 2 and id == "icecap")
 
-func last_year_price(id: String) -> float:
-	# A full four-season sine cycle averages to base, regardless of phase.
-	return float(CropTable.CROPS[id].base) if season_clock.year > 1 else 0.0
-
 func crop_grow_time(id: String) -> float:
 	return float(CropTable.CROPS[id]["grow"]) / crop_growth_speed(id)
 
