@@ -963,3 +963,5 @@ Segment 19 Tess’s board lives in `tess_board.gd`; the legacy loss-panel action
 Segment 19 station captures are `artifacts/segment19-climate-*`. The weather dashboard, station, climate, protection and UI audit suites check its live warnings, purchase gates, four-tile shape and reachable controls.
 
 Segment 19 `buyer_slips.gd` draws compact pinned contracts and hides inapplicable delivery and penalty rows. The order and diversification suites verify binding acceptance and collection. Captures: `artifacts/segment19-contracts-*`.
+
+Segment 19 front-page weather history uses the shared ten-box `climate_strip.gd`, with no dash rows. A conditional Accounts box reads the previous closed year’s ledger total. The climate curve and guide suites check the annual report; desktop and phone previews are `artifacts/segment19-front_page-*`.

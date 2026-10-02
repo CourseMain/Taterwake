@@ -137,3 +137,5 @@ Tess keeps the map’s cork board. Quests and Losses are tabs on the same board,
 Iris’s instrument panel combines radar, the next-season probability bracket and event names. Three field exposure chips sit above four protection tiles; each tile has level pips, its loss reduction and one build-or-work button. Spring insurance is one toggle row. The station upgrade is a small line. Frost-cover batch work is on the Winter jobs note.
 
 The buyer board displays each offer as a tacked paper slip: crop, tonnes, quote, Autumn-end due date and missing-tonne penalty. The Accept control stamps the order; a question mark holds the explanation.
+
+The year’s front page keeps its newspaper masthead and headline. A ten-box weather strip records disaster icons, with its legend behind a question mark. When a previous year has closed, a small Accounts box prints its net. Skip remains outside the article scroll area.

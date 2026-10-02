@@ -7,6 +7,8 @@ var portrait
 var voice
 var subtitle: Label
 var strip: Control
+var accounts_box: PanelContainer
+var last_net: Label
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -20,44 +22,89 @@ func _ready() -> void:
 	page.add_child(scroll)
 	var column := VBoxContainer.new(); column.size_flags_horizontal = Control.SIZE_EXPAND_FILL; column.add_theme_constant_override("separation", 20)
 	scroll.add_child(column)
-	var top := HBoxContainer.new(); column.add_child(top)
-	var masthead := label("THE VALLEY WEATHER RECORD", 18)
-	masthead.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(masthead)
-	chapter = label("", 36); column.add_child(chapter)
+	var masthead := label("THE SPUD VALLEY RECORD", 42)
+	masthead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(masthead)
+	column.add_child(label("WEATHER • FARMING • THE YEAR AHEAD", 14))
+	var rule := HSeparator.new()
+	column.add_child(rule)
+	var news := BoxContainer.new()
+	news.add_theme_constant_override("separation", 30)
+	column.add_child(news)
+	var lead := VBoxContainer.new()
+	lead.add_theme_constant_override("separation", 18)
+	lead.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	news.add_child(lead)
+	chapter = label("", 48); lead.add_child(chapter)
 	var broadcast := HBoxContainer.new(); broadcast.add_theme_constant_override("separation", 18)
-	column.add_child(broadcast)
+	lead.add_child(broadcast)
 	portrait = preload("res://scripts/npc_portrait.gd").new()
-	portrait.custom_minimum_size = Vector2(110, 140)
+	portrait.custom_minimum_size = Vector2(64, 82)
+	portrait.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	broadcast.add_child(portrait)
 	forecaster = label("", 18); forecaster.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	broadcast.add_child(forecaster)
 	voice = preload("res://scripts/npc_voice.gd").new(); add_child(voice)
-	subtitle = label("", 19); column.add_child(subtitle)
-	column.add_child(label("TEN YEARS · RECORDED DISASTERS", 15))
-	strip = Strip.new(); column.add_child(strip)
-	column.add_child(label("Sun: drought · Waves: flood · Bolt: storm\nSnowflake: freeze · Ring: deep freeze · Wind: blizzard", 14))
-	skip = Button.new(); skip.text = "Skip → Return to farm"; skip.custom_minimum_size.y = 54
-	skip.add_theme_font_override("font", Type.face(Type.BODY)); skip.add_theme_font_size_override("font_size", 18)
-	top.add_child(skip); skip.pressed.connect(finish)
+	subtitle = label("", 19); lead.add_child(subtitle)
+	var weather := VBoxContainer.new()
+	weather.custom_minimum_size.x = 260
+	news.add_child(weather)
+	weather.add_child(label("THE WEATHER COLUMN", 22))
+	weather.add_child(label("Ten years · recorded disasters", 14))
+	strip = Strip.new()
+	strip.custom_minimum_size = Vector2(230, 104)
+	weather.add_child(strip)
+	var legend_row := HBoxContainer.new(); weather.add_child(legend_row)
+	preload("res://scripts/place_ui.gd").help(get_parent().get_parent().hud, legend_row, "Sun: drought. Waves: flood. Bolt: storm. Snowflake: freeze. Ring: deep freeze. Wind: blizzard. Empty boxes have no recorded disaster. The highlighted box is this year.")
+	accounts_box = PanelContainer.new(); accounts_box.name = "LastYearAccounts"
+	accounts_box.add_theme_stylebox_override("panel", preload("res://scripts/place_ui.gd").skin())
+	weather.add_child(accounts_box)
+	var accounts := VBoxContainer.new(); accounts_box.add_child(accounts)
+	accounts.add_child(label("ACCOUNTS · LAST YEAR", 14))
+	last_net = label("", 24); accounts.add_child(last_net)
+	resized.connect(func():
+		if not is_inside_tree(): return
+		news.vertical = size.x < 760
+		chapter.add_theme_font_size_override("font_size", 36 if size.x < 760 else 48)
+		var scale: float = minf(float(get_tree().root.size.x) / size.x, float(get_tree().root.size.y) / size.y)
+		skip.custom_minimum_size.y = maxf(68, ceilf(44 / maxf(scale, 0.1)))
+		for text in column.find_children("*", "Label", true, false):
+			text.add_theme_font_size_override("font_size", maxi(int(text.get_meta("base_font_size", 14)), ceili(14 / maxf(scale, 0.1))))
+	)
+	skip = Button.new(); skip.text = "Skip → Return to farm"; skip.custom_minimum_size.y = 68
+	skip.add_theme_font_override("font", Type.face(Type.BODY)); skip.add_theme_font_size_override("font_size", 20)
+	for state in ["normal", "hover", "pressed"]: skip.add_theme_stylebox_override(state, preload("res://scripts/cozy_ui.gd").button_style(state, false))
+	preload("res://scripts/place_ui.gd").pill(skip, Color("34362c"))
+	# The skip control stays outside the article's scroll area on a short phone.
+	var frame := VBoxContainer.new()
+	frame.add_theme_constant_override("separation", 12)
+	page.remove_child(scroll)
+	page.add_child(frame)
+	frame.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.add_child(skip)
+	skip.pressed.connect(finish)
 	stop()
 func label(words: String, pixels: int) -> Label:
 	var result := Label.new(); result.text = words; result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	result.add_theme_font_override("font", Type.face(Type.EDITORIAL if pixels > 25 else Type.BODY))
+	var face: FontVariation = Type.face(Type.EDITORIAL if pixels > 25 else Type.BODY)
+	face.fallbacks = [Type.SPUDION]
+	result.add_theme_font_override("font", face)
+	result.set_meta("base_font_size", pixels)
 	result.add_theme_font_size_override("font_size", pixels); result.add_theme_color_override("font_color", Color("3f392b"))
 	return result
 func present(farm) -> void:
 	elapsed = 0
 	var year: int = farm.season_clock.year
 	chapter.text = "YEAR %d\n%s" % [year, HEADLINES[year - 1]]
-	subtitle.text = "Disaster chance per season: %d%%. Mean severity: %d%%.\nAt most one disaster each season, three this year.\nDry ground, extra rain and wind can hint at next season; they are no promise." % [roundi(farm.ClimateSystem.chance(year) * 100), roundi(farm.ClimateSystem.severity_mean(year) * 100)]
-	if farm.guided_first_year():
-		subtitle.text = "Guided Spring–Autumn: one Summer storm at 20% severity.\nAfter the first accounts, seasonal forecasts use the normal climate odds.\nDry ground, extra rain and wind can hint at next season; they are no promise."
-	subtitle.text += "\nHome Field · Sheltered   |   Low Field · Floods first   |   Hill Field · Dries first"
+	subtitle.text = "Mean severity %d%% · three disasters per year at most" % roundi(farm.ClimateSystem.severity_mean(year) * 100)
+	if farm.guided_first_year(): subtitle.text = "Summer storm · 20% severity"
 	forecaster.text = "Iris · Weather forecaster\n" + farm.NpcRoster.forecast_line(farm)
 	portrait.show()
 	portrait.show_person("iris")
 	strip.setup(farm.climate.data.outlook.records, year)
+	accounts_box.visible = year > 1 and farm.ledger.is_closed(year - 1)
+	last_net.text = farm.money(farm.ledger.total(year - 1))
 	super.start(chapter.text)
 	voice.begin_line("iris", forecaster.text.length())
 func stop() -> void:

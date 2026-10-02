@@ -7,7 +7,7 @@ var year: int = 1
 var future: bool = false
 var font: Font = Type.face(Type.BODY)
 func _init() -> void:
-	custom_minimum_size = Vector2(280, 126)
+	custom_minimum_size = Vector2(280, 104)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 func setup(entries: Array, current_year: int) -> void:
 	records = entries.duplicate(true); year = current_year
@@ -26,7 +26,7 @@ func _draw() -> void:
 		return
 	var width: float = size.x / 10.0
 	for y in range(1, 11):
-		var rect := Rect2((y - 1) * width + 1, 0, width - 2, 122)
+		var rect := Rect2((y - 1) * width + 1, 0, width - 2, 100)
 		draw_rect(rect, Color("e4d7b7") if y == year else Color("f0e6ce"))
 		draw_string(font, Vector2(rect.position.x + 6, 20), str(y), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("493d2b"))
 		var row: int = 0
@@ -34,7 +34,7 @@ func _draw() -> void:
 			if int(e.year) != y: continue
 			_icon(Vector2(rect.position.x + rect.size.x / 2, 39 + row * 24), str(e.event))
 			row += 1
-		if row == 0: draw_line(Vector2(rect.position.x + 8, 45), Vector2(rect.end.x - 8, 45), Color("9d9279"), 1)
+
 func _icon(p: Vector2, event: String) -> void:
 	var ink := Color("496b76")
 	if event == "drought":
@@ -61,3 +61,4 @@ func _draw_future() -> void:
 		var tint: Color = Color("b8c3a0").lerp(Color("a65e44"), severity / 3.0)
 		draw_rect(Rect2((y - 1) * width, 2, maxf(1, width - 1), 5 + count * 6), tint)
 		if y % 10 == 0: draw_string(font, Vector2((y - 3) * width, 43), str(y), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("493d2b"))
+
