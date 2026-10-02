@@ -58,8 +58,9 @@ func available() -> Dictionary:
 				now += count * farm.trading.stored_price(farm, crop, grade)
 				peak += count * farm.trading.peak_price(crop, grade)
 			result["stores:" + crop] = ["%s %d t · %s/t → %s late Winter" % [str(farm.CropTable.CROPS[crop].name).trim_suffix(" Potato"), held, farm.market_money(now / held), farm.market_money(peak / held)], "sell_potatoes"]
-		if int(farm.seed_inventory[crop]) + int(farm.trading.kept_seed[crop]) < farm.MAX_INVENTORY:
-			for grade in ["Table", "Standard"]: seeds += farm.stock_count(crop, grade)
+		var seed_space: int = farm.MAX_INVENTORY - int(farm.seed_inventory[crop]) - int(farm.trading.kept_seed[crop])
+		var eligible: int = farm.stock_count(crop, "Table") + farm.stock_count(crop, "Standard")
+		seeds += mini(maxi(0, seed_space), eligible)
 	for id in farm.climate.data.protection.pending:
 		result["project:" + id] = ["%s paid · work %d / 3 →" % [farm.ClimateSystem.Protection.NAMES[id], farm.climate.data.protection.pending[id]], "project_site:" + id]
 	var coverable: int = farm.ClimateSystem.Protection.coverable_beds(farm).size()

@@ -133,6 +133,10 @@ func winter_pages() -> void:
 	check(note.visible, "Winter note appears after accounts close")
 	for key in ["ice", "stores:russet", "project:rainwater", "covers", "ripe", "seed", "business:grower", "blizzard"]:
 		check(note.jobs.has(key), "live Winter job: " + key)
+	var previous_seeds: int = game.state.seed_inventory.russet
+	game.state.seed_inventory.russet = game.state.MAX_INVENTORY - 1
+	check(note.available().seed[0].begins_with("1 t"), "seed job respects remaining seed space")
+	game.state.seed_inventory.russet = previous_seeds
 	check(note.jobs["project:rainwater"][0].contains("1 / 3"), "paid project shows actual work")
 	check(note.jobs["stores:russet"][0].contains("late Winter"), "stores show current and rising price")
 	note.heading.pressed.emit()
