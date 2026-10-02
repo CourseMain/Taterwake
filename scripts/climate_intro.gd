@@ -67,7 +67,10 @@ func _ready() -> void:
 		news.vertical = size.x < 760
 		chapter.add_theme_font_size_override("font_size", 36 if size.x < 760 else 48)
 		var scale: float = minf(float(get_tree().root.size.x) / size.x, float(get_tree().root.size.y) / size.y)
-		skip.custom_minimum_size.y = maxf(68, ceilf(44 / maxf(scale, 0.1)))
+		var target: float = maxf(44, ceilf(44 / maxf(scale, 0.1)))
+		for control in find_children("*", "Button", true, false):
+			control.custom_minimum_size.x = maxf(control.custom_minimum_size.x, target)
+			control.custom_minimum_size.y = maxf(68 if control == skip else 44, target)
 		for text in column.find_children("*", "Label", true, false):
 			text.add_theme_font_size_override("font_size", maxi(int(text.get_meta("base_font_size", 14)), ceili(14 / maxf(scale, 0.1))))
 	)

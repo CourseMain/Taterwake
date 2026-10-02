@@ -51,6 +51,9 @@ func run() -> void:
 				final_page.hide(); game.state.ledger.load_data(saved_ledger); game.state.run_over = false; game.state.run_outcome = ""; game.hud.update_state(game.state); continue
 			if kind == "front_page":
 				game.hud.close_panel(); game.year_intro.present(game.state); await settle(); game.year_intro.elapsed = 1.0; game.year_intro._process(0)
+				var front_scale: float = minf(float(root.size.x) / game.year_intro.size.x, float(root.size.y) / game.year_intro.size.y)
+				for control in game.year_intro.find_children("*", "Button", true, false):
+					if control.is_visible_in_tree(): check(minf(control.size.x, control.size.y) * front_scale >= 43.9, "newspaper target " + control.text)
 				if "--capture" in OS.get_cmdline_user_args():
 					RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/segment19-front_page-%d.png" % dimensions.x)
 				game.year_intro.stop(); continue
