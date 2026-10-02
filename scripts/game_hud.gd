@@ -2586,3 +2586,8 @@ func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
 		card.add_child(_wrap(_state.ClimateSystem.Protection.text(entry), 16, INK))
 		count += 1
 	if count == 0: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))
+
+func touch_target() -> float:
+	var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
+	return maxf(68, ceilf(44 / maxf(scale, 0.1)))
+

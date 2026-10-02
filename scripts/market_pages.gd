@@ -1,5 +1,6 @@
 extends VBoxContainer
 ## Seed and crop counters with prices, quantities and transaction confirmation.
+const Seeds = preload("res://scripts/seed_packets.gd")
 const State = preload("res://scripts/game_state.gd")
 const Sparkline = preload("res://scripts/price_sparkline.gd")
 const Quantity = preload("res://scripts/market_quantity.gd")
@@ -22,6 +23,7 @@ var crops: Array[String] = []
 var selected_grade: String = "Standard"
 var grade_buttons: Dictionary = {}
 var selected: String = ""
+var seed_cards: Dictionary = {}
 var grid: GridContainer
 var tabs: HBoxContainer
 var hero: PanelContainer
@@ -148,106 +150,7 @@ func _stock_cell(parent: HBoxContainer, title: String) -> Label:
 	return amount
 
 func _build_buy() -> void:
-	var counter := PanelContainer.new()
-	counter.name = "MaraProduceCounter"
-	counter.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	add_child(counter)
-	grid = GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 14)
-	grid.add_theme_constant_override("v_separation", 14)
-	counter.add_child(grid)
-	for crop: String in crops:
-		var accent: Color = ACCENTS[crop]
-		var card := Surface.new()
-		card.name = crop.capitalize() + "SeedBin"
-		card.plain_frame = true
-		var skin: StyleBoxFlat = Surface.framed_skin(PACKET, FRAME, Color.TRANSPARENT, 10, 3)
-		card.add_theme_stylebox_override("panel", skin)
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		grid.add_child(card)
-		var body: VBoxContainer = hud._vbox(8)
-		card.add_child(body)
-		var preview := VBoxContainer.new()
-		preview.add_theme_constant_override("separation", 9)
-		body.add_child(preview)
-		var picture = Portrait.new()
-		picture.crop = crop
-		picture.accent = accent
-		picture.seed_sack = true
-		picture.custom_minimum_size = Vector2(64, 64)
-		preview.add_child(picture)
-		var identity: VBoxContainer = hud._vbox(4)
-		identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		preview.add_child(identity)
-		var crop_tab: Button = hud._button(hud._crop_name(crop), "crop:" + crop)
-		crop_tab.toggle_mode = true
-		_style_button(crop_tab, accent, true)
-		hud._refs[crop + ":select"] = crop_tab
-		card.gui_input.connect(func(event):
-			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: hud._act("crop:" + crop))
-		identity.add_child(crop_tab)
-		var definition: Dictionary = State.CropTable.CROPS[crop]
-		var badge := _label("%d season%s · %ds · %d t" % [definition.grow_seasons, "" if definition.grow_seasons == 1 else "s", definition.grow, definition["yield"]], 12, MUTED)
-		identity.add_child(badge)
-		var price: Label = _label("", 20, INK)
-		price.add_theme_stylebox_override("normal", hud.Cozy.box(PRICE_TAG, 5, 2, FRAME))
-		identity.add_child(price)
-		hud._refs[crop + ":seed_price"] = price
-		var produce: Label = _label("", 14, INK)
-		produce.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		produce.autowrap_mode = TextServer.AUTOWRAP_OFF
-		var quote_row := HBoxContainer.new()
-		body.add_child(quote_row)
-		quote_row.add_child(produce)
-		var change := _label("", 14, INK)
-		change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		change.autowrap_mode = TextServer.AUTOWRAP_OFF
-		quote_row.add_child(change)
-		hud._refs[crop + ":change"] = change
-		hud._refs[crop + ":price"] = produce
-		hud._refs[crop + ":history"] = _sparkline(body)
-		var last_year := _label("", 13, MUTED)
-		body.add_child(last_year)
-		hud._refs[crop + ":last_year"] = last_year
-		for dial in [["Water need", "water_need", Color("508ba0")], ["Heat tolerance", "heat_tolerance", Color("bd783a")], ["Cold tolerance", "cold_tolerance", Color("638396")]]:
-			var row := HBoxContainer.new()
-			body.add_child(row)
-			var label := _label(dial[0], 13, INK)
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(label)
-			var bars := HBoxContainer.new()
-			bars.name = crop + "_" + dial[1]
-			bars.set_meta("value", int(definition[dial[1]]))
-			bars.tooltip_text = "%s: %d / 3" % [dial[0], definition[dial[1]]]
-			row.add_child(bars)
-			for level in range(3):
-				var bar := ColorRect.new()
-				bar.custom_minimum_size = Vector2(12, 8)
-				bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-				bar.color = dial[2] if level < int(definition[dial[1]]) else Color("c4b79a")
-				bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				bars.add_child(bar)
-		body.add_child(_label("Price swings: " + str(definition.volatility), 12, MUTED))
-		if crop == "icecap": body.add_child(_label("Autumn planting. Grows and harvests through Winter ice.", 13, INK))
-		body.add_child(_rule())
-		var stock := HBoxContainer.new()
-		stock.add_theme_constant_override("separation", 10)
-		body.add_child(stock)
-		hud._refs[crop + ":quote"] = _stock_cell(stock, "SEEDS")
-		stock.add_child(_rule(true))
-		hud._refs[crop + ":barn_quantity"] = _stock_cell(stock, "IN BARN")
-		var actions := HBoxContainer.new()
-		actions.add_theme_constant_override("separation", 8)
-		body.add_child(actions)
-		for count: int in [1, 5]:
-			var action := "buy:%s:%d" % [crop, count]
-			var button: Button = hud._button("Buy %d" % count, action)
-			_style_button(button, accent, count == 1)
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			button.visible = not hud._tutorial_seed_market() or count == 1
-			actions.add_child(button)
-			hud._refs[action] = button
+	Seeds.build(self)
 
 func _build_sell() -> void:
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
@@ -393,7 +296,7 @@ func _layout() -> void:
 		button.custom_minimum_size.y = 68 if touch else 46
 		button.add_theme_font_override("font", _body_font)
 	if not selling:
-		grid.columns = 5 if available_width >= (1050 if touch else 880) else (3 if available_width >= 780 else (2 if available_width >= 560 else 1))
+		Seeds.layout(self, available_width, touch)
 	else:
 		var compact: bool = touch and get_viewport_rect().size.y < 700
 		add_theme_constant_override("separation", 6 if compact else 14)
@@ -436,19 +339,7 @@ func refresh() -> void:
 	var state = hud._state
 	wallet.text = _receipt if _receipt_left > 0 else "Balance %s" % state.market_money(state.coins)
 	if not selling:
-		for crop: String in crops:
-			var quote: Dictionary = state.market[crop]
-			hud._refs[crop + ":select"].set_pressed_no_signal(state.selected_crop == crop)
-			hud._refs[crop + ":last_year"].text = "Last year avg " + (state.market_money(state.last_year_price(crop)) if state.season_clock.year > 1 else "—")
-			hud._refs[crop + ":seed_price"].text = "%s each" % state.market_money(quote.seed)
-			hud._refs[crop + ":price"].text = "%s/t" % state.market_money(quote.sell)
-			_show_price_change(hud._refs[crop + ":change"], crop)
-			hud._refs[crop + ":history"].set_history(quote.history, MUTED)
-			hud._refs[crop + ":quote"].text = state.format_number(state.seed_inventory[crop])
-			hud._refs[crop + ":barn_quantity"].text = state.format_number(state.stock_count(crop)) + " t"
-			for count: int in [1, 5]:
-				var key := "buy:%s:%d" % [crop, count]
-				hud._set_purchase_button(key, "Buy 1 Russet" if hud._tutorial_seed_market() and count == 1 else ("Buy %d" % count), quote.seed * count, int(state.seed_inventory[crop]) + int(state.trading.kept_seed[crop]) + count > State.MAX_INVENTORY)
+		Seeds.refresh(self)
 		return
 	hud._sell_crop = selected
 	var quote: Dictionary = state.market.get(selected, {})

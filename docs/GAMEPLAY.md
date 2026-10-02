@@ -30,7 +30,7 @@ Walk, sprint or click around one continuous hexagonal Valley island with long an
 
 ### What to plant
 
-Read Mara’s crop cards: seed cost, water need, heat and cold tolerance, growth and price volatility. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; prices are per tonne.
+Mara’s chalkboard holds an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
 
 | Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
