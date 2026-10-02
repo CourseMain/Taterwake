@@ -98,7 +98,8 @@ func run() -> void:
 	await winter_pages()
 	game.queue_free()
 	await process_frame
-	await create_timer(0.2).timeout
+	# Let the audio mixer release the last stopped NPC playback under parallel runs.
+	await create_timer(0.4).timeout
 	print("HUD LAYOUT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
