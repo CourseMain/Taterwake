@@ -585,7 +585,8 @@ storage; quest cash rewards scaled to island baselines (keep quest boards
 but pay small flat amounts for now); barn upgrade costs 500·5^level (make
 it three levels at 300, 800, 2,000).
 
-Rescale: coins start at 2,000. Crop base prices 15 to 30 per sack. Seeds
+Rescale: coins start at 2,000. Crop base prices 15 to 30 per sack
+(Segment 13b widens this to 15 to 50). Seeds
 cost 75% of base. Tool upgrades 300 to 1,500. Field expansion 1,200.
 Yields: one bed gives 3 to 5 sacks. Keep the island yield multipliers out:
 1× everywhere. Money renders as an integer with a thousands separator and
@@ -690,17 +691,17 @@ derived value (starting cash plus the sum of entries) so the ledger can
 never disagree with the purse. Year totals, category totals, best and
 worst year.
 
-Fixed costs posted in Winter: mortgage 2,000 (interest 1,000 + principal
-1,000 on a 20,000 loan), rent and land tax 500, living 1,500, equipment
-upkeep 500. Constants in one place, docs/REDESIGN_PLAN.md §6 is the
+Fixed costs posted at the start of Winter: mortgage 2,000 (interest 1,000
++ principal 1,000 on a 20,000 loan), rent and land tax 500, living 1,500,
+equipment upkeep 500. Constants in one place, docs/REDESIGN_PLAN.md §6 is the
 source.
 
 Overdraft: the bank allows −5,000. Crossing it in Winter (after fixed
 costs) forecloses: reuse climate_collapse.gd's editorial page with the
 ledger's last year, the cause, and Try Again.
 
-Annual accounts screen: a Winter panel listing every category for the
-year, a running ten-year table, and the net figure in large type. Plain,
+Annual accounts screen: a panel that opens as Winter begins (Segment 9b
+makes it pause the clock), listing every category for the year, a running ten-year table, and the net figure in large type. Plain,
 paper-like, in the existing cream UI. Screenshot-friendly: no HUD chrome
 behind it.
 
@@ -714,6 +715,53 @@ the boundary and not one coin before, and that ten years end the run.
 
 Acceptance: play a year headless, see fixed costs in the ledger; suite
 green; game boots.
+```
+
+### Segment 9b: Working Winter (run before Segment 11)
+
+```
+Goal: Winter becomes a fourth real-time working season. This corrects
+Segment 8, which made Winter a menu phase.
+
+Clock (scripts/season_clock.gd): Winter is season 3 with the same
+SEASON_SECONDS as the others. Remove winter_menu and start_next_year().
+advance() rolls the year over automatically when Winter ends (year += 1,
+season = 0) and the boundary save fires as for any other season. Year 10
+ends when its Winter ends: set the run-complete condition to "year 10
+Winter finished" and show the ten-year summary then. Keep can_plant()
+false in Winter. Tilling is also blocked in Winter.
+
+Accounts at Winter start: when the Autumn to Winter boundary fires, open
+the annual accounts panel from Segment 9 and pause the simulation while it
+is open, exactly as NPC conversations pause it. Fixed costs post at that
+boundary as before. Closing the panel resumes the clock. The panel stays
+reachable from the farm menu all Winter. Foreclosure still checks after
+the fixed costs post.
+
+Frozen fields: at the Autumn to Winter boundary, unharvested crops are
+lost as now, then every bed ices over (reuse the frost visuals and the
+"hoe the ice" action kept from the old Frostbreak). Hoe [1] on an iced
+bed clears it. A bed cleared in Winter is ready to till on the first
+second of Spring; a bed still iced at Spring start must be cleared first,
+costing Spring labour. That is the reason to work in Winter.
+
+Water: the tank refills at a quarter rate in Winter (snow, not rain). The
+watering can and sprinklers are not needed since nothing grows, except
+Icecap (Segment 10 gives it "grows through Winter"; until then nothing).
+
+Visuals: the Segment 8 snow cover and roof snow appear for the whole
+season; the sun still runs dawn to dusk, lower and paler.
+
+HUD: remove the Winter panel's "Start next year" button and the pause
+menu's Winter entry; the season strip shows "Year N · Winter" like any
+other season. The old Winter panel becomes the accounts panel's host.
+
+Tests: rewrite test_season_clock.gd for four working seasons, automatic
+rollover, the year-10 end condition, and ice clearing carrying into
+Spring. Update test_ledger.gd for accounts-at-start pausing.
+
+Acceptance: a full year of four seasons plays through headless; ice
+cleared in Winter is tillable at Spring start; suite green; game boots.
 ```
 
 ### Segment 10: Crop cards and the planting decision
@@ -785,7 +833,11 @@ Goal: the third decision, and legible losses.
 Map the existing climate projects (climate_projects.gd, two levels each)
 to: Rainwater tank (drought), Drainage (flood), Windbreak (storm), Frost
 cover (freeze). Cost 1,500 to 2,500 for level 1, roughly double for level
-2, upkeep 100 per year posted in Winter. Level 1 cuts that disaster's field
+2, upkeep 100 per year posted at Winter start. Building is Winter work:
+paying reserves the project, then the player walks to its site and spends
+labour (a few hoe-style actions) to finish it before Spring; unfinished
+work carries to the next Winter. Frost covers are placed per bed in
+Winter and protect that bed against the Spring freeze. Level 1 cuts that disaster's field
 loss by 50%, level 2 by 75%. Insurance: 400 per year, pays 40% of the
 season's crop loss at Winter. Keep the water loop (tank, can, sprinklers)
 as the manual side of drought.
@@ -812,10 +864,11 @@ Acceptance: suite green; game boots.
 ```
 Goal: the trend the player can see.
 
-Curve: per working season, disaster chance = 0.15 + 0.04 × (year − 1),
-capped at 0.6; severity mean = 0.5 + 0.03 × (year − 1). Event mix by
-season: Spring flood or freeze, Summer drought or storm, Autumn storm or
-flood. Constants in climate_system.gd, read by the forecast.
+Curve: per season, disaster chance = 0.15 + 0.04 × (year − 1), capped at
+0.6; severity mean = 0.5 + 0.03 × (year − 1). Event mix by season: Spring
+flood or freeze, Summer drought or storm, Autumn storm or flood, Winter
+deep freeze or blizzard (these hit the barn's stored sacks and any Icecap
+in the ground, not empty beds). Constants in climate_system.gd, read by the forecast.
 
 Foreshadowing: the season before a drought, the tank fills at half rate
 and the ground colour dries; before a flood, rain visuals run more often;
@@ -827,10 +880,82 @@ subtitle and skip mechanics) with a headline that grows grimmer by year
 and a ten-year climate strip showing each past year's disasters as icons.
 The same strip lives in the Winter accounts.
 
+Season character: Spring, Summer and Autumn must look different at a
+glance, not only through the sky. Spring: blossom on the fruit trees,
+fresh green grass tint, small flowers in the verges. Summer: warmer grass,
+a faint heat haze over the field on hot days, the tank level visibly
+mattering. Autumn: orange and brown tree canopies, fallen leaves on the
+paths, longer dusk. Winter keeps the Segment 8 snow. Implement as per-season
+tints and a few swapped meshes in farm_world.gd, driven by the season
+clock, with a one-second crossfade at each boundary so the sky and grass
+do not snap. Foreshadowing signals sit on top of these looks. Later years
+should also show the trend: by year 6 the Summer grass is drier and the
+haze stronger even in calm seasons, so the villain is visible without a
+disaster.
+
+Frequency cap: warning 45 s + active 30 s + recovery 75 s fills one
+150 s season, so at most one disaster per season and three per year. Keep
+that cap in this segment. Shortening the phases to allow more is a
+decision for after Segment 14's tuning results.
+
 Tests: test_climate_curve.gd (chance and severity by year, event mix,
-foreshadowing rate over many seeded seasons).
+foreshadowing rate over many seeded seasons, season tint values by season
+and by year).
 
 Acceptance: suite green; game boots.
+```
+
+### Segment 13b: Potato grades (run before Segment 14)
+
+```
+Goal: the reward for farming well, and a wider spread between varieties.
+Harvested potatoes get a grade that changes their price, decided by how
+the crop was treated. A well-kept crop earns more; a neglected one earns
+less. Must land before the tuning bot because it moves the economy.
+
+Grades and prices, per sack, relative to the variety's base price:
+- Table: base × 1.5. Clean, undamaged, harvested on time.
+- Standard: base × 1.0.
+- Feed: base × 0.5. Bitten, stressed or left too long.
+Also "Keep as seed": at the barn, a Standard or Table sack of a variety
+can be kept over Winter and becomes one seed of that variety next Spring.
+Kept sacks are not sold and are not counted as storage for spoilage.
+
+Widen the variety spread in scripts/crop_table.gd so base prices run 15
+to 50: Russet 15, Giant 20, Golden 28, Sunburst 38, Icecap 50. Seeds stay
+at 75% of base. Higher base still means more fragile (Segment 10 dials).
+
+Quality score per bed: starts at 100 when planted, stored on the plot.
+Deductions, each scaled by the variety's fragility (inverse of its
+tolerance dials) and reduced by the relevant protection with the same
+formula used for field loss:
+- each pest bite tick: −6
+- drought or flood stress while active: −4 per 10 s of stress
+- freeze on the bed: −15 once, further −4 per 10 s
+- storm lightning row hit: −25 once
+- unwatered while growing: −2 per 10 s
+- ripe and left in the field: −5 per 10 s after the first 30 s
+Grade at harvest: 80 to 100 Table, 40 to 79 Standard, below 40 Feed.
+Storage: every Winter in storage costs −10 quality, so Table can become
+Standard; this replaces part of the 10% spoilage (keep 5% spoilage).
+
+Legibility: a small tag on each growing bed shows its current grade word
+(Table / Standard / Feed) in the bed's hover and near-player context; the
+harvest pop shows the grade; the annual accounts show sales split by
+grade with sacks and totals; a cause line explains the largest deduction
+on a downgraded bed ("Pests took it to Standard").
+
+Wiring: storage becomes per variety per grade; the Sell Potatoes page
+lists each grade with its price; contracts (Segment 11) require Standard
+or better; the farm shop (Segment 15) sells Table only at base × 1.8;
+the ledger sales category records grade in the label.
+
+Tests: test_grades.gd (score deductions and thresholds, protection
+reduces deductions, kept seed appears next Spring, storage downgrade,
+contract refuses Feed, sales by grade sum to the ledger).
+
+Acceptance: a bed hovered mid-season shows its grade; a harvest shows
+the grade; suite green; game boots.
 ```
 
 ### Segment 14: The tuning bot
@@ -860,12 +985,47 @@ docs/REDESIGN_PLAN.md §6.
 Acceptance: test_tuning_bot.gd passes; the constants are documented.
 ```
 
+### Segment 14b: Farm-scale money (run before Segment 16)
+
+```
+Goal: the same economy in realistic units. The tuned numbers are the right
+shape but read like pocket money; a decade of careful farming ending at
+minus 1,400 is not a farm. Scale every money constant by one factor and
+rename the unit so the ledger reads like real accounts.
+
+Scale factor: 40. Apply it to every money constant in scripts/balance.gd
+and nowhere else: crop base and seed prices, opening cash, overdraft,
+loan, fixed costs, protection costs and upkeep, insurance premium,
+storage fee, shortfall fee, field expansion, business costs and incomes.
+Ratios, grade multipliers, volatility, climate constants and quantities
+stay exactly as they are. Also scale the debug money cap (MAX_MONEY) and
+the tuning bot's cash ceiling (8,000 becomes 320,000) and any other
+absolute money threshold in tests. Quantities are unchanged.
+
+Units: a "sack" becomes a "tonne" everywhere in copy (t on cards and
+receipts, "tonnes" in sentences). A bed yields 3 to 5 tonnes. Prices are
+per tonne. Money keeps the Spudion glyph and thousands separators; no
+decimals anywhere on screen.
+
+Expected result after scaling: Russet 360 per tonne, Icecap 1,200;
+opening cash 80,000; fixed costs 104,000 a year; overdraft 200,000;
+careful play ends the decade near minus 57,000, perfect play near plus
+220,000, naive play forecloses owing about 240,000.
+
+Tests: run the whole suite; the tuning bot must print the same survival
+counts and the same means multiplied by 40. Add a check that no balance
+constant is below 1 after scaling except quantities and rates.
+
+Acceptance: ledger and sell page show farm-sized figures with separators;
+tuning bot statistics are the old ones times 40; suite green.
+```
+
 ### Segment 15: Diversification and run titles
 
 ```
 Goal: the mid-game strategic decision.
 
-From year 3, the Winter menu offers: Farm shop (3,000 to build, +800 per
+From year 3, the accounts panel offers: Farm shop (3,000 to build, +800 per
 year, consumes one season's worth of labour each year by shortening
 Summer by 30 seconds), Contract grower (unlocks two simultaneous
 contracts and a 1.2× contract price), Lodging (2,500, +600 per year, income
@@ -935,6 +1095,420 @@ paragraph about removed systems.
 
 Acceptance: test_tutorial_*.gd rewritten and green; a new player can reach
 the first accounts screen headless in the tutorial test.
+```
+
+### Segment 17b: Pace and land (run before Segment 18)
+
+```
+Goal: more happens between planting and harvest, on a farm big enough
+that the player cannot do everything. Fixes three complaints from play:
+the guided year is slow, growing is slow, and pests arrive after harvest.
+
+1. Pest timing (bug). Pest delays are still tuned for the old ten-second
+   crops. Rescale: a planted bed's first pest chance opens at 25% of its
+   grow time and pests must arrive, if at all, by 60% of grow time; pest
+   pressure is highest in Summer (multiply the chance by 1.5) and zero in
+   Winter. Ducks keep their patrol. Every pest bite still costs quality.
+   Test: over many seeded beds, first pests land inside 25 to 60% of grow
+   time and never after ripening.
+
+2. Three fields with different exposure. Bring the preserved Golden
+   Shores and Frosthollow geometry onto the same island as two more
+   fields so the map is roughly twice its current size:
+   - Home Field: the current 24 beds. Sheltered: storm and flood stress
+     × 0.8.
+   - Low Field: 24 beds on the shore side using the Shores ground.
+     Yield × 1.25. Flood stress × 1.5 and floods hit it first; drought
+     × 0.8.
+   - Hill Field: 24 beds on higher ground using the Frosthollow ground
+     without snow. Drought stress × 1.5 and it dries first; flood × 0.5;
+     storm wind × 1.3; freeze × 1.2.
+   Home Field starts with 12 beds open as now. Each other field is
+   rented in Winter from the accounts page: Low Field 12,000 a year,
+   Hill Field 9,000 a year (scaled money), posted under rent, cancellable
+   any Winter. Beds inside a rented field open in two halves as Home
+   Field does, at the existing expansion cost. Protections cover the
+   whole farm at their level; per-field exposure multiplies the loss.
+   Cause cards name the field. The forecast page shows the three fields
+   with their exposure words (Floods first / Dries first / Sheltered).
+   The walkable area, camera bounds and recenter grow with the map;
+   sprint stays. Ducks patrol all rented fields.
+
+3. Grow times. Keep the season at 150 s but let the fast crops turn
+   twice: Russet 60, Golden 90, Giant 110, Sunburst 160, Icecap 200. A
+   bed that ripens in Spring can be replanted in Spring. Hoe on a
+   harvested bed re-tills without waiting.
+
+4. Guided first year. Time runs at 3× while a "wait" step is active
+   (grow, and the run-up to the storm), back to 1× the moment a decision
+   or a cause card is on screen. The scripted storm lands at second 40
+   of Summer. Target: a new player reaches the first accounts in about
+   four minutes. Reduce the scripted loss to one tonne of three.
+
+5. Re-run the tuning bot after all of the above. The bot's strategies
+   rent no fields (Home Field only) so the published survival numbers
+   stay comparable; add a fifth strategy "expander" that rents the Low
+   Field from year 2 and plants it with the same crop, and assert it
+   survives at least 20 of 30 seeds and out-earns cautious in mean sales
+   while never exceeding the cash ceiling. Adjust rents until it holds.
+
+Tests: test_pace_and_land.gd covering pest windows, field exposure
+multipliers, rent posting and cancellation, bed opening per field, cause
+cards naming the field, and the guided-year timing.
+
+Acceptance: pests appear mid-growth; three fields walkable and rentable;
+guided year under five minutes; tuning bot green with the expander row
+recorded in §6; suite green; web export runs.
+```
+
+### Segment 18: Farm visuals pass (run after Segment 15)
+
+```
+Goal: every new mechanic gets real art on the island, in the existing
+low-poly, vertex-coloured style of farm_world.gd. No new asset pipeline;
+build from the same primitives and the static mesh compiler.
+
+Replace and add:
+- Winter: replace the flat white sheet with snow that sits on things.
+  Drifts against fences and walls, snow caps on every roof and tree, bare
+  fruit trees, frozen tank surface, footprints on the paths the farmer
+  walks, ice on beds drawn as a cracked glaze that Hoe visibly breaks.
+- Seasons (from Segment 13): make blossom, summer haze, autumn canopies
+  and fallen leaves read at the default zoom, not only up close.
+- Fields (from Segment 17b): the Low Field reads wet and lush, the Hill
+  Field pale and windswept, with a signpost naming each; rented fields
+  show a fence line, unrented ones an overgrown "To let" board.
+- Beds: a small grade marker on each growing bed (green leaf for Table,
+  plain for Standard, brown for Feed) that matches the hover tag; stress
+  reads on the plant (wilting for drought, yellowing for flood, frost
+  rime for freeze), not only on the border.
+- Barn: stored sacks visibly stack inside the open barn door in Winter;
+  sacks kept for seed sit in a separate crate; spoiled sacks show as a
+  darker heap that shrinks.
+- Buyer board: the contract shows as a crate with a chalk tag by the
+  road; on collection a cart arrives and leaves.
+- Protections: the tank, drainage channels, windbreak rows and frost
+  covers are visible buildings and objects that appear as they are built
+  in Winter, with an under-construction state while unfinished.
+- Weather station: the forecast range shows on the instrument face.
+- Farmer: a Winter coat and hat in Winter, straw hat in Summer, from the
+  fixed-outfit system kept in Segment 3.
+
+Keep draw calls near the current count: everything static goes through
+the batcher; only animated pieces stay separate. Check the web build.
+
+Tests: test_farm_visuals.gd (season and Winter states build without
+errors, grade markers match state, batcher counts within a budget).
+
+Acceptance: a screenshot of Winter, of a stressed bed and of a built tank
+each look finished; suite green; web export runs.
+```
+
+### Segment 19: Interface visuals pass
+
+```
+Goal: the new screens look designed and read at a glance. Reference: the
+Duck patrol page (a picture of the thing, coloured blocks with one action
+each, a status badge, no paragraph). Every page follows seven rules:
+
+SHAPE      Each place is an object: chalkboard + seed packets (Mara),
+           timber barn with crates (Nell), pegboard workbench (Bram),
+           instrument panel (Iris), cork board with pinned notes (Tess),
+           paper ledger (accounts), newspaper (front page).
+ACCENT     One accent colour per place, on the header band and the
+           primary button only; body stays cream. Crop ribbons use the
+           crop's own colour.
+EDGES      Paper 6 to 8 px rounded, buttons full pills, boards and
+           instruments squarer. Mixed on purpose.
+FACTS      Only what applies: no zero rows, no repeated boilerplate, no
+           "—" placeholders. Big number, small label. Icons for thirst,
+           heat, cold and weather events. Explanations behind a ? tooltip.
+LINES      At most two facts joined by "·".
+ENTRANCES  One way in per thing.
+CHARACTERS The keeper's portrait small in a corner of their page.
+
+Per page:
+1. Seeds (Mara): chalkboard background; one seed PACKET per variety with
+   a crop-coloured ribbon, illustration, price per seed large, season
+   pips and tonnes, three icon dials, one volatility badge, what you
+   own, Buy 1 / Buy 5 pills. Remove: grade thresholds, live /t and %,
+   sparkline, "Last year avg", "Price swings" text, "In barn".
+2. Sell (market): one row per variety: icon, name, price/t with a
+   signed % chip, sparkline with the Winter dash, then grade chips ONLY
+   for grades with stock ("Table 12 t", "Standard 4 t"); tapping a chip
+   opens the amount stepper. The storage sentence becomes a ? tooltip,
+   shown as one line only in Winter.
+3. Tess's board: Tess is the quest keeper. The quest board on the map
+   opens her cork board with two tabs, Quests and Losses; each item is a
+   pinned note (event icon, tonnes, field, worth, one counterfactual
+   line). Remove "Crop loss notices" from the weather station and from
+   Tess's conversation. Fix the bug where the panel shows a loss and
+   then "No crop losses recorded".
+4. Weather station (Iris): instrument panel. Top: radar + the forecast
+   bracket as one visual with the event names. Then three field chips
+   with exposure icons. Then a 2×2 grid of protection tiles (icon, name,
+   level pips, one-line effect with its %, one button). Then one
+   insurance toggle row and a small station-upgrade line. Remove the
+   damage-reduction table, the loss-notices button and "Cover all
+   cleared beds" (that lives on the Winter jobs card).
+5. Buyer board: the order is a paper slip pinned with a tack: crop icon,
+   "20 t Russet", price, "due Autumn end", penalty small, Accept as a
+   stamp button. The explanatory paragraph becomes a tooltip.
+6. Front page: keep the layout; replace the ten "—" rows with a single
+   ten-box strip with icons; legend behind a tooltip; add last year's
+   net in a small Accounts box.
+7. Barn (Nell): lighter timber frame, cream interior; ONE Sell button
+   that opens the market (on stores in Winter); remove the second "Barn
+   stores" button; items as a grid of crate tiles, not one wide card.
+8. Workbench (Bram): pegboard; smaller tool tiles with level pips;
+   "Garden beds" becomes "Open 12 more beds" with the field named;
+   PotatoDex moves to the farm menu.
+9. Annual accounts: a ledger page. Ruled lines, category rows with dot
+   leaders, the net figure in the display font, a stamped year, the
+   ten-year table as a small column, the climate strip beneath, cause
+   notes as pinned slips. No HUD chrome behind it; a screenshot button.
+10. Season strip: a small four-segment bar under the wordmark with the
+    current season lit and the year number.
+11. Winter jobs card: when Winter opens (after the accounts close), a
+    pinned card under the season strip lists every Winter action that is
+    actually available, with live numbers, one line each: iced beds to
+    clear; stored tonnes with the current and late-Winter price; paid
+    projects with work done of three; cleared beds that can take a frost
+    cover; ripe Icecap; sacks that can be kept as seed; businesses on
+    offer from year three; the blizzard warning when one is coming. Each
+    line is a button that walks the farmer there or opens the right
+    page. Lines tick off as they are done and the card collapses to
+    "Winter · N jobs left" on request. Other seasons may show at most
+    two lines (a contract due, a disaster warning), never a to-do list.
+12. World signs: field boards show the field name only; exposure is an
+    icon on the post. To Let boards show "TO LET" only. All Label3D text
+    must fit its board: measure and shrink, never overflow.
+13. Phone: packets become a horizontal swipe row; tiles a single column;
+    44 px touch targets.
+
+Copy sweep: remove leftover words from the old game (stock, boom,
+islands other than Spud Valley, market-era quest names). Ledger labels
+are frozen strings the save validator checks: never change them.
+
+One page per commit, screenshot at desktop and phone width after each.
+If a line does not change what the player does next, it goes.
+
+Tests: update the HUD layout and responsive suites for the new pages at
+the existing viewport set; add a Label3D fit check for every world sign.
+
+Acceptance: every page screenshotted at both widths looks consistent and
+follows the seven rules; suite green.
+```
+
+### Segment 20: Feel, sound and performance
+
+```
+Goal: the last mile before the tutorial rewrite.
+
+- Transitions: one-second crossfade at season boundaries (sky, grass,
+  snow); accounts page slides in from the ledger book; front page fades.
+- Sound: a short seasonal ambience loop each (birds, cicadas, wind,
+  muffled snow), the existing tool foley, a paper sound for the ledger,
+  a low note for foreclosure. Reuse climate_audio.gd for weather.
+- Harvest and grade feedback: the harvest pop shows the grade stamp with
+  a distinct sound per grade.
+- Epilogue (Segment 16): the fifty-year pan, headlines fading in per
+  decade, the four verdict lines typed on.
+- Camera: gentle push-in on the accounts open; storm shake stays bounded.
+- Performance: profile the web build at phone resolution; the per-frame
+  costs noted in the original analysis (day-time rewrite, nearby-station
+  scan on every frame, per-sample audio synthesis) are fixed here if
+  still present. Target 60 fps on a mid-range phone in Summer with rain.
+- Save: confirm the boundary save never hitches longer than a frame;
+  move it off the main thread if it does.
+- Pace controls: "Sleep until Spring" button in Winter, on the jobs card
+  and the farm menu; it resolves any active weather first, then jumps to
+  the Spring boundary with the normal boundary save; stored sacks are
+  not sold automatically, and a confirm line states the tonnes still in
+  store and the price they would reach by late Winter. "Hold to hurry":
+  holding H (desktop) or a touch button runs the simulation at 3× while
+  held, in any season, never during the accounts, a conversation, a
+  cause card or the tutorial's own waits; a small "3×" badge shows.
+- Growth feel: a bed waiting for water shows a clear droplet marker at
+  default zoom and the hover tag says "Needs water · growth paused"; dry
+  beds grow at 40% speed instead of 0%. Guided-year wait speed is at most
+  5×, and 1× from the storm warning through the cause card.
+- Shadow cost on phones: the 4096 shadow map and soft filter are also set
+  for mobile; measure on a real phone and drop to 2048 on web if frame
+  time rises.
+
+Tests: test_feel.gd for transition timing and audio presence; a
+benchmark script that reports frame time in the browser fixture.
+
+Acceptance: a full year played on a phone without a visible hitch; suite
+green; web export runs.
+```
+
+### Segment 21: Balance and playthrough (after Segment 20)
+
+```
+Goal: tune what the bot cannot feel, then play it as a stranger.
+
+Balance (bot-verified):
+1. Low Field rent: raise it until the expander strategy's mean ending
+   cash lands between cautious and tidy (about +100,000 scaled), not at
+   tidy's shoulder. Keep expander survival at least 24 of 30.
+2. Diversification: nudge shop income and lodging income until the
+   diversifier's mean ending cash is clearly above cautious (at least
+   +40,000 scaled) and still below tidy. The fork must be a real fork.
+3. Only if play still drags after Segment 20's pace controls: cut grow
+   times by a quarter (Russet 45, Golden 70, Giant 85, Sunburst 120,
+   Icecap 150), re-run the bot, re-tune seed prices or fixed costs until
+   survival numbers match, re-record the table.
+4. Then shorten Winter to 100 s only if it still feels empty with the
+   jobs card and Sleep until Spring in place.
+
+Playthrough (human):
+- On the web build on a phone, as a new player: tutorial, ten years,
+  epilogue. Write down every moment of confusion or boredom with the
+  season and screen it happened on. That list becomes the final fixes.
+- Check the epilogue wait on a phone; if it exceeds 20 seconds, reduce
+  the caretaker's per-year tick budget or show the ten-year ledger while
+  it computes.
+
+Release:
+- Follow PUBLISHING.md; fresh web export into docs/; tag v2.0.0; README
+  play link points at the new build; the old v1.0.3.1 build moves to a
+  release asset only.
+```
+
+### Segment 21 follow-up: tag j fixes (run before Segment 22 step 0)
+
+```
+Goal: close what the tag j review found, so the three fresh testers in
+Segment 22 step 0 trip only on things we do not already know about.
+
+Suite:
+1. tests/test_climate_operations.gd line 80 still asserts the retired
+   rule that an unwatered seedling stays at stage 1. Under dry growth
+   (DRY_GROWTH_SPEED 0.4) a dry seedling becomes stage 2 on its first
+   update, so "hoe drains living flooded beds without destroying crop"
+   fails at tag j although the hoe is correct (stress 0.47 to 0.0, crop
+   kept). Assert the crop is alive (stage in [1, 2], crop unchanged)
+   instead of stage == 1. Re-run the suite; DEVELOPMENT.md says 84
+   suites pass, which is not true at tag j.
+2. tests/test_harvest_identity.gd line 61 advances once by 1000 s and
+   expects the guided storm to have landed. Since bce5f1d the calendar
+   runs at 1x from the storm warning, so one advance stops at the
+   warning and the next six checks cascade (storm-lost tonne, receipt,
+   foley, grade cue). Advance until current_id() is "loss" (at most six
+   calls); with that change all 22 checks pass at tag j. Both of these
+   tests were not re-run after the last commits; run the full suite
+   before tagging, not the focused ones.
+3. tools/run_tests.sh only imports when .godot/imported is missing. A
+   checkout that already has one never sees new assets, so the audio
+   added in cb5c2bb makes almost every suite report ERRORS ("Cannot
+   open file res://.godot/imported/farm-harvest.wav-...sample") on any
+   stale clone. Import when any *.import file under assets/ is newer
+   than .godot/imported, or always run the editor import step when
+   --import is passed; document it in DEVELOPMENT.md.
+4. Tuning bot at tag j, standalone: 1,679 checks, 0 failures. Expander
+   survives 29 of 30 with max cash 215,971, inside the 320,000 ceiling;
+   the earlier over-ceiling seed is resolved. Record that in
+   DEVELOPMENT.md and drop the "left failing" note.
+
+Copy:
+5. main.gd shows "Needs water · growth paused" while a dry bed grows at
+   40%. Say what is true: "Dry · growing slowly" (Segment 19: only
+   applicable facts).
+
+Stall:
+6. Cold accounts boundary frame is 404 ms. Build the accounts panel
+   during the last ten seconds of Autumn, off the boundary frame, or
+   show "Opening the books…" and build it over the next frames. Measure
+   again; the target is under 100 ms on the M4 baseline.
+
+Before testers (from PLAYTEST_J.md, highest quit risk first):
+7. The guide asks the player to buy seeds while twelve starter seeds
+   are already in the pouch. Either start with none (the guide buys
+   them) or have the guide say plant the starter seeds.
+8. Starter beds die to Autumn Cold while the guide still locks the
+   player out of harvesting. The guided year must never lose a bed the
+   player could not act on: either the guide's lock lifts when a bed
+   ripens, or the first Autumn Cold is delayed until the guided harvest
+   is done.
+9. "Calendar running…" dead wait and the ripe bed waiting through the
+   guided storm: the guide hands control back the moment the thing it
+   is waiting on arrives; no screen may show a wait with nothing to do.
+10. Blocked-action text replaces the instruction. Keep the instruction on
+   screen; show the blocked reason underneath it, not instead of it.
+11. Seed shop tap target on a phone; the horizontal card scroll with no
+    hint. Make the counter's tap area the whole stall and show the
+    first card half cut off so the scroll is obvious.
+12. "Skip" label says what it skips (the guided year, not the season).
+
+Phone:
+13. Measure one full year on a real mid-range phone with 2048 shadows;
+    record the frame time in DEVELOPMENT.md. Default phones to 2048 if
+    4096 drops below 50 fps.
+
+Done when: the full suite passes with no known failing check, the
+guided year cannot lose a bed the player could not act on, and the
+phone frame time is recorded from a real device.
+```
+
+### Segment 22: The fun pass (after Segment 21)
+
+```
+Why: with Segments 1 to 21 done the game is honest, legible and simple,
+and the owner's verdict is that it is boring. The plan under-invested in
+the two things that make farming games fun minute to minute: chores that
+feel good under pressure, and a farm that visibly grows. Honesty stays
+in the ledger. It never required a farm that stays the same size.
+
+Step 0, before any build: put the current build in front of three
+people who have not seen it. Note the minute each would have quit and
+on which screen. Use that to order the items below; the guess is that
+the first ten minutes and the middle years matter most.
+
+A. Rush. Working seasons 100 s. Grow times cut a quarter (Russet 45,
+   Golden 70, Giant 85, Sunburst 120, Icecap 150). Home Field starts with
+   all 24 beds open. The aim is to always have one more job than time.
+   Re-run the tuning bot and re-tune fixed costs or prices to the
+   recorded survival numbers.
+B. Build. The island fills over ten years, each item visible on the map
+   and a line on the ledger: a greenhouse (grows one variety through
+   Winter, costs upkeep), a second barn (capacity and a safer store), an
+   orchard (a small steady income with Autumn labour), a hired farmhand
+   (Tess does one chore type for you each season for a wage). Unlock
+   order by year; nothing multiplies prices.
+C. Timed moments inside seasons, one or two per season, never more:
+   - a buyer at the gate for 60 s offering a premium for what you hold
+     now;
+   - a storm warning that gives 45 s to pull ripe beds before it lands
+     (already exists; make it louder and give sprint a reason);
+   - pests that spread to neighbouring beds every 20 s if unsprayed;
+   - a price rush: the market pays +20% for 30 s, announced by Mara.
+D. Skill in the hands. A perfect-ripeness window (the first 10 s after
+   ripe) that guarantees Table grade; hoeing adjacent beds in rhythm
+   speeds up; the watering can covers a row when swept along a path.
+   All visible, all learnable in the guided year.
+E. Things going wrong, with a choice. Ten handwritten yearly incidents,
+   one per year in Summer, each with two options and a ledger cost:
+   the tractor is too big, the ducks got out, a TV crew wants to film,
+   the well runs dry, a neighbour offers to buy the Low Field, and so
+   on. This is where the humour lives. No incident repeats in a run.
+F. The hook (kept from the earlier draft): a break-even target card
+   every Spring with live progress; one dilemma per season said out
+   loud; a comeback cap after a two-disaster year; Nell marks the first
+   profitable year and the best year yet; the epilogue adds one
+   sentence drawn from the run's largest avoidable loss; region choice
+   at new run (Valley, Shores, Frosthollow) and one rare event per run.
+G. Not allowed: login rewards, offline timers, anything bought with
+   money, price multipliers that compound.
+
+Tests: bot re-run per change in A; incidents never repeat and always
+post to the ledger; timed moments at most two per season; the perfect
+window grants Table exactly; region curves differ; target card
+arithmetic matches the ledger.
+
+Acceptance: the three testers from step 0 play again and each wants a
+second run without being asked. If not, repeat step 0 and this segment.
 ```
 
 ## 8. Logic checks on the original plan
