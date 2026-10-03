@@ -5,6 +5,12 @@ signal finished
 signal new_run
 const Type = preload("res://scripts/ui_type.gd")
 const Epilogue = preload("res://scripts/epilogue.gd")
+const WORLD_FADE_SECONDS: float = 2.0
+const HEADLINE_FADE_SECONDS: float = 0.85
+const HEADLINE_STEP_SECONDS: float = 1.0
+const VERDICT_CHARACTERS_PER_SECOND: float = 36.0
+const VERDICT_GAP_SECONDS: float = 0.3
+const VALUE_FADE_SECONDS: float = 0.6
 var simulation
 var world
 var result: Dictionary = {}
@@ -14,6 +20,9 @@ var top: PanelContainer
 var bottom: PanelContainer
 var headlines_grid: GridContainer
 var verdict_grid: GridContainer
+var headline_labels: Array[Label] = []
+var verdict_labels: Array[Label] = []
+var value_line: Label
 var actions: HBoxContainer
 var screenshot: Button
 var status: Label
@@ -22,6 +31,8 @@ var home: Vector3
 var saved_camera_size: float
 var saved_camera_transform: Transform3D
 var ready_scene: bool = false
+var presentation_time: float = 0
+var reveal_complete: bool = false
 
 func setup(farm, farm_world, cached: Dictionary = {}) -> void:
 	name = "FiftyYearEpilogue"
@@ -50,6 +61,9 @@ func _process(delta: float) -> void:
 		if simulation.advance_year(80): present(simulation.result)
 		else: progress.text = "Year %d of 50\nThe caretaker keeps your crops and investments." % simulation.farm.season_clock.year
 	if not ready_scene: return
+	if not reveal_complete:
+		presentation_time += delta
+		_update_reveal()
 	pan_time += delta
 	world.camera.position = home + Vector3(sin(pan_time * 0.055) * 4.0, 0, cos(pan_time * 0.055) * 2.0)
 	world.camera.look_at(Vector3(0, 0, -1))
@@ -81,7 +95,9 @@ func present(ending: Dictionary) -> void:
 	for headline in ending.headlines:
 		var headline_label: Label = _label("%d  /  %s" % [headline.year, headline.text], 14)
 		headline_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		headline_label.modulate.a = 0
 		headlines_grid.add_child(headline_label)
+		headline_labels.append(headline_label)
 	bottom = _paper()
 	add_child(bottom)
 	var lower := VBoxContainer.new()
@@ -92,8 +108,12 @@ func present(ending: Dictionary) -> void:
 	for line in ending.verdicts:
 		var verdict_label: Label = _label(line, 16)
 		verdict_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		verdict_label.visible_characters = 0
 		verdict_grid.add_child(verdict_label)
-	lower.add_child(_label("Farm value, 50 years on   " + _money(ending.farm_value), 23, true))
+		verdict_labels.append(verdict_label)
+	value_line = _label("Farm value, 50 years on   " + _money(ending.farm_value), 23, true)
+	value_line.modulate.a = 0
+	lower.add_child(value_line)
 	actions = HBoxContainer.new()
 	lower.add_child(actions)
 	screenshot = _button("Screenshot", capture)
@@ -101,21 +121,74 @@ func present(ending: Dictionary) -> void:
 	actions.add_child(_button("Ten-year ledger", func(): finished.emit()))
 	actions.add_child(_button("New Run", func(): new_run.emit()))
 	status = _label("", 13)
+	status.hide()
 	lower.add_child(status)
 	resized.connect(_layout)
 	bottom.minimum_size_changed.connect(_layout)
 	top.minimum_size_changed.connect(_layout)
 	_layout.call_deferred()
 	veil.move_to_front()
-	var tween := create_tween()
-	tween.tween_property(veil, "color:a", 0.0, 2.0)
-	tween.tween_callback(veil.hide)
 	ready_scene = true
+	_update_reveal()
+
+func verdict_start_time() -> float:
+	return WORLD_FADE_SECONDS + maxf(0, headline_labels.size() - 1) * HEADLINE_STEP_SECONDS + HEADLINE_FADE_SECONDS + VERDICT_GAP_SECONDS
+
+func reveal_duration() -> float:
+	var seconds: float = verdict_start_time()
+	for line in verdict_labels:
+		seconds += float(line.text.length()) / VERDICT_CHARACTERS_PER_SECOND + VERDICT_GAP_SECONDS
+	return seconds + VALUE_FADE_SECONDS
+
+func _update_reveal() -> void:
+	veil.color.a = 1.0 - clampf(presentation_time / WORLD_FADE_SECONDS, 0, 1)
+	if presentation_time >= WORLD_FADE_SECONDS: veil.hide()
+	for i in range(headline_labels.size()):
+		var start: float = WORLD_FADE_SECONDS + i * HEADLINE_STEP_SECONDS
+		headline_labels[i].modulate.a = clampf((presentation_time - start) / HEADLINE_FADE_SECONDS, 0, 1)
+	_fit_headlines()
+	var start: float = verdict_start_time()
+	for line in verdict_labels:
+		var letters: int = mini(line.text.length(), maxi(0, floori((presentation_time - start) * VERDICT_CHARACTERS_PER_SECOND)))
+		line.visible_characters = -1 if letters == line.text.length() else letters
+		start += float(line.text.length()) / VERDICT_CHARACTERS_PER_SECOND + VERDICT_GAP_SECONDS
+	value_line.modulate.a = clampf((presentation_time - start) / VALUE_FADE_SECONDS, 0, 1)
+	reveal_complete = presentation_time >= reveal_duration()
+
+func finish_reveal() -> void:
+	if not ready_scene: return
+	presentation_time = reveal_duration()
+	_update_reveal()
+
+func _fit_headlines() -> void:
+	var compact: bool = size.y < 650 and size.x > 700
+	var decade: int = clampi(floori((presentation_time - WORLD_FADE_SECONDS) / HEADLINE_STEP_SECONDS), 0, headline_labels.size() - 1)
+	# A short landscape phone reads one decade at a time, leaving room for the
+	# future farm and all four verdicts. The fifty-year strip stays visible.
+	for i in range(headline_labels.size()): headline_labels[i].visible = not compact or i == decade
 
 func _layout() -> void:
 	if not is_instance_valid(bottom): return
-	headlines_grid.columns = 5 if size.x >= 700 else 1
+	var physical: Vector2 = Vector2(get_tree().root.size)
+	if OS.has_feature("web"):
+		physical = Vector2(float(JavaScriptBridge.eval("document.getElementById('canvas').clientWidth", true)), float(JavaScriptBridge.eval("document.getElementById('canvas').clientHeight", true)))
+	var scale: float = minf(physical.x / size.x, physical.y / size.y)
+	var compact: bool = size.y < 650 and size.x > 700
+	for text in find_children("*", "Label", true, false):
+		if text.has_meta("base_font_size"):
+			var points: float = float(text.get_meta("base_font_size"))
+			if compact and points > 20: points = 22 if points == 28 else 20
+			text.add_theme_font_size_override("font_size", ceili(points / minf(1.0, maxf(scale, 0.1))))
+	for button in actions.get_children():
+		button.custom_minimum_size.y = maxf(44, ceilf(44 / maxf(scale, 0.1)))
+		button.add_theme_font_size_override("font_size", ceili(15 / minf(1.0, maxf(scale, 0.1))))
+	for panel in [top, bottom]:
+		var paper: StyleBoxFlat = panel.get_theme_stylebox("panel")
+		paper.content_margin_top = 4 if compact else 10
+		paper.content_margin_bottom = 4 if compact else 10
+	headlines_grid.columns = 5 if size.x >= 700 and size.y >= 650 else 1
 	verdict_grid.columns = 2 if size.y < 650 and size.x > 700 else 1
+	_fit_headlines()
 	top.offset_bottom = top.offset_top + top.get_combined_minimum_size().y
 	var height: float = bottom.get_combined_minimum_size().y
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -140,6 +213,7 @@ func _label(text: String, points: int, heading: bool = false) -> Label:
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_override("font", Type.face(Type.DISPLAY if heading else Type.BODY))
+	label.set_meta("base_font_size", points)
 	label.add_theme_font_size_override("font_size", points)
 	label.add_theme_color_override("font_color", Color("493d2b"))
 	return label
@@ -168,8 +242,11 @@ func _money(value: float) -> String:
 	return formatted + " Spudions"
 
 func capture() -> void:
+	# A saved ending always contains the complete verdict, even during its reveal.
+	finish_reveal()
 	if DisplayServer.get_name() == "headless":
 		status.text = "Screenshots need a rendered window."
+		status.show()
 		return
 	actions.hide()
 	status.hide()

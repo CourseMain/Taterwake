@@ -56,6 +56,25 @@ func run() -> void:
 				for resident in game.world._villagers: check(not resident.visible, "no residents in abandoned future")
 			"Holding on", "The shop village", "Thriving": check(game.world.future_root.find_children("PotatoTuber*", "Node3D", true, false).size() > 0, "occupied farm keeps its potato crops")
 		check(not game.hud.visible and not game.touch_controls.visible, "ordinary chrome hidden")
+		if outcome == Epilogue.OUTCOMES[0]:
+			check(screen.headline_labels.size() == 5 and screen.verdict_labels.size() == 4, "five decades and four verdicts have independent reveal controls")
+			check(screen.headline_labels[0].modulate.a == 0 and screen.verdict_labels[0].visible_characters == 0, "ending starts with the world fade before any text")
+			var footer_height: float = screen.bottom.size.y
+			screen._process(screen.WORLD_FADE_SECONDS + screen.HEADLINE_FADE_SECONDS * 0.5 - screen.presentation_time)
+			check(not screen.veil.visible and is_equal_approx(screen.headline_labels[0].modulate.a, 0.5), "first decade fades after the two-second world reveal")
+			check(screen.headline_labels[1].modulate.a == 0 and screen.verdict_labels[0].visible_characters == 0, "later decades and verdicts wait their turn")
+			screen._process(screen.HEADLINE_STEP_SECONDS)
+			check(screen.headline_labels[0].modulate.a == 1 and is_equal_approx(screen.headline_labels[1].modulate.a, 0.5), "next decade fades while its predecessor stays readable")
+			screen._process(screen.verdict_start_time() + 5.5 / screen.VERDICT_CHARACTERS_PER_SECOND - screen.presentation_time)
+			check(screen.headline_labels[4].modulate.a == 1 and screen.verdict_labels[0].visible_characters == 5, "verdict begins typing only after the last headline")
+			check(screen.verdict_labels[1].visible_characters == 0 and screen.value_line.modulate.a == 0, "next verdict and final value wait for the earlier line")
+			await frames()
+			check(is_equal_approx(screen.bottom.size.y, footer_height), "typing reserves each full line so the footer never jumps")
+			screen._process(float(screen.verdict_labels[0].text.length()) / screen.VERDICT_CHARACTERS_PER_SECOND + screen.VERDICT_GAP_SECONDS)
+			check(screen.verdict_labels[0].visible_characters == -1 and screen.verdict_labels[1].visible_characters > 0 and screen.verdict_labels[2].visible_characters == 0, "verdicts type sequentially with a short pause")
+			screen.finish_reveal()
+			check(screen.reveal_complete and screen.value_line.modulate.a == 1, "finish reveal includes the final farm value")
+			for line in screen.verdict_labels: check(line.visible_characters == -1, "finished reveal includes every complete verdict")
 		var camera_before: Vector3 = game.world.camera.position
 		screen._process(1.0)
 		check(camera_before != game.world.camera.position, "slow pan plays")
@@ -67,7 +86,8 @@ func run() -> void:
 		check(bounds_fit, "epilogue pan keeps every coastline edge inside the fitted shadow range")
 		check(var_to_str(game.state._save_data()) == before, "presentation leaves ten-year save untouched")
 		if "--capture" in OS.get_cmdline_user_args():
-			await create_timer(2.1).timeout
+			screen.finish_reveal()
+			await frames()
 			await RenderingServer.frame_post_draw
 			DirAccess.make_dir_recursive_absolute("res://artifacts/epilogue")
 			root.get_texture().get_image().save_png("res://artifacts/epilogue/" + outcome.to_snake_case() + ".png")
@@ -82,14 +102,26 @@ func run() -> void:
 		check(restored_depth > game.world.camera.near and restored_depth < game.world.camera.far and is_equal_approx(game.world.camera.far - game.world.camera.near, 70.0), "returning to the ledger restores the original camera's fitted depth")
 	game.epilogue_result = fixture("Holding on")
 	game._on_user_action("epilogue")
-	await create_timer(2.1).timeout
+	await frames()
+	game.epilogue_screen.finish_reveal()
+	root.min_size = Vector2i.ZERO
+	game.touch_controls.enabled = true
+	game.touch_controls._build_touch_sheets()
 	for dimensions in [Vector2i(390, 844), Vector2i(844, 390), Vector2i(1280, 800)]:
 		root.size = dimensions
-		await frames(5)
+		await frames(8)
 		var screen = game.epilogue_screen
 		check(screen.bottom.get_global_rect().end.y <= screen.size.y + 1, "ending footer fits " + str(dimensions))
 		check(screen.actions.get_global_rect().end.x <= screen.size.x, "buttons fit " + str(dimensions))
 		check(screen.top.get_global_rect().end.y < screen.bottom.position.y, "farm remains visible " + str(dimensions))
+		var scale: float = minf(float(root.size.x) / screen.size.x, float(root.size.y) / screen.size.y)
+		for button in screen.actions.get_children(): check(minf(button.size.x, button.size.y) * scale >= 43.9, "ending actions keep physical phone touch targets " + str(dimensions))
+		for line in screen.verdict_labels:
+			check(line.get_theme_font_size("font_size") * scale >= 15.9, "verdict stays readable at phone scale " + str(dimensions))
+		if dimensions == Vector2i(844, 390):
+			var visible_headlines: int = 0
+			for line in screen.headline_labels: visible_headlines += int(line.visible)
+			check(visible_headlines == 1 and screen.headline_labels[4].visible, "short landscape phone keeps its final decade and all verdicts beside the farm")
 		if "--capture" in OS.get_cmdline_user_args():
 			await RenderingServer.frame_post_draw
 			root.get_texture().get_image().save_png("res://artifacts/epilogue/layout_%dx%d.png" % [dimensions.x, dimensions.y])
