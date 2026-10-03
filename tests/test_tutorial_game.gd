@@ -74,6 +74,7 @@ func run() -> void:
 	game._process(1000.0)
 	check(game.state.tutorial_loss().is_empty() and game._simulation_delta(1) == 1, "accelerated Spring stops at the real-time storm warning")
 	check(game.hud._tutorial_forecaster.visible and game.hud._tutorial_title.text.begins_with("Iris") and game.hud._tutorial_next.text.contains("Storm in 8s") and game.hud._tutorial_body.text.contains("1×"), "Iris appears with the live Summer countdown")
+	check(not game.hud._climate_alert.visible, "Iris guide is not covered by a duplicate warning popup")
 	await shot("iris-warning")
 	var warning_snapshot: Dictionary = game.state._save_data().duplicate(true)
 	game._process(8.0)

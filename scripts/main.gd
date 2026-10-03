@@ -1245,9 +1245,12 @@ func _on_climate_changed(phase: String) -> void:
 		hud._climate_console.targeting = ""
 	var info: Dictionary = state.climate_info()
 	if phase in ["warning", "impact", "recovery"]:
-		hud._climate_alert.present(phase, info, state)
 		if phase == "warning" and state.guided_first_year():
+			# Iris's persistent guide already gives this warning on small screens.
+			hud._climate_alert.dismiss()
 			conversation.voice.begin_line("iris", 100)
+		else:
+			hud._climate_alert.present(phase, info, state)
 		_play_tone(164.81 if phase == "impact" else 220.0, 0.6)
 	if is_instance_valid(climate_audio):
 		climate_audio.set_weather(info, state.run_over)

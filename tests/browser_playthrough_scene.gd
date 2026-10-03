@@ -14,7 +14,7 @@ func _ready() -> void:
 	game.state.season_changed.connect(func():
 		if game.state.season_clock.season == 0 and not game.state.run_over: game._show_year_start())
 	game.tutorial.start()
-	game._show_year_start()
+	game._show_year_start.call_deferred()
 	callback = JavaScriptBridge.create_callback(observe)
 	JavaScriptBridge.get_interface("window").playthroughQA = callback
 	observe(["status"])
