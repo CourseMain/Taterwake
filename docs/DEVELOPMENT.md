@@ -519,6 +519,8 @@ Inventory contains crop/seed shelves and five usable tools. The PotatoDex shows 
 
 `price_sparkline.gd` appears only in Mara’s Sell tab. Each variety’s history contains up to 12 quotes: prior 15-second sample boundaries plus the current quote. The deterministic price curve reconstructs these samples from saved elapsed time, so reloads retain the same history without a new save field or frame-rate-dependent sampling. A fresh farm starts with one quote. The shared percentage is `round((price / base - 1) × 100)`, with an explicit sign; only the comparison text is green above base or red below. Sparklines use neutral ink and no animation; card bounce tweens are removed.
 
+Sparklines scale to recent quotes with a labelled range, a small minimum span and padding. Winter targets outside that range keep a dashed edge marker, direction arrow and actual quote without flattening the history. Taller plots make a 1% move visible on desktop and phone; unchanged quotes remain horizontal. `market_pages.gd` derives stored-price samples from the Winter clock and the existing linear storage curve, so the last point agrees with the shown quote. `test_seed_market` checks small rises, falls, flat quotes and distant targets; `test_market_decisions` checks graded Winter endpoints.
+
 The stock countdown, tracked-price tray, full chart page, market aura, launch presentation, launch audio and audio baker are removed. The main audio generator retains short action tones; farm foley and storm shake remain. Starter seed-buying and potato-selling quests now count ordinary transactions under their original save IDs. Their quest rewards are flat after Segment 6.
 
 

@@ -125,7 +125,7 @@ func _build_sell() -> void:
 	var help_row := HBoxContainer.new(); add_child(help_row)
 	storage_note = _label("", 14, MUTED)
 	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
-	Place.help(hud, help_row, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
+	Place.help(hud, help_row, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote. Charts zoom to recent prices. An arrow marks a Winter target outside the labelled range." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
 	if hud._state.season_clock.season == 3:
 		tabs.show()
 		for mode in [true, false]:
@@ -147,7 +147,7 @@ func _build_sell() -> void:
 		var change := _label("", 14); change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; change.autowrap_mode = TextServer.AUTOWRAP_OFF; change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		change.add_theme_stylebox_override("normal", Place.skin(Place.PAPER, 5, 100)); quotes.add_child(change)
 		var tail: VBoxContainer = hud._vbox(5); tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL; column.add_child(tail)
-		var history := _sparkline(tail); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL; history.custom_minimum_size.y = 32
+		var history := _sparkline(tail); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL; history.custom_minimum_size.y = 68
 		var grades := HFlowContainer.new(); grades.add_theme_constant_override("h_separation", 8); tail.add_child(grades)
 		var buttons: Dictionary = {}
 		for word in State.Quality.GRADES:
@@ -165,6 +165,23 @@ func stock(crop: String, grade: String = "") -> int:
 func price_for(crop: String, grade: String) -> float:
 	return hud._state.trading.stored_price(hud._state, crop, grade) if stored_mode else float(hud._state.market[crop].sell) * State.Quality.MULTIPLIER[grade]
 
+func price_history(crop: String, grade: String) -> Array:
+	var state = hud._state
+	var history: Array = []
+	var factor: float = State.Quality.MULTIPLIER[grade]
+	if not stored_mode:
+		for quote in state.market[crop].history: history.append(float(quote) * factor)
+		return history
+	# Stored prices follow the Winter clock, rather than the fresh harvest quote.
+	var seconds: float = state.season_clock.seconds
+	var end: int = ceili(seconds / State.PRICE_QUOTE_SECONDS)
+	var base: float = float(State.CropTable.CROPS[crop].base) * factor
+	var peak: float = state.trading.peak_price(crop, grade)
+	for index in range(maxi(0, end - State.PRICE_HISTORY_LIMIT + 1), end):
+		history.append(lerpf(base, peak, clampf(index * State.PRICE_QUOTE_SECONDS / state.SeasonClock.SEASON_SECONDS, 0, 1)))
+	history.append(price_for(crop, grade))
+	return history
+
 func select_variety(crop: String, grade: String = "") -> void:
 	selected = crop
 	trade_open = true
@@ -179,8 +196,8 @@ func _sparkline(parent: Control) -> Control:
 	chart.name = "PriceHistory"
 	chart.custom_minimum_size = Vector2(140, 28)
 	chart.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	chart.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chart.tooltip_text = "Recent sale prices · up to 12 quotes"
+	chart.mouse_filter = Control.MOUSE_FILTER_PASS
+	chart.tooltip_text = "Recent sale prices, zoomed to their labelled range. A Winter arrow means the target is outside that range."
 	parent.add_child(chart)
 	return chart
 
@@ -271,7 +288,9 @@ func _layout() -> void:
 	if not selling:
 		Seeds.layout(self, available_width, touch)
 	else:
-		for entry in sale_rows.values(): entry.card.get_child(0).vertical = narrow
+		for entry in sale_rows.values():
+			entry.card.get_child(0).vertical = narrow
+			entry.history.custom_minimum_size.y = 100 if touch else 68
 		if narrow and sell_button.get_parent() != _mobile_actions:
 			sell_button.reparent(_mobile_actions)
 			_total_box.reparent(_mobile_actions)
@@ -302,7 +321,6 @@ func refresh() -> void:
 	hud._sell_crop = selected
 	for crop in sale_rows:
 		var entry: Dictionary = sale_rows[crop]
-		var crop_quote_data: Dictionary = state.market[crop]
 		entry.price.text = state.market_money(price_for(crop, selected_grade if crop == selected else "Standard")) + "/t"
 		entry.price.tooltip_text = "Sale price per tonne"
 		_show_price_change(entry.change, crop, selected_grade if crop == selected else "Standard")
@@ -312,10 +330,7 @@ func refresh() -> void:
 			entry.grades[word].visible = stock(crop, word) > 0
 			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
 			Place.pill(entry.grades[word], ACCENT)
-		var factor: float = State.Quality.MULTIPLIER[selected_grade] if crop == selected else 1.0
-		var history: Array = []
-		for point in crop_quote_data.history: history.append(float(point) * factor)
-		entry.history.set_history(history, MUTED)
+		entry.history.set_history(price_history(crop, selected_grade if crop == selected else "Standard"), MUTED)
 		entry.history.set_expected_price(state.trading.peak_price(crop, selected_grade if crop == selected else "Standard"))
 		entry.owned.text = "%d fresh tonnes" % stock(crop)
 	var chosen: Dictionary = sale_rows[selected]

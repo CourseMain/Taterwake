@@ -202,6 +202,7 @@ func ui_checks() -> void:
 		var base: float = State.CropTable.CROPS.russet.base * State.Quality.MULTIPLIER[grade]
 		var premium: int = roundi((page.price_for("russet", grade) / base - 1.0) * 100.0)
 		check(page.crop_change.text == "+%d%%" % premium and premium > 0, "Winter percentage uses the rising stored quote for " + grade)
+		check(is_equal_approx(page.crop_history.samples[-1], page.price_for("russet", grade)) and page.crop_history.samples[0] < page.crop_history.samples[-1], "Winter chart ends at the actual rising stored quote for " + grade)
 	var held_before_tabs: Dictionary = game.state.trading.held.duplicate(true)
 	var cash_before_tabs: float = game.state.coins
 	game.hud._modal_market_nav.get_child(0).pressed.emit()

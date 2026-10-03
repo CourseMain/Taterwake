@@ -74,12 +74,37 @@ func check_price_information(state) -> void:
 			check(page.crop_history.samples == state.market[crop].history, crop + " sell navigation updates sparkline")
 			check(game.hud._top.price.text == state.market_money(state.market[crop].sell) and game.hud._top.price_change.text == "· " + text and game.hud._top.price_change.get_theme_color("font_color") == color, crop + " top bar live price, signed percentage and color")
 
+func check_chart_scaling() -> void:
+	var chart = load("res://scripts/price_sparkline.gd").new()
+	root.add_child(chart)
+	for dimensions in [Vector2(600, 68), Vector2(300, 100)]:
+		chart.size = dimensions
+		chart.set_history([360.0, 361.8, 363.6], Color("705236"))
+		chart.set_expected_price(432)
+		var rise: Dictionary = chart.chart_geometry()
+		check(rise.points[0].y - rise.points[-1].y > rise.plot.size.y * 0.6, "one-percent rise visibly crosses the chart at " + str(dimensions))
+		check(rise.winter_off_scale == 1 and rise.range.y < 432, "distant Winter target is marked outside the zoomed range")
+		check(chart.samples == [360.0, 361.8, 363.6], "zoom keeps real quote values")
+		chart.set_expected_price(720)
+		check(chart.chart_geometry().points == rise.points, "a larger Winter premium cannot flatten recent movement")
+		chart.set_expected_price(361.8)
+		var inside: Dictionary = chart.chart_geometry()
+		check(inside.winter_off_scale == 0 and inside.winter_y > inside.plot.position.y and inside.winter_y < inside.plot.end.y, "in-range Winter target retains its real plotted height")
+		chart.set_history([363.6, 361.8, 360.0], Color("705236"))
+		var fall: Dictionary = chart.chart_geometry()
+		check(fall.points[-1].y - fall.points[0].y > fall.plot.size.y * 0.6, "small price fall points downward with the same visibility")
+		chart.set_history([360.0, 360.0, 360.0], Color("705236"))
+		var flat: Dictionary = chart.chart_geometry()
+		check(is_equal_approx(flat.points[0].y, flat.points[-1].y), "unchanged quotes stay flat")
+	chart.queue_free()
+
 func run() -> void:
 	if not "--integration-test" in OS.get_cmdline_user_args():
 		quit(1)
 		return
 	create_timer(90).timeout.connect(func() -> void: push_error("Market check timed out"); quit(1))
 	capture = "--capture" in OS.get_cmdline_user_args()
+	check_chart_scaling()
 	var expected: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
 	check(State.crops_by_base_price(State.CROP_IDS) == expected, "fixed ascending base order")
 	game = load("res://scenes/main.tscn").instantiate()

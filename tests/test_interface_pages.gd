@@ -37,6 +37,8 @@ func run() -> void:
 			if kind == "run_summary":
 				game.state.run_outcome = "completed"; game.state.season_clock.year = 10
 			game.state.season_clock.season = 3 if kind in ["climate", "winter_stores", "accounts", "run_summary"] else 0
+			if kind == "sell_potatoes":
+				game.state.elapsed = 18.0; game.state._refresh_market()
 			if kind == "winter_stores":
 				game.state.season_clock.seconds = 140
 				for crop in game.state.CROP_IDS: game.state.trading.held[crop] = game.state.Stock.pile(8)
