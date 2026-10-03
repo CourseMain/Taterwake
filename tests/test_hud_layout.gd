@@ -133,6 +133,7 @@ func winter_pages() -> void:
 	var note = game.hud._season_jobs
 	check(note.visible, "Winter note appears after accounts close")
 	check(not game.hud._climate_alert.visible, "the Winter blizzard line replaces the overlapping transient banner")
+	check(note.lines.get_child(0).name == "WinterJob_blizzard", "the urgent blizzard action stays above the job scroll")
 	for key in ["ice", "stores:russet", "project:rainwater", "covers", "ripe", "seed", "business:grower", "blizzard"]:
 		check(note.jobs.has(key), "live Winter job: " + key)
 	var previous_seeds: int = game.state.seed_inventory.russet

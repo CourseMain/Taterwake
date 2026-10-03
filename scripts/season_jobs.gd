@@ -42,6 +42,8 @@ func available() -> Dictionary:
 	var farm = hud._state
 	var result: Dictionary = {}
 	if farm.season_clock.season != 3: return result
+	if farm.climate.data.phase == "warning" and farm.climate.data.event == "blizzard":
+		result.blizzard = ["Blizzard in %ds · sell / harvest →" % ceili(farm.climate.data.timer), "climate"]
 	var iced: int = 0
 	var ripe: int = 0
 	var seeds: int = 0
@@ -72,8 +74,6 @@ func available() -> Dictionary:
 	if seeds > 0: result.seed = ["%d t · keep as seed →" % seeds, "winter_seeds"]
 	for id in farm.Diversification.NAMES:
 		if farm.diversification.can_buy(farm, id): result["business:" + id] = [farm.Diversification.NAMES[id] + " · " + ("Free enrolment" if id == "grower" else farm.money(farm.Diversification.Balance.BUSINESS_COSTS[id])) + " →", "businesses"]
-	if farm.climate.data.phase == "warning" and farm.climate.data.event == "blizzard":
-		result.blizzard = ["Blizzard in %ds · protect stores →" % ceili(farm.climate.data.timer), "climate"]
 	return result
 
 func refresh() -> void:
@@ -110,6 +110,7 @@ func refresh() -> void:
 			button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			button.add_theme_font_override("font", hud._plain_font)
 			Place.pill(button, Place.INK)
+			if id == "blizzard": button.add_theme_color_override("font_color", Color("a63529"))
 			lines.add_child(button)
 		for id in completed:
 			var done: Label = hud._label("✓ " + completion_text(str(id)), 13, hud.MUTED)
