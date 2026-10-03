@@ -6,6 +6,7 @@ var heading: Button
 var quote_key: Label
 var scroll: ScrollContainer
 var lines: VBoxContainer
+var sleep_button: Button
 var jobs: Dictionary = {}
 var completed: Dictionary = {}
 var collapsed: bool = false
@@ -34,6 +35,10 @@ func setup(owner_hud) -> void:
 	column.add_child(scroll)
 	lines.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(lines)
+	sleep_button = hud._button("Sleep until Spring", "sleep_spring", true)
+	sleep_button.name = "WinterSleepUntilSpring"
+	sleep_button.tooltip_text = "Review stored tonnes and their late Winter value before sleeping. Stores stay unsold."
+	column.add_child(sleep_button)
 	var pin := preload("res://scripts/paper_detail.gd").new()
 	pin.kind = "pin"
 	add_child(pin)
@@ -95,12 +100,14 @@ func refresh() -> void:
 	for id in completed.keys():
 		if str(id).begins_with("business:") and not farm.diversification.owns(str(id).get_slice(":", 1)): completed.erase(id)
 	jobs = next
-	var next_signature: String = str(jobs) + str(completed) + str(collapsed)
+	var can_sleep: bool = farm.can_sleep_until_spring()
+	var next_signature: String = str(jobs) + str(completed) + str(collapsed) + str(can_sleep)
 	if next_signature != signature:
 		signature = next_signature
 		for child in lines.get_children(): lines.remove_child(child); child.queue_free()
 		heading.text = "Winter · %d jobs left %s" % [jobs.size(), "+" if collapsed else "−"]
 		scroll.visible = not collapsed
+		sleep_button.visible = can_sleep and not collapsed
 		quote_key.visible = not collapsed and jobs.keys().any(func(id): return str(id).begins_with("stores:"))
 		for id in jobs:
 			var button: Button = hud._button(jobs[id][0], jobs[id][1])
@@ -144,10 +151,14 @@ func layout() -> void:
 		top = maxf(top, touch.status.get_global_rect().end.y + 14)
 	position = Vector2(left, top)
 	var bottom: float = hud.root.size.y - 20
-	if phone and not landscape: bottom = touch.stick.get_global_rect().position.y - 12
+	if phone and not landscape:
+		bottom = touch.stick.get_global_rect().position.y - 12
+		var hurry = touch.get("hurry_button")
+		if is_instance_valid(hurry): bottom = minf(bottom, hurry.get_global_rect().position.y - 12)
 	elif not phone: bottom = hud.root.size.y - 180
 	var chrome: float = get_theme_stylebox("panel").get_minimum_size().y + heading.get_combined_minimum_size().y + 4
 	if quote_key.visible: chrome += quote_key.get_combined_minimum_size().y + 2
+	if sleep_button.visible: chrome += sleep_button.get_combined_minimum_size().y + 2
 	scroll.custom_minimum_size = Vector2(width - 20, minf(lines.get_combined_minimum_size().y, maxf(target, bottom - top - chrome)))
 	size.y = 0
 	size.x = width

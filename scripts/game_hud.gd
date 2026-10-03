@@ -3,6 +3,7 @@ extends CanvasLayer
 const Balance = preload("res://scripts/balance.gd")
 
 signal action_requested(action: String)
+signal panel_opened(kind: String)
 
 class DebugMoneyInput extends LineEdit:
 	# Range/SpinBox displays tiny positive values as zero. Keep the original
@@ -77,6 +78,7 @@ const ALL_CROP_IDS: Array[String] = CropTable.IDS
 const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
+const ACCOUNTS_ENTRANCE_SECONDS: float = 0.6
 
 var _conversation: Control
 var root: Control
@@ -84,6 +86,9 @@ var _state: Node
 var _plain_font: FontVariation = Type.face(Type.BODY, 400.0)
 var _card_heading_font: FontVariation = Type.face(Type.SHOP, 600.0)
 var _card_button_font: FontVariation = Type.face(Type.DISPLAY, 600.0)
+var _paper_body_font: FontVariation = Type.face(Type.BODY, 600.0)
+var _paper_heading_font: FontVariation = Type.face(Type.DISPLAY, 600.0)
+var _ledger_font: FontVariation = Type.face(Type.BODY, 400.0)
 var _font: Font
 var _heading_font: Font
 var _top: Dictionary = {}
@@ -171,6 +176,15 @@ var _run_end: Control
 var _run_end_title: Label
 var _run_end_detail: Label
 var _modal_fade: Tween
+var _modal_motion: Control
+var _modal_entrance_shield: Control
+var _entrance_elapsed: float = ACCOUNTS_ENTRANCE_SECONDS
+var _entrance_duration: float = ACCOUNTS_ENTRANCE_SECONDS
+var _entrance_origin := Vector2.ZERO
+var _entrance_offset := Vector2.ZERO
+var _entrance_request: int = 0
+var _hurry_badge: PanelContainer
+var hurry_active: bool = false
 var _climate_console: PanelContainer
 var _weather_button: Button
 var _climate_alert: Control
@@ -181,6 +195,8 @@ var _season_jobs: PanelContainer
 var last_screenshot_path: String = ""
 
 func _process(delta: float) -> void:
+	advance_panel_entrance(delta)
+	_update_hurry_badge()
 	_hud_clock += delta
 	_help_cooldown = maxf(0.0, _help_cooldown - delta)
 	_farm_hint_remaining = maxf(0.0, _farm_hint_remaining - delta)
@@ -228,6 +244,9 @@ func build_ui() -> void:
 	title_font.fallbacks = [Type.SPUDION, UI_SYMBOLS, UI_SYMBOLS_2]
 	title_font.variation_opentype = {weight_axis: 600.0}
 	_heading_font = title_font
+	_paper_body_font.fallbacks = [Type.SPUDION]
+	_paper_heading_font.fallbacks = [Type.SPUDION]
+	_ledger_font.fallbacks = [Type.SPUDION]
 	root = Control.new()
 	root.name = "TaterlandHUD"
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -240,6 +259,7 @@ func build_ui() -> void:
 	_climate_effect = load("res://scripts/climate_effect.gd").new()
 	root.add_child(_climate_effect)
 	_build_top()
+	_build_hurry_badge()
 	_season_jobs = preload("res://scripts/season_jobs.gd").new()
 	root.add_child(_season_jobs)
 	_season_jobs.setup(self)
@@ -696,6 +716,9 @@ func _act(action: String) -> void:
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
 		return
+	if action == "sleep_spring":
+		if is_instance_valid(_state) and _state.can_sleep_until_spring(): show_panel("sleep_confirm", _state)
+		return
 	if action in ["tutorial:exit", "tutorial:stay"]:
 		_tutorial_exit_pending = action == "tutorial:exit"
 		_apply_tutorial_visibility()
@@ -846,6 +869,42 @@ func _build_top() -> void:
 	save.add_theme_font_size_override("font_size", 12)
 	_place(save, Rect2(1154, 67, 98, 27))
 	save.hide()
+
+func _build_hurry_badge() -> void:
+	_hurry_badge = _card(CREAM, 6)
+	_hurry_badge.name = "HurryBadge"
+	_hurry_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hurry_badge.z_index = 200
+	var badge: Label = _label("3×", 16, INK, true)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hurry_badge.add_child(badge)
+	_place(_hurry_badge, Rect2(338, 112, 46, 28))
+	_hurry_badge.hide()
+
+func set_hurry_active(active: bool) -> void:
+	hurry_active = active
+	_update_hurry_badge()
+
+func _update_hurry_badge() -> void:
+	if not is_instance_valid(_hurry_badge): return
+	var touch = get_parent().get("touch_controls")
+	var phone: bool = is_instance_valid(touch) and touch.enabled
+	# Touch shows the badge in its held field button. A keyboard can still
+	# hurry an ordinary phone menu, where the field controls are hidden.
+	_hurry_badge.visible = hurry_active and (not phone or is_panel_open()) and is_instance_valid(_state) and not _state.run_over
+	if not _hurry_badge.visible: return
+	var badge: Label = _hurry_badge.get_child(0)
+	if phone:
+		var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
+		var extent := Vector2(46, 28) / maxf(.1, scale)
+		_hurry_badge.position = Vector2(root.size.x - extent.x - 22, 24)
+		_hurry_badge.size = extent
+		badge.add_theme_font_size_override("font_size", ceili(16 / maxf(.1, scale)))
+	else:
+		_hurry_badge.position = Vector2(338, 112)
+		_hurry_badge.size = Vector2(46, 28)
+		badge.add_theme_font_size_override("font_size", 16)
 
 func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> Label:
 	var box: VBoxContainer = _vbox(0)
@@ -1083,9 +1142,14 @@ func _build_modal() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_modal.add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_modal_motion = Control.new()
+	_modal_motion.name = "ModalPresentation"
+	_modal_motion.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_modal.add_child(_modal_motion)
+	_modal_motion.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel: PanelContainer = _card(CREAM, 24)
 	_modal_card = panel
-	_modal.add_child(panel)
+	_modal_motion.add_child(panel)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.offset_left = -376
 	panel.offset_right = 376
@@ -1128,6 +1192,15 @@ func _build_modal() -> void:
 	_modal_trade_footer = _vbox(4)
 	column.add_child(_modal_trade_footer)
 	_modal_trade_footer.hide()
+	var shield := ColorRect.new()
+	shield.name = "AccountsEntranceShield"
+	shield.color = Color.TRANSPARENT
+	shield.mouse_filter = Control.MOUSE_FILTER_STOP
+	shield.z_index = 20
+	_modal.add_child(shield)
+	shield.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shield.hide()
+	_modal_entrance_shield = shield
 	_modal.hide()
 
 func price_change_color(crop: String) -> Color:
@@ -1416,6 +1489,8 @@ func is_panel_open() -> bool:
 func close_panel() -> void:
 	if is_instance_valid(_state): _state.accounts_open = false
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
+	_entrance_request += 1
+	_finish_panel_entrance()
 	if is_instance_valid(_conversation) and _conversation.visible: _conversation.finish()
 	if is_instance_valid(_modal):
 		_modal.hide()
@@ -1432,6 +1507,9 @@ func show_panel(kind: String, state: Node) -> void:
 	_state.accounts_open = kind == "accounts"
 	if not is_instance_valid(root):
 		build_ui()
+	var opening: bool = not _modal.visible or kind != _panel_kind
+	_entrance_request += 1
+	_finish_panel_entrance()
 	if kind != _panel_kind:
 		_reset_pending = false
 	_panel_kind = kind
@@ -1483,6 +1561,7 @@ func show_panel(kind: String, state: Node) -> void:
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
 		"accounts": _build_winter()
+		"sleep_confirm": _build_sleep_confirm()
 		"bank":
 			_heading("The overdraft", "Edwin · Bank manager")
 			_body.add_child(_wrap(_state.NpcRoster.bank_line(_state), 20, INK))
@@ -1531,6 +1610,63 @@ func show_panel(kind: String, state: Node) -> void:
 		# Newly built content can settle its minimum size after the first fit.
 		# Refit this frame rather than waiting for the periodic touch update.
 		get_parent().touch_controls.fit_modal.call_deferred()
+	if opening:
+		if kind == "accounts":
+			_modal_motion.modulate.a = 0
+			(_modal.get_child(0) as CanvasItem).modulate.a = 0
+			_modal_entrance_shield.show()
+		_begin_panel_entrance.call_deferred(kind, _entrance_request)
+
+func _begin_panel_entrance(kind: String, request: int) -> void:
+	if request != _entrance_request or not _modal.visible or kind != _panel_kind: return
+	if kind == "accounts":
+		_entrance_elapsed = 0
+		_entrance_duration = ACCOUNTS_ENTRANCE_SECONDS
+		_entrance_origin = ledger_screen_position() - _modal_card.get_global_rect().get_center()
+		_apply_panel_entrance()
+	panel_opened.emit(kind)
+
+func ledger_screen_position() -> Vector2:
+	var game = get_parent()
+	var world = game.get("world")
+	var farm_view = game.get("farm_viewport")
+	if is_instance_valid(world) and is_instance_valid(world.camera) and is_instance_valid(farm_view):
+		return world.camera.unproject_position(world.ledger_book_position()) * root.size / Vector2(farm_view.size).max(Vector2.ONE)
+	return root.size * Vector2(.5, .8)
+
+func panel_entrance_duration() -> float:
+	return _entrance_duration
+
+func panel_entrance_progress() -> float:
+	return clampf(_entrance_elapsed / _entrance_duration, 0, 1)
+
+func panel_entrance_offset() -> Vector2:
+	return _entrance_offset
+
+func advance_panel_entrance(delta: float) -> void:
+	if _entrance_elapsed >= _entrance_duration: return
+	_entrance_elapsed = minf(_entrance_duration, _entrance_elapsed + maxf(0, delta))
+	_apply_panel_entrance()
+
+func _apply_panel_entrance() -> void:
+	var progress: float = panel_entrance_progress()
+	var eased: float = 1 - pow(1 - progress, 3)
+	_entrance_offset = _entrance_origin * (1 - eased)
+	# A render-only wrapper leaves the settled card rect intact for responsive
+	# fitting. Its temporary input shield covers the translated presentation.
+	RenderingServer.canvas_item_set_transform(_modal_motion.get_canvas_item(), Transform2D(0, _entrance_offset))
+	_modal_motion.modulate.a = minf(1, progress * 3)
+	(_modal.get_child(0) as CanvasItem).modulate.a = progress
+	_modal_entrance_shield.visible = progress < 1
+
+func _finish_panel_entrance() -> void:
+	_entrance_elapsed = _entrance_duration
+	_entrance_offset = Vector2.ZERO
+	if is_instance_valid(_modal_motion):
+		RenderingServer.canvas_item_set_transform(_modal_motion.get_canvas_item(), Transform2D.IDENTITY)
+		_modal_motion.modulate.a = 1
+	if is_instance_valid(_modal_entrance_shield): _modal_entrance_shield.hide()
+	if is_instance_valid(_modal): (_modal.get_child(0) as CanvasItem).modulate.a = 1
 
 func _fit_shop_modal() -> void:
 	if _panel_kind not in ["barn", "inventory", "tools"] or not _modal.visible: return
@@ -1701,9 +1837,9 @@ func _build_help() -> void:
 	_modal_card.offset_right = 310
 	_modal_card.offset_top = -200
 	_modal_card.offset_bottom = 200
-	var entries: Array = [["Camera", "Hold click + drag"], ["Zoom", "Mouse wheel / pinch"], ["Recenter", "Home"], ["Move", "WASD / arrows"], ["Interact", "Click / E"], ["Sell", "F"]]
+	var entries: Array = [["Camera", "Hold click + drag"], ["Zoom", "Mouse wheel / pinch"], ["Recenter", "Home"], ["Move", "WASD / arrows"], ["Interact", "Click / E"], ["Sell", "F"], ["Hurry", "Hold H · 3×"]]
 	if is_instance_valid(get_parent().get("touch_controls")) and get_parent().get("touch_controls").enabled:
-		entries = [["Camera", "Drag farm"], ["Zoom", "Pinch"], ["Move", "Joystick"], ["Interact", "Tap bed or shop"], ["Recenter", "Tools → Recenter"]]
+		entries = [["Camera", "Drag farm"], ["Zoom", "Pinch"], ["Move", "Joystick"], ["Interact", "Tap bed or shop"], ["Recenter", "Tools → Recenter"], ["Hurry", "Hold to hurry · 3×"]]
 	var controls := _vbox(10)
 	_body.add_child(controls)
 	for entry: Array in entries:
@@ -1720,6 +1856,9 @@ func _account_row(parent: Node, title: String, value: String) -> Label:
 	parent.add_child(row)
 	row.setup(self, title, value)
 	return row.amount
+
+func ledger_row_font() -> Font:
+	return _ledger_font
 
 func _capture_ledger() -> void:
 	if _panel_kind not in ["accounts", "run_summary"]: return
@@ -1760,9 +1899,9 @@ func touch_target() -> float:
 	return maxf(68, ceilf(44 / maxf(scale, 0.1)))
 
 func _paper_typography(node: Node) -> void:
-	if node is Label:
-		var font: FontVariation = Type.face(Type.DISPLAY if node.get_theme_font("font") in [_card_heading_font, _heading_font] else Type.BODY, 600)
-		font.fallbacks = [Type.SPUDION]
+	if node is Label and not node.has_meta("ledger_row_type"):
+		var heading: bool = node.get_theme_font("font") in [_card_heading_font, _heading_font, _paper_heading_font]
+		var font: FontVariation = _paper_heading_font if heading else _paper_body_font
 		node.add_theme_font_override("font", font)
 	for child in node.get_children(): _paper_typography(child)
 
@@ -1898,9 +2037,37 @@ func _build_run_summary() -> void:
 	_modal_trade_footer.show()
 
 
+func _build_sleep_confirm() -> void:
+	_modal_card.offset_left = -330
+	_modal_card.offset_right = 330
+	_modal_card.offset_top = -230
+	_modal_card.offset_bottom = 230
+	_heading("Sleep until Spring?", "WINTER · Year %d" % _state.season_clock.year)
+	var quote: Dictionary = _state.winter_sleep_quote()
+	_refs.sleep_quote = _wrap("%d t still in store · Late Winter %s total" % [quote.tonnes, _state.money(quote.peak_value)], 24, INK, true)
+	_refs.sleep_quote.name = "WinterSleepQuote"
+	_body.add_child(_refs.sleep_quote)
+	_body.add_child(_wrap("Resolve the current weather, then wake at the Spring boundary. Stored sacks stay unsold and return to the barn.", 18, INK))
+	if int(quote.tonnes) > 0:
+		_body.add_child(_wrap("The late Winter value uses the grades now in store. Weather losses may change it.", 15, MUTED))
+	var actions: BoxContainer = _hbox(10)
+	_body.add_child(actions)
+	var cancel: Button = _button("Keep working", "close")
+	cancel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(cancel)
+	var confirm: Button = _button("Sleep until Spring", "confirm_sleep_spring", true)
+	confirm.name = "ConfirmSleepUntilSpring"
+	confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	confirm.disabled = not _state.can_sleep_until_spring()
+	actions.add_child(confirm)
+
 func _build_pause() -> void:
 	_heading("Your farm", "")
 	if _state.season_clock.season == 3: _body.add_child(_button("Annual accounts", "accounts", true))
+	if _state.can_sleep_until_spring():
+		var sleep: Button = _button("Sleep until Spring", "sleep_spring")
+		sleep.name = "MenuSleepUntilSpring"
+		_body.add_child(sleep)
 	if _state.run_outcome == "completed": _body.add_child(_button("Ten-year summary", "run_summary", true))
 	var menu: GridContainer = GridContainer.new()
 	menu.columns = 3

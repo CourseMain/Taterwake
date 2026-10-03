@@ -111,7 +111,7 @@ func _run() -> void:
 	game.perform_plot(5, "plant")
 	check(game.state.plots[5].stage == 1 and not game.state.plots[5].watered, "manual planting leaves a thirsty crop")
 	game._process(12.0)
-	check(game.state.plots[5].stage != 3, "unwatered crops do not grow unattended")
+	check(game.state.plots[5].stage == 2 and game.state.plots[5].elapsed > 0 and game.state.plots[5].elapsed < 12, "unwatered crops make slow progress while waiting for water")
 	game.perform_plot(5, "water")
 	game._process(game.state.CropTable.CROPS.russet.grow + 0.1)
 	check(game.state.plots[5].stage == 3, "watered crop matures on continuous time")

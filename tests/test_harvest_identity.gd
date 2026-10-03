@@ -71,10 +71,16 @@ func run() -> void:
 	check(game.state.storage_used()-stored == 2, "first Russet harvest excludes the one storm-lost tonne")
 	check(fx.active.size() == 1 and not fx.active[0].heavy, "committed Russet starts one visual receipt")
 	check(fx.audio.last_kind == "harvest", "ordinary crop uses harvest foley")
+	var grade_cues: int = fx.audio.played_count
+	fx.animate(.17)
+	check(fx.audio.played_count==grade_cues,"grade stamp sound waits for the tuber to pop")
+	fx.animate(.02)
+	check(fx.audio.played_count==grade_cues+1 and fx.audio.last_grade==fx.active[0].grade,"committed harvest pop plays its actual grade sound")
+	fx.animate(.02)
+	check(fx.audio.played_count==grade_cues+1,"harvest grade sound plays once")
 	fx.animate(2)
 	check(fx.active.is_empty() and fx.clods.is_empty(), "harvest cleans up without leaving props")
 	game.tutorial.finish()
-	game.tone_remaining = 0
 	ready_plot(6)
 	game.perform_plot(6, "harvest")
 	fx.animate(2)
@@ -83,10 +89,10 @@ func run() -> void:
 	game.perform_plot(5,"harvest")
 	check(game.state.storage_used() == game.state.capacity and game.state.plots[5].stage == 3 and game.state.plots[5].pending > 0, "partial harvest retains uncollected inventory on its crop")
 	fx.animate(2)
-	game.tone_remaining = 0
+	var cues: int = game.feedback_audio.played_count
 	game.perform_plot(5,"harvest")
 	check(fx.active.is_empty(), "full barn produces no fake successful harvest")
-	check(game.tone_remaining == 0, "blocked harvest produces no success chime")
+	check(game.feedback_audio.played_count == cues, "blocked harvest produces no success chime")
 	Stock.take(game.state.storage, "russet", 1)
 	game.perform_plot(5,"harvest")
 	check(fx.active.size() == 1, "partial harvest can resume while receipts remain cosmetic")

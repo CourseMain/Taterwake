@@ -18,6 +18,7 @@ func check(ok: bool, description: String) -> void:
 func settle() -> void:
 	for _frame: int in range(4):
 		await process_frame
+	if is_instance_valid(game): game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)
 
 func inside(control: Control, label: String) -> void:
 	var bounds: Rect2 = game.hud.root.get_global_rect().grow(0.5)

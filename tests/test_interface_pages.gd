@@ -9,6 +9,7 @@ func check(ok: bool, words: String) -> void:
 	if not ok: failures += 1; push_error("FAIL: " + words)
 func settle() -> void:
 	for frame in range(12): await process_frame
+	if is_instance_valid(game): game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate(); root.add_child(game)
@@ -74,6 +75,10 @@ func run() -> void:
 			for button in game.hud._modal_card.find_children("*", "Button", true, false):
 				if button.is_visible_in_tree(): check(minf(button.size.x, button.size.y) * scale >= 43.9, kind + " target " + button.text)
 			if kind == "accounts":
+				var paper_faces: Dictionary = {}
+				for label in game.hud._modal_card.find_children("*", "Label", true, false):
+					paper_faces[label.get_theme_font("font").get_instance_id()] = true
+				check(paper_faces.size() == 3, "annual accounts shares its two paper faces and one ledger face instead of creating one per label or row")
 				check(game.hud._refs["diversify:grower"].text == "Enrol free", "free enrolment has an action instead of a zero price")
 				for id in game.state.Diversification.NAMES:
 					var effect: Label = game.hud._body.find_child("BusinessEffect_" + id, true, false)

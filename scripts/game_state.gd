@@ -16,6 +16,7 @@ const SeasonClock = preload("res://scripts/season_clock.gd")
 var season_clock = SeasonClock.new()
 # Standalone fixtures never write a player save. Main assigns the live path.
 var boundary_save_path: String = ""
+var last_save_ms: float = 0.0 # Runtime timing only; never part of a farm save.
 
 const NpcRoster = preload("res://scripts/npc_roster.gd")
 const Balance = preload("res://scripts/balance.gd")
@@ -41,6 +42,7 @@ var diversification = Diversification.new()
 const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
 const MAX_GROW_SECONDS: float = 450.0
+const DRY_GROWTH_SPEED: float = 0.4
 const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
 const BARN_COSTS: Array[float] = Balance.BARN_COSTS
 const Ledger = preload("res://scripts/ledger.gd")
@@ -349,7 +351,8 @@ func update(delta: float) -> void:
 			var ripe_step: float = step if int(plot["stage"]) == 3 else 0.0
 			if int(plot.stage) > 0: plot["plant_age"] = minf(1e9, float(plot.get("plant_age", 0)) + step)
 			var was_infested: bool = bool(plot.get("pests", false))
-			if plot["unlocked"] and int(plot["stage"]) in [1, 2] and plot["watered"]:
+			if plot["unlocked"] and int(plot["stage"]) in [1, 2]:
+				if not plot.watered: growth_speed *= DRY_GROWTH_SPEED
 				plot["stage"] = 2
 				var until_ripe: float = (float(CropTable.CROPS[plot["crop"]]["grow"]) - float(plot["elapsed"])) / growth_speed
 				ripe_step = maxf(0.0, step - until_ripe)
@@ -397,6 +400,34 @@ func season_seconds() -> float:
 
 func calendar_light_seconds() -> float:
 	return season_clock.seconds / season_seconds() * SeasonClock.SEASON_SECONDS
+
+func can_sleep_until_spring() -> bool:
+	return season_clock.season == 3 and season_clock.year < SeasonClock.LAST_YEAR and not run_over and not accounts_open and not climate_report_open and not tutorial_active and not ClimateSystem.Lesson.active(self)
+
+func winter_sleep_quote() -> Dictionary:
+	var tonnes: int = 0
+	var peak: float = 0.0
+	for crop in CROP_IDS:
+		for grade in Quality.GRADES:
+			var count: int = Stock.count(trading.held, crop, grade)
+			tonnes += count
+			peak += count * trading.peak_price(crop, grade)
+	return {"tonnes": tonnes, "peak_value": peak}
+
+func winter_sleep_step(delta: float) -> bool:
+	# Work is budgeted by the scene across frames. Preserve the ordinary
+	# Winter simulation, losses, store release and boundary save. A warning
+	# started late by debug must resolve while it is still Winter.
+	if not can_sleep_until_spring() or not is_finite(delta) or delta <= 0.0: return false
+	var remaining: float = season_clock.remaining(season_seconds())
+	if remaining > 0.00002:
+		update(minf(delta, remaining - 0.00001))
+	elif climate.data.phase != "calm":
+		climate.update(self, minf(delta, minf(0.25, climate.next_boundary())))
+		changed.emit()
+	else:
+		update(remaining)
+	return season_clock.season == 0
 
 func run_title() -> String:
 	return diversification.title(self)
@@ -995,6 +1026,12 @@ func _reject_save(path: String) -> void:
 
 
 func save_game(path: String = DEFAULT_SAVE_PATH) -> bool:
+	var started: int = Time.get_ticks_usec()
+	var saved: bool = _write_save(path)
+	last_save_ms = (Time.get_ticks_usec() - started) / 1000.0
+	return saved
+
+func _write_save(path: String) -> bool:
 	if path in PROTECTED_SAVE_PATHS:
 		notified.emit("The original farm save is preserved as a backup. Save to the current version instead.")
 		return false
@@ -1157,8 +1194,6 @@ func _valid_plots(raw: Variant, data: Dictionary) -> bool:
 		if stage == 0 and (plot["watered"] or float(plot["elapsed"]) > 0.0 or int(plot["pending"]) > 0):
 			return false
 		if stage == 1 and (plot["watered"] or float(plot["elapsed"]) > 0.0):
-			return false
-		if stage >= 2 and not plot["watered"]:
 			return false
 		if stage == 3 and float(plot["elapsed"]) != saved_grow:
 			return false

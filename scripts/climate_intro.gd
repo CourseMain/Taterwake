@@ -1,6 +1,7 @@
 extends "res://scripts/chapter_subtitles.gd"
 ## Annual front page, reusing the former intro's subtitle, timed reveal and skip.
 const Strip = preload("res://scripts/climate_strip.gd")
+const FADE_SECONDS: float = 0.6
 const HEADLINES: Array[String] = ["A farm under an uncertain sky", "The old seasons start to shift", "Rain arrives at the wrong time", "The safe seasons grow shorter", "Another year of harder choices", "Even quiet summers leave the grass dry", "The weather takes a larger share", "Familiar seasons, unfamiliar losses", "Little room left for a bad harvest", "Ten years beneath a changing sky"]
 var forecaster: Label
 var portrait
@@ -98,6 +99,7 @@ func label(words: String, pixels: int) -> Label:
 	return result
 func present(farm) -> void:
 	elapsed = 0
+	modulate.a = 0
 	var year: int = farm.season_clock.year
 	chapter.text = "YEAR %d\n%s" % [year, HEADLINES[year - 1]]
 	subtitle.text = "Mean severity %d%% · three disasters per year at most" % roundi(farm.ClimateSystem.severity_mean(year) * 100)
@@ -114,10 +116,14 @@ func stop() -> void:
 	if is_instance_valid(voice): voice.stop()
 	if is_instance_valid(portrait): portrait.hide()
 	super.stop()
+	modulate.a = 1
 
 func finish() -> void:
 	stop(); finished.emit()
 func _process(delta: float) -> void:
 	_tick(delta)
 	if is_instance_valid(portrait.avatar): portrait.avatar.speaking = voice.player.playing
-	subtitle.modulate.a = clampf(elapsed / 0.6, 0, 1)
+	modulate.a = front_page_progress()
+
+func front_page_progress() -> float:
+	return clampf(elapsed / FADE_SECONDS, 0, 1)

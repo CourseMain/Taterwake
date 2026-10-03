@@ -19,6 +19,7 @@ func shot(name: String) -> void:
 		return
 	await process_frame
 	await process_frame
+	game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)
 	RenderingServer.force_draw()
 	check(root.get_texture().get_image().save_png("res://artifacts/hud-layout-" + name + ".png") == OK, "render " + name)
 

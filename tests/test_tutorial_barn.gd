@@ -75,6 +75,7 @@ func run() -> void:
 	walk_plot("plant")
 	walk_plot("water")
 	game._process(1000)
+	game._process(40)
 	check(game.tutorial.current_id() == "loss", "Summer loss precedes harvest")
 	press("tutorial:next")
 	walk_plot("harvest")

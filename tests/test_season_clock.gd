@@ -138,7 +138,9 @@ func scene_checks() -> void:
 	game._process(10)
 	check(game.state.season_clock.season == 3 and game.state.season_clock.seconds == 0 and game.hud._panel_kind == "accounts", "accounts interrupt excess simulation exactly at Winter start")
 	check(JSON.parse_string(FileAccess.get_file_as_string(SAVE)).season_clock.season == 3, "Winter saves before accounts open")
-	check(game.hud._top.season.text == "Year 1 · Winter" and game.world._winter_cover.visible, "season strip and snow show Winter")
+	check(game.hud._top.season.text == "Year 1 · Winter" and game.world.season_transition_info().active, "season strip shows Winter while snow begins its crossfade")
+	game.world._process(1.0)
+	check(game.world._winter_cover.visible and not game.world.season_transition_info().active, "Winter snow finishes its one-second crossfade")
 	check(not game.hud._season_jobs.visible, "Winter jobs wait until the accounts close")
 	var matching_ice := true
 	for i in range(game.state.plots.size()):
@@ -168,7 +170,8 @@ func scene_checks() -> void:
 		root.get_texture().get_image().save_png("res://artifacts/working-winter.png")
 	game._on_action("menu")
 	game._process(149)
-	check(game.state.season_clock.year == 2 and not game.world._winter_cover.visible, "automatic Spring restores green ground")
+	game.world._process(1.0)
+	check(game.state.season_clock.year == 2 and not game.world._winter_cover.visible, "automatic Spring restores green ground after the crossfade")
 	check(not game.hud._modal.find_children("*", "Button", true, false).any(func(b): return b.text == "Annual accounts"), "Spring refresh removes the Winter-only accounts link")
 	game._on_action("accounts")
 	check(not game.state.accounts_open, "stale accounts actions cannot pause Spring")

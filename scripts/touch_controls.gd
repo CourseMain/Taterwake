@@ -19,6 +19,12 @@ var use_button: Button
 var tools_button: Button
 var menu_button: Button
 var sell_button: Button
+var hurry_button: Button
+var hurry_held: bool = false
+var interaction_scans: int = 0
+var _interaction_clock: float = 1.0
+var _interaction_position := Vector3.INF
+var _interaction_target: Dictionary = {}
 var status: Label
 var drawer: PanelContainer
 var drawer_body: VBoxContainer
@@ -57,6 +63,10 @@ func _ready() -> void:
 	tools_button = button("Tools", func(): open_drawer("tools"))
 	menu_button = button("Menu", func(): game.hud._act("menu"))
 	sell_button = button("Sell", func(): game.hud._act("quick_sell"))
+	hurry_button = button("Hold to hurry", func(): pass)
+	hurry_button.name = "HoldToHurry"
+	hurry_button.button_down.connect(func(): hurry_held = true)
+	hurry_button.button_up.connect(func(): hurry_held = false)
 	fullscreen = preload("res://scripts/fullscreen_button.gd").new()
 	fullscreen.custom_minimum_size = Vector2(44, 44)
 	root.add_child(fullscreen)
@@ -109,7 +119,7 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(resize, CONNECT_DEFERRED)
 	resize()
 	if not enabled:
-		for item in [stick, use_button, tools_button, menu_button, sell_button, status]: item.hide()
+		for item in [stick, use_button, tools_button, menu_button, sell_button, hurry_button, status]: item.hide()
 	# Browser shell owns its button so fullscreen is requested in a trusted DOM gesture.
 	fullscreen.visible = not OS.has_feature("web")
 	get_tree().root.focus_exited.connect(release_all)
@@ -173,6 +183,7 @@ func resize() -> void:
 	place(knob, Rect2(51, 51, 64, 64))
 	place(use_button, Rect2(w - 210, h - 100, 188, 78))
 	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
+	place(hurry_button, Rect2(w - 210, h - 252, 188, 68))
 	place(menu_button, Rect2(w - 134, 16, 112, 68))
 	place(sell_button, Rect2(w - 134, 94, 112, 68))
 	place(status, Rect2(16, 132, minf(w - 168, 500), 48))
@@ -214,7 +225,7 @@ func fit_modal() -> void:
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
 	var height: float = minf(view.y - 24, 1000.0) if trading else view.y - 112
-	if hud._panel_kind == "help":
+	if hud._panel_kind in ["help", "sleep_confirm"]:
 		height = minf(height, hud.modal_content_height())
 	elif hud._panel_kind in ["barn", "inventory", "tools"]:
 		height = minf(height, maxf(240.0, hud.ShopPages.content_height(hud)))
@@ -257,12 +268,22 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 				row_width += child.get_combined_minimum_size().x + node.get_theme_constant("separation")
 		node.vertical = available < 650 or row_width > available
 
-func update_interaction_prompt() -> void:
+func _nearby_target(force: bool = false) -> Dictionary:
+	# Prompt discovery is bounded; projection still follows a moving camera.
+	# The actual E/tap action always performs its own fresh hit test.
+	if force or _interaction_clock >= 0.1 or game.world.player.position.distance_to(_interaction_position) >= 0.35:
+		_interaction_clock = 0.0
+		_interaction_position = game.world.player.position
+		_interaction_target = game.world.nearby_station()
+		if _interaction_target.is_empty(): _interaction_target = game.bed_context()
+		interaction_scans += 1
+	return _interaction_target
+
+func update_interaction_prompt(force: bool = true) -> void:
 	if game.hud.is_panel_open() or game.state.run_over or not game.climate_target.is_empty() or drawer.visible:
 		interaction_prompt.hide()
 		return
-	var target: Dictionary = game.world.nearby_station()
-	if target.is_empty(): target = game.bed_context()
+	var target: Dictionary = _nearby_target(force)
 	if target.is_empty():
 		interaction_prompt.hide()
 		return
@@ -276,7 +297,7 @@ func update_interaction_prompt() -> void:
 		interaction_prompt.hide()
 		return
 	# Never cover the movement pad, status, or other touch controls.
-	for control in [stick, tools_button, use_button, menu_button, sell_button, status, fullscreen, guide_button]:
+	for control in [stick, tools_button, use_button, menu_button, sell_button, hurry_button, status, fullscreen, guide_button]:
 		if control.visible and control.get_global_rect().intersects(rect):
 			interaction_prompt.hide()
 			return
@@ -285,7 +306,8 @@ func update_interaction_prompt() -> void:
 	interaction_prompt.show()
 
 func _process(delta: float) -> void:
-	update_interaction_prompt()
+	_interaction_clock += delta
+	update_interaction_prompt(false)
 	var hud = game.hud
 	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
 	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
@@ -297,7 +319,7 @@ func _process(delta: float) -> void:
 	if not enabled: return
 	_clock += delta
 
-	var blocked: bool = hud.is_panel_open() or game.state.run_over
+	var blocked: bool = hud.is_panel_open() or game.state.run_over or game.sleeping_until_spring or game.state.climate_report_open
 	if blocked and not _blocked_before: release_all()
 	if blocked != _blocked_before and OS.has_feature("web"):
 		JavaScriptBridge.eval("document.body.classList.toggle('menu-open', %s)" % ("true" if blocked else "false"), true)
@@ -306,8 +328,11 @@ func _process(delta: float) -> void:
 	guide_button.text = "Hide guide" if guide_open else "Show guide"
 	if not hud._tutorial.is_empty(): hud._tutorial_card.visible = not hud.is_panel_open() or guide_open
 	else: guide_open = false
-	for item in [stick, use_button, tools_button, menu_button, sell_button, status]: item.visible = not blocked
+	for item in [stick, use_button, tools_button, menu_button, sell_button, hurry_button, status]: item.visible = not blocked
 	sell_button.visible = not blocked and not hud._climate_console.visible and not drawer.visible
+	hurry_button.disabled = not game.can_hurry()
+	if hurry_button.disabled: hurry_held = false
+	hurry_button.text = "Hold · 3×" if game.hurry_active else "Hold to hurry"
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
@@ -320,8 +345,8 @@ func _process(delta: float) -> void:
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
 		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
-		elif not game.world.nearby_station().is_empty() and game.climate_target.is_empty(): use_button.text = "Interact"
-		elif not game.bed_context().is_empty() and game.climate_target.is_empty(): use_button.text = "Cover bed"
+		elif _nearby_target().has("station") and game.climate_target.is_empty(): use_button.text = "Interact"
+		elif _nearby_target().has("plot_index") and game.climate_target.is_empty(): use_button.text = "Cover bed"
 		sell_button.disabled = hud._quick_sell.disabled
 		if hud.is_panel_open(): fit_modal()
 		fit_auxiliary()
@@ -411,7 +436,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		if drawer.visible and drawer.get_global_rect().has_point(event.position): return
 		# Overlay actions are dispatched by finger ID, allowing stick + action.
-		for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button, interaction_prompt]:
+		for item in [use_button, tools_button, menu_button, sell_button, hurry_button, fullscreen, guide_button, interaction_prompt]:
 			if item.is_visible_in_tree() and item.get_global_rect().has_point(event.position):
 				get_viewport().set_input_as_handled()
 				return
@@ -427,14 +452,16 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.pressed:
 			if drawer.visible and drawer.get_global_rect().has_point(event.position): return
-			for item in [use_button, tools_button, menu_button, sell_button, fullscreen, guide_button, interaction_prompt]:
+			for item in [use_button, tools_button, menu_button, sell_button, hurry_button, fullscreen, guide_button, interaction_prompt]:
 				if item.is_visible_in_tree() and not item.disabled and item.get_global_rect().has_point(event.position):
 					button_fingers[event.index] = item
+					if item == hurry_button: hurry_held = true
 					get_viewport().set_input_as_handled()
 					return
 		elif button_fingers.has(event.index):
 			var target: Button = button_fingers[event.index]
 			button_fingers.erase(event.index)
+			if target == hurry_button: hurry_held = false
 			if not event.canceled and target.is_visible_in_tree() and not target.disabled and target.get_global_rect().has_point(event.position): target.pressed.emit()
 			get_viewport().set_input_as_handled()
 		elif world_fingers.has(event.index):
@@ -444,6 +471,10 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenDrag:
 		if event.index == stick_finger:
 			move_stick(event.position)
+			get_viewport().set_input_as_handled()
+		elif button_fingers.has(event.index):
+			if button_fingers[event.index] == hurry_button:
+				hurry_held = hurry_button.is_visible_in_tree() and not hurry_button.disabled and hurry_button.get_global_rect().has_point(event.position)
 			get_viewport().set_input_as_handled()
 		elif world_fingers.has(event.index):
 			if not game._map_navigation_allowed():
@@ -499,6 +530,7 @@ func finish_world_touch(event: InputEventScreenTouch) -> void:
 		game._tap_world(event.position)
 
 func release_all() -> void:
+	hurry_held = false
 	movement = Vector2.ZERO
 	sprinting = false
 	stick_finger = -1

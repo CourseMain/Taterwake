@@ -44,14 +44,12 @@ var _simulation_changed: bool = false
 var _working_plot: bool = false
 var save_elapsed: float = 0.0
 var test_mode: bool = false
-var sound_player: AudioStreamPlayer
-var audio_playback: AudioStreamGeneratorPlayback
-var _silent_audio := PackedVector2Array()
-var audio_phase: float = 0.0
-var tone_frequency: float = 440.0
-var tone_remaining: float = 0.0
-var tone_length: float = 0.1
-var sparkle_tone: bool = false
+var feedback_audio: Node
+var seasonal_ambience: Node
+var sleeping_until_spring: bool = false
+var hurry_active: bool = false
+var _accounts_camera_from: float = -1.0
+var _accounts_camera_elapsed: float = 0.0
 var pest_alert: Node
 var _zoom_target_size: float = 38.0
 var _camera_home_position := Vector3.ZERO
@@ -130,6 +128,7 @@ func _ready() -> void:
 	conversation.finished.connect(_finish_conversation)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
 	hud.action_requested.connect(_on_user_action)
+	hud.panel_opened.connect(_on_panel_opened)
 	state.contract_collected.connect(func(receipts): world.visuals.collect_order(receipts))
 	state.changed.connect(_on_state_changed)
 	state.notified.connect(_on_notification)
@@ -174,7 +173,7 @@ func _register_inputs() -> void:
 	var bindings: Dictionary = {
 		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
 		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
-		"sprint": [KEY_SHIFT]
+		"sprint": [KEY_SHIFT], "hurry": [KEY_H]
 	}
 	for action in bindings:
 		if not InputMap.has_action(action):
@@ -188,16 +187,26 @@ func _process(delta: float) -> void:
 	if is_instance_valid(epilogue_screen): return
 	if world == null or hud == null:
 		return
-	if is_instance_valid(year_intro) and year_intro.visible: return
+	_update_accounts_camera(delta)
+	seasonal_ambience.set_season(state.season_clock.season, state.run_over)
+	hurry_active = _hurry_requested() and can_hurry()
+	hud.set_hurry_active(hurry_active)
+	if sleeping_until_spring:
+		_advance_winter_sleep()
+		world.animate(delta, false)
+		return
+	if is_instance_valid(year_intro) and year_intro.visible:
+		world.animate(delta, false)
+		return
 	if not test_mode and not state.run_over and (not state.tutorial_active or tutorial.current_id() == "welcome") and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
 		_show_year_start()
 		return
 	if state.run_over:
 		hud.update_state(state)
-		_pump_audio()
+		world.animate(delta, false)
 		return
 	if state.accounts_open or (is_instance_valid(conversation) and conversation.visible):
-		_pump_audio()
+		world.animate(delta, false)
 		return
 	state.ClimateSystem.Lesson.tick(state, delta)
 	if not climate_target.is_empty() and (not state.ClimateSystem.Lesson.active(state) and state.climate.data.phase not in ["warning", "active"]):
@@ -307,7 +316,6 @@ func _process(delta: float) -> void:
 		if tutorial_note_clock <= 0.0:
 			_play_tone(tutorial_notes.pop_front(), 0.11)
 			tutorial_note_clock = 0.14
-	_pump_audio()
 
 func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 	if mode not in GraphicsPreferences.MODES:
@@ -320,31 +328,72 @@ func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 		if GraphicsPreferences.save_mode(mode) != OK:
 			hud.show_toast("Graphics changed. This browser could not save the preference.")
 
+func _hurry_requested() -> bool:
+	return Input.is_action_pressed("hurry") or (is_instance_valid(touch_controls) and touch_controls.hurry_held)
+
+func can_hurry() -> bool:
+	if state.run_over or state.accounts_open or state.climate_report_open or sleeping_until_spring or state.tutorial_active or state.ClimateSystem.Lesson.active(state): return false
+	if is_instance_valid(epilogue_screen) or (is_instance_valid(conversation) and conversation.visible) or (is_instance_valid(year_intro) and year_intro.visible): return false
+	if hud.is_panel_open() and hud._panel_kind in ["accounts", "loss_notices", "sleep_confirm", "debug"]: return false
+	return not get_viewport().gui_get_focus_owner() is LineEdit
+
 func _simulation_delta(delta: float) -> float:
-	if not is_finite(delta) or delta <= 0.0:
-		return 0.0
-	# Debug is a workbench: editing a test setup must not advance weather,
-	# especially when the previous scenario left accelerated time enabled.
+	if not is_finite(delta) or delta <= 0.0: return 0.0
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
-	if state.guided_first_year(): multiplier = TutorialScript.WAIT_SPEED if state._tutorial_clock_running() else 1.0
-	var step: float = minf(delta * multiplier, MAX_ACCELERATED_STEP if debug_unlocked and debug_time_multiplier > 1.0 else 3600.0)
-	return step
+	if _hurry_requested() and can_hurry(): multiplier = 3.0
+	if state.guided_first_year():
+		# Draw the Summer warning before choosing the frame's speed.
+		if state.season_clock.seconds == 0.0 and state._tutorial_clock_running(): state.climate.start_season(state)
+		var warning: bool = tutorial.current_id() in ["grow", "loss"] and state.climate.data.phase != "calm"
+		multiplier = TutorialScript.WAIT_SPEED if state._tutorial_clock_running() and not warning else 1.0
+	return minf(delta * multiplier, MAX_ACCELERATED_STEP if debug_unlocked and debug_time_multiplier > 1.0 else 3600.0)
 
 func _advance_simulation(delta: float) -> void:
-	if state.run_over or state.accounts_open or state.climate_report_open or state.ClimateSystem.Lesson.active(state):
-		return
-	if _tutorial_active():
-		state.update(delta)
-		return
+	if state.run_over or state.accounts_open or state.climate_report_open or state.ClimateSystem.Lesson.active(state): return
 	var remaining: float = delta
 	while remaining >= 0.000001:
-		var step: float = remaining
-		if state.climate.clock_running(state): step = minf(step, float(state.climate.data.timer))
+		var season_before: int = state.season_clock.season
+		var fast_guide: bool = state.guided_first_year() and tutorial.current_id() == "grow" and state.climate.data.phase == "calm"
+		var step: float = minf(remaining, state.season_clock.remaining(state.season_seconds()))
+		if state.climate.clock_running(state): step = minf(step, state.climate.next_boundary())
 		state.update(step)
-		if state.run_over or state.accounts_open or state.climate_report_open:
-			return
+		if state.run_over or state.accounts_open or state.climate_report_open or not state._tutorial_clock_running(): return
+		# Excess accelerated time cannot spill into the first storm warning.
+		if fast_guide and season_before != state.season_clock.season: return
 		remaining = maxf(0.0, remaining - step)
+
+func _advance_winter_sleep() -> void:
+	var started: int = Time.get_ticks_usec()
+	_updating_simulation = true
+	for iteration in range(256):
+		if not state.can_sleep_until_spring():
+			sleeping_until_spring = false
+			break
+		if state.winter_sleep_step(3.0):
+			sleeping_until_spring = false
+			break
+		if Time.get_ticks_usec() - started >= 4000: break
+	_updating_simulation = false
+	if _simulation_changed:
+		_simulation_changed = false
+		_on_state_changed()
+
+func _on_panel_opened(kind: String) -> void:
+	if kind == "accounts":
+		feedback_audio.play_paper()
+		if _accounts_camera_from < 0: _accounts_camera_from = world.camera.size
+		_accounts_camera_elapsed = 0.0
+
+func _update_accounts_camera(delta: float) -> void:
+	if _accounts_camera_from < 0: return
+	if not state.accounts_open:
+		world.camera.size = _zoom_target_size
+		_accounts_camera_from = -1.0
+		return
+	_accounts_camera_elapsed = minf(0.6, _accounts_camera_elapsed + maxf(0.0, delta))
+	var progress: float = _accounts_camera_elapsed / 0.6
+	world.camera.size = lerpf(_accounts_camera_from, maxf(CAMERA_ZOOM_MIN, _accounts_camera_from * 0.965), smoothstep(0.0, 1.0, progress))
 
 func _set_debug_session(unlocked: bool, error: String = "") -> void:
 	debug_unlocked = unlocked
@@ -439,7 +488,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(epilogue_screen): return
+	if is_instance_valid(epilogue_screen) or sleeping_until_spring: return
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
 		touch_controls.toggle_fullscreen()
@@ -468,7 +517,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_P: _on_user_action("dex")
 			KEY_Q: _on_user_action("quests")
 			KEY_F: _on_user_action("quick_sell")
-			KEY_H, KEY_F1: _on_user_action("help")
+			KEY_F1: _on_user_action("help")
 			KEY_F5: _on_user_action("save")
 			KEY_F9: _on_user_action("load")
 			KEY_1: _select_tool("hoe")
@@ -878,6 +927,8 @@ func _update_hover_at(screen_position: Vector2) -> void:
 			context_text = state.Land.NAMES[field] + (" · Rent at Winter accounts" if not state.Land.active(state, field) else " · Open 12 beds at Winter accounts · " + state.money(float(land.cost)))
 		elif int(plot.stage) == 3:
 			context_text = "%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action]
+		elif int(plot.stage) in [1, 2] and not bool(plot.watered):
+			context_text = "Needs water · growth paused"
 		elif int(plot.stage) > 0 and bool(plot.watered):
 			var seconds: float = maxf(0.0, (float(state.CropTable.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
 			context_text = "%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds]
@@ -1034,6 +1085,15 @@ func _on_action(action: String) -> void:
 		return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
+		"sleep_spring":
+			if state.can_sleep_until_spring(): hud.show_panel("sleep_confirm", state)
+		"confirm_sleep_spring":
+			if hud._panel_kind == "sleep_confirm" and state.can_sleep_until_spring():
+				hud.close_panel()
+				_cancel_walk()
+				touch_controls.release_all()
+				sleeping_until_spring = true
+				hud.show_farm_hint("Sleeping until Spring…")
 		"talk":
 			if parts.size() == 2: _start_conversation(parts[1])
 		"graphics":
@@ -1216,7 +1276,8 @@ func _on_run_ended() -> void:
 	pest_alert.update(0.0, 0)
 	world.camera.h_offset = 0.0
 	world.camera.v_offset = 0.0
-	_play_tone(130.81, 0.65)
+	if state.run_outcome == "foreclosed": feedback_audio.play_foreclosure()
+	seasonal_ambience.set_season(state.season_clock.season, true)
 	_save_checkpoint.call_deferred()
 
 func _save_checkpoint() -> void:
@@ -1243,8 +1304,7 @@ func _on_reward(title: String, detail: String, rarity: String) -> void:
 		return
 	hud.show_reward(title, detail, rarity)
 	world.play_reward(rarity)
-	_play_tone(880.0, 0.85)
-	sparkle_tone = true
+	feedback_audio.play_tone(880.0, 0.85, true)
 
 func _on_pest_warning(_index: int, destroyed: bool) -> void:
 	if _tutorial_active():
@@ -1265,52 +1325,24 @@ func play_tutorial_cue(kind: String) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_stop_map_navigation()
+		Input.action_release("hurry")
+		if is_instance_valid(touch_controls): touch_controls.release_all()
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if state != null and not test_mode:
 			state.save_game()
 		get_tree().quit()
 
 func _setup_sound() -> void:
-	if DisplayServer.get_name() == "headless":
-		return
-	sound_player = AudioStreamPlayer.new()
-	# Generated tool audio must use the streaming mixer on Web too.
-	# The browser's sample playback path cannot play AudioStreamGenerator.
-	sound_player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
-	var stream: AudioStreamGenerator = AudioStreamGenerator.new()
-	stream.mix_rate = 22050.0
-	stream.buffer_length = 0.08
-	sound_player.stream = stream
-	sound_player.volume_db = -18.0
-	add_child(sound_player)
-	sound_player.play()
-	audio_playback = sound_player.get_stream_playback()
+	feedback_audio = preload("res://scripts/farm_audio.gd").new()
+	feedback_audio.name = "FarmCues"
+	add_child(feedback_audio)
+	seasonal_ambience = preload("res://scripts/farm_ambience.gd").new()
+	seasonal_ambience.name = "SeasonAmbience"
+	add_child(seasonal_ambience)
+	seasonal_ambience.set_season(state.season_clock.season, state.run_over)
 
 func _play_tone(frequency: float, duration: float) -> void:
-	tone_frequency = frequency
-	tone_length = duration
-	tone_remaining = duration
-	sparkle_tone = false
-
-func _pump_audio() -> void:
-	if audio_playback == null:
-		return
-	var frames: int = audio_playback.get_frames_available()
-	if tone_remaining <= 0.0:
-		# Silence is a bulk transfer, not 22,050 interpreted push_frame calls/sec.
-		_silent_audio.resize(frames)
-		audio_playback.push_buffer(_silent_audio)
-		return
-	for frame in range(frames):
-		var sample: float = 0.0
-		if tone_remaining > 0.0:
-			var envelope: float = minf(1.0, (tone_length - tone_remaining) * 80.0) * (tone_remaining / tone_length)
-			var harmonic: float = sin(audio_phase * TAU) + (sin(audio_phase * TAU * 1.5) * 0.4 if sparkle_tone else 0.0)
-			sample = harmonic * envelope * 0.4
-			audio_phase = fmod(audio_phase + tone_frequency / 22050.0, 1.0)
-			tone_remaining -= 1.0 / 22050.0
-		sample = clampf(sample, -0.95, 0.95)
-		audio_playback.push_frame(Vector2(sample, sample))
+	feedback_audio.play_tone(frequency, duration)
 
 func _farm_help_action(action: String) -> void:
 	if _tutorial_active(): return
@@ -1405,6 +1437,7 @@ func _show_year_start() -> void:
 func _show_epilogue() -> void:
 	if state.run_outcome != "completed" or is_instance_valid(epilogue_screen): return
 	_cancel_walk()
+	seasonal_ambience.set_season(state.season_clock.season, true)
 	hud.close_panel()
 	hud.hide()
 	touch_controls.hide()
