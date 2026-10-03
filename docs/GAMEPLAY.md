@@ -155,3 +155,5 @@ This development build starts a new farm when a save contains the earlier lease 
 The first-year guide runs its Spring and Winter waits at 10×. Iris appears for an eight-second Summer warning at ordinary speed, with a countdown, before Tess presents the crop loss. Decisions and cause-card reading pause the calendar.
 
 On phones, Sell stays available during weather. The weather card’s touch area follows its visible height so farm beds and Winter’s Sleep action remain reachable.
+
+Phones start with a **2048 shadow map**. Graphics offers **4096** as a device-local choice; Smooth turns shadows off. The existing Debug panel offers **Measure a year** without unlocking test funding. Finish the guided year first, tap it once, then play until the next Winter accounts close. A result card shows the device, actual shadow size and resolution, mean and 1% low fps, and the worst frame with its season. **Copy** copies that report. Samples stay in memory and never enter the farm save.

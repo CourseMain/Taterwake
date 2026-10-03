@@ -1443,13 +1443,20 @@ Before testers (from PLAYTEST_J.md, highest quit risk first):
 12. "Skip" label says what it skips (the guided year, not the season).
 
 Phone:
-13. Measure one full year on a real mid-range phone with 2048 shadows;
-    record the frame time in DEVELOPMENT.md. Default phones to 2048 if
-    4096 drops below 50 fps.
+13. Awaiting owner measurement (owner override: no remote phone available).
+    Default phones to 2048 now; keep 4096 as a Graphics choice. Debug's
+    one-tap "Measure a year" records every frame until the next Winter
+    accounts close, shows device/OS, actual shadow size, resolution, mean
+    fps, 1% low fps, worst frame and its season, and copies the same text.
+    No measurement enters the farm save. Export a branch-only Web test
+    build outside docs/ and web/. DEVELOPMENT.md keeps the real-phone
+    row open with exact local-serve and recording steps for the owner.
 
 Done when: the full suite passes with no known failing check, the
 guided year cannot lose a bed the player could not act on, and the
-phone frame time is recorded from a real device.
+phone recorder and test build are ready for the owner's real-device
+measurement. "Real-phone year measured" remains open until they paste
+the card text into DEVELOPMENT.md.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)

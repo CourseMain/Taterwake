@@ -49,12 +49,12 @@ def default_directory() -> Path:
     return here if (here / "index.html").is_file() else here.parent / "dist" / "web"
 
 
-def create_server(directory: Path, first_port: int = 8080) -> ThreadingHTTPServer:
+def create_server(directory: Path, first_port: int = 8080, host: str = "127.0.0.1") -> ThreadingHTTPServer:
     handler = partial(WebGameHandler, directory=str(directory.resolve()))
     attempts = [0] if first_port == 0 else range(first_port, min(65536, first_port + 100))
     for port in attempts:
         try:
-            server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+            server = ThreadingHTTPServer((host, port), handler)
             server.daemon_threads = True
             return server
         except OSError as error:
@@ -67,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, default=default_directory(), help="Folder containing index.html")
     parser.add_argument("--port", type=int, default=8080, help="First localhost port to try; default: 8080")
+    parser.add_argument("--host", default="127.0.0.1", help="Bind address; use 0.0.0.0 for a phone on the same Wi-Fi")
     parser.add_argument("--open", action="store_true", help="Open the game in your default browser")
     args = parser.parse_args(argv)
     if not 0 <= args.port <= 65535:
@@ -75,10 +76,12 @@ def main(argv: list[str] | None = None) -> int:
     if not (directory / "index.html").is_file():
         parser.error(f"No index.html in {directory}. Build with tools/export_web.py first.")
     try:
-        with create_server(directory, args.port) as server:
+        with create_server(directory, args.port, args.host) as server:
             # Godot's PWA cache keys its start page as index.html, not '/'.
             url = f"http://127.0.0.1:{server.server_port}/index.html"
             print(f"Serving Taterland at {url}", flush=True)
+            if args.host == "0.0.0.0":
+                print(f"On your phone, open http://<this computer’s Wi-Fi IP>:{server.server_port}/index.html", flush=True)
             print("Keep this terminal open while playing. Press Ctrl+C to stop.", flush=True)
             if args.open:
                 webbrowser.open(url)

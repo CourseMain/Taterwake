@@ -1053,3 +1053,17 @@ The tag-j review found two stale assertions: flooded dry crops can grow to stage
 The guide uses the twelve owned starter seeds instead of requiring a thirteenth purchase. Hoe, water, harvest and selling are available during guided waits; the final wait pauses until ripe starter beds have been harvested. Both sell/store paths reach the normal Winter settlement with no stranded Autumn Cold loss. Instructions remain visible above blocked-action feedback. Mara's collider covers the full stall; phone packets expose part of the next card and a swipe hint. Exit reads “Skip guided year”; the front page reads “Start the year”. Ledger labels, crop rates and economic rules are unchanged.
 
 Rendered accounts show “Opening the books…” and build their portrait, category rows, years and details over successive frames. Replacing or closing the page cancels the build. Snow fade shaders are shared across rebuilt protection meshes. Winter material variants draw tiny copies below the island during initial loading, one per frame, to compile their first-use Compatibility programs before Winter. The phone-resolution browser fixture waits for that loading work before its cold boundary sample.
+
+Phones now default to 2048 shadows, with the existing soft filter retained and 4096 available in Graphics. The device-local preference preserves both quality and shadow choice. Debug's locked panel exposes “Measure a year”; its monotonic recorder includes rendering and browser scheduling, stops when the next Winter accounts close, and opens a selectable report with Copy. The 1% low is the inverse mean interval of the slowest 1% of frames. Resolution/shadow changes are listed, and a run ending early is labelled as an incomplete measurement. No samples, recorder state or reports are stored in the farm save.
+
+| Owner check | Status |
+| --- | --- |
+| Real-phone year measured | **Awaiting owner measurement**; no connected physical phone was available. |
+
+To measure on a real phone:
+
+1. Download the tag-k Web release ZIP, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-k/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-k/web --host 0.0.0.0 --port 8080`. Keep the terminal open.
+2. Put the phone on the same Wi-Fi and open `http://<computer Wi-Fi IP>:8080/index.html`. On macOS, find the address in System Settings → Wi-Fi → Details → TCP/IP.
+3. Finish the guided year. At the next Spring, choose Graphics → Balanced and 2048, then farm menu → Debug → **Measure a year**. No debug code or test funding is needed.
+4. Play through Spring, Summer, Autumn and Winter, including rain when it occurs; close Winter accounts. Copy the result card and paste its complete text into this row. If Copy is unavailable in the browser, select the report text. Do not describe desktop emulation as a real-phone result.
+5. Optionally repeat a year at 4096 and paste that report too. The 2048 default remains until the owner measures the device.

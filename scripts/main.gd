@@ -68,6 +68,8 @@ var weather_shake_clock: float = 0.0
 var debug_unlocked: bool = false
 var debug_time_multiplier: float = 1.0
 var graphics_quality: String = "balanced"
+var shadow_size: int = 4096
+var frame_recorder: Node
 var climate_audio: Node
 var climate_target: String = ""
 var pending_refill: bool = false
@@ -127,6 +129,15 @@ func _ready() -> void:
 	hud._conversation = conversation
 	conversation.finished.connect(_finish_conversation)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
+	_set_shadow_size((2048 if touch_controls.enabled else 4096) if test_mode else GraphicsPreferences.load_shadow_size(touch_controls.enabled))
+	frame_recorder = preload("res://scripts/frame_time_recorder.gd").new()
+	frame_recorder.game = self
+	add_child(frame_recorder)
+	frame_recorder.finished.connect(func(): hud.show_panel.call_deferred("measurement", state))
+	frame_recorder.copied.connect(func(ok):
+		if hud._panel_kind == "measurement" and hud._refs.has("measurement_copy_status"):
+			hud._refs.measurement_copy_status.text = "Copied" if ok else "Copy unavailable here. Select the report text to copy it."
+	)
 	hud.action_requested.connect(_on_user_action)
 	hud.panel_opened.connect(_on_panel_opened)
 	state.contract_collected.connect(func(receipts): world.visuals.collect_order(receipts))
@@ -327,6 +338,13 @@ func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 	if persist and not test_mode:
 		if GraphicsPreferences.save_mode(mode) != OK:
 			hud.show_toast("Graphics changed. This browser could not save the preference.")
+
+func _set_shadow_size(size: int, persist: bool = false) -> void:
+	if size not in [2048, 4096]: return
+	shadow_size = size
+	RenderingServer.directional_shadow_atlas_set_size(size, true)
+	if persist and not test_mode: GraphicsPreferences.save_shadow_size(size)
+	if hud._panel_kind == "graphics": hud._refresh_graphics()
 
 func _hurry_requested() -> bool:
 	return Input.is_action_pressed("hurry") or (is_instance_valid(touch_controls) and touch_controls.hurry_held)
@@ -1062,14 +1080,14 @@ func _on_action(action: String) -> void:
 	if action.begins_with("debug:"): epilogue_result.clear()
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if is_instance_valid(conversation) and conversation.visible: return
-	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu"] and not action.begins_with("graphics"):
+	if state.ClimateSystem.Lesson.active(state) and not action.begins_with("climate_operate:") and action not in ["save", "pause", "help", "menu", "measure_year", "measurement", "measurement_copy"] and not action.begins_with("graphics"):
 		state.ClimateSystem.Lesson.finish(state)
 		climate_target = ""
 	if not action.begins_with("climate_operate:"):
 		_close_equipment()
 		climate_target = ""
 		hud._climate_console.targeting = ""
-	if state.run_over and action not in (["reset", "debug", "close", "menu", "pause", "accounts", "run_summary", "epilogue"] if state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug:"):
+	if state.run_over and action not in (["reset", "debug", "close", "menu", "pause", "accounts", "run_summary", "epilogue", "measurement", "measurement_copy"] if state.run_outcome == "completed" else ["reset", "debug", "close", "measurement", "measurement_copy"]) and not action.begins_with("debug:"):
 		return
 	if action.begins_with("farm_help:"):
 		_farm_help_action(action.get_slice(":", 1))
@@ -1085,6 +1103,15 @@ func _on_action(action: String) -> void:
 		return
 	var parts: PackedStringArray = action.split(":")
 	match parts[0]:
+		"measure_year":
+			if frame_recorder.start():
+				hud.close_panel()
+				hud.show_toast("Recording until the next Winter accounts close.")
+		"measurement_copy": frame_recorder.copy_report()
+		"measurement":
+			if not frame_recorder.report_text.is_empty(): hud.show_panel("measurement", state)
+		"shadows":
+			if parts.size() == 2: _set_shadow_size(int(parts[1]), true)
 		"sleep_spring":
 			if state.can_sleep_until_spring(): hud.show_panel("sleep_confirm", state)
 		"confirm_sleep_spring":
