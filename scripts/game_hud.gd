@@ -2149,7 +2149,7 @@ func _set_inventory_tab() -> void:
 		_inventory_sections[section].visible = str(section) == _inventory_tab
 		var button: Button = _refs.get("tab:" + str(section)) as Button
 		if is_instance_valid(button):
-			button.add_theme_stylebox_override("normal", _style(Color("dce7d1") if str(section) == _inventory_tab else PAPER, 10, 10))
+			preload("res://scripts/place_ui.gd").tab(button, str(section) == _inventory_tab)
 
 func _refresh_inventory() -> void:
 	_set_inventory_tab()

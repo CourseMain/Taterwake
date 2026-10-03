@@ -53,8 +53,6 @@ static func refresh(page) -> void:
 		if entry.kind in ["seed", "crop"]: page._item_quantities[entry.id].text = "%d %s" % [entry.count, "t" if entry.kind == "crop" else "seeds"]
 		if entry.kind == "tool": hud._refs[key + ":detail"].text = entry.effect
 		if entry.kind == "seed": hud._refs[key + ":detail"].hide()
-	for section in hud._inventory_sections:
-		Place.pill(hud._refs["tab:" + section], ACCENT)
 static func layout(page) -> void:
 	var touch: bool = is_instance_valid(page.hud.get_parent().get("touch_controls")) and page.hud.get_parent().touch_controls.enabled
 	for grid in page._grids: grid.columns = 1 if page.size.x < 650 else 3

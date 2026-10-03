@@ -101,6 +101,13 @@ func run() -> void:
 				for label in board.loss_notes.find_children("*", "Label", true, false):
 					if label.text == "No crop losses recorded.": empty_notices += 1
 				check(empty_notices == 0 and board.loss_notes.find_child("PinnedCauseNote", true, false) != null, "a recorded loss has no contradictory empty notice")
+			if kind == "barn":
+				for shelf in ["tools", "crops"]:
+					game.hud._act("inventory_tab:" + shelf); await settle()
+					var active: Button = game.hud._refs["tab:" + shelf]
+					var other: Button = game.hud._refs["tab:" + ("crops" if shelf == "tools" else "tools")]
+					check(active.button_pressed and not other.button_pressed, "Nell marks only the selected shelf")
+					check(game.hud._inventory_sections[shelf].visible and active.get_theme_stylebox("pressed").border_color != other.get_theme_stylebox("normal").border_color, "Nell's outlined tab matches the visible crates")
 			if "--capture" in OS.get_cmdline_user_args():
 				await create_timer(.25).timeout; RenderingServer.force_draw()
 				check(root.get_texture().get_image().save_png("res://artifacts/segment19-%s-%d.png" % [kind, dimensions.x]) == OK, "capture " + kind)

@@ -982,6 +982,8 @@ Segment 19 front-page weather history uses the shared ten-box `climate_strip.gd`
 
 Segment 19 `barn_crates.gd` provides Nell’s timber frame, cream crate grid and one Sell entrance. Stored sales and seed keeping share `market_pages.gd`; the old stores sub-menu is removed. `season_jobs.gd` lists available Winter actions with real work and prices, ticks completed jobs and collapses. Its cover action directly fits cleared beds. The guide, HUD, grading, storage and protection suites verify these paths. Captures: `artifacts/segment19-barn-*`.
 
+The barn’s Crops & seeds and Tools tabs share Tess’s active cream-and-ink outline. The shelf visibility update owns this styling, so periodic crate refreshes preserve the selection. The interface suite switches both shelves at desktop and phone widths.
+
 Segment 19 `workbench_tiles.gd` replaces the large painted tool cards with a pegboard and compact tiles. Expansion chooses an active field with closed beds; the saved transaction labels stay untouched. Sprinklers retain their purchase and practice paths. Captures: `artifacts/segment19-tools-*`; water-loop, purchase and responsive suites check the paths.
 
 Segment 19 world labels register their board dimensions and requested font size. `farm_world.gd` measures width and height, shrinks long or changing text and restores shorter text to its fitted size. Field exposure uses post geometry; lease boards read TO LET. The world-sign suite also checks extreme long text. Captures: `artifacts/segment19-signs-*`.
