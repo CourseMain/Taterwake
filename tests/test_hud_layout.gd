@@ -132,6 +132,7 @@ func winter_pages() -> void:
 	game.hud.update_state(game.state)
 	var note = game.hud._season_jobs
 	check(note.visible, "Winter note appears after accounts close")
+	check(not game.hud._climate_alert.visible, "the Winter blizzard line replaces the overlapping transient banner")
 	for key in ["ice", "stores:russet", "project:rainwater", "covers", "ripe", "seed", "business:grower", "blizzard"]:
 		check(note.jobs.has(key), "live Winter job: " + key)
 	var previous_seeds: int = game.state.seed_inventory.russet
@@ -139,7 +140,8 @@ func winter_pages() -> void:
 	check(note.available().seed[0].begins_with("1 t"), "seed job respects remaining seed space")
 	game.state.seed_inventory.russet = previous_seeds
 	check(note.jobs["project:rainwater"][0].contains("1 / 3"), "paid project shows actual work")
-	check(note.jobs["stores:russet"][0].contains("late Winter"), "stores show current and rising price")
+	check(note.quote_key.visible and note.quote_key.text.contains("now → late Winter"), "one key explains current and late-Winter store quotes")
+	check(note.jobs["stores:russet"][0].contains("%s → %s/t" % [game.state.market_money(game.state.trading.stored_price(game.state, "russet", "Table")), game.state.market_money(game.state.trading.peak_price("russet", "Table"))]), "stores show actual current and rising prices")
 	note.heading.pressed.emit()
 	check(note.collapsed and not note.scroll.visible and note.heading.text.contains("jobs left"), "Winter card collapses with a live count")
 	note.heading.pressed.emit()
@@ -158,6 +160,17 @@ func winter_pages() -> void:
 	game.hud._act("sell_potatoes")
 	check(game.hud._panel_kind == "sell_potatoes" and game.hud._refs.market_page.stored_mode, "barn Sell opens the market on rising stores")
 	game.hud.close_panel()
+	root.min_size = Vector2i.ZERO
+	for dimensions in [Vector2i(1280, 800), Vector2i(390, 844)]:
+		game.touch_controls.enabled = dimensions.x < 600
+		if game.touch_controls.enabled: game.touch_controls._build_touch_sheets()
+		root.size = dimensions
+		for frame in range(12): await process_frame
+		game.touch_controls.resize(); note.refresh()
+		for frame in range(8): await process_frame
+		if game.touch_controls.enabled:
+			check(not note.get_global_rect().intersects(game.touch_controls.status.get_global_rect()), "Winter note clears the phone's live weather status")
+		await shot("winter-jobs-%d" % dimensions.x)
 	game.state.season_clock.season = 0
 	note.refresh()
 	check(not note.visible and note.jobs.is_empty(), "Spring has no Winter to-do list")

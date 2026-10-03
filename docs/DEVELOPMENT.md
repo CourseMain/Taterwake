@@ -984,6 +984,8 @@ Segment 19 `barn_crates.gd` provides Nell’s timber frame, cream crate grid and
 
 The barn’s Crops & seeds and Tools tabs share Tess’s active cream-and-ink outline. The shelf visibility update owns this styling, so periodic crate refreshes preserve the selection. The interface suite switches both shelves at desktop and phone widths.
 
+The Winter note uses compact, single-line actions and one conditional key for stored quotes. Its phone width gives the live prices room; text is measured before choosing its font size. The blizzard line replaces the duplicate transient warning, and the note clears the phone’s live weather status. `test_responsive_fit` checks unclipped lines and physical 44 px targets across the existing viewport set, with ice, construction, covers and ripe Icecap present. HUD captures include the live desktop and phone note.
+
 Segment 19 `workbench_tiles.gd` replaces the large painted tool cards with a pegboard and compact tiles. Expansion chooses an active field with closed beds; the saved transaction labels stay untouched. Sprinklers retain their purchase and practice paths. Captures: `artifacts/segment19-tools-*`; water-loop, purchase and responsive suites check the paths.
 
 Segment 19 world labels register their board dimensions and requested font size. `farm_world.gd` measures width and height, shrinks long or changing text and restores shorter text to its fitted size. Field exposure uses post geometry; lease boards read TO LET. The world-sign suite also checks extreme long text. Captures: `artifacts/segment19-signs-*`.

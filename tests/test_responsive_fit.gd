@@ -127,6 +127,13 @@ func paper_pages() -> void:
 	game.state.season_clock.year = 3
 	game.state.update(450)
 	game.hud.close_panel()
+	# Keep every kind of work available while the responsive note is measured.
+	game.state.climate.data.protection.pending.rainwater = 1
+	game.state.climate.data.projects.frost = 1
+	game.state.interact_plot(0, "hoe")
+	game.state.plots[1].crop = "icecap"
+	game.state.plots[1].stage = 3
+	game.state.plots[1].yield_total = 2
 	for crop in game.state.CROP_IDS:
 		game.state.Stock.add(game.state.storage, crop, 6, 90)
 		game.state.Stock.add(game.state.storage, crop, 4, 60)
@@ -200,6 +207,13 @@ func paper_pages() -> void:
 		game.hud._season_jobs.refresh()
 		await settle()
 		inside(game.hud._season_jobs, tag + " Winter jobs")
+		var note = game.hud._season_jobs
+		for button in note.find_children("*", "Button", true, false):
+			if not button.is_visible_in_tree(): continue
+			var available_width: float = button.size.x - button.get_theme_stylebox("normal").get_minimum_size().x
+			var text_width: float = button.get_theme_font("font").get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, button.get_theme_font_size("font_size")).x
+			check(button.autowrap_mode == TextServer.AUTOWRAP_OFF and text_width <= available_width + .5, tag + " one unclipped Winter line: " + button.text)
+			check(minf(button.size.x, button.size.y) * front_scale >= 43.9, tag + " Winter touch target: " + button.text)
 		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-winter-jobs")
 		game.hud._run_end.show_report(game.state)
 		await settle()
