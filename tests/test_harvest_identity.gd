@@ -58,7 +58,9 @@ func run() -> void:
 	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
 	game._process((float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1) / game.tutorial.WAIT_SPEED)
 	check(game.state.plots[4].stage == 3 and game.tutorial.current_id() == "grow", "crop uses ordinary growth before Summer lesson")
-	game._process(1000)
+	for advance in range(6):
+		if game.tutorial.current_id() == "loss": break
+		game._process(1000)
 	check(game.tutorial.current_id() == "loss", "guided storm precedes first harvest")
 	game.tutorial.next()
 	game.world.camera.size = 17

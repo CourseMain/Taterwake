@@ -76,8 +76,9 @@ func run() -> void:
 	weather("flood")
 	farm.update(10)
 	stress = farm.climate.data.operations.stress["0"]
+	var crop_before_hoe: String = farm.plots[0].crop
 	farm.interact_plot(0, "hoe")
-	check(float(farm.climate.data.operations.stress["0"]) < stress and farm.plots[0].stage == 1, "hoe drains living flooded beds without destroying crop")
+	check(float(farm.climate.data.operations.stress["0"]) < stress and farm.plots[0].stage in [1, 2] and farm.plots[0].crop == crop_before_hoe, "hoe drains living flooded beds without destroying crop")
 	fresh()
 	farm.climate.data.projects.drainage = 1 # Completed infrastructure fixture; construction is covered in test_protection.
 	Ops.operate(farm, "gates")

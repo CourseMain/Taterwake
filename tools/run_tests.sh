@@ -16,6 +16,7 @@ import sys
 parser = argparse.ArgumentParser(description="Run isolated Godot suites; logs in artifacts/test-results.")
 parser.add_argument("-j", type=int, default=4, help="parallel suites (default: 4)")
 parser.add_argument("--timeout", type=float, default=180, help="seconds per suite (default: 180)")
+parser.add_argument("--import", dest="force_import", action="store_true", help="always re-import assets before running suites")
 parser.add_argument("suites", nargs="*", help="optional test names or paths; default: all test_*.gd except *_browser.*")
 args = parser.parse_args()
 if args.j < 1 or args.timeout <= 0:
@@ -46,9 +47,14 @@ def execute(command, log):
         log.write_text(str(error))
         return None, False
 
-if not Path(".godot/imported").is_dir():
+imported = Path(".godot/imported")
+needs_import = args.force_import or not imported.is_dir()
+if not needs_import:
+    imported_at = imported.stat().st_mtime_ns
+    needs_import = any(path.stat().st_mtime_ns > imported_at for path in Path("assets").rglob("*.import"))
+if needs_import:
     log = logs / "import.log"
-    code, timed_out = execute([engine, "--headless", "--path", ".", "--editor", "--quit"], log)
+    code, timed_out = execute([engine, "--headless", "--path", ".", "--editor", "--import", "--quit"], log)
     if timed_out or code != 0 or error_re.search(log.read_text(errors="replace")):
         print(f"{'TIMEOUT' if timed_out else 'ERRORS'} project import | {log}")
         sys.exit(1)

@@ -928,7 +928,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 		elif int(plot.stage) == 3:
 			context_text = "%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action]
 		elif int(plot.stage) in [1, 2] and not bool(plot.watered):
-			context_text = "Needs water · growth paused"
+			context_text = "Dry · growing slowly"
 		elif int(plot.stage) > 0 and bool(plot.watered):
 			var seconds: float = maxf(0.0, (float(state.CropTable.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
 			context_text = "%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds]
