@@ -1249,6 +1249,46 @@ Release:
   release asset only.
 ```
 
+### Segment 22: The hook (after Segment 21)
+
+```
+Goal: make a lost run the reason to start the next one. No dark patterns:
+no login rewards, no timers that run while the game is closed, nothing
+bought with money.
+
+1. A target every year. At Spring start, a card under the season strip:
+   "Winter bills: 104,000. Break-even needs about N tonnes at today's
+   prices." N recomputes as prices move and crops are sold; the card
+   shows progress as sales come in. The accounts then read as the
+   reveal of a chase the player watched all year.
+2. One dilemma per season, said out loud. Reuse the Winter jobs card
+   pattern for two lines per season: Spring "what and where", Summer
+   "labour: water or spray", Autumn "sell, store or contract". Never a
+   to-do list in working seasons.
+3. Comebacks. After a year with two or more disasters, cap the next year
+   at one. Nell marks the first profitable year and the best year yet
+   with one line each on the accounts page.
+4. A lesson at the end. The epilogue adds one sentence drawn from the
+   run's largest avoidable loss: "You never built drainage; the Low
+   Field drowned twice." Computed from cause cards, not written by hand.
+5. Variety between runs. Region choice at new run: Valley (current),
+   Shores (heat and flood) and Frosthollow (cold and storm) using the
+   shelved island geometry as whole-farm terrains with their own climate
+   curves. Each run also draws one rare event from a small pool: a buyer
+   offering a large premium order, a perfect-weather year, a bank offer
+   to restructure the loan at a cost. One per run, never two.
+6. Keep the juice from Segment 20: grade stamp pop, sale sound, cause
+   card thud.
+
+Tests: target card arithmetic matches the ledger; the comeback cap holds
+in the climate curve test; the lesson sentence is derived from the
+largest cause-card loss; one rare event per run; region curves differ.
+The tuning bot runs on all three regions and records a table each.
+
+Acceptance: in the Segment 21 playthrough, the tester wants to start a
+second run without being asked. If not, this segment is not done.
+```
+
 ## 8. Logic checks on the original plan
 
 - **Hard versus unfair.** "Barely any money" only works if every loss is
