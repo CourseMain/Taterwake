@@ -124,6 +124,8 @@ var _modal_market_nav: HBoxContainer
 var _modal_trade_footer: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
+var accounts_building: bool = false
+var _accounts_build_request: int = 0
 var _displayed_calendar: String = ""
 var _sell_crop: String = ""
 var _refs: Dictionary = {}
@@ -157,6 +159,7 @@ var _tutorial_card: PanelContainer
 var _tutorial_forecaster: Control
 var _tutorial_title: Label
 var _tutorial_body: Label
+var _tutorial_feedback: Label
 var _tutorial_progress: Label
 var _tutorial_next: Button
 var _tutorial_skip: Button
@@ -299,7 +302,7 @@ func _update_weather_ui() -> void:
 	_weather_button.visible = _tutorial.is_empty() and not is_panel_open() and not _state.run_over
 	_weather_button.text = "Weather & protection →" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
 	if _state.run_outcome == "foreclosed":
-		var debug_open: bool = is_panel_open() and _panel_kind == "debug"
+		var debug_open: bool = is_panel_open() and _panel_kind in ["debug", "measurement"]
 		_modal.z_index = 210 if debug_open else 0
 		if not _run_end.visible and not debug_open:
 			close_panel()
@@ -352,7 +355,7 @@ func _build_tutorial() -> void:
 	top_row.add_child(graphics)
 	_tutorial_skip = _button("×", "tutorial:exit")
 	_tutorial_skip.name = "TutorialSkip"
-	_tutorial_skip.tooltip_text = "End tutorial"
+	_tutorial_skip.tooltip_text = "Skip the guided year"
 	_tutorial_skip.custom_minimum_size = Vector2(26, 26)
 	_tutorial_skip.add_theme_font_size_override("font_size", 20)
 	for style_name: String in ["normal", "hover", "pressed"]:
@@ -386,6 +389,9 @@ func _build_tutorial() -> void:
 	guide_font.variation_opentype = _font.variation_opentype
 	_tutorial_body.add_theme_font_override("font", guide_font)
 	contents.add_child(_tutorial_body)
+	_tutorial_feedback = _wrap("", 13, GOLD)
+	contents.add_child(_tutorial_feedback)
+	_tutorial_feedback.hide()
 	_tutorial_key = _label("", 13, GOLD, true)
 	_tutorial_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	contents.add_child(_tutorial_key)
@@ -400,11 +406,11 @@ func _build_tutorial() -> void:
 	contents.add_child(_tutorial_next)
 	_tutorial_exit_box = _vbox(8)
 	contents.add_child(_tutorial_exit_box)
-	_tutorial_exit_box.add_child(_wrap("Leave the tutorial?", 15, CREAM, true))
+	_tutorial_exit_box.add_child(_wrap("Skip the guided year? Your farm and seasons stay.", 15, CREAM, true))
 	var stay: Button = _button("Keep learning →", "tutorial:stay")
 	stay.add_theme_stylebox_override("normal", _style(GOLD, 9, 10))
 	_tutorial_exit_box.add_child(stay)
-	var leave: Button = _button("End tutorial", "tutorial:skip")
+	var leave: Button = _button("Skip guided year", "tutorial:skip")
 	leave.add_theme_stylebox_override("normal", _style(Color("294438"), 9, 10))
 	leave.add_theme_color_override("font_color", Color("c9d1c4"))
 	_tutorial_exit_box.add_child(leave)
@@ -420,6 +426,8 @@ func set_tutorial(info: Dictionary) -> void:
 	_restore_tutorial_buttons()
 	if info.get("step", -1) != _tutorial.get("step", -1):
 		_tutorial_exit_pending = false
+		_tutorial_feedback.text = ""
+		_tutorial_feedback.hide()
 	_tutorial = info.duplicate(true)
 	if _tutorial.is_empty():
 		_tutorial_card.hide()
@@ -451,7 +459,7 @@ func set_tutorial(info: Dictionary) -> void:
 		elif info.get("id") == "walk":
 			_tutorial_next.text = "Try a few steps"
 		elif info.get("id") in ["grow", "winter"]:
-			_tutorial_next.text = str(info.get("wait_label", "Calendar running…"))
+			_tutorial_next.text = str(info.get("wait_label", "Work on the other beds"))
 		_tutorial_key.text = str(info.get("key", ""))
 		_tutorial_key.visible = not _tutorial_key.text.is_empty()
 		_tutorial_meter.value = 100.0 * float(info.get("step", 1)) / maxf(1.0, float(info.get("total", 20)))
@@ -722,10 +730,10 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset"] if _state.run_outcome == "completed" else ["reset", "debug", "close"]) and not action.begins_with("debug"):
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset", "measurement", "measurement_copy"] if _state.run_outcome == "completed" else ["reset", "debug", "close", "measurement", "measurement_copy"]) and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
-		show_tutorial_feedback("Finish this step, or choose End tutorial to farm freely.")
+		show_tutorial_feedback("This action waits until later. Skip the guided year to farm freely.")
 		return
 	if action == "sleep_spring":
 		if is_instance_valid(_state) and _state.can_sleep_until_spring(): show_panel("sleep_confirm", _state)
@@ -1498,6 +1506,8 @@ func is_panel_open() -> bool:
 	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible)
 
 func close_panel() -> void:
+	_accounts_build_request += 1
+	accounts_building = false
 	if is_instance_valid(_state): _state.accounts_open = false
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
 	_entrance_request += 1
@@ -1514,6 +1524,8 @@ func close_panel() -> void:
 
 func show_panel(kind: String, state: Node) -> void:
 	if kind == "winter_stores": kind = "sell_potatoes"
+	_accounts_build_request += 1
+	accounts_building = false
 	_state = state
 	_state.accounts_open = kind == "accounts"
 	if not is_instance_valid(root):
@@ -1571,7 +1583,11 @@ func show_panel(kind: String, state: Node) -> void:
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
-		"accounts": _build_winter()
+		"accounts":
+			if DisplayServer.get_name() != "headless":
+				_open_books(opening, _accounts_build_request)
+				return
+			_build_winter()
 		"sleep_confirm": _build_sleep_confirm()
 		"bank":
 			_heading("The overdraft", "Edwin · Bank manager")
@@ -1588,9 +1604,14 @@ func show_panel(kind: String, state: Node) -> void:
 		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
+		"measurement": _build_measurement()
 		"graphics": _build_graphics()
 		"climate": _build_climate()
 		_: _build_help()
+	_finish_panel_build(kind, opening)
+
+func _finish_panel_build(kind: String, opening: bool) -> void:
+	var paper: bool = kind in ["accounts", "run_summary"]
 	_polish_card_typography(_body)
 	_polish_card_typography(_modal_trade_footer)
 	_polish_card_typography(_modal_market_nav)
@@ -1627,6 +1648,30 @@ func show_panel(kind: String, state: Node) -> void:
 			(_modal.get_child(0) as CanvasItem).modulate.a = 0
 			_modal_entrance_shield.show()
 		_begin_panel_entrance.call_deferred(kind, _entrance_request)
+
+func _open_books(opening: bool, request: int) -> void:
+	accounts_building = true
+	_paper_page()
+	_heading("Opening the books…", "Winter · Time paused")
+	_modal.show()
+	_modal.modulate.a = 1
+	_modal.move_to_front()
+	_modal_entrance_shield.show()
+	_season_jobs.hide()
+	# Paint the status before the first cold font and portrait work.
+	await get_tree().process_frame
+	if request != _accounts_build_request: return
+	await _build_winter(true, request)
+	if request != _accounts_build_request: return
+	accounts_building = false
+	_finish_panel_build("accounts", opening)
+
+func _accounts_frame(request: int) -> bool:
+	_paper_typography(_modal_card)
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch): touch.fit_modal()
+	await get_tree().process_frame
+	return request == _accounts_build_request and _panel_kind == "accounts"
 
 func _begin_panel_entrance(kind: String, request: int) -> void:
 	if request != _entrance_request or not _modal.visible or kind != _panel_kind: return
@@ -1923,7 +1968,7 @@ func _paper_page() -> void:
 	_modal_card.offset_bottom = 370
 	_modal_card.add_theme_stylebox_override("panel", _style(CREAM, 24, 8))
 
-func _build_winter() -> void:
+func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_paper_page()
 	var clock = _state.season_clock
 	_heading("The annual accounts", "Winter · Time paused")
@@ -1941,6 +1986,7 @@ func _build_winter() -> void:
 	portrait.custom_minimum_size = Vector2(52, 64); portrait.size_flags_horizontal = Control.SIZE_SHRINK_END; portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER; filing.add_child(portrait)
 	_body.add_child(filing)
 	portrait.show_person("nell")
+	if staged and not await _accounts_frame(request): return
 	var net: float = _state.ledger.total(clock.year)
 	_refs.accounts_net = _label(("+" if net >= 0 else "−") + _state.money(absf(net)), 42, GREEN if net >= 0 else Color("a63529"), true)
 	_refs.accountant = _wrap("Nell · Accountant", 14, MUTED)
@@ -1957,6 +2003,7 @@ func _build_winter() -> void:
 	for category in _state.Ledger.CATEGORIES:
 		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
 		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(clock.year, category))
+		if staged and not await _accounts_frame(request): return
 	var years := _vbox(2)
 	years.custom_minimum_size.x = 245
 	years.size_flags_horizontal = Control.SIZE_FILL
@@ -1965,6 +2012,7 @@ func _build_winter() -> void:
 	for year in range(1, 11):
 		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "")
 		_refs["accounts_year_%d" % year].get_parent().get_parent().visible = _state.ledger.is_closed(year)
+		if staged and not await _accounts_frame(request): return
 	var strip = preload("res://scripts/climate_strip.gd").new()
 	strip.name = "AnnualClimateStrip"
 	strip.setup(_state.climate.data.outlook.records, clock.year)
@@ -1976,6 +2024,7 @@ func _build_winter() -> void:
 	_refs.accounts_loan = _wrap("", 16, INK)
 	_body.add_child(_refs.accounts_loan)
 	preload("res://scripts/place_ui.gd").help(self, balance_row, "Mortgage: %s interest + %s principal on the original %s loan. Fixed bills total %s per year.\n" % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())] + _state.NpcRoster.ledger_lines(_state))
+	if staged and not await _accounts_frame(request): return
 	for word in _state.Quality.GRADES:
 		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
 	var lease_heading := HBoxContainer.new(); _body.add_child(lease_heading)
@@ -1988,8 +2037,11 @@ func _build_winter() -> void:
 		_body.add_child(row)
 		if field != "home":
 			row.add_child(_button(("Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year"), "lease:" + field))
+	if staged and not await _accounts_frame(request): return
 	_build_diversification()
+	if staged and not await _accounts_frame(request): return
 	_build_loss_cards(_body, clock.year)
+	if staged and not await _accounts_frame(request): return
 	_ledger_actions()
 	var resume: Button = _button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true)
 	resume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1997,6 +2049,7 @@ func _build_winter() -> void:
 	_modal_trade_footer.show()
 
 func _refresh_accounts() -> void:
+	if accounts_building: return
 	_refresh_diversification()
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
@@ -2149,6 +2202,10 @@ func _build_graphics() -> void:
 		choice.custom_minimum_size.y = 70
 		_body.add_child(choice)
 		_refs["graphics_" + str(entry[0])] = choice
+	_body.add_child(_label("SHADOW MAP", 15, INK, true))
+	for size in [2048, 4096]:
+		_refs["shadows_%d" % size] = _button(str(size), "shadows:%d" % size)
+		_body.add_child(_refs["shadows_%d" % size])
 	_body.add_child(_button("Back to farm", "close"))
 	_refresh_graphics()
 
@@ -2156,6 +2213,10 @@ func _refresh_graphics() -> void:
 	if not _refs.has("graphics_current"):
 		return
 	_refs.graphics_current.text = "Using " + _graphics_quality.capitalize()
+	var game = get_parent()
+	if game.get("shadow_size") != null:
+		_refs.graphics_current.text += " · %d shadows" % game.shadow_size
+		for size in [2048, 4096]: _refs["shadows_%d" % size].disabled = game.shadow_size == size
 	for mode: String in ["balanced", "smooth", "crisp"]:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
@@ -2455,7 +2516,39 @@ func _focus_debug_code() -> void:
 	if _panel_kind == "debug" and _refs.has("debug_code") and is_instance_valid(_refs.debug_code):
 		_refs.debug_code.grab_focus()
 
+func _build_measure_controls() -> void:
+	var recorder = get_parent().get("frame_recorder")
+	if not is_instance_valid(recorder): return
+	var card := _card(PAPER, 14)
+	_body.add_child(card)
+	var column := _vbox(8)
+	card.add_child(column)
+	column.add_child(_label("FRAME TIME", 16, INK, true))
+	var button := _button("Recording…" if recorder.recording else "Measure a year", "measure_year", true)
+	button.disabled = recorder.recording or _state.run_over or _state.tutorial_active or _state.ClimateSystem.Lesson.active(_state)
+	column.add_child(button)
+	column.add_child(_wrap("Records through the next Winter accounts closing. No farm data changes.", 14, MUTED))
+	if not recorder.report_text.is_empty(): column.add_child(_button("Last measurement", "measurement"))
+
+func _build_measurement() -> void:
+	_heading("Year frame times", "DEVICE MEASUREMENT")
+	var report := TextEdit.new()
+	report.name = "FrameTimeReport"
+	report.text = get_parent().frame_recorder.report_text
+	report.editable = false
+	report.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	report.custom_minimum_size.y = 480
+	report.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	report.add_theme_font_override("font", _plain_font)
+	report.add_theme_font_size_override("font_size", 18)
+	_body.add_child(report)
+	_body.add_child(_button("Copy", "measurement_copy", true))
+	_refs.measurement_copy_status = _wrap("", 14, GREEN)
+	_body.add_child(_refs.measurement_copy_status)
+	_body.add_child(_button("Return to farm", "close"))
+
 func _build_debug() -> void:
+	_build_measure_controls()
 	if not _debug_unlocked:
 		_heading("Debug access", "Enter the access code to unlock controls for this session.")
 		_info("debug_access_note", "Test funding and recovery change this saved farm. Ordinary gameplay stays paused after bankruptcy.", MUTED, 15)
@@ -2630,7 +2723,8 @@ func _refresh_debug() -> void:
 
 func show_tutorial_feedback(message: String) -> void:
 	if not _tutorial.is_empty():
-		_tutorial_body.text = message
+		_tutorial_feedback.text = message
+		_tutorial_feedback.show()
 
 func _build_farm_help() -> void:
 	# Keep the shared layout handle for older touch/capture callers. Contextual

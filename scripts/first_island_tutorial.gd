@@ -2,8 +2,8 @@ extends Node
 ## A guided first year through real Winter accounts. Later help is optional.
 const WAIT_SPEED: float = 10.0
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Your first year", "body": "Plant, water, weather, harvest. Then Nell reads the bills.\nThis guided year has one small Summer storm. Decisions pause time.\nWASD to walk; drag to look.", "next": true, "label": "Try Mara's seed →"},
-	{"id": "market", "title": "Choose your first crop card", "body": "Open Seeds [B]. Read the Russet card: water, tolerance, price and seed cost. Buy one for this first bed.", "focus": "market", "key": "B · SEEDS"},
+	{"id": "welcome", "title": "Your first year", "body": "Plant, water, weather, harvest. Then Nell reads the bills.\nThis guided year has one small Summer storm. Decisions pause time.\nWASD to walk; drag to look.", "next": true, "label": "Meet Mara →"},
+	{"id": "market", "title": "Choose your first crop card", "body": "Tap Mara’s whole stall or press B to read Russet’s card. You already have twelve starter seeds; use one for your first bed.", "focus": "market", "key": "B · SEEDS", "next": true, "label": "Use my starter seeds →"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
@@ -11,7 +11,7 @@ const STEPS: Array[Dictionary] = [
 	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. One tonne lost; two left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
 	{"id": "sell", "title": "Sell now or store?", "body": "Sell your Russet in the barn [F] for cash now. Or keep it: Winter charges storage and spoilage, while prices rise. Either choice leads to the same honest accounts.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
-	{"id": "winter", "title": "The bills are coming", "body": "Time is running through Autumn. Nell will open the accounts at Winter. Unsold crops stay in the barn; crops left in the field face the cold."},
+	{"id": "winter", "title": "The bills are coming", "body": "Harvest the remaining starter beds before Winter. You can work the other beds now; Nell opens the accounts as Winter begins. Unsold crops stay in the barn."},
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
@@ -105,6 +105,9 @@ func _tools() -> Array[String]:
 	if _tour_only(): return result
 	for entry: Array in [[2, "hoe"], [3, "plant"], [4, "water"], [7, "harvest"]]:
 		if _index() >= int(entry[0]): result.append(str(entry[1]))
+	if current_id() in ["grow", "winter"]:
+		for tool in ["hoe", "water", "harvest"]:
+			if tool not in result: result.append(tool)
 	return result
 
 func _features() -> Array[String]:
@@ -123,6 +126,7 @@ func allowed_actions() -> Array[String]:
 	for tool: String in _tools(): result.append("tool:" + tool)
 	if current_id() == "market": result.append("buy:russet:1")
 	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
+	if current_id() in ["grow", "winter"]: result.append_array(["quick_sell", "sell_potatoes", "sell:russet:", "market_sell", "market_all", "quantity_minus", "quantity_plus", "grade:"])
 	if current_id() == "plant": result.append("crop:russet")
 	if current_id() == "loss": result.append("loss_notices")
 	return result
@@ -140,6 +144,10 @@ func allows_plot(index: int, tool: String) -> bool:
 	if not active: return true
 	if _tour_only(): return false
 	var id: String = current_id()
+	if id in ["grow", "winter"] and index >= 0 and index < game.state.plots.size():
+		# Keep only the demonstration crop for the disclosed gust; other beds
+		# are available immediately, before the guide could expose them to cold.
+		return game.state.plots[index].unlocked and tool in ["hoe", "water", "harvest"] and (id == "winter" or index != _plot_index())
 	# A different empty bed is a valid choice; move the cue to that bed.
 	if id == "hoe" and tool == "hoe" and index >= 0 and index < game.state.plots.size():
 		var candidate: Dictionary = game.state.plots[index]
@@ -154,7 +162,7 @@ func explain_block() -> void:
 	if not _tour_only():
 		var step: Dictionary = _steps()[_index()]
 		refresh()
-		message = str(game.hud._tutorial.body)
+		message = "That action is not part of this step. You can skip the guided year to farm freely."
 		if step.has("tool"):
 			game._select_tool(str(step.tool))
 			message = "%s selected again. Click the gold bed." % str(step.tool).capitalize()
@@ -173,17 +181,23 @@ func refresh() -> void:
 	if current_id() == "grow":
 		if game.state.season_clock.season == 0:
 			var seconds: int = ceili(game.state.season_clock.remaining(game.state.season_seconds()) / WAIT_SPEED)
-			body = "Spring is passing at 10×. Summer in %ds.\nIris will warn us before one small storm. Your first crop's quality and pests are protected while you learn." % seconds
+			body = "Spring is passing at 10×. Summer in %ds.\nIris will warn us before one small storm. Harvest the other ripe starter beds with tool 4 while Iris watches the sky." % seconds
 			wait_label = "Summer in %ds · 10×" % seconds
 		else:
 			forecaster = true
 			title = "Iris · Summer warning"
 			var seconds: int = ceili(game.state.climate.data.timer)
-			body = "Iris, on the radio: a small storm is coming in %ds. Watch the sky and your gold bed.\nThe warning runs at 1×. Tess will show the loss, then you can harvest." % seconds
+			body = "Iris, on the radio: a small storm is coming in %ds. Watch the sky and your gold bed.\nThe warning runs at 1×. Harvest the other starter beds now; Tess will show the loss on the gold bed." % seconds
 			wait_label = "Storm in %ds · 1×" % seconds
 	elif current_id() == "winter":
 		var left: float = (3 - game.state.season_clock.season) * game.state.season_seconds() - game.state.season_clock.seconds
-		wait_label = "Accounts in %ds · 10×" % ceili(left / WAIT_SPEED)
+		var ripe: int = game.state.plots.filter(func(bed): return int(bed.stage) == 3 and bed.crop != "icecap").size()
+		if ripe > 0:
+			body = "Harvest %d remaining ripe bed%s with tool 4. The calendar pauses so the guide cannot leave them to die in the cold. Unsold sacks stay in the barn." % [ripe, "" if ripe == 1 else "s"]
+			wait_label = "Harvest remaining beds · time paused"
+		else:
+			body += "\nTend or hoe the other beds while time runs at 10×."
+			wait_label = "Accounts in %ds · 10×" % ceili(left / WAIT_SPEED)
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "wait_label": wait_label, "forecaster": forecaster, "id": current_id(), "key": str(step.get("key", "")),

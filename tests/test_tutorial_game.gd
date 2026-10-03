@@ -61,7 +61,10 @@ func run() -> void:
 	press("tutorial:next")
 	lesson("market")
 	game._on_action("market")
-	press("buy:russet:1")
+	var starting_seeds: int = game.state.seed_inventory.russet
+	var starting_coins: float = game.state.coins
+	press("tutorial:next")
+	check(starting_seeds == 12 and game.state.seed_inventory.russet == starting_seeds and game.state.coins == starting_coins, "guide uses owned starters without requiring a paid purchase")
 	lesson("hoe")
 	walk_plot("hoe", 4)
 	lesson("plant")
@@ -84,8 +87,9 @@ func run() -> void:
 	check(loss.sacks == 1 and loss.saved == 1 and loss.missing == "Windbreak missing", "small disaster records real yield and prevention")
 	check(game.state.ClimateSystem.Protection.remaining(game.state.plots[4]) == 2, "storm leaves a harvest")
 	check(game.hud._panel_kind == "loss_notices" and game.hud._refs.tess_board.loss_notes.find_children("*", "Label", true, false).any(func(label): return label.text.contains("360")) and game.hud._refs.tess_board.loss_notes.find_children("*", "Label", true, false).any(func(label): return label.text.contains("1 t")), "farmhand reports the base-value loss and cause")
+	var instruction: String = game.hud._tutorial_body.text
 	game.tutorial.explain_block()
-	check(not game.hud._tutorial_body.text.is_empty(), "blocked input retains cause-card guidance")
+	check(game.hud._tutorial_body.text == instruction and game.hud._tutorial_feedback.visible, "blocked reason appears below the unchanged instruction")
 	await shot("cause-card")
 	var stopped: Dictionary = game.state._save_data().duplicate(true)
 	game._process(1000)
@@ -114,13 +118,21 @@ func run() -> void:
 		else: press("tutorial:next")
 		lesson("winter")
 		check(not game.state.tutorial_progress.completed and game.state.tutorial_progress.choice == decision, "choice saved without ending guide: " + decision)
+		var autumn_before: float = game.state.elapsed
 		game._process(1000)
+		check(game.state.elapsed == autumn_before and game.hud._tutorial_body.text.contains("remaining ripe"), "remaining starter crops pause the Winter wait with an actionable harvest")
+		for index in range(4): walk_plot("harvest", index)
+		check(game.state.plots.slice(0, 4).all(func(bed): return int(bed.stage) == 0), "all formerly locked starter beds can be harvested")
+		game._process(1000)
+		await settle()
+		while game.hud.accounts_building: await process_frame
 		check(game.state.season_clock.year == 1 and game.state.season_clock.season == 3, "new player reaches first Winter: " + decision)
 		check(game.state.accounts_open and game.hud._panel_kind == "accounts", "annual ledger is open: " + decision)
 		check(game.state.tutorial_progress.completed and not game.tutorial.active, "guidance ends at accounts: " + decision)
 		check(game.state.ledger.is_closed(1) and game.state.ledger.total(1) < -100000, "normal bills posted to honest negative ledger: " + decision)
 		check(game.hud._refs.accountant.text == "Nell · Accountant" and game.hud._refs.accountant.tooltip_text == game.state.NpcRoster.ledger_lines(game.state), "accountant reads current ledger")
-		check(game.state.stock_count("russet") == (2 if decision == "store" else 0), "choice determines stored stock")
+		check(game.state.stock_count("russet") == (13 if decision == "store" else 11), "choice determines stock after normal five-percent Winter spoilage")
+		check(game.state.season_clock.autumn_loss == 0, "guided year loses no crop the player could not harvest")
 		check(game.state._valid_save(game.state._save_data()), "first accounts save valid: " + decision)
 		stopped = game.state._save_data().duplicate(true)
 		game._process(1000)
@@ -137,6 +149,7 @@ func run() -> void:
 	game.state.restore_snapshot(choice)
 	game.tutorial.start()
 	game.tutorial.next()
+	for index in range(4): game.state.interact_plot(index, "harvest")
 	game.state.update(1000)
 	game.state.tutorial_progress.completed = false
 	game.state.tutorial_progress.step = 9

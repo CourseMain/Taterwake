@@ -1080,7 +1080,7 @@ func _market(pos: Vector3) -> void:
 	var vendor := _npc_person(root, Vector3(0.0, 0.18, 0.65), "mara")
 	_villagers.append(vendor)
 	_shop_label(root, "Seeds", Vector3(0.0, 4.45, 0.0))
-	_target(root, Vector3(0.0, 1.8, 0.0), Vector3(5.3, 3.6, 4.0), "station", "market")
+	_target(root, Vector3(0.0, 2.2, 0.2), Vector3(6.2, 4.5, 4.8), "station", "market")
 
 func _windmill(pos: Vector3) -> void:
 	var root := _root("Windmill", pos)

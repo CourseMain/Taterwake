@@ -75,6 +75,7 @@ func transition_checks() -> void:
 	game.state.tutorial_progress.completed = true
 	game.hud.set_process(false)
 	game.hud.show_panel("accounts", game.state)
+	while game.hud.accounts_building: await process_frame
 	await settle()
 	check(game.feedback_audio.last_cue == "paper", "accounts entrance plays paper foley")
 	check(game.hud.panel_entrance_duration() == .6 and game.hud.panel_entrance_progress() == 0, "accounts begin their book slide")
@@ -89,6 +90,15 @@ func transition_checks() -> void:
 	check(game.hud._modal_entrance_shield.visible, "accounts slide does not finish early")
 	game.hud.advance_panel_entrance(.001)
 	check(game.hud.panel_entrance_offset() == Vector2.ZERO and not game.hud._modal_entrance_shield.visible, "accounts finish at .6 seconds with live input")
+	game.hud.close_panel()
+	# Closing during an incremental build must cancel its remaining rows and
+	# deferred entrance instead of reopening the accounts over another page.
+	game.hud.show_panel("accounts", game.state)
+	if DisplayServer.get_name() == "headless": game.hud._open_books(true, game.hud._accounts_build_request)
+	check(game.hud.accounts_building, "accounts show their opening status before construction finishes")
+	game.hud.show_panel("menu", game.state)
+	await settle()
+	check(game.hud._panel_kind == "menu" and not game.hud.accounts_building and not game.state.accounts_open, "replacing an in-progress accounts build cancels it completely")
 	game.hud.close_panel()
 	game._process(.01)
 	check(is_equal_approx(world.camera.size, game._zoom_target_size), "closing accounts restores the chosen camera zoom")
@@ -124,7 +134,7 @@ func growth_checks() -> void:
 	check(5 in game.world.visuals.dry_beds, "thirsty bed has a pooled droplet marker")
 	var point: Vector2 = game.world.camera.unproject_position(game.world.plot_positions[5]) * game.hud.root.size / Vector2(game.farm_viewport.size)
 	game._update_hover_at(point)
-	check(game.hud._context.text.begins_with("Needs water · growth paused"), "hover names the waiting-for-water state")
+	check(game.hud._context.text.begins_with("Dry · growing slowly"), "hover names the waiting-for-water state")
 
 func pace_checks() -> void:
 	game.hud.close_panel()

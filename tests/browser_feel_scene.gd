@@ -34,6 +34,7 @@ func _ready() -> void:
 	game.state.season_changed.connect(_boundary_saved)
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
+	while not game.world.visuals.winter_materials_ready: await get_tree().process_frame
 	if OS.has_feature("web"):
 		callback = JavaScriptBridge.create_callback(command)
 		JavaScriptBridge.get_interface("window").feelQA = callback
@@ -108,7 +109,7 @@ func _prepare_farm(year: int, season: int) -> void:
 	game._on_state_changed()
 	boundaries.clear()
 	pending_boundary = -1
-	for node in [game.hud, game.touch_controls]:
+	for node in [game.hud, game.touch_controls, game.world, game.world.visuals, game]:
 		if node.get("_feel_profile") is Dictionary: node.set("_feel_profile", {})
 	game.set_process(true)
 
@@ -185,7 +186,7 @@ func _finish_sample(error: String = "") -> void:
 		result.simulation_seconds = game.state.elapsed
 		result.observed_pace = game.state.elapsed / maxf(sample_elapsed, 0.001)
 	result.stage_timings = {}
-	for entry in [{"name": "hud", "node": game.hud}, {"name": "touch", "node": game.touch_controls}]:
+	for entry in [{"name": "hud", "node": game.hud}, {"name": "touch", "node": game.touch_controls}, {"name": "world", "node": game.world}, {"name": "visuals", "node": game.world.visuals}, {"name": "main", "node": game}]:
 		var timings: Variant = entry.node.get("_feel_profile")
 		if timings is Dictionary: result.stage_timings[entry.name] = timings.duplicate(true)
 	result.stage_timing_note = "Optional disposable wrappers include child calls in parent timings; recursive totals overlap. They are diagnostic CPU timings, not an uninstrumented FPS comparison."

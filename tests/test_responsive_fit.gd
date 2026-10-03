@@ -16,6 +16,7 @@ func check(ok: bool, description: String) -> void:
 		push_error("FAIL: " + description)
 
 func settle() -> void:
+	while is_instance_valid(game) and game.hud.accounts_building: await process_frame
 	for _frame: int in range(4):
 		await process_frame
 	if is_instance_valid(game): game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)

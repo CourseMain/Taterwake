@@ -9,6 +9,10 @@ static func build(page) -> void:
 	page.hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Color("304d3d"), 18, 3, Color("5a6d50")))
 	var counter := Board.new(); counter.name = "MaraChalkboard"
 	counter.add_theme_stylebox_override("panel", Place.skin(Color("304d3d"), 12, 3, Color("304d3d")))
+	var hint: Label = page._label("Swipe for more seeds →", 14, Place.PAPER)
+	hint.name = "SeedSwipeHint"
+	page.add_child(hint)
+	hint.hide()
 	page.add_child(counter)
 	var swipe := ScrollContainer.new(); swipe.name = "SeedPacketSwipe"
 	swipe.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -75,4 +79,5 @@ static func layout(page, width: float, touch: bool) -> void:
 	page.grid.columns = page.crops.size()
 	var narrow: bool = width < 700
 	page.grid.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN if narrow or page.crops.size() == 1 else Control.SIZE_EXPAND_FILL
-	for card in page.seed_cards.values(): card.custom_minimum_size.x = 340 if narrow and touch else (220 if narrow or page.crops.size() == 1 else 164)
+	page.get_node("SeedSwipeHint").visible = narrow and touch and page.crops.size() > 1
+	for card in page.seed_cards.values(): card.custom_minimum_size.x = maxf(280, (width - 16) * 0.66) if narrow and touch else (220 if narrow or page.crops.size() == 1 else 164)

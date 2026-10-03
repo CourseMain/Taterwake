@@ -150,6 +150,7 @@ func run() -> void:
 	game.state.interact_plot(5, "harvest")
 	game.state.tutorial_progress.step = 9
 	game.state.tutorial_progress.choice = "store"
+	for index in range(4): game.state.interact_plot(index, "harvest")
 	while game.state.season_clock.season != 3 and wall < 300:
 		game._process(0.1); wall += 0.1
 	check(wall < 220 and game.state.accounts_open and game.hud._panel_kind == "accounts", "ten-times waits reach accounts with a real-time storm warning and reading allowance")

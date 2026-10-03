@@ -306,7 +306,7 @@ func _tutorial_clock_running() -> bool:
 	if not guided_first_year(): return false
 	match int(tutorial_progress.step):
 		5: return tutorial_loss().is_empty()
-		9: return season_clock.season < 3
+		9: return season_clock.season < 3 and not plots.any(func(bed): return int(bed.stage) == 3 and bed.crop != "icecap")
 	return false
 
 

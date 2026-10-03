@@ -4,6 +4,9 @@ extends RefCounted
 var entries: Array[Dictionary] = []
 var materials: Dictionary = {}
 var opacity := -1.0
+# Snow is rebuilt when protection structures change. Share its fade shader so
+# those meshes reuse the program already compiled for the first snowfall.
+static var _shaders: Dictionary = {}
 
 func collect(root: Node3D) -> void:
 	entries.clear()
@@ -16,9 +19,12 @@ func collect(root: Node3D) -> void:
 		if not materials.has(id):
 			var faded: Material = original.duplicate()
 			if faded is ShaderMaterial:
-				var shader := Shader.new()
-				shader.code = original.shader.code.replace("void fragment() {", "uniform float season_opacity = 1.0;\nvoid fragment() {\n\tALPHA = season_opacity;")
-				faded.shader = shader
+				var code: String = original.shader.code
+				if not _shaders.has(code):
+					var shader := Shader.new()
+					shader.code = code.replace("void fragment() {", "uniform float season_opacity = 1.0;\nvoid fragment() {\n\tALPHA = season_opacity;")
+					_shaders[code] = shader
+				faded.shader = _shaders[code]
 			elif faded is StandardMaterial3D:
 				faded.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 			materials[id] = faded

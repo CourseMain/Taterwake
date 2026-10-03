@@ -49,9 +49,14 @@ func _run() -> void:
 	restored.interact_plot(5, "harvest")
 	restored.tutorial_progress.step = 9
 	restored.tutorial_progress.choice = "store"
+	before = restored._save_data().duplicate(true)
+	restored.update(3600)
+	check(restored._save_data() == before, "remaining ripe starters pause the calendar before cold can kill locked beds")
+	for index in range(4): restored.interact_plot(index, "harvest")
 	restored.update(3600)
 	check(restored.season_clock.season == 3 and restored.ledger.is_closed(1), "state alone reaches settled first accounts")
-	check(restored.stock_count("russet") == 2 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and charges fee")
+	check(restored.stock_count("russet") == 13 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and charges fee")
+	check(restored.season_clock.autumn_loss == 0, "no unmanageable guided crops die to Autumn Cold")
 	check(restored.climate.year_count(1) == 1, "no second guided disaster")
 	check(restored._valid_save(restored._save_data()), "Winter guide state valid before controller completes")
 	for invalid in [{}, {"version": 3, "step": -1, "completed": false, "plot": 5}, {"version": 3, "step": 2, "completed": "false", "plot": 5}, {"version": 3, "step": 2, "completed": false, "plot": 99}]:

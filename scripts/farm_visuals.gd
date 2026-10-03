@@ -21,6 +21,7 @@ var winter_dirty := true
 var winter := false
 var snow_opacity := 0.0
 var snow_builds := 0
+var winter_materials_ready := false
 var _snow_fade := Fade.new()
 var _charm_fade := Fade.new()
 var water_markers: MultiMeshInstance3D
@@ -94,6 +95,45 @@ func setup(w) -> void:
 	spoiled = _group("SpoiledSacks")
 	order_crates = _group("BuyerOrderCrates")
 	_build_cart()
+	if DisplayServer.get_name() != "headless": _warm_winter_materials.call_deferred()
+	else: winter_materials_ready = true
+
+func _warm_winter_materials() -> void:
+	# Compatibility compiles programs only on their first draw. Submit tiny
+	# copies below the island during loading, one variant per frame, rather
+	# than compiling all the hidden Winter layers on the accounts boundary.
+	var variants: Array[Dictionary] = []
+	for fade in [_snow_fade, _charm_fade]:
+		for entry in fade.entries:
+			for material in [entry.original, entry.fade]:
+				variants.append({"node": entry.node, "material": material})
+	for node in [bed_snow, footprints, sparkles]:
+		variants.append({"node": node, "material": node.material_override})
+	var seen: Dictionary = {}
+	for entry in variants:
+		if not is_instance_valid(entry.node): continue
+		var source: GeometryInstance3D = entry.node
+		var material: Material = entry.material
+		var mesh: Mesh = source.multimesh.mesh if source is MultiMeshInstance3D else source.mesh
+		var key := "%d:%d:%s" % [material.get_instance_id(), mesh.get_instance_id(), source is MultiMeshInstance3D]
+		if seen.has(key): continue
+		seen[key] = true
+		var copy: GeometryInstance3D
+		if source is MultiMeshInstance3D:
+			copy = MultiMeshInstance3D.new()
+			copy.multimesh = source.multimesh.duplicate()
+			copy.multimesh.visible_instance_count = -1
+		else:
+			copy = MeshInstance3D.new()
+			copy.mesh = mesh
+		copy.material_override = material
+		copy.cast_shadow = source.cast_shadow
+		copy.transform = Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * .0001), Vector3(0, -2, 0))
+		add_child(copy)
+		await RenderingServer.frame_post_draw
+		if is_instance_valid(copy): copy.free()
+		if not is_inside_tree(): return
+	winter_materials_ready = true
 
 func _group(title: String, parent: Node3D = self) -> Node3D:
 	var node := Node3D.new(); node.name=title; parent.add_child(node)
