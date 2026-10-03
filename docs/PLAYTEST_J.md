@@ -30,3 +30,9 @@ The user independently reported a Summer step-six stall and missing Iris, and re
 ## Upload handoff
 
 The learned second run reached year-five Summer and is preserved in `j-second-run-year5-save.json`; it did not complete ten years or measure the epilogue wait. The user requested an immediate upload for the next reviewer, so those remain open checks. This pass also found the weather card’s invisible scroll area intercepting farm and Winter Sleep taps. The uploaded fix sizes that area to its visible contents and keeps quick Sell visible during weather. The touch suite verifies that a real GUI click reaches the Sleep confirmation during a blizzard warning. Seed-shop access, unmanageable starter crops and the known cold accounts stall remain review candidates.
+
+## Tag k follow-up
+
+The guide uses owned seeds and keeps its continuation in the shop footer even when phone guidance is folded. Ripe starter beds can be harvested during guided waits, and the final wait pauses before Autumn Cold until they are harvested. Countdown text names useful work; blocked feedback appears below the instruction. Mara's whole stall accepts taps, ordinary phone seed cards show a swipe hint and part of the next packet, and the exit says “Skip guided year”. The front page says “Start the year”. An emulated phone completed this revised guided year with thirteen stored Russet tonnes after spoilage and no browser errors.
+
+Accounts build over multiple frames and Winter shaders compile during loading; the committed M4 browser fixture records a 99.780 ms cold boundary. The owner has deferred real-phone measurement: Debug now provides the one-tap year recorder and Copy report, phones default to 2048, and DEVELOPMENT.md gives local-serve steps. The earlier ten-year stranger playthrough and physical-phone epilogue timing remain Segment 22 review work; this follow-up does not claim either.
