@@ -55,6 +55,8 @@ var _toolsmiths: Array[Node3D] = []
 var _time: float = 0.0
 var _day_elapsed: float = 0.0
 var _applied_day_time: float = -1.0
+const LIGHTING_STEP_SECONDS := 0.10
+var lighting_updates := 0
 var _day_environment: Environment
 const SUN_STEP_SECONDS := 3.0
 const SUN_EASE_SECONDS := 0.4
@@ -128,6 +130,7 @@ var _season_index: int = 0
 var _season_signal: String = ""
 var _season_key: String = ""
 var _season_blend: float = 1.0
+const SEASON_FADE_SECONDS := 1.0
 var _season_from: Dictionary = {}
 var _season_light: Dictionary = {}
 var _season_materials: Array[Dictionary] = []
@@ -540,6 +543,7 @@ func set_climate_projects(projects: Dictionary) -> void:
 			_geometry_batcher.batch_tree(project, {})
 	_project_levels = levels.duplicate(true)
 	if is_instance_valid(visuals): visuals.winter_dirty = true
+	if is_instance_valid(visuals): visuals.prepare_snow()
 
 
 func set_climate(info: Dictionary) -> void:
@@ -572,14 +576,18 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var winter_changed: bool = _winter_visible != winter
 	_winter_visible = winter
 	_day_elapsed = clampf(elapsed, 0.0, DAY_CYCLE_SECONDS)
-	if is_instance_valid(player): _set_winter_cover(winter)
+	# set_calendar owns the material fade. Direct callers still get a complete
+	# Winter switch, without doing snow/plot work for every clock tick.
+	if is_instance_valid(player) and winter_changed:
+		_set_winter_cover(winter, float(_season_palette.get("snow",1.0 if winter else 0.0)) if _season_blend < 1.0 else -1.0)
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
 	if winter_changed:
 		_sun.shadow_opacity = 0.45 if winter else 0.68
-	if _day_elapsed == _applied_day_time and not winter_changed:
+	if _applied_day_time >= 0.0 and absf(_day_elapsed - _applied_day_time) < LIGHTING_STEP_SECONDS and not winter_changed:
 		return
 	_applied_day_time = _day_elapsed
+	lighting_updates += 1
 	var phase: float = _day_elapsed / DAY_CYCLE_SECONDS
 	var height: float = sin(phase * PI)
 	var daylight: float = 0.25 + 0.75 * height
@@ -791,7 +799,7 @@ func update_plots(plots: Array) -> void:
 		var stress: float = floorf(raw_stress*4)/4.0
 		var event: String = str(_plant_weather.get("event", "")) if stress > 0 else ""
 		var overview_stress: bool = raw_stress > .3 and STRESS_TINTS.has(event)
-		key += "/%s/%.2f/%s/%s" % [event,stress,overview_stress,_bed_winter]
+		key += "/%s/%.2f/%s" % [event,stress,overview_stress]
 		if key == _plot_states[i]:
 			if _crop_tubers.has(i): _update_crop_tuber(_crop_tubers[i])
 			continue
@@ -803,14 +811,12 @@ func update_plots(plots: Array) -> void:
 			root.remove_child(child)
 			child.queue_free()
 		_furrow_roots[i].visible = unlocked and tilled
-		_soil_meshes[i].position.y = .105 if unlocked else (.145 if _bed_winter else .027)
-		_soil_meshes[i].scale.y = 1.0 if unlocked else .12
-		_soil_meshes[i].material_override = _unused_ground_material if _bed_winter else _mat(Color("66513b") if watered else (SOIL if tilled else Color("8d9c70")))
+		_update_plot_ground(i, data)
 		if not unlocked:
 			_soil_meshes[i].material_override = _unused_ground_material
-			if not _bed_winter: _unused_blades(root,.04)
+			_unused_blades(root,.04)
 			continue
-		if not tilled and stage == 0 and not _bed_winter: _unused_blades(root,.22)
+		if not tilled and stage == 0: _unused_blades(root,.22)
 		if watered and stage < 3:
 			for p in range(4):
 				_sphere(root, Vector3(-0.65 + float(p % 2) * 1.3, 0.225, -0.6 + float(p / 2) * 1.2), Vector3(0.13, 0.025, 0.18), Color("8ba39a"))
@@ -836,7 +842,14 @@ func update_plots(plots: Array) -> void:
 
 func _update_unused_ground_tint() -> void:
 	if _unused_ground_material == null: return
-	_unused_ground_material.albedo_color = Color("f0f1f0") if _bed_winter else Color(_season_palette.get("grass",GRASS)).lightened(.08)
+	var grass: Color = Color(_season_palette.get("grass",GRASS)).lightened(.08)
+	_unused_ground_material.albedo_color = grass.lerp(Color("f0f1f0"),float(_season_palette.get("snow",1.0 if _bed_winter else 0.0)))
+
+func _update_plot_ground(index: int, data: Dictionary) -> void:
+	var unlocked: bool = bool(data.get("unlocked",true))
+	_soil_meshes[index].position.y = .105 if unlocked else (.145 if _bed_winter else .027)
+	_soil_meshes[index].scale.y = 1.0 if unlocked else .12
+	_soil_meshes[index].material_override = _unused_ground_material if _bed_winter or not unlocked else _mat(Color("66513b") if data.get("watered",false) else (SOIL if data.get("tilled",true) else Color("8d9c70")))
 
 func _unused_blades(parent: Node3D, base: float) -> void:
 	# Three narrow, bent blades, with no rounded tufts or rock silhouettes.
@@ -851,9 +864,11 @@ func _unused_blades(parent: Node3D, base: float) -> void:
 	var blades := MeshInstance3D.new(); blades.name = "UnusedGrassBlades"
 	blades.mesh = surface.commit()
 	blades.material_override = _mat(Color("b0aa79"))
-	parent.add_child(blades)
-	parent.set_meta("unused_blades",3)
-	_geometry_batcher.batch_siblings(parent)
+	var layer := Node3D.new(); layer.name = "UnusedGrassLayer"
+	parent.add_child(layer)
+	layer.add_child(blades)
+	layer.visible = not _bed_winter
+	parent.set_meta("unused_blades",0 if _bed_winter else 3)
 
 func _crop_appearance(plot: Dictionary) -> Dictionary:
 	var crop_kind: String = str(plot.get("crop", "russet"))
@@ -1024,8 +1039,25 @@ func _barn(pos: Vector3) -> void:
 		_box(root, Vector3(2.63, 1.95, z), Vector3(0.10, 3.7, 0.08), Color("db8969"))
 	_box(root, Vector3(3.3, 0.43, 1.45), Vector3(0.95, 0.85, 1.22), Color("d2b266"))
 	_box(root, Vector3(3.3, 0.87, 1.45), Vector3(0.98, 0.07, 1.23), Color("ecd18a"))
+	var book := Node3D.new(); book.name = "LedgerBook"
+	book.position = Vector3(-1.15,1.0,2.67)
+	root.add_child(book)
+	# Nell's shallow writing shelf stays against the barn, off the village road.
+	_box(book,Vector3(0,-.12,0),Vector3(1.60,.15,.86),Color("a78150"))
+	for side in [-1,1]:
+		var page := Node3D.new(); page.rotation.z = float(side)*.055
+		book.add_child(page)
+		_box(page,Vector3(float(side)*.30,-.015,0),Vector3(.62,.045,.60),Color("80583e"))
+		_box(page,Vector3(float(side)*.30,.025,0),Vector3(.57,.040,.55),Color("f3e8c7"))
+		for line in range(4):
+			_box(page,Vector3(float(side)*.30,.052,-.15+line*.095),Vector3(.40,.006,.014),Color("b1ad96"))
+	_box(book,Vector3(0,.044,.02),Vector3(.038,.009,.49),Color("9a6b51"))
 	_target(root, Vector3(0.0, 2.5, 0.0), Vector3(5.6, 5.0, 4.6), "station", "barn")
 	_shop_label(root, "Barn", Vector3(0.0, 5.65, 0.0))
+
+func ledger_book_position() -> Vector3:
+	var book: Node3D = get_node_or_null("RedBarn/LedgerBook")
+	return book.global_position if is_instance_valid(book) else Vector3.ZERO
 
 func _market(pos: Vector3) -> void:
 	var root := _root("MarketStall", pos)
@@ -1692,19 +1724,26 @@ func _falling_snow(parent: Node3D, extent: Vector2) -> void:
 		snowflake.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		_snowflakes.append(snowflake)
 
-func _set_winter_cover(enabled: bool) -> void:
+func _set_winter_cover(enabled: bool, opacity: float = -1.0) -> void:
+	if opacity < 0.0: _season_palette["snow"] = 1.0 if enabled else 0.0
 	if _bed_winter != enabled:
 		_bed_winter = enabled
 		_animate_activities(1)
-		if not _live_plots.is_empty(): update_plots(_live_plots)
+		# Seasonal art must not destroy and rebuild seventy-two crop roots.
+		for i in range(mini(_live_plots.size(),_soil_meshes.size())):
+			_update_plot_ground(i,_live_plots[i])
+			var blades: Node3D = _crop_roots[i].get_node_or_null("UnusedGrassLayer")
+			if is_instance_valid(blades):
+				blades.visible = not enabled
+				_crop_roots[i].set_meta("unused_blades",0 if enabled else 3)
 	_update_unused_ground_tint()
 	if is_instance_valid(visuals):
-		visuals.set_winter(enabled)
+		visuals.set_winter(enabled,opacity)
 		_winter_cover = visuals.snow
-		get_node("IslandTerrainShell").material_override = visuals.snow_material if enabled else _ground_material
+		get_node("IslandTerrainShell").material_override = visuals.snow_material if enabled and visuals.snow_opacity >= 1.0 else _ground_material
 	if is_instance_valid(_player_body): _player_body.set_season(3 if enabled else _season_index)
 	for tree in _tree_specs:
-		if is_instance_valid(tree.canopy): tree.canopy.visible = not enabled
+		if is_instance_valid(tree.canopy): tree.canopy.visible = not enabled or (opacity >= 0.0 and opacity < 1.0)
 
 
 func _icecap_bloom(parent: Node3D, pos: Vector3) -> void:
@@ -2015,7 +2054,7 @@ static func season_tints(year: int, season: int, hint: String = "") -> Dictionar
 	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
-		"haze": (0.12 + age * 0.26) if season == 1 else 0.0}
+		"haze": (0.12 + age * 0.26) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
 
 func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	for entry in _season_materials:
@@ -2060,6 +2099,11 @@ func set_calendar(year: int, season: int, seconds: float, hint: String = "") -> 
 		_applied_day_time = -1.0
 	set_day_time(seconds, season == 3)
 
+func season_transition_info() -> Dictionary:
+	return {"duration": SEASON_FADE_SECONDS, "progress": _season_blend,
+		"active": _season_blend < 1.0, "snow": float(_season_palette.get("snow",0.0)),
+		"lighting_updates": lighting_updates}
+
 func _animate_sun(delta: float) -> void:
 	if not is_instance_valid(_sun) or not _sun_pose_ready: return
 	_sun_step_elapsed += delta
@@ -2086,7 +2130,7 @@ func _process(delta: float) -> void:
 	_animate_sun(delta)
 	_animate_winter(delta)
 	if _season_blend >= 1.0: return
-	_season_blend = minf(1.0, _season_blend + delta)
+	_season_blend = minf(1.0, _season_blend + delta / SEASON_FADE_SECONDS)
 	_apply_season()
 	_applied_day_time = -1.0
 	set_day_time(_day_elapsed, _season_index == 3)
@@ -2096,11 +2140,14 @@ func _apply_season() -> void:
 	for key in target:
 		_season_palette[key] = _season_from.get(key, target[key]).lerp(target[key], _season_blend) if target[key] is Color else lerpf(float(_season_from.get(key, target[key])), float(target[key]), _season_blend)
 	if is_instance_valid(_ground_material): _ground_material.set_shader_parameter("grass_color", _season_palette.grass)
-	_set_winter_cover(_season_index == 3)
+	_set_winter_cover(_season_index == 3,float(_season_palette.snow))
 	for entry in _season_materials:
 		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass
 		elif entry.kind == "canopy":
-			entry.material.albedo_color = _season_palette.canopy.darkened(clampf((0.68 - entry.base.g) * 1.8, 0, 0.24))
+			var color: Color = _season_palette.canopy.darkened(clampf((0.68 - entry.base.g) * 1.8, 0, 0.24))
+			color.a = 1.0-float(_season_palette.snow)
+			entry.material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if color.a > 0.0 and color.a < 1.0 else BaseMaterial3D.TRANSPARENCY_DISABLED
+			entry.material.albedo_color = color
 		else:
 			var color: Color = entry.base
 			color.a = _season_palette[entry.kind]

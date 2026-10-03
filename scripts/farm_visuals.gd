@@ -5,6 +5,7 @@ const SNOW := Color("f0f1f0")
 const WOOD := Color("a78150")
 const PRINT_LIMIT := 96
 const SHARD_LIMIT := 48
+const Fade = preload("res://scripts/season_fade.gd")
 var world
 var snow: Node3D
 var snow_material: ShaderMaterial
@@ -18,6 +19,13 @@ var snow_paths: MeshInstance3D
 var drift_specs: Array[Dictionary] = []
 var winter_dirty := true
 var winter := false
+var snow_opacity := 0.0
+var snow_builds := 0
+var _snow_fade := Fade.new()
+var _charm_fade := Fade.new()
+var water_markers: MultiMeshInstance3D
+var dry_beds: Array[int] = []
+var _water_marker_scale := -1.0
 var grades: Dictionary = {}
 var grade_batches: Dictionary = {}
 var footprints: MultiMeshInstance3D
@@ -77,6 +85,10 @@ func setup(w) -> void:
 	shards = _instances("BrokenBedIce",shard_shape,world._mat(Color("e2e6e5")),SHARD_LIMIT)
 	_build_sparkles()
 	_build_winter_charm()
+	_charm_fade.collect(winter_charm)
+	# Loading prepares the meshes. Calendar boundaries only change materials.
+	prepare_snow()
+	_build_water_markers()
 	stores = _group("WinterBarnSacks")
 	seed_crate = _group("KeptSeedCrate")
 	spoiled = _group("SpoiledSacks")
@@ -114,26 +126,91 @@ func update_grades(plots: Array) -> void:
 		grade_batches[word].multimesh.set_instance_transform(counts[word],Transform3D(Basis.IDENTITY,p))
 		counts[word]+=1
 	for word in counts: grade_batches[word].multimesh.visible_instance_count=counts[word]
+	update_water_markers(plots)
 
-func set_winter(enabled: bool) -> void:
-	winter = enabled
-	if winter and winter_dirty: _build_snow()
+func _build_water_markers() -> void:
+	# A filled teardrop and dark rim share one billboard batch for every bed.
+	var surface := SurfaceTool.new(); surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var points: Array[Vector2] = [Vector2(0,.72),Vector2(.19,.35),Vector2(.32,.03),Vector2(.29,-.24),Vector2(.16,-.42),Vector2(0,-.48),Vector2(-.16,-.42),Vector2(-.29,-.24),Vector2(-.32,.03),Vector2(-.19,.35)]
+	for layer in range(2):
+		var scale_value: float = 1.16 if layer == 0 else 1.0
+		var tint := Color("325b67") if layer == 0 else Color("9fdef0")
+		for i in range(points.size()):
+			for p: Vector2 in [Vector2.ZERO,points[i],points[(i+1)%points.size()]]:
+				surface.set_color(tint)
+				surface.add_vertex(Vector3(p.x*scale_value,p.y*scale_value,float(layer)*.01))
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.vertex_color_use_as_albedo = true
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	material.billboard_keep_scale = true
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.render_priority = 20
+	material.no_depth_test = true
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	water_markers = _instances("BedsNeedingWater",surface.commit(),material,world.plot_positions.size())
+	water_markers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+func update_water_markers(plots: Array) -> void:
+	if not is_instance_valid(water_markers): return
+	dry_beds.clear()
+	for i in range(mini(plots.size(),world.plot_positions.size())):
+		var plot: Dictionary = plots[i]
+		if not plot.get("unlocked",true) or int(plot.get("stage",0)) not in [1,2] or plot.get("watered",false): continue
+		dry_beds.append(i)
+	water_markers.multimesh.visible_instance_count = dry_beds.size()
+	water_markers.visible = not dry_beds.is_empty()
+	_water_marker_scale = -1.0
+	_fit_water_markers()
+
+func _fit_water_markers() -> void:
+	if dry_beds.is_empty() or not is_instance_valid(world.camera): return
+	# Orthographic portrait views see more land: keep the droplet at least 16px.
+	var height: float = maxf(1.0,get_viewport().get_visible_rect().size.y)
+	var marker_scale: float = maxf(1.0,world.camera.size/height*16.0/1.2)
+	if is_equal_approx(marker_scale,_water_marker_scale): return
+	_water_marker_scale = marker_scale
+	for j in range(dry_beds.size()):
+		var p: Vector3 = world.plot_positions[dry_beds[j]]+Vector3(.75,2.25,.4)
+		water_markers.multimesh.set_instance_transform(j,Transform3D(Basis.IDENTITY.scaled(Vector3.ONE*marker_scale),p))
+
+func prepare_snow() -> void:
+	if not winter_dirty: return
+	_build_snow()
+	_snow_fade.collect(snow)
 	set_shadow_mode(world.graphics_quality!="smooth")
-	snow.visible=winter
-	sparkles.visible=winter
-	winter_charm.visible=winter
-	update_bed_snow(world._live_plots)
+	_snow_fade.set_opacity(snow_opacity)
+
+func set_winter(enabled: bool, opacity: float = -1.0) -> void:
+	var changed: bool = winter != enabled
+	winter = enabled
+	var amount: float = (1.0 if enabled else 0.0) if opacity < 0.0 else clampf(opacity,0.0,1.0)
+	if changed: update_bed_snow(world._live_plots)
+	set_snow_opacity(amount)
 	footprints.visible=winter
 	stores.visible=winter and stored_count>0
 	spoiled.visible=winter and spoiled_count>0 and spoil_seconds<14
-	if not winter:
+	if is_instance_valid(water_markers): water_markers.visible = not dry_beds.is_empty()
+	if changed and not winter:
 		print_count=0; print_cursor=0; walked_distance=0
 		print_ages.fill(PRINT_SECONDS)
 		footprints.multimesh.visible_instance_count=0
 
+func set_snow_opacity(amount: float) -> void:
+	snow_opacity = clampf(amount,0.0,1.0)
+	snow.visible=snow_opacity>0
+	sparkles.visible=snow_opacity>0
+	winter_charm.visible=snow_opacity>0
+	_snow_fade.set_opacity(snow_opacity)
+	_charm_fade.set_opacity(snow_opacity)
+
 func set_shadow_mode(enabled: bool) -> void:
 	for material in [snow_material, snow_ground.material_override if is_instance_valid(snow_ground) else null, snow_paths.material_override if is_instance_valid(snow_paths) else null]:
 		if material!=null: material.set_shader_parameter("single_light_pass",not enabled)
+	# A quality change during a fade must survive restoration of opaque art.
+	for entry in _snow_fade.entries:
+		for material in [entry.original,entry.fade]:
+			if material is ShaderMaterial: material.set_shader_parameter("single_light_pass",not enabled)
 
 func _build_winter_charm() -> void:
 	winter_charm=_group("WinterCharm")
@@ -196,6 +273,7 @@ func _flatten_static(root: Node3D) -> void:
 func _build_snow() -> void:
 	_clear(snow)
 	winter_dirty=false
+	snow_builds+=1
 	for spec in world._roof_specs:
 		if not is_instance_valid(spec.parent): continue
 		var cap := _group("RoofSnow",snow); cap.global_transform=spec.parent.global_transform
@@ -402,7 +480,9 @@ func sync_state(farm) -> void:
 			tag.pixel_size=.013
 			world.bind_label(tag, Vector2(1.69, .60))
 		world._geometry_batcher.batch_siblings(order_crates)
-	set_winter(farm.season_clock.season==3)
+	# The world's calendar fade owns snow opacity; stock sync cannot snap it.
+	stores.visible=winter and stored_count>0
+	spoiled.visible=winter and spoiled_count>0 and spoil_seconds<14
 
 func collect_order(receipts: Array) -> void:
 	if receipts.is_empty(): return
@@ -437,12 +517,13 @@ func footprint_alpha(index: int) -> float:
 	return 1.0-print_ages[index]/PRINT_SECONDS
 
 func animate(delta: float) -> void:
-	if winter:
+	_fit_water_markers()
+	if snow_opacity>0:
 		sparkle_time+=delta
 		for i in range(mini(14,sparkle_points.size())):
 			var pulse: float=pow(maxf(0,sin(sparkle_time*.55+i*1.8)),8)
 			sparkles.multimesh.set_instance_transform(i,Transform3D(world.camera.global_basis.scaled(Vector3.ONE*(.03+.13*pulse)),sparkle_points[i]))
-			sparkles.multimesh.set_instance_color(i,Color(1,1,1,pulse*.8))
+			sparkles.multimesh.set_instance_color(i,Color(1,1,1,pulse*.8*snow_opacity))
 	if winter and print_count>0:
 		print_count=0
 		for i in range(PRINT_LIMIT):

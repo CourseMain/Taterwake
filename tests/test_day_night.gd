@@ -78,6 +78,12 @@ func run() -> void:
 	check(not world._sun.rotation_degrees.is_equal_approx(held) and not world._sun.rotation_degrees.is_equal_approx(world._sun_target), "sun eases between poses")
 	world._animate_sun(0.2)
 	check(world._sun.rotation_degrees.is_equal_approx(world._sun_target), "sun arrives after 0.4 seconds")
+	world.set_day_time(77)
+	var writes: int = world.lighting_updates
+	for i in range(5): world.set_day_time(77.0+float(i)*.016)
+	check(world.lighting_updates==writes and world.day_cycle_info().seconds>77,"fractional clock advances without rewriting the environment every frame")
+	world.set_day_time(77.12)
+	check(world.lighting_updates==writes+1,"lighting refreshes at a tenth of a simulated second")
 	if "--capture" in OS.get_cmdline_user_args():
 		for moment in [0, 75, 150]:
 			world.set_day_time(moment)

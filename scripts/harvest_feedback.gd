@@ -45,12 +45,40 @@ func harvest(snapshots: Dictionary) -> void:
 		tag.font_size = 42
 		tag.pixel_size = 0.026
 		tag.no_depth_test = true
+		tag.render_priority = 3
 		tag.position.y = 0.9
+		var ink: Color = {"Table":Color("43734b"),"Standard":Color("526471"),"Feed":Color("94653c")}[tag.text]
+		tag.modulate = ink
+		tag.outline_size = 0
 		body.add_child(tag)
-		world.bind_label(tag, Vector2(2.8, .7))
+		_stamp_plate(body,ink)
+		world.bind_label(tag, Vector2(2.45, .55))
+		var view_height: float = maxf(1.0,get_viewport().get_visible_rect().size.y)
+		var stamp_scale: float = maxf(1.0,world.camera.size/view_height*20.0/.84)
+		for stamp: Node3D in [tag,body.get_node("HarvestStampRim"),body.get_node("HarvestStampPaper")]:
+			stamp.scale = Vector3.ONE*stamp_scale
 		body.position = origin
-		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "popped":false, "landed":false})
+		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "grade":tag.text, "popped":false, "landed":false})
 	if not snapshots.is_empty(): audio.play_action("giant" if heavy_sound else "harvest")
+
+func _stamp_plate(parent: Node3D, ink: Color) -> void:
+	# A cream receipt with a grade-coloured rim reads as a stamp above the pull.
+	for layer in range(2):
+		var mesh := MeshInstance3D.new(); mesh.name = "HarvestStampRim" if layer == 0 else "HarvestStampPaper"
+		var quad := QuadMesh.new(); quad.size = Vector2(2.8,.84) if layer == 0 else Vector2(2.6,.68)
+		mesh.mesh = quad
+		var material := StandardMaterial3D.new()
+		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		material.billboard_keep_scale = true
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.no_depth_test = true
+		material.albedo_color = ink if layer == 0 else Color("f7edcf")
+		material.render_priority = 1+layer
+		mesh.material_override = material
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mesh.position.y = .9
+		parent.add_child(mesh)
 
 func _remove(index: int) -> void:
 	var node: Node3D = active[index].node
@@ -69,6 +97,7 @@ func _scatter(at: Vector3, count: int, heavy: bool) -> void:
 
 func animate(delta: float) -> void:
 	pull_pose = 0
+	var popped_grades: Dictionary = {}
 	for i in range(active.size() - 1, -1, -1):
 		var entry: Dictionary = active[i]
 		entry.age += delta
@@ -100,6 +129,9 @@ func animate(delta: float) -> void:
 				continue
 		if t >= pull and not entry.popped:
 			entry.popped = true
+			if not popped_grades.has(entry.grade):
+				popped_grades[entry.grade] = true
+				audio.play_grade(entry.grade)
 			_scatter(origin, 7 if entry.heavy else 4, entry.heavy)
 		if t >= pull+flight and not entry.landed:
 			entry.landed = true
