@@ -226,31 +226,19 @@ signals appear 70% of the time, false signals 10%. Winter deep freeze and
 blizzard remove 20% / 30% times severity of exposed stored tonnes and living
 Icecap. These constants also live in `balance.gd`.
 
-Current pace and land results (installed Godot 4.7 stable, seeds 1–30):
+Current balance results (Godot 4.7.2, seeds 1–30, 40% dry growth and Segment 20 pace controls):
 
 | Policy | Completes year 10 | Median ending year | Mean ending cash | Maximum ending cash | Mean crop sales |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Naive | 0 / 30 | 4 | -231,297.63 | -200,488.86 | 307,689.04 |
-| Cautious | 30 / 30 | 10 | -30,269.59 | 55,498.72 | 1,370,622.57 |
+| Naive | 0 / 30 | 4 | -245,170.12 | -201,127.63 | 388,763.21 |
+| Cautious | 30 / 30 | 10 | -26,996.95 | 56,594.15 | 1,372,380.97 |
 | Tidy | 30 / 30 | 10 | 271,118.27 | 319,021.66 | 1,759,191.23 |
-| Diversifier | 26 / 30 | 10 | -14,160.84 | 122,204.05 | 1,220,605.45 |
-| Expander | 30 / 30 | 10 | 209,394.14 | 311,958.73 | 2,078,761.18 |
+| Diversifier | 28 / 30 | 10 | 28,661.22 | 143,980.64 | 1,284,880.84 |
+| Expander | 29 / 30 | 10 | 87,956.58 | 215,971.19 | 2,018,396.42 |
 
-All **1,651 bot checks** pass across 150 runs, including exact annual journal
-replay. The original four policies use Home Field only. Tidy's mean sales
-advantage is **28.35%**; expander survives all 30 seeds and out-earns cautious
-without exceeding the **320,000 ending-cash ceiling** on any seed. Ending
-statistics include foreclosures; receipts stop when a farm closes.
+All **1,679 bot checks** pass across 150 runs, including exact annual journal replay. Tidy's mean crop-sales advantage is **28.19%**. Expander's mean cash is between cautious and tidy, near positive 100,000, with 29 survivors against the required 24. Diversifier's mean cash exceeds cautious by **55,658.17** and remains below tidy. Ending statistics include foreclosures; receipts stop when a farm closes. No funding, forced weather, yield changes or strategy shortcuts were added.
 
-Low Field rent is tuned to **44,000 a year**; Hill Field remains **9,000**.
-The requested initial Low rent of 12,000 produced expander mean ending cash
-529,394.14 and maximum 631,958.73, failing the ceiling on all 30 seeds.
-Raising rent preserves its 2,078,761.18 mean crop sales while bringing every
-ending balance below the ceiling. Leases pay ahead in Winter, starting with
-Winter 1 for the expander's year-two planting. Each lease opens twelve beds;
-the other twelve cost the existing 48,000 expansion price. Home's fixed rent
-and tax remain in the annual bills above. Low's yield multiplier is 1.25;
-field exposure and cancellation rules are listed in `GAMEPLAY.md`.
+Low Field rent is **55,000 a year**; Hill Field remains **9,000**. The preceding 44,000 rate left expander mean cash at 207,828.24, close to tidy, and one seed above the 320,000 cash ceiling after dry growth changed. Raising rent creates a distinct expansion trade-off while keeping survival above 24/30. Leases pay ahead in Winter, starting with Winter 1 for the expander's year-two planting. Each lease opens twelve beds; the other twelve cost the existing 48,000 expansion price. Home's fixed rent and tax remain in the annual bills above. Low's yield multiplier is 1.25; field exposure and cancellation rules are listed in `GAMEPLAY.md`.
 
 The single pest chance is **16%**, **24% in Summer**, and **zero in Winter**,
 with its deadline uniformly between 25% and 60% of base grow time. The old
@@ -295,9 +283,9 @@ benefits beginning the following year. Values live in `balance.gd`.
 
 | Business | Build/enrolment | Annual benefit |
 | --- | ---: | --- |
-| Farm shop | 120,000 | 32,000; Summer loses 30 seconds (120 remain) |
+| Farm shop | 120,000 | 34,000; Summer loses 30 seconds (120 remain) |
 | Contract grower | 0 | Two simultaneous orders; contract quote × 1.2 |
-| Lodging | 100,000 | 24,000 × completed protection types / 4 |
+| Lodging | 100,000 | 28,000 × completed protection types / 4 |
 
 Lodging counts tank, drainage, windbreak and frost cover once each, ignoring
 levels and sprinklers. Annual shop/lodging income posts before foreclosure;
@@ -324,7 +312,7 @@ The original four policies rent no land. Expander follows cautious with the same
 “Out-earns” means total **crop sales receipts** over the ten-year cohort;
 a percentage of net profit would be undefined or misleading when it is zero
 or negative. The bot also checks majority-Table tidy harvests, the 320,000 per-run cash
-ceiling, tidy mean cash strictly below 320,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes.
+ceiling, tidy mean cash strictly below 320,000, the 15–40% advantage range, survival and exact annual journal replay against observed purse changes. It additionally requires expander survival of at least 24/30, expander mean cash of 80,000–120,000 between cautious and tidy, and diversifier mean cash at least 40,000 above cautious and below tidy.
 It uses ordinary IEEE float transaction order, with no approximate-equality
 allowance. Reports under `artifacts/test-results/tuning_<strategy>.json` include
 each seed's annual opening, closing and category totals. The obsolete pre-scale outcome fixture was removed when pacing changed; annual ledger replay stays exact. This tests state-level

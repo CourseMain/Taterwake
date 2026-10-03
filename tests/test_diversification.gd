@@ -66,8 +66,8 @@ func run() -> void:
 	check(farm.season_clock.season == 2 and farm.season_clock.seconds == 0 and farm.season_seconds() == 150, "Autumn starts exactly at Summer second 120")
 	before = farm.coins
 	farm.update(150)
-	check(farm.diversification.winters["4"].shop == 32000 and farm.diversification.winters["4"].lodging == 12000, "first full year pays 32,000 shop and 12,000 for two lodging protections")
-	check(farm.coins == before + 44000 - farm.ledger.fixed_cost_total() - 2 * Balance.PROTECTION_UPKEEP, "business income pays before the Winter bill")
+	check(farm.diversification.winters["4"].shop == 34000 and farm.diversification.winters["4"].lodging == 14000, "first full year pays 34,000 shop and 14,000 for two lodging protections")
+	check(farm.coins == before + 48000 - farm.ledger.fixed_cost_total() - 2 * Balance.PROTECTION_UPKEEP, "business income pays before the Winter bill")
 	check(farm.save_game(SAVE) and farm.load_game(SAVE), "income reports and entries round-trip")
 	before = farm.coins
 	farm.diversification.winter(farm)
@@ -93,7 +93,7 @@ func run() -> void:
 		farm.diversification.buy(farm, "lodging")
 		for i in range(count): farm.climate.data.projects[["rainwater", "drainage", "windbreaks", "frost"][i]] = 1
 		winter(farm, 4)
-		check(farm.diversification.winters["4"].lodging == 6000 * count, "lodging scales from zero to four protections")
+		check(farm.diversification.winters["4"].lodging == 7000 * count, "lodging scales from zero to four protections")
 		farm.free()
 	farm = fresh(); winter(farm)
 	farm.coins = Balance.OVERDRAFT_LIMIT + Balance.BUSINESS_COSTS.shop - 1

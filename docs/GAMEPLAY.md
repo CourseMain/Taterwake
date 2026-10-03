@@ -21,7 +21,7 @@ Home, Low and Hill each contain 24 beds. Home starts with twelve open. Rent Low 
 | Field | Annual rent | Exposure |
 | --- | ---: | --- |
 | Home · Sheltered | Included in fixed costs | Storm and flood ×0.8 |
-| Low · Floods first | 44,000 | Yield ×1.25; flood ×1.5; drought ×0.8 |
+| Low · Floods first | 55,000 | Yield ×1.25; flood ×1.5; drought ×0.8 |
 | Hill · Dries first | 9,000 | Drought ×1.5; flood ×0.5; storm ×1.3; freeze ×1.2 |
 
 Exposure multiplies weather stress and resulting loss. Protection projects share their levels across the farm; Spring frost covers can be placed on any rented bed. Loss cards name the field. Low Field's extra whole tonnes are distributed across four beds, giving each complete half-field exactly 25% more. Ducks patrol open beds in all rented fields.
@@ -111,9 +111,9 @@ From year three, the accounts offer a further decision: diversify or keep invest
 
 | Business | Cost | Return and tradeoff |
 | --- | ---: | --- |
-| Farm shop | 120,000 | 32,000 each Winter; Summer has 30 fewer seconds for farming. |
+| Farm shop | 120,000 | 34,000 each Winter; Summer has 30 fewer seconds for farming. |
 | Contract grower | Free enrolment | Two simultaneous Spring orders, each at 1.2× the ordinary contract price; normal shortfall penalties apply. |
-| Lodging | 100,000 | 6,000 each Winter per completed protection type, up to 24,000. |
+| Lodging | 100,000 | 7,000 each Winter per completed protection type, up to 28,000. |
 
 
 Business benefits begin the following year. Lodging counts completed tank, drainage, windbreak and frost-cover projects separately. Contract growers receive two simultaneous premium orders at base × 1.32; shortfall penalties still apply. These incomes and costs use the same ledger.

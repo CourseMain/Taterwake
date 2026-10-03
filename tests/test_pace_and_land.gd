@@ -49,12 +49,12 @@ func run() -> void:
 	farm._season_boundary()
 	var before: float = farm.ledger.total(1, "rent")
 	farm.rent_field("low"); farm.rent_field("hill")
-	check(farm.ledger.total(1, "rent") == before - 53000, "both annual rents post under rent")
+	check(farm.ledger.total(1, "rent") == before - 64000, "both annual rents post under rent")
 	check(farm.field_expansion_info("low").opened == 12 and farm.field_expansion_info("hill").opened == 12, "rent opens only first halves")
 	farm.expand_field("low")
 	check(farm.field_expansion_info("low").opened == 24 and farm.field_expansion_info("home").opened == 12 and farm.field_expansion_info("hill").opened == 12, "expansion is local to the paid field")
 	farm.Land.renew(farm)
-	check(farm.ledger.total(1, "rent") == before - 53000 - farm.FIELD_EXPANSION_COST, "renewal cannot double charge")
+	check(farm.ledger.total(1, "rent") == before - 64000 - farm.FIELD_EXPANSION_COST, "renewal cannot double charge")
 	farm.rent_field("low", false)
 	check(farm.field_expansion_info("low").opened == 0 and farm.ledger.total(1, "rent") == before - 9000 - farm.FIELD_EXPANSION_COST, "Winter cancellation refunds renewal and closes beds")
 	farm.rent_field("low")
@@ -64,7 +64,7 @@ func run() -> void:
 	farm.season_clock.year = 2
 	before = farm.coins
 	farm.Land.renew(farm)
-	check(farm.coins == before - 44000, "next Winter charges only the retained lease")
+	check(farm.coins == before - 55000, "next Winter charges only the retained lease")
 	farm.season_clock.season = 0
 	farm.rent_field("hill")
 	check(not farm.land.hill.rented, "rent decisions restricted to Winter")

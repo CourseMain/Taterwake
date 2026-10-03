@@ -19,6 +19,7 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	DirAccess.make_dir_recursive_absolute("res://artifacts/test-results")
 	var results: Dictionary = {}
+	var mean_cash: Dictionary = {}
 	for strategy in STRATEGIES:
 		var rows: Array = []
 		for seed_value in range(1, 31): rows.append(play(strategy, seed_value))
@@ -36,13 +37,18 @@ func run() -> void:
 			check(not row.completed or row.cash <= 320000, "%s seed %d cash ceiling: %.2f" % [strategy, row.seed, row.cash])
 		years.sort()
 		print("%s: survived %d/30, median end year %.1f, mean cash %.2f, max cash %.2f, mean sales %.2f" % [strategy, survived, (years[14]+years[15])/2.0, cash/30, best, sales/30])
+		mean_cash[strategy] = cash / rows.size()
 		if strategy == "naive": check((years[14]+years[15])/2.0 <= 6, "naive median foreclosure by year six")
 		if strategy == "cautious": check(survived >= 24, "cautious survives at least 24 seeds")
 		if strategy == "tidy":
 			check(survived == 30, "tidy survives all thirty seeds")
 			check(cash / rows.size() < 320000, "tidy mean ending cash stays below 320,000: %.2f" % (cash / rows.size()))
 		if strategy == "diversifier": check(survived >= 24, "diversifier survives at least 24 seeds")
-		if strategy == "expander": check(survived >= 20, "expander survives at least 20 seeds")
+		if strategy == "expander": check(survived >= 24, "expander survives at least 24 seeds")
+	check(mean_cash.expander > mean_cash.cautious and mean_cash.expander < mean_cash.tidy, "expansion mean cash stays between cautious and tidy")
+	check(mean_cash.expander >= 80000 and mean_cash.expander <= 120000, "expansion mean cash stays near positive 100,000")
+	check(mean_cash.diversifier >= mean_cash.cautious + 40000, "diversification mean cash exceeds cautious by at least 40,000")
+	check(mean_cash.diversifier < mean_cash.tidy, "diversification mean cash stays below tidy")
 	var cautious_sales := 0.0
 	var tidy_sales := 0.0
 	var expander_sales := 0.0

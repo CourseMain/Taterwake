@@ -44,16 +44,16 @@ const CLIMATE_FALSE_ALARM_CHANCE: float = 0.1
 const CLIMATE_ANNUAL_CAP: int = 3
 const CLIMATE_WINTER_LOSS: Dictionary = {"deep_freeze": 0.20, "blizzard": 0.30}
 const PEST_CHANCE: float = 0.16
-const FIELD_RENTS := {"low": 1100.0 * MONEY_SCALE, "hill": 225.0 * MONEY_SCALE}
+const FIELD_RENTS := {"low": 1375.0 * MONEY_SCALE, "hill": 225.0 * MONEY_SCALE}
 const FIELD_EXPANSION_COST: float = 1200.0 * MONEY_SCALE
 const CONTRACT_QUANTITY: int = 20
 const CONTRACT_PRICE_FACTOR: float = 1.1
 # Winter diversification, available from year three. Payments start next Winter.
 const DIVERSIFY_YEAR: int = 3
 const BUSINESS_COSTS: Dictionary = {"shop": 3000.0 * MONEY_SCALE, "grower": 0.0 * MONEY_SCALE, "lodging": 2500.0 * MONEY_SCALE}
-const SHOP_INCOME: float = 800.0 * MONEY_SCALE
+const SHOP_INCOME: float = 850.0 * MONEY_SCALE
 const SHOP_SUMMER_SECONDS: float = 30.0
-const LODGING_INCOME: float = 600.0 * MONEY_SCALE
+const LODGING_INCOME: float = 700.0 * MONEY_SCALE
 const GROWER_PRICE_FACTOR: float = 1.2
 
 # Other purchases share the same currency scale; counts and speeds stay local.
