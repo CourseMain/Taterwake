@@ -100,6 +100,13 @@ func run() -> void:
 				for crop in sale.sale_rows:
 					for grade in sale.sale_rows[crop].grades:
 						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade chip matches actual tonnes")
+			if kind == "winter_stores":
+				var sale = game.hud._refs.market_page
+				check(sale.tabs.get_child(0).button_pressed and not sale.tabs.get_child(1).button_pressed, "Winter market marks the stores view")
+				sale.tabs.get_child(1).pressed.emit(); await settle()
+				check(not sale.stored_mode and sale.tabs.get_child(1).button_pressed and not sale.tabs.get_child(0).button_pressed, "fresh harvest selection follows its visible view")
+				sale.tabs.get_child(0).pressed.emit(); await settle()
+				check(sale.stored_mode and sale.tabs.get_child(0).button_pressed and not sale.trade_open, "returning to stores highlights its tab without opening a sale")
 			if kind == "market":
 				check(game.hud._body.find_child("MaraChalkboard", true, false) != null, "seeds sit on chalkboard")
 				check(game.hud._refs.market_page.sale_rows.is_empty() and game.hud._body.find_child("PriceHistory", true, false) == null, "Buy has seed packets without harvested stock or price charts")

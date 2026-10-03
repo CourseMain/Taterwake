@@ -318,6 +318,8 @@ func refresh() -> void:
 	if not selling:
 		Seeds.refresh(self)
 		return
+	for button: Button in tabs.get_children():
+		Place.tab(button, (button.get_meta("action") == "sale_stock:true") == stored_mode)
 	hud._sell_crop = selected
 	for crop in sale_rows:
 		var entry: Dictionary = sale_rows[crop]

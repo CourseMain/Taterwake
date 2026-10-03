@@ -970,6 +970,8 @@ Segment 19 seed packets use `seed_packets.gd` on a procedural chalkboard, with c
 
 Segment 19 sell rows expose stocked grade chips, a bounded amount stepper and the Winter marker. Winter opens on held stores and can switch to fresh Icecap; seed selection remains in the stepper. Stored percentage chips compare the actual rising quote with that grade’s base quote. The retired market specimen and canvas-frame helpers are removed. Captures: `artifacts/segment19-sell_potatoes-*`.
 
+Winter’s stores and fresh-harvest tabs use the same selected cream-and-ink outline as the barn and quest board. Interface checks switch both ways and confirm that selecting a view opens no sale.
+
 Segment 19 Tess’s board lives in `tess_board.gd`; the legacy loss-panel action selects its Losses tab for the first-year guide. `farm_protection.gd` shares the counterfactual wording with notifications without changing ledger labels. Desktop and phone previews are `artifacts/segment19-quests-*` and `artifacts/segment19-loss_notices-*`.
 
 Tess’s tabs use the shared cream navigation style with a dark active outline. `test_interface_pages` checks both entry tabs, switching the visible view and the absence of a contradictory empty notice when a loss exists.
