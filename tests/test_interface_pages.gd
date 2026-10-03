@@ -89,6 +89,18 @@ func run() -> void:
 				check(game.hud._refs.market_page.sale_rows.is_empty() and game.hud._body.find_child("PriceHistory", true, false) == null, "Buy has seed packets without harvested stock or price charts")
 				for crop in game.hud._refs.market_page.crops:
 					check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), "packet excludes market statistics")
+			if kind in ["quests", "loss_notices"]:
+				var board = game.hud._refs.tess_board
+				var selected_tab: int = 1 if kind == "loss_notices" else 0
+				check(board.tabs[selected_tab].button_pressed and not board.tabs[1 - selected_tab].button_pressed, "Tess marks only the visible tab")
+				check(board.tabs[selected_tab].get_theme_stylebox("pressed").border_color != board.tabs[1 - selected_tab].get_theme_stylebox("normal").border_color, "Tess's active tab has a visible ink outline")
+				board.tabs[1 - selected_tab].pressed.emit(); await settle()
+				check(board.tabs[1 - selected_tab].button_pressed and not board.tabs[selected_tab].button_pressed, "Tess's highlight follows a tab switch")
+				board.tabs[selected_tab].pressed.emit(); await settle()
+				var empty_notices: int = 0
+				for label in board.loss_notes.find_children("*", "Label", true, false):
+					if label.text == "No crop losses recorded.": empty_notices += 1
+				check(empty_notices == 0 and board.loss_notes.find_child("PinnedCauseNote", true, false) != null, "a recorded loss has no contradictory empty notice")
 			if "--capture" in OS.get_cmdline_user_args():
 				await create_timer(.25).timeout; RenderingServer.force_draw()
 				check(root.get_texture().get_image().save_png("res://artifacts/segment19-%s-%d.png" % [kind, dimensions.x]) == OK, "capture " + kind)

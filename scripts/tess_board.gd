@@ -41,7 +41,7 @@ func pin(note: Control) -> void:
 func refresh() -> void:
 	quest_notes.visible = not losses; loss_notes.visible = losses
 	for i in range(2):
-		tabs[i].set_pressed_no_signal(losses == (i == 1)); Place.pill(tabs[i], ACCENT)
+		Place.tab(tabs[i], losses == (i == 1))
 	for q in hud._quests():
 		var key: String = "quest:" + q.id
 		hud._refs[key + ":bar"].max_value = q.target; hud._refs[key + ":bar"].value = minf(q.progress, q.target)

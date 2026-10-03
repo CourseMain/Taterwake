@@ -37,6 +37,14 @@ static func header(hud, parent: Control, title: String, accent: Color, keeper: S
 		portrait.custom_minimum_size = Vector2(52, 64); row.add_child(portrait)
 		portrait.show_person(keeper)
 	return row
+static func tab(button: Button, selected: bool) -> void:
+	# Navigation stays cream; ink outlines identify the visible shelf or board.
+	pill(button, INK)
+	button.toggle_mode = true
+	button.set_pressed_no_signal(selected)
+	var active := skin(Color("e9e6d5"), 10, 100, INK)
+	active.set_border_width_all(2)
+	button.add_theme_stylebox_override("pressed", active)
 static func help(hud, parent: Control, words: String) -> Button:
 	var button: Button = hud._button("?", "")
 	button.tooltip_text = words
