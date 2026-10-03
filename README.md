@@ -54,9 +54,11 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | I | Crops and tools |
 | B / U | Market / tool upgrades |
 | F | Sell the selected crop |
+| Hold H / touch Hold to hurry | Run the simulation at 3× while held |
+| F1 | Optional help and Valley tour |
 | Escape / ☰ | Main menu and remaining activities |
 
-The first-year guide selects your tools and pauses at each decision. After the first accounts, close the ledger to work through Winter and prepare for Spring. **H** opens optional help and the Valley tour.
+The first-year guide selects your tools and pauses at each decision. After the first accounts, close the ledger to work through Winter and prepare for Spring. **F1** opens optional help and the Valley tour. Winter’s jobs card and farm menu offer **Sleep until Spring**, with a stored-crop quote before confirmation.
 
 See the [gameplay guide](docs/GAMEPLAY.md) for crop choices, the annual bills, climate protection and the ending.
 
