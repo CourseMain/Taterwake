@@ -1079,51 +1079,97 @@ each look finished; suite green; web export runs.
 ### Segment 19: Interface visuals pass
 
 ```
-Goal: the new screens look designed, in the cream paper and ink style of
-UI_STYLE.md, on desktop and phone.
+Goal: the new screens look designed and read at a glance. Reference: the
+Duck patrol page (a picture of the thing, coloured blocks with one action
+each, a status badge, no paragraph). Every page follows seven rules:
 
-- Annual accounts: a ledger page. Ruled lines, category rows with dot
-  leaders, the net figure in the display font, a stamped year, the
-  ten-year table as a small column, the climate strip beneath, cause
-  cards as pinned notes. This is the screenshot screen: no HUD chrome
-  behind it, a screenshot button that saves to the user folder.
-- Crop cards: illustrated potato per variety (item_icon.gd), the three
-  dials as short bars with icons (drop, sun, snowflake), seed cost, last
-  year's price, and a grade preview line; selected card lifts.
-- Sell page: one row per variety, then per grade; the sparkline with the
-  dashed Winter marker; a single line explaining storage.
-- Contracts and Winter stores: paper order slip and a barn tally board.
-- Front page (Segment 13): a newspaper layout with masthead, headline,
-  the ten-year strip as a weather column, and a skip control.
-- Forecast: the range as a bracket on a scale, not text only.
-- Foreclosure and ten-year summary: keep the editorial page, add the
-  final ledger and the epilogue lead-in.
-- Season strip: a small four-segment bar under the wordmark with the
-  current season lit and the year number.
-- Winter jobs card: when Winter opens (after the accounts close), a
-  pinned card under the season strip lists every Winter action that is
-  actually available, with live numbers, one line each: iced beds to
-  clear; stored tonnes with the current and late-Winter price; paid
-  projects with work done of three; cleared beds that can take a frost
-  cover; ripe Icecap; sacks that can be kept as seed; businesses on
-  offer from year three; and the blizzard warning when one is coming.
-  Each line is a button that walks the farmer there or opens the right
-  page. Lines tick off as they are done and the card collapses to a
-  single "Winter · N jobs left" line when the player wants it out of
-  the way. Move the Winter stores sale out of the barn sub-menu: the
-  barn's Winter page opens on the stores list with the rising price
-  first. The same card pattern may show at most two lines in other
-  seasons (a contract due, a disaster warning) but never a to-do list.
-- Phone layouts for every page above; touch targets at least 44 px.
+SHAPE      Each place is an object: chalkboard + seed packets (Mara),
+           timber barn with crates (Nell), pegboard workbench (Bram),
+           instrument panel (Iris), cork board with pinned notes (Tess),
+           paper ledger (accounts), newspaper (front page).
+ACCENT     One accent colour per place, on the header band and the
+           primary button only; body stays cream. Crop ribbons use the
+           crop's own colour.
+EDGES      Paper 6 to 8 px rounded, buttons full pills, boards and
+           instruments squarer. Mixed on purpose.
+FACTS      Only what applies: no zero rows, no repeated boilerplate, no
+           "—" placeholders. Big number, small label. Icons for thirst,
+           heat, cold and weather events. Explanations behind a ? tooltip.
+LINES      At most two facts joined by "·".
+ENTRANCES  One way in per thing.
+CHARACTERS The keeper's portrait small in a corner of their page.
 
-Remove leftover copy from the old game wherever it appears (stock words,
-island names other than Spud Valley, quest names from the market era).
+Per page:
+1. Seeds (Mara): chalkboard background; one seed PACKET per variety with
+   a crop-coloured ribbon, illustration, price per seed large, season
+   pips and tonnes, three icon dials, one volatility badge, what you
+   own, Buy 1 / Buy 5 pills. Remove: grade thresholds, live /t and %,
+   sparkline, "Last year avg", "Price swings" text, "In barn".
+2. Sell (market): one row per variety: icon, name, price/t with a
+   signed % chip, sparkline with the Winter dash, then grade chips ONLY
+   for grades with stock ("Table 12 t", "Standard 4 t"); tapping a chip
+   opens the amount stepper. The storage sentence becomes a ? tooltip,
+   shown as one line only in Winter.
+3. Tess's board: Tess is the quest keeper. The quest board on the map
+   opens her cork board with two tabs, Quests and Losses; each item is a
+   pinned note (event icon, tonnes, field, worth, one counterfactual
+   line). Remove "Crop loss notices" from the weather station and from
+   Tess's conversation. Fix the bug where the panel shows a loss and
+   then "No crop losses recorded".
+4. Weather station (Iris): instrument panel. Top: radar + the forecast
+   bracket as one visual with the event names. Then three field chips
+   with exposure icons. Then a 2×2 grid of protection tiles (icon, name,
+   level pips, one-line effect with its %, one button). Then one
+   insurance toggle row and a small station-upgrade line. Remove the
+   damage-reduction table, the loss-notices button and "Cover all
+   cleared beds" (that lives on the Winter jobs card).
+5. Buyer board: the order is a paper slip pinned with a tack: crop icon,
+   "20 t Russet", price, "due Autumn end", penalty small, Accept as a
+   stamp button. The explanatory paragraph becomes a tooltip.
+6. Front page: keep the layout; replace the ten "—" rows with a single
+   ten-box strip with icons; legend behind a tooltip; add last year's
+   net in a small Accounts box.
+7. Barn (Nell): lighter timber frame, cream interior; ONE Sell button
+   that opens the market (on stores in Winter); remove the second "Barn
+   stores" button; items as a grid of crate tiles, not one wide card.
+8. Workbench (Bram): pegboard; smaller tool tiles with level pips;
+   "Garden beds" becomes "Open 12 more beds" with the field named;
+   PotatoDex moves to the farm menu.
+9. Annual accounts: a ledger page. Ruled lines, category rows with dot
+   leaders, the net figure in the display font, a stamped year, the
+   ten-year table as a small column, the climate strip beneath, cause
+   notes as pinned slips. No HUD chrome behind it; a screenshot button.
+10. Season strip: a small four-segment bar under the wordmark with the
+    current season lit and the year number.
+11. Winter jobs card: when Winter opens (after the accounts close), a
+    pinned card under the season strip lists every Winter action that is
+    actually available, with live numbers, one line each: iced beds to
+    clear; stored tonnes with the current and late-Winter price; paid
+    projects with work done of three; cleared beds that can take a frost
+    cover; ripe Icecap; sacks that can be kept as seed; businesses on
+    offer from year three; the blizzard warning when one is coming. Each
+    line is a button that walks the farmer there or opens the right
+    page. Lines tick off as they are done and the card collapses to
+    "Winter · N jobs left" on request. Other seasons may show at most
+    two lines (a contract due, a disaster warning), never a to-do list.
+12. World signs: field boards show the field name only; exposure is an
+    icon on the post. To Let boards show "TO LET" only. All Label3D text
+    must fit its board: measure and shrink, never overflow.
+13. Phone: packets become a horizontal swipe row; tiles a single column;
+    44 px touch targets.
+
+Copy sweep: remove leftover words from the old game (stock, boom,
+islands other than Spud Valley, market-era quest names). Ledger labels
+are frozen strings the save validator checks: never change them.
+
+One page per commit, screenshot at desktop and phone width after each.
+If a line does not change what the player does next, it goes.
 
 Tests: update the HUD layout and responsive suites for the new pages at
-the existing viewport set.
+the existing viewport set; add a Label3D fit check for every world sign.
 
-Acceptance: every panel screenshotted at desktop and phone width looks
-consistent; suite green.
+Acceptance: every page screenshotted at both widths looks consistent and
+follows the seven rules; suite green.
 ```
 
 ### Segment 20: Feel, sound and performance
@@ -1147,12 +1193,60 @@ Goal: the last mile before the tutorial rewrite.
   still present. Target 60 fps on a mid-range phone in Summer with rain.
 - Save: confirm the boundary save never hitches longer than a frame;
   move it off the main thread if it does.
+- Pace controls: "Sleep until Spring" button in Winter, on the jobs card
+  and the farm menu; it resolves any active weather first, then jumps to
+  the Spring boundary with the normal boundary save; stored sacks are
+  not sold automatically, and a confirm line states the tonnes still in
+  store and the price they would reach by late Winter. "Hold to hurry":
+  holding H (desktop) or a touch button runs the simulation at 3× while
+  held, in any season, never during the accounts, a conversation, a
+  cause card or the tutorial's own waits; a small "3×" badge shows.
+- Growth feel: a bed waiting for water shows a clear droplet marker at
+  default zoom and the hover tag says "Needs water · growth paused"; dry
+  beds grow at 40% speed instead of 0%. Guided-year wait speed is at most
+  5×, and 1× from the storm warning through the cause card.
+- Shadow cost on phones: the 4096 shadow map and soft filter are also set
+  for mobile; measure on a real phone and drop to 2048 on web if frame
+  time rises.
 
 Tests: test_feel.gd for transition timing and audio presence; a
 benchmark script that reports frame time in the browser fixture.
 
 Acceptance: a full year played on a phone without a visible hitch; suite
 green; web export runs.
+```
+
+### Segment 21: Balance and playthrough (after Segment 20)
+
+```
+Goal: tune what the bot cannot feel, then play it as a stranger.
+
+Balance (bot-verified):
+1. Low Field rent: raise it until the expander strategy's mean ending
+   cash lands between cautious and tidy (about +100,000 scaled), not at
+   tidy's shoulder. Keep expander survival at least 24 of 30.
+2. Diversification: nudge shop income and lodging income until the
+   diversifier's mean ending cash is clearly above cautious (at least
+   +40,000 scaled) and still below tidy. The fork must be a real fork.
+3. Only if play still drags after Segment 20's pace controls: cut grow
+   times by a quarter (Russet 45, Golden 70, Giant 85, Sunburst 120,
+   Icecap 150), re-run the bot, re-tune seed prices or fixed costs until
+   survival numbers match, re-record the table.
+4. Then shorten Winter to 100 s only if it still feels empty with the
+   jobs card and Sleep until Spring in place.
+
+Playthrough (human):
+- On the web build on a phone, as a new player: tutorial, ten years,
+  epilogue. Write down every moment of confusion or boredom with the
+  season and screen it happened on. That list becomes the final fixes.
+- Check the epilogue wait on a phone; if it exceeds 20 seconds, reduce
+  the caretaker's per-year tick budget or show the ten-year ledger while
+  it computes.
+
+Release:
+- Follow PUBLISHING.md; fresh web export into docs/; tag v2.0.0; README
+  play link points at the new build; the old v1.0.3.1 build moves to a
+  release asset only.
 ```
 
 ## 8. Logic checks on the original plan
