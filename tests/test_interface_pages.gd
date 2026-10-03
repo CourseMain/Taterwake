@@ -74,10 +74,26 @@ func run() -> void:
 			for button in game.hud._modal_card.find_children("*", "Button", true, false):
 				if button.is_visible_in_tree(): check(minf(button.size.x, button.size.y) * scale >= 43.9, kind + " target " + button.text)
 			if kind == "accounts":
+				check(game.hud._refs["diversify:grower"].text == "Enrol free", "free enrolment has an action instead of a zero price")
+				for id in game.state.Diversification.NAMES:
+					var effect: Label = game.hud._body.find_child("BusinessEffect_" + id, true, false)
+					check(effect != null and effect.text.count("·") <= 1 and effect.get_line_count() <= 2, "business effects stay brief on the ledger")
 				for category in game.state.Ledger.CATEGORIES:
 					var ledger_row = game.hud._refs["accounts_" + category].get_parent().get_parent()
 					check(ledger_row.caption.text == game.state.Ledger.LABELS[category], "ledger label stays frozen")
 					check(ledger_row.visible == not is_zero_approx(game.state.ledger.total(3, category)), "ledger shows only applicable categories")
+				var recorded_losses: Array = game.state.climate.data.protection.losses.duplicate(true)
+				game.state.climate.data.protection.losses.clear()
+				game.hud.show_panel("accounts", game.state); await settle()
+				var empty_notices: int = 0
+				for label in game.hud._body.find_children("*", "Label", true, false):
+					if label.text == "No crop losses recorded.": empty_notices += 1
+				check(empty_notices == 0 and game.hud._body.find_child("PinnedCauseNote", true, false) == null, "calm-year accounts omit the empty loss section")
+				if "--capture" in OS.get_cmdline_user_args():
+					scroll.scroll_vertical = 100000; await settle(); RenderingServer.force_draw()
+					root.get_texture().get_image().save_png("res://artifacts/segment19-accounts-%d-calm.png" % dimensions.x)
+				game.state.climate.data.protection.losses.assign(recorded_losses)
+				game.hud.show_panel("accounts", game.state); await settle()
 			if kind == "sell_potatoes":
 				var sale = game.hud._refs.market_page
 				check(not sale.trade_open, "sale stepper waits for a grade chip")

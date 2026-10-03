@@ -51,7 +51,7 @@ func refresh() -> void:
 	if next != signature:
 		signature = next
 		for child in loss_notes.get_children(): loss_notes.remove_child(child); child.queue_free()
-		hud._build_loss_cards(loss_notes, hud._state.season_clock.year)
+		hud._build_loss_cards(loss_notes, hud._state.season_clock.year, true)
 		if not hud._tutorial.is_empty() and hud._tutorial.get("id") == "loss":
 			var next_button: Button = hud._button("Harvest what remains →", "tutorial:next", true); Place.pill(next_button, ACCENT, true); loss_notes.add_child(next_button)
 	var count: int = 0

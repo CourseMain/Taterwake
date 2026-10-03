@@ -2500,11 +2500,34 @@ func _build_diversification() -> void:
 		"grower": "From next Spring, accept two different orders at %.1f× the ordinary contract price. Shortfall penalties still apply." % _state.Diversification.Balance.GROWER_PRICE_FACTOR,
 		"lodging": "Earn up to %s each Winter after a full year: %s per completed tank, drainage, windbreak or frost-cover project. Levels do not stack; no protections means no guests." % [_state.money(_state.Diversification.Balance.LODGING_INCOME), _state.money(_state.Diversification.Balance.LODGING_INCOME / 4.0)],
 	}
+	var effects: Dictionary = {
+		"shop": "+%s/year · Summer −%ds" % [_state.money(_state.Diversification.Balance.SHOP_INCOME), _state.Diversification.Balance.SHOP_SUMMER_SECONDS],
+		"grower": "2 orders · price +%d%%" % roundi((_state.Diversification.Balance.GROWER_PRICE_FACTOR - 1.0) * 100),
+		"lodging": "+%s/protection · max %s/year" % [_state.money(_state.Diversification.Balance.LODGING_INCOME / 4.0), _state.money(_state.Diversification.Balance.LODGING_INCOME)],
+	}
+	var grid := GridContainer.new()
+	grid.name = "WinterBusinessTiles"
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	grid.resized.connect(func(): grid.columns = 3 if grid.size.x >= 900 else 1)
+	_body.add_child(grid)
+	var Place = preload("res://scripts/place_ui.gd")
 	for id in _state.Diversification.NAMES:
-		_body.add_child(_wrap(descriptions[id], 16, MUTED))
+		var tile := PanelContainer.new()
+		tile.add_theme_stylebox_override("panel", Place.skin())
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(tile)
+		var column := _vbox(8); tile.add_child(column)
+		var title := HBoxContainer.new(); column.add_child(title)
+		var label := _wrap(_state.Diversification.NAMES[id], 18, INK, true)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL; title.add_child(label)
+		Place.help(self, title, descriptions[id])
+		var effect := _wrap(effects[id], 16, MUTED)
+		effect.name = "BusinessEffect_" + id; column.add_child(effect)
 		_refs["diversify:" + id] = _button("", "diversify:" + id)
 		_refs["diversify:" + id].autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_body.add_child(_refs["diversify:" + id])
+		Place.pill(_refs["diversify:" + id], GREEN)
+		column.add_child(_refs["diversify:" + id])
 	_refs.business_ledger = _wrap("", 16, INK)
 	_body.add_child(_refs.business_ledger)
 	_refresh_diversification()
@@ -2513,25 +2536,26 @@ func _refresh_diversification() -> void:
 	if not _refs.has("business_ledger"): return
 	for id in _state.Diversification.NAMES:
 		var owned: bool = _state.diversification.owns(id)
-		_refs["diversify:" + id].text = _state.Diversification.NAMES[id] + (" · Enrolled" if id == "grower" else " · Built") if owned else _state.Diversification.NAMES[id] + " · " + _state.money(_state.Diversification.Balance.BUSINESS_COSTS[id])
+		_refs["diversify:" + id].text = ("Enrolled" if id == "grower" else "Built") if owned else ("Enrol free" if id == "grower" else "Build · " + _state.money(_state.Diversification.Balance.BUSINESS_COSTS[id]))
 		_refs["diversify:" + id].disabled = not _state.diversification.can_buy(_state, id)
 	var lines := PackedStringArray()
 	for entry in _state.ledger.entries:
 		if int(entry.year) != _state.season_clock.year: continue
 		if entry.label in _state.Diversification.BUILD_LABELS.values() or entry.label in _state.Diversification.INCOME_LABELS.values() or str(entry.label).begins_with("Contract grower "):
-			lines.append(entry.label + " · " + _state.money(entry.amount))
+			lines.append(entry.label + (" · " + _state.money(entry.amount) if not is_zero_approx(entry.amount) else ""))
 	_refs.business_ledger.text = "\n".join(lines)
+	_refs.business_ledger.visible = not lines.is_empty()
 
 func _build_loss_notices() -> void:
 	_build_quests(true)
 func _refresh_loss_notices() -> void:
 	_refs.tess_board.refresh()
 
-func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
+func _build_loss_cards(parent: Control, year: int, show_empty: bool = false) -> void:
 	var Place = preload("res://scripts/place_ui.gd")
 	var count: int = 0
 	for entry in _state.climate.data.protection.losses:
-		if int(entry.year) != year or (season >= 0 and int(entry.season) != season): continue
+		if int(entry.year) != year: continue
 		var card := PanelContainer.new(); card.name = "PinnedCauseNote"
 		card.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 7)); parent.add_child(card)
 		var note := _vbox(8); card.add_child(note)
@@ -2544,4 +2568,4 @@ func _build_loss_cards(parent: Control, year: int, season: int = -1) -> void:
 		var stamp := _wrap("Year %d · %s" % [entry.year, _state.SeasonClock.NAMES[entry.season]], 13, MUTED); note.add_child(stamp)
 		var pin = preload("res://scripts/paper_detail.gd").new(); pin.kind = "pin"; card.add_child(pin); pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		count += 1
-	if count == 0: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))
+	if count == 0 and show_empty: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))

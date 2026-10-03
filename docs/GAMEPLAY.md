@@ -89,7 +89,7 @@ Every loss has a **cause card**: the event, variety, tonnes lost, missing protec
 
 ## The ledger
 
-Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger has ruled category rows, dot leaders, a large signed net, a filed-year stamp and a narrow ten-year column. The climate strip sits below the accounts; loss causes are pinned notes. Only categories with money, grades sold and closed years appear; their saved labels remain unchanged. Remaining debt is recorded below the ledger. Mortgage explanations sit behind a question mark. **Save screenshot** writes a PNG to the game’s user folder; the browser also downloads a copy. Accounts and the final summary have an opaque paper background covering the HUD.
+Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger has ruled category rows, dot leaders, a large signed net, a filed-year stamp and a narrow ten-year column. The climate strip sits below the accounts; loss causes are pinned notes when losses occurred. Only categories with money, grades sold and closed years appear; their saved labels remain unchanged. Remaining debt is recorded below the ledger. Mortgage explanations sit behind a question mark. **Save screenshot** writes a PNG to the game’s user folder; the browser also downloads a copy. Accounts and the final summary have an opaque paper background covering the HUD.
 
 Every Winter posts these fixed bills once:
 
@@ -107,7 +107,7 @@ Storage, insurance, protection upkeep, purchases and other transactions appear s
 
 The overdraft limit is **−200,000**. Edwin, the bank manager, appears when the purse falls **below −100,000**, more than halfway into it. He quotes the real balance and offers the same conversation choices as the other villagers. Purchases that would cross the overdraft limit are refused. At Winter settlement, income, claims and the bills settle before foreclosure is tested: **strictly below −200,000 ends the run; exactly −200,000 survives**.
 
-From year three, the accounts offer a further decision: diversify or keep investing in crops and protection.
+From year three, the accounts offer a further decision: diversify or keep investing in crops and protection. Three compact tiles show each business’s effect and one build or enrol action; question marks explain timing and penalties.
 
 | Business | Cost | Return and tradeoff |
 | --- | ---: | --- |

@@ -986,6 +986,10 @@ The barn’s Crops & seeds and Tools tabs share Tess’s active cream-and-ink ou
 
 The Winter note uses compact, single-line actions and one conditional key for stored quotes. Its phone width gives the live prices room; text is measured before choosing its font size. The blizzard line replaces the duplicate transient warning, and the note clears the phone’s live weather status. `test_responsive_fit` checks unclipped lines and physical 44 px targets across the existing viewport set, with ice, construction, covers and ripe Icecap present. HUD captures include the live desktop and phone note.
 
+Calm-year annual accounts omit the empty loss section. Tess’s Losses tab still explains an empty board when visited directly. The shared loss-note builder no longer has an unused season filter; accounts and the board both show the relevant year. `test_interface_pages` verifies calm-year omission alongside actual pinned notes and frozen ledger labels, with calm-year end captures at both widths.
+
+The accounts’ business offers use compact cream tiles with two facts at most, one action each and question-mark explanations. Free enrolment uses words rather than a zero price; its journal label is still displayed after enrolment. The shared business page uses the same tiles. Simulation constants, transaction labels and save validation are unchanged.
+
 Segment 19 `workbench_tiles.gd` replaces the large painted tool cards with a pegboard and compact tiles. Expansion chooses an active field with closed beds; the saved transaction labels stay untouched. Sprinklers retain their purchase and practice paths. Captures: `artifacts/segment19-tools-*`; water-loop, purchase and responsive suites check the paths.
 
 Segment 19 world labels register their board dimensions and requested font size. `farm_world.gd` measures width and height, shrinks long or changing text and restores shorter text to its fitted size. Field exposure uses post geometry; lease boards read TO LET. The world-sign suite also checks extreme long text. Captures: `artifacts/segment19-signs-*`.
