@@ -151,3 +151,5 @@ Field boards print only the field’s name. A shelter, waves or hill symbol sits
 Foreclosure keeps the editorial page and opens on its final category ledger, with the real balance, overdraft limit and only applicable loss figures. The lead-in connects that final state to the farm’s future.
 
 This development build starts a new farm when a save contains the earlier lease or business rates. The incompatible save is preserved separately rather than changing its journal.
+
+The first-year guide runs its Spring and Winter waits at 10×. Iris appears for an eight-second Summer warning at ordinary speed, with a countdown, before Tess presents the crop loss. Decisions and cause-card reading pause the calendar.

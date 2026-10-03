@@ -135,11 +135,11 @@ func run() -> void:
 	game.state.buy_seeds("russet", 1)
 	for action in ["hoe", "plant", "water"]: game.state.interact_plot(5, action)
 	game.state.tutorial_progress.step = 5
-	check(game._simulation_delta(1) == 5, "guided waits stay at five times speed")
+	check(game._simulation_delta(1) == 10, "guided waits stay at ten times speed")
 	var wall: float = 6 * 12.0
 	while game.state.tutorial_loss().is_empty() and wall < 290:
 		game._process(0.1); wall += 0.1
-	check(is_equal_approx(game.state.season_clock.seconds, 40), "guided storm lands at Summer second 40")
+	check(is_equal_approx(game.state.season_clock.seconds, 8), "guided storm lands at Summer second 8")
 	check(game.state.tutorial_loss().get("sacks") == 1, "scripted storm loses one of three tonnes")
 	check(game._simulation_delta(1) == 1, "cause card returns time scale to one")
 	var clock: float = game.state.elapsed
@@ -152,7 +152,7 @@ func run() -> void:
 	game.state.tutorial_progress.choice = "store"
 	while game.state.season_clock.season != 3 and wall < 300:
 		game._process(0.1); wall += 0.1
-	check(wall < 220 and game.state.accounts_open and game.hud._panel_kind == "accounts", "five-times waits reach accounts with a real-time storm warning and reading allowance")
+	check(wall < 220 and game.state.accounts_open and game.hud._panel_kind == "accounts", "ten-times waits reach accounts with a real-time storm warning and reading allowance")
 	check(game.world.plot_positions.size() == 72, "all three fields drawn")
 	for i in [0, 24, 48]:
 		var pos: Vector3 = game.world.plot_positions[i]

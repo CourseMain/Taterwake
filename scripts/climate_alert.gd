@@ -77,6 +77,9 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	else:
 		title.text = "THE WEATHER IS EASING"
 		message.text = "Replant. Rebuild. Prepare for the next storm."
+	if kind == "warning" and farm.guided_first_year():
+		title.text = "IRIS · SUMMER WARNING"
+		message.text = "One small storm. Watch the sky and the gold bed; Tess will count the loss."
 	if is_instance_valid(_tween): _tween.kill()
 	modulate.a = 0.0
 	show()

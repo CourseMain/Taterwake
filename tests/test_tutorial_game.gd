@@ -69,11 +69,13 @@ func run() -> void:
 	lesson("water")
 	walk_plot("water", 4)
 	lesson("grow")
-	check(game._simulation_delta(1) == 5, "guided wait uses at most five-times simulation")
-	check(game.hud._tutorial_body.text.contains("5×") and game.hud._tutorial_body.text.contains("1×"), "guide displays wait speed and warning slowdown")
+	check(game._simulation_delta(1) == 10, "guided wait uses at most ten-times simulation")
+	check(game.hud._tutorial_body.text.contains("10×") and game.hud._tutorial_next.text.contains("Summer in"), "Spring wait shows speed and remaining time")
 	game._process(1000.0)
 	check(game.state.tutorial_loss().is_empty() and game._simulation_delta(1) == 1, "accelerated Spring stops at the real-time storm warning")
-	game._process(40.0)
+	check(game.hud._tutorial_forecaster.visible and game.hud._tutorial_title.text.begins_with("Iris") and game.hud._tutorial_next.text.contains("Storm in 8s") and game.hud._tutorial_body.text.contains("1×"), "Iris appears with the live Summer countdown")
+	var warning_snapshot: Dictionary = game.state._save_data().duplicate(true)
+	game._process(8.0)
 	lesson("loss")
 	check(game.state.season_clock.season == 1 and game.state.climate.data.phase == "active", "large update stops at Summer cause card")
 	var loss: Dictionary = game.state.tutorial_loss()
@@ -140,6 +142,17 @@ func run() -> void:
 	game.hud.close_panel()
 	game.tutorial.start()
 	check(game.state.tutorial_progress.completed and not game.tutorial.active, "Winter checkpoint resumes without redoing the guided year")
+	# A saved step-six Summer with a started calm outlook must still progress.
+	game.state.restore_snapshot(warning_snapshot)
+	game.state.tutorial_progress.step = 5
+	game.state.season_clock.seconds = 75
+	game.state.climate.reset()
+	game.state.climate.data.outlook.started = 1
+	game.tutorial.start()
+	check(game.state.climate.data.phase == "warning" and game.hud._tutorial_forecaster.visible, "mid-Summer resume starts the missing lesson warning and shows Iris")
+	game._process(8)
+	lesson("loss")
+	check(game.state.tutorial_loss().sacks == 1 and game.state.ClimateSystem.Protection.remaining(game.state.plots[4]) == 2, "resumed Summer reaches the real cause card without changing the crop")
 	# Old completed guides stay completed, unfinished bed work keeps its target.
 	game.state.reset_game()
 	game.state.tutorial_progress = {"version": 2, "step": 3, "completed": false, "plot": 4}

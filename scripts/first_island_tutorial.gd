@@ -1,13 +1,13 @@
 extends Node
 ## A guided first year through real Winter accounts. Later help is optional.
-const WAIT_SPEED: float = 5.0
+const WAIT_SPEED: float = 10.0
 const STEPS: Array[Dictionary] = [
 	{"id": "welcome", "title": "Your first year", "body": "Plant, water, weather, harvest. Then Nell reads the bills.\nThis guided year has one small Summer storm. Decisions pause time.\nWASD to walk; drag to look.", "next": true, "label": "Try Mara's seed →"},
 	{"id": "market", "title": "Choose your first crop card", "body": "Open Seeds [B]. Read the Russet card: water, tolerance, price and seed cost. Buy one for this first bed.", "focus": "market", "key": "B · SEEDS"},
 	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
 	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
 	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
-	{"id": "grow", "title": "Spring into Summer", "body": "The calendar runs at 5× while you wait, then at 1× from the storm warning. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
+	{"id": "grow", "title": "Spring into Summer", "body": "The calendar runs at 10× while you wait, then at 1× from the storm warning. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
 	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. One tonne lost; two left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
 	{"id": "sell", "title": "Sell now or store?", "body": "Sell your Russet in the barn [F] for cash now. Or keep it: Winter charges storage and spoilage, while prices rise. Either choice leads to the same honest accounts.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
@@ -86,11 +86,14 @@ func _enter_step() -> void:
 	sale_baseline = game.state.lifetime_sales
 	if not _tour_only() and current_id() in ["plant", "sell"]:
 		game.state.select_crop("russet")
+	_ensure_summer_warning()
 	refresh()
 	var step: Dictionary = _steps()[_index()]
 	if step.has("tool"):
 		game._select_tool(str(step.tool))
 	game._on_state_changed()
+	if current_id() == "grow" and game.state.climate.data.phase == "warning":
+		game._on_climate_changed("warning")
 	if current_id() == "loss":
 		game.hud._climate_alert.dismiss()
 		game.hud.show_panel("loss_notices", game.state)
@@ -165,16 +168,38 @@ func refresh() -> void:
 	var focus: String = str(step.get("focus", ""))
 	if not _tour_only() and current_id() in ["hoe", "plant", "water", "grow", "harvest"]:
 		focus = "plot:%d" % _plot_index()
+	var wait_label: String = ""
+	var forecaster: bool = false
 	if current_id() == "grow":
-		body = "Spring → Summer. The calendar runs at 5× while you wait, then at 1× from the storm warning.\nIris will warn us before the small storm. Your first crop's quality and pests are protected while you learn."
+		if game.state.season_clock.season == 0:
+			var seconds: int = ceili(game.state.season_clock.remaining(game.state.season_seconds()) / WAIT_SPEED)
+			body = "Spring is passing at 10×. Summer in %ds.\nIris will warn us before one small storm. Your first crop's quality and pests are protected while you learn." % seconds
+			wait_label = "Summer in %ds · 10×" % seconds
+		else:
+			forecaster = true
+			title = "Iris · Summer warning"
+			var seconds: int = ceili(game.state.climate.data.timer)
+			body = "Iris, on the radio: a small storm is coming in %ds. Watch the sky and your gold bed.\nThe warning runs at 1×. Tess will show the loss, then you can harvest." % seconds
+			wait_label = "Storm in %ds · 1×" % seconds
+	elif current_id() == "winter":
+		var left: float = (3 - game.state.season_clock.season) * game.state.season_seconds() - game.state.season_clock.seconds
+		wait_label = "Accounts in %ds · 10×" % ceili(left / WAIT_SPEED)
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
-		"continue_label": str(step.get("label", "Next place →")), "id": current_id(), "key": str(step.get("key", "")),
+		"continue_label": str(step.get("label", "Next place →")), "wait_label": wait_label, "forecaster": forecaster, "id": current_id(), "key": str(step.get("key", "")),
 		"tool": str(step.get("tool", "")), "tour_only": _tour_only(), "visited": visited, "focus": focus, "allowed_actions": allowed_actions()})
 	game.world.set_tutorial_focus(focus)
 
+func _ensure_summer_warning() -> void:
+	# Resuming mid-Summer can have an already-started outlook but no lesson storm.
+	# Start the real warned event; keep its loss, yield and journal arithmetic.
+	if not _tour_only() and current_id() == "grow" and game.state.guided_first_year() and game.state.season_clock.season == 1 and game.state.tutorial_loss().is_empty() and game.state.climate.data.phase == "calm":
+		if game.state.climate.begin_warning(game.state, "storm", 0.2):
+			game.state.climate.data.timer = minf(game.state.ClimateSystem.GUIDED_WARNING_SECONDS, maxf(0.01, game.state.season_clock.remaining(game.state.season_seconds()) - 0.01))
+
 func update(_delta: float) -> void:
 	if not active or _tour_only(): return
+	_ensure_summer_warning()
 	var id: String = current_id()
 	var plot: Dictionary = game.state.plots[_plot_index()]
 	var done: bool = false
@@ -192,7 +217,7 @@ func update(_delta: float) -> void:
 				finish()
 				return
 	if done: _advance()
-	elif id == "grow": refresh()
+	elif id in ["grow", "winter"]: refresh()
 
 func observe_action(action: String) -> void:
 	if not active: return

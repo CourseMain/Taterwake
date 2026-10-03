@@ -154,6 +154,7 @@ var _opened_farm_tip: Dictionary = {}
 var _help_cooldown: float = 0.0
 var _tutorial: Dictionary = {}
 var _tutorial_card: PanelContainer
+var _tutorial_forecaster: Control
 var _tutorial_title: Label
 var _tutorial_body: Label
 var _tutorial_progress: Label
@@ -369,7 +370,16 @@ func _build_tutorial() -> void:
 	contents.add_child(_tutorial_icon)
 	_tutorial_title = _wrap("Welcome home", 21, CREAM, true)
 	_tutorial_title.add_theme_font_override("font", _compact_heading_font())
-	contents.add_child(_tutorial_title)
+	var speaker := HBoxContainer.new()
+	speaker.add_theme_constant_override("separation", 10)
+	contents.add_child(speaker)
+	_tutorial_forecaster = preload("res://scripts/npc_portrait.gd").new()
+	_tutorial_forecaster.custom_minimum_size = Vector2(68, 86)
+	speaker.add_child(_tutorial_forecaster)
+	_tutorial_forecaster.show_person("iris")
+	_tutorial_forecaster.hide()
+	_tutorial_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	speaker.add_child(_tutorial_title)
 	_tutorial_body = _wrap("", 15, Color("e2ead9"))
 	var guide_font: FontVariation = FontVariation.new()
 	guide_font.base_font = UI_FONT
@@ -430,6 +440,7 @@ func set_tutorial(info: Dictionary) -> void:
 		_refresh_seed_visibility()
 	else:
 		_tutorial_progress.text = ("VALLEY TOUR" if info.get("tour_only", false) else "FIRST YEAR") + "  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
+		_tutorial_forecaster.visible = bool(info.get("forecaster", false))
 		_tutorial_title.text = str(info.get("title", "Your first farm"))
 		_tutorial_body.text = str(info.get("body", ""))
 		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Click the gold bed" if str(info.get("focus", "")).begins_with("plot:") else "Follow the gold marker"
@@ -440,7 +451,7 @@ func set_tutorial(info: Dictionary) -> void:
 		elif info.get("id") == "walk":
 			_tutorial_next.text = "Try a few steps"
 		elif info.get("id") in ["grow", "winter"]:
-			_tutorial_next.text = "Calendar running…"
+			_tutorial_next.text = str(info.get("wait_label", "Calendar running…"))
 		_tutorial_key.text = str(info.get("key", ""))
 		_tutorial_key.visible = not _tutorial_key.text.is_empty()
 		_tutorial_meter.value = 100.0 * float(info.get("step", 1)) / maxf(1.0, float(info.get("total", 20)))
