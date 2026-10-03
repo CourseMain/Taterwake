@@ -1249,44 +1249,63 @@ Release:
   release asset only.
 ```
 
-### Segment 22: The hook (after Segment 21)
+### Segment 22: The fun pass (after Segment 21)
 
 ```
-Goal: make a lost run the reason to start the next one. No dark patterns:
-no login rewards, no timers that run while the game is closed, nothing
-bought with money.
+Why: with Segments 1 to 21 done the game is honest, legible and simple,
+and the owner's verdict is that it is boring. The plan under-invested in
+the two things that make farming games fun minute to minute: chores that
+feel good under pressure, and a farm that visibly grows. Honesty stays
+in the ledger. It never required a farm that stays the same size.
 
-1. A target every year. At Spring start, a card under the season strip:
-   "Winter bills: 104,000. Break-even needs about N tonnes at today's
-   prices." N recomputes as prices move and crops are sold; the card
-   shows progress as sales come in. The accounts then read as the
-   reveal of a chase the player watched all year.
-2. One dilemma per season, said out loud. Reuse the Winter jobs card
-   pattern for two lines per season: Spring "what and where", Summer
-   "labour: water or spray", Autumn "sell, store or contract". Never a
-   to-do list in working seasons.
-3. Comebacks. After a year with two or more disasters, cap the next year
-   at one. Nell marks the first profitable year and the best year yet
-   with one line each on the accounts page.
-4. A lesson at the end. The epilogue adds one sentence drawn from the
-   run's largest avoidable loss: "You never built drainage; the Low
-   Field drowned twice." Computed from cause cards, not written by hand.
-5. Variety between runs. Region choice at new run: Valley (current),
-   Shores (heat and flood) and Frosthollow (cold and storm) using the
-   shelved island geometry as whole-farm terrains with their own climate
-   curves. Each run also draws one rare event from a small pool: a buyer
-   offering a large premium order, a perfect-weather year, a bank offer
-   to restructure the loan at a cost. One per run, never two.
-6. Keep the juice from Segment 20: grade stamp pop, sale sound, cause
-   card thud.
+Step 0, before any build: put the current build in front of three
+people who have not seen it. Note the minute each would have quit and
+on which screen. Use that to order the items below; the guess is that
+the first ten minutes and the middle years matter most.
 
-Tests: target card arithmetic matches the ledger; the comeback cap holds
-in the climate curve test; the lesson sentence is derived from the
-largest cause-card loss; one rare event per run; region curves differ.
-The tuning bot runs on all three regions and records a table each.
+A. Rush. Working seasons 100 s. Grow times cut a quarter (Russet 45,
+   Golden 70, Giant 85, Sunburst 120, Icecap 150). Home Field starts with
+   all 24 beds open. The aim is to always have one more job than time.
+   Re-run the tuning bot and re-tune fixed costs or prices to the
+   recorded survival numbers.
+B. Build. The island fills over ten years, each item visible on the map
+   and a line on the ledger: a greenhouse (grows one variety through
+   Winter, costs upkeep), a second barn (capacity and a safer store), an
+   orchard (a small steady income with Autumn labour), a hired farmhand
+   (Tess does one chore type for you each season for a wage). Unlock
+   order by year; nothing multiplies prices.
+C. Timed moments inside seasons, one or two per season, never more:
+   - a buyer at the gate for 60 s offering a premium for what you hold
+     now;
+   - a storm warning that gives 45 s to pull ripe beds before it lands
+     (already exists; make it louder and give sprint a reason);
+   - pests that spread to neighbouring beds every 20 s if unsprayed;
+   - a price rush: the market pays +20% for 30 s, announced by Mara.
+D. Skill in the hands. A perfect-ripeness window (the first 10 s after
+   ripe) that guarantees Table grade; hoeing adjacent beds in rhythm
+   speeds up; the watering can covers a row when swept along a path.
+   All visible, all learnable in the guided year.
+E. Things going wrong, with a choice. Ten handwritten yearly incidents,
+   one per year in Summer, each with two options and a ledger cost:
+   the tractor is too big, the ducks got out, a TV crew wants to film,
+   the well runs dry, a neighbour offers to buy the Low Field, and so
+   on. This is where the humour lives. No incident repeats in a run.
+F. The hook (kept from the earlier draft): a break-even target card
+   every Spring with live progress; one dilemma per season said out
+   loud; a comeback cap after a two-disaster year; Nell marks the first
+   profitable year and the best year yet; the epilogue adds one
+   sentence drawn from the run's largest avoidable loss; region choice
+   at new run (Valley, Shores, Frosthollow) and one rare event per run.
+G. Not allowed: login rewards, offline timers, anything bought with
+   money, price multipliers that compound.
 
-Acceptance: in the Segment 21 playthrough, the tester wants to start a
-second run without being asked. If not, this segment is not done.
+Tests: bot re-run per change in A; incidents never repeat and always
+post to the ledger; timed moments at most two per season; the perfect
+window grants Table exactly; region curves differ; target card
+arithmetic matches the ledger.
+
+Acceptance: the three testers from step 0 play again and each wants a
+second run without being asked. If not, repeat step 0 and this segment.
 ```
 
 ## 8. Logic checks on the original plan
