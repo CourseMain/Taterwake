@@ -32,7 +32,7 @@ Walk, sprint or click around one continuous hexagonal Valley island with long an
 
 ### What to plant
 
-Mara’s shop has **Buy** and **Sell** buttons at the top, reachable while its contents scroll. Buy opens her chalkboard with an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Harvested stock, sale prices and charts appear only on Sell. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
+Mara’s shop has **Buy** and **Sell** buttons at the top, reachable while its contents scroll. Buy opens her chalkboard with an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Harvested crops, sale prices and charts appear only on Sell. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
 
 | Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
