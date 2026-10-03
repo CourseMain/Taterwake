@@ -1264,14 +1264,22 @@ Suite:
    kept). Assert the crop is alive (stage in [1, 2], crop unchanged)
    instead of stage == 1. Re-run the suite; DEVELOPMENT.md says 84
    suites pass, which is not true at tag j.
-2. tools/run_tests.sh only imports when .godot/imported is missing. A
+2. tests/test_harvest_identity.gd line 61 advances once by 1000 s and
+   expects the guided storm to have landed. Since bce5f1d the calendar
+   runs at 1x from the storm warning, so one advance stops at the
+   warning and the next six checks cascade (storm-lost tonne, receipt,
+   foley, grade cue). Advance until current_id() is "loss" (at most six
+   calls); with that change all 22 checks pass at tag j. Both of these
+   tests were not re-run after the last commits; run the full suite
+   before tagging, not the focused ones.
+3. tools/run_tests.sh only imports when .godot/imported is missing. A
    checkout that already has one never sees new assets, so the audio
    added in cb5c2bb makes almost every suite report ERRORS ("Cannot
    open file res://.godot/imported/farm-harvest.wav-...sample") on any
    stale clone. Import when any *.import file under assets/ is newer
    than .godot/imported, or always run the editor import step when
    --import is passed; document it in DEVELOPMENT.md.
-3. Expander seed 21 ends 325,971 against the 320,000 ceiling. The
+4. Expander seed 21 ends 325,971 against the 320,000 ceiling. The
    ceiling is a guard against runaway money, not a tuning target, and
    the expander mean is +88,000 with 29 of 30 surviving, which is where
    Segment 21 asked it to be. Raise the ceiling to 350,000 with a
@@ -1279,37 +1287,37 @@ Suite:
    check in the suite.
 
 Copy:
-4. main.gd shows "Needs water · growth paused" while a dry bed grows at
+5. main.gd shows "Needs water · growth paused" while a dry bed grows at
    40%. Say what is true: "Dry · growing slowly" (Segment 19: only
    applicable facts).
 
 Stall:
-5. Cold accounts boundary frame is 404 ms. Build the accounts panel
+6. Cold accounts boundary frame is 404 ms. Build the accounts panel
    during the last ten seconds of Autumn, off the boundary frame, or
    show "Opening the books…" and build it over the next frames. Measure
    again; the target is under 100 ms on the M4 baseline.
 
 Before testers (from PLAYTEST_J.md, highest quit risk first):
-6. The guide asks the player to buy seeds while twelve starter seeds
+7. The guide asks the player to buy seeds while twelve starter seeds
    are already in the pouch. Either start with none (the guide buys
    them) or have the guide say plant the starter seeds.
-7. Starter beds die to Autumn Cold while the guide still locks the
+8. Starter beds die to Autumn Cold while the guide still locks the
    player out of harvesting. The guided year must never lose a bed the
    player could not act on: either the guide's lock lifts when a bed
    ripens, or the first Autumn Cold is delayed until the guided harvest
    is done.
-8. "Calendar running…" dead wait and the ripe bed waiting through the
+9. "Calendar running…" dead wait and the ripe bed waiting through the
    guided storm: the guide hands control back the moment the thing it
    is waiting on arrives; no screen may show a wait with nothing to do.
-9. Blocked-action text replaces the instruction. Keep the instruction on
+10. Blocked-action text replaces the instruction. Keep the instruction on
    screen; show the blocked reason underneath it, not instead of it.
-10. Seed shop tap target on a phone; the horizontal card scroll with no
+11. Seed shop tap target on a phone; the horizontal card scroll with no
     hint. Make the counter's tap area the whole stall and show the
     first card half cut off so the scroll is obvious.
-11. "Skip" label says what it skips (the guided year, not the season).
+12. "Skip" label says what it skips (the guided year, not the season).
 
 Phone:
-12. Measure one full year on a real mid-range phone with 2048 shadows;
+13. Measure one full year on a real mid-range phone with 2048 shadows;
     record the frame time in DEVELOPMENT.md. Default phones to 2048 if
     4096 drops below 50 fps.
 
