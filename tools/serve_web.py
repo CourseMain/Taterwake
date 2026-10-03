@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview the exported game on this computer, without any dependencies."""
+"""Preview the exported game locally, or on a phone using HTTPS."""
 from __future__ import annotations
 
 import argparse
@@ -8,6 +8,10 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import sys
+import ssl
+import subprocess
+import tempfile
+from contextlib import ExitStack
 import webbrowser
 
 
@@ -68,6 +72,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--directory", type=Path, default=default_directory(), help="Folder containing index.html")
     parser.add_argument("--port", type=int, default=8080, help="First localhost port to try; default: 8080")
     parser.add_argument("--host", default="127.0.0.1", help="Bind address; use 0.0.0.0 for a phone on the same Wi-Fi")
+    parser.add_argument("--https", action="store_true", help="Use a temporary local certificate (requires OpenSSL); phones require HTTPS")
     parser.add_argument("--open", action="store_true", help="Open the game in your default browser")
     args = parser.parse_args(argv)
     if not 0 <= args.port <= 65535:
@@ -76,12 +81,26 @@ def main(argv: list[str] | None = None) -> int:
     if not (directory / "index.html").is_file():
         parser.error(f"No index.html in {directory}. Build with tools/export_web.py first.")
     try:
-        with create_server(directory, args.port, args.host) as server:
+        with ExitStack() as stack:
+            server = stack.enter_context(create_server(directory, args.port, args.host))
+            if args.https:
+                certificates = Path(stack.enter_context(tempfile.TemporaryDirectory(prefix="taterland-phone-")))
+                key, certificate = certificates / "key.pem", certificates / "certificate.pem"
+                subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "7",
+                                "-subj", "/CN=Taterland local phone preview", "-keyout", str(key), "-out", str(certificate)],
+                               check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                tls.load_cert_chain(certificate, key)
+                server.socket = tls.wrap_socket(server.socket, server_side=True)
+            scheme = "https" if args.https else "http"
             # Godot's PWA cache keys its start page as index.html, not '/'.
-            url = f"http://127.0.0.1:{server.server_port}/index.html"
+            url = f"{scheme}://127.0.0.1:{server.server_port}/index.html"
             print(f"Serving Taterland at {url}", flush=True)
             if args.host == "0.0.0.0":
-                print(f"On your phone, open http://<this computer’s Wi-Fi IP>:{server.server_port}/index.html", flush=True)
+                print(f"On your phone, open {scheme}://<this computer’s Wi-Fi IP>:{server.server_port}/index.html", flush=True)
+                if not args.https: print("Godot requires --https when opened on a phone over Wi-Fi.", flush=True)
+            if args.https:
+                print("For this local preview, accept the browser's local certificate prompt (Advanced / Continue).", flush=True)
             print("Keep this terminal open while playing. Press Ctrl+C to stop.", flush=True)
             if args.open:
                 webbrowser.open(url)
@@ -89,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
                 server.serve_forever(poll_interval=0.25)
             except KeyboardInterrupt:
                 print("\nLocal preview stopped.")
-    except OSError as error:
+    except (OSError, subprocess.CalledProcessError) as error:
         print(f"Could not start the local preview: {error}", file=sys.stderr)
         return 1
     return 0
