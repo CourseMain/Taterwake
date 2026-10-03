@@ -11,7 +11,7 @@
 
 ## Development release
 
-The redesign source is version `2.0.0-underdevelopment-h`, published as the GitHub prerelease **v2.0.0 (underdevelopment: h)** from the `redesign` branch. This tag adds the cute-snow corrections and the Winter light and shadow pass, with unchanged farming mechanics. The earlier `v2.0.0-undeveloped-g` tag introduced field leases, the connected terraced island, 30× guided waits and seasonal farm art. The earlier `v2.0.0-undeveloped-f` tag covers Segments 1–17, including the fifty-year ending and guided first year. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The redesign source is version `2.0.0-underdevelopment-i`, published as the GitHub prerelease **v2.0.0 (underdevelopment: i)** from the `redesign` branch. This tag adds the cream-paper page redesign, active navigation, live Winter jobs, responsive touch controls and ocean-coverage fixes. All 90 suites and the final affected-suite reruns pass; native desktop and phone captures verify the pages. The separate Web download loads at 1280×800 and 390×844 in Chrome with no browser errors or test bridge. Farming mechanics and ledger labels remain unchanged. The earlier `v2.0.0-underdevelopment-h` tag added the cute-snow corrections and Winter light and shadow pass. The earlier `v2.0.0-undeveloped-g` tag introduced field leases, the connected terraced island, 30× guided waits and seasonal farm art. The earlier `v2.0.0-undeveloped-f` tag covers Segments 1–17, including the fifty-year ending and guided first year. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
