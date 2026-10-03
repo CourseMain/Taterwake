@@ -11,11 +11,11 @@
 
 ## Development release
 
-The latest published source prerelease is version `2.0.0-underdevelopment-i`, published as the GitHub prerelease **v2.0.0 (underdevelopment: i)** from the `redesign` branch. This tag adds the cream-paper page redesign, active navigation, live Winter jobs, responsive touch controls and ocean-coverage fixes. All 90 suites and the final affected-suite reruns pass; native desktop and phone captures verify the pages. The separate Web download loads at 1280×800 and 390×844 in Chrome with no browser errors or test bridge. Farming mechanics and ledger labels were unchanged at that tag. The last-mile work below is a subsequent source change. The earlier `v2.0.0-underdevelopment-h` tag added the cute-snow corrections and Winter light and shadow pass. The earlier `v2.0.0-undeveloped-g` tag introduced field leases, the connected terraced island, 30× guided waits and seasonal farm art. The earlier `v2.0.0-undeveloped-f` tag covers Segments 1–17, including the fifty-year ending and guided first year. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+Version `2.0.0-underdevelopment-j` is the GitHub prerelease **v2.0.0 (underdevelopment: j)** from `redesign`. It includes the last-mile transitions, sound, grade feedback, staged epilogue, hurry and Winter sleep controls, plus the expansion and diversification tuning below. The focused segment suites and phone-resolution Web smoke pass. `PLAYTEST_J.md` records the emulated walkthrough and outstanding final-fix candidates. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
-Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 42. Earlier saves, including revision 41, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
+Current saves use `user://taterland_save_v4.json`, schema 4 and mechanics revision 43. Earlier saves, including revision 42, are set aside as incompatible. There is no stored `coins` field: the journal reconstructs the purse. Older schemas are rejected, with no migration or fallback loader. The original v2 and v3 paths are protected from reads, writes and rejection moves. Browser and native saves remain separate.
 
 Each successful save moves the previous file to `<path>.bak`, replacing the older rolling backup. A load rejected for size, malformed JSON or invalid data moves the candidate to `<path>.rejected`, replacing the previous rejected file and reporting that it was set aside. New-farm autosaves leave that file alone. The original v2 and v3 paths are never moved or overwritten. `GameState.backup_path()` and `rejected_path()` also accept disposable test paths; pass the backup path to `load_game()` to recover the previous farm.
 
@@ -40,7 +40,7 @@ The tuning bot simulates 150 runs; use a 1,500-second timeout and run it separat
 
 ### Baseline
 
-#### Pace and land — current
+#### Pace and land — historical
 
 Godot **4.7.2 stable**, GL Compatibility: **84 discovered GDScript suites pass**
 through the full `tools/run_tests.sh` run and corrected growth-timing fixture
@@ -706,8 +706,8 @@ or disabled.
 
 `diversification.gd` owns Winter purchases from year three, annual income,
 protection counts and derived titles. `balance.gd` supplies all business values.
-The shop costs 120,000 and earns 32,000 annually; lodging costs 100,000 and earns 6,000
-per distinct completed protection type (maximum 24,000). Contract grower enrolment
+The shop costs 120,000 and earns 34,000 annually; lodging costs 100,000 and earns 7,000
+per distinct completed protection type (maximum 28,000). Contract grower enrolment
 is free and unlocks two distinct 20-tonne orders at the normal quote × 1.2.
 Benefits start the year after purchase. Each business has its own journal
 labels; income settles before fixed costs and foreclosure, once per Winter.
@@ -873,7 +873,7 @@ claim testing on that exact patch release.
 
 ## Segment 17: Cast and guided first year
 
-`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop at no more than 5×. The guided storm warning through its cause card stays at 1×. Decisions and cause cards pause the simulation. The guided year suppresses random events in favour of one severity-0.2 storm; its gust at Summer second 40 exposes one tonne on the selected bed through `FarmProtection.damage`, leaving two tonnes to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
+`first_island_tutorial.gd` version 3 guides one Russet card through planting, watering, a disclosed Summer storm, its cause card, harvest, an explicit sell/store choice and the first Winter ledger. Decision steps pause the whole simulation. Growth and the approach to Winter use the ordinary event-boundary loop at no more than 10×. The guided storm warning through its cause card stays at 1×. Decisions and cause cards pause the simulation. The guided year suppresses random events in favour of one severity-0.2 storm; its gust at Summer second 8 exposes one tonne on the selected bed through `FarmProtection.damage`, leaving two tonnes to harvest. Protection counterfactuals use the usual loss formula. Guided crop quality and pest damage remain protected. Prices, seed charges, yield, storage, Winter field losses and fixed bills remain real.
 
 Tutorial entry/exit no longer resets pests, crop ages or RNG, and the unused demonstration-pest helper and separate frozen-calendar growth loop are removed. Version-2 progress remains readable and migrates at controller start; completed introductions remain completed. Optional Valley tours preserve the existing farm. Winter completion clears guide locks without closing the annual accounts. A save made at the settlement boundary completes the guide on resume.
 
@@ -894,7 +894,7 @@ Pest deadlines are uniform between 0.25 and 0.60 of the crop's base grow duratio
 
 The map uses one continuous Valley prism, enlarged 1.6× in width and 1.4× in depth, with a six-sided coastline and long straight angled shores. `farm_surface.gd` shares the coastline and height map between geometry, picking and walking. Three evenly spaced 0.8-unit terraces rise behind the village; one approach from the barn crosses them with four 0.2-unit treads per terrace flight, landings and handrails on both sides. Low Field dips 0.15 units toward the shore. The terrain shader applies mild dry/wet tints within one grass palette, and Winter banks follow its heights. Beds retain common geometry and soil; lease boards and rough grass disappear when the field opens. Static geometry signatures rebuild with each world. The old regional ground, scenery builders and their exclusive helpers are removed. The climate UI names exposures; accounts offer leases and expansions; loss groups include field ID so no cause card mixes fields.
 
-The second map pass brings Hill behind the village at field offset `(1, -23)` and Low closer at `(18, 13)`, preserving Home and village positions. Orthogonal dirt lanes form continuous loops between the village, Low and pier. A western working orchard has a central lane, hedges and crates; the eastern service yard adds compost bays and barrels. The overview camera faces the farm more directly, while overview and recenter continue to adapt to viewport aspect ratio. The visual follow-up restores a stronger hexagonal outline, green Spring and early-Summer grass, and taller terraces while preserving shared soil and all 17b field mechanics. That map pass originally introduced 30× guided waiting; the last-mile feel pass below caps it at 5×.
+The second map pass brings Hill behind the village at field offset `(1, -23)` and Low closer at `(18, 13)`, preserving Home and village positions. Orthogonal dirt lanes form continuous loops between the village, Low and pier. A western working orchard has a central lane, hedges and crates; the eastern service yard adds compost bays and barrels. The overview camera faces the farm more directly, while overview and recenter continue to adapt to viewport aspect ratio. The visual follow-up restores a stronger hexagonal outline, green Spring and early-Summer grass, and taller terraces while preserving shared soil and all 17b field mechanics. That map pass originally introduced 30× guided waiting; the last-mile feel pass below now uses 10× at the user’s request.
 
 Run `tools/run_tests.sh --timeout 1500 test_pace_and_land test_pest_schedule test_tutorial_game test_tutorial_state test_tuning_bot` and the full suite. The pacing test follows real scene frames to the first open accounts in 99.1 seconds, including 84 seconds allocated to decisions and reading. The browser export is built under `dist/web`, leaving published `docs/index.*` and `web/` untouched.
 
@@ -1011,7 +1011,7 @@ Season boundaries crossfade sky, grass, canopies and snow over one second. Snow 
 
 The ending retains its fifty-year simulation and gentle farm pan. Decade headlines fade in sequentially; all four verdicts type at 36 characters per second, followed by the farm value. Screenshots finish the reveal before capturing. Portrait and landscape phone layouts retain readable type and 44-pixel actions.
 
-Hold H or the touch hurry control for 3× simulation time; releasing, cancelling a touch or losing focus ends the hold. Accounts, conversations, cause cards, the front page and tutorial waits block it. Help moves to F1 and remains in the farm menu. Guided waits are capped at 5×; excess accelerated time stops at the Summer boundary so the storm warning through the cause card runs at 1×. Growing dry beds advance at 40% speed, preserve that progress on watering and round-trip through save validation. Pooled droplets remain clear at the overview zoom, including living Icecap in Winter; the requested hover wording is “Needs water · growth paused”.
+Hold H or the touch hurry control for 3× simulation time; releasing, cancelling a touch or losing focus ends the hold. Accounts, conversations, cause cards, the front page and tutorial waits block it. Help moves to F1 and remains in the farm menu. Guided waits run at 10×; excess accelerated time stops at the Summer boundary so the storm warning through the cause card runs at 1×. Growing dry beds advance at 40% speed, preserve that progress on watering and round-trip through save validation. Pooled droplets remain clear at the overview zoom, including living Icecap in Winter; the requested hover wording is “Needs water · growth paused”.
 
 Winter's jobs card and farm menu offer Sleep until Spring before year ten. Confirmation shows held tonnes and their total late-Winter value at current grades. A four-millisecond work budget advances ordinary Winter farming and resolves active weather before crossing the Spring boundary. The ordinary boundary save runs once; unsold sacks return to ordinary barn stock. No simulated sale or extra calendar time is added to resolve weather that was started late through debug.
 
@@ -1034,6 +1034,10 @@ The fixed seeds 1–30 cohort completes **1,679 checks** with exact annual journ
 
 Mechanics revision **43** keeps saves with obsolete exact lease/business journal rates out of the new validator. An incompatible farm is set aside as `taterland_save_v4.json.rejected`; a new farm starts. The original journal is not rewritten.
 
-Focused validation through `tools/run_tests.sh -j 4 --timeout 1500 test_tuning_bot test_diversification test_pace_and_land test_save_safety test_game test_feel` passes **6 suites**, **1,679 / 89 / 673 / 28 / 45 / 74 checks**, with no skips or disabled tests. This is the segment's focused run, not a claim that every historical suite was rerun.
+Focused validation through `tools/run_tests.sh -j 4 --timeout 1500 test_tuning_bot test_diversification test_pace_and_land test_save_safety test_game test_feel` passes **6 suites**, **1,679 / 89 / 673 / 28 / 45 / 74 checks**, with no skips or disabled tests. The separate single-farm rerun passes **267 checks**, including byte-for-byte preservation of the rejected earlier-rate journal. This is the segment's focused run, not a claim that every historical suite was rerun.
 
 `browser_playthrough_scene.gd` starts the real first-year guide and annual front page on a fresh farm in an isolated disposable export. Its browser bridge observes state and captures the final snapshot; it has no mutation commands. Farming, purchases, hurry, conversations, accounts and Winter sleep use browser inputs. Export with `tools/export_browser_benchmark.py --fixture playthrough --label <label>`. The user requested browser emulation for this pass; physical-phone performance and human newcomer reactions remain unverified. Playthrough observations and final-fix candidates are recorded in `PLAYTEST_J.md`.
+
+The production Web ZIP exports with Godot 4.7.2 and loads at 390×844 in hardware-accelerated Chrome with a correctly sized canvas, no observation bridge and no browser errors (`artifacts/underdevelopment-j-web-export.log`, `artifacts/j-web-smoke.log`). The build comes from a committed checkout; local editor changes are preserved separately.
+
+The user's tutorial follow-up changes guided waits from 5× to **10×**. The disclosed Summer warning lasts **eight seconds at 1×**, with Iris's portrait/radio cue and a live countdown; Spring and Winter waits also show time remaining. A resumed step six in mid-Summer with a started calm outlook starts its missing warned storm and reaches the ordinary one-tonne cause card. Ordinary weather durations, ten-year balance, yields and bills are unchanged. The tutorial/feel/pace/boot rerun passes **7 suites** (scene 60, state 21, HUD 77, barn 58, feel 74, pace 673, boot 45); no tests are skipped or disabled.
