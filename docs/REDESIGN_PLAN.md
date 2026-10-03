@@ -1279,12 +1279,10 @@ Suite:
    stale clone. Import when any *.import file under assets/ is newer
    than .godot/imported, or always run the editor import step when
    --import is passed; document it in DEVELOPMENT.md.
-4. Expander seed 21 ends 325,971 against the 320,000 ceiling. The
-   ceiling is a guard against runaway money, not a tuning target, and
-   the expander mean is +88,000 with 29 of 30 surviving, which is where
-   Segment 21 asked it to be. Raise the ceiling to 350,000 with a
-   comment saying why, re-record the table, and stop leaving a failing
-   check in the suite.
+4. Tuning bot at tag j, standalone: 1,679 checks, 0 failures. Expander
+   survives 29 of 30 with max cash 215,971, inside the 320,000 ceiling;
+   the earlier over-ceiling seed is resolved. Record that in
+   DEVELOPMENT.md and drop the "left failing" note.
 
 Copy:
 5. main.gd shows "Needs water · growth paused" while a dry bed grows at
