@@ -81,15 +81,15 @@ func run() -> void:
 	hud.show_panel("market", state)
 	await settle()
 	var purchase_guide: Dictionary = guide(["hoe", "plant"], ["coins", "market"], ["tool:", "buy:russet:1", "market", "close"])
-	purchase_guide["continue"] = false
+	purchase_guide["continue"] = true
 	hud.set_tutorial(purchase_guide)
 	hud._update_tutorial_pointer()
-	check(hud._tutorial_pointer.target == hud._refs["buy:russet:1"], "pointer targets the real enabled Russet buy button")
-	check(hud._tutorial_next.visible and hud._tutorial_next.disabled and hud._tutorial_skip.get_global_rect().end.y < hud._tutorial_next.get_global_rect().position.y, "exit is above the lesson and cannot replace the disabled action prompt")
+	check(hud._tutorial_pointer.target == hud._refs.starter_continue, "pointer targets the real owned-seed continuation")
+	check(hud._tutorial_next.visible and not hud._tutorial_next.disabled and hud._tutorial_skip.get_global_rect().end.y < hud._tutorial_next.get_global_rect().position.y, "exit is above the lesson and cannot replace the owned-seed action")
 	check(not hud._refs["buy:russet:1"].disabled and hud._refs["buy:russet:5"].disabled and not hud._refs.has("buy:golden:1"), "first purchase explicitly allows one Russet seed only")
 	var market_page: Control = hud._refs.market_page
 	check(hud._panel_crops == ["russet"] and market_page.crops == ["russet"] and not hud._refs["buy:russet:5"].visible, "first market keeps only Russet and hides bulk purchases")
-	check(not market_page.selling and market_page.sell_button == null and not hud._modal_trade_footer.visible, "guided buying has no sell controls or price chart")
+	check(not market_page.selling and market_page.sell_button == null and hud._modal_trade_footer.visible and not hud._refs.has("market_sell"), "guided seed footer offers continuation without sell controls or price chart")
 	check(button_for("sell_potatoes") != null and button_for("sell_potatoes").disabled, "selling page waits for its tutorial introduction")
 	check(hud._known_crops().size() >= 4, "simplified seed market leaves full inventory crop catalog intact")
 	check(hud._refs["buy:russet:1"].text == "Buy 1 Russet", "guided purchase names the exact seed to buy")

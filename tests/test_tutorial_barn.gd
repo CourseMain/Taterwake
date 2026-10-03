@@ -26,9 +26,9 @@ func press(action: String) -> void:
 func settle() -> void:
 	for frame: int in range(8): await process_frame
 
-func walk_plot(tool: String) -> void:
+func walk_plot(tool: String, index: int = 4) -> void:
 	game._on_action("tool:" + tool)
-	game.queue_plot(4)
+	game.queue_plot(index)
 	for frame: int in range(400):
 		game._process(0.04)
 		if not game.walking: break
@@ -105,8 +105,14 @@ func run() -> void:
 	await settle()
 	check_crops()
 	sell_harvest()
-	game._process(1000)
+	for advance in range(6):
+		for index in range(game.state.plots.size()):
+			if int(game.state.plots[index].stage) == 3: walk_plot("harvest", index)
+		if game.state.accounts_open: break
+		game._process(1000)
+	while game.hud.accounts_building: await process_frame
 	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
+	check(game.state.season_clock.autumn_loss == 0, "resumed barn lesson harvests starters before Autumn Cold")
 	game._on_action("close")
 	game.hud.show_panel("barn", game.state)
 	check(game.hud._panel_kind == "barn", "barn opens its crate page")
