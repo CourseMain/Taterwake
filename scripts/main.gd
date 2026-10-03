@@ -892,7 +892,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
-		var descriptions: Dictionary = {"market": "Mara’s seeds · Click to browse", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "contracts": "Buyer board · Spring orders", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
+		var descriptions: Dictionary = {"market": "Mara’s shop · Click to buy or sell", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "contracts": "Buyer board · Spring orders", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["activities"] = "Ducks · Click to hire pest patrol"
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"

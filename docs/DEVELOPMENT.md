@@ -463,7 +463,7 @@ Run `test_touch_controls.gd` with `-- --integration-test --touch-controls`. It c
 
 ### Buy Seeds and Sell Potatoes
 
-`market_pages.gd` owns the Buy Seeds and Sell Potatoes pages with prices, quantities and confirmation controls. `market_quantity.gd` validates whole amounts and bounds them by available crops. Trading calls `FarmState.buy_seeds` and `sell_crop`; an explicit amount above inventory is rejected and `-1` means sell all. Committed receipts drive short transaction feedback.
+`market_pages.gd` owns Mara’s shop with fixed Buy and Sell tabs above the scrolling contents. Buy builds seed packets without harvested stock, quotes or charts; Sell builds stock rows, price history, grade chips and confirmation controls. The existing `market` and `sell_potatoes` actions select those tabs, so Nell’s Sell and the farm menu reach the same shop. The active tab stays selected and preserves a pending amount when tapped again. Tab switches do not replay Mara’s introduction or change inventory. `market_quantity.gd` validates whole amounts and bounds them by available crops. Trading calls `FarmState.buy_seeds` and `sell_crop`; an explicit amount above inventory is rejected and `-1` means sell all. Committed receipts drive short transaction feedback.
 
 `test_market_dialogue.gd -- --integration-test` verifies first meetings, repeated tab switches, saved memory and deliberate Mara revisits. All scene tests use isolated state.
 
@@ -517,7 +517,7 @@ Inventory contains crop/seed shelves and five usable tools. The PotatoDex shows 
 
 ### Placeholder market (Segment 4)
 
-`price_sparkline.gd` is restored for each Buy Seeds and Sell Potatoes card. Each variety’s history contains up to 12 quotes: prior 15-second sample boundaries plus the current quote. The deterministic price curve reconstructs these samples from saved elapsed time, so reloads retain the same history without a new save field or frame-rate-dependent sampling. A fresh farm starts with one quote. The shared percentage is `round((price / base - 1) × 100)`, with an explicit sign; only the comparison text is green above base or red below. Sparklines use neutral ink and no animation; card bounce tweens are removed.
+`price_sparkline.gd` appears only in Mara’s Sell tab. Each variety’s history contains up to 12 quotes: prior 15-second sample boundaries plus the current quote. The deterministic price curve reconstructs these samples from saved elapsed time, so reloads retain the same history without a new save field or frame-rate-dependent sampling. A fresh farm starts with one quote. The shared percentage is `round((price / base - 1) × 100)`, with an explicit sign; only the comparison text is green above base or red below. Sparklines use neutral ink and no animation; card bounce tweens are removed.
 
 The stock countdown, tracked-price tray, full chart page, market aura, launch presentation, launch audio and audio baker are removed. The main audio generator retains short action tones; farm foley and storm shake remain. Starter seed-buying and potato-selling quests now count ordinary transactions under their original save IDs. Their quest rewards are flat after Segment 6.
 

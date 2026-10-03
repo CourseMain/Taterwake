@@ -200,7 +200,7 @@ func fit_modal() -> void:
 	if not enabled or not is_instance_valid(game.hud._modal_card): return
 	var hud = game.hud
 	var view := get_viewport().get_visible_rect().size
-	var trading: bool = hud._panel_kind == "sell_potatoes"
+	var trading: bool = hud._panel_kind in ["market", "sell_potatoes"]
 	var width := minf(1200 if trading else 940, view.x - 24)
 	# Filters and stake choices must also scroll on a short landscape phone.
 	if hud._modal_fixed.get_parent() != hud._body:
@@ -288,9 +288,9 @@ func _process(delta: float) -> void:
 	update_interaction_prompt()
 	var hud = game.hud
 	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
-	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
+	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
 	if OS.has_feature("web"):
-		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind == "sell_potatoes")
+		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
 		if cover_fullscreen != _browser_fullscreen_hidden:
 			_browser_fullscreen_hidden = cover_fullscreen
 			JavaScriptBridge.eval("document.getElementById('fullscreen-button').style.visibility = '%s';" % ("hidden" if cover_fullscreen else "visible"))

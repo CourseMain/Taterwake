@@ -32,7 +32,7 @@ Walk, sprint or click around one continuous hexagonal Valley island with long an
 
 ### What to plant
 
-Mara’s chalkboard holds an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
+Mara’s shop has **Buy** and **Sell** buttons at the top, reachable while its contents scroll. Buy opens her chalkboard with an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Harvested stock, sale prices and charts appear only on Sell. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
 
 | Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -53,7 +53,7 @@ Growing beds carry a small grade peg matching the hover tag: a green leaf for Ta
 
 ### When to sell
 
-Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. The harvest market lists each variety with its quote, signed percentage chip and price sparkline with a dashed late-Winter marker. Only grades you own have chips. Tap one to open the amount stepper and preview payment. The storage explanation is behind a question mark; Winter shows one reminder line and opens on stores. No sale happens merely by opening a page.
+Sell at harvest for cash now, or keep tonnes for Winter’s rising storage price. Standard live quotes follow a slow seasonal cycle: Low volatility varies by ±5%, Mid by ±10%, High by ±15%. **Mara’s shop → Sell** lists each variety with its quote, signed percentage chip and price sparkline with a dashed late-Winter marker. Only grades you own have chips. Tap one to open the amount stepper and preview payment. The storage explanation is behind a question mark; Winter shows one reminder line and opens on stores. Nell’s Sell and the farm menu reach this same shop tab. No sale happens merely by opening a page or switching tabs.
 
 Winter storage charges a flat **4,800**, spoils **5%** of held tonnes and removes **10 quality points** from survivors. An empty barn has no storage bill. These costs settle before foreclosure is checked. Winter-store prices rise from base toward **1.2× for Low, 1.4× for Mid or 1.6× for High volatility**, multiplied by current grade. Weather can destroy stores before you sell. Spring resets the premium. Fresh Icecap harvested in Winter uses the ordinary quote.
 

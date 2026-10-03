@@ -4,8 +4,7 @@ Every page follows the Duck patrol reference and the Segment 19 direction sheet.
 
 | Place | Object | Accent |
 | --- | --- | --- |
-| Mara’s seeds | Chalkboard `#304d3d` with cream packets | Ochre `#c98335`; crop colours on ribbons |
-| Harvest market | Cream price rows and grade chips | Green `#436733` |
+| Mara’s shop | Buy: chalkboard `#304d3d` with cream packets; Sell: cream stock rows | Ochre `#c98335`; crop colours on ribbons |
 | Tess’s board | Cork `#b89663` with pinned cream notes | Brown `#997243` |
 | Iris’s station | Instrument case `#284550` with cream tiles | Blue `#588da5` |
 | Buyer board | Tacked cream order slips | Ochre `#a17c42` |
@@ -26,7 +25,9 @@ Every page follows the Duck patrol reference and the Segment 19 direction sheet.
    that works with hover and a tap. Saved ledger labels are frozen strings.
 5. **Lines:** join at most two facts with `·`. Avoid repeated explanations.
 6. **Entrances:** give each thing one service page. Tess owns Quests and Losses;
-   the barn’s single Sell opens the market, on stores in Winter. Keep PotatoDex
+   Mara’s shop has fixed Buy and Sell tabs; harvested stock and price charts
+   appear only on Sell. The barn’s single Sell opens Mara’s Sell tab, on stores
+   in Winter. Keep PotatoDex
    in the farm menu and bed expansion on Bram’s pegboard.
 7. **Characters:** a keeper has one small corner portrait on their page.
 

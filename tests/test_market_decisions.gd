@@ -202,6 +202,17 @@ func ui_checks() -> void:
 		var base: float = State.CropTable.CROPS.russet.base * State.Quality.MULTIPLIER[grade]
 		var premium: int = roundi((page.price_for("russet", grade) / base - 1.0) * 100.0)
 		check(page.crop_change.text == "+%d%%" % premium and premium > 0, "Winter percentage uses the rising stored quote for " + grade)
+	var held_before_tabs: Dictionary = game.state.trading.held.duplicate(true)
+	var cash_before_tabs: float = game.state.coins
+	game.hud._modal_market_nav.get_child(0).pressed.emit()
+	if game.conversation.visible:
+		check(game.conversation.npc_id == "mara", "first Buy tab still introduces Mara")
+		game.conversation.choose(0)
+		await process_frame
+	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.sale_rows.is_empty(), "Winter Buy tab keeps held potatoes out of seed packets")
+	game.hud._modal_market_nav.get_child(1).pressed.emit()
+	check(game.hud._panel_kind == "sell_potatoes" and game.hud._refs.market_page.stored_mode, "Winter Sell tab returns to rising stored quotes")
+	check(game.state.trading.held == held_before_tabs and game.state.coins == cash_before_tabs, "Winter tab switches neither sell stock nor spend cash")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
 		if game.touch_controls.enabled: game.touch_controls.resize()

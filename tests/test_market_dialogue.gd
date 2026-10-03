@@ -18,14 +18,12 @@ func settle() -> void:
 	for _i in range(5): await process_frame
 
 func navigate(action: String) -> void:
-	game.hud.close_panel()
-	game._on_action("menu")
-	await settle()
-	for button: Node in game.hud._modal_card.find_children("*", "Button", true, false):
+	check(game.hud._modal_market_nav.is_visible_in_tree() and game.hud._modal_market_nav.get_child_count() == 2, "Mara’s shop has two fixed trading tabs")
+	for button: Node in game.hud._modal_market_nav.get_children():
 		if str(button.get_meta("action", "")) == action:
 			button.pressed.emit()
 			return
-	check(false, "farm menu entry exists: " + action)
+	check(false, "shop tab exists: " + action)
 
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args():
@@ -61,15 +59,18 @@ func run() -> void:
 	await settle()
 	game.hud._refs.market_page.select_variety("giant")
 	var selected: String = game.hud._refs.market_page.selected
+	game.hud._refs.market_page.quantity.value = 2
+	await navigate("sell_potatoes")
+	check(game.hud._refs.market_page.quantity.value == 2 and game.hud._modal_market_nav.get_child(1).button_pressed, "active Sell tab keeps its selection and amount")
 	for _i in range(3):
 		await navigate("market")
 		await settle()
 		check(not game.conversation.visible and game.hud._panel_kind == "market", "Buy re-entry opens without replaying dialogue")
 		await navigate("sell_potatoes")
 		await settle()
-		check(not game.conversation.visible and game.hud._panel_kind == "sell_potatoes", "Sell re-entry opens the harvest market")
+		check(not game.conversation.visible and game.hud._panel_kind == "sell_potatoes", "Sell tab opens Mara’s selling counter")
 		check(game.hud._refs.market_page.selected == selected, "page re-entry retains selected selling variety")
-	check(state.npc_history == memory, "menu entries do not record extra NPC visits")
+	check(state.npc_history == memory, "shop tabs do not record extra NPC visits")
 	check(state.storage == inventory and state.seed_inventory == seeds and state.coins == cash, "navigation preserves inventory and wallet")
 	check(state.market == prices, "navigation preserves the live quotes and history")
 

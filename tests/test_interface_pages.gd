@@ -64,6 +64,11 @@ func run() -> void:
 			var scroll: ScrollContainer = game.hud._body.get_parent()
 			check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1, kind + " fits width")
 			var scale: float = float(root.size.x) / game.hud.root.size.x
+			if kind in ["market", "sell_potatoes", "winter_stores"]:
+				var navigation: HBoxContainer = game.hud._modal_market_nav
+				check(navigation.is_visible_in_tree() and navigation.get_child_count() == 2, "shop has Buy and Sell above its contents")
+				check(navigation.get_child(0).text == "Buy" and navigation.get_child(1).text == "Sell", "shop navigation labels")
+				check(navigation.get_child(0).button_pressed == (kind == "market") and navigation.get_child(1).button_pressed == (kind != "market"), "shop highlights the active counter")
 			for button in game.hud._modal_card.find_children("*", "Button", true, false):
 				if button.is_visible_in_tree(): check(minf(button.size.x, button.size.y) * scale >= 43.9, kind + " target " + button.text)
 			if kind == "accounts":
@@ -79,6 +84,7 @@ func run() -> void:
 						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade chip matches actual tonnes")
 			if kind == "market":
 				check(game.hud._body.find_child("MaraChalkboard", true, false) != null, "seeds sit on chalkboard")
+				check(game.hud._refs.market_page.sale_rows.is_empty() and game.hud._body.find_child("PriceHistory", true, false) == null, "Buy has seed packets without harvested stock or price charts")
 				for crop in game.hud._refs.market_page.crops:
 					check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), "packet excludes market statistics")
 			if "--capture" in OS.get_cmdline_user_args():

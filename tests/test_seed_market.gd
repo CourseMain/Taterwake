@@ -126,7 +126,7 @@ func run() -> void:
 	game.hud.show_panel("sell_potatoes", state)
 	await settle()
 	page = game.hud._refs.market_page
-	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "separate sell page opens selected crop")
+	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "Sell counter opens selected crop")
 	check(page.crops == expected, "buy and sell share base order")
 	page.quantity.value = 3
 	check(page.payout.text == state.money(3 * state.market.russet.sell), "quantity previews actual expected payout")

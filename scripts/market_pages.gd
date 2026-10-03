@@ -6,6 +6,7 @@ const Quantity = preload("res://scripts/market_quantity.gd")
 const Seeds = preload("res://scripts/seed_packets.gd")
 const Place = preload("res://scripts/place_ui.gd")
 const Type = preload("res://scripts/ui_type.gd")
+const ACCENT = Seeds.ACCENT
 const INK := Color("3f2c1c")
 const MUTED := Color("705236")
 const GAIN := Color("436733")
@@ -77,6 +78,20 @@ func setup(owner_hud, sell_page: bool) -> void:
 	_layout.call_deferred()
 
 func _build_navigation() -> void:
+	# Both counters belong to Mara. Keep their tabs above the scrolling contents.
+	hud._modal_market_nav.show()
+	var group := ButtonGroup.new()
+	for mode in [false, true]:
+		var action: String = "sell_potatoes" if mode else "market"
+		var button := _local_button("Sell" if mode else "Buy", action, func():
+			if hud._panel_kind != action: hud._act(action))
+		button.name = "ShopSell" if mode else "ShopBuy"
+		button.toggle_mode = true
+		button.button_group = group
+		button.set_pressed_no_signal(mode == selling)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		Place.pill(button, ACCENT, mode == selling)
+		hud._modal_market_nav.add_child(button)
 	tabs = HBoxContainer.new()
 	add_child(tabs)
 	tabs.hide()
@@ -86,7 +101,7 @@ func _label(text: String, font_size: int, color: Color = INK, display: bool = fa
 	label.add_theme_font_override("font", _title_font if display else _body_font)
 	return label
 
-func _style_button(button: Button, accent: Color = GAIN, filled: bool = false) -> void:
+func _style_button(button: Button, accent: Color = ACCENT, filled: bool = false) -> void:
 	button.custom_minimum_size.y = 46
 	button.add_theme_font_override("font", _body_font)
 	button.add_theme_font_size_override("font_size", 15)
@@ -106,7 +121,7 @@ func _build_buy() -> void:
 	Seeds.build(self)
 
 func _build_sell() -> void:
-	Place.header(hud, self, "THE HARVEST MARKET", GAIN)
+	Place.header(hud, self, "MARA’S SHOP", ACCENT, "mara")
 	var help_row := HBoxContainer.new(); add_child(help_row)
 	storage_note = _label("", 14, MUTED)
 	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
@@ -235,7 +250,7 @@ func _local_button(caption: String, key: String, callback: Callable, primary: bo
 	button.set_meta("hud_action", key)
 	button.custom_minimum_size.x = 46
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_style_button(button, GAIN, primary)
+	_style_button(button, ACCENT, primary)
 	if caption in ["‹", "›", "−", "+"]: button.add_theme_font_size_override("font_size", 25)
 	button.pressed.connect(callback)
 	return button
@@ -248,6 +263,11 @@ func _layout() -> void:
 	for button: Node in tabs.get_children():
 		button.custom_minimum_size.y = hud.touch_target() if touch else 46
 		button.add_theme_font_override("font", _body_font)
+	for button: Button in hud._modal_market_nav.get_children():
+		button.custom_minimum_size = Vector2(hud.touch_target() if touch else 46, hud.touch_target() if touch else 46)
+		button.add_theme_font_override("font", _body_font)
+		button.add_theme_font_size_override("font_size", 22 if touch else 18)
+		button.set_pressed_no_signal((button.get_meta("action") == "sell_potatoes") == selling)
 	if not selling:
 		Seeds.layout(self, available_width, touch)
 	else:
@@ -291,7 +311,7 @@ func refresh() -> void:
 			entry.grades[word].text = "%s %d t" % [word, stock(crop, word)]
 			entry.grades[word].visible = stock(crop, word) > 0
 			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
-			Place.pill(entry.grades[word], GAIN)
+			Place.pill(entry.grades[word], ACCENT)
 		var factor: float = State.Quality.MULTIPLIER[selected_grade] if crop == selected else 1.0
 		var history: Array = []
 		for point in crop_quote_data.history: history.append(float(point) * factor)
