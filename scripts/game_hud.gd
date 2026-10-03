@@ -513,7 +513,7 @@ func _apply_tutorial_buttons() -> void:
 			if not node.has_meta("tutorial_disabled"):
 				node.set_meta("tutorial_disabled", node.disabled)
 				node.set_meta("tutorial_tooltip", node.tooltip_text)
-			node.tooltip_text = "Available after the first accounts, or choose End tutorial to farm freely."
+			node.tooltip_text = "Available after the first accounts, or skip the guided year to farm freely."
 			node.disabled = true
 
 func _apply_tutorial_visibility() -> void:
@@ -574,7 +574,9 @@ func _update_tutorial_pointer() -> void:
 	if not _tutorial_pointer.visible:
 		return
 	var target: Control = null
-	if not _tutorial_next.disabled:
+	if _panel_kind == "market" and _refs.has("starter_continue"):
+		target = _refs.starter_continue
+	elif not _tutorial_next.disabled:
 		target = _tutorial_next
 	elif is_panel_open():
 		var sale_action: String = "market_sell" if _panel_kind == "sell_potatoes" else "sell_potatoes"
@@ -1808,7 +1810,8 @@ func _build_market(selling: bool = false) -> void:
 	_refs.market_page = page
 	page.setup(self, selling)
 	if not selling and _tutorial_seed_market():
-		_modal_trade_footer.add_child(_button("Use my starter seeds →", "tutorial:next", true))
+		_refs.starter_continue = _button("Use my starter seeds →", "tutorial:next", true)
+		_modal_trade_footer.add_child(_refs.starter_continue)
 		_modal_trade_footer.show()
 
 
