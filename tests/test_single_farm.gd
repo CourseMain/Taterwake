@@ -12,7 +12,7 @@ func check(ok: bool, note: String) -> void:
 func run() -> void:
 	var farm = State.new()
 	root.add_child(farm)
-	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 42, "new farm format and isolated v4 path")
+	check(State.DEFAULT_SAVE_PATH == "user://taterland_save_v4.json" and State.SAVE_VERSION == 4 and State.MECHANICS_REVISION == 43, "new farm format and isolated v4 path")
 	check(World.REGION == 1 and farm.plots.size() == 72 and farm.plots.filter(func(p): return p.unlocked).size() == 12, "connected farm starts with twelve Home beds open")
 	check(farm.field_columns() == 6 and farm.field_rows() == 4, "one six-by-four field")
 	check(farm.available_crops().has("sunburst") and farm.available_crops().has("icecap"), "ordinary varieties have no travel gate")
@@ -30,6 +30,12 @@ func run() -> void:
 	var saved: Dictionary = farm._save_data()
 	for field in ["current_island", "island2_unlocked", "island3_unlocked", "island_plots", "field_expansions", "retained_beds", "export_active", "export_timer", "frost_active", "frost_timer"]:
 		check(not saved.has(field), "save omits " + field)
+	var old_rates: Dictionary = saved.duplicate(true)
+	old_rates.mechanics_revision = 42
+	var old_file := FileAccess.open(SAVE, FileAccess.WRITE)
+	old_file.store_string(JSON.stringify(old_rates)); old_file.close()
+	check(not farm.load_game(SAVE) and farm._save_data() == saved and FileAccess.file_exists(SAVE + ".rejected"), "obsolete lease and business rates reject without rewriting the farm")
+	check(FileAccess.get_file_as_string(SAVE + ".rejected") == JSON.stringify(old_rates), "rejected earlier-rate journal is preserved exactly")
 	for version in [2, 3]:
 		var old: Dictionary = saved.duplicate(true)
 		old.schema_version = version
