@@ -103,7 +103,7 @@ func _prepare_farm(year: int, season: int) -> void:
 	for project in ["rainwater", "drainage", "windbreaks", "frost"]: game.state.climate.data.projects[project] = 1
 	Stock.add(game.state.storage, "russet", 12, 90)
 	game._apply_graphics_quality("balanced")
-	RenderingServer.call("directional_shadow_atlas_set_size", shadow_size, true)
+	game._set_shadow_size(shadow_size)
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
 	game._on_state_changed()
