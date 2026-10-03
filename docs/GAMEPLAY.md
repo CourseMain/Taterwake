@@ -149,3 +149,5 @@ Bram’s pegboard has compact tool tiles with level pips and their current effec
 Field boards print only the field’s name. A shelter, waves or hill symbol sits on the post; available fields have a **TO LET** board. World lettering is measured against the board and shrinks to fit.
 
 Foreclosure keeps the editorial page and opens on its final category ledger, with the real balance, overdraft limit and only applicable loss figures. The lead-in connects that final state to the farm’s future.
+
+This development build starts a new farm when a save contains the earlier lease or business rates. The incompatible save is preserved separately rather than changing its journal.
