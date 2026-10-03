@@ -26,6 +26,7 @@ func setup(owner_hud) -> void:
 	column.add_child(heading)
 	quote_key = hud._label("Store quotes · now → late Winter / t", 12, Place.MUTED)
 	quote_key.name = "WinterQuoteKey"
+	quote_key.clip_text = true
 	column.add_child(quote_key)
 	lines = VBoxContainer.new()
 	scroll = ScrollContainer.new()
@@ -121,7 +122,9 @@ func refresh() -> void:
 func layout() -> void:
 	var touch = hud.get_parent().get("touch_controls")
 	var phone: bool = is_instance_valid(touch) and touch.enabled
-	var width: float = minf(560 if phone else 390, hud.root.size.x - 32)
+	var landscape: bool = phone and hud.root.size.x > hud.root.size.y
+	var left: float = touch.stick.get_global_rect().end.x + 24 if landscape else (16 if phone else 28)
+	var width: float = minf(560 if phone else 390, hud.root.size.x - left - (244 if landscape else 16))
 	var scale: float = float(hud.get_tree().root.size.x) / hud.root.size.x
 	var target: float = maxf(44, 44 / scale) if phone else 44
 	for button in find_children("*", "Button", true, false):
@@ -132,13 +135,20 @@ func layout() -> void:
 		var font: Font = button.get_theme_font("font")
 		while pixels > 14 and font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x > available_width: pixels -= 1
 		button.add_theme_font_size_override("font_size", pixels)
-	quote_key.add_theme_font_size_override("font_size", 18 if phone else 12)
+	var key_pixels: int = 18 if phone else 12
+	while key_pixels > 12 and quote_key.get_theme_font("font").get_string_size(quote_key.text, HORIZONTAL_ALIGNMENT_LEFT, -1, key_pixels).x > width - 20: key_pixels -= 1
+	quote_key.add_theme_font_size_override("font_size", key_pixels)
 	for label in lines.find_children("*", "Label", true, false): label.add_theme_font_size_override("font_size", 20 if phone else 13)
 	var top: float = 208 if phone else 154
 	if phone and is_instance_valid(touch.status) and touch.status.visible:
 		top = maxf(top, touch.status.get_global_rect().end.y + 14)
-	position = Vector2(16 if phone else 28, top)
-	scroll.custom_minimum_size = Vector2(width - 20, minf(lines.get_combined_minimum_size().y, maxf(100, hud.root.size.y - position.y - 280)))
+	position = Vector2(left, top)
+	var bottom: float = hud.root.size.y - 20
+	if phone and not landscape: bottom = touch.stick.get_global_rect().position.y - 12
+	elif not phone: bottom = hud.root.size.y - 180
+	var chrome: float = get_theme_stylebox("panel").get_minimum_size().y + heading.get_combined_minimum_size().y + 4
+	if quote_key.visible: chrome += quote_key.get_combined_minimum_size().y + 2
+	scroll.custom_minimum_size = Vector2(width - 20, minf(lines.get_combined_minimum_size().y, maxf(target, bottom - top - chrome)))
 	size.y = 0
 	size.x = width
 

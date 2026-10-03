@@ -208,6 +208,8 @@ func paper_pages() -> void:
 		await settle()
 		inside(game.hud._season_jobs, tag + " Winter jobs")
 		var note = game.hud._season_jobs
+		for control in [game.touch_controls.stick, game.touch_controls.tools_button, game.touch_controls.use_button]:
+			check(not note.get_global_rect().intersects(control.get_global_rect()), tag + " Winter note clears " + control.name)
 		for button in note.find_children("*", "Button", true, false):
 			if not button.is_visible_in_tree(): continue
 			var available_width: float = button.size.x - button.get_theme_stylebox("normal").get_minimum_size().x
