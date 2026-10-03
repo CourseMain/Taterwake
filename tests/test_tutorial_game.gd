@@ -61,6 +61,8 @@ func run() -> void:
 	press("tutorial:next")
 	lesson("market")
 	game._on_action("market")
+	var starter_continue: Button = game.hud._modal_trade_footer.get_child(0)
+	check(starter_continue.is_visible_in_tree() and starter_continue.get_meta("hud_action") == "tutorial:next", "owned-seed continuation stays in the shop footer when the phone guide is folded")
 	var starting_seeds: int = game.state.seed_inventory.russet
 	var starting_coins: float = game.state.coins
 	press("tutorial:next")

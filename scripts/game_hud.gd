@@ -1807,6 +1807,9 @@ func _build_market(selling: bool = false) -> void:
 	_body.add_child(page)
 	_refs.market_page = page
 	page.setup(self, selling)
+	if not selling and _tutorial_seed_market():
+		_modal_trade_footer.add_child(_button("Use my starter seeds →", "tutorial:next", true))
+		_modal_trade_footer.show()
 
 
 func _first_harvest_barn() -> bool:
