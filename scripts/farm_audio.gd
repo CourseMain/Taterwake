@@ -1,63 +1,94 @@
 extends Node
-## Small original foley clips, cached once and shared across island rebuilds.
-const RATE: int = 22050
-static var clips: Dictionary = {}
+## Original, prebuilt PCM foley and cues: playback never synthesizes samples.
+const CLIPS: Dictionary = {
+	"harvest": preload("res://assets/audio/farm-harvest.wav"),
+	"giant": preload("res://assets/audio/farm-giant.wav"),
+	"water": preload("res://assets/audio/farm-water.wav"),
+	"hoe": preload("res://assets/audio/farm-hoe.wav"),
+	"pest": preload("res://assets/audio/farm-pest.wav"),
+	"plant": preload("res://assets/audio/farm-plant.wav"),
+	"ice": preload("res://assets/audio/farm-ice.wav"),
+	"grade_table": preload("res://assets/audio/grade-table.wav"),
+	"grade_standard": preload("res://assets/audio/grade-standard.wav"),
+	"grade_feed": preload("res://assets/audio/grade-feed.wav"),
+	"paper": preload("res://assets/audio/ledger-paper.wav"),
+	"foreclosure": preload("res://assets/audio/foreclosure-note.wav"),
+}
+const TONES: Array = [
+	[130.81, .65, preload("res://assets/audio/foreclosure-note.wav")],
+	[164.81, .60, preload("res://assets/audio/cue-impact.wav")],
+	[220.0, .60, preload("res://assets/audio/cue-warning.wav")],
+	[440.0, .10, preload("res://assets/audio/cue-tool.wav")],
+	[740.0, .12, preload("res://assets/audio/cue-purchase.wav")],
+	[523.25, .11, preload("res://assets/audio/cue-c.wav")],
+	[659.25, .11, preload("res://assets/audio/cue-e.wav")],
+	[783.99, .11, preload("res://assets/audio/cue-g.wav")],
+	[1046.5, .11, preload("res://assets/audio/cue-high-c.wav")],
+]
+const REWARD: AudioStreamWAV = preload("res://assets/audio/cue-reward.wav")
+const VOICE_COUNT: int = 4
 var voices: Array[AudioStreamPlayer] = []
 var next_voice: int = 0
 var last_kind: String = ""
+var last_grade: String = ""
+var last_cue: String = ""
+var played_count: int = 0
 
 func _ready() -> void:
 	if DisplayServer.get_name() == "headless": return
-	for i in range(4):
+	for index in range(VOICE_COUNT):
 		var voice := AudioStreamPlayer.new()
 		voice.volume_db = -14.0
 		add_child(voice)
 		voices.append(voice)
 
+func _exit_tree() -> void:
+	for voice in voices:
+		voice.stop()
+		voice.stream = null
+
 func play_action(kind: String) -> void:
 	last_kind = kind
+	_play(bake(kind), "action:" + kind)
+
+func play_grade(grade: String) -> void:
+	if grade not in ["Table", "Standard", "Feed"]: return
+	last_grade = grade
+	_play(CLIPS["grade_" + grade.to_lower()], "grade:" + grade)
+
+func play_paper() -> void:
+	_play(CLIPS.paper, "paper")
+
+func play_foreclosure() -> void:
+	_play(CLIPS.foreclosure, "foreclosure")
+
+func play_tone(frequency: float, duration: float, sparkle: bool = false) -> void:
+	if not is_finite(frequency) or frequency <= 0 or not is_finite(duration) or duration <= 0: return
+	if sparkle:
+		_play(REWARD, "reward", frequency / 880.0)
+		return
+	# Every game cue has an exact authored clip. The nearest note also keeps
+	# debug/test callers audible without introducing a runtime sample loop.
+	var nearest: Array = TONES[0]
+	var distance: float = INF
+	for tone: Array in TONES:
+		var difference: float = absf(log(frequency / float(tone[0]))) + absf(duration - float(tone[1]))
+		if difference < distance:
+			distance = difference
+			nearest = tone
+	_play(nearest[2], "tone", frequency / float(nearest[0]))
+
+func _play(stream: AudioStreamWAV, cue: String, pitch: float = 1.0) -> void:
+	last_cue = cue
+	played_count += 1
 	if voices.is_empty(): return
-	if not clips.has(kind): clips[kind] = bake(kind)
 	var voice: AudioStreamPlayer = voices[next_voice]
 	next_voice = (next_voice + 1) % voices.size()
-	voice.stream = clips[kind]
+	voice.stream = stream
+	voice.pitch_scale = clampf(pitch, .25, 4.0)
 	voice.play()
 
 static func bake(kind: String) -> AudioStreamWAV:
-	var harvest: bool = kind in ["harvest", "giant"]
-	var heavy: bool = kind == "giant"
-	var pull: float = .32 if heavy else .18
-	var landing: float = pull + (.48 if heavy else .36)
-	var duration: float = landing + .36 if harvest else .42
-	var bytes := PackedByteArray()
-	bytes.resize(int(duration * RATE) * 2)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 9417
-	var soft_noise: float = 0.0
-	for frame in range(bytes.size() / 2):
-		var t: float = float(frame) / RATE
-		var noise: float = rng.randf_range(-1, 1)
-		soft_noise = lerpf(soft_noise, noise, .18)
-		var sample: float = 0
-		if harvest:
-			if t < pull:
-				sample = (soft_noise * .65 + sin(TAU * (85 * t + 90 * t * t)) * .10) * sin(PI * t / pull)
-			var pop: float = t - pull
-			if pop >= 0:
-				sample += (sin(TAU * (160 * pop + 4 * (1 - exp(-pop * 35)))) * .55 + noise * .25) * exp(-pop * 30)
-			var thud: float = t - landing
-			if thud >= 0:
-				sample += (sin(TAU * (54 if heavy else 112) * thud) * (.85 if heavy else .32) + soft_noise * .4) * exp(-thud * (15 if heavy else 29))
-		else:
-			match kind:
-				"water": sample = (soft_noise * .6 + sin(TAU * (520 * t + sin(t * 51) * 1.5)) * .12) * sin(PI * t / duration)
-				"hoe": sample = (soft_noise * .8 + sin(TAU * 94 * t) * .45) * exp(-t * 17)
-				"pest": sample = noise * .25 * sin(PI * t / duration)
-				_: sample = (soft_noise * .5 + sin(TAU * 240 * t) * .18) * exp(-t * 23)
-		var edge: float = minf(1, t * 700) * minf(1, (duration - t) * 80)
-		bytes.encode_s16(frame * 2, int(clampf(sample * edge, -.95, .95) * 32767))
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = RATE
-	stream.data = bytes
-	return stream
+	# Compatibility for callers that inspected the old cached foley. All
+	# authored samples now live in assets and are loaded before gameplay.
+	return CLIPS.get(kind, CLIPS.plant)
