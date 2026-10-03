@@ -153,3 +153,5 @@ Foreclosure keeps the editorial page and opens on its final category ledger, wit
 This development build starts a new farm when a save contains the earlier lease or business rates. The incompatible save is preserved separately rather than changing its journal.
 
 The first-year guide runs its Spring and Winter waits at 10×. Iris appears for an eight-second Summer warning at ordinary speed, with a countdown, before Tess presents the crop loss. Decisions and cause-card reading pause the calendar.
+
+On phones, Sell stays available during weather. The weather card’s touch area follows its visible height so farm beds and Winter’s Sleep action remain reachable.

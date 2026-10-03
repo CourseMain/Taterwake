@@ -329,7 +329,7 @@ func _process(delta: float) -> void:
 	if not hud._tutorial.is_empty(): hud._tutorial_card.visible = not hud.is_panel_open() or guide_open
 	else: guide_open = false
 	for item in [stick, use_button, tools_button, menu_button, sell_button, hurry_button, status]: item.visible = not blocked
-	sell_button.visible = not blocked and not hud._climate_console.visible and not drawer.visible
+	sell_button.visible = not blocked and not drawer.visible
 	hurry_button.disabled = not game.can_hurry()
 	if hurry_button.disabled: hurry_held = false
 	hurry_button.text = "Hold · 3×" if game.hurry_active else "Hold to hurry"
@@ -374,7 +374,9 @@ func fit_auxiliary() -> void:
 	if hud._climate_console.visible:
 		adapt(hud._climate_console, 380, false)
 		if not portrait: hud._climate_console.story.hide()
-		place(equipment_sheet, Rect2(view.x - 420, 174 if portrait else 92, 398, view.y - (380 if portrait else 280)))
+		var available: float = view.y - (380 if portrait else 280)
+		var height: float = minf(available, hud._climate_console.get_combined_minimum_size().y)
+		place(equipment_sheet, Rect2(view.x - 420, 174 if portrait else 92, 398, height))
 	if hud._climate_alert.visible:
 		var panel: Control = hud._climate_alert.panel
 		var width := minf(700, view.x - 32)

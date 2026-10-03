@@ -126,6 +126,33 @@ func run() -> void:
 	finger(4,use_point,true)
 	finger(4,use_point,false)
 	check(Stock.count(game.state.storage, "russet") > stored, "touch harvest delivers crop to barn")
+	# The weather sheet must not swallow the Winter jobs below its visible card.
+	root.size = Vector2i(390,844)
+	game.state.season_clock.season = 3
+	game.state.climate.reset()
+	game.state.climate.begin_warning(game.state, "blizzard", 0.5)
+	game.hud.update_state(game.state)
+	game.hud.close_panel()
+	await frames()
+	touch._process(0.3)
+	await frames()
+	touch._process(0.3)
+	check(touch.sell_button.visible, "weather keeps the touch Sell route visible")
+	var sleep: Button
+	for candidate in game.hud.root.find_children("*", "Button", true, false):
+		if candidate.is_visible_in_tree() and candidate.get_meta("hud_action", "") == "sleep_spring": sleep = candidate
+	check(is_instance_valid(sleep), "Winter sleep action is visible during a warning")
+	if is_instance_valid(sleep):
+		var point: Vector2 = sleep.get_global_rect().get_center()
+		check(not touch.equipment_sheet.get_global_rect().has_point(point), "weather scroll area ends above the Winter action")
+		for pressed in [true, false]:
+			var click := InputEventMouseButton.new()
+			click.position = point
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.button_mask = MOUSE_BUTTON_MASK_LEFT if pressed else 0
+			click.pressed = pressed
+			root.push_input(click, true)
+		check(game.hud._panel_kind == "sleep_confirm", "real GUI click reaches Sleep through the weather overlay")
 	game.queue_free()
 	await frames()
 	print("TOUCH CONTROLS: %d checks, %d failures" % [checks,failures])

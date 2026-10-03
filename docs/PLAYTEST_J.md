@@ -26,3 +26,7 @@ Evidence: `artifacts/j-play-actions.json`, `artifacts/j-play-routine.log`, and `
 ## Tutorial follow-up
 
 The user independently reported a Summer step-six stall and missing Iris, and requested 10× instead of 5×. This build now uses 10× guided waits, an eight-second warning at 1×, Iris's portrait and radio cue, and countdowns. A mid-Summer resume regression checks that a started calm outlook still starts the lesson storm and reaches the real cause card. These changes address the warning and progress observations above; seed-shop access and starter-crop losses remain final-fix candidates.
+
+## Upload handoff
+
+The learned second run reached year-five Summer and is preserved in `j-second-run-year5-save.json`; it did not complete ten years or measure the epilogue wait. The user requested an immediate upload for the next reviewer, so those remain open checks. This pass also found the weather card’s invisible scroll area intercepting farm and Winter Sleep taps. The uploaded fix sizes that area to its visible contents and keeps quick Sell visible during weather. The touch suite verifies that a real GUI click reaches the Sleep confirmation during a blizzard warning. Seed-shop access, unmanageable starter crops and the known cold accounts stall remain review candidates.
