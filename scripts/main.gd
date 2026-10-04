@@ -82,6 +82,7 @@ var touch_controls
 var conversation
 var epilogue_screen: Control
 var epilogue_result: Dictionary = {}
+var title_scene: CanvasLayer
 
 func _ready() -> void:
 	test_mode = "--integration-test" in OS.get_cmdline_user_args() or "--capture" in OS.get_cmdline_user_args()
@@ -158,16 +159,6 @@ func _ready() -> void:
 	tutorial.setup(self)
 	_on_state_changed()
 	hud.set_tool(selected_tool)
-	if not test_mode:
-		if state.run_over:
-			_on_run_ended()
-		elif (state.season_clock.season == 3):
-			if not state.tutorial_progress.completed: tutorial.start()
-			hud.show_panel("accounts", state)
-		elif not bool(state.tutorial_progress.get("completed", false)):
-			tutorial.start()
-		elif returning:
-			hud.show_toast("Your farm is restored. The market is open!")
 	year_intro = load("res://scripts/climate_intro.gd").new()
 	var report_layer := CanvasLayer.new()
 	report_layer.layer = 40
@@ -179,6 +170,35 @@ func _ready() -> void:
 		_save_checkpoint.call_deferred()
 	)
 	get_tree().auto_accept_quit = false
+	if not test_mode: _show_title(returning)
+
+func title_active() -> bool:
+	return is_instance_valid(title_scene) and title_scene.active
+
+func _show_title(returning: bool) -> void:
+	if not is_instance_valid(title_scene):
+		title_scene = preload("res://scripts/farm_title.gd").new()
+		title_scene.name = "FarmTitle"
+		title_scene.game = self
+		add_child(title_scene)
+	title_scene.start(returning)
+
+func _enter_title_farm(fresh: bool) -> void:
+	if not title_active(): return
+	title_scene.finish()
+	_resume_loaded_farm(not fresh)
+
+func _resume_loaded_farm(returning: bool) -> void:
+	hud.update_state(state)
+	if state.run_over:
+		_on_run_ended()
+	elif state.season_clock.season == 3:
+		if not state.tutorial_progress.completed: tutorial.start()
+		hud.show_panel("accounts", state)
+	elif not bool(state.tutorial_progress.get("completed", false)):
+		tutorial.start()
+	elif returning:
+		hud.show_toast("Your farm's waiting.")
 
 func _register_inputs() -> void:
 	var bindings: Dictionary = {
@@ -197,6 +217,11 @@ func _register_inputs() -> void:
 func _process(delta: float) -> void:
 	if is_instance_valid(epilogue_screen): return
 	if world == null or hud == null:
+		return
+	if title_active():
+		title_scene.advance(delta)
+		seasonal_ambience.set_season(state.season_clock.season, false)
+		world.animate(delta, false)
 		return
 	_update_accounts_camera(delta)
 	seasonal_ambience.set_season(state.season_clock.season, state.run_over)
@@ -350,6 +375,7 @@ func _hurry_requested() -> bool:
 	return Input.is_action_pressed("hurry") or (is_instance_valid(touch_controls) and touch_controls.hurry_held)
 
 func can_hurry() -> bool:
+	if title_active(): return false
 	if state.run_over or state.accounts_open or state.climate_report_open or sleeping_until_spring or state.tutorial_active or state.ClimateSystem.Lesson.active(state): return false
 	if is_instance_valid(epilogue_screen) or (is_instance_valid(conversation) and conversation.visible) or (is_instance_valid(year_intro) and year_intro.visible): return false
 	if hud.is_panel_open() and hud._panel_kind in ["accounts", "loss_notices", "sleep_confirm", "debug"]: return false
@@ -506,6 +532,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if title_active(): return
 	if is_instance_valid(epilogue_screen) or sleeping_until_spring: return
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_F11:
@@ -565,6 +592,8 @@ func _tap_world(point: Vector2) -> void:
 		_interact_station(str(hit.station))
 
 func _interact_station(station: String) -> void:
+	if title_active(): return
+	hud.set_panel_source(station)
 	if station.begins_with("project:"):
 		_queue_project(station.trim_prefix("project:"))
 	elif station.begins_with("equipment:"):
@@ -577,6 +606,9 @@ func _interact_station(station: String) -> void:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
+	if title_active():
+		if action == "reset" and title_scene.confirming and hud._reset_pending: _on_action(action)
+		return
 	if conversation.visible: return
 	if action in ["market", "sell_potatoes"]:
 		# Use the existing saved memory for ordinary re-entry, so a completed
@@ -593,11 +625,13 @@ func _on_user_action(action: String) -> void:
 		_on_action(action)
 
 func _start_conversation(id: String, requested_service: String = "") -> void:
+	if title_active(): return
 	if not state.NpcRoster.available(id, state) or _tutorial_active() or state.run_over: return
 	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
 	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
 	if id == "nell" and state.season_clock.season == 3: return_service = "accounts"
 	if id == "edwin": return_service = "accounts" if state.season_clock.season == 3 else "bank"
+	hud.set_panel_source(return_service)
 	_cancel_walk()
 	_close_equipment()
 	climate_target = ""
@@ -606,7 +640,6 @@ func _start_conversation(id: String, requested_service: String = "") -> void:
 	touch_controls.drawer.hide()
 	hud.close_panel()
 	hud._climate_alert.dismiss()
-	farm_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	conversation.start(id, state, return_service, touch_controls.enabled)
 	_save_checkpoint.call_deferred()
 
@@ -646,7 +679,7 @@ func _recenter_camera() -> void:
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
 func _map_navigation_allowed() -> bool:
-	return is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
+	return not title_active() and is_instance_valid(hud) and not hud.is_panel_open() and not state.run_over and not (is_instance_valid(conversation) and conversation.visible) and not (is_instance_valid(touch_controls) and touch_controls.drawer.visible)
 
 func _stop_map_navigation() -> void:
 	_cancel_map_drag()
@@ -1077,6 +1110,9 @@ func _climate_action(action: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_action(action: String) -> void:
+	if title_active():
+		if action != "reset" or not title_scene.confirming or not hud._reset_pending: return
+		title_scene.finish()
 	if action.begins_with("debug:"): epilogue_result.clear()
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if is_instance_valid(conversation) and conversation.visible: return
@@ -1313,7 +1349,7 @@ func _on_run_ended() -> void:
 	_save_checkpoint.call_deferred()
 
 func _save_checkpoint() -> void:
-	if not test_mode:
+	if not test_mode and not title_active():
 		state.save_game()
 
 func _on_purchase_rejected(message: String) -> void:
@@ -1360,7 +1396,7 @@ func _notification(what: int) -> void:
 		Input.action_release("hurry")
 		if is_instance_valid(touch_controls): touch_controls.release_all()
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		if state != null and not test_mode:
+		if state != null and not test_mode and not title_active():
 			state.save_game()
 		get_tree().quit()
 

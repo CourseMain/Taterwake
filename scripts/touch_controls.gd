@@ -1,5 +1,6 @@
 extends CanvasLayer
 ## Touch owns fingers, never keyboard actions. A pinch is never a farm tap.
+const Cozy = preload("res://scripts/cozy_ui.gd")
 const TOOL_NAMES := {"hoe": "Hoe", "plant": "Seeds", "water": "Water", "harvest": "Harvest", "pest": "Sprayer"}
 var game
 var enabled: bool = false
@@ -97,11 +98,11 @@ func _ready() -> void:
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	status.add_theme_color_override("font_color", Color("fff3cf"))
 	status.add_theme_font_size_override("font_size", 22)
-	status.add_theme_stylebox_override("normal", skin(Color(0.07, 0.18, 0.14, 0.86), 10))
+	status.add_theme_stylebox_override("normal", Cozy.paper(Cozy.INK, 12, 5, Color("365747")))
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	root.add_child(status)
 	drawer = PanelContainer.new()
-	drawer.add_theme_stylebox_override("panel", skin(Color("193c33"), 16))
+	drawer.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 16, 5, Color("365747")))
 	root.add_child(drawer)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -306,16 +307,21 @@ func update_interaction_prompt(force: bool = true) -> void:
 	interaction_prompt.show()
 
 func _process(delta: float) -> void:
+	var at_title: bool = game.title_active()
+	root.visible = not at_title
 	_interaction_clock += delta
-	update_interaction_prompt(false)
+	if not at_title: update_interaction_prompt(false)
 	var hud = game.hud
-	var paper: bool = (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
+	var paper: bool = at_title or (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
 	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
 	if OS.has_feature("web"):
 		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
 		if cover_fullscreen != _browser_fullscreen_hidden:
 			_browser_fullscreen_hidden = cover_fullscreen
 			JavaScriptBridge.eval("document.getElementById('fullscreen-button').style.visibility = '%s';" % ("hidden" if cover_fullscreen else "visible"))
+	if at_title:
+		release_all()
+		return
 	if not enabled: return
 	_clock += delta
 
@@ -393,7 +399,7 @@ func open_drawer(kind: String) -> void:
 		drawer.hide()
 		return
 	drawer_kind = kind
-	drawer.add_theme_stylebox_override("panel", skin(Color("193c33"), 5))
+	drawer.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 16, 5, Color("365747")))
 	for child in drawer_body.get_children():
 		drawer_body.remove_child(child)
 		child.queue_free()
@@ -417,7 +423,7 @@ func open_drawer(kind: String) -> void:
 
 func open_seeds() -> void:
 	drawer_kind = "seeds"
-	drawer.add_theme_stylebox_override("panel", skin(Color("5b422b"), 3))
+	drawer.add_theme_stylebox_override("panel", Cozy.paper(Color("79553d"), 16, 3, Color("523b2b")))
 	for child in drawer_body.get_children():
 		drawer_body.remove_child(child)
 		child.queue_free()
@@ -434,7 +440,7 @@ func open_seeds() -> void:
 	fit_drawer.call_deferred()
 
 func _input(event: InputEvent) -> void:
-	if not enabled: return
+	if not enabled or game.title_active(): return
 	if event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		if drawer.visible and drawer.get_global_rect().has_point(event.position): return
 		# Overlay actions are dispatched by finger ID, allowing stick + action.

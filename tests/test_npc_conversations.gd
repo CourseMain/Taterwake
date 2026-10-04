@@ -36,7 +36,7 @@ func run() -> void:
 		await frames()
 		check(talk.visible and game.hud.is_panel_open(),"conversation is modal " + id)
 		check(not game.hud._modal.visible,"no stacked shop " + id)
-		check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"only portrait renders while talking")
+		check(game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS,"farm keeps rendering behind the keeper")
 		check(talk.title.text == Roster.PEOPLE[id].name,"named portrait " + id)
 		check(talk.speech.text == expected_greeting,"first introduction " + id)
 		check(farm.npc_history[id].visits == 1,"remembers meeting " + id)
@@ -49,7 +49,9 @@ func run() -> void:
 		looks.append(signature)
 		var before: String = JSON.stringify(farm._save_data())
 		var position: Vector3 = game.world.player.position
+		var world_time: float = game.world._time
 		game._process(20)
+		check(game.world._time > world_time, "farm animation continues behind the keeper " + id)
 		check(JSON.stringify(farm._save_data()) == before,"all farm clocks paused " + id)
 		check(game.world.player.position == position,"player stays still " + id)
 		game._on_action("quick_sell")

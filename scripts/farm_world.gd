@@ -12,6 +12,7 @@ signal pest_warning(index: int, destroyed: bool)
 
 var plot_positions: Array[Vector3] = []
 var camera: Camera3D
+var title_gate: Node3D
 var player: Node3D
 var _player_heading: float = 0.45
 var _plot_nodes: Array[Node3D] = []
@@ -1145,7 +1146,7 @@ func _scenery() -> void:
 		for j in range(4):
 			var puff := _sphere(cloud, Vector3(float(j) * 1.1 - 1.5, 0.0 if j % 2 == 0 else 0.4, 0.0), Vector3(1.25, 0.65, 0.8), Color("f4f0d8"))
 			puff.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_sign(Vector3(-6.0, 0, 9.7), "SPUD VALLEY", Color("41675e"))
+	_build_title_gate()
 	# Farm props: a wheelbarrow, watering can, and a tiny produce cart.
 	var barrow := _root("Wheelbarrow", Vector3(-9.8, 0.0, 1.1))
 	_box(barrow, Vector3(0.0, 0.64, 0.0), Vector3(0.75, 0.35, 1.1), Color("b98151"))
@@ -1272,6 +1273,33 @@ func _crate(parent: Node3D, pos: Vector3, full: bool) -> void:
 	if full:
 		for i in range(5):
 			_sphere(parent, pos + Vector3(-0.39 + float(i % 3) * 0.38, 0.29, -0.16 + float(i / 3) * 0.35), Vector3(0.24, 0.18, 0.20), Color("d7aa69"))
+
+func _build_title_gate() -> void:
+	title_gate = _root("TaterlandGate", Vector3(-5.5, 0, 10.5))
+	for x: float in [-3.6, 3.6]:
+		_box(title_gate, Vector3(x, 1.8, 0), Vector3(.32, 3.6, .32), Color("79553d"))
+		_sphere(title_gate, Vector3(x, 3.68, 0), Vector3(.28, .16, .28), Color("9d7650"))
+	_box(title_gate, Vector3(0, 3.0, 0), Vector3(8.0, 1.35, .3), Color("79553d"))
+	_box(title_gate, Vector3(0, 3.0, .17), Vector3(7.72, 1.1, .055), Color("17382d"))
+	for x: float in [-3.62, 3.62]:
+		for y: float in [2.6, 3.4]:
+			_sphere(title_gate, Vector3(x, y, .215), Vector3.ONE * .045, Color("c89a5b"))
+	var wordmark := _label(title_gate, "TATERLAND", Vector3(0, 3.02, .225), 64, Color("fffbed"), false)
+	wordmark.name = "GateWordmark"
+	# Physical sign lettering has a fixed width, independent of UI font leading.
+	_fitted_labels.erase(wordmark)
+	wordmark.set_meta("board_bounds", Vector2(7.25, 1.1))
+	wordmark.font_size = 64
+	wordmark.pixel_size = 7.1 / wordmark.font.get_string_size(wordmark.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x
+	# An open swing leaves the path into the field clear.
+	var swing := Node3D.new()
+	title_gate.add_child(swing)
+	swing.position = Vector3(-3.5, 0, 0)
+	swing.rotation.y = -.9
+	for y: float in [.6, 1.4]:
+		_box(swing, Vector3(1.5, y, 0), Vector3(3.0, .15, .13), Color("ae8558"))
+	for x: float in [.15, 1.5, 2.85]:
+		_box(swing, Vector3(x, .92, 0), Vector3(.12, 1.5, .13), Color("79553d"))
 
 func _sign(pos: Vector3, title: String, color: Color) -> Node3D:
 	var root := _root("VillageSign", pos)
