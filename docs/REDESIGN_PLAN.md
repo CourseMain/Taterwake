@@ -1385,6 +1385,37 @@ screenshotted before and after at 390x844, no screen shows three
 stacked cream surfaces, and the suite passes.
 ```
 
+### Segment 21e: Tell the player the three numbers (before Segment 22 step 0)
+
+```
+Why: the owner's own run went 75,000 to 7,000 to foreclosed. The bot
+survives because it does three things on day one that the game never
+tells a human: it opens Home Field to 24 beds at once (the player starts
+with 12), it plants Golden rather than Russet, and it replants the
+moment a bed empties and stores half for the Winter price. On 12 Russet
+beds the best possible year nets about 45,000 against 104,000 of bills.
+That player cannot survive, and nothing on screen says so.
+
+1. Nell's Year 1 accounts speech states the arithmetic once, plainly:
+   "The bills are 104,000 a year. Twelve beds of Russet make about
+   45,000 at best. You need more beds, a dearer potato, and no empty
+   beds in Spring or Summer." Then the three actions as tappable lines:
+   "Open 12 more Home beds · 48,000", "Mara's Golden card", "Store half
+   for Winter".
+2. Spring break-even card (pulled forward from Segment 22 F): at every
+   Spring start, one card: "Bills this Winter: 104,000. Your beds at
+   this crop, planted twice: about N. Short by M." Updated when the crop
+   or bed count changes. Not shown during the guided year.
+3. Home expansion is available from the Tools shed in any season, not
+   only at the Winter accounts. Renting Low and Hill stays a Winter
+   lease. The Tools card says so: "Open more Home beds · 48,000 · any
+   season" and "Rent Low or Hill · at the Winter accounts".
+4. Every locked bed, when tapped, says which of the two it needs: "Home
+   bed · open 12 more at the Tools shed, 48,000" or "Low Field · lease
+   at the Winter accounts, 55,000 a year".
+Ledger labels unchanged; no balance change; bot unchanged.
+```
+
 ### Segment 22: The fun pass (after Segment 21)
 
 ```
