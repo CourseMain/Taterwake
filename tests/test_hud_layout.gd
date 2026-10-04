@@ -169,8 +169,14 @@ func winter_pages() -> void:
 		root.size = dimensions
 		for frame in range(12): await process_frame
 		game.touch_controls.resize(); note.refresh()
-		for frame in range(8): await process_frame
+		# This fixture freezes HUD processing. Fill the live status explicitly,
+		# then run the same HUD layout updates that follow its wrapped text in play.
+		if game.touch_controls.enabled: game.touch_controls._process(.21)
+		for frame in range(8):
+			await process_frame
+			game.hud._process(.01)
 		if game.touch_controls.enabled:
+			check(game.touch_controls.status.text.contains(game.state.climate_info().name), "phone layout includes the live blizzard status")
 			check(not note.get_global_rect().intersects(game.touch_controls.status.get_global_rect()), "Winter note clears the phone's live weather status")
 		await shot("winter-jobs-%d" % dimensions.x)
 	game.state.season_clock.season = 0
