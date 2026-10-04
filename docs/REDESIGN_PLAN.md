@@ -1544,7 +1544,48 @@ ink action and Continue the smaller text action, keeping phone-sized tap targets
 Restore the camera, sky, markers and saved farm's actual lighting on entry; the
 title must not advance or save the farm.
 
-### Segment 22: The fun pass (after Segment 21c)
+### Segment 21d: Light and the play HUD (after 21c, before Segment 22 step 0)
+
+Owner’s follow-up: the finished play view must match the lit title. Keep the two
+existing lights, Compatibility rendering, no screen-space effects, and phone
+shadow maps at or below 2048. Compare the same phone browser fixture against tag l;
+mean frame time must not rise.
+
+1. Sun elevation 20° at dawn/dusk and 35° at noon in every season; retain 3 s pose steps.
+2. Warm `ffd9a8` sunlight, cool `b8c8e0` ambient fill.
+3. Build-only vertex-colour occlusion, 10–20% under canopies, fences, footings and beds.
+4. Light terrace tops and darker risers/tree ground; Summer straw-green over olive.
+5. A 2–3% darker soil rim and soft inset shade; green growing beds and potato-coloured ripe tops.
+6. Deep-top/pale-horizon sky and faint far-island haze.
+7. Soft contact discs under trees, buildings and villagers.
+8. One opaque coastal surface: green-blue shallows, deep blue distance, one slow
+   foam edge, four to six broad highlights drifting over 10–20 s, warm/cool sides
+   and a low slow vertex wave. No reflections, refraction or second water layer.
+9. Top bar, weather pill, tools and Sell use ink/wood; cream highlights the money
+   and price facts. No three stacked cream surfaces.
+10. The current season is a lit wooden tab.
+
+Capture Spring noon, Summer noon and Autumn dusk at 390×844 and desktop. Record
+phone-fixture frame times beside tag l. Run the full suite before tagging.
+
+#### Title third pass, included with the light pass in tag n
+
+Fresh profiles show one large **Walk to the farm** action, no second line; the
+first guide card opens after the walk-in. Saved profiles show large **Continue ·
+Year N, Season**, entering the farm without a panel, then small **Start a new farm**.
+The latter opens a title-owned ink confirmation: **Replace your Year N farm? This
+cannot be undone.** Two choices, **Keep my farm** as the safe default. Never use the
+pause reset flag. Title, golden-hour lighting and pull-back own the first game
+frame on every Web launch, before HUD, guide, farm panel or annual page.
+
+Test the exported production launch path in a fresh browser profile, Walk followed
+by the welcome guide, and persistent relaunch with Continue. Capture both title
+states at 390×844. The combined release is **v2.0.0-underdevelopment-n** because
+m was already published for the guided-year credit. Real-phone measurement remains
+**awaiting owner measurement** using Debug → Measure a year; browser emulation
+is the available fixture and does not establish phone hardware performance.
+
+### Segment 22: The fun pass (after Segment 21d)
 
 ```
 Why: with Segments 1 to 21 done the game is honest, legible and simple,

@@ -1,0 +1,315 @@
+{
+  "visual_runtime": "7fbb309",
+  "title_runtime": "4236fb9",
+  "version": "2.0.0-underdevelopment-n",
+  "renderer": "Godot 4.7.2 Compatibility",
+  "captures": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scene": "play_spring",
+      "file": "docs/style-board/tag-n-play_spring-390.png",
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scene": "play_summer",
+      "file": "docs/style-board/tag-n-play_summer-390.png",
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "scene": "play_autumn",
+      "file": "docs/style-board/tag-n-play_autumn-390.png",
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scene": "play_spring",
+      "file": "docs/style-board/tag-n-play_spring-1440.png",
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scene": "play_summer",
+      "file": "docs/style-board/tag-n-play_summer-1440.png",
+      "errors": []
+    },
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scene": "play_autumn",
+      "file": "docs/style-board/tag-n-play_autumn-1440.png",
+      "errors": []
+    }
+  ],
+  "title_regression": {
+    "url": "http://127.0.0.1:8933/index.html",
+    "resolution": [
+      390,
+      844
+    ],
+    "results": [
+      {
+        "state": "fresh first game render",
+        "confirmation": false,
+        "front_page": false,
+        "guide": "",
+        "hud": false,
+        "keep_rect": [
+          0,
+          0,
+          135,
+          68
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "panel": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1186,
+          520,
+          84
+        ],
+        "replace_rect": [
+          0,
+          0,
+          136,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": true,
+        "version": "2.0.0-underdevelopment-n",
+        "walking_in": false
+      },
+      {
+        "state": "after walk",
+        "confirmation": false,
+        "front_page": false,
+        "guide": "welcome",
+        "hud": true,
+        "keep_rect": [
+          0,
+          0,
+          135,
+          68
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "panel": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1186,
+          520,
+          84
+        ],
+        "replace_rect": [
+          0,
+          0,
+          136,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.0-underdevelopment-n",
+        "walking_in": false
+      },
+      {
+        "state": "saved first game render",
+        "confirmation": false,
+        "front_page": false,
+        "guide": "",
+        "hud": false,
+        "keep_rect": [
+          0,
+          0,
+          135,
+          68
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "panel": false,
+        "pause_reset": false,
+        "primary": "Continue \u00b7 Year 1, Spring",
+        "primary_rect": [
+          40,
+          1104,
+          520,
+          84
+        ],
+        "replace_rect": [
+          0,
+          0,
+          136,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": true,
+        "test_mode": false,
+        "title": true,
+        "version": "2.0.0-underdevelopment-n",
+        "walking_in": false
+      },
+      {
+        "state": "title replacement confirmation",
+        "confirmation": true,
+        "front_page": false,
+        "guide": "",
+        "hud": false,
+        "keep_rect": [
+          0,
+          0,
+          135,
+          68
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "panel": false,
+        "pause_reset": false,
+        "primary": "Continue \u00b7 Year 1, Spring",
+        "primary_rect": [
+          40,
+          1104,
+          520,
+          84
+        ],
+        "replace_rect": [
+          0,
+          0,
+          136,
+          68
+        ],
+        "safe_default": true,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": true,
+        "version": "2.0.0-underdevelopment-n",
+        "walking_in": false
+      },
+      {
+        "state": "resumed farm",
+        "confirmation": false,
+        "front_page": false,
+        "guide": "welcome",
+        "hud": true,
+        "keep_rect": [
+          62,
+          634,
+          476,
+          68
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "panel": false,
+        "pause_reset": false,
+        "primary": "Continue \u00b7 Year 1, Spring",
+        "primary_rect": [
+          40,
+          1104,
+          520,
+          84
+        ],
+        "replace_rect": [
+          62,
+          720,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.0-underdevelopment-n",
+        "walking_in": false
+      }
+    ],
+    "errors": []
+  },
+  "validation": {
+    "runtime": "4236fb9",
+    "full_suite": {
+      "pass": 98,
+      "fail": 0,
+      "timeout": 0,
+      "errors": 0
+    },
+    "boot_checks": 45,
+    "epilogue_checks": 534,
+    "tuning_bot_checks": 1679,
+    "physical_phone": "awaiting owner measurement"
+  }
+}

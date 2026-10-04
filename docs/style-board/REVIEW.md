@@ -49,3 +49,6 @@ The material rule is expressed through several distinct forms: seed packets on a
 ## Guided-year bills follow-up · tag m
 
 The [fresh guided Winter accounts](tag-m-guided-accounts.png) were captured at 390×844 through touch input. All ordinary bill rows remain on paper; the one signed 104,000 credit wraps inside its row, and Nell's exact explanation sits on ink. Other does not repeat the credit. There is no additional cream layer. The title, crop and forecast surfaces are unchanged from the twenty-page tag-l review above. This is desktop phone emulation; physical-phone frame time remains awaiting the owner.
+
+
+The later [tag-n light, HUD and title review](TAG_N.md) supersedes the opening choices and play masthead shown in this historical tag-l review. Accounts, crop cards and forecast retain their 21c surfaces and frozen ledger labels.

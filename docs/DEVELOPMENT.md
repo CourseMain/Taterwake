@@ -11,7 +11,7 @@
 
 ## Development release
 
-The current `redesign` build is **v2.0.0 (underdevelopment: m)** for Segment 21b item 7a: the guided first year's fixed bills remain visible and Dad's last harvest covers their total. Tag l completed Segment 21c; its 96-suite result and screen review remain recorded below. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The current `redesign` build is **v2.0.0 (underdevelopment: n)** for Segment 21d and the title third pass. Segment 21c's finished surfaces and the guided-year bills credit remain. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
@@ -1062,11 +1062,11 @@ Phones now default to 2048 shadows, with the existing soft filter retained and 4
 
 To measure on a real phone:
 
-1. Download the tag-m **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-m/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-m/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
+1. Download the tag-n **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-n/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-n/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
 2. Put the phone on the same Wi-Fi and open `https://<computer Wi-Fi IP>:8080/index.html`. Godot 4.7.2 requires HTTPS away from localhost. The server uses OpenSSL to create a temporary local certificate; accept its browser prompt through Advanced / Continue for this local preview. The temporary key is outside the served folder and is removed when the server stops. On macOS, find the address in System Settings → Wi-Fi → Details → TCP/IP.
 3. Finish the guided year. At the next Spring, choose Graphics → Balanced and 2048, then farm menu → Debug → **Measure a year**. No debug code or test funding is needed.
 4. Play through Spring, Summer, Autumn and Winter, including rain when it occurs; close Winter accounts. Copy the result card and paste its complete text into this row. If Copy is unavailable in the browser, select the report text. Do not describe desktop emulation as a real-phone result.
-5. Optionally repeat a year at 4096 and paste that report too. The 2048 default remains until the owner measures the device.
+5. Paste the copied card text into the open real-phone row below. Phones stay at or below 2048; 4096 remains a desktop Graphics choice.
 
 Final cold-boundary sample on Apple M4 / Chrome 154 with a 390×844 CSS viewport, DPR 3, Compatibility PCF13 and a forced 4096 map: **99.780 ms** on the first Winter accounts boundary, below the 100 ms target. The ordinary save itself takes **2.470 ms**; the year-ten 3,000-entry stress save takes **9.720 ms**, with a **36.295 ms** following boundary frame (43.730 ms maximum across that sample). The timed fixture uses the committed configuration (4096 desktop, 2048 mobile, soft filter 4 on both) and the shared shader/loading warm-up. This is desktop phone emulation, not physical-phone evidence or a guarantee that every cold frame stays below 100 ms. Raw report: `artifacts/feel-browser/k-final.json`.
 
@@ -1129,3 +1129,119 @@ Segment 21c's finished title, materials, illustrations, motion and screenshots r
 ### Segment 22 · Step 0
 
 [PLAYTEST_22.md](PLAYTEST_22.md) supplies the tag-l baseline build links, a neutral fresh-player protocol, three quit-time/screen report rows, the recorded tuning baseline and the replay acceptance sheet. The three human baseline reports are pending. Segment 22 explicitly places these observations before any build changes, so implementation order and A–F remain pending until those reports arrive. No game code or gameplay rules changed in this preparation.
+
+
+### Segment 21d · Light, play HUD and title third pass · tag n
+
+Play uses the existing sun and fill: 20° at dawn/dusk, 35° at noon in all four
+seasons, with the existing three-second sun steps and 0.4-second easing. Warm
+`ffd9a8` sunlight contrasts with cool `b8c8e0` ambient fill. The static compiler
+bakes up to 20% vertex-colour occlusion through a build-only spatial grid;
+terrain gets the same canopy, fence, footing and bed shade. The callback is
+removed before dynamic crop batching. Static tree/building contacts share one
+instanced draw; villagers have feathered contacts. Terrace tops and risers use
+two seasonal grass tones. Soil has a 2.5% rim and soft inset shade. Growing
+potatoes read green and ripe ones retain their variety colour.
+
+The sky is a small gradient shader with environment reflections disabled;
+there are no new lights or screen-space passes. Water remains one opaque
+surface, with shore-to-distance colour, one pulsing foam edge, five bounded
+broad highlights drifting over sixteen seconds, warm/cool sides and a slower
+low vertex wave. Title water retains its three quiet highlights.
+
+Ink and wood now carry the top bar, season tabs, Weather & protection, tools
+and Sell. Cream highlights the numeric facts. Touch shows the selected crop's
+live price, gives the season row its full width, and keeps Sell beside the
+stick. The tool hover and disabled states keep their wood surface and readable
+captions. [Nine reviewed captures](style-board/TAG_N.md) show Spring noon,
+Summer noon and Autumn dusk at 390×844 and 1440×900, both 390×844 title states
+and the safe replacement card. The 21c board and four-screen comparison remain.
+
+The title owns the first game frame. The farm picture is attached and sized
+synchronously, and simulation waits for launch setup. Fresh farms show only
+Walk; the welcome guide follows a 1.2-second walk-in. Saved farms put Continue
+on the large action and resume without a modal, including Winter; an unfinished
+guide keeps its pinned instruction and calendar lock. Start a new
+farm opens a separate ink confirmation with Keep my farm focused. Confirmation
+neither routes through pause nor sets its reset flag. Replacing a farm saves
+only after the explicit destructive choice. Ledger labels, simulation prices,
+growth times, fixed costs and mechanics revision 43 are unchanged.
+
+The owner's fresh-profile missing-title symptom did not reproduce on the
+prior tag-m production Web export here: its first captured game frame already
+showed the gate. The initialization race risk has been removed, and the new
+browser test records the first rendered frame on the production startup/save
+path. Fresh launch, Walk → welcome, persisted relaunch → Continue, Keep and
+direct resume all pass with no browser errors. The final release export is
+also smoke-tested without the fixture bridge.
+
+#### Matched phone browser fixture
+
+Desktop Chrome 154 / Apple M4 / ANGLE Metal, 390×844 CSS pixels, DPR 3,
+Balanced, 2048 shadows and PCF13 on both builds. The tag-l runtime at
+`4ae84f8` was re-exported for this comparison; this is a new measurement of
+that tag, not a historical number invented for it. Each steady sample runs
+Summer rain for twelve seconds after three seconds of warm-up.
+
+| Metric | Tag l | Tag n |
+| --- | ---: | ---: |
+| Mean fps | 60.00 | 60.00 |
+| Mean frame ms | 16.6665 | 16.6663 |
+| Median frame ms | 16.665 | 16.670 |
+| 99th percentile frame ms | 16.930 | 17.800 |
+| Worst steady frame ms | 17.405 | 18.355 |
+| Engine-reported mean process ms | 12.817 | 11.275 |
+| Ordinary boundary save ms | 2.905 | 2.695 |
+| Year-ten 3,000-entry save ms | 9.065 | 10.000 |
+| First cold accounts boundary ms | 106.880 | 109.285 |
+
+Steady mean frame time does not rise; the final sample’s 99th percentile and
+worst steady frame are slightly higher, so no claim is made that every frame improved. The engine-reported process cost is lower
+after using the small gradient sky without a reflected-light cubemap. Ordinary
+and stress saves remain under one 16.67 ms frame on this fixture. The cold
+accounts frame still visibly hitches; its 109.285 ms is recorded rather than
+claimed to meet 60 fps. It remains an existing cold presentation limitation
+for owner phone measurement. The raw before/after JSON and screenshots are
+included in the review bundle (`l-light-baseline.json`, `n-light-final.json`).
+Browser emulation does not establish mid-range phone performance.
+
+#### Validation and open owner row
+
+Godot **4.7.2 stable**, Compatibility: the final clean committed runtime at
+`4236fb9` passes **98 / 98 suites** through `tools/run_tests.sh --timeout 1500`:
+**0 fail, 0 timeout, 0 errors**. Epilogue passes **534 checks**; the 150-run tuning
+bot passes **1,679 checks** with unchanged survival: naive 0/30, cautious 30/30,
+tidy 30/30, diversifier 28/30, expander 29/30. Expander maximum cash remains
+**215,971**, below its 320,000 ceiling. The required standalone headless boot
+passes **45 checks**. New play-light and launch suites pass **17 / 9 checks**;
+the updated title suite passes **48**. No suite is skipped or disabled.
+
+The tool-slot test now compares the textured surface's actual fill instead of
+casting it to the removed flat style. The existing green-Summer and signed
+quote-color checks remain intact. The quote fact panel passes camera gestures
+through and fits the compact HUD. The owner’s local project settings were kept
+separate from the clean release checkout. Full logs, browser reports, before/
+after frame JSON and all nine images are included in the review ZIP.
+
+| Required evidence | Result |
+| --- | --- |
+| Full headless suite and required boot | **98 PASS / 0 FAIL / 0 TIMEOUT / 0 ERRORS**; boot **45 checks** |
+| Exported first-frame fresh/saved title regression | Pass; production startup, persistence, no integration override |
+| Phone and desktop season screenshots | Captured and reviewed; no three stacked cream panels |
+| Production Web export and phone-test ZIP | Pass; both export, production phone smoke has no errors or fixture bridge |
+| Real-phone year measured | **Awaiting owner measurement** |
+
+For the open row: download tag-n **Taterland-Phone-Test.zip**, extract it, run
+`python3 serve.py --host 0.0.0.0 --https --port 8080`, and keep the terminal open.
+On the same Wi-Fi, open `https://COMPUTER-LAN-IP:8080/index.html` on the phone
+and accept the local certificate. Finish the guide, choose Graphics → Balanced
+and 2048, then farm menu → Debug → **Measure a year**. Play until the next Winter
+accounts close, tap **Copy**, and paste the complete card here: device/model and
+OS, actual shadow size, resolution, mean fps, 1% low fps, worst frame ms and its
+season. The local branch-only preview is `builds/underdevelopment-n/web/`;
+none of these exports modifies the published source `docs/index.*` or `web/`.
+Samples remain in memory and do not enter the farm save. No physical phone or
+remote phone session is available in this task.
+
+The three new-player Segment 22 step-0 reports remain pending, using tag n's
+finished visuals. No Segment 22 mechanics were started.

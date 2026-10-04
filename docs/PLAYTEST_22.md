@@ -4,7 +4,7 @@ Step 0 is awaiting three people who have never played Taterland. These are human
 
 ## Current build
 
-Use the finished-look baseline [v2.0.0-underdevelopment-m](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-m) with the guided-year bills fix and green release validation. Download `Taterland-Web.zip` for a computer or `Taterland-Phone-Test.zip` for the local HTTPS phone preview. The phone ZIP includes `README-PHONE.txt`; [DEVELOPMENT.md](DEVELOPMENT.md#segment-21-follow-up--tag-k) also has the launch steps. Each person starts a fresh farm in a separate browser profile or with existing farm data cleared through the game's normal controls.
+Use the finished-look baseline [v2.0.0-underdevelopment-n](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-n) with the completed light, play HUD and title passes. Download `Taterland-Web.zip` for a computer or `Taterland-Phone-Test.zip` for the local HTTPS phone preview. The phone ZIP includes `README-PHONE.txt`; [DEVELOPMENT.md](DEVELOPMENT.md#segment-21-follow-up--tag-k) also has the launch steps. Each person starts a fresh farm in a separate browser profile or with existing farm data cleared through the game's normal controls.
 
 Ask each person to play as they normally would and say what they are thinking. Start the timer when they begin the game. Let the guide explain the controls; avoid coaching or describing planned features. Record every confusion or idle stretch with elapsed time, year, season and screen. If someone stops, record why. If they continue, ask afterward where they would have stopped when playing alone. Do not assume a completed run means they enjoyed it.
 
