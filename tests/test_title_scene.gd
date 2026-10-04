@@ -98,7 +98,12 @@ func run() -> void:
 	check(not game.title_active() and game.hud._run_end.visible and game.state.run_outcome == "foreclosed", "Continue restores the saved foreclosure screen")
 	for path: String in [SAVE, SAVE + ".bak", SAVE + ".tmp"]:
 		if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	# The final Winter entry starts Nell's real voice. Stop it before freeing
+	# the scene, then let the audio mixer release its deferred WAV playback.
+	game.conversation.voice.stop()
+	game.year_intro.voice.stop()
 	game.queue_free()
 	await frames()
+	await create_timer(.1).timeout
 	print("FARM TITLE: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
