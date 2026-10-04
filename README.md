@@ -1,4 +1,4 @@
-![The first Winter ledger: a negative year, itemised costs and Nell’s verdict](docs/images/annual-ledger.png)
+![Taterland at golden hour: the farm gate and the round potato farmer](docs/style-board/taterland-after/title.png)
 
 # Taterland
 
