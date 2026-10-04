@@ -43,7 +43,7 @@ func setup(farm, farm_world, cached: Dictionary = {}) -> void:
 	saved_camera_transform = world.camera.transform
 	saved_camera_size = world.camera.size
 	veil = ColorRect.new()
-	veil.color = Color("f6edda")
+	veil.color = Color("17382d")
 	add_child(veil)
 	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	progress = _label("Forty more years…\nThe caretaker keeps your crops and investments.", 24)
@@ -116,10 +116,10 @@ func present(ending: Dictionary) -> void:
 	lower.add_child(value_line)
 	actions = HBoxContainer.new()
 	lower.add_child(actions)
-	screenshot = _button("Screenshot", capture)
+	screenshot = _button("Keep this picture", capture)
 	actions.add_child(screenshot)
-	actions.add_child(_button("Ten-year ledger", func(): finished.emit()))
-	actions.add_child(_button("New Run", func(): new_run.emit()))
+	actions.add_child(_button("Read the ledger", func(): finished.emit()))
+	actions.add_child(_button("Plant a new farm", func(): new_run.emit()))
 	status = _label("", 13)
 	status.hide()
 	lower.add_child(status)
@@ -183,7 +183,7 @@ func _layout() -> void:
 		button.custom_minimum_size.y = maxf(44, ceilf(44 / maxf(scale, 0.1)))
 		button.add_theme_font_size_override("font_size", ceili(15 / minf(1.0, maxf(scale, 0.1))))
 	for panel in [top, bottom]:
-		var paper: StyleBoxFlat = panel.get_theme_stylebox("panel")
+		var paper: StyleBox = panel.get_theme_stylebox("panel")
 		paper.content_margin_top = 4 if compact else 10
 		paper.content_margin_bottom = 4 if compact else 10
 	headlines_grid.columns = 5 if size.x >= 700 and size.y >= 650 else 1
@@ -201,10 +201,7 @@ func _layout() -> void:
 
 func _paper() -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("f6edda")
-	style.set_content_margin_all(10)
-	style.set_corner_radius_all(8)
+	var style := preload("res://scripts/cozy_ui.gd").paper(Color("17382d"), 10, 6, Color("79553d"))
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
 
@@ -215,7 +212,7 @@ func _label(text: String, points: int, heading: bool = false) -> Label:
 	label.add_theme_font_override("font", Type.face(Type.DISPLAY if heading else Type.BODY))
 	label.set_meta("base_font_size", points)
 	label.add_theme_font_size_override("font_size", points)
-	label.add_theme_color_override("font_color", Color("493d2b"))
+	label.add_theme_color_override("font_color", Color("fffbed"))
 	return label
 
 func _button(text: String, action: Callable) -> Button:

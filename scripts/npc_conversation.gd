@@ -5,6 +5,7 @@ const Roster = preload("res://scripts/npc_roster.gd")
 const Portrait = preload("res://scripts/npc_portrait.gd")
 const Voice = preload("res://scripts/npc_voice.gd")
 const Type = preload("res://scripts/ui_type.gd")
+const Cozy = preload("res://scripts/cozy_ui.gd")
 var state
 var npc_id: String = ""
 var service: String = ""
@@ -27,6 +28,7 @@ var elapsed: float = 0
 var _revealed: float = 0
 var _entry_time: float = 0
 var _touch: bool = false
+var _source_offset := Vector2.ZERO
 var voice
 
 func _ready() -> void:
@@ -39,7 +41,7 @@ func _ready() -> void:
 	theme.default_font_size = 22
 	self.theme = theme
 	card = Panel.new()
-	card.add_theme_stylebox_override("panel", style(Color("152f2b"),24,0))
+	card.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 0, 6, Cozy.WOOD))
 	add_child(card)
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint = label("Farm paused",16,Color("c2d4c3"))
@@ -48,7 +50,7 @@ func _ready() -> void:
 	add_child(close_button)
 	close_button.tooltip_text = "Leave conversation (Escape)"
 	text_card = PanelContainer.new()
-	text_card.add_theme_stylebox_override("panel",style(Color("fff8e8"),18,24))
+	text_card.add_theme_stylebox_override("panel", Cozy.paper(Cozy.WOOD, 24, 6, Cozy.INK))
 	add_child(text_card)
 	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -60,7 +62,7 @@ func _ready() -> void:
 	title = label("",34,Color("17382d"))
 	title.add_theme_font_override("font",face(Type.DISPLAY,600))
 	body.add_child(title)
-	role = label("",17,Color("637869"))
+	role = label("",17,Color("ece1cb"))
 	body.add_child(role)
 	speech = RichTextLabel.new()
 	speech.bbcode_enabled = false
@@ -74,12 +76,7 @@ func _ready() -> void:
 	speech.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: reveal())
 	speech_bubble = PanelContainer.new()
-	var bubble := style(Color.WHITE,16,16)
-	bubble.border_color = Color("24362e")
-	bubble.set_border_width_all(2)
-	bubble.shadow_color = Color(0,0,0,.10)
-	bubble.shadow_size = 2
-	bubble.shadow_offset = Vector2(0,3)
+	var bubble := Cozy.paper(Cozy.CREAM, 16, 8, Cozy.INK)
 	speech_bubble.add_theme_stylebox_override("panel",bubble)
 	body.add_child(speech_bubble)
 	speech_bubble.add_child(speech)
@@ -156,14 +153,21 @@ func start(id: String, farm, return_service: String, touch: bool = false) -> voi
 	role.text = str(Roster.PEOPLE[id].role)
 	var accent := Color(Roster.PEOPLE[id].color).darkened(.32)
 	title.add_theme_color_override("font_color",accent)
-	var name_tag := style(Color(Roster.PEOPLE[id].color).lightened(.76),10,10)
-	name_tag.border_color = accent
-	name_tag.border_width_left = 5
+	var name_tag := Cozy.paper(Cozy.CREAM, 10, 4, accent)
 	title.add_theme_stylebox_override("normal",name_tag)
 	_entry_time = 0
+	var game = get_parent().get_parent()
+	_source_offset = game.hud.panel_source_position(return_service) - size * .5
 	layout()
 	show_page("greeting",Roster.greeting(id,state,true))
+	_update_entrance()
 	close_button.grab_focus()
+
+func _update_entrance() -> void:
+	var progress: float = clampf(_entry_time / .42, 0, 1)
+	var offset: Vector2 = _source_offset * pow(1 - progress, 3)
+	RenderingServer.canvas_item_set_transform(get_canvas_item(), Transform2D(0, offset))
+	modulate.a = minf(1, progress * 3)
 
 func layout() -> void:
 	if not is_instance_valid(card): return
@@ -211,7 +215,7 @@ func layout() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO,size),Color(.035,.075,.065,.88))
+	draw_rect(Rect2(Vector2.ZERO,size),Color(.035,.075,.065,.28))
 
 func show_page(next_page: String, text: String = "") -> void:
 	page = next_page
@@ -277,6 +281,7 @@ func reveal() -> void:
 func _process(delta: float) -> void:
 	elapsed += minf(delta,.1)
 	_entry_time += delta
+	_update_entrance()
 	if speech.visible_characters >= 0:
 		_revealed += minf(delta,.25)*42
 		speech.visible_characters = int(_revealed)
@@ -304,6 +309,7 @@ func _input(event: InputEvent) -> void:
 
 func finish(next_service: String = "") -> void:
 	if not visible: return
+	RenderingServer.canvas_item_set_transform(get_canvas_item(), Transform2D.IDENTITY)
 	voice.stop()
 	hide()
 	set_process(false)

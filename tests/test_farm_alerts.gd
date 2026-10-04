@@ -27,7 +27,7 @@ func run() -> void:
 	game.hud.update_state(game.state)
 	await settle()
 	check(game.hud._barn_full_alert.visible, "filling the barn shows a persistent banner")
-	check(game.hud._barn_full_alert.get_theme_stylebox("panel").bg_color.r > .5, "full barn uses the red alert palette")
+	check(game.hud._barn_full_alert.get_theme_stylebox("panel").texture.get_image().get_pixel(32, 32).r > .5, "full barn uses the red alert palette")
 	check(game.hud.root.get_global_rect().encloses(game.hud._barn_full_alert.get_global_rect()), "full-barn banner fits inside the viewport")
 	if game.touch_controls.enabled:
 		root.min_size = Vector2i.ZERO
@@ -50,8 +50,9 @@ func run() -> void:
 	game.hud.set_context("12 more beds · Unlock at Tools for \uE000 1.8K")
 	await settle()
 	check(game.hud._context_box.visible and game.hud._context_box.get_meta("warning", false), "locked-bed reminder stays visible on desktop and touch")
-	var skin: StyleBoxFlat = game.hud._context_box.get_theme_stylebox("panel")
-	check(skin.bg_color.r > skin.bg_color.g * 2, "locked-bed reminder uses red rather than farm green")
+	var skin: StyleBoxTexture = game.hud._context_box.get_theme_stylebox("panel")
+	var fill: Color = skin.texture.get_image().get_pixel(32, 32)
+	check(fill.r > fill.g * 2, "locked-bed reminder uses red rather than farm green")
 	check(game.hud.root.get_global_rect().encloses(game.hud._context_box.get_global_rect()), "warning reminder stays inside the viewport")
 	game.hud.show_panel("duck_patrol",game.state)
 	await settle()

@@ -18,15 +18,11 @@ func _ready() -> void:
 	panel.offset_right = 350
 	panel.offset_top = -165
 	panel.offset_bottom = 165
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("172c38")
-	style.border_color = Color("dda965")
-	style.border_width_left = 7
+	var style := preload("res://scripts/cozy_ui.gd").paper(Color("17382d"), 24, 5, Color("dda965"))
 	style.content_margin_left = 32
 	style.content_margin_right = 32
 	style.content_margin_top = 24
 	style.content_margin_bottom = 24
-	style.set_corner_radius_all(5)
 	panel.add_theme_stylebox_override("panel", style)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 13)
@@ -59,7 +55,7 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	panel.offset_right = 220
 	panel.offset_top = 108
 	panel.offset_bottom = 190
-	var style: StyleBoxFlat = panel.get_theme_stylebox("panel")
+	var style: StyleBox = panel.get_theme_stylebox("panel")
 	style.content_margin_top = 10
 	style.content_margin_bottom = 10
 	style.content_margin_left = 16

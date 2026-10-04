@@ -160,8 +160,8 @@ func scene_checks() -> void:
 	game._on_action("accounts")
 	check(game.state.accounts_open, "reopening accounts pauses again")
 	for button in game.hud._modal_trade_footer.find_children("*", "Button", true, false):
-		if button.text == "Return to farm": button.pressed.emit()
-	check(not game.state.accounts_open and not game.hud.is_panel_open(), "Return to farm button resumes Winter without skipping it")
+		if button.text == "Walk out to the field": button.pressed.emit()
+	check(not game.state.accounts_open and not game.hud.is_panel_open(), "Walk out to the field resumes Winter without skipping it")
 	game.perform_plot(5, "hoe")
 	check(not game.world._ice_roots[5].visible, "clearing a bed removes its frost mesh")
 	if "--capture" in OS.get_cmdline_user_args():

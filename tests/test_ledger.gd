@@ -178,7 +178,7 @@ func ui_checks() -> void:
 	game.state.update(450)
 	await process_frame
 	check(game.hud._panel_kind == "accounts" and game.hud._refs.accounts_net.text.contains(game.state.format_number(game.state.ledger.fixed_cost_total())), "annual accounts show the year net")
-	check((game.hud._modal.get_child(0) as ColorRect).color.a == 1 and game.hud._modal.modulate.a == 1, "opaque paper hides all HUD chrome without a fade")
+	check((game.hud._modal.get_child(0) as ColorRect).color.a < 1 and game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS, "accounts keep the farm rendering behind a translucent shade")
 	for category in Ledger.CATEGORIES:
 		check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == Ledger.LABELS[category]), "accounts include " + category)
 	game.touch_controls._process(0.1)
@@ -216,7 +216,7 @@ func ui_checks() -> void:
 		game.state.update(150)
 	check(game.hud._panel_kind == "run_summary" and not game.hud._run_end.visible, "successful tenth Winter ends at the summary")
 	game._on_action("run_summary")
-	check(game.hud._modal_title.text == "Ten years on the farm" and game.hud._modal_trade_footer.find_children("*", "Button", true, false).any(func(button): return button.text == "New Run"), "ten-year summary offers New Run")
+	check(game.hud._modal_title.text == "Ten years on the farm" and game.hud._modal_trade_footer.find_children("*", "Button", true, false).any(func(button): return button.text == "Plant a new farm"), "ten-year summary offers Plant a new farm")
 	if "--capture" in OS.get_cmdline_user_args(): await capture("ten-years")
 	game._on_action("reset")
 	check(game.state.coins == 80000 and game.state.ledger.entries.is_empty() and not game.state.run_over and game.state.season_clock.year == 1, "New Run resets the journal and calendar")

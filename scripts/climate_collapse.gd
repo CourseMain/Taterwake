@@ -4,6 +4,7 @@ signal restart_requested
 signal debug_requested
 const Climate = preload("res://scripts/climate_system.gd")
 const Type = preload("res://scripts/ui_type.gd")
+const Cozy = preload("res://scripts/cozy_ui.gd")
 const INK := Color("17382d")
 const MUTED := Color("667569")
 const DEBT := Color("a63529")
@@ -30,9 +31,9 @@ func _init() -> void:
 	z_index = 200
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var background := ColorRect.new()
+	var background := Panel.new()
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	background.color = Color("fffbed")
+	background.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 0, 0, Cozy.WOOD))
 	add_child(background)
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var margin := MarginContainer.new()
@@ -102,7 +103,10 @@ func _init() -> void:
 	_final_rows = VBoxContainer.new()
 	_final_rows.name = "FinalLedgerRows"
 	_final_rows.add_theme_constant_override("separation", 2)
-	_ledger.add_child(_final_rows)
+	var ledger_leaf := PanelContainer.new()
+	ledger_leaf.add_theme_stylebox_override("panel", Cozy.paper(Cozy.CREAM, 16, 4))
+	_ledger.add_child(ledger_leaf)
+	ledger_leaf.add_child(_final_rows)
 	_ledger.add_child(rule())
 	_ledger.add_child(label("BEYOND THIS FARM", 12, Color("896221")))
 	var education := label(Climate.EDUCATION, 18, INK)
@@ -147,7 +151,7 @@ func label(text: String, pixels: int, color: Color, display: bool = false) -> La
 	result.text = text
 	result.add_theme_font_override("font", _display if display else _font)
 	result.add_theme_font_size_override("font_size", pixels)
-	result.add_theme_color_override("font_color", color)
+	result.add_theme_color_override("font_color", color.lightened(.65) if color.get_luminance() < .62 else color)
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return result
 

@@ -9,6 +9,7 @@ func check(ok: bool, words: String) -> void:
 	if not ok: failures += 1; push_error("FAIL: " + words)
 func settle() -> void:
 	for frame in range(12): await process_frame
+	while is_instance_valid(game) and game.hud.accounts_building: await process_frame
 	if is_instance_valid(game): game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return

@@ -79,6 +79,7 @@ const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
 const TOOL_AREAS: Dictionary = {"hoe": ["1 tile", "3 tiles", "3 × 3 tiles", "5 × 5 tiles"], "water": ["1 tile", "3 × 3 tiles", "5 × 5 tiles", "7 × 7 tiles"], "harvest": ["1 tile", "one full row", "three full rows", "five full rows"]}
 const PURCHASE_SECONDS: float = 3.2
 const ACCOUNTS_ENTRANCE_SECONDS: float = 0.6
+const PANEL_ENTRANCE_SECONDS: float = 0.42
 
 var _conversation: Control
 var root: Control
@@ -185,6 +186,8 @@ var _modal_entrance_shield: Control
 var _entrance_elapsed: float = ACCOUNTS_ENTRANCE_SECONDS
 var _entrance_duration: float = ACCOUNTS_ENTRANCE_SECONDS
 var _entrance_origin := Vector2.ZERO
+var _panel_source: String = ""
+var _panel_source_tick: int = 0
 var _entrance_offset := Vector2.ZERO
 var _entrance_request: int = 0
 var _hurry_badge: PanelContainer
@@ -194,6 +197,7 @@ var _weather_button: Button
 var _climate_alert: Control
 var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
+var _panel_hidden: Array[CanvasItem] = []
 var _season_strip: Control
 var _season_jobs: PanelContainer
 var last_screenshot_path: String = ""
@@ -218,7 +222,22 @@ func _process(delta: float) -> void:
 	if not _tutorial.is_empty():
 		_apply_tutorial_visibility()
 		_update_tutorial_pointer()
+		_sync_panel_chrome()
 		return
+	_sync_panel_chrome()
+
+func _sync_panel_chrome() -> void:
+	if not is_panel_open():
+		for child in _panel_hidden:
+			if is_instance_valid(child): child.show()
+		_panel_hidden.clear()
+		return
+	for child in root.get_children():
+		if not child is CanvasItem or child in [_modal, _run_end, _climate_effect, _tutorial_pointer, _purchase_box, _toast_box, _reward_box]: continue
+		if child == _tutorial_card or (child is Control and child.is_ancestor_of(_tutorial_card)): continue
+		if child.visible:
+			if child not in _panel_hidden: _panel_hidden.append(child)
+			child.hide()
 
 func _refresh_seed_visibility() -> void:
 	var showing: bool = _selected_tool == "plant" and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
@@ -301,6 +320,13 @@ func _update_weather_ui() -> void:
 	_climate_effect.set_weather(climate, bool(_state.run_over) or (not _tutorial.is_empty() and not _state.guided_first_year()))
 	_weather_button.visible = _tutorial.is_empty() and not is_panel_open() and not _state.run_over
 	_weather_button.text = "Weather & protection →" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
+	var game = get_parent()
+	if game.has_method("title_active") and game.title_active():
+		_run_end.hide()
+		if game.title_scene.confirming:
+			_modal.z_index = 210
+			_modal.show()
+		return
 	if _state.run_outcome == "foreclosed":
 		var debug_open: bool = is_panel_open() and _panel_kind in ["debug", "measurement"]
 		_modal.z_index = 210 if debug_open else 0
@@ -637,7 +663,7 @@ func _hbox(gap: int = 10) -> BoxContainer:
 
 func _card(color: Color = CREAM, padding: int = 16) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(Color("fffdf4") if color == PAPER else color, padding, 17, Color("d9decd") if color == PAPER else Color.TRANSPARENT))
+	panel.add_theme_stylebox_override("panel", Cozy.paper(color, padding, 6, color.darkened(.20)))
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	return panel
 
@@ -732,7 +758,7 @@ func _act(action: String) -> void:
 				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
-	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset", "measurement", "measurement_copy"] if _state.run_outcome == "completed" else ["reset", "debug", "close", "measurement", "measurement_copy"]) and not action.begins_with("debug"):
+	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset", "measurement", "measurement_copy"] if _state.run_outcome == "completed" else ["reset", "debug", "close", "cancel_reset", "measurement", "measurement_copy"]) and not action.begins_with("debug"):
 		return
 	if not _tutorial_allows(action):
 		show_tutorial_feedback("This action waits until later. Skip the guided year to farm freely.")
@@ -1042,7 +1068,7 @@ func _build_footer() -> void:
 	_quick_sell.custom_minimum_size.y = 46
 	sell_box.add_child(_quick_sell)
 	_context_box = _card(Color(0.09, 0.20, 0.16, 0.93), 6)
-	var hint_skin: StyleBoxFlat = _context_box.get_theme_stylebox("panel")
+	var hint_skin: StyleBox = _context_box.get_theme_stylebox("panel")
 	hint_skin.content_margin_top = 2
 	hint_skin.content_margin_bottom = 2
 	root.add_child(_context_box)
@@ -1075,11 +1101,7 @@ func _build_notices() -> void:
 	root.add_child(_barn_full_alert)
 	_barn_full_alert.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_barn_full_alert.z_index = 15
-	var alert_skin: StyleBoxFlat = _barn_full_alert.get_theme_stylebox("panel")
-	alert_skin.border_color = Color("ffd0a3")
-	alert_skin.set_border_width_all(2)
-	alert_skin.shadow_color = Color(0, 0, 0, .2)
-	alert_skin.shadow_size = 8
+	_barn_full_alert.add_theme_stylebox_override("panel", Cozy.paper(Color("a52f38"), 16, 6, Color("ffd0a3")))
 	var alert_row := _hbox(16)
 	_barn_full_alert.add_child(alert_row)
 	var alert_words := _vbox(3)
@@ -1183,7 +1205,7 @@ func _build_modal() -> void:
 	var titles: VBoxContainer = _vbox(3)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
-	_modal_title = _wrap("Welcome to Taterland", 34, INK, true)
+	_modal_title = _wrap("", 34, CREAM, true)
 	_modal_subtitle = _wrap("", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
@@ -1336,10 +1358,12 @@ func _update_context() -> void:
 	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
 	var warning: bool = _notice_is_warning(text)
-	var skin: StyleBoxFlat = _context_box.get_theme_stylebox("panel")
-	skin.bg_color = Color("a5343c") if warning else Color("333b40")
-	skin.border_color = Color("ffbd9e") if warning else Color("657079")
-	skin.set_border_width_all(1)
+	if not _context_box.has_meta("surface_warning") or _context_box.get_meta("surface_warning") != warning:
+		var skin: StyleBoxTexture = Cozy.paper(Color("a5343c") if warning else INK, 6, 4, Color("ffbd9e") if warning else Color("657079"))
+		skin.content_margin_top = 2
+		skin.content_margin_bottom = 2
+		_context_box.add_theme_stylebox_override("panel", skin)
+		_context_box.set_meta("surface_warning", warning)
 	_context_box.set_meta("warning", warning)
 	_context_box.set_meta("grade", text.contains("Table") or text.contains("Standard") or text.contains("Feed"))
 	_context.text = text
@@ -1396,8 +1420,7 @@ func show_toast(text: String) -> void:
 	if not is_instance_valid(root):
 		build_ui()
 	_toast_label.text = text
-	var skin: StyleBoxFlat = _toast_box.get_theme_stylebox("panel")
-	skin.bg_color = Color("a5343c") if _notice_is_warning(text) else INK
+	_toast_box.add_theme_stylebox_override("panel", Cozy.paper(Color("a5343c") if _notice_is_warning(text) else INK, 10, 6))
 	_toast_layout_key = ""
 	_layout_toast()
 	_toast_box.show()
@@ -1414,7 +1437,7 @@ func _layout_toast() -> void:
 	var width: float = 700 if in_menu else (302 if weather_on_right else 326)
 	_toast_label.max_lines_visible = (1 if compact else 2) if in_menu else 3
 	_toast_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	var toast_style: StyleBoxFlat = _toast_box.get_theme_stylebox("panel")
+	var toast_style: StyleBox = _toast_box.get_theme_stylebox("panel")
 	toast_style.content_margin_top = 4 if compact else 8
 	toast_style.content_margin_bottom = 4 if compact else 8
 	_toast_label.size.x = width - 20
@@ -1518,6 +1541,7 @@ func close_panel() -> void:
 	if is_instance_valid(_modal):
 		_modal.hide()
 	_panel_kind = ""
+	_sync_panel_chrome()
 	_refresh_seed_visibility()
 	_reset_pending = false
 	_apply_tutorial_visibility()
@@ -1540,7 +1564,7 @@ func show_panel(kind: String, state: Node) -> void:
 	_panel_kind = kind
 	_body.add_theme_constant_override("separation", 6 if kind == "accounts" else 10)
 	var paper: bool = kind in ["accounts", "run_summary"]
-	(_modal.get_child(0) as ColorRect).color = CREAM if paper else Color(0.06, 0.13, 0.10, 0.58)
+	(_modal.get_child(0) as ColorRect).color = Color(0.06, 0.13, 0.10, 0.28)
 	_modal.z_index = 150 if paper else 0
 	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
 	_modal_card.offset_left = -376
@@ -1552,11 +1576,11 @@ func show_panel(kind: String, state: Node) -> void:
 		_modal_card.offset_right = 500
 		_modal_card.offset_top = -380
 		_modal_card.offset_bottom = 380
-	_modal_title.add_theme_color_override("font_color", INK)
+	_modal_title.add_theme_color_override("font_color", CREAM)
 	_modal_title.add_theme_font_override("font", _card_heading_font)
 	_modal_title.add_theme_font_size_override("font_size", 28)
 	_modal_subtitle.add_theme_font_override("font", _plain_font)
-	_modal_subtitle.add_theme_color_override("font_color", MUTED)
+	_modal_subtitle.add_theme_color_override("font_color", Color("c5ccb7"))
 	_modal_title.visible = kind not in ["market", "sell_potatoes"]
 	_modal_subtitle.visible = kind not in ["market", "sell_potatoes"]
 	for child: Node in _modal_market_nav.get_children():
@@ -1619,6 +1643,7 @@ func _finish_panel_build(kind: String, opening: bool) -> void:
 	_polish_card_typography(_modal_market_nav)
 	if paper:
 		_paper_typography(_modal_card)
+	_surface_text(_modal_card)
 	var bottom_space := Control.new()
 	bottom_space.custom_minimum_size.y = 8
 	bottom_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1645,11 +1670,11 @@ func _finish_panel_build(kind: String, opening: bool) -> void:
 		# Refit this frame rather than waiting for the periodic touch update.
 		get_parent().touch_controls.fit_modal.call_deferred()
 	if opening:
-		if kind == "accounts":
-			_modal_motion.modulate.a = 0
-			(_modal.get_child(0) as CanvasItem).modulate.a = 0
-			_modal_entrance_shield.show()
+		_modal_motion.modulate.a = 0
+		(_modal.get_child(0) as CanvasItem).modulate.a = 0
+		_modal_entrance_shield.show()
 		_begin_panel_entrance.call_deferred(kind, _entrance_request)
+	_sync_panel_chrome()
 
 func _open_books(opening: bool, request: int) -> void:
 	accounts_building = true
@@ -1677,12 +1702,44 @@ func _accounts_frame(request: int) -> bool:
 
 func _begin_panel_entrance(kind: String, request: int) -> void:
 	if request != _entrance_request or not _modal.visible or kind != _panel_kind: return
-	if kind == "accounts":
-		_entrance_elapsed = 0
-		_entrance_duration = ACCOUNTS_ENTRANCE_SECONDS
-		_entrance_origin = ledger_screen_position() - _modal_card.get_global_rect().get_center()
-		_apply_panel_entrance()
+	_entrance_elapsed = 0
+	_entrance_duration = ACCOUNTS_ENTRANCE_SECONDS if kind == "accounts" else PANEL_ENTRANCE_SECONDS
+	_entrance_origin = panel_source_position(kind) - _modal_card.get_global_rect().get_center()
+	_apply_panel_entrance()
 	panel_opened.emit(kind)
+
+func set_panel_source(station: String) -> void:
+	_panel_source = station
+	_panel_source_tick = Time.get_ticks_msec()
+
+func panel_source_position(kind: String) -> Vector2:
+	if kind in ["accounts", "run_summary"]:
+		_panel_source = ""
+		return ledger_screen_position()
+	var places := {"market":"market", "sell_potatoes":"market", "barn":"barn", "inventory":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "loss_notices":"quests", "contracts":"contracts", "bank":"bank", "businesses":"barn", "duck_patrol":"activities", "activities":"activities"}
+	var station: String = _panel_source if not _panel_source.is_empty() and Time.get_ticks_msec() - _panel_source_tick < 1000 else str(places.get(kind, ""))
+	_panel_source = ""
+	var game = get_parent()
+	var world = game.get("world")
+	var farm_view = game.get("farm_viewport")
+	if is_instance_valid(world) and is_instance_valid(world.camera) and is_instance_valid(farm_view):
+		var point: Vector3 = world.station_position(station) + Vector3(0, 1.8, 0) if not station.is_empty() else world.player.position + Vector3(0, 1.8, 0)
+		return world.camera.unproject_position(point) * root.size / Vector2(farm_view.size).max(Vector2.ONE)
+	return root.size * Vector2(.5, .8)
+
+func _surface_text(node: Node, fill: Color = INK) -> void:
+	# Text follows the actual material underneath it, including optional cards.
+	if node is Control:
+		var surface: String = "normal" if node is BaseButton or node is Label else "panel"
+		if node.has_theme_stylebox_override(surface):
+			var skin: StyleBox = node.get_theme_stylebox(surface)
+			var local_fill: Color = skin.bg_color if skin is StyleBoxFlat else skin.get_meta("surface_fill", Color.TRANSPARENT)
+			fill = fill.blend(local_fill)
+	if node is Label:
+		var ink: Color = node.get_theme_color("font_color")
+		if fill.get_luminance() < .35 and ink.get_luminance() < .62:
+			node.add_theme_color_override("font_color", CREAM if ink == INK else ink.lightened(.62))
+	for child in node.get_children(): _surface_text(child, fill)
 
 func ledger_screen_position() -> Vector2:
 	var game = get_parent()
@@ -1800,11 +1857,7 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 
 func _build_market(selling: bool = false) -> void:
 	_heading("Sell Potatoes" if selling else "Buy Seeds", "")
-	var style: StyleBoxFlat = Cozy.modal()
-	style.bg_color = Color("f7f4e6")
-	style.border_color = Color("d3dbbe")
-	style.set_corner_radius_all(28)
-	_modal_card.add_theme_stylebox_override("panel", style)
+	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
 	var page = MarketPages.new()
 	_body.add_child(page)
 	_refs.market_page = page
@@ -1845,7 +1898,7 @@ func _style_choice(choice: OptionButton) -> void:
 	choice.add_theme_color_override("font_disabled_color", MUTED)
 	choice.add_theme_stylebox_override("focus", _style(Color.TRANSPARENT, 10, 10, GOLD))
 	var popup := choice.get_popup()
-	popup.add_theme_stylebox_override("panel", _style(CREAM, 8, 10, Color("b7c8af")))
+	popup.add_theme_stylebox_override("panel", Cozy.paper(CREAM, 8, 6, Color("b7c8af")))
 	popup.add_theme_stylebox_override("hover", _style(Color("dcebd7"), 6, 6))
 	popup.add_theme_font_override("font", _plain_font)
 	popup.add_theme_font_size_override("font_size", 14)
@@ -1917,7 +1970,17 @@ func _account_row(parent: Node, title: String, value: String) -> Label:
 	var row := preload("res://scripts/ledger_row.gd").new()
 	parent.add_child(row)
 	row.setup(self, title, value)
+	if not parent.get_meta("ledger_leaf", false): row.add_theme_stylebox_override("panel", Cozy.paper(CREAM, 5, 1))
 	return row.amount
+
+func _ledger_leaf(parent: Control, contents: VBoxContainer) -> void:
+	var leaf := PanelContainer.new()
+	leaf.name = "LedgerLeaf"
+	leaf.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	leaf.add_theme_stylebox_override("panel", Cozy.paper(CREAM, 12, 3, Cozy.WOOD))
+	contents.set_meta("ledger_leaf", true)
+	parent.add_child(leaf)
+	leaf.add_child(contents)
 
 func ledger_row_font() -> Font:
 	return _ledger_font
@@ -1972,7 +2035,7 @@ func _paper_page() -> void:
 	_modal_card.offset_right = 550
 	_modal_card.offset_top = -370
 	_modal_card.offset_bottom = 370
-	_modal_card.add_theme_stylebox_override("panel", _style(CREAM, 24, 8))
+	_modal_card.add_theme_stylebox_override("panel", Cozy.paper(INK, 24, 5, Cozy.WOOD))
 
 func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_paper_page()
@@ -1986,6 +2049,9 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	stamp.add_theme_stylebox_override("normal", stamp_ink)
 	stamp.add_theme_color_override("font_color", CHERRY)
 	var filing := HBoxContainer.new(); filing.add_theme_constant_override("separation", 12)
+	var book: Control = _icon({"kind": "place", "id": "ledger"}, 66)
+	book.name = "LedgerDrawing"
+	filing.add_child(book)
 	filing.add_child(stamp)
 	var spacer := Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; filing.add_child(spacer)
 	var portrait := preload("res://scripts/npc_portrait.gd").new()
@@ -2004,7 +2070,7 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_body.add_child(columns)
 	var categories := _vbox(2)
 	categories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns.add_child(categories)
+	_ledger_leaf(columns, categories)
 	categories.add_child(_label("THIS YEAR", 13, MUTED, true))
 	for category in _state.Ledger.CATEGORIES:
 		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
@@ -2013,7 +2079,7 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	var years := _vbox(2)
 	years.custom_minimum_size.x = 245
 	years.size_flags_horizontal = Control.SIZE_FILL
-	columns.add_child(years)
+	_ledger_leaf(columns, years)
 	years.add_child(_label("TEN-YEAR RECORD", 13, MUTED, true))
 	for year in range(1, 11):
 		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "")
@@ -2049,7 +2115,7 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_build_loss_cards(_body, clock.year)
 	if staged and not await _accounts_frame(request): return
 	_ledger_actions()
-	var resume: Button = _button("Ten-year summary", "run_summary", true) if _state.run_outcome == "completed" else _button("Return to farm", "close", true)
+	var resume: Button = _button("Read ten years", "run_summary", true) if _state.run_outcome == "completed" else _button("Walk out to the field", "close", true)
 	resume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_refs.ledger_actions.add_child(resume)
 	_modal_trade_footer.show()
@@ -2076,6 +2142,7 @@ func _refresh_accounts() -> void:
 	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit())]
 	_refs.accounts_loan.text = "Loan remaining " + _state.money(_state.ledger.loan_remaining())
 	_refs.accounts_loan.visible = _state.ledger.loan_remaining() > 0
+	_surface_text(_modal_card)
 
 func _build_run_summary() -> void:
 	_paper_page()
@@ -2100,7 +2167,7 @@ func _build_run_summary() -> void:
 	_account_row(_body, "Final purse", _state.money(_state.coins))
 	_account_row(_body, "Loan remaining", _state.money(_state.ledger.loan_remaining()))
 	_body.add_child(_wrap("The books close here. Your choices carry on for forty more years, under a sky that keeps changing.", 24, MUTED, true))
-	for entry in [["Fifty years on", "epilogue"], ["New Run", "reset"], ["Year 10 accounts", "accounts"]]:
+	for entry in [["Fifty years on", "epilogue"], ["Plant a new farm", "reset"], ["Year 10 accounts", "accounts"]]:
 		var button := _button(entry[0], entry[1], entry[1] == "epilogue")
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_refs.ledger_actions.add_child(button)
@@ -2444,10 +2511,7 @@ func _build_duck_patrol() -> void:
 	_heading("Duck patrol", "")
 	_modal_card.offset_top = -380
 	_modal_card.offset_bottom = 380
-	var modal_skin: StyleBoxFlat = Cozy.modal()
-	modal_skin.bg_color = Color("fff9eb")
-	modal_skin.border_color = Color("eacb85")
-	_modal_card.add_theme_stylebox_override("panel", modal_skin)
+	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
 	var hero_card := _card(Color("edf7f1"), 14)
 	_body.add_child(hero_card)
 	var hero: VBoxContainer = _vbox(7)
@@ -2466,7 +2530,7 @@ func _build_duck_patrol() -> void:
 	_offer("Add a duck", "", "Hire a duck", "activity:duck", true)
 	_offer("Patrol speed", "", "Train ducks", "activity:duck:speed", true)
 	for action: String in ["activity:duck", "activity:duck:speed"]:
-		var skin: StyleBoxFlat = Cozy.box(Color("fff0bf") if action == "activity:duck" else Color("e8f2fa"), 14, 20, Color("e1ce98") if action == "activity:duck" else Color("a7cbd6"))
+		var skin: StyleBoxTexture = Cozy.paper(CREAM, 14, 6, Color("c9bea0"))
 		_refs[action + ":card"].add_theme_stylebox_override("panel", skin)
 		_refs[action + ":value"].add_theme_color_override("font_color", Color("435c6b"))
 	_refresh_duck_patrol()
@@ -2551,7 +2615,7 @@ func _build_measurement() -> void:
 	_body.add_child(_button("Copy", "measurement_copy", true))
 	_refs.measurement_copy_status = _wrap("", 14, GREEN)
 	_body.add_child(_refs.measurement_copy_status)
-	_body.add_child(_button("Return to farm", "close"))
+	_body.add_child(_button("Walk out to the field", "close"))
 
 func _build_debug() -> void:
 	_build_measure_controls()

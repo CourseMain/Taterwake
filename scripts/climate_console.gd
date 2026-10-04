@@ -26,14 +26,11 @@ func _ready() -> void:
 	offset_left = -314
 	offset_right = -22
 	offset_top = 112
-	var skin := _skin(Color("193c33"), Color("6f9d83"), 14)
+	var skin := preload("res://scripts/cozy_ui.gd").paper(Color("17382d"), 14, 4, Color("79553d"))
 	skin.content_margin_left = 14
 	skin.content_margin_right = 14
 	skin.content_margin_top = 12
 	skin.content_margin_bottom = 12
-	skin.shadow_color = Color(0.02, 0.10, 0.06, 0.24)
-	skin.shadow_size = 10
-	skin.shadow_offset = Vector2(0, 4)
 	add_theme_stylebox_override("panel", skin)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)

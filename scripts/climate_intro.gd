@@ -1,6 +1,7 @@
 extends "res://scripts/chapter_subtitles.gd"
 ## Annual front page, reusing the former intro's subtitle, timed reveal and skip.
 const Strip = preload("res://scripts/climate_strip.gd")
+const Cozy = preload("res://scripts/cozy_ui.gd")
 const FADE_SECONDS: float = 0.6
 const HEADLINES: Array[String] = ["A farm under an uncertain sky", "The old seasons start to shift", "Rain arrives at the wrong time", "The safe seasons grow shorter", "Another year of harder choices", "Even quiet summers leave the grass dry", "The weather takes a larger share", "Familiar seasons, unfamiliar losses", "Little room left for a bad harvest", "Ten years beneath a changing sky"]
 var forecaster: Label
@@ -10,14 +11,16 @@ var subtitle: Label
 var strip: Control
 var accounts_box: PanelContainer
 var last_net: Label
+var source_offset := Vector2.ZERO
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 150
 	var page := PanelContainer.new()
 	add_child(page); page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new(); style.bg_color = Color("f5ecd6")
-	for side in [SIDE_LEFT, SIDE_RIGHT, SIDE_TOP, SIDE_BOTTOM]: style.set_content_margin(side, 22)
+	page.offset_left = 24; page.offset_right = -24
+	page.offset_top = 24; page.offset_bottom = -24
+	var style := Cozy.paper(Cozy.INK, 22, 4, Cozy.WOOD)
 	page.add_theme_stylebox_override("panel", style)
 	var scroll := ScrollContainer.new(); scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	page.add_child(scroll)
@@ -61,8 +64,11 @@ func _ready() -> void:
 	accounts_box.add_theme_stylebox_override("panel", preload("res://scripts/place_ui.gd").skin())
 	weather.add_child(accounts_box)
 	var accounts := VBoxContainer.new(); accounts_box.add_child(accounts)
-	accounts.add_child(label("ACCOUNTS · LAST YEAR", 14))
+	var caption: Label = label("ACCOUNTS · LAST YEAR", 14)
+	caption.add_theme_color_override("font_color", Cozy.INK)
+	accounts.add_child(caption)
 	last_net = label("", 24); accounts.add_child(last_net)
+	last_net.add_theme_color_override("font_color", Cozy.INK)
 	resized.connect(func():
 		if not is_inside_tree(): return
 		news.vertical = size.x < 760
@@ -95,11 +101,13 @@ func label(words: String, pixels: int) -> Label:
 	face.fallbacks = [Type.SPUDION]
 	result.add_theme_font_override("font", face)
 	result.set_meta("base_font_size", pixels)
-	result.add_theme_font_size_override("font_size", pixels); result.add_theme_color_override("font_color", Color("3f392b"))
+	result.add_theme_font_size_override("font_size", pixels); result.add_theme_color_override("font_color", Cozy.CREAM)
 	return result
 func present(farm) -> void:
 	elapsed = 0
 	modulate.a = 0
+	var game = get_parent().get_parent()
+	source_offset = game.hud.panel_source_position("climate") - size * .5
 	var year: int = farm.season_clock.year
 	chapter.text = "YEAR %d\n%s" % [year, HEADLINES[year - 1]]
 	subtitle.text = "Mean severity %d%% · three disasters per year at most" % roundi(farm.ClimateSystem.severity_mean(year) * 100)
@@ -111,19 +119,26 @@ func present(farm) -> void:
 	accounts_box.visible = year > 1 and farm.ledger.is_closed(year - 1)
 	last_net.text = farm.money(farm.ledger.total(year - 1))
 	super.start(chapter.text)
+	_update_presentation()
 	voice.begin_line("iris", forecaster.text.length())
 func stop() -> void:
 	if is_instance_valid(voice): voice.stop()
 	if is_instance_valid(portrait): portrait.hide()
 	super.stop()
 	modulate.a = 1
+	RenderingServer.canvas_item_set_transform(get_canvas_item(), Transform2D.IDENTITY)
 
 func finish() -> void:
 	stop(); finished.emit()
 func _process(delta: float) -> void:
 	_tick(delta)
 	if is_instance_valid(portrait.avatar): portrait.avatar.speaking = voice.player.playing
-	modulate.a = front_page_progress()
+	_update_presentation()
+
+func _update_presentation() -> void:
+	var progress: float = front_page_progress()
+	modulate.a = progress
+	RenderingServer.canvas_item_set_transform(get_canvas_item(), Transform2D(0, source_offset * pow(1 - progress, 3)))
 
 func front_page_progress() -> float:
 	return clampf(elapsed / FADE_SECONDS, 0, 1)
