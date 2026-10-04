@@ -46,7 +46,7 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO; root.size = Vector2i(390, 844)
 	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets()
 	await settle()
-	for kind in ["market", "sell_potatoes", "barn", "tools", "quests", "contracts", "climate", "accounts", "pause"]:
+	for kind in ["market", "sell_potatoes", "barn", "tools", "quests", "contracts", "climate", "accounts", "pause", "activities"]:
 		game.state.season_clock.season = 3 if kind in ["accounts", "climate"] else 0
 		game.hud.show_panel(kind, game.state); await settle(); game.touch_controls.fit_modal(); await settle()
 		check(game.hud._modal_card.get_theme_stylebox("panel") is StyleBoxTexture, kind + " frame uses the shared material")
@@ -62,6 +62,10 @@ func run() -> void:
 				check(found, crop + " seed packet has its own crop drawing")
 		elif kind == "barn": check(game.hud._body.find_child("BarnDrawing", true, false) != null, "barn tally has a recognisable barn drawing")
 		elif kind == "climate": check(game.hud._body.find_child("ForecastDrawing", true, false) != null, "forecast has its own weather drawing")
+		elif kind == "activities":
+			for words in ["Add a duck", "Patrol speed", "0 / 2 ducks", "Whole flock"]:
+				var labels: Array = game.hud._body.find_children("*", "Label", true, false).filter(func(label): return label.text == words)
+				check(labels.size() == 1 and labels[0].get_theme_color("font_color").get_luminance() > .7, "duck offer text reads on timber: " + words)
 		elif kind == "pause":
 			check(game.hud._modal_title.get_theme_color("font_color").get_luminance() > .7, "farm title stays light against its ink frame")
 			var menu_labels := 0

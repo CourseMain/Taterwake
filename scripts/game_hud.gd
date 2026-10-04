@@ -1737,7 +1737,7 @@ func _surface_text(node: Node, fill: Color = INK) -> void:
 			fill = fill.blend(local_fill)
 	if node is Label:
 		var ink: Color = node.get_theme_color("font_color")
-		if fill.get_luminance() < .35 and ink.get_luminance() < .62:
+		if fill.get_luminance() < .45 and ink.get_luminance() < .62:
 			node.add_theme_color_override("font_color", CREAM if ink == INK else ink.lightened(.62))
 	for child in node.get_children(): _surface_text(child, fill)
 
