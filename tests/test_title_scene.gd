@@ -20,13 +20,27 @@ func run() -> void:
 	await frames()
 	check(not game.title_active(), "integration fixtures keep direct farm access")
 	var before: Dictionary = game.state._save_data()
-	var camera: Transform3D = game.world.camera.transform
 	var label_visibility: Dictionary = {}
 	for label: Label3D in game.world.find_children("*", "Label3D", true, false): label_visibility[label] = label.visible
 	var background: int = game.world._day_environment.background_mode
 	var sky = game.world._day_environment.sky
 	game._show_title(false)
 	var title = game.title_scene
+	check(title.idle.actors.size() == 3 and title.idle.petals.size() == 6, "only Mara, Bram and the farmer idle beside six Spring title petals")
+	var mara_pose: Transform3D = title.idle.actors[0].rig
+	var poses: Array[Transform3D] = []
+	for record: Dictionary in title.idle.actors: poses.append(record.person._rig.transform)
+	title.elapsed = 1.0
+	title._process(0)
+	for i in range(3):
+		check(not title.idle.actors[i].person._rig.transform.is_equal_approx(poses[i]), "each gate character breathes on the title")
+		title.idle.advance(3.4 + i * .7 - .09)
+		check(title.idle.actors[i].person._eyes.all(func(eye): return eye.scale.y < .1), "each gate character blinks at its 3–5 second interval")
+	title.elapsed = 0.0
+	title.idle.advance(0)
+	var petal: Vector3 = title.idle.petals[0].position
+	title.idle.advance(1)
+	check(title.idle.petals[0].position != petal, "Spring petals drift without a collision or UI target")
 	check(title.walk is Button and title.resume is Button and not title.confirmation.visible, "title has its world action and a hidden title-owned confirmation")
 	check(title.walk.text == "Walk to the farm" and not title.resume.visible, "fresh title shows one action and no second line")
 	check(title.resume.disabled, "a missing save cannot be continued")
@@ -88,9 +102,11 @@ func run() -> void:
 				root.get_texture().get_image().save_png("res://artifacts/segment21c-title-%d-%ds.png" % [size.x,int(seconds)])
 	title.walk.pressed.emit()
 	check(game.title_active() and title.walking_in and not game.tutorial.active, "guide waits for the walk-in")
-	game._process(title.WALK_IN_SECONDS)
+	title.advance(title.WALK_IN_SECONDS)
 	check(not game.title_active() and game.tutorial.current_id() == "welcome", "walking into a fresh farm starts the existing guided year")
-	check(game.world.camera.transform.is_equal_approx(camera), "entry restores the player's normal farm camera")
+	check(is_equal_approx(game.world.camera.size, game.world.overview_size()), "fresh entry fits the overview to the current viewport")
+	check(title.idle.actors.is_empty() and title.idle.petals.is_empty(), "breathing overrides and petals stop at the title exit")
+	check(game.world._npc_actors.mara._rig.transform.is_equal_approx(mara_pose), "Mara returns to her original shop pose after the title")
 	var restored: bool = true
 	for label: Label3D in label_visibility:
 		if label.visible != bool(label_visibility[label]): restored = false
@@ -108,6 +124,7 @@ func run() -> void:
 	var saved_bytes := FileAccess.get_file_as_string(SAVE)
 	before = game.state._save_data()
 	game._show_title(true)
+	check(title.idle.petals.is_empty(), "Autumn title does not add Spring petals")
 	check(title.resume.visible and title.walk.text == "Continue · Year 3, Autumn" and title.resume.text == "Start a new farm", "Continue uses the loaded farm's own year and season")
 	title.resume.pressed.emit()
 	check(title.confirming and title.confirmation.visible and not game.hud._reset_pending and not game.hud.is_panel_open(), "starting over opens a title-owned confirmation without the pause reset flag")

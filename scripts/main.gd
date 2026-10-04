@@ -660,12 +660,12 @@ func _camera_zoom_max() -> float:
 func _reset_camera_zoom() -> void:
 	_zoom_target_size = clampf(world.camera.size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
-func _reset_camera_view() -> void:
+func _reset_camera_view(new_overview: bool = false) -> void:
 	_cancel_map_drag()
 	if is_instance_valid(touch_controls): touch_controls.release_all()
 	# Loading a save on the current island reuses its camera. Do not promote
 	# the player's current pan/zoom into the new default overview.
-	if _camera_home_id == world.camera.get_instance_id():
+	if not new_overview and _camera_home_id == world.camera.get_instance_id():
 		_recenter_camera()
 		world.camera.size = _camera_home_size
 		return

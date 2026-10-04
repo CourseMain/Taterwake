@@ -537,14 +537,19 @@ func _lighting() -> void:
 	camera = Camera3D.new()
 	camera.name = "DioramaCamera"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	add_child(camera)
+	fit_overview()
+	camera.current = true
+
+
+func fit_overview() -> void:
+	# Compute the overview from the current viewport, including first Web entry.
 	camera.size = overview_size()
 	camera.position = Vector3(14.0, 35.0, 43.0) * LAND_SPACING
-	add_child(camera)
 	camera.look_at(Vector3(-1.0, 0.3, -5.0))
 	# Orthographic scale is unchanged by backing away along the viewing axis.
 	# Keep even the lowest portrait ray above sea level.
 	camera.position += camera.basis.z * 190.0
-	camera.current = true
 	fit_camera_depth()
 
 

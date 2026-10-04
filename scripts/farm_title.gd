@@ -15,6 +15,9 @@ var walking_in := false
 var walk_elapsed := 0.0
 var entry_camera: Transform3D
 var entry_size := 0.0
+var walk_camera: Transform3D
+var walk_size := 0.0
+var idle: Node
 var confirmation_center: CenterContainer
 var confirmation: PanelContainer
 var confirmation_words: Label
@@ -45,6 +48,8 @@ func _ready() -> void:
 	)
 	resume.pressed.connect(_confirm_new_farm)
 	_build_confirmation()
+	idle = preload("res://scripts/title_idle.gd").new()
+	add_child(idle)
 	get_tree().root.size_changed.connect(_layout, CONNECT_DEFERRED)
 	root.hide()
 
@@ -100,6 +105,7 @@ func start(returning: bool) -> void:
 	walk.show()
 	walk.tooltip_text = ""
 	root.show()
+	idle.start(game.world, game.state.season_clock.season == 0)
 	_layout()
 	advance(0)
 	game.world.set_player_position(game.world.title_gate.global_position + Vector3(2.2, 0, 2.1))
@@ -125,6 +131,7 @@ func _process(_delta: float) -> void:
 	for entry: Dictionary in hidden_world_items:
 		if is_instance_valid(entry.node): entry.node.hide()
 	_light()
+	idle.advance(elapsed)
 
 func _light() -> void:
 	# Warm low sun and cool fill belong to this camera, never to farm history.
@@ -180,8 +187,8 @@ func advance(delta: float) -> void:
 	if walking_in:
 		walk_elapsed = minf(WALK_IN_SECONDS, walk_elapsed + maxf(0, delta))
 		var weight: float = smoothstep(0, WALK_IN_SECONDS, walk_elapsed)
-		game.world.camera.transform = entry_camera.interpolate_with(saved_camera, weight)
-		game.world.camera.size = lerpf(entry_size, saved_size, weight)
+		game.world.camera.transform = entry_camera.interpolate_with(walk_camera, weight)
+		game.world.camera.size = lerpf(entry_size, walk_size, weight)
 		game.world.fit_camera_depth()
 		if walk_elapsed >= WALK_IN_SECONDS: game._enter_title_farm(true)
 		return
@@ -256,6 +263,7 @@ func _replace_farm() -> void:
 	confirming = false
 	confirmation.hide()
 	game.state.reset_game()
+	has_saved_farm = false
 	game.epilogue_result.clear()
 	game.hud.close_panel()
 	game._on_state_changed()
@@ -271,6 +279,16 @@ func _walk_in() -> void:
 	walk_elapsed = 0.0
 	entry_camera = game.world.camera.transform
 	entry_size = game.world.camera.size
+	if not has_saved_farm:
+		game.world.fit_overview()
+		walk_camera = game.world.camera.transform
+		walk_size = game.world.camera.size
+		game.world.camera.transform = entry_camera
+		game.world.camera.size = entry_size
+		game.world.fit_camera_depth()
+	else:
+		walk_camera = saved_camera
+		walk_size = saved_size
 	walk.hide()
 	resume.hide()
 
@@ -280,9 +298,13 @@ func finish() -> void:
 	walking_in = false
 	confirming = false
 	root.hide()
+	idle.stop()
 	game.hud.close_panel()
-	game.world.camera.transform = saved_camera
-	game.world.camera.size = saved_size
+	if has_saved_farm:
+		game.world.camera.transform = saved_camera
+		game.world.camera.size = saved_size
+	else:
+		game.world.fit_overview()
 	game.world.set_player_position(saved_player_position)
 	for entry: Dictionary in hidden_world_items:
 		if is_instance_valid(entry.node): entry.node.visible = entry.visible
@@ -299,4 +321,5 @@ func finish() -> void:
 	game.hud.root.visible = saved_hud_visible
 	game.touch_controls.root.show()
 	game.touch_controls.release_all()
-	game._reset_camera_zoom()
+	if has_saved_farm: game._reset_camera_zoom()
+	else: game._reset_camera_view(true)

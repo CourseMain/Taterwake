@@ -8,7 +8,7 @@ const fs=require('node:fs');
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
  const results=[];
  try {
-  for(const [path,version,name] of [['','2.0.0','redesign'],['classic/','1.0.3.1','classic']]){
+  for(const [path,version,name] of [['','2.0.1','redesign'],['classic/','1.0.3.1','classic']]){
    const context=await browser.newContext({viewport:{width:1280,height:800}});
    const page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
