@@ -14,9 +14,9 @@ This is **v2.0.0 (underdevelopment: l)**, the surfaces-and-voice pass. The farm 
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — the published site still contains the previous game. To try this redesign, run or export the current source below.
 
-## Download the previous browser release
+## Download the development browser release
 
-For a local copy of v1.0.3.1, use **Taterland-Web.zip** from its [release](https://github.com/CourseMain/Taterwake/releases/tag/v1.0.3.1). To build the v2 development source, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+For this redesign, use **Taterland-Web.zip** from [underdevelopment l](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-l). The same release includes **Taterland-Phone-Test.zip** and the screenshot/test review bundle. To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 

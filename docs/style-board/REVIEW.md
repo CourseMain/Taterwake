@@ -42,6 +42,6 @@ The material rule is expressed through several distinct forms: seed packets on a
 | Shared material structure | Runtime audit: 24 modal kinds, at most two cream layers, no large flat panel backgrounds. |
 | Short everyday voice | [Twenty edits](VOICE.md), 435 words reduced to 217; seven focused suites passed. |
 | Motion from the place, with the farm alive behind it | Focused panel-motion suite passed 133 checks at desktop and phone sizes, including projected building origins, bounded entrance timing, input protection and a live farm during conversations while the farm calendar stays paused. |
-| Full suite and standalone epilogue / tuning bot | Release validation is running. The final result belongs in DEVELOPMENT.md before tagging. |
+| Full suite and standalone epilogue / tuning bot | **96/96 suites PASS**; standalone epilogue **534** and tuning bot **1,679** checks pass. Exact boot **45** checks passes. Zero failures, errors or skipped tests; final results are recorded in [DEVELOPMENT.md](../DEVELOPMENT.md). |
 | Physical-phone year measurement | Awaiting owner measurement using Debug → Measure a year, as recorded in DEVELOPMENT.md. Browser emulation supplies no physical-phone performance result. |
 | Segment 22 stranger playtests | Not started in this segment. Three new players' quit-risk notes and replay acceptance remain human work. |

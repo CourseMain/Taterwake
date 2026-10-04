@@ -1062,7 +1062,7 @@ Phones now default to 2048 shadows, with the existing soft filter retained and 4
 
 To measure on a real phone:
 
-1. Download the tag-k **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-k/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-k/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
+1. Download the tag-l **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-l/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-l/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
 2. Put the phone on the same Wi-Fi and open `https://<computer Wi-Fi IP>:8080/index.html`. Godot 4.7.2 requires HTTPS away from localhost. The server uses OpenSSL to create a temporary local certificate; accept its browser prompt through Advanced / Continue for this local preview. The temporary key is outside the served folder and is removed when the server stops. On macOS, find the address in System Settings → Wi-Fi → Details → TCP/IP.
 3. Finish the guided year. At the next Spring, choose Graphics → Balanced and 2048, then farm menu → Debug → **Measure a year**. No debug code or test funding is needed.
 4. Play through Spring, Summer, Autumn and Winter, including rain when it occurs; close Winter accounts. Copy the result card and paste its complete text into this row. If Copy is unavailable in the browser, select the report text. Do not describe desktop emulation as a real-phone result.
@@ -1088,16 +1088,20 @@ Both tag-k Web exports succeed from the committed source: the standard PWA build
 
 `GameHUD` projects the tapped building into UI coordinates, then eases the page from that point over **0.42 seconds**. Accounts retain their **0.6-second** slide from Nell’s actual ledger book and gentle camera push. A temporary shield protects moving controls until they settle, and closing/replacing a page invalidates pending entrances. Ledger openings consume their pending building source so it cannot leak into the next forecast. Keeper conversations use their building origin; the year-start page uses the station. HUD chrome tucks away behind open panels while the farm viewport keeps rendering and world animation continues. Accounts and conversations still pause the simulation clocks. No crop rate, bill, saved schema, economic rule or balance constant changes in this segment.
 
-Focused validation: seven tutorial/NPC suites pass **572 checks**; `test_panel_motion.gd` passes **133 checks** at desktop and phone sizes. A runtime audit of 24 modal types found at most two cream layers and no large flat panel backgrounds. The native responsive capture run reported **410 checks, zero failures/errors**. [REVIEW.md](style-board/REVIEW.md) records the screen-by-screen review, known superseded captures and pending exact browser comparisons. These checks do not replace the required full release run.
+Focused validation: seven tutorial/NPC suites pass **572 checks**; `test_panel_motion.gd` passes **133 checks** at desktop and phone sizes. A runtime audit of 24 modal types found at most two cream layers and no large flat panel backgrounds. The native responsive capture run reported **410 checks, zero failures/errors**. [REVIEW.md](style-board/REVIEW.md) records the final review of twenty browser pages, including scrolling endings. [COMPARISON.md](style-board/COMPARISON.md) contains the four required before/after pairs, all unedited 390×844 captures. The final audit covers 24 panel kinds, with at most two cream layers and no large flat panel backgrounds.
 
 | Tag-l release check | Result |
 | --- | --- |
-| Full `tools/run_tests.sh --timeout 1500` | Pending final committed-source run. |
-| Standalone `test_epilogue` with `--timeout 1500` | Pending. |
-| Standalone `test_tuning_bot` with `--timeout 1500` | Pending. |
-| Exact 390×844 title, accounts, crop card and forecast before/after | Before pinned; final browser comparison pending. |
-| Web export and phone-resolution load | Pending final export. |
+| Full `tools/run_tests.sh -j 4 --timeout 1500` | **96 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. |
+| Standalone `test_epilogue` with `--timeout 1500` | **534 checks, 0 failures**. |
+| Standalone `test_tuning_bot` with `--timeout 1500` | **1,679 checks, 0 failures**. |
+| Exact 390×844 title, accounts, crop card and forecast before/after | Captured and reviewed; four before images and 24 final images, including the title pullback and lower ledger pages. |
+| Web export and phone-resolution load | Standard Web and phone-test ZIPs export and load at 390×844; zero browser errors, no QA bridges. Local Wi-Fi HTTPS load also passes. |
 | Real-phone year measured | **Awaiting owner measurement**; the tag-k recorder and exact owner procedure above remain available. |
+
+Final tag-l validation uses the clean committed runtime at `4ae84f8`, preserving the owner's local editor settings separately. The exact headless boot passes **45 checks**. New title, material and motion suites pass **52 / 53 / 133 checks**. Full results are in the review ZIP (`l-full-suite.log`, `full-suite/results.json` and individual logs), with separate epilogue and tuning logs. The bot still gives expander **29/30** survival and maximum ending cash **215,971**. No tests are skipped or disabled. Old opaque-ledger assertions now require ink frames over a live farm; pointer tests wait for the entrance; the intentionally frozen HUD fixture advances its live weather layout before checking clearance. The title fixture stops its final voice and lets the mixer drain before exit.
+
+The final browser review also corrected white text on cream menu buttons, muted duck-offer text on timber, missing arrow/level glyphs and the annual newspaper's first phone layout. The twenty-page screenshot set is a browser-emulated visual check, not a physical-phone performance measurement. Published `docs/index.*` and `web/` remain untouched; ledger labels and economic rules have no diff.
 
 Segment 22's three fresh-player reports remain pending. Its baseline moves to tag l so testers encounter the finished surfaces; no Segment 22 mechanic is implemented here.
 
