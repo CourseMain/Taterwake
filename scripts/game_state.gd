@@ -458,7 +458,7 @@ func _season_boundary() -> void:
 		ClimateSystem.Protection.winter(self)
 		diversification.winter(self)
 		Land.renew(self)
-		ledger.post_fixed_costs(season_clock.year)
+		ledger.post_fixed_costs(season_clock.year, guided_first_year())
 		if coins < OVERDRAFT_LIMIT and not caretaker_mode: _end_run("foreclosed")
 		news = winter_notice()
 	else:

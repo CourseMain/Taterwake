@@ -37,4 +37,5 @@ func _layout() -> void:
 		if label.get_theme_font("font") != font: label.add_theme_font_override("font", font)
 		var pixels: int = 22 if phone else 15
 		if label.get_theme_font_size("font_size") != pixels: label.add_theme_font_size_override("font_size", pixels)
-		if label.autowrap_mode != TextServer.AUTOWRAP_OFF: label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		var wrap: int = TextServer.AUTOWRAP_WORD_SMART if label.get_meta("ledger_wrap", false) else TextServer.AUTOWRAP_OFF
+		if label.autowrap_mode != wrap: label.autowrap_mode = wrap

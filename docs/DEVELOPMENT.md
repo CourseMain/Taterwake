@@ -11,7 +11,7 @@
 
 ## Development release
 
-Current `redesign` work targets **v2.0.0 (underdevelopment: l)** for Segment 21c: the gate title, shared paper/wood/ink surfaces, object drawings, shorter village guidance and panels moving from their buildings. Release validation is pending in the Segment 21c section below. Tag k remains the preceding published baseline, with its full suite recorded separately. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+Current `redesign` work targets **v2.0.0 (underdevelopment: m)** for Segment 21b item 7a: the guided first year's fixed bills remain visible and Dad's last harvest covers their total. Tag l completed Segment 21c; its 96-suite result and screen review remain recorded below. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
@@ -1104,6 +1104,22 @@ Final tag-l validation uses the clean committed runtime at `4ae84f8`, preserving
 The final browser review also corrected white text on cream menu buttons, muted duck-offer text on timber, missing arrow/level glyphs and the annual newspaper's first phone layout. The twenty-page screenshot set is a browser-emulated visual check, not a physical-phone performance measurement. Published `docs/index.*` and `web/` remain untouched; ledger labels and economic rules have no diff.
 
 Segment 22's three fresh-player reports remain pending. Its baseline moves to tag l so testers encounter the finished surfaces; no Segment 22 mechanic is implemented here.
+
+### Segment 21b · Guided first-year bills · tag m
+
+The plan branch's new item 7a is merged. The ordinary Winter settlement posts every existing fixed-cost entry, then one `other` credit labelled **Year one covered by the last harvest**, exactly `ledger.fixed_cost_total()` (104,000). Eligibility is the active, unfinished version-three first-year guide at settlement; skipping, optional tours, ordinary bot runs and later years receive none. The credit posts before the foreclosure check and boundary save. The existing closed-year guard prevents duplicate bills or credits. Existing labels, tuning parameters, save schema and mechanics revision stay unchanged; old settled farms are not retroactively credited.
+
+The annual accounts give the credit its own signed row and subtract it from the generic Other display so it is not counted twice. Its caption wraps on phones. Nell's exact line is visible on the same page and in her Winter greeting/advice: “Dad's last harvest paid this year. From now on it's yours.” The validator admits this new label only once, in closed Winter 1, in Other, with the exact fixed-cost amount. Purchases, storage fees, spoilage and principal repayment still work normally.
+
+Focused `tools/run_tests.sh` checks pass: tutorial state **47**, tutorial barn **62**, ledger **122** and save safety **28**, all with zero failures. These include starting cash plus starter-harvest sales, retained optional costs, skipped-guide/tour/year-two exclusions, save/load idempotence and malformed-credit rejection. Full release validation and exports are pending; the following row will be replaced with actual results before tagging.
+
+| Tag-m release check | Result |
+| --- | --- |
+| Full suite, standalone epilogue and tuning bot, exact boot | Pending. |
+| Web export and phone accounts view | Pending. |
+| Real-phone year measured | **Awaiting owner measurement**; use the existing recorder and procedure above. |
+
+Segment 21c's finished title, materials, illustrations, motion and screenshots remain in this build. Segment 22 mechanics remain unimplemented; three new-player baseline reports are still pending.
 
 ### Segment 22 · Step 0
 

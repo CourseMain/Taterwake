@@ -1,5 +1,6 @@
 extends RefCounted
 ## Dialogue is flavour and guidance. Choices never spend money or change odds.
+const GUIDED_CREDIT_LINE: String = "Dad's last harvest paid this year. From now on it's yours."
 const PEOPLE := {
 	"mara": {"name":"Mara", "role":"Seed seller", "service":"market", "service_label":"Browse seeds", "color":"769751", "skin":"dbab78", "shape":Vector3(1.0,1.0,1.0), "hat":"straw", "detail":"flower",
 		"first":"Mara. Seeds are in the bags; the blue stitches are mine. Mind that crate. One leg is a potato and I'd rather not discuss it.",
@@ -65,7 +66,9 @@ static func available(id: String, state = null) -> bool:
 	return PEOPLE.has(id) and (id != "edwin" or state == null or state.coins < state.bankruptcy_limit() * 0.5)
 
 static func ledger_lines(state) -> String:
-	return "Year %d net: %s.\nPurse: %s. Unsold potatoes do not pay the mortgage." % [state.season_clock.year, state.money(state.ledger.total(state.season_clock.year)), state.money(state.coins)]
+	var line: String = "Year %d net: %s.\nPurse: %s. Unsold potatoes do not pay the mortgage." % [state.season_clock.year, state.money(state.ledger.total(state.season_clock.year)), state.money(state.coins)]
+	if state.ledger.guided_credit(state.season_clock.year) > 0: line = GUIDED_CREDIT_LINE + "\n" + line
+	return line
 
 static func weather_cost(state) -> String:
 	var losses: Array = state.climate.data.protection.losses

@@ -10,13 +10,13 @@ Choose what to plant, when to sell and what to protect. From year three, decide 
 
 The round potato farmer, villagers and handmade 3D island remain, with wood, ink-green frames and cream paper highlights. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-This is **v2.0.0 (underdevelopment: l)**, the surfaces-and-voice pass. The farm opens close to its gate at golden hour and draws back slowly, with one main action and a smaller Continue; shops, forecasts and accounts use shared paper grain, wood and dark green frames, with drawings that identify each place. Pages move out from their buildings while the farm keeps moving, and twenty everyday lines are half their old length. The ten-year rules, ledger labels, tuned economy and one-tap phone recorder remain. See the [style board and screen review](docs/style-board/README.md), [gameplay guide](docs/GAMEPLAY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use `v2.0.0-underdevelopment-l` for this prerelease or `redesign` for ongoing work.
+This is **v2.0.0 (underdevelopment: m)**. Nell's first guided Winter accounts keep the full bills and show one matching “Year one covered by the last harvest” credit. Skipping the guide receives none; later years stand on their own. Segment 21c's golden-hour gate title, paper/wood/ink surfaces, drawings, shorter guidance and moving panels remain. See the [style board and screen review](docs/style-board/README.md), [gameplay guide](docs/GAMEPLAY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use `v2.0.0-underdevelopment-m` for this prerelease or `redesign` for ongoing work.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — the published site still contains the previous game. To try this redesign, run or export the current source below.
 
 ## Download the development browser release
 
-For this redesign, use **Taterland-Web.zip** from [underdevelopment l](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-l). The same release includes **Taterland-Phone-Test.zip** and the screenshot/test review bundle. To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+For this redesign, use **Taterland-Web.zip** from [underdevelopment m](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-m). The same release includes **Taterland-Phone-Test.zip** and the screenshot/test review bundle. To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 
@@ -26,7 +26,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `v2.0.0-underdevelopment-l` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `v2.0.0-underdevelopment-m` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .

@@ -113,6 +113,10 @@ func run() -> void:
 	while game.hud.accounts_building: await process_frame
 	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
 	check(game.state.season_clock.autumn_loss == 0, "resumed barn lesson harvests starters before Autumn Cold")
+	var credit_row = game.hud._refs.accounts_guided_credit.get_parent().get_parent()
+	check(credit_row.is_visible_in_tree() and credit_row.caption.text == game.state.Ledger.GUIDED_CREDIT_LABEL and game.hud._refs.accounts_guided_credit.text == "+" + game.state.money(game.state.ledger.fixed_cost_total()), "accounts show the named credit at its exact amount")
+	check(not game.hud._refs.accounts_other.get_parent().get_parent().visible, "credit is not also counted in a generic Other row")
+	check(game.hud._refs.accountant.text == "Nell: Dad's last harvest paid this year. From now on it's yours.", "Nell's explanation stays visible after the guide closes")
 	game._on_action("close")
 	game.hud.show_panel("barn", game.state)
 	check(game.hud._panel_kind == "barn", "barn opens its crate page")

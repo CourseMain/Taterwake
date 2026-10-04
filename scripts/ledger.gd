@@ -6,6 +6,7 @@ const OVERDRAFT_LIMIT: float = Balance.OVERDRAFT_LIMIT
 const INITIAL_LOAN: float = Balance.INITIAL_LOAN
 const CATEGORIES: Array[String] = ["sales", "seeds", "water_fuel", "labour", "upkeep", "protection", "insurance", "mortgage", "rent", "living", "storage", "contracts", "other"]
 const LABELS: Dictionary = {"sales": "Crop sales", "seeds": "Seeds", "water_fuel": "Water & fuel", "labour": "Labour", "upkeep": "Equipment upkeep", "protection": "Protection", "insurance": "Insurance", "mortgage": "Mortgage", "rent": "Rent & land tax", "living": "Living costs", "storage": "Storage", "contracts": "Contracts", "other": "Other"}
+const GUIDED_CREDIT_LABEL: String = "Year one covered by the last harvest"
 # REDESIGN_PLAN §6. Interest is fixed for this ten-year model.
 const FIXED_COSTS: Array[Dictionary] = Balance.FIXED_COSTS
 var last_year: int = 10 # Runtime-only; normal saves remain ten-year journals.
@@ -74,12 +75,21 @@ func fixed_cost_total() -> float:
 	for cost in FIXED_COSTS: amount -= float(cost.amount)
 	return amount
 
-func post_fixed_costs(year: int) -> bool:
+func guided_credit(year: int) -> float:
+	if year != 1: return 0.0
+	var amount: float = 0.0
+	for entry in _entries:
+		if int(entry.year) == year and entry.label == GUIDED_CREDIT_LABEL: amount += float(entry.amount)
+	return amount
+
+func post_fixed_costs(year: int, cover_guided_year: bool = false) -> bool:
 	if is_closed(year) or year < 1 or year > last_year: return false
 	for cost in FIXED_COSTS:
 		# The inherited loan is paid off after twenty principal payments.
 		if cost.category == "mortgage" and loan_remaining() <= 0: continue
 		post(year, 3, cost.category, cost.label, cost.amount)
+	if year == 1 and cover_guided_year:
+		post(year, 3, "other", GUIDED_CREDIT_LABEL, fixed_cost_total())
 	_closed_years.append(year)
 	return true
 
@@ -104,12 +114,18 @@ static func valid(raw: Variant, current_year: int, current_season: int) -> bool:
 	if not raw is Dictionary or not raw.get("entries") is Array or not raw.get("closed_years") is Array: return false
 	var rules = preload("res://scripts/save_validation.gd")
 	var balance: float = STARTING_CASH
+	var credits: int = 0
+	var credit_amount: float = 0.0
+	for cost in FIXED_COSTS: credit_amount -= float(cost.amount)
 	for entry in raw.entries:
 		if not entry is Dictionary or entry.size() != 5: return false
 		if not rules.number(entry.get("year"), 1, current_year, true) or not rules.number(entry.get("season"), 0, 3, true): return false
 		if int(entry.year) == current_year and int(entry.season) > current_season: return false
 		if entry.get("category") not in CATEGORIES or not entry.get("label") is String or entry.label.is_empty() or entry.label.length() > 256: return false
 		if not (entry.get("amount") is float or entry.get("amount") is int) or not is_finite(float(entry.amount)): return false
+		if entry.label == GUIDED_CREDIT_LABEL:
+			credits += 1
+			if credits > 1 or int(entry.year) != 1 or int(entry.season) != 3 or entry.category != "other" or float(entry.amount) != credit_amount: return false
 		balance += float(entry.amount)
 		if not is_finite(balance): return false
 	var seen: Array[int] = []
@@ -126,4 +142,5 @@ static func valid(raw: Variant, current_year: int, current_season: int) -> bool:
 		for cost in FIXED_COSTS:
 			if entry.category == cost.category and entry.label == cost.label:
 				if int(entry.year) not in seen or int(entry.season) != 3 or float(entry.amount) != float(cost.amount): return false
+	if credits > 0 and 1 not in seen: return false
 	return true

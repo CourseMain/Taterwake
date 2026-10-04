@@ -2079,6 +2079,12 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
 		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(clock.year, category))
 		if staged and not await _accounts_frame(request): return
+	_refs.accounts_guided_credit = _account_row(categories, _state.Ledger.GUIDED_CREDIT_LABEL, "")
+	var credit_row = _refs.accounts_guided_credit.get_parent().get_parent()
+	credit_row.caption.set_meta("ledger_wrap", true)
+	credit_row.caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	credit_row._layout()
+	credit_row.hide()
 	var years := _vbox(2)
 	years.custom_minimum_size.x = 245
 	years.size_flags_horizontal = Control.SIZE_FILL
@@ -2129,12 +2135,17 @@ func _refresh_accounts() -> void:
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
 	var net: float = _state.ledger.total(_state.season_clock.year)
+	var credit: float = _state.ledger.guided_credit(_state.season_clock.year)
+	_refs.accountant.text = "Nell: " + _state.NpcRoster.GUIDED_CREDIT_LINE if credit > 0 else "Nell · Accountant"
 	_refs.accountant.tooltip_text = _state.NpcRoster.ledger_lines(_state)
 	_refs.accounts_net.text = ("+" if net >= 0 else "−") + _state.money(absf(net))
 	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
 	for category in _state.Ledger.CATEGORIES:
-		_refs["accounts_" + category].text = _state.money(_state.ledger.total(_state.season_clock.year, category))
-		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(_state.season_clock.year, category))
+		var amount: float = _state.ledger.total(_state.season_clock.year, category) - (credit if category == "other" else 0.0)
+		_refs["accounts_" + category].text = _state.money(amount)
+		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(amount)
+	_refs.accounts_guided_credit.text = "+" + _state.money(credit)
+	_refs.accounts_guided_credit.get_parent().get_parent().visible = credit > 0
 	for year in range(1, 11):
 		_refs["accounts_year_%d" % year].text = _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else ""
 		_refs["accounts_year_%d" % year].get_parent().get_parent().visible = _state.ledger.is_closed(year)
