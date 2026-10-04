@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1791105141|1627746';
+const CACHE_VERSION = '1791108886|2267964';
 /** @type {string} */
 const CACHE_PREFIX = 'Taterland-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
