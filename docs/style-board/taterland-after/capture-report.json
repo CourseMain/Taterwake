@@ -1,0 +1,5374 @@
+{
+  "url": "http://127.0.0.1:8911/index.html",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "errors": [],
+  "reports": [
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            40,
+            1104,
+            520,
+            84
+          ],
+          "text": "Walk to the farm"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            40,
+            1202,
+            520,
+            68
+          ],
+          "text": "Continue · Year 3, Spring"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "title",
+      "ready": true,
+      "request": 1,
+      "scroll": [
+        12,
+        100,
+        0,
+        0
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 3.32807499999999,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            488,
+            958,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            488,
+            1069,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "ledger_screenshot",
+          "disabled": false,
+          "rect": [
+            36,
+            1194,
+            260,
+            68
+          ],
+          "text": "Save screenshot"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            304,
+            1194,
+            260,
+            68
+          ],
+          "text": "Walk out to the field"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            35
+          ],
+          "text": "The annual accounts"
+        },
+        {
+          "rect": [
+            114,
+            218,
+            176,
+            41
+          ],
+          "text": "FILED · YEAR 03"
+        },
+        {
+          "rect": [
+            36,
+            278,
+            520,
+            51
+          ],
+          "text": "− 102,056"
+        },
+        {
+          "rect": [
+            36,
+            335,
+            520,
+            31
+          ],
+          "text": "NET FOR THE YEAR"
+        },
+        {
+          "rect": [
+            48,
+            384,
+            496,
+            28
+          ],
+          "text": "THIS YEAR"
+        },
+        {
+          "rect": [
+            48,
+            414,
+            105,
+            31
+          ],
+          "text": "Crop sales"
+        },
+        {
+          "rect": [
+            463,
+            414,
+            81,
+            31
+          ],
+          "text": " 5,184"
+        },
+        {
+          "rect": [
+            48,
+            447,
+            60,
+            31
+          ],
+          "text": "Seeds"
+        },
+        {
+          "rect": [
+            454,
+            447,
+            90,
+            31
+          ],
+          "text": "- 3,240"
+        },
+        {
+          "rect": [
+            48,
+            480,
+            185,
+            31
+          ],
+          "text": "Equipment upkeep"
+        },
+        {
+          "rect": [
+            440,
+            480,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            48,
+            513,
+            96,
+            31
+          ],
+          "text": "Mortgage"
+        },
+        {
+          "rect": [
+            440,
+            513,
+            104,
+            31
+          ],
+          "text": "- 48,000"
+        },
+        {
+          "rect": [
+            48,
+            546,
+            153,
+            31
+          ],
+          "text": "Rent & land tax"
+        },
+        {
+          "rect": [
+            440,
+            546,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            48,
+            579,
+            116,
+            31
+          ],
+          "text": "Living costs"
+        },
+        {
+          "rect": [
+            440,
+            579,
+            104,
+            31
+          ],
+          "text": "- 32,000"
+        },
+        {
+          "rect": [
+            48,
+            666,
+            496,
+            28
+          ],
+          "text": "TEN-YEAR RECORD"
+        },
+        {
+          "rect": [
+            48,
+            696,
+            62,
+            31
+          ],
+          "text": "Year 1"
+        },
+        {
+          "rect": [
+            427,
+            696,
+            117,
+            31
+          ],
+          "text": "- 104,000"
+        },
+        {
+          "rect": [
+            48,
+            729,
+            62,
+            31
+          ],
+          "text": "Year 2"
+        },
+        {
+          "rect": [
+            427,
+            729,
+            117,
+            31
+          ],
+          "text": "- 104,000"
+        },
+        {
+          "rect": [
+            48,
+            762,
+            62,
+            31
+          ],
+          "text": "Year 3"
+        },
+        {
+          "rect": [
+            427,
+            762,
+            117,
+            31
+          ],
+          "text": "- 102,056"
+        },
+        {
+          "rect": [
+            36,
+            921,
+            520,
+            31
+          ],
+          "text": "Nell · Accountant"
+        },
+        {
+          "rect": [
+            36,
+            959,
+            448,
+            65
+          ],
+          "text": "Purse - 230,056 · Overdraft limit - 200,000"
+        },
+        {
+          "rect": [
+            36,
+            1032,
+            520,
+            31
+          ],
+          "text": "Loan remaining  408,000"
+        },
+        {
+          "rect": [
+            36,
+            1089,
+            448,
+            28
+          ],
+          "text": "FIELDS · leases for the coming year"
+        },
+        {
+          "rect": [
+            36,
+            1143,
+            520,
+            31
+          ],
+          "text": "Low Field"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "accounts",
+      "ready": true,
+      "request": 2,
+      "scroll": [
+        36,
+        206,
+        528,
+        974
+      ],
+      "scroll_top": 0,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "LedgerLeaf",
+          "rect": [
+            36,
+            372,
+            520,
+            250
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7158",
+          "rect": [
+            48,
+            414,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7164",
+          "rect": [
+            48,
+            447,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7182",
+          "rect": [
+            48,
+            480,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7200",
+          "rect": [
+            48,
+            513,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7206",
+          "rect": [
+            48,
+            546,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7212",
+          "rect": [
+            48,
+            579,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@7236",
+          "rect": [
+            36,
+            654,
+            520,
+            151
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7239",
+          "rect": [
+            48,
+            696,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7245",
+          "rect": [
+            48,
+            729,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7251",
+          "rect": [
+            48,
+            762,
+            496,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 14.6458310000002,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "market",
+          "disabled": false,
+          "rect": [
+            30,
+            167,
+            227,
+            68
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "sell_potatoes",
+          "disabled": false,
+          "rect": [
+            265,
+            167,
+            227,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            167,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "crop:russet",
+          "disabled": false,
+          "rect": [
+            54,
+            467,
+            303,
+            68
+          ],
+          "text": "RUSSET"
+        },
+        {
+          "action": "buy:russet:1",
+          "disabled": false,
+          "rect": [
+            54,
+            970,
+            148,
+            68
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:russet:5",
+          "disabled": false,
+          "rect": [
+            208,
+            970,
+            149,
+            68
+          ],
+          "text": "Buy 5"
+        },
+        {
+          "action": "crop:giant",
+          "disabled": false,
+          "rect": [
+            397,
+            467,
+            303,
+            68
+          ],
+          "text": "GIANT"
+        },
+        {
+          "action": "buy:giant:1",
+          "disabled": false,
+          "rect": [
+            397,
+            937,
+            148,
+            68
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:giant:5",
+          "disabled": false,
+          "rect": [
+            551,
+            937,
+            149,
+            68
+          ],
+          "text": "Buy 5"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            30,
+            249,
+            540,
+            26
+          ],
+          "text": "Balance - 126,056"
+        },
+        {
+          "rect": [
+            42,
+            305,
+            452,
+            56
+          ],
+          "text": "MARA’S SHOP"
+        },
+        {
+          "rect": [
+            30,
+            391,
+            540,
+            38
+          ],
+          "text": "Swipe for more seeds →"
+        },
+        {
+          "rect": [
+            54,
+            653,
+            303,
+            40
+          ],
+          "text": " 270"
+        },
+        {
+          "rect": [
+            54,
+            700,
+            303,
+            26
+          ],
+          "text": "PER SEED"
+        },
+        {
+          "rect": [
+            54,
+            733,
+            303,
+            38
+          ],
+          "text": "●○ · 3 t"
+        },
+        {
+          "rect": [
+            222,
+            778,
+            135,
+            26
+          ],
+          "text": "Thirst"
+        },
+        {
+          "rect": [
+            222,
+            811,
+            135,
+            26
+          ],
+          "text": "Heat"
+        },
+        {
+          "rect": [
+            222,
+            844,
+            135,
+            26
+          ],
+          "text": "Cold"
+        },
+        {
+          "rect": [
+            54,
+            877,
+            303,
+            36
+          ],
+          "text": "STEADY PRICE"
+        },
+        {
+          "rect": [
+            54,
+            937,
+            303,
+            26
+          ],
+          "text": "12 seeds owned"
+        },
+        {
+          "rect": [
+            397,
+            653,
+            303,
+            40
+          ],
+          "text": " 360"
+        },
+        {
+          "rect": [
+            397,
+            700,
+            303,
+            26
+          ],
+          "text": "PER SEED"
+        },
+        {
+          "rect": [
+            397,
+            733,
+            303,
+            38
+          ],
+          "text": "●○ · 5 t"
+        },
+        {
+          "rect": [
+            397,
+            877,
+            303,
+            36
+          ],
+          "text": "STEADY PRICE"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        149,
+        576,
+        1000
+      ],
+      "page": "market",
+      "ready": true,
+      "request": 3,
+      "scroll": [
+        30,
+        249,
+        540,
+        882
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            149,
+            576,
+            1000
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "c98335ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            289,
+            540,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "MaraChalkboard",
+          "rect": [
+            30,
+            443,
+            540,
+            627
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "RussetSeedPacket",
+          "rect": [
+            42,
+            455,
+            327.359985351562,
+            595
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7507",
+          "rect": [
+            83,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7508",
+          "rect": [
+            129,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7509",
+          "rect": [
+            175,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7513",
+          "rect": [
+            83,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7514",
+          "rect": [
+            129,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7515",
+          "rect": [
+            175,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7519",
+          "rect": [
+            83,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7520",
+          "rect": [
+            129,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7521",
+          "rect": [
+            175,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "GiantSeedPacket",
+          "rect": [
+            385,
+            455,
+            327.359985351562,
+            595
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7537",
+          "rect": [
+            426,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7538",
+          "rect": [
+            472,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7539",
+          "rect": [
+            518,
+            786,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7543",
+          "rect": [
+            426,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7544",
+          "rect": [
+            472,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7545",
+          "rect": [
+            518,
+            819,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7549",
+          "rect": [
+            426,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@7550",
+          "rect": [
+            472,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7551",
+          "rect": [
+            518,
+            852,
+            42,
+            9
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 17.3500000000002,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "climate_fund:rainwater",
+          "disabled": true,
+          "rect": [
+            42,
+            729,
+            508,
+            68
+          ],
+          "text": "Build ·  36,000"
+        },
+        {
+          "action": "climate_fund:drainage",
+          "disabled": true,
+          "rect": [
+            42,
+            920,
+            508,
+            68
+          ],
+          "text": "Build ·  48,000"
+        },
+        {
+          "action": "climate_fund:windbreaks",
+          "disabled": true,
+          "rect": [
+            42,
+            1111,
+            508,
+            68
+          ],
+          "text": "Build ·  60,000"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            227,
+            444,
+            34
+          ],
+          "text": "WEATHER STATION"
+        },
+        {
+          "rect": [
+            142,
+            312,
+            408,
+            61
+          ],
+          "text": "Next Spring\nFlood or Freeze"
+        },
+        {
+          "rect": [
+            142,
+            488,
+            408,
+            29
+          ],
+          "text": "Clear skies"
+        },
+        {
+          "rect": [
+            70,
+            549,
+            124,
+            61
+          ],
+          "text": "Home · sheltered"
+        },
+        {
+          "rect": [
+            250,
+            549,
+            124,
+            61
+          ],
+          "text": "Low · floods first"
+        },
+        {
+          "rect": [
+            430,
+            549,
+            124,
+            61
+          ],
+          "text": "Hill · dries first"
+        },
+        {
+          "rect": [
+            94,
+            650,
+            410,
+            25
+          ],
+          "text": "Rainwater tank"
+        },
+        {
+          "rect": [
+            514,
+            642,
+            36,
+            42
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            692,
+            508,
+            29
+          ],
+          "text": "Drought loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            841,
+            410,
+            25
+          ],
+          "text": "Drainage"
+        },
+        {
+          "rect": [
+            514,
+            833,
+            36,
+            42
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            883,
+            508,
+            29
+          ],
+          "text": "Flood loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            1032,
+            410,
+            25
+          ],
+          "text": "Windbreak"
+        },
+        {
+          "rect": [
+            514,
+            1024,
+            36,
+            42
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            1074,
+            508,
+            29
+          ],
+          "text": "Storm loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            1223,
+            410,
+            25
+          ],
+          "text": "Frost cover"
+        },
+        {
+          "rect": [
+            514,
+            1215,
+            36,
+            42
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            1265,
+            508,
+            29
+          ],
+          "text": "Covered Spring freeze loss −50%"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "climate",
+      "ready": true,
+      "request": 4,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "588da5ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            532,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ForecastInstrument",
+          "rect": [
+            30,
+            300,
+            532,
+            229
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@7739",
+          "rect": [
+            30,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@7743",
+          "rect": [
+            210,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@7747",
+          "rect": [
+            390,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Protection_rainwater",
+          "rect": [
+            30,
+            630,
+            532,
+            179
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Protection_drainage",
+          "rect": [
+            30,
+            821,
+            532,
+            179
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Protection_windbreaks",
+          "rect": [
+            30,
+            1012,
+            532,
+            179
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Protection_frost",
+          "rect": [
+            30,
+            1203,
+            532,
+            179
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 19.5611111111114,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "inventory",
+          "disabled": false,
+          "rect": [
+            36,
+            206,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "contracts",
+          "disabled": false,
+          "rect": [
+            36,
+            284,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "market",
+          "disabled": false,
+          "rect": [
+            36,
+            362,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "sell_potatoes",
+          "disabled": false,
+          "rect": [
+            36,
+            440,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "debug",
+          "disabled": false,
+          "rect": [
+            36,
+            518,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "activities",
+          "disabled": false,
+          "rect": [
+            36,
+            596,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "quests",
+          "disabled": false,
+          "rect": [
+            36,
+            674,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "tools",
+          "disabled": false,
+          "rect": [
+            36,
+            752,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "dex",
+          "disabled": false,
+          "rect": [
+            36,
+            830,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "climate",
+          "disabled": false,
+          "rect": [
+            36,
+            908,
+            528,
+            68
+          ],
+          "text": ""
+        },
+        {
+          "action": "toggle_details:menu_settings",
+          "disabled": false,
+          "rect": [
+            36,
+            986,
+            528,
+            68
+          ],
+          "text": "Settings & saves"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            36,
+            1064,
+            528,
+            68
+          ],
+          "text": "Back to the farm"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Your farm"
+        },
+        {
+          "rect": [
+            86,
+            217,
+            470,
+            46
+          ],
+          "text": "Inventory"
+        },
+        {
+          "rect": [
+            86,
+            295,
+            470,
+            46
+          ],
+          "text": "Contracts"
+        },
+        {
+          "rect": [
+            86,
+            373,
+            470,
+            46
+          ],
+          "text": "Buy Seeds"
+        },
+        {
+          "rect": [
+            86,
+            451,
+            470,
+            46
+          ],
+          "text": "Sell Potatoes"
+        },
+        {
+          "rect": [
+            86,
+            529,
+            470,
+            46
+          ],
+          "text": "Debug"
+        },
+        {
+          "rect": [
+            86,
+            607,
+            470,
+            46
+          ],
+          "text": "Duck patrol"
+        },
+        {
+          "rect": [
+            86,
+            685,
+            470,
+            46
+          ],
+          "text": "Quests"
+        },
+        {
+          "rect": [
+            86,
+            763,
+            470,
+            46
+          ],
+          "text": "Tool upgrades"
+        },
+        {
+          "rect": [
+            86,
+            841,
+            470,
+            46
+          ],
+          "text": "PotatoDex"
+        },
+        {
+          "rect": [
+            86,
+            919,
+            470,
+            46
+          ],
+          "text": "Weather & protection"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "menu",
+      "ready": true,
+      "request": 5,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 21.4605786666669,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "sell_potatoes",
+          "disabled": false,
+          "rect": [
+            410,
+            312,
+            140,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "inventory_tab:crops",
+          "disabled": false,
+          "rect": [
+            30,
+            404,
+            262,
+            68
+          ],
+          "text": "Crops & seeds"
+        },
+        {
+          "action": "inventory_tab:tools",
+          "disabled": false,
+          "rect": [
+            300,
+            404,
+            262,
+            68
+          ],
+          "text": "Tools"
+        },
+        {
+          "action": "crop:russet",
+          "disabled": true,
+          "rect": [
+            46,
+            642,
+            500,
+            68
+          ],
+          "text": "Selected"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            227,
+            444,
+            34
+          ],
+          "text": "NELL’S BARN"
+        },
+        {
+          "rect": [
+            124,
+            312,
+            268,
+            35
+          ],
+          "text": "60 / 200 t"
+        },
+        {
+          "rect": [
+            124,
+            349,
+            268,
+            29
+          ],
+          "text": "TONNES / CAPACITY"
+        },
+        {
+          "rect": [
+            46,
+            570,
+            500,
+            25
+          ],
+          "text": "Russet seeds"
+        },
+        {
+          "rect": [
+            46,
+            601,
+            500,
+            35
+          ],
+          "text": "12 seeds"
+        },
+        {
+          "rect": [
+            46,
+            826,
+            500,
+            25
+          ],
+          "text": "Russet"
+        },
+        {
+          "rect": [
+            46,
+            857,
+            500,
+            35
+          ],
+          "text": "12 t"
+        },
+        {
+          "rect": [
+            46,
+            898,
+            500,
+            29
+          ],
+          "text": "Current value  4,320"
+        },
+        {
+          "rect": [
+            46,
+            1043,
+            500,
+            25
+          ],
+          "text": "Giant"
+        },
+        {
+          "rect": [
+            46,
+            1074,
+            500,
+            35
+          ],
+          "text": "12 t"
+        },
+        {
+          "rect": [
+            46,
+            1115,
+            500,
+            29
+          ],
+          "text": "Current value  5,760"
+        },
+        {
+          "rect": [
+            46,
+            1260,
+            500,
+            25
+          ],
+          "text": "Golden"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "barn",
+      "ready": true,
+      "request": 6,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "a46e43ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            532,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "BarnTallyBoard",
+          "rect": [
+            30,
+            300,
+            532,
+            92
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Crate_seed_russet",
+          "rect": [
+            30,
+            484,
+            532,
+            242
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Crate_crop_russet",
+          "rect": [
+            30,
+            740,
+            532,
+            203
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Crate_crop_giant",
+          "rect": [
+            30,
+            957,
+            532,
+            203
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "Crate_crop_golden",
+          "rect": [
+            30,
+            1174,
+            532,
+            203
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 23.7240700000003,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "upgrade:hoe",
+          "disabled": false,
+          "rect": [
+            52,
+            452,
+            488,
+            68
+          ],
+          "text": "Upgrade ·  12,000"
+        },
+        {
+          "action": "upgrade:water",
+          "disabled": false,
+          "rect": [
+            52,
+            643,
+            488,
+            68
+          ],
+          "text": "Upgrade ·  16,000"
+        },
+        {
+          "action": "upgrade:harvest",
+          "disabled": false,
+          "rect": [
+            52,
+            834,
+            488,
+            68
+          ],
+          "text": "Upgrade ·  20,000"
+        },
+        {
+          "action": "upgrade:expansion:home",
+          "disabled": false,
+          "rect": [
+            52,
+            1025,
+            488,
+            68
+          ],
+          "text": "Open ·  48,000"
+        },
+        {
+          "action": "climate_fund:irrigation",
+          "disabled": false,
+          "rect": [
+            52,
+            1216,
+            488,
+            68
+          ],
+          "text": "Install ·  20,000"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            227,
+            444,
+            34
+          ],
+          "text": "BRAM’S WORKBENCH"
+        },
+        {
+          "rect": [
+            30,
+            300,
+            532,
+            29
+          ],
+          "text": "Balance - 126,056"
+        },
+        {
+          "rect": [
+            110,
+            374,
+            366,
+            25
+          ],
+          "text": "Hoe"
+        },
+        {
+          "rect": [
+            486,
+            366,
+            54,
+            42
+          ],
+          "text": "○○○"
+        },
+        {
+          "rect": [
+            52,
+            417,
+            488,
+            29
+          ],
+          "text": "1 tile per action"
+        },
+        {
+          "rect": [
+            110,
+            565,
+            366,
+            25
+          ],
+          "text": "Watering can"
+        },
+        {
+          "rect": [
+            486,
+            557,
+            54,
+            42
+          ],
+          "text": "○○○"
+        },
+        {
+          "rect": [
+            52,
+            608,
+            488,
+            29
+          ],
+          "text": "16 water · 1 tile per action"
+        },
+        {
+          "rect": [
+            110,
+            756,
+            366,
+            25
+          ],
+          "text": "Harvest scythe"
+        },
+        {
+          "rect": [
+            486,
+            748,
+            54,
+            42
+          ],
+          "text": "○○○"
+        },
+        {
+          "rect": [
+            52,
+            799,
+            488,
+            29
+          ],
+          "text": "1 tile per action"
+        },
+        {
+          "rect": [
+            110,
+            947,
+            430,
+            25
+          ],
+          "text": "Open 12 more beds"
+        },
+        {
+          "rect": [
+            52,
+            990,
+            488,
+            29
+          ],
+          "text": "Home Field"
+        },
+        {
+          "rect": [
+            110,
+            1138,
+            384,
+            25
+          ],
+          "text": "Sprinklers"
+        },
+        {
+          "rect": [
+            504,
+            1130,
+            36,
+            42
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            52,
+            1181,
+            488,
+            29
+          ],
+          "text": "6 tank water per patch"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "tools",
+      "ready": true,
+      "request": 7,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "7b684cff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            532,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "PegboardWorkbench",
+          "rect": [
+            30,
+            341,
+            532,
+            965
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ToolTile_hoe",
+          "rect": [
+            42,
+            353,
+            508,
+            177
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ToolTile_water",
+          "rect": [
+            42,
+            544,
+            508,
+            177
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ToolTile_harvest",
+          "rect": [
+            42,
+            735,
+            508,
+            177
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ToolTile_expansion",
+          "rect": [
+            42,
+            926,
+            508,
+            177
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "ToolTile_irrigation",
+          "rect": [
+            42,
+            1117,
+            508,
+            177
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 26.1358183333336,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            30,
+            302,
+            265,
+            68
+          ],
+          "text": "Quests"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            305,
+            302,
+            265,
+            68
+          ],
+          "text": "Losses 1"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            227,
+            452,
+            34
+          ],
+          "text": "TESS’S BOARD"
+        },
+        {
+          "rect": [
+            48,
+            402,
+            504,
+            26
+          ],
+          "text": "Buy 10 seeds."
+        },
+        {
+          "rect": [
+            48,
+            452,
+            504,
+            30
+          ],
+          "text": "0 of 10"
+        },
+        {
+          "rect": [
+            48,
+            490,
+            246,
+            33
+          ],
+          "text": " 4,000"
+        },
+        {
+          "rect": [
+            306,
+            491,
+            246,
+            30
+          ],
+          "text": "2 Golden seeds"
+        },
+        {
+          "rect": [
+            48,
+            573,
+            504,
+            26
+          ],
+          "text": "Sell 10 tonnes of potatoes."
+        },
+        {
+          "rect": [
+            48,
+            623,
+            504,
+            30
+          ],
+          "text": "0 of 10"
+        },
+        {
+          "rect": [
+            48,
+            661,
+            504,
+            33
+          ],
+          "text": " 4,000"
+        },
+        {
+          "rect": [
+            48,
+            744,
+            504,
+            26
+          ],
+          "text": "Harvest 12 beds."
+        },
+        {
+          "rect": [
+            48,
+            794,
+            504,
+            30
+          ],
+          "text": "0 of 12"
+        },
+        {
+          "rect": [
+            48,
+            832,
+            504,
+            33
+          ],
+          "text": " 4,000"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "quests",
+      "ready": true,
+      "request": 8,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "997243ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            540,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "PinnedQuestNote",
+          "rect": [
+            30,
+            384,
+            540,
+            157
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@8267",
+          "rect": [
+            30,
+            555,
+            540,
+            157
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@8276",
+          "rect": [
+            30,
+            726,
+            540,
+            157
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 28.8847222222226,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            30,
+            302,
+            265,
+            68
+          ],
+          "text": "Quests"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            305,
+            302,
+            265,
+            68
+          ],
+          "text": "Losses 1"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            227,
+            452,
+            34
+          ],
+          "text": "TESS’S BOARD"
+        },
+        {
+          "rect": [
+            94,
+            407,
+            458,
+            26
+          ],
+          "text": "Autumn Cold · Home Field"
+        },
+        {
+          "rect": [
+            48,
+            446,
+            504,
+            26
+          ],
+          "text": "Lost 3 t of Russet"
+        },
+        {
+          "rect": [
+            48,
+            480,
+            504,
+            30
+          ],
+          "text": "Worth  1,080"
+        },
+        {
+          "rect": [
+            48,
+            518,
+            504,
+            30
+          ],
+          "text": "Harvesting before Winter would have saved 3 t."
+        },
+        {
+          "rect": [
+            48,
+            556,
+            504,
+            30
+          ],
+          "text": "Year 3 · Autumn"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "loss_notices",
+      "ready": true,
+      "request": 9,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "997243ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            540,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "PinnedCauseNote",
+          "rect": [
+            30,
+            384,
+            540,
+            220
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 31.334846666667,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            36,
+            296,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "contract_accept:0",
+          "disabled": false,
+          "rect": [
+            58,
+            668,
+            230,
+            68
+          ],
+          "text": "ACCEPT ORDER"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            48,
+            218,
+            504,
+            56
+          ],
+          "text": "BUYER BOARD"
+        },
+        {
+          "rect": [
+            160,
+            404,
+            382,
+            67
+          ],
+          "text": "20 t Golden"
+        },
+        {
+          "rect": [
+            58,
+            490,
+            484,
+            56
+          ],
+          "text": " 739 / t"
+        },
+        {
+          "rect": [
+            58,
+            556,
+            484,
+            46
+          ],
+          "text": "DUE AUTUMN END"
+        },
+        {
+          "rect": [
+            58,
+            612,
+            484,
+            46
+          ],
+          "text": "Missing tonne penalty ·  200"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "contracts",
+      "ready": true,
+      "request": 10,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "a17c42ff",
+          "name": "PlaceHeader",
+          "rect": [
+            36,
+            206,
+            528,
+            80
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "BuyerOrderSlip0",
+          "rect": [
+            36,
+            374,
+            528,
+            384
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 33.339531666667,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "market",
+          "disabled": false,
+          "rect": [
+            30,
+            167,
+            227,
+            68
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "sell_potatoes",
+          "disabled": false,
+          "rect": [
+            265,
+            167,
+            227,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            167,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            30,
+            351,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "grade:russet:Standard",
+          "disabled": false,
+          "rect": [
+            42,
+            625,
+            146,
+            68
+          ],
+          "text": "Standard 12 t"
+        },
+        {
+          "action": "grade:giant:Standard",
+          "disabled": false,
+          "rect": [
+            42,
+            911,
+            146,
+            68
+          ],
+          "text": "Standard 12 t"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            42,
+            265,
+            444,
+            56
+          ],
+          "text": "MARA’S SHOP"
+        },
+        {
+          "rect": [
+            106,
+            445,
+            444,
+            25
+          ],
+          "text": "Russet"
+        },
+        {
+          "rect": [
+            106,
+            474,
+            78,
+            31
+          ],
+          "text": " 360/t"
+        },
+        {
+          "rect": [
+            192,
+            472,
+            49,
+            36
+          ],
+          "text": "+0%"
+        },
+        {
+          "rect": [
+            106,
+            731,
+            444,
+            25
+          ],
+          "text": "Giant"
+        },
+        {
+          "rect": [
+            106,
+            760,
+            78,
+            31
+          ],
+          "text": " 480/t"
+        },
+        {
+          "rect": [
+            192,
+            758,
+            49,
+            36
+          ],
+          "text": "+0%"
+        },
+        {
+          "rect": [
+            106,
+            1017,
+            444,
+            25
+          ],
+          "text": "Golden"
+        },
+        {
+          "rect": [
+            106,
+            1046,
+            78,
+            31
+          ],
+          "text": " 672/t"
+        },
+        {
+          "rect": [
+            192,
+            1044,
+            49,
+            36
+          ],
+          "text": "+0%"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        149,
+        576,
+        1000
+      ],
+      "page": "sell_potatoes",
+      "ready": true,
+      "request": 11,
+      "scroll": [
+        30,
+        249,
+        540,
+        882
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            149,
+            576,
+            1000
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "c98335ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            249,
+            532,
+            88
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "SaleRow_russet",
+          "rect": [
+            30,
+            433,
+            532,
+            272
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "SaleRow_giant",
+          "rect": [
+            30,
+            719,
+            532,
+            272
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "SaleRow_golden",
+          "rect": [
+            30,
+            1005,
+            532,
+            272
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 35.517820703704,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            390,
+            1198,
+            188,
+            78
+          ],
+          "text": "Use Hoe"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            390,
+            1120,
+            188,
+            68
+          ],
+          "text": "Hoe  /  Tools"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            466,
+            16,
+            112,
+            68
+          ],
+          "text": "Menu"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            466,
+            94,
+            112,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "",
+          "disabled": true,
+          "rect": [
+            390,
+            1046,
+            188,
+            68
+          ],
+          "text": "Hold to hurry"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            46,
+            903,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            46,
+            1184,
+            508,
+            68
+          ],
+          "text": "Start the year →"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            96,
+            16,
+            92,
+            67
+          ],
+          "text": "TATER"
+        },
+        {
+          "rect": [
+            196,
+            16,
+            16,
+            67
+          ],
+          "text": "/"
+        },
+        {
+          "rect": [
+            220,
+            16,
+            84,
+            67
+          ],
+          "text": "LAND"
+        },
+        {
+          "rect": [
+            16,
+            132,
+            432,
+            70
+          ],
+          "text": "- 126,056 · Russet"
+        },
+        {
+          "rect": [
+            46,
+            46,
+            508,
+            64
+          ],
+          "text": "THE SPUD VALLEY RECORD"
+        },
+        {
+          "rect": [
+            46,
+            130,
+            508,
+            31
+          ],
+          "text": "WEATHER • FARMING • THE YEAR AHEAD"
+        },
+        {
+          "rect": [
+            46,
+            205,
+            508,
+            222
+          ],
+          "text": "YEAR 3\nRain arrives at the wrong time"
+        },
+        {
+          "rect": [
+            128,
+            445,
+            426,
+            167
+          ],
+          "text": "Iris · Weather forecaster\nIris, on the radio. Year 3: 23% disaster chance each season. These are odds, not appointments. Read the sky, leave room in the budget."
+        },
+        {
+          "rect": [
+            46,
+            630,
+            508,
+            65
+          ],
+          "text": "Mean severity 56% · three disasters per year at most"
+        },
+        {
+          "rect": [
+            46,
+            725,
+            508,
+            31
+          ],
+          "text": "THE WEATHER COLUMN"
+        },
+        {
+          "rect": [
+            46,
+            760,
+            508,
+            31
+          ],
+          "text": "Ten years · recorded disasters"
+        },
+        {
+          "rect": [
+            58,
+            987,
+            484,
+            31
+          ],
+          "text": "ACCOUNTS · LAST YEAR"
+        },
+        {
+          "rect": [
+            58,
+            1022,
+            484,
+            34
+          ],
+          "text": "- 104,000"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "front_page",
+      "ready": true,
+      "request": 12,
+      "scroll": [
+        30,
+        200,
+        540,
+        882
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "1433298c",
+          "name": "@Panel@5971",
+          "rect": [
+            22,
+            1108,
+            166,
+            166
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "f2e0a8cc",
+          "name": "@Panel@5972",
+          "rect": [
+            73,
+            1159,
+            64,
+            64
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@6963",
+          "rect": [
+            24,
+            24,
+            552,
+            1250
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "LastYearAccounts",
+          "rect": [
+            46,
+            975,
+            508,
+            93
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 37.4733542222225,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            422,
+            111,
+            146,
+            68
+          ],
+          "text": "Leave  ×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            56,
+            939,
+            488,
+            68
+          ],
+          "text": "Open the barn"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            56,
+            1015,
+            488,
+            68
+          ],
+          "text": "Who left the muddy boots?"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            56,
+            1091,
+            488,
+            68
+          ],
+          "text": "How's the weather looking?"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            40,
+            121,
+            94,
+            23
+          ],
+          "text": "Farm paused"
+        },
+        {
+          "rect": [
+            56,
+            497,
+            488,
+            63
+          ],
+          "text": "Nell"
+        },
+        {
+          "rect": [
+            56,
+            570,
+            488,
+            24
+          ],
+          "text": "Accountant"
+        },
+        {
+          "rect": [
+            72,
+            620,
+            456,
+            112
+          ],
+          "text": "Nell. Barn and books. Crops in before rot."
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "npc",
+      "ready": true,
+      "request": 13,
+      "scroll": [
+        30,
+        200,
+        540,
+        882
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@Panel@5996",
+          "rect": [
+            16,
+            99,
+            568,
+            1100
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@5999",
+          "rect": [
+            32,
+            473,
+            536,
+            710
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@6008",
+          "rect": [
+            56,
+            604,
+            488,
+            144
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 39.2955813333336,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "ledger_screenshot",
+          "disabled": false,
+          "rect": [
+            36,
+            1118,
+            260,
+            68
+          ],
+          "text": "Save screenshot"
+        },
+        {
+          "action": "epilogue",
+          "disabled": false,
+          "rect": [
+            304,
+            1118,
+            260,
+            68
+          ],
+          "text": "Fifty years on"
+        },
+        {
+          "action": "reset",
+          "disabled": false,
+          "rect": [
+            36,
+            1194,
+            260,
+            68
+          ],
+          "text": "Plant a new farm"
+        },
+        {
+          "action": "accounts",
+          "disabled": false,
+          "rect": [
+            304,
+            1194,
+            260,
+            68
+          ],
+          "text": "Year 10 accounts"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            35
+          ],
+          "text": "Ten years on the farm"
+        },
+        {
+          "rect": [
+            36,
+            218,
+            464,
+            40
+          ],
+          "text": "Stubborn"
+        },
+        {
+          "rect": [
+            36,
+            280,
+            520,
+            49
+          ],
+          "text": " 0"
+        },
+        {
+          "rect": [
+            36,
+            339,
+            520,
+            31
+          ],
+          "text": "NET OVER TEN YEARS"
+        },
+        {
+          "rect": [
+            41,
+            385,
+            105,
+            31
+          ],
+          "text": "Crop sales"
+        },
+        {
+          "rect": [
+            470,
+            385,
+            81,
+            31
+          ],
+          "text": " 5,184"
+        },
+        {
+          "rect": [
+            41,
+            436,
+            60,
+            31
+          ],
+          "text": "Seeds"
+        },
+        {
+          "rect": [
+            461,
+            436,
+            90,
+            31
+          ],
+          "text": "- 3,240"
+        },
+        {
+          "rect": [
+            41,
+            487,
+            185,
+            31
+          ],
+          "text": "Equipment upkeep"
+        },
+        {
+          "rect": [
+            434,
+            487,
+            117,
+            31
+          ],
+          "text": "- 120,000"
+        },
+        {
+          "rect": [
+            41,
+            538,
+            96,
+            31
+          ],
+          "text": "Mortgage"
+        },
+        {
+          "rect": [
+            434,
+            538,
+            117,
+            31
+          ],
+          "text": "- 480,000"
+        },
+        {
+          "rect": [
+            41,
+            589,
+            153,
+            31
+          ],
+          "text": "Rent & land tax"
+        },
+        {
+          "rect": [
+            434,
+            589,
+            117,
+            31
+          ],
+          "text": "- 120,000"
+        },
+        {
+          "rect": [
+            41,
+            640,
+            116,
+            31
+          ],
+          "text": "Living costs"
+        },
+        {
+          "rect": [
+            434,
+            640,
+            117,
+            31
+          ],
+          "text": "- 320,000"
+        },
+        {
+          "rect": [
+            41,
+            691,
+            57,
+            31
+          ],
+          "text": "Other"
+        },
+        {
+          "rect": [
+            425,
+            691,
+            126,
+            31
+          ],
+          "text": " 1,038,056"
+        },
+        {
+          "rect": [
+            41,
+            856,
+            134,
+            31
+          ],
+          "text": "Years in profit"
+        },
+        {
+          "rect": [
+            494,
+            856,
+            57,
+            31
+          ],
+          "text": "1 / 10"
+        },
+        {
+          "rect": [
+            41,
+            907,
+            109,
+            31
+          ],
+          "text": "Worst year"
+        },
+        {
+          "rect": [
+            355,
+            907,
+            196,
+            31
+          ],
+          "text": "Year 1 · - 104,000"
+        },
+        {
+          "rect": [
+            41,
+            958,
+            93,
+            31
+          ],
+          "text": "Best year"
+        },
+        {
+          "rect": [
+            351,
+            958,
+            200,
+            31
+          ],
+          "text": "Year 10 ·  934,056"
+        },
+        {
+          "rect": [
+            41,
+            1009,
+            109,
+            31
+          ],
+          "text": "Final purse"
+        },
+        {
+          "rect": [
+            456,
+            1009,
+            95,
+            31
+          ],
+          "text": " 80,000"
+        },
+        {
+          "rect": [
+            41,
+            1060,
+            152,
+            31
+          ],
+          "text": "Loan remaining"
+        },
+        {
+          "rect": [
+            443,
+            1060,
+            108,
+            31
+          ],
+          "text": " 240,000"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "run_summary",
+      "ready": true,
+      "request": 14,
+      "scroll": [
+        36,
+        206,
+        528,
+        898
+      ],
+      "scroll_top": 0,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9020",
+          "rect": [
+            36,
+            380,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9026",
+          "rect": [
+            36,
+            431,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9032",
+          "rect": [
+            36,
+            482,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9038",
+          "rect": [
+            36,
+            533,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9044",
+          "rect": [
+            36,
+            584,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9050",
+          "rect": [
+            36,
+            635,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9056",
+          "rect": [
+            36,
+            686,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9066",
+          "rect": [
+            36,
+            851,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9072",
+          "rect": [
+            36,
+            902,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9078",
+          "rect": [
+            36,
+            953,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9084",
+          "rect": [
+            36,
+            1004,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@9090",
+          "rect": [
+            36,
+            1055,
+            520,
+            41
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 41.1965563333336,
+      "year": 10
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            36,
+            1107,
+            190,
+            88
+          ],
+          "text": "TRY AGAIN"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            236,
+            1107,
+            190,
+            88
+          ],
+          "text": "HIDE RUN SUMMARY"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            36,
+            1204,
+            190,
+            68
+          ],
+          "text": "DEBUG ACCESS"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            26,
+            528,
+            31
+          ],
+          "text": "SPUD VALLEY   /   YEAR 3 ACCOUNTS"
+        },
+        {
+          "rect": [
+            36,
+            71,
+            520,
+            60
+          ],
+          "text": "FORECLOSED"
+        },
+        {
+          "rect": [
+            36,
+            143,
+            265,
+            31
+          ],
+          "text": "FINAL BALANCE"
+        },
+        {
+          "rect": [
+            36,
+            178,
+            265,
+            60
+          ],
+          "text": "- 210,000"
+        },
+        {
+          "rect": [
+            36,
+            246,
+            265,
+            99
+          ],
+          "text": "Sold Up · Winter fixed costs left the farm below its overdraft limit."
+        },
+        {
+          "rect": [
+            36,
+            349,
+            265,
+            65
+          ],
+          "text": "Foreclosure below - 200,000"
+        },
+        {
+          "rect": [
+            36,
+            426,
+            520,
+            65
+          ],
+          "text": "Year 3 net: - 82,000. The complete Winter bill of  104,000 has been posted."
+        },
+        {
+          "rect": [
+            36,
+            516,
+            200,
+            31
+          ],
+          "text": "OVERDRAFT LIMIT"
+        },
+        {
+          "rect": [
+            36,
+            551,
+            200,
+            51
+          ],
+          "text": "- 200,000"
+        },
+        {
+          "rect": [
+            36,
+            614,
+            520,
+            99
+          ],
+          "text": "Year 3 · Category totals\nThe books close here. The farm’s future starts with the state you leave behind."
+        },
+        {
+          "rect": [
+            52,
+            741,
+            105,
+            31
+          ],
+          "text": "Crop sales"
+        },
+        {
+          "rect": [
+            459,
+            741,
+            81,
+            31
+          ],
+          "text": " 5,184"
+        },
+        {
+          "rect": [
+            52,
+            774,
+            60,
+            31
+          ],
+          "text": "Seeds"
+        },
+        {
+          "rect": [
+            450,
+            774,
+            90,
+            31
+          ],
+          "text": "- 3,240"
+        },
+        {
+          "rect": [
+            52,
+            807,
+            185,
+            31
+          ],
+          "text": "Equipment upkeep"
+        },
+        {
+          "rect": [
+            436,
+            807,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            52,
+            840,
+            96,
+            31
+          ],
+          "text": "Mortgage"
+        },
+        {
+          "rect": [
+            436,
+            840,
+            104,
+            31
+          ],
+          "text": "- 48,000"
+        },
+        {
+          "rect": [
+            52,
+            873,
+            153,
+            31
+          ],
+          "text": "Rent & land tax"
+        },
+        {
+          "rect": [
+            436,
+            873,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            52,
+            906,
+            116,
+            31
+          ],
+          "text": "Living costs"
+        },
+        {
+          "rect": [
+            436,
+            906,
+            104,
+            31
+          ],
+          "text": "- 32,000"
+        },
+        {
+          "rect": [
+            52,
+            939,
+            57,
+            31
+          ],
+          "text": "Other"
+        },
+        {
+          "rect": [
+            445,
+            939,
+            95,
+            31
+          ],
+          "text": " 20,056"
+        },
+        {
+          "rect": [
+            36,
+            1011,
+            520,
+            31
+          ],
+          "text": "BEYOND THIS FARM"
+        },
+        {
+          "rect": [
+            36,
+            1054,
+            520,
+            133
+          ],
+          "text": "For real farming communities, extreme weather can destroy harvests, damage infrastructure and disrupt markets. Preparing together can protect livelihoods."
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "foreclosure",
+      "ready": true,
+      "request": 15,
+      "scroll": [
+        36,
+        206,
+        528,
+        898
+      ],
+      "scroll_top": 116,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@Panel@5932",
+          "rect": [
+            0,
+            0,
+            600,
+            1298
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@5961",
+          "rect": [
+            36,
+            725,
+            520,
+            261
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9101",
+          "rect": [
+            52,
+            741,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9107",
+          "rect": [
+            52,
+            774,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9113",
+          "rect": [
+            52,
+            807,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9119",
+          "rect": [
+            52,
+            840,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9125",
+          "rect": [
+            52,
+            873,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9131",
+          "rect": [
+            52,
+            906,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@9137",
+          "rect": [
+            52,
+            939,
+            488,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 43.2691996666669,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "graphics:balanced",
+          "disabled": true,
+          "rect": [
+            36,
+            262,
+            528,
+            76
+          ],
+          "text": "Balanced\nClear farm · gentle shadows"
+        },
+        {
+          "action": "graphics:smooth",
+          "disabled": false,
+          "rect": [
+            36,
+            348,
+            528,
+            76
+          ],
+          "text": "Smooth\nFaster farm · shadows off"
+        },
+        {
+          "action": "graphics:crisp",
+          "disabled": false,
+          "rect": [
+            36,
+            434,
+            528,
+            76
+          ],
+          "text": "Crisp\nSharpest farm · needs more power"
+        },
+        {
+          "action": "shadows:2048",
+          "disabled": true,
+          "rect": [
+            36,
+            576,
+            528,
+            68
+          ],
+          "text": "2048"
+        },
+        {
+          "action": "shadows:4096",
+          "disabled": false,
+          "rect": [
+            36,
+            654,
+            528,
+            68
+          ],
+          "text": "4096"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            36,
+            732,
+            528,
+            68
+          ],
+          "text": "Back to farm"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Graphics"
+        },
+        {
+          "rect": [
+            36,
+            206,
+            528,
+            46
+          ],
+          "text": "Using Balanced · 2048 shadows"
+        },
+        {
+          "rect": [
+            36,
+            520,
+            528,
+            46
+          ],
+          "text": "SHADOW MAP"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "graphics",
+      "ready": true,
+      "request": 16,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 45.1869223333334,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "measure_year",
+          "disabled": false,
+          "rect": [
+            50,
+            274,
+            500,
+            68
+          ],
+          "text": "Measure a year"
+        },
+        {
+          "action": "debug_unlock",
+          "disabled": false,
+          "rect": [
+            36,
+            708,
+            528,
+            68
+          ],
+          "text": "Unlock debug"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Debug access"
+        },
+        {
+          "rect": [
+            50,
+            220,
+            500,
+            46
+          ],
+          "text": "FRAME TIME"
+        },
+        {
+          "rect": [
+            50,
+            350,
+            500,
+            95
+          ],
+          "text": "Records through the next Winter accounts closing. No farm data changes."
+        },
+        {
+          "rect": [
+            36,
+            469,
+            528,
+            95
+          ],
+          "text": "Test funding and recovery change this saved farm. Ordinary gameplay stays paused after bankruptcy."
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "debug",
+      "ready": true,
+      "request": 17,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "f3efdfff",
+          "name": "@PanelContainer@9194",
+          "rect": [
+            36,
+            206,
+            528,
+            253
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 46.9035196666667,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Controls"
+        },
+        {
+          "rect": [
+            36,
+            206,
+            256,
+            46
+          ],
+          "text": "Camera"
+        },
+        {
+          "rect": [
+            308,
+            206,
+            256,
+            46
+          ],
+          "text": "Drag farm"
+        },
+        {
+          "rect": [
+            36,
+            262,
+            256,
+            46
+          ],
+          "text": "Zoom"
+        },
+        {
+          "rect": [
+            308,
+            262,
+            256,
+            46
+          ],
+          "text": "Pinch"
+        },
+        {
+          "rect": [
+            36,
+            318,
+            256,
+            46
+          ],
+          "text": "Move"
+        },
+        {
+          "rect": [
+            308,
+            318,
+            256,
+            46
+          ],
+          "text": "Joystick"
+        },
+        {
+          "rect": [
+            36,
+            374,
+            256,
+            46
+          ],
+          "text": "Interact"
+        },
+        {
+          "rect": [
+            308,
+            374,
+            256,
+            46
+          ],
+          "text": "Tap bed or shop"
+        },
+        {
+          "rect": [
+            36,
+            430,
+            256,
+            46
+          ],
+          "text": "Recenter"
+        },
+        {
+          "rect": [
+            308,
+            430,
+            256,
+            46
+          ],
+          "text": "Tools → Recenter"
+        },
+        {
+          "rect": [
+            36,
+            486,
+            256,
+            46
+          ],
+          "text": "Hurry"
+        },
+        {
+          "rect": [
+            308,
+            486,
+            256,
+            46
+          ],
+          "text": "Hold to hurry · 3×"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        474
+      ],
+      "page": "help",
+      "ready": true,
+      "request": 18,
+      "scroll": [
+        36,
+        206,
+        528,
+        344
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            474
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 48.5368529999999,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "activity:duck",
+          "disabled": false,
+          "rect": [
+            50,
+            741,
+            500,
+            68
+          ],
+          "text": "Hire +1 ·  20,000"
+        },
+        {
+          "action": "activity:duck:speed",
+          "disabled": true,
+          "rect": [
+            50,
+            1118,
+            500,
+            68
+          ],
+          "text": "Hire a duck first"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Duck patrol"
+        },
+        {
+          "rect": [
+            50,
+            383,
+            500,
+            49
+          ],
+          "text": "No ducks hired yet"
+        },
+        {
+          "rect": [
+            50,
+            530,
+            500,
+            46
+          ],
+          "text": "Add a duck"
+        },
+        {
+          "rect": [
+            50,
+            579,
+            500,
+            46
+          ],
+          "text": "0 / 2 ducks"
+        },
+        {
+          "rect": [
+            50,
+            628,
+            500,
+            46
+          ],
+          "text": "Clears pests automatically"
+        },
+        {
+          "rect": [
+            50,
+            677,
+            500,
+            52
+          ],
+          "text": "Affordable"
+        },
+        {
+          "rect": [
+            50,
+            907,
+            500,
+            46
+          ],
+          "text": "Patrol speed"
+        },
+        {
+          "rect": [
+            50,
+            956,
+            500,
+            46
+          ],
+          "text": "Whole flock"
+        },
+        {
+          "rect": [
+            50,
+            1005,
+            500,
+            46
+          ],
+          "text": "4s → 3s per bed"
+        },
+        {
+          "rect": [
+            50,
+            1054,
+            500,
+            52
+          ],
+          "text": "Locked · Hire a duck"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "activities",
+      "ready": true,
+      "request": 19,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@9224",
+          "rect": [
+            36,
+            206,
+            528,
+            240
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@9229",
+          "rect": [
+            36,
+            456,
+            528,
+            367
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "@PanelContainer@9238",
+          "rect": [
+            36,
+            833,
+            528,
+            367
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 50.1533969999998,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            58
+          ],
+          "text": "Crop varieties"
+        },
+        {
+          "rect": [
+            36,
+            206,
+            520,
+            46
+          ],
+          "text": "5 varieties"
+        },
+        {
+          "rect": [
+            50,
+            362,
+            492,
+            46
+          ],
+          "text": "#01 · Russet"
+        },
+        {
+          "rect": [
+            50,
+            414,
+            492,
+            46
+          ],
+          "text": "60s base growth · Spud Valley"
+        },
+        {
+          "rect": [
+            50,
+            466,
+            492,
+            58
+          ],
+          "text": "3 t per bed"
+        },
+        {
+          "rect": [
+            50,
+            650,
+            492,
+            46
+          ],
+          "text": "#02 · Giant"
+        },
+        {
+          "rect": [
+            50,
+            702,
+            492,
+            46
+          ],
+          "text": "110s base growth · Spud Valley"
+        },
+        {
+          "rect": [
+            50,
+            754,
+            492,
+            58
+          ],
+          "text": "5 t per bed"
+        },
+        {
+          "rect": [
+            50,
+            938,
+            492,
+            46
+          ],
+          "text": "#03 · Golden"
+        },
+        {
+          "rect": [
+            50,
+            990,
+            492,
+            46
+          ],
+          "text": "90s base growth · Spud Valley"
+        },
+        {
+          "rect": [
+            50,
+            1042,
+            492,
+            58
+          ],
+          "text": "4 t per bed"
+        },
+        {
+          "rect": [
+            50,
+            1226,
+            492,
+            46
+          ],
+          "text": "#04 · Sunburst"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "dex",
+      "ready": true,
+      "request": 20,
+      "scroll": [
+        36,
+        206,
+        528,
+        1056
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "17382dff",
+          "name": "@PanelContainer@5805",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "VarietyBoard_russet",
+          "rect": [
+            36,
+            262,
+            520,
+            276
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "VarietyBoard_giant",
+          "rect": [
+            36,
+            550,
+            520,
+            276
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "VarietyBoard_golden",
+          "rect": [
+            36,
+            838,
+            520,
+            276
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "79553dff",
+          "name": "VarietyBoard_sunburst",
+          "rect": [
+            36,
+            1126,
+            520,
+            276
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-l",
+      "world_animation_time": 51.8366636666664,
+      "year": 3
+    }
+  ]
+}

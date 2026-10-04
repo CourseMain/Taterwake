@@ -1,0 +1,14 @@
+{
+  "before_commit": "ea69a35",
+  "after_production_commit": "5589811",
+  "browser": "Chrome 154 / Godot 4.7.2 Compatibility",
+  "viewport": [
+    390,
+    844
+  ],
+  "device_pixel_ratio": 1,
+  "fixture": "tests/browser_surfaces_scene.gd",
+  "player_saves_used": false,
+  "before_report": "taterland-before/capture-report.json",
+  "after_report": "taterland-after/capture-report.json"
+}

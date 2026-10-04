@@ -1,0 +1,1733 @@
+{
+  "url": "http://127.0.0.1:8912/index.html",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "errors": [],
+  "reports": [
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            390,
+            1198,
+            188,
+            78
+          ],
+          "text": "Use Hoe"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            390,
+            1120,
+            188,
+            68
+          ],
+          "text": "Hoe  /  Tools"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            466,
+            16,
+            112,
+            68
+          ],
+          "text": "Menu"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            466,
+            94,
+            112,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "",
+          "disabled": true,
+          "rect": [
+            390,
+            1046,
+            188,
+            68
+          ],
+          "text": "Hold to hurry"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            318,
+            337,
+            44,
+            49
+          ],
+          "text": "?"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            22,
+            1208,
+            556,
+            68
+          ],
+          "text": "Start the year →"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            96,
+            16,
+            92,
+            67
+          ],
+          "text": "TATER"
+        },
+        {
+          "rect": [
+            196,
+            16,
+            16,
+            67
+          ],
+          "text": "/"
+        },
+        {
+          "rect": [
+            220,
+            16,
+            84,
+            67
+          ],
+          "text": "LAND"
+        },
+        {
+          "rect": [
+            16,
+            132,
+            432,
+            58
+          ],
+          "text": "- 126,056 · Russet"
+        },
+        {
+          "rect": [
+            22,
+            22,
+            556,
+            64
+          ],
+          "text": "THE SPUD VALLEY RECORD"
+        },
+        {
+          "rect": [
+            22,
+            106,
+            556,
+            20
+          ],
+          "text": "WEATHER • FARMING • THE YEAR AHEAD"
+        },
+        {
+          "rect": [
+            22,
+            170,
+            266,
+            297
+          ],
+          "text": "YEAR 3\nRain arrives at the wrong time"
+        },
+        {
+          "rect": [
+            104,
+            485,
+            184,
+            258
+          ],
+          "text": "Iris · Weather forecaster\nIris, on the radio. Year 3: 23% disaster chance each season. These are odds, not appointments. Read the sky, leave room in the budget."
+        },
+        {
+          "rect": [
+            22,
+            761,
+            266,
+            57
+          ],
+          "text": "Mean severity 56% · three disasters per year at most"
+        },
+        {
+          "rect": [
+            318,
+            170,
+            260,
+            31
+          ],
+          "text": "THE WEATHER COLUMN"
+        },
+        {
+          "rect": [
+            318,
+            205,
+            260,
+            20
+          ],
+          "text": "Ten years · recorded disasters"
+        },
+        {
+          "rect": [
+            330,
+            402,
+            236,
+            20
+          ],
+          "text": "ACCOUNTS · LAST YEAR"
+        },
+        {
+          "rect": [
+            330,
+            426,
+            236,
+            34
+          ],
+          "text": "- 104,000"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1218
+      ],
+      "page": "title",
+      "ready": true,
+      "request": 1,
+      "scroll": [
+        12,
+        100,
+        0,
+        0
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "1433298c",
+          "name": "@Panel@5958",
+          "rect": [
+            22,
+            1108,
+            166,
+            166
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "f2e0a8cc",
+          "name": "@Panel@5959",
+          "rect": [
+            73,
+            1159,
+            64,
+            64
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "f5ecd6ff",
+          "name": "@PanelContainer@6950",
+          "rect": [
+            0,
+            0,
+            600,
+            1298
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "LastYearAccounts",
+          "rect": [
+            318,
+            390,
+            260,
+            82
+          ],
+          "type": "StyleBoxFlat"
+        }
+      ],
+      "title_available": false,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-k",
+      "world_animation_time": 3.37335888888888,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            496,
+            124,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            488,
+            908,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "rect": [
+            488,
+            1019,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "lease:low",
+          "disabled": false,
+          "rect": [
+            36,
+            1130,
+            520,
+            68
+          ],
+          "text": "Rent ·  55,000/year"
+        },
+        {
+          "action": "ledger_screenshot",
+          "disabled": false,
+          "rect": [
+            36,
+            1194,
+            260,
+            68
+          ],
+          "text": "Save screenshot"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            304,
+            1194,
+            260,
+            68
+          ],
+          "text": "Return to farm"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            96,
+            16,
+            92,
+            67
+          ],
+          "text": "TATER"
+        },
+        {
+          "rect": [
+            196,
+            16,
+            16,
+            67
+          ],
+          "text": "/"
+        },
+        {
+          "rect": [
+            220,
+            16,
+            84,
+            67
+          ],
+          "text": "LAND"
+        },
+        {
+          "rect": [
+            36,
+            124,
+            450,
+            35
+          ],
+          "text": "The annual accounts"
+        },
+        {
+          "rect": [
+            36,
+            217,
+            176,
+            41
+          ],
+          "text": "FILED · YEAR 03"
+        },
+        {
+          "rect": [
+            36,
+            276,
+            520,
+            51
+          ],
+          "text": "− 102,056"
+        },
+        {
+          "rect": [
+            36,
+            333,
+            520,
+            31
+          ],
+          "text": "NET FOR THE YEAR"
+        },
+        {
+          "rect": [
+            36,
+            370,
+            520,
+            28
+          ],
+          "text": "THIS YEAR"
+        },
+        {
+          "rect": [
+            36,
+            400,
+            105,
+            31
+          ],
+          "text": "Crop sales"
+        },
+        {
+          "rect": [
+            475,
+            400,
+            81,
+            31
+          ],
+          "text": " 5,184"
+        },
+        {
+          "rect": [
+            36,
+            433,
+            60,
+            31
+          ],
+          "text": "Seeds"
+        },
+        {
+          "rect": [
+            466,
+            433,
+            90,
+            31
+          ],
+          "text": "- 3,240"
+        },
+        {
+          "rect": [
+            36,
+            466,
+            185,
+            31
+          ],
+          "text": "Equipment upkeep"
+        },
+        {
+          "rect": [
+            452,
+            466,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            36,
+            499,
+            96,
+            31
+          ],
+          "text": "Mortgage"
+        },
+        {
+          "rect": [
+            452,
+            499,
+            104,
+            31
+          ],
+          "text": "- 48,000"
+        },
+        {
+          "rect": [
+            36,
+            532,
+            153,
+            31
+          ],
+          "text": "Rent & land tax"
+        },
+        {
+          "rect": [
+            452,
+            532,
+            104,
+            31
+          ],
+          "text": "- 12,000"
+        },
+        {
+          "rect": [
+            36,
+            565,
+            116,
+            31
+          ],
+          "text": "Living costs"
+        },
+        {
+          "rect": [
+            452,
+            565,
+            104,
+            31
+          ],
+          "text": "- 32,000"
+        },
+        {
+          "rect": [
+            36,
+            628,
+            520,
+            28
+          ],
+          "text": "TEN-YEAR RECORD"
+        },
+        {
+          "rect": [
+            36,
+            658,
+            62,
+            31
+          ],
+          "text": "Year 1"
+        },
+        {
+          "rect": [
+            439,
+            658,
+            117,
+            31
+          ],
+          "text": "- 104,000"
+        },
+        {
+          "rect": [
+            36,
+            691,
+            62,
+            31
+          ],
+          "text": "Year 2"
+        },
+        {
+          "rect": [
+            439,
+            691,
+            117,
+            31
+          ],
+          "text": "- 104,000"
+        },
+        {
+          "rect": [
+            36,
+            724,
+            62,
+            31
+          ],
+          "text": "Year 3"
+        },
+        {
+          "rect": [
+            439,
+            724,
+            117,
+            31
+          ],
+          "text": "- 102,056"
+        },
+        {
+          "rect": [
+            36,
+            871,
+            520,
+            31
+          ],
+          "text": "Nell · Accountant"
+        },
+        {
+          "rect": [
+            36,
+            909,
+            448,
+            65
+          ],
+          "text": "Purse - 230,056 · Overdraft limit - 200,000"
+        },
+        {
+          "rect": [
+            36,
+            982,
+            520,
+            31
+          ],
+          "text": "Loan remaining  408,000"
+        },
+        {
+          "rect": [
+            36,
+            1039,
+            448,
+            28
+          ],
+          "text": "FIELDS · leases for the coming year"
+        },
+        {
+          "rect": [
+            36,
+            1093,
+            520,
+            31
+          ],
+          "text": "Low Field"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "accounts",
+      "ready": true,
+      "request": 2,
+      "scroll": [
+        36,
+        206,
+        528,
+        974
+      ],
+      "scroll_top": 0,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "fffbedff",
+          "name": "@PanelContainer@5793",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7294",
+          "rect": [
+            36,
+            400,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7300",
+          "rect": [
+            36,
+            433,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7318",
+          "rect": [
+            36,
+            466,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7336",
+          "rect": [
+            36,
+            499,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7342",
+          "rect": [
+            36,
+            532,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7348",
+          "rect": [
+            36,
+            565,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7374",
+          "rect": [
+            36,
+            658,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7380",
+          "rect": [
+            36,
+            691,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@7386",
+          "rect": [
+            36,
+            724,
+            520,
+            31
+          ],
+          "type": "StyleBoxEmpty"
+        }
+      ],
+      "title_available": false,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-k",
+      "world_animation_time": 5.32914833333332,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "market",
+          "disabled": false,
+          "rect": [
+            30,
+            167,
+            227,
+            68
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "sell_potatoes",
+          "disabled": false,
+          "rect": [
+            265,
+            167,
+            227,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            167,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "crop:russet",
+          "disabled": false,
+          "rect": [
+            54,
+            455,
+            303,
+            68
+          ],
+          "text": "RUSSET"
+        },
+        {
+          "action": "buy:russet:1",
+          "disabled": false,
+          "rect": [
+            54,
+            946,
+            148,
+            68
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:russet:5",
+          "disabled": false,
+          "rect": [
+            208,
+            946,
+            149,
+            68
+          ],
+          "text": "Buy 5"
+        },
+        {
+          "action": "crop:giant",
+          "disabled": false,
+          "rect": [
+            397,
+            455,
+            303,
+            68
+          ],
+          "text": "GIANT"
+        },
+        {
+          "action": "buy:giant:1",
+          "disabled": false,
+          "rect": [
+            397,
+            913,
+            148,
+            68
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:giant:5",
+          "disabled": false,
+          "rect": [
+            551,
+            913,
+            149,
+            68
+          ],
+          "text": "Buy 5"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            96,
+            16,
+            92,
+            67
+          ],
+          "text": "TATER"
+        },
+        {
+          "rect": [
+            196,
+            16,
+            16,
+            67
+          ],
+          "text": "/"
+        },
+        {
+          "rect": [
+            220,
+            16,
+            84,
+            67
+          ],
+          "text": "LAND"
+        },
+        {
+          "rect": [
+            30,
+            249,
+            540,
+            26
+          ],
+          "text": "Balance - 126,056"
+        },
+        {
+          "rect": [
+            42,
+            305,
+            452,
+            56
+          ],
+          "text": "MARA’S SHOP"
+        },
+        {
+          "rect": [
+            30,
+            391,
+            540,
+            26
+          ],
+          "text": "Swipe for more seeds →"
+        },
+        {
+          "rect": [
+            54,
+            641,
+            303,
+            40
+          ],
+          "text": " 270"
+        },
+        {
+          "rect": [
+            54,
+            688,
+            303,
+            26
+          ],
+          "text": "PER SEED"
+        },
+        {
+          "rect": [
+            54,
+            721,
+            303,
+            26
+          ],
+          "text": "●○ · 3 t"
+        },
+        {
+          "rect": [
+            222,
+            754,
+            135,
+            26
+          ],
+          "text": "Thirst"
+        },
+        {
+          "rect": [
+            222,
+            787,
+            135,
+            26
+          ],
+          "text": "Heat"
+        },
+        {
+          "rect": [
+            222,
+            820,
+            135,
+            26
+          ],
+          "text": "Cold"
+        },
+        {
+          "rect": [
+            54,
+            853,
+            303,
+            36
+          ],
+          "text": "STEADY PRICE"
+        },
+        {
+          "rect": [
+            54,
+            913,
+            303,
+            26
+          ],
+          "text": "12 seeds owned"
+        },
+        {
+          "rect": [
+            397,
+            641,
+            303,
+            40
+          ],
+          "text": " 360"
+        },
+        {
+          "rect": [
+            397,
+            688,
+            303,
+            26
+          ],
+          "text": "PER SEED"
+        },
+        {
+          "rect": [
+            397,
+            721,
+            303,
+            26
+          ],
+          "text": "●○ · 5 t"
+        },
+        {
+          "rect": [
+            397,
+            853,
+            303,
+            36
+          ],
+          "text": "STEADY PRICE"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        149,
+        576,
+        1000
+      ],
+      "page": "market",
+      "ready": true,
+      "request": 3,
+      "scroll": [
+        30,
+        249,
+        540,
+        882
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "304d3dff",
+          "name": "@PanelContainer@5793",
+          "rect": [
+            12,
+            149,
+            576,
+            1000
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "c98335ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            289,
+            540,
+            88
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "304d3dff",
+          "name": "MaraChalkboard",
+          "rect": [
+            30,
+            431,
+            540,
+            615
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "RussetSeedPacket",
+          "rect": [
+            42,
+            443,
+            327.359985351562,
+            583
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7642",
+          "rect": [
+            83,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7643",
+          "rect": [
+            129,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7644",
+          "rect": [
+            175,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7648",
+          "rect": [
+            83,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7649",
+          "rect": [
+            129,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7650",
+          "rect": [
+            175,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7654",
+          "rect": [
+            83,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7655",
+          "rect": [
+            129,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7656",
+          "rect": [
+            175,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "GiantSeedPacket",
+          "rect": [
+            385,
+            443,
+            327.359985351562,
+            583
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7672",
+          "rect": [
+            426,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7673",
+          "rect": [
+            472,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7674",
+          "rect": [
+            518,
+            762,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7678",
+          "rect": [
+            426,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7679",
+          "rect": [
+            472,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7680",
+          "rect": [
+            518,
+            795,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7684",
+          "rect": [
+            426,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "34362cff",
+          "name": "@PanelContainer@7685",
+          "rect": [
+            472,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "e3dcc6ff",
+          "name": "@PanelContainer@7686",
+          "rect": [
+            518,
+            828,
+            42,
+            9
+          ],
+          "type": "StyleBoxFlat"
+        }
+      ],
+      "title_available": false,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-k",
+      "world_animation_time": 6.98746833333331,
+      "year": 3
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "rect": [
+            502,
+            118,
+            68,
+            68
+          ],
+          "text": "×"
+        },
+        {
+          "action": "climate_fund:rainwater",
+          "disabled": true,
+          "rect": [
+            42,
+            729,
+            508,
+            68
+          ],
+          "text": "Build ·  36,000"
+        },
+        {
+          "action": "climate_fund:drainage",
+          "disabled": true,
+          "rect": [
+            42,
+            920,
+            508,
+            68
+          ],
+          "text": "Build ·  48,000"
+        },
+        {
+          "action": "climate_fund:windbreaks",
+          "disabled": true,
+          "rect": [
+            42,
+            1111,
+            508,
+            68
+          ],
+          "text": "Build ·  60,000"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "surfaces",
+      "labels": [
+        {
+          "rect": [
+            96,
+            16,
+            92,
+            67
+          ],
+          "text": "TATER"
+        },
+        {
+          "rect": [
+            196,
+            16,
+            16,
+            67
+          ],
+          "text": "/"
+        },
+        {
+          "rect": [
+            220,
+            16,
+            84,
+            67
+          ],
+          "text": "LAND"
+        },
+        {
+          "rect": [
+            42,
+            227,
+            444,
+            34
+          ],
+          "text": "WEATHER STATION"
+        },
+        {
+          "rect": [
+            142,
+            312,
+            408,
+            61
+          ],
+          "text": "Next Spring\nFlood or Freeze"
+        },
+        {
+          "rect": [
+            142,
+            488,
+            408,
+            29
+          ],
+          "text": "Clear skies"
+        },
+        {
+          "rect": [
+            70,
+            549,
+            124,
+            61
+          ],
+          "text": "Home · sheltered"
+        },
+        {
+          "rect": [
+            250,
+            549,
+            124,
+            61
+          ],
+          "text": "Low · floods first"
+        },
+        {
+          "rect": [
+            430,
+            549,
+            124,
+            61
+          ],
+          "text": "Hill · dries first"
+        },
+        {
+          "rect": [
+            94,
+            650,
+            422,
+            25
+          ],
+          "text": "Rainwater tank"
+        },
+        {
+          "rect": [
+            526,
+            648,
+            24,
+            29
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            692,
+            508,
+            29
+          ],
+          "text": "Drought loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            841,
+            422,
+            25
+          ],
+          "text": "Drainage"
+        },
+        {
+          "rect": [
+            526,
+            839,
+            24,
+            29
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            883,
+            508,
+            29
+          ],
+          "text": "Flood loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            1032,
+            422,
+            25
+          ],
+          "text": "Windbreak"
+        },
+        {
+          "rect": [
+            526,
+            1030,
+            24,
+            29
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            1074,
+            508,
+            29
+          ],
+          "text": "Storm loss −50%"
+        },
+        {
+          "rect": [
+            94,
+            1223,
+            422,
+            25
+          ],
+          "text": "Frost cover"
+        },
+        {
+          "rect": [
+            526,
+            1221,
+            24,
+            29
+          ],
+          "text": "○○"
+        },
+        {
+          "rect": [
+            42,
+            1265,
+            508,
+            29
+          ],
+          "text": "Covered Spring freeze loss −50%"
+        }
+      ],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        12,
+        100,
+        576,
+        1186
+      ],
+      "page": "climate",
+      "ready": true,
+      "request": 4,
+      "scroll": [
+        30,
+        200,
+        540,
+        1068
+      ],
+      "scroll_top": 0,
+      "season": "Winter",
+      "simulation_seconds": 0,
+      "surfaces": [
+        {
+          "fill": "284550ff",
+          "name": "@PanelContainer@5793",
+          "rect": [
+            12,
+            100,
+            576,
+            1186
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "588da5ff",
+          "name": "PlaceHeader",
+          "rect": [
+            30,
+            200,
+            532,
+            88
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "ForecastInstrument",
+          "rect": [
+            30,
+            300,
+            532,
+            229
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "@PanelContainer@7875",
+          "rect": [
+            30,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "@PanelContainer@7879",
+          "rect": [
+            210,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "@PanelContainer@7883",
+          "rect": [
+            390,
+            541,
+            172,
+            77
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "Protection_rainwater",
+          "rect": [
+            30,
+            630,
+            532,
+            179
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "Protection_drainage",
+          "rect": [
+            30,
+            821,
+            532,
+            179
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "Protection_windbreaks",
+          "rect": [
+            30,
+            1012,
+            532,
+            179
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fff8e7ff",
+          "name": "Protection_frost",
+          "rect": [
+            30,
+            1203,
+            532,
+            179
+          ],
+          "type": "StyleBoxFlat"
+        }
+      ],
+      "title_available": false,
+      "touch": true,
+      "version": "2.0.0-underdevelopment-k",
+      "world_animation_time": 8.66243166666668,
+      "year": 3
+    }
+  ]
+}

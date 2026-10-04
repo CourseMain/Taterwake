@@ -38,6 +38,10 @@ const height = width === 390 ? 844 : 800;
       await page.screenshot({path: path.join(output, `${name}.png`)});
       reports.push(report);
       console.log(`CAPTURE ${width}x${height} ${name}`);
+      if (extra && command === 'title') {
+        await page.waitForTimeout(8500);
+        await page.screenshot({path: path.join(output, 'title-pullback.png')});
+      }
       if (extra && ['accounts', 'run_summary', 'foreclosure'].includes(command)) {
         await page.evaluate(() => window.surfaceQA('scroll:end'));
         await page.waitForFunction(() => window.surfaceReport.ready);
