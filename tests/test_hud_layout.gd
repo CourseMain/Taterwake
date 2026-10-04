@@ -121,7 +121,7 @@ func winter_pages() -> void:
 	check(not game.hud._season_jobs.visible, "Winter jobs stay hidden while accounts pause")
 	check(game.hud._body.find_child("LedgerYearStamp", true, false) != null, "accounts stamp the year")
 	check(game.hud._refs.has("ledger_screenshot"), "annual accounts offer a screenshot")
-	check(game.hud._modal.get_child(0).color == game.hud.CREAM, "ledger has opaque cream behind it")
+	check(game.hud._modal.get_child(0).color.a < 1 and game.hud._modal_card.get_theme_stylebox("panel").get_meta("surface_fill") == game.hud.INK, "ledger has an ink frame over the visible farm")
 	game.hud.close_panel()
 	game.state.climate.data.protection.pending.rainwater = 1
 	game.state.climate.data.projects.frost = 1

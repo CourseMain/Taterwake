@@ -9,6 +9,7 @@ func check(ok: bool, note: String) -> void:
 	if not ok: failures += 1; push_error("FAIL: " + note)
 func settle() -> void:
 	for i in range(10): await process_frame
+	if is_instance_valid(game): game.hud.advance_panel_entrance(game.hud.ACCOUNTS_ENTRANCE_SECONDS)
 func shot(label: String) -> void:
 	if "--capture" not in OS.get_cmdline_user_args(): return
 	await settle()

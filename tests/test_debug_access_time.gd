@@ -25,6 +25,8 @@ func shot(label: String) -> void:
 	check(root.get_texture().get_image().save_png("res://artifacts/debug-access-" + label + ".png") == OK, "capture " + label)
 
 func click_button(button: Button) -> void:
+	# Pointer input belongs to the settled page; the entrance shields taps.
+	await create_timer(game.hud.PANEL_ENTRANCE_SECONDS + .05).timeout
 	var scroller: ScrollContainer = game.hud._body.get_parent()
 	scroller.ensure_control_visible(button)
 	await process_frame
