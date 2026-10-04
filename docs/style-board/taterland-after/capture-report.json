@@ -64,7 +64,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 3.32807499999999,
+      "world_animation_time": 3.40701166666666,
       "year": 3
     },
     {
@@ -553,7 +553,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 14.6458310000002,
+      "world_animation_time": 14.4278456666669,
       "year": 3
     },
     {
@@ -1081,7 +1081,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 17.3500000000002,
+      "world_animation_time": 16.7599556666669,
       "year": 3
     },
     {
@@ -1438,7 +1438,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 19.5611111111114,
+      "world_animation_time": 18.7779490000002,
       "year": 3
     },
     {
@@ -1732,7 +1732,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 21.4605786666669,
+      "world_animation_time": 20.4271633333334,
       "year": 3
     },
     {
@@ -2013,7 +2013,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 23.7240700000003,
+      "world_animation_time": 22.1010993333334,
       "year": 3
     },
     {
@@ -2352,7 +2352,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 26.1358183333336,
+      "world_animation_time": 23.9810777878788,
       "year": 3
     },
     {
@@ -2580,7 +2580,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 28.8847222222226,
+      "world_animation_time": 26.2034663333334,
       "year": 3
     },
     {
@@ -2741,7 +2741,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 31.334846666667,
+      "world_animation_time": 28.225,
       "year": 3
     },
     {
@@ -2893,7 +2893,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 33.339531666667,
+      "world_animation_time": 30.0311479999999,
       "year": 3
     },
     {
@@ -3145,7 +3145,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 35.517820703704,
+      "world_animation_time": 31.8513888888888,
       "year": 3
     },
     {
@@ -3424,7 +3424,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 37.4733542222225,
+      "world_animation_time": 33.6205873333332,
       "year": 3
     },
     {
@@ -3578,7 +3578,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 39.2955813333336,
+      "world_animation_time": 35.2455759999999,
       "year": 3
     },
     {
@@ -4069,7 +4069,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 41.1965563333336,
+      "world_animation_time": 36.9862693333332,
       "year": 10
     },
     {
@@ -4476,7 +4476,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 43.2691996666669,
+      "world_animation_time": 38.9122193333331,
       "year": 3
     },
     {
@@ -4632,7 +4632,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 45.1869223333334,
+      "world_animation_time": 40.8037573333331,
       "year": 3
     },
     {
@@ -4764,7 +4764,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 46.9035196666667,
+      "world_animation_time": 42.4287466666664,
       "year": 3
     },
     {
@@ -4944,7 +4944,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 48.5368529999999,
+      "world_animation_time": 44.0286819999996,
       "year": 3
     },
     {
@@ -5152,7 +5152,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 50.1533969999998,
+      "world_animation_time": 45.6453486666662,
       "year": 3
     },
     {
@@ -5367,7 +5367,7 @@
       "title_available": true,
       "touch": true,
       "version": "2.0.0-underdevelopment-l",
-      "world_animation_time": 51.8366636666664,
+      "world_animation_time": 47.2453486666661,
       "year": 3
     }
   ]
