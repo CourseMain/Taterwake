@@ -1431,6 +1431,81 @@ Ledger labels unchanged; no balance change; bot unchanged. Full suite
 before tagging; tag v2.0.0-underdevelopment-o.
 ```
 
+### Segment 21f: The first tester (run now, before any more features)
+
+```
+Why: the first fresh tester, who never plays games, read the first
+screen for five seconds and quit. Her words: too much text, too small,
+too fast, too loud, could not tell what Table and Standard meant. Her
+run also hit a blocker: after "Walk to the farm" on a fresh launch the
+island was missing and the game had to be restarted. This segment is
+only what she hit. Nothing new is added.
+
+A. Blocker. farm_title.start() saves the camera transform and size on
+   the first frame, before the world has done its overview fit, and
+   finish() restores that stale transform, so the island is tiny or off
+   screen until a restart. On finish, do not restore saved values on a
+   fresh launch: re-run the overview fit (camera.size = overview_size(),
+   the overview position and look-at, then fit_camera_depth). Test on
+   the Web export at 1440x900 and 390x844: after Walk, the island fills
+   the frame on the first launch.
+
+B. One thing at a time in the guided year.
+   1. Hide everything the current step does not need: the Weather pill,
+      Sell, the Spring card, the market price, hurry, the season tabs.
+      Each appears the first time its step needs it and stays after.
+   2. Guide cards are full plain sentences, one instruction each, at
+      most twelve words, no semicolons, no "10x / 1x", no key codes on
+      phone. "Hoe ready. Tap gold bed." becomes "Tap the hoe, then tap
+      the glowing bed." "10x waits; 1x warnings. One mild Summer storm
+      teaches loss." becomes "Spring is passing. One small storm is
+      coming. Iris will warn you."
+   3. The guided storm is called what it is everywhere: "A small storm
+      is coming", never "SEVERE STORM". The alert says one thing:
+      "Harvest the glowing bed before the storm." Warning runs 30 s at
+      1x (GUIDED_WARNING_SECONDS 8 is too fast for a first player).
+   4. Grades, explained once with pictures: the first time a harvest is
+      graded, one card shows the three stamps with a plain gloss under
+      each: Table "best, sells for more", Standard "normal", Feed
+      "damaged, half price". The gloss also prints under the stamp for
+      the first three harvests, then only the word.
+   5. Pests: "Sprayer [5]" becomes "Tap the sprayer, then the bed with
+      bugs." Time to ready: tapping a growing bed shows "Ready in 40 s"
+      large, instead of a tiny label.
+   6. The Autumn Icecap rule and similar reminders are shown only when
+      the player tries the thing (tap a bed in Autumn: one line), never
+      as standing small text.
+
+C. Text floor. Nothing in the HUD below 14 px at 390 wide; game_hud has
+   22 labels at 10 to 13 px. Three sizes only: 22 heading, 16 body, 14
+   caption. Muted captions are 14, not 11.
+
+D. Top band. One row, not three: "Spring · Year 1" left, money centre,
+   Menu right. Height at most 56 px on phone, 64 on desktop. The
+   wordmark goes; the name is on the gate sign. The market price moves
+   onto the Sell button: "Sell · Russet 360/t". Season tabs become the
+   single "Spring · Year 1" label; tapping it opens the calendar.
+
+E. Sound: vary, do not delete. Target mix: ambience bed -24 dB with two
+   layered loops that cross-fade slowly; birds and cicadas in bursts
+   every 20-40 s, not continuous; wind peaks at -26 dB in the guided
+   year and -20 after; thunder -18; the pest alert -14 with three
+   different cues rotated, at most one per 20 s; tool cues -16. No two
+   alert sounds within two seconds of each other. A "Quieter" toggle in
+   the menu halves everything but tool cues.
+
+F. Record the first sheet in PLAYTEST_22.md: tester 1, phone, quit at
+   minute 1, first screen, "too much text, too small, too fast, too
+   loud, did not understand Table and Standard." Three more fresh
+   testers after this segment, not before.
+
+Done when: a fresh Web launch reaches the farm every time, the guided
+year shows one card at a time with nothing else on screen until needed,
+no HUD text under 14 px, the top band is one row, and the storm in the
+guided year is named small and arrives 30 s after its warning. Full
+suite; tag v2.0.1.
+```
+
 ### Segment 22: The fun pass (after Segment 21)
 
 ```
