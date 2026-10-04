@@ -35,12 +35,13 @@ func setup(owner_hud) -> void:
 	_grid.add_theme_constant_override("h_separation", 12); _grid.add_theme_constant_override("v_separation", 12); add_child(_grid)
 	for id in ["rainwater", "drainage", "windbreaks", "frost"]:
 		var tile := _panel(_grid); tile.name = "Protection_" + id
+		tile.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 12, 5, Place.WOOD.darkened(.25)))
 		var body: VBoxContainer = hud._vbox(8); tile.add_child(body)
 		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); body.add_child(row)
-		var drawing := Display.new(); drawing.kind = id; drawing.custom_minimum_size = Vector2(42, 42); row.add_child(drawing)
-		var title: Label = hud._wrap(hud._state.ClimateSystem.Protection.NAMES[id], 20, Place.INK, true); row.add_child(title)
-		var level: Label = hud._label("", 16, Place.INK); row.add_child(level); _levels[id] = level
-		var effect: Label = hud._wrap("", 15, Place.MUTED); body.add_child(effect); hud._refs["climate_effect:" + id] = effect
+		var drawing := Display.new(); drawing.kind = id; drawing.dark = true; drawing.custom_minimum_size = Vector2(42, 42); row.add_child(drawing)
+		var title: Label = hud._wrap(hud._state.ClimateSystem.Protection.NAMES[id], 20, Place.PAPER, true); row.add_child(title)
+		var level: Label = hud._label("", 16, Place.PAPER); row.add_child(level); _levels[id] = level
+		var effect: Label = hud._wrap("", 15, Place.PAPER.darkened(.1)); body.add_child(effect); hud._refs["climate_effect:" + id] = effect
 		var button: Button = hud._button("", "")
 		button.pressed.connect(func(): hud._act("project_site:" + id if hud._state.climate.data.protection.pending.has(id) else "climate_fund:" + id))
 		Place.pill(button, ACCENT, true); body.add_child(button); hud._refs["climate_fund:" + id] = button
