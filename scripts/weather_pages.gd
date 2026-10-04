@@ -2,7 +2,7 @@ extends VBoxContainer
 const Display = preload("res://scripts/weather_display.gd")
 const Place = preload("res://scripts/place_ui.gd")
 const ACCENT := Color("588da5")
-const SHELL := Color("284550")
+const SHELL := Place.INK
 var hud
 var _grid: GridContainer
 var _hero: HBoxContainer
@@ -13,13 +13,13 @@ var _values: Dictionary = {}
 func setup(owner_hud) -> void:
 	hud = owner_hud; set_meta("market_responsive", true)
 	add_theme_constant_override("separation", 12)
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(SHELL, 18, 3, Color("476572")))
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(SHELL, 18, 3, Place.WOOD))
 	hud._modal_card.offset_left = -500; hud._modal_card.offset_right = 500
 	hud._modal_card.offset_top = -380; hud._modal_card.offset_bottom = 380
 	Place.header(hud, self, "WEATHER STATION", ACCENT, "iris")
 	var instrument := _panel(self); instrument.name = "ForecastInstrument"
 	_hero = HBoxContainer.new(); _hero.add_theme_constant_override("separation", 16); instrument.add_child(_hero)
-	_instrument = Display.new(); _instrument.custom_minimum_size = Vector2(128, 128); _hero.add_child(_instrument)
+	_instrument = Display.new(); _instrument.name = "ForecastDrawing"; _instrument.custom_minimum_size = Vector2(128, 128); _hero.add_child(_instrument)
 	var forecast: VBoxContainer = hud._vbox(5); forecast.size_flags_horizontal = Control.SIZE_EXPAND_FILL; _hero.add_child(forecast)
 	hud._refs.forecast_range = hud._wrap("", 23, Place.INK, true); forecast.add_child(hud._refs.forecast_range)
 	_range = preload("res://scripts/paper_detail.gd").new(); _range.kind = "range"; _range.name = "ForecastBracket"

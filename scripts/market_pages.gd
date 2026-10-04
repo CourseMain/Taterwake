@@ -60,7 +60,7 @@ func setup(owner_hud, sell_page: bool) -> void:
 	set_meta("market_responsive", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_theme_constant_override("separation", 14)
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 18, 3))
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.INK, 18, 3, Place.WOOD))
 	crops = State.crops_by_base_price(hud._known_crops() if selling else hud._market_crops())
 	hud._panel_crops = crops.duplicate()
 	_build_navigation()
@@ -123,7 +123,7 @@ func _build_buy() -> void:
 func _build_sell() -> void:
 	Place.header(hud, self, "MARA’S SHOP", ACCENT, "mara")
 	var help_row := HBoxContainer.new(); add_child(help_row)
-	storage_note = _label("", 14, MUTED)
+	storage_note = _label("", 14, Place.PAPER)
 	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
 	Place.help(hud, help_row, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote. Charts zoom to recent prices. An arrow marks a Winter target outside the labelled range." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
 	if hud._state.season_clock.season == 3:

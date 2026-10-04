@@ -3,6 +3,40 @@ extends RefCounted
 const INK: Color = Color("17382d")
 const GREEN: Color = Color("377858")
 const CREAM: Color = Color("fffbed")
+const WOOD: Color = Color("79553d")
+static var _paper_textures: Dictionary = {}
+
+static func paper(fill: Color = CREAM, padding: int = 14, radius: int = 4, edge: Color = Color("c9bea0")) -> StyleBoxTexture:
+	# One material for every sheet, board and painted frame. Build each 64 px
+	# swatch once; nine-slice tiling keeps its grain and inner edge at 1 px.
+	var curve: int = clampi(radius, 0, 8)
+	var key: String = "%s:%s:%d" % [fill.to_html(), edge.to_html(), curve]
+	if not _paper_textures.has(key):
+		var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		for y in range(64):
+			for x in range(64):
+				var hash_value: int = (x * 73 + y * 151 + x * y * 11) % 31
+				var grain: float = (float(hash_value) / 30.0 - .5) * .025
+				if fill == WOOD: grain += sin(float(y) * .8 + sin(float(x) * .12)) * .018
+				var pixel: Color = fill.lightened(grain) if grain >= 0 else fill.darkened(-grain)
+				var distance: int = mini(mini(x, 63 - x), mini(y, 63 - y))
+				if distance == 0: pixel = edge if edge.a > 0 else fill.darkened(.2)
+				elif distance == 1: pixel = fill.darkened(.13)
+				elif distance == 2: pixel = fill.lightened(.035)
+				if curve > 0:
+					var corner := Vector2(clampf(x, curve, 63 - curve), clampf(y, curve, 63 - curve))
+					pixel.a *= clampf(float(curve) + .5 - Vector2(x, y).distance_to(corner), 0, 1)
+				image.set_pixel(x, y, pixel)
+		_paper_textures[key] = ImageTexture.create_from_image(image)
+	var style := StyleBoxTexture.new()
+	style.texture = _paper_textures[key]
+	style.set_texture_margin_all(8)
+	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	style.set_content_margin_all(padding)
+	style.set_meta("surface_fill", fill)
+	style.set_meta("surface_material", "wood" if fill == WOOD else ("ink" if fill == INK else "paper"))
+	return style
 
 static func box(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -17,23 +51,11 @@ static func box(color: Color, padding: int = 14, radius: int = 14, border: Color
 		style.border_color = border
 	return style
 
-static func surface(kind: String, accent: Color = GREEN, selected: bool = false) -> StyleBoxFlat:
-	var style := box(Color("fffdf4").lerp(accent, 0.07 if selected else 0.015), 14, 4, accent.lerp(CREAM, 0.42 if selected else 0.76))
-	style.shadow_color = Color(0.12, 0.20, 0.14, 0.07)
-	style.shadow_size = 3
-	style.shadow_offset = Vector2(0, 2)
-	match kind:
-		"upgrade": style.border_width_left = 4
-		"quest": style.border_width_left = 4 if selected else 1
-		"tracked": style.border_width_left = 4 if selected else 1
-	return style
+static func surface(_kind: String, accent: Color = GREEN, selected: bool = false) -> StyleBoxTexture:
+	return paper(CREAM, 14, 4, accent if selected else Color("c9bea0"))
 
-static func modal(dark: bool = false) -> StyleBoxFlat:
-	var style := box(Color("2b1d40") if dark else Color("f3efdf"), 24, 5, Color("72558e") if dark else Color("d9dcc9"))
-	style.shadow_color = Color(0.04, 0.12, 0.08, 0.28)
-	style.shadow_size = 6
-	style.shadow_offset = Vector2(0, 8)
-	return style
+static func modal(_dark: bool = false) -> StyleBoxTexture:
+	return paper(INK, 24, 5, WOOD)
 
 static func button_style(state: String, primary: bool) -> StyleBoxFlat:
 	var fill: Color = GREEN if primary else Color("f9f7e9")

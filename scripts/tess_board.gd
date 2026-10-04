@@ -11,7 +11,7 @@ func setup(owner_hud, show_losses: bool = false) -> void:
 	hud = owner_hud; losses = show_losses
 	set_meta("market_responsive", true)
 	add_theme_constant_override("separation", 14)
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Color("b89663"), 18, 3, Color("896537")))
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 18, 3, Place.INK))
 	hud._modal_card.offset_top = -380; hud._modal_card.offset_bottom = 380
 	Place.header(hud, self, "TESS’S BOARD", ACCENT, "tess")
 	var bar := HBoxContainer.new(); bar.add_theme_constant_override("separation", 10); add_child(bar)

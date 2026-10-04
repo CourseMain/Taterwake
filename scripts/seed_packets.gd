@@ -6,9 +6,9 @@ static func build(page) -> void:
 	Place.header(page.hud, page, "MARA’S SHOP", ACCENT, "mara")
 	page.wallet.reparent(page); page.move_child(page.wallet, 1)
 	page.wallet.add_theme_color_override("font_color", Place.PAPER)
-	page.hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Color("304d3d"), 18, 3, Color("5a6d50")))
+	page.hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.INK, 18, 3, Place.WOOD))
 	var counter := Board.new(); counter.name = "MaraChalkboard"
-	counter.add_theme_stylebox_override("panel", Place.skin(Color("304d3d"), 12, 3, Color("304d3d")))
+	counter.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 12, 3, Place.WOOD.darkened(.2)))
 	var hint: Label = page._label("Swipe for more seeds →", 14, Place.PAPER)
 	hint.name = "SeedSwipeHint"
 	page.add_child(hint)
@@ -67,8 +67,7 @@ static func refresh(page) -> void:
 	for crop in page.crops:
 		var chosen: bool = state.selected_crop == crop
 		page.hud._refs[crop + ":select"].set_pressed_no_signal(chosen)
-		var skin: StyleBoxFlat = Place.skin(Place.PAPER, 12, 8, Place.INK if chosen else Color("d7c9aa"))
-		skin.shadow_size = 5 if chosen else 0; skin.shadow_offset = Vector2(0, 4)
+		var skin: StyleBoxTexture = Place.skin(Place.PAPER, 12, 8, Place.INK if chosen else Color("d7c9aa"))
 		page.seed_cards[crop].add_theme_stylebox_override("panel", skin)
 		page.hud._refs[crop + ":seed_price"].text = state.market_money(state.market[crop].seed)
 		page.hud._refs[crop + ":quote"].text = "%d seeds owned" % state.seed_inventory[crop] if state.seed_inventory[crop] > 0 else ""

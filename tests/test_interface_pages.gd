@@ -150,7 +150,7 @@ func run() -> void:
 						if child is AcceptDialog: notes = child
 					check(notes != null and notes.visible and notes.size.x <= game.hud.root.size.x, "tap opens a fitting explanation")
 					if notes != null:
-						check(notes.get_label().get_theme_color("font_color") == Color("34362c"), "help text has dark ink on cream")
+						check(notes.get_label().get_theme_color("font_color") == Color("17382d"), "help text has the shared dark ink on paper")
 						check(minf(notes.get_ok_button().size.x, notes.get_ok_button().size.y) * scale >= 43.9, "help dismissal is a phone-sized target: %s, minimum %s, scale %s" % [notes.get_ok_button().size, notes.get_ok_button().custom_minimum_size, scale])
 						if "--capture" in OS.get_cmdline_user_args():
 							RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/segment19-help-%d.png" % dimensions.x)

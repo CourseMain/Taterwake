@@ -4,11 +4,11 @@ const Board = preload("res://scripts/place_board.gd")
 const ACCENT := Color("7b684c")
 static func build(page) -> void:
 	var hud = page.hud
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Color("d4c5a8"), 18, 3, Color("a2947c")))
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.INK, 18, 3, Place.WOOD))
 	Place.header(hud, page, "BRAM’S WORKBENCH", ACCENT, "bram")
-	page._wallet = hud._wrap("", 14, Place.INK); page._wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; page.add_child(page._wallet)
+	page._wallet = hud._wrap("", 14, Place.PAPER); page._wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; page.add_child(page._wallet)
 	var bench := Board.new(); bench.board_kind = "peg"; bench.name = "PegboardWorkbench"
-	bench.add_theme_stylebox_override("panel", Place.skin(Color("d4c5a8"), 12, 3, Color("a2947c"))); page.add_child(bench)
+	bench.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 12, 3, Place.WOOD.darkened(.2))); page.add_child(bench)
 	var grid: GridContainer = page._grid(bench)
 	for tool in ["hoe", "water", "harvest", "expansion", "irrigation"]:
 		var action: String = "climate_fund:irrigation" if tool == "irrigation" else "upgrade:" + tool

@@ -34,6 +34,7 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_circle(Vector2.ZERO, 27, Color("30463a", 0.13))
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
+		"place": _place(c, id)
 		"event": _event(c, id)
 		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id.trim_prefix("tool:"))))
@@ -53,6 +54,40 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 		"crop": _potato(c, crop, Vector2.ZERO, 1.0)
 		_: _symbol(c, id)
 	c.draw_set_transform(Vector2.ZERO)
+
+static func _place(c: CanvasItem, id: String) -> void:
+	# The same warm outlines, soft cast shadows and lumpy geometry as the
+	# potatoes: pictures name the place before its text needs to be read.
+	match id:
+		"barn":
+			_poly(c, [Vector2(-31, -10), Vector2(31, -10), Vector2(31, 33), Vector2(-31, 33)], Color("b07750"))
+			_poly(c, [Vector2(-37, -10), Vector2(0, -38), Vector2(38, -10)], Color("79553d"))
+			_poly(c, [Vector2(-27, -9), Vector2(-2, -29), Vector2(26, -9)], Color("d5a06a"))
+			c.draw_rect(Rect2(-15, 5, 30, 28), Color("17382d"))
+			for x: int in [-24, 22]: c.draw_line(Vector2(x, -5), Vector2(x, 28), Color("e3bb87"), 2, true)
+			c.draw_line(Vector2(-14, 7), Vector2(14, 30), Color("d5a06a"), 3, true)
+			c.draw_line(Vector2(14, 7), Vector2(-14, 30), Color("d5a06a"), 3, true)
+			c.draw_style_box(_box(Color("d8ba77"), 6), Rect2(17, 20, 23, 17))
+			c.draw_line(Vector2(18, 26), Vector2(39, 26), Color("967148"), 2, true)
+		"ledger":
+			c.draw_style_box(_box(Color("17382d"), 5), Rect2(-37, -31, 74, 67))
+			_poly(c, [Vector2(-31, -28), Vector2(-4, -24), Vector2(-4, 30), Vector2(-31, 26)], Color("fffbed"))
+			_poly(c, [Vector2(1, -24), Vector2(31, -28), Vector2(31, 26), Vector2(1, 30)], Color("f0e5c9"))
+			c.draw_line(Vector2(-1, -23), Vector2(-1, 30), Color("79553d"), 3, true)
+			for y: int in [-12, -2, 8, 18]:
+				c.draw_line(Vector2(-25, y), Vector2(-10, y + 1), Color("728575"), 1.5, true)
+				c.draw_line(Vector2(7, y + 1), Vector2(25, y), Color("728575"), 1.5, true)
+			c.draw_line(Vector2(20, -19), Vector2(20, 21), Color("a56443"), 1, true)
+			c.draw_line(Vector2(18, -37), Vector2(-9, 10), Color("bf913e"), 5, true)
+			_poly(c, [Vector2(-9, 10), Vector2(-13, 18), Vector2(-5, 13)], INK)
+		"forecast":
+			c.draw_circle(Vector2(15, -17), 19, Color("e2b254"))
+			c.draw_arc(Vector2(15, -17), 25, -.8, 3.4, 22, Color("e2b254"), 2, true)
+			for point: Vector2 in [Vector2(-20, 1), Vector2(-6, -7), Vector2(10, 2)]:
+				c.draw_circle(point + Vector2(1, 3), 17, Color("547e83"))
+				c.draw_circle(point, 15, Color("9db9b3"))
+			for x: int in [-20, -4, 12]: c.draw_line(Vector2(x, 23), Vector2(x - 5, 33), Color("527e95"), 4, true)
+		_: _symbol(c, id)
 
 static func _box(color: Color, radius: int) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()

@@ -8,12 +8,7 @@ var frame: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
-	var skin := StyleBoxFlat.new()
-	skin.bg_color = base
-	skin.border_color = edge
-	skin.set_border_width_all(2 if frame else 1)
-	skin.set_corner_radius_all(radius)
-	skin.set_content_margin_all(padding)
+	var skin := preload("res://scripts/cozy_ui.gd").paper(base, padding, radius, edge)
 	add_theme_stylebox_override("panel", skin)
 	resized.connect(queue_redraw)
 

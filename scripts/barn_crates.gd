@@ -3,10 +3,12 @@ const Place = preload("res://scripts/place_ui.gd")
 const ACCENT := Color("a46e43")
 static func build(page) -> void:
 	var hud = page.hud
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Color("d9c29b"), 18, 3, Color("a98a61")))
+	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.INK, 18, 3, Place.WOOD))
 	Place.header(hud, page, "NELL’S BARN", ACCENT, "nell")
 	var tally := PanelContainer.new(); tally.name = "BarnTallyBoard"; tally.add_theme_stylebox_override("panel", Place.skin()); page.add_child(tally)
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 18); tally.add_child(row)
+	var picture: Control = hud._icon({"kind":"place", "id":"barn"}, 64)
+	picture.name = "BarnDrawing"; row.add_child(picture)
 	var numbers: VBoxContainer = hud._vbox(2); numbers.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(numbers)
 	var total: Label = hud._wrap("", 28, Place.INK, true); numbers.add_child(total); hud._refs.inventory_total = total
 	numbers.add_child(hud._wrap("TONNES / CAPACITY", 12, Place.MUTED))
@@ -26,14 +28,14 @@ static func build(page) -> void:
 		var id: String = entry.id; var key: String = "item:" + id
 		var shelf: GridContainer = shelves["tools" if entry.kind == "tool" else "crops"]
 		var crate: PanelContainer = page._timber(shelf, "Crate_" + id)
-		crate.radius = 6; crate.base = Place.PAPER; crate.edge = Color("b99d74"); crate.frame = true
-		crate.add_theme_stylebox_override("panel", Place.skin(Place.PAPER, 16, 6, crate.edge))
+		crate.radius = 6; crate.base = Place.WOOD; crate.edge = Place.WOOD.darkened(.25); crate.frame = true
+		crate.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 16, 6, crate.edge))
 		var body: VBoxContainer = hud._vbox(6); crate.add_child(body)
 		body.add_child(hud._icon(entry, 64))
-		var title: Label = hud._wrap("", 18, Place.INK, true); body.add_child(title); hud._refs[key + ":title"] = title
-		var quantity: Label = hud._wrap("", 28, Place.INK, true); body.add_child(quantity); page._item_quantities[id] = quantity
+		var title: Label = hud._wrap("", 18, Place.PAPER, true); body.add_child(title); hud._refs[key + ":title"] = title
+		var quantity: Label = hud._wrap("", 28, Place.PAPER, true); body.add_child(quantity); page._item_quantities[id] = quantity
 		quantity.visible = entry.kind in ["seed", "crop"]
-		var detail: Label = hud._wrap("", 13, Place.MUTED); body.add_child(detail); hud._refs[key + ":detail"] = detail
+		var detail: Label = hud._wrap("", 13, Place.PAPER.darkened(.1)); body.add_child(detail); hud._refs[key + ":detail"] = detail
 		if entry.kind != "crop" and not str(entry.get("action", "")).is_empty():
 			var button: Button = hud._button("Select", entry.action); Place.pill(button, ACCENT); body.add_child(button); hud._refs[key + ":action"] = button
 	var upgrade := PanelContainer.new(); upgrade.add_theme_stylebox_override("panel", Place.skin()); page.add_child(upgrade)

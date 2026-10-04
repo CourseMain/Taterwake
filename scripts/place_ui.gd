@@ -1,15 +1,13 @@
 extends RefCounted
 ## The shared paper, pill and keeper details; each place supplies its own object.
-const PAPER := Color("fff8e7")
-const INK := Color("34362c")
+const Cozy = preload("res://scripts/cozy_ui.gd")
+const PAPER := Cozy.CREAM
+const INK := Cozy.INK
+const WOOD := Cozy.WOOD
 const MUTED := Color("786c56")
 const Type = preload("res://scripts/ui_type.gd")
-static func skin(fill: Color = PAPER, padding: int = 12, radius: int = 8, edge: Color = Color("d7c9aa")) -> StyleBoxFlat:
-	var s := StyleBoxFlat.new()
-	s.bg_color = fill; s.border_color = edge
-	s.set_border_width_all(1); s.set_corner_radius_all(radius)
-	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]: s.set_content_margin(side, padding)
-	return s
+static func skin(fill: Color = PAPER, padding: int = 12, radius: int = 8, edge: Color = Color("d7c9aa")) -> StyleBoxTexture:
+	return Cozy.paper(fill, padding, radius, edge)
 static func pill(button: Button, accent: Color, primary: bool = false) -> void:
 	button.custom_minimum_size.x = maxf(44, button.custom_minimum_size.x)
 	button.custom_minimum_size.y = maxf(44, button.custom_minimum_size.y)
@@ -18,10 +16,10 @@ static func pill(button: Button, accent: Color, primary: bool = false) -> void:
 		if state == "hover": fill = fill.lightened(.08)
 		if state == "pressed": fill = fill.darkened(.07)
 		if state == "disabled": fill = Color("e6dfcd")
-		button.add_theme_stylebox_override(state, skin(fill, 10, 100, accent if primary else Color("cfc3aa")))
+		button.add_theme_stylebox_override(state, Cozy.box(fill, 10, 100, accent if primary else Color("cfc3aa")))
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: button.add_theme_color_override(state, PAPER if primary else INK)
 	button.add_theme_color_override("font_disabled_color", MUTED)
-	button.add_theme_stylebox_override("focus", skin(Color.TRANSPARENT, 10, 100, INK))
+	button.add_theme_stylebox_override("focus", Cozy.box(Color.TRANSPARENT, 10, 100, INK))
 static func header(hud, parent: Control, title: String, accent: Color, keeper: String = "") -> HBoxContainer:
 	hud._modal_title.hide(); hud._modal_subtitle.hide()
 	var panel := PanelContainer.new()
@@ -42,7 +40,7 @@ static func tab(button: Button, selected: bool) -> void:
 	pill(button, INK)
 	button.toggle_mode = true
 	button.set_pressed_no_signal(selected)
-	var active := skin(Color("e9e6d5"), 10, 100, INK)
+	var active := Cozy.box(Color("e9e6d5"), 10, 100, INK)
 	active.set_border_width_all(2)
 	button.add_theme_stylebox_override("pressed", active)
 static func help(hud, parent: Control, words: String) -> Button:
