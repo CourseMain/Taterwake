@@ -97,7 +97,9 @@ func _build_navigation() -> void:
 
 func _label(text: String, font_size: int, color: Color = INK, display: bool = false) -> Label:
 	var label: Label = hud._wrap(text, font_size, color)
-	label.add_theme_font_override("font", _title_font if display else _body_font)
+	var face: FontVariation = _title_font if display else _body_font
+	if Type.uses_symbols(text): face = Type.face(Type.DISPLAY if display else Type.BODY, 650 if display else 600)
+	label.add_theme_font_override("font", face)
 	return label
 
 func _style_button(button: Button, accent: Color = ACCENT, filled: bool = false) -> void:

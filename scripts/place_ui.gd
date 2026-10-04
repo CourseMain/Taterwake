@@ -87,5 +87,5 @@ static func compact(parent: Node) -> void:
 		var existing: Font = node.get_theme_font("font")
 		var source: Font = Type.DISPLAY if existing is FontVariation and existing.base_font == Type.DISPLAY else Type.BODY
 		var font: FontVariation = Type.face(source, 650 if node is Button else 500)
-		font.fallbacks = [Type.SPUDION]
+		font.fallbacks = [Type.SPUDION, Type.SYMBOLS, Type.SYMBOLS_2] if Type.uses_symbols(node.text) else [Type.SPUDION]
 		node.add_theme_font_override("font", font)

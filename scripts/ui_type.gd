@@ -13,3 +13,6 @@ static func face(source: Font, weight: float = 600.0) -> FontVariation:
 	font.fallbacks = [SPUDION, SYMBOLS, SYMBOLS_2]
 	font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
 	return font
+
+static func uses_symbols(words: String) -> bool:
+	return words.contains("→") or words.contains("●") or words.contains("○")
