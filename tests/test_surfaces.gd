@@ -46,7 +46,7 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO; root.size = Vector2i(390, 844)
 	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets()
 	await settle()
-	for kind in ["market", "sell_potatoes", "barn", "tools", "quests", "contracts", "climate", "accounts"]:
+	for kind in ["market", "sell_potatoes", "barn", "tools", "quests", "contracts", "climate", "accounts", "pause"]:
 		game.state.season_clock.season = 3 if kind in ["accounts", "climate"] else 0
 		game.hud.show_panel(kind, game.state); await settle(); game.touch_controls.fit_modal(); await settle()
 		check(game.hud._modal_card.get_theme_stylebox("panel") is StyleBoxTexture, kind + " frame uses the shared material")
@@ -62,6 +62,28 @@ func run() -> void:
 				check(found, crop + " seed packet has its own crop drawing")
 		elif kind == "barn": check(game.hud._body.find_child("BarnDrawing", true, false) != null, "barn tally has a recognisable barn drawing")
 		elif kind == "climate": check(game.hud._body.find_child("ForecastDrawing", true, false) != null, "forecast has its own weather drawing")
+		elif kind == "pause":
+			check(game.hud._modal_title.get_theme_color("font_color").get_luminance() > .7, "farm title stays light against its ink frame")
+			var menu_labels := 0
+			for tile in game.hud._body.find_children("*", "Button", true, false):
+				if not tile.is_visible_in_tree(): continue
+				for label in tile.find_children("*", "Label", true, false):
+					if not label.is_visible_in_tree(): continue
+					menu_labels += 1
+					check(label.get_theme_color("font_color").get_luminance() < .3, "farm menu action remains dark on its paper button: " + label.text)
+			check(menu_labels >= 10, "farm-menu contrast check covers every illustrated destination")
+			var badge: Label = game.hud._badge("Ready", "ready")
+			game.hud._body.add_child(badge)
+			var badge_ink: Color = badge.get_theme_color("font_color")
+			game.hud._surface_text(game.hud._modal_card)
+			check(badge.get_theme_color("font_color") == badge_ink, "paper badge keeps its readable ink inside an ink panel")
+			game.hud._body.remove_child(badge); badge.queue_free()
+			if "--capture" in OS.get_cmdline_user_args():
+				for dimensions in [Vector2i(390, 844), Vector2i(1280, 800)]:
+					root.size = dimensions; game.touch_controls.enabled = dimensions.x < 600
+					game.hud.show_panel("pause", game.state); await settle(); game.touch_controls.fit_modal(); await settle()
+					RenderingServer.force_draw()
+					root.get_texture().get_image().save_png("res://artifacts/surfaces-farm-menu-%d.png" % dimensions.x)
 	game.queue_free(); await settle()
 	print("SURFACES: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
