@@ -1,0 +1,40 @@
+extends Node
+## Production Main._ready, real browser persistence, no integration-mode override.
+var game
+var callback
+var first_frame: Dictionary
+var launch_report: Dictionary
+func _ready() -> void:
+	if OS.has_feature("web"):
+		callback = JavaScriptBridge.create_callback(command)
+		JavaScriptBridge.get_interface("window").titleQA = callback
+	game = load("res://scenes/main.tscn").instantiate()
+	add_child(game)
+	assert(not game.test_mode)
+	RenderingServer.frame_post_draw.connect(_first_draw, CONNECT_ONE_SHOT)
+func _first_draw() -> void:
+	first_frame = status()
+	_publish()
+func command(args: Array) -> void:
+	if args.is_empty(): return
+	if str(args[0]) == "checkpoint": game._save_checkpoint()
+	_publish()
+func status() -> Dictionary:
+	var title = game.title_scene
+	return {"title":game.title_active(),"hud":game.hud.root.is_visible_in_tree(),
+		"panel":game.hud.is_panel_open(),"front_page":game.year_intro.visible,
+		"guide":game.tutorial.current_id() if game.tutorial.active else "",
+		"saved":title.has_saved_farm,"primary":title.walk.text,
+		"secondary_visible":title.resume.is_visible_in_tree(),"secondary":title.resume.text,
+		"confirmation":title.confirmation.is_visible_in_tree(),"pause_reset":game.hud._reset_pending,
+		"safe_default":title.keep_farm.has_focus(),"walking_in":title.walking_in,
+		"logical_size":[get_viewport().get_visible_rect().size.x,get_viewport().get_visible_rect().size.y],
+		"primary_rect":_rect(title.walk),"secondary_rect":_rect(title.resume),
+		"keep_rect":_rect(title.keep_farm),"replace_rect":_rect(title.replace_farm),
+		"version":ProjectSettings.get_setting("application/config/version"),"test_mode":game.test_mode}
+func _rect(control: Control) -> Array:
+	var rect := control.get_global_rect()
+	return [rect.position.x,rect.position.y,rect.size.x,rect.size.y]
+func _publish() -> void:
+	launch_report = {"first_frame":first_frame,"state":status(),"ready":not first_frame.is_empty()}
+	if OS.has_feature("web"): JavaScriptBridge.eval("window.titleReport="+JSON.stringify(launch_report),true)

@@ -14,10 +14,16 @@ func _ready() -> void:
 	gui_disable_input = true
 	handle_input_locally = false
 	render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	get_tree().root.size_changed.connect(sync_resolution)
+	sync_resolution()
+
+func attach_picture() -> void:
+	# Attach synchronously once Main has finished adding this viewport. The
+	# first rendered game frame already has its farm picture and title camera.
 	var layer := CanvasLayer.new()
 	layer.name = "FarmPictureLayer"
 	layer.layer = -10
-	get_parent().add_child.call_deferred(layer)
+	get_parent().add_child(layer)
 	picture = TextureRect.new()
 	picture.name = "FarmPicture"
 	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -27,8 +33,6 @@ func _ready() -> void:
 	picture.texture = get_texture()
 	layer.add_child(picture)
 	picture.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	get_tree().root.size_changed.connect(sync_resolution)
-	sync_resolution.call_deferred()
 
 static func render_size(display_size: Vector2i, mode: String) -> Vector2i:
 	var budget: Vector2i = BUDGETS.get(mode, BUDGETS.balanced)

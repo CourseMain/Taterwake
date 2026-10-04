@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--godot', required=True)
 parser.add_argument('--source', type=Path, default=root)
 parser.add_argument('--label', default='current')
-parser.add_argument('--fixture', choices=['performance', 'climate', 'mobile', 'feel', 'playthrough', 'surfaces'], default='performance')
+parser.add_argument('--fixture', choices=['performance', 'climate', 'mobile', 'feel', 'playthrough', 'surfaces', 'title_launch'], default='performance')
 parser.add_argument('--feel-stage-timings', action='store_true', help='Instrument HUD/touch stages only in the disposable feel fixture')
 args = parser.parse_args()
 assert re.fullmatch(r'[a-zA-Z0-9-]+', args.label)
@@ -24,9 +24,10 @@ for name in ['project.godot', 'export_presets.cfg', 'icon.svg']:
     shutil.copy2(args.source / name, project / name)
 main = project / 'scripts/main.gd'
 source = main.read_text()
-source, count = re.subn(r'\ttest_mode = .*', '\ttest_mode = true', source, count=1)
-assert count == 1
-main.write_text(source)
+if args.fixture != 'title_launch':
+    source, count = re.subn(r'\ttest_mode = .*', '\ttest_mode = true', source, count=1)
+    assert count == 1
+    main.write_text(source)
 if args.fixture == 'feel':
     # The frozen baseline predates save timing. Instrument only its disposable
     # copy, wrapping the identical write implementation without changing it.

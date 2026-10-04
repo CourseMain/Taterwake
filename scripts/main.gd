@@ -44,6 +44,9 @@ var _simulation_changed: bool = false
 var _working_plot: bool = false
 var save_elapsed: float = 0.0
 var test_mode: bool = false
+var launch_title_in_tests := false
+var _launch_ready := false
+var _title_returned := false
 var feedback_audio: Node
 var seasonal_ambience: Node
 var sleeping_until_spring: bool = false
@@ -107,6 +110,7 @@ func _ready() -> void:
 	farm_viewport = FarmViewport.new()
 	farm_viewport.name = "FarmViewport"
 	add_child(farm_viewport)
+	farm_viewport.attach_picture()
 	farm_viewport.add_child(world)
 	world.build_world()
 	_reset_camera_view()
@@ -170,7 +174,8 @@ func _ready() -> void:
 		_save_checkpoint.call_deferred()
 	)
 	get_tree().auto_accept_quit = false
-	if not test_mode: _show_title(returning)
+	if not test_mode or launch_title_in_tests: _show_title(returning)
+	_launch_ready = true
 
 func title_active() -> bool:
 	return is_instance_valid(title_scene) and title_scene.active
@@ -189,16 +194,13 @@ func _enter_title_farm(fresh: bool) -> void:
 	_resume_loaded_farm(not fresh)
 
 func _resume_loaded_farm(returning: bool) -> void:
+	_title_returned = returning
 	hud.update_state(state)
+	hud.close_panel()
 	if state.run_over:
 		_on_run_ended()
-	elif state.season_clock.season == 3:
-		if not state.tutorial_progress.completed: tutorial.start()
-		hud.show_panel("accounts", state)
-	elif not bool(state.tutorial_progress.get("completed", false)):
+	elif not returning and not bool(state.tutorial_progress.get("completed", false)):
 		tutorial.start()
-	elif returning:
-		hud.show_toast("Your farm's waiting.")
 
 func _register_inputs() -> void:
 	var bindings: Dictionary = {
@@ -215,6 +217,7 @@ func _register_inputs() -> void:
 			InputMap.action_add_event(action, event)
 
 func _process(delta: float) -> void:
+	if not _launch_ready: return
 	if is_instance_valid(epilogue_screen): return
 	if world == null or hud == null:
 		return
@@ -234,7 +237,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid(year_intro) and year_intro.visible:
 		world.animate(delta, false)
 		return
-	if not test_mode and not state.run_over and (not state.tutorial_active or tutorial.current_id() == "welcome") and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
+	if not test_mode and not state.run_over and not _title_returned and not state.tutorial_active and state.season_clock.season == 0 and int(state.climate.data.outlook.seen_year) < state.season_clock.year:
 		_show_year_start()
 		return
 	if state.run_over:
@@ -366,6 +369,7 @@ func _apply_graphics_quality(mode: String, persist: bool = false) -> void:
 
 func _set_shadow_size(size: int, persist: bool = false) -> void:
 	if size not in [2048, 4096]: return
+	if is_instance_valid(touch_controls) and touch_controls.enabled: size = mini(size, 2048)
 	shadow_size = size
 	RenderingServer.directional_shadow_atlas_set_size(size, true)
 	if persist and not test_mode: GraphicsPreferences.save_shadow_size(size)
@@ -607,7 +611,6 @@ func _interact_station(station: String) -> void:
 
 func _on_user_action(action: String) -> void:
 	if title_active():
-		if action == "reset" and title_scene.confirming and hud._reset_pending: _on_action(action)
 		return
 	if conversation.visible: return
 	if action in ["market", "sell_potatoes"]:
@@ -1111,8 +1114,7 @@ func _climate_action(action: String) -> void:
 
 func _on_action(action: String) -> void:
 	if title_active():
-		if action != "reset" or not title_scene.confirming or not hud._reset_pending: return
-		title_scene.finish()
+		return
 	if action.begins_with("debug:"): epilogue_result.clear()
 	if is_instance_valid(year_intro) and year_intro.visible: return
 	if is_instance_valid(conversation) and conversation.visible: return
@@ -1324,6 +1326,7 @@ func _on_climate_changed(phase: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_season_changed() -> void:
+	_title_returned = false
 	if state.season_clock.season == 0 and not state.run_over and not test_mode: _show_year_start()
 	if state.season_clock.season == 3 and not state.run_over:
 		state.accounts_open = true

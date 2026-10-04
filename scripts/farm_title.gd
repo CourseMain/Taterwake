@@ -10,6 +10,16 @@ var has_saved_farm := false
 var root: Control
 var walk: Button
 var resume: Button
+const WALK_IN_SECONDS := 1.2
+var walking_in := false
+var walk_elapsed := 0.0
+var entry_camera: Transform3D
+var entry_size := 0.0
+var confirmation_center: CenterContainer
+var confirmation: PanelContainer
+var confirmation_words: Label
+var keep_farm: Button
+var replace_farm: Button
 var elapsed := 0.0
 var saved_camera: Transform3D
 var saved_size := 0.0
@@ -29,10 +39,12 @@ func _ready() -> void:
 	add_child(root)
 	walk = _button("Walk to the farm", true)
 	resume = _button("", false)
-	walk.pressed.connect(_walk_in)
-	resume.pressed.connect(func():
+	walk.pressed.connect(func():
 		if has_saved_farm: game._enter_title_farm(false)
+		else: _walk_in()
 	)
+	resume.pressed.connect(_confirm_new_farm)
+	_build_confirmation()
 	get_tree().root.size_changed.connect(_layout, CONNECT_DEFERRED)
 	root.hide()
 
@@ -62,6 +74,8 @@ func start(returning: bool) -> void:
 	if active: return
 	active = true
 	confirming = false
+	walking_in = false
+	confirmation.hide()
 	has_saved_farm = returning
 	elapsed = 0
 	saved_camera = game.world.camera.transform
@@ -76,12 +90,15 @@ func start(returning: bool) -> void:
 	game._cancel_map_drag()
 	game.touch_controls.release_all()
 	game.hud.close_panel()
+	game.hud._run_end.hide()
 	game.hud.root.hide()
 	game.touch_controls.root.hide()
-	resume.text = "Continue · Year %d, %s" % [game.state.season_clock.year, game.state.season_clock.NAMES[game.state.season_clock.season]]
+	walk.text = "Continue · Year %d, %s" % [game.state.season_clock.year, game.state.season_clock.NAMES[game.state.season_clock.season]] if returning else "Walk to the farm"
+	resume.text = "Start a new farm"
+	resume.visible = returning
 	resume.disabled = not returning
-	resume.tooltip_text = "" if returning else "Your first farm starts at the gate."
-	walk.tooltip_text = "Start a new farm. You'll be asked before replacing this one." if returning else ""
+	walk.show()
+	walk.tooltip_text = ""
 	root.show()
 	_layout()
 	advance(0)
@@ -146,22 +163,28 @@ func _layout() -> void:
 	var gap: float = 14 if touch else 10
 	var left: float = (viewport_size.x - width) * .5
 	var bottom: float = viewport_size.y - 28
-	walk.position = Vector2(left, bottom - height - continue_height - gap)
+	walk.position = Vector2(left, bottom - height - (continue_height + gap if has_saved_farm else 0.0))
 	walk.size = Vector2(width, height)
 	resume.position = Vector2(left, bottom - continue_height)
 	resume.size = Vector2(width, continue_height)
 	walk.add_theme_font_size_override("font_size", 28 if touch else 22)
 	resume.add_theme_font_size_override("font_size", 22 if touch else 16)
-	if active: _pan()
+	if is_instance_valid(confirmation):
+		confirmation.custom_minimum_size.x = width
+		confirmation_words.custom_minimum_size.x = maxf(1,width-44)
+	if active and not walking_in: _pan()
 
 func advance(delta: float) -> void:
 	if not active: return
 	elapsed += maxf(0, delta)
-	if confirming and (not game.hud.is_panel_open() or not game.hud._reset_pending):
-		confirming = false
-		game.hud.close_panel()
-		game.hud.root.hide()
-		root.show()
+	if walking_in:
+		walk_elapsed = minf(WALK_IN_SECONDS, walk_elapsed + maxf(0, delta))
+		var weight: float = smoothstep(0, WALK_IN_SECONDS, walk_elapsed)
+		game.world.camera.transform = entry_camera.interpolate_with(saved_camera, weight)
+		game.world.camera.size = lerpf(entry_size, saved_size, weight)
+		game.world.fit_camera_depth()
+		if walk_elapsed >= WALK_IN_SECONDS: game._enter_title_farm(true)
+		return
 	_pan()
 	# Keep the real season's field and snow, but let the gate catch dusk light.
 	game.world.set_day_time(game.world.DAY_CYCLE_SECONDS * .94, game.state.season_clock.season == 3)
@@ -183,23 +206,78 @@ func _pan() -> void:
 	world.camera.position += world.camera.basis.z * 190.0
 	world.fit_camera_depth()
 
-func _walk_in() -> void:
-	if not active: return
-	if not has_saved_farm:
-		game._enter_title_farm(true)
-		return
+func _build_confirmation() -> void:
+	confirmation_center = CenterContainer.new()
+	confirmation_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(confirmation_center)
+	confirmation_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	confirmation = PanelContainer.new()
+	confirmation.name = "ReplaceFarmConfirmation"
+	confirmation.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 22, 8, Cozy.WOOD))
+	confirmation_center.add_child(confirmation)
+	var body := VBoxContainer.new()
+	body.add_theme_constant_override("separation", 18)
+	confirmation.add_child(body)
+	confirmation_words = Label.new()
+	confirmation_words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	confirmation_words.add_theme_font_override("font", Type.face(Type.BODY, 700))
+	confirmation_words.add_theme_font_size_override("font_size", 25)
+	confirmation_words.add_theme_color_override("font_color", Cozy.CREAM)
+	body.add_child(confirmation_words)
+	keep_farm = _button("Keep my farm", true)
+	keep_farm.reparent(body)
+	keep_farm.custom_minimum_size.y = 68
+	keep_farm.pressed.connect(_keep_farm)
+	replace_farm = _button("Start a new farm", false)
+	replace_farm.reparent(body)
+	replace_farm.custom_minimum_size.y = 68
+	replace_farm.pressed.connect(_replace_farm)
+	confirmation.hide()
+
+func _confirm_new_farm() -> void:
+	if not active or not has_saved_farm or walking_in: return
 	confirming = true
-	root.hide()
-	game.hud.root.show()
-	game.hud._run_end.hide()
-	# Reuse the existing two-choice reset confirmation; no save changes yet.
-	game.hud.show_panel("pause", game.state)
-	game.hud._reset_pending = true
-	game.hud.show_panel("pause", game.state)
+	walk.hide()
+	resume.hide()
+	confirmation_words.text = "Replace your Year %d farm? This cannot be undone." % game.state.season_clock.year
+	confirmation.show()
+	_layout()
+	keep_farm.grab_focus()
+
+func _keep_farm() -> void:
+	confirming = false
+	confirmation.hide()
+	walk.show()
+	resume.visible = has_saved_farm
+	walk.grab_focus()
+
+func _replace_farm() -> void:
+	if not active or not confirming: return
+	confirming = false
+	confirmation.hide()
+	game.state.reset_game()
+	game.epilogue_result.clear()
+	game.hud.close_panel()
+	game._on_state_changed()
+	saved_player_position = Vector3(0,0,9)
+	game._set_debug_session(false)
+	game._select_tool("hoe")
+	if not game.test_mode: game.state.save_game()
+	_walk_in()
+
+func _walk_in() -> void:
+	if not active or walking_in: return
+	walking_in = true
+	walk_elapsed = 0.0
+	entry_camera = game.world.camera.transform
+	entry_size = game.world.camera.size
+	walk.hide()
+	resume.hide()
 
 func finish() -> void:
 	if not active: return
 	active = false
+	walking_in = false
 	confirming = false
 	root.hide()
 	game.hud.close_panel()
