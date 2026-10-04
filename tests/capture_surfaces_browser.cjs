@@ -26,6 +26,7 @@ const height = width === 390 ? 844 : 800;
     await page.goto(url);
     await page.waitForFunction(() => typeof window.surfaceQA === 'function' && window.surfaceReport?.ready, null, {timeout: 90000});
     const pages = width === 1280 ? [['menu', 'menu']] : [['title', 'title'], ['accounts', 'accounts'], ['market', 'crop-card'], ['climate', 'forecast']];
+    if (process.argv.includes('--advice')) pages.splice(0, pages.length, ...['harvest', 'barn', 'sell_potatoes', 'spring_target', 'year1_accounts', 'winter_jobs', 'winter_seed_choices'].map(p => [p,p]));
     if (extra) pages.push(...['menu', 'barn', 'tools', 'quests', 'loss_notices', 'contracts', 'sell_potatoes', 'front_page', 'npc:nell', 'run_summary', 'foreclosure', 'graphics', 'debug', 'help', 'activities', 'dex'].map(p => [p, p.replace(':', '-')]));
     for (const [command, name] of pages) {
       const previous = await page.evaluate(() => window.surfaceReport.request);
@@ -33,7 +34,7 @@ const height = width === 390 ? 844 : 800;
       await page.waitForFunction(({previous, command}) => window.surfaceReport?.ready && window.surfaceReport.request > previous && window.surfaceReport.page === command.split(':')[0], {previous, command}, {timeout: 60000});
       const report = await page.evaluate(() => window.surfaceReport);
       assert.deepEqual(report.backing_size, [width, height], `${name}: backing resolution`);
-      if (!['title', 'npc:nell', 'front_page', 'foreclosure'].includes(command)) assert.ok(report.content_fits_width, `${name}: content fits width`);
+      if (!['title', 'npc:nell', 'front_page', 'foreclosure', 'harvest', 'spring_target', 'winter_jobs'].includes(command)) assert.ok(report.content_fits_width, `${name}: content fits width`);
       assert.deepEqual(errors, [], `${name}: browser errors`);
       await page.screenshot({path: path.join(output, `${name}.png`)});
       reports.push(report);

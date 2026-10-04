@@ -3,7 +3,7 @@ extends Node
 ## window.surfaceQA("title" | "accounts" | "market" | "climate" | "npc:nell"
 ##   | "run_summary" | "foreclosure" | "scroll:end" | "scroll:top" | "status").
 ## Await window.surfaceReport.ready before capturing the browser viewport.
-const PAGES: Array[String] = ["play_spring", "play_summer", "play_autumn","title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "tools", "quests", "loss_notices", "contracts", "sell_potatoes", "menu", "pause", "graphics", "debug", "help", "activities", "duck_patrol", "dex", "front_page"]
+const PAGES: Array[String] = ["harvest", "spring_target", "winter_jobs", "year1_accounts", "winter_seed_choices", "play_spring", "play_summer", "play_autumn","title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "tools", "quests", "loss_notices", "contracts", "sell_potatoes", "menu", "pause", "graphics", "debug", "help", "activities", "duck_patrol", "dex", "front_page"]
 var game
 var callback
 var request := 0
@@ -25,6 +25,9 @@ func _ready() -> void:
 	game.state.season_clock.year = 3
 	game.state.coins = 80000
 	for crop: String in game.state.CROP_IDS: game.state.storage[crop] = game.state.Stock.pile(12)
+	game.state.storage.russet = game.state.Stock.pile(12, 100)
+	game.state.Stock.add(game.state.storage, "russet", 8, 60)
+	game.state.Stock.add(game.state.storage, "russet", 4, 20)
 	game.state.ledger.post_fixed_costs(1)
 	game.state.ledger.post_fixed_costs(2)
 	game.state.ledger.post(3, 0, "sales", "Table Russet · 12 t", 5184)
@@ -50,6 +53,8 @@ func _ready() -> void:
 
 func _page_visible() -> bool:
 	match current_page:
+		"harvest", "spring_target", "winter_jobs": return not game.hud.is_panel_open() and not game.title_active()
+		"year1_accounts": return game.hud.is_panel_open() and game.hud._panel_kind == "accounts"
 		"play_spring", "play_summer", "play_autumn": return not game.hud.is_panel_open() and not game.title_active()
 		"title": return game.title_active() if game.has_method("title_active") else game.year_intro.visible
 		"npc": return game.conversation.visible
@@ -63,7 +68,7 @@ func _process(delta: float) -> void:
 	else:
 		# Freeze only crop/calendar simulation. Clouds, windmill, potato farmer,
 		# keepers, snow and the UI's own entrance animations remain live.
-		game.world.animate(delta, false)
+		if current_page != "harvest": game.world.animate(delta, false)
 		game._update_accounts_camera(delta)
 		game.seasonal_ambience.set_season(game.state.season_clock.season, game.state.run_over)
 
@@ -113,7 +118,7 @@ func _present(action: String, ticket: int) -> void:
 			bed.stage = 3 if index % 3 == 0 else 2
 			bed.elapsed = 60 if bed.stage == 3 else 36
 			bed.watered = true
-	if current_page in ["accounts", "climate", "run_summary", "foreclosure"]:
+	if current_page in ["accounts", "year1_accounts", "winter_jobs", "winter_seed_choices", "climate", "run_summary", "foreclosure"]:
 		game.state.season_clock.season = 3
 		game.state.season_clock.seconds = 0
 		game.state.ledger.post_fixed_costs(3)
@@ -121,6 +126,9 @@ func _present(action: String, ticket: int) -> void:
 			game.state._clear_crop(plot)
 			plot.tilled = false
 			plot.winter_ice = true
+	if current_page == "year1_accounts": game.state.season_clock.year = 1
+	if current_page in ["winter_jobs", "winter_seed_choices"]:
+		game.state.trading.held = game.state.storage.duplicate(true)
 	if current_page == "run_summary":
 		game.state.season_clock.year = 10
 		game.state.season_clock.seconds = game.state.SeasonClock.SEASON_SECONDS
@@ -142,6 +150,13 @@ func _present(action: String, ticket: int) -> void:
 	game.hud._toast_box.hide()
 	game.hud._purchase_box.hide()
 	match current_page:
+		"harvest", "spring_target":
+			game.state.season_clock.season = 0
+			game.world.set_calendar(3, 0, 75)
+			game.world._animate_sun(3.4)
+			game.hud.update_state(game.state)
+		"winter_jobs": game.hud._season_jobs.refresh()
+		"year1_accounts": game.hud.show_panel("accounts", game.state)
 		"play_spring", "play_summer", "play_autumn": game.world._animate_sun(3.4)
 		"title":
 			if game.has_method("_show_title"):
@@ -169,6 +184,15 @@ func _present(action: String, ticket: int) -> void:
 	if ticket != request: return
 	game.touch_controls.fit_modal()
 	for frame in range(3): await get_tree().process_frame
+	if current_page == "harvest":
+		game.hud._spring_target.hide()
+		game.state._clear_crop(game.state.plots[4])
+		game.state.plots[4].merge({"stage":3, "crop":"russet", "watered":true, "quality":100}, true)
+		game._on_state_changed()
+		game.perform_plot(4, "harvest")
+		game.world.harvest_feedback.animate(.22)
+		game.hud._toast_box.hide(); game.hud._spring_target.hide()
+		for frame in range(3): await get_tree().process_frame
 	is_ready = true
 	_publish()
 
@@ -222,7 +246,7 @@ func _collect(node: Node) -> void:
 			if node is Button:
 				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled})
 			elif (node is Label or node is RichTextLabel) and not node.text.is_empty():
-				last_report.labels.append({"text": node.text, "rect": _rect(node)})
+				last_report.labels.append({"text": node.text, "rect": _rect(node), "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size") if node is Label else 0})
 			if node is PanelContainer or node is Panel:
 				var style: StyleBox = node.get_theme_stylebox("panel")
 				var fill := Color.TRANSPARENT
