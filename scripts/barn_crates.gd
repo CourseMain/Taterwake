@@ -35,6 +35,13 @@ static func build(page) -> void:
 		var title: Label = hud._wrap("", 18, Place.PAPER, true); body.add_child(title); hud._refs[key + ":title"] = title
 		var quantity: Label = hud._wrap("", 28, Place.PAPER, true); body.add_child(quantity); page._item_quantities[id] = quantity
 		quantity.visible = entry.kind in ["seed", "crop"]
+		if entry.kind == "crop":
+			var grades := HFlowContainer.new(); grades.name = "BarnGradeChips_" + entry.crop
+			grades.add_theme_constant_override("h_separation", 8); grades.add_theme_constant_override("v_separation", 8); body.add_child(grades)
+			for word in hud._state.Quality.GRADES:
+				var chip: Label = hud._label("", 22)
+				preload("res://scripts/grade_stamp.gd").apply(chip, word)
+				grades.add_child(chip); hud._refs[key + ":grade:" + word] = chip
 		var detail: Label = hud._wrap("", 13, Place.PAPER.darkened(.1)); body.add_child(detail); hud._refs[key + ":detail"] = detail
 		if entry.kind != "crop" and not str(entry.get("action", "")).is_empty():
 			var button: Button = hud._button("Select", entry.action); Place.pill(button, ACCENT); body.add_child(button); hud._refs[key + ":action"] = button
@@ -53,6 +60,11 @@ static func refresh(page) -> void:
 		if not hud._refs.has(key + ":title"): continue
 		hud._refs[key + ":title"].text = hud._crop_name(entry.crop) + (" seeds" if entry.kind == "seed" else "") if entry.kind in ["crop", "seed"] else entry.name
 		if entry.kind in ["seed", "crop"]: page._item_quantities[entry.id].text = "%d %s" % [entry.count, "t" if entry.kind == "crop" else "seeds"]
+		if entry.kind == "crop":
+			for word in state.Quality.GRADES:
+				var chip: Label = hud._refs[key + ":grade:" + word]
+				var count: int = state.stock_count(entry.crop, word)
+				chip.text = "%s %d t" % [word, count]; chip.visible = count > 0
 		if entry.kind == "tool": hud._refs[key + ":detail"].text = entry.effect
 		if entry.kind == "seed": hud._refs[key + ":detail"].hide()
 static func layout(page) -> void:

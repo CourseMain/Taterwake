@@ -6,11 +6,18 @@ var world
 var active: Array[Dictionary] = []
 var clods: Array[Dictionary] = []
 var audio: Node
+const STAMP_HOLD: float = 1.2
+const STAMP_FADE: float = .4
+var stamp_layer: CanvasLayer
 var pull_pose: float = 0
 
 func setup(owner_world) -> void:
 	world = owner_world
 	name = "HarvestFeedback"
+	stamp_layer = CanvasLayer.new(); stamp_layer.name = "HarvestStamps"; stamp_layer.layer = 2
+	var host: Node = world.get_viewport().get_parent() if world.get_viewport() is SubViewport else get_tree().root
+	host.add_child(stamp_layer)
+	tree_exiting.connect(func(): if is_instance_valid(stamp_layer): stamp_layer.queue_free())
 	audio = preload("res://scripts/farm_audio.gd").new()
 	add_child(audio)
 
@@ -37,51 +44,19 @@ func harvest(snapshots: Dictionary) -> void:
 		tuber.scale = Vector3.ONE * size
 		tuber.position.y = -.58 * size
 		var origin: Vector3 = world.plot_positions[index] + Vector3(0,.25 + .58 * size,0)
-		var tag := Label3D.new()
+		var tag := Label.new()
 		tag.text = preload("res://scripts/crop_quality.gd").grade(int(plot.get("quality", 100)))
 		tag.name = "HarvestGrade"
-		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		tag.font = world._shop_font
-		tag.font_size = 42
-		tag.pixel_size = 0.026
-		tag.no_depth_test = true
-		tag.render_priority = 3
-		tag.position.y = 0.9
-		var ink: Color = {"Table":Color("43734b"),"Standard":Color("526471"),"Feed":Color("94653c")}[tag.text]
-		tag.modulate = ink
-		tag.outline_size = 0
-		body.add_child(tag)
-		_stamp_plate(body,ink)
-		world.bind_label(tag, Vector2(2.45, .55))
-		var view_height: float = maxf(1.0,get_viewport().get_visible_rect().size.y)
-		var stamp_scale: float = maxf(1.0,world.camera.size/view_height*20.0/.84)
-		for stamp: Node3D in [tag,body.get_node("HarvestStampRim"),body.get_node("HarvestStampPaper")]:
-			stamp.scale = Vector3.ONE*stamp_scale
+		preload("res://scripts/grade_stamp.gd").apply(tag, tag.text)
+		stamp_layer.add_child(tag)
+		tag.hide()
 		body.position = origin
-		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "grade":tag.text, "popped":false, "landed":false})
+		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "grade":tag.text, "stamp":tag, "popped":false, "landed":false})
 	if not snapshots.is_empty(): audio.play_action("giant" if heavy_sound else "harvest")
-
-func _stamp_plate(parent: Node3D, ink: Color) -> void:
-	# A cream receipt with a grade-coloured rim reads as a stamp above the pull.
-	for layer in range(2):
-		var mesh := MeshInstance3D.new(); mesh.name = "HarvestStampRim" if layer == 0 else "HarvestStampPaper"
-		var quad := QuadMesh.new(); quad.size = Vector2(2.8,.84) if layer == 0 else Vector2(2.6,.68)
-		mesh.mesh = quad
-		var material := StandardMaterial3D.new()
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		material.billboard_keep_scale = true
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.no_depth_test = true
-		material.albedo_color = ink if layer == 0 else Color("f7edcf")
-		material.render_priority = 1+layer
-		mesh.material_override = material
-		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mesh.position.y = .9
-		parent.add_child(mesh)
 
 func _remove(index: int) -> void:
 	var node: Node3D = active[index].node
+	active[index].stamp.queue_free()
 	node.hide()
 	node.queue_free()
 	active.remove_at(index)
@@ -106,6 +81,24 @@ func animate(delta: float) -> void:
 		var flight: float = .48 if entry.heavy else .36
 		var body: Node3D = entry.node
 		var origin: Vector3 = entry.origin
+		var stamp: Label = entry.stamp
+		var logical: Vector2 = get_tree().root.get_visible_rect().size
+		var scale: float = float(get_tree().root.size.x) / logical.x
+		stamp.visible = t >= pull
+		var pixels: int = ceili(16 / scale)
+		if stamp.get_theme_font_size("font_size") != pixels: stamp.add_theme_font_size_override("font_size", pixels)
+		stamp.size = stamp.get_combined_minimum_size()
+		var point: Vector2 = world.camera.unproject_position(origin) * logical / Vector2(world.get_viewport().size)
+		# A receipt rail sits above the whole field, so no chip covers a bed.
+		var top: float = logical.y
+		var field: int = entry.index / 24
+		for bed in range(field * 24, mini((field + 1) * 24, world.plot_positions.size())):
+			var bed_point: Vector2 = world.camera.unproject_position(world.plot_positions[bed] + Vector3(0, .3, 0)) * logical / Vector2(world.get_viewport().size)
+			top = minf(top, bed_point.y)
+		stamp.position = Vector2(clampf(point.x - stamp.size.x / 2, 8, logical.x - stamp.size.x - 8), maxf(8, top - stamp.size.y - 18 / scale))
+		stamp.modulate.a = clampf(1 - (t - pull - STAMP_HOLD) / STAMP_FADE, 0, 1)
+		if t >= pull + STAMP_HOLD + STAMP_FADE:
+			_remove(i); continue
 		if t < pull:
 			var tension: float = t / pull
 			body.position = origin + Vector3(sin(tension*PI*5)*.035, tension*.11,0)
@@ -124,9 +117,7 @@ func animate(delta: float) -> void:
 			body.scale = Vector3(1+squash,1-squash,1+squash)
 			body.rotation.z = -.07
 			if settle > .22: body.scale *= maxf(.001, 1-(settle-.22)/.18)
-			if settle >= .4:
-				_remove(i)
-				continue
+			if settle >= .4: body.hide()
 		if t >= pull and not entry.popped:
 			entry.popped = true
 			if not popped_grades.has(entry.grade):
