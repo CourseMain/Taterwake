@@ -1556,12 +1556,32 @@ L. The player's own farmer. Show the player's 3D model on the Menu page
    name. Chosen at first launch after Walk to the farm, one card, skip
    allowed; changeable from Menu. Keepers use the name in their lines.
 
+M. Cuter. The farm is already round and friendly; the interface and
+   the motion are not. Rules, not decoration:
+   1. Keepers and the player idle with a slow breathing bob and a blink
+      every 3-5 s; a small squash on tap and a stretch on release.
+   2. Ripe potatoes wobble once every few seconds; a harvested bed pops
+      with three soft petals or sparks and a two-note cue; a watered bed
+      shows a single drop with a bounce.
+   3. Ducks waddle, stop, look at the player, and quack once when
+      tapped. Blossom petals drift in Spring, leaves in Autumn, snow in
+      Winter, a few at a time.
+   4. Panels: corner radius 12 on cards, 999 on chips; stamps and chips
+      get soft pastel fills (Table warm gold, Standard sage, Feed
+      clay); portraits get a rounded frame with a 2 px cream inner
+      line; the Menu farmer gets a tiny animated hat tip on open.
+   5. Copy warmth: Nell, Mara, Tess and Iris each get one gentle
+      greeting line that changes with the season, in their own voice,
+      shown as the page header when their page opens.
+   6. Nothing in this part may add text, cover a tap target, or play a
+      sound within two seconds of another.
+
 Done when: a fresh Web launch reaches the farm every time, the guided
 year shows one card at a time with nothing else on screen until needed,
 no HUD text under 14 px, the top band is one row, the storm in the
 guided year is named small and arrives 30 s after its warning, and
 every thing on the farm has exactly one entrance. Full suite; A ships
-as v2.0.1, B to L as v2.0.2.
+as v2.0.1, B to M as v2.0.2.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
