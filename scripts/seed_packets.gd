@@ -30,7 +30,7 @@ static func build(page) -> void:
 		var body: VBoxContainer = page.hud._vbox(7); card.add_child(body)
 		var ribbon: Button = page.hud._button(page.hud._crop_name(crop).to_upper(), "crop:" + crop)
 		ribbon.toggle_mode = true
-		for state in ["normal", "hover", "pressed", "disabled"]: ribbon.add_theme_stylebox_override(state, Place.skin(page.ACCENTS[crop], 6, 6, page.ACCENTS[crop]))
+		for state in ["normal", "hover", "pressed", "disabled"]: ribbon.add_theme_stylebox_override(state, Place.skin(ACCENT, 6, 6, ACCENT))
 		ribbon.add_theme_font_size_override("font_size", 18); body.add_child(ribbon)
 		page.hud._refs[crop + ":select"] = ribbon
 		card.gui_input.connect(func(event):

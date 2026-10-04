@@ -14,7 +14,6 @@ const LOSS := Color("a63529")
 const PAPER := Color("fffbed")
 const FRAME := Color("795b32")
 const PRICE_TAG := Color("f3efdf")
-const ACCENTS := {"russet": Color("df9c42"), "giant": Color("e87c59"), "golden": Color("dcad24"), "sunburst": Color("ed9737"), "icecap": Color("51aeca")}
 var hud
 var selling: bool = false
 var crops: Array[String] = []
