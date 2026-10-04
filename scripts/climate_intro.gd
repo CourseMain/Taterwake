@@ -69,7 +69,7 @@ func _ready() -> void:
 	accounts.add_child(caption)
 	last_net = label("", 24); accounts.add_child(last_net)
 	last_net.add_theme_color_override("font_color", Cozy.INK)
-	resized.connect(func():
+	var fit_layout: Callable = func() -> void:
 		if not is_inside_tree(): return
 		news.vertical = size.x < 760
 		chapter.add_theme_font_size_override("font_size", 36 if size.x < 760 else 48)
@@ -80,7 +80,7 @@ func _ready() -> void:
 			control.custom_minimum_size.y = maxf(68 if control == skip else 44, target)
 		for text in column.find_children("*", "Label", true, false):
 			text.add_theme_font_size_override("font_size", maxi(int(text.get_meta("base_font_size", 14)), ceili(14 / maxf(scale, 0.1))))
-	)
+	resized.connect(fit_layout)
 	skip = Button.new(); skip.text = "Start the year →"; skip.custom_minimum_size.y = 68
 	skip.add_theme_font_override("font", Type.face(Type.BODY)); skip.add_theme_font_size_override("font_size", 20)
 	for state in ["normal", "hover", "pressed"]: skip.add_theme_stylebox_override(state, preload("res://scripts/cozy_ui.gd").button_style(state, false))
@@ -94,6 +94,9 @@ func _ready() -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	frame.add_child(skip)
 	skip.pressed.connect(finish)
+	# Browser parents can already have their final size before _ready connects
+	# resized. Apply the phone column layout once even without a new resize.
+	fit_layout.call_deferred()
 	stop()
 func label(words: String, pixels: int) -> Label:
 	var result := Label.new(); result.text = words; result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
