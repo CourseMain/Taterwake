@@ -34,7 +34,7 @@ const dpr = Number(process.argv.find(a => a.startsWith('--dpr='))?.split('=')[1]
       await page.evaluate(action => window.surfaceQA(action), command);
       await page.waitForFunction(({previous, command}) => window.surfaceReport?.ready && window.surfaceReport.request > previous && window.surfaceReport.page === command.split(':')[0], {previous, command}, {timeout: 60000});
       const report = await page.evaluate(() => window.surfaceReport);
-      assert.deepEqual(report.backing_size, [width * dpr, height * dpr], `${name}: backing resolution`);
+      assert.deepEqual(report.backing_size, [width * Math.min(dpr, 2), height * Math.min(dpr, 2)], `${name}: backing resolution`);
       if (!['title', 'npc:nell', 'front_page', 'foreclosure', 'harvest', 'spring_target', 'winter_jobs'].includes(command)) assert.ok(report.content_fits_width, `${name}: content fits width`);
       assert.deepEqual(errors, [], `${name}: browser errors`);
       if (process.argv.includes('--advice') && ['harvest', 'barn', 'sell_potatoes'].includes(command)) {

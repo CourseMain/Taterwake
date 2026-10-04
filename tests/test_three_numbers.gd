@@ -57,6 +57,10 @@ func run() -> void:
 	game.hud._spring_target.refresh(); check(not game.hud._spring_target.visible, "guided year hides the estimate")
 	farm.tutorial_progress.completed = true; farm.set_tutorial_active(false); farm.season_clock.year = 2
 	game.hud._spring_target.refresh(); check(game.hud._spring_target.visible and not game.hud._spring_target.collapsed, "next Spring reopens its card")
+	game.hud._spring_target.collapsed = true
+	farm.season_clock.year = 1; farm.set_tutorial_active(true); game.hud._spring_target.refresh()
+	farm.season_clock.year = 2; farm.set_tutorial_active(false); game.hud._spring_target.refresh()
+	check(not game.hud._spring_target.collapsed, "a new guided farm cannot inherit the previous farm's folded year-two card")
 	farm.season_clock.year = 1; farm.season_clock.season = 3; farm.ledger.post_fixed_costs(1)
 	game.hud.show_panel("accounts", farm); await settle()
 	var frozen: Dictionary = farm.ledger.save_data(); cash = farm.coins

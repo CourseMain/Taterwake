@@ -6,7 +6,7 @@ var hud
 var heading: Button
 var facts: Label
 var assumption: Label
-var calendar: int = 0
+var calendar: String = ""
 var collapsed: bool = false
 var signature: String = ""
 
@@ -27,10 +27,12 @@ func setup(owner_hud) -> void:
 func refresh() -> void:
 	if not is_instance_valid(hud._state): return
 	var farm = hud._state
+	var season_key: String = "%d:%d" % [farm.season_clock.year, farm.season_clock.season]
+	if calendar != season_key:
+		calendar = season_key
+		if farm.season_clock.season == 0: collapsed = false; signature = ""
 	visible = farm.season_clock.season == 0 and not farm.tutorial_active and not farm.guided_first_year() and hud._tutorial.is_empty() and not farm.run_over and not farm.climate_report_open and not hud.is_panel_open()
 	if not visible: return
-	if calendar != farm.season_clock.year:
-		calendar = farm.season_clock.year; collapsed = false; signature = ""
 	var estimate: Dictionary = Advice.spring(farm)
 	var key: String = str(estimate) + farm.selected_crop
 	if key != signature:
