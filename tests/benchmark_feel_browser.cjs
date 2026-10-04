@@ -129,10 +129,14 @@ async function main() {
     };
 
     if (!flag('boundary-only') && !flag('year-only')) {
-    for (const size of (argument('shadows','both') === '2048' ? [2048] : [4096, 2048])) {
-      const id = `summer_rain_shadow_${size}`;
+    const sampledShadows = new Set();
+    for (const size of (argument('shadows','2048') === '2048' ? [2048] : [4096, 2048])) {
+      let id = `summer_rain_shadow_${size}`;
       console.log(`Starting ${label} ${id}, ${duration}s after 3s warmup`);
       await command(`rain:${size}:${duration}`);
+      id = await page.evaluate(() => window.feelReport.sample.id);
+      if (sampledShadows.has(id)) continue;
+      sampledShadows.add(id);
       await page.waitForFunction(id => window.feelReport.sample.id === id && window.feelReport.sample.sampling, id,
         { timeout: 15000, polling: 100 });
       await beginRAF(id);
@@ -142,7 +146,7 @@ async function main() {
     if (report.results.length === 2) {
     const high = report.results[0];
     const low = report.results[1];
-    report.shadow_comparison = { high: 4096, low: 2048,
+    report.shadow_comparison = { high: high.shadow_size, low: low.shadow_size,
       median_delta_ms: low.frame_ms.median - high.frame_ms.median,
       p95_delta_ms: low.frame_ms.p95 - high.frame_ms.p95,
       fps_delta: low.fps - high.fps,
