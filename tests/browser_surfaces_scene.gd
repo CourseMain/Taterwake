@@ -244,7 +244,7 @@ func _collect(node: Node) -> void:
 			ancestor = ancestor.get_parent()
 		if visible:
 			if node is Button:
-				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled})
+				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled, "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size")})
 			elif (node is Label or node is RichTextLabel) and not node.text.is_empty():
 				last_report.labels.append({"text": node.text, "rect": _rect(node), "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size") if node is Label else 0})
 			if node is PanelContainer or node is Panel:

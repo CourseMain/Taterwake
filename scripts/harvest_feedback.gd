@@ -8,6 +8,7 @@ var clods: Array[Dictionary] = []
 var audio: Node
 const STAMP_HOLD: float = 1.2
 const STAMP_FADE: float = .4
+var _canvas_width: float = 0
 var stamp_layer: CanvasLayer
 var pull_pose: float = 0
 
@@ -17,6 +18,7 @@ func setup(owner_world) -> void:
 	stamp_layer = CanvasLayer.new(); stamp_layer.name = "HarvestStamps"; stamp_layer.layer = 2
 	var host: Node = world.get_viewport().get_parent() if world.get_viewport() is SubViewport else get_tree().root
 	host.add_child(stamp_layer)
+	get_tree().root.size_changed.connect(func(): _canvas_width = 0)
 	tree_exiting.connect(func(): if is_instance_valid(stamp_layer): stamp_layer.queue_free())
 	audio = preload("res://scripts/farm_audio.gd").new()
 	add_child(audio)
@@ -85,7 +87,7 @@ func animate(delta: float) -> void:
 		var origin: Vector3 = entry.origin
 		var stamp: Label = entry.stamp
 		var logical: Vector2 = get_tree().root.get_visible_rect().size
-		var scale: float = float(get_tree().root.size.x) / logical.x
+		var scale: float = _display_scale()
 		stamp.visible = t >= pull
 		var pixels: int = ceili(16 / scale)
 		if stamp.get_theme_font_size("font_size") != pixels: stamp.add_theme_font_size_override("font_size", pixels)
@@ -183,3 +185,10 @@ func _clear_stamp_position(preferred: Vector2, stamp_size: Vector2, obstacles: A
 						hit = true; break
 				if not hit: return point
 	return preferred
+
+func _display_scale() -> float:
+	if _canvas_width <= 0:
+		_canvas_width = float(get_tree().root.size.x)
+		if OS.has_feature("web"):
+			_canvas_width = float(JavaScriptBridge.eval("document.getElementById('canvas').clientWidth", true))
+	return maxf(.1, _canvas_width / get_tree().root.get_visible_rect().size.x)
