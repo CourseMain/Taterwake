@@ -21,6 +21,10 @@ func run() -> void:
 	check(not game.title_active(), "integration fixtures keep direct farm access")
 	var before: Dictionary = game.state._save_data()
 	var camera: Transform3D = game.world.camera.transform
+	var label_visibility: Dictionary = {}
+	for label: Label3D in game.world.find_children("*", "Label3D", true, false): label_visibility[label] = label.visible
+	var background: int = game.world._day_environment.background_mode
+	var sky = game.world._day_environment.sky
 	game._show_title(false)
 	var title = game.title_scene
 	check(title.root.get_child_count() == 2 and title.walk is Button and title.resume is Button, "title consists of two buttons with no modal, logo label or body")
@@ -29,11 +33,33 @@ func run() -> void:
 	check(not game.hud.root.visible and not game.touch_controls.root.visible, "title hides gameplay controls")
 	check(game.world.title_gate.get_node("GateWordmark").text == "TATERLAND", "the name is painted on a world gate")
 	check(game.world.title_gate.get_node("GateWordmark").billboard == BaseMaterial3D.BILLBOARD_DISABLED, "gate name faces with its wood instead of following the camera")
+	var visible_words: Array[String] = []
+	for label: Label3D in label_visibility:
+		if label.is_visible_in_tree(): visible_words.append(label.text)
+	check(visible_words == ["TATERLAND"], "the gate name is the only world lettering on the title")
+	check(game.world._lease_boards.all(func(board): return not board.visible), "To Let boards wait until the player enters")
+	check(game.world.visuals.grade_batches.values().all(func(marker): return not marker.visible) and not game.world.visuals.water_markers.visible, "crop grade and water markers stay out of the welcome")
+	check(title.walk.get_theme_stylebox("normal").bg_color == Color("17382d"), "the large title action is an ink surface")
+	check(title.resume.get_theme_stylebox("normal") is StyleBoxEmpty, "Continue is a quiet text action with no second large card")
+	check(title.resume.get_theme_color("font_outline_color") == Color("17382d"), "Continue remains readable over the moving farm")
+	check(is_equal_approx(game.world._sun.rotation_degrees.x, -15) and game.world._sun.light_color.r > game.world._sun.light_color.b, "title uses a low fifteen-degree amber sun")
+	check(game.world._day_environment.background_mode == Environment.BG_SKY and game.world._day_environment.sky != sky, "the title owns a temporary dusk sky gradient")
+	game.world._sun.rotation_degrees = Vector3(-60, -32, 0)
+	title._process(0)
+	check(is_equal_approx(game.world._sun.rotation_degrees.x, -15), "live world lighting cannot lift the title's low sun")
 	var pan: Transform3D = game.world.camera.transform
+	var close_size: float = game.world.camera.size
 	var world_time: float = game.world._time
-	game._process(5)
+	game._process(4)
 	check(not game.world.camera.transform.is_equal_approx(pan), "the title camera slowly pans")
-	check(game.world._time > world_time + 4.9, "the farm animates behind the title")
+	var middle_size: float = game.world.camera.size
+	game._process(4)
+	var wide_size: float = game.world.camera.size
+	check(close_size < middle_size and middle_size < wide_size, "eight-second pullback reveals more farm continuously")
+	pan = game.world.camera.transform
+	game._process(1)
+	check(is_equal_approx(game.world.camera.size, wide_size) and not game.world.camera.transform.is_equal_approx(pan), "after eight seconds the wide view keeps drifting without another zoom or cut")
+	check(game.world._time > world_time + 8.9, "the farm animates behind the title")
 	check(game.state._save_data() == before, "waiting at the gate never advances crops, weather, accounts or save state")
 	check(is_equal_approx(game.world._day_elapsed, game.world.DAY_CYCLE_SECONDS * .94), "title uses golden-hour light without changing the calendar")
 	check(not game.can_hurry() and not game._map_navigation_allowed(), "title blocks hurry and farm navigation")
@@ -42,6 +68,8 @@ func run() -> void:
 	check(game.state._save_data() == before and game.title_active(), "hidden gameplay and reset shortcuts cannot change the title farm")
 	game.touch_controls.enabled = true
 	for size: Vector2i in [Vector2i(390,844), Vector2i(844,390), Vector2i(1280,800)]:
+		game.touch_controls.enabled = size.x < 900
+		if not game.touch_controls.enabled: root.content_scale_size = size
 		root.size = size
 		await frames()
 		game.touch_controls.resize()
@@ -51,12 +79,21 @@ func run() -> void:
 		for button: Button in [title.walk, title.resume]:
 			check(bounds.encloses(button.get_global_rect()), "title action stays inside " + str(size))
 			check(button.size.y * scale >= 43.9, "title action stays at least 44 px high at " + str(size))
-		if size == Vector2i(390,844) and "--capture" in OS.get_cmdline_user_args():
-			await RenderingServer.frame_post_draw
-			root.get_texture().get_image().save_png("res://artifacts/segment21c-title-390.png")
+		if size in [Vector2i(390,844), Vector2i(1280,800)] and "--capture" in OS.get_cmdline_user_args():
+			for seconds: float in [0,8]:
+				title.elapsed = seconds
+				title.advance(0)
+				await frames()
+				await RenderingServer.frame_post_draw
+				root.get_texture().get_image().save_png("res://artifacts/segment21c-title-%d-%ds.png" % [size.x,int(seconds)])
 	title.walk.pressed.emit()
 	check(not game.title_active() and game.tutorial.current_id() == "welcome", "walking into a fresh farm starts the existing guided year")
 	check(game.world.camera.transform.is_equal_approx(camera), "entry restores the player's normal farm camera")
+	var restored: bool = true
+	for label: Label3D in label_visibility:
+		if label.visible != bool(label_visibility[label]): restored = false
+	check(restored, "entry restores each world's visible and hidden label state")
+	check(game.world._day_environment.background_mode == background and game.world._day_environment.sky == sky, "entry restores the farm's original sky resource and background mode")
 	game.tutorial.finish()
 	game.year_intro.stop()
 	game.state.coins = 90000
