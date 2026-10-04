@@ -14,7 +14,7 @@ varying vec2 sea_pos;
 void vertex() {
 	sea_pos = VERTEX.xz;
 	if (!title_mode) {
-		VERTEX.y += sin(VERTEX.x * 0.55 + water_clock * 1.1) * 0.022 + cos(VERTEX.z * 0.65 - water_clock * 0.8) * 0.018;
+		VERTEX.y += sin(VERTEX.x * 0.12 + water_clock * 0.32) * 0.022 + cos(VERTEX.z * 0.10 - water_clock * 0.25) * 0.018;
 	}
 	// The island camera uses a tight depth slice for detailed orthogonal shadows.
 	// Preserve the sea's screen shape but keep its non-shadow-casting surface
@@ -41,17 +41,17 @@ void fragment() {
 		glow += title_highlight(SCREEN_UV, vec2(0.31, 0.81) + drift * 0.7, vec2(0.15, 0.007));
 		water = mix(water, foam_color, glow * 0.13);
 	} else {
-		// Broad curling ribbons and smaller crossing ripples. Six trigonometric
-		// evaluations, one opaque pass, no reflections or screen/depth reads.
-		float bend = sin(sea_pos.y * 0.30 + water_clock * 0.18) + cos(sea_pos.x * 0.22 - sea_pos.y * 0.10) * 0.45;
-		float ribbon = sin(sea_pos.x * 0.46 + sea_pos.y * 0.25 + bend * 2.2 - water_clock * 0.55);
-		float chop = sin(sea_pos.y * 0.9 - sea_pos.x * 0.3 + water_clock * 0.48);
-		float breaker = sin(shore * 3.0 - water_clock * 1.2 + bend);
-		float breaks = smoothstep(-0.3, 0.7, sin(UV.y * 0.65 + water_clock * 0.15));
-		float foam = smoothstep(0.86, 0.99, breaker) * breaks * (1.0 - smoothstep(0.8, 4.2, shore));
-		float crest = smoothstep(0.975, 0.996, ribbon) * smoothstep(-0.15, 0.6, chop);
-		water += (ribbon * 0.014 + chop * 0.008);
-		water = mix(water, foam_color, foam * 0.65 + crest * 0.36);
+		// Five broad, feathered pools. Their bounded screen count remains calm
+		// at every zoom; each drifts over a sixteen-second cycle.
+		vec2 drift = vec2(sin(water_clock * .39),cos(water_clock * .31)) * .018;
+		float glow = title_highlight(SCREEN_UV,vec2(.12,.24)+drift,vec2(.17,.022));
+		glow += title_highlight(SCREEN_UV,vec2(.76,.18)-drift,vec2(.15,.017));
+		glow += title_highlight(SCREEN_UV,vec2(.91,.51)+drift,vec2(.18,.024));
+		glow += title_highlight(SCREEN_UV,vec2(.16,.70)-drift,vec2(.20,.025));
+		glow += title_highlight(SCREEN_UV,vec2(.65,.87)+drift,vec2(.19,.019));
+		float foam = (1.-smoothstep(.10,.22,abs(shore-.35))) * (.20+.08*sin(water_clock*.35));
+		water = mix(water,foam_color,foam+glow*.17);
+		water *= mix(vec3(.92,.97,1.05),vec3(1.06,1.02,.94),(1.-smoothstep(.1,.8,SCREEN_UV.x)));
 	}
 	// Ocean covers the complete camera view, including the far distance.
 	// A subtle sky tint follows dusk without dissolving the sea into a void.

@@ -104,6 +104,7 @@ func _prepare_farm(year: int, season: int) -> void:
 	Stock.add(game.state.storage, "russet", 12, 90)
 	game._apply_graphics_quality("balanced")
 	game._set_shadow_size(shadow_size)
+	shadow_size = game.shadow_size
 	game.hud._climate_alert.dismiss()
 	game.hud._toast_box.hide()
 	game._on_state_changed()

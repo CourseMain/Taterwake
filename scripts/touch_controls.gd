@@ -186,12 +186,16 @@ func resize() -> void:
 	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
 	place(hurry_button, Rect2(w - 210, h - 252, 188, 68))
 	place(menu_button, Rect2(w - 134, 16, 112, 68))
-	place(sell_button, Rect2(w - 134, 94, 112, 68))
-	place(status, Rect2(16, 132, minf(w - 168, 500), 48))
+	place(sell_button, Rect2(22, h - 268, 166, 68))
+	place(status, Rect2(16, 132, w - 32, 48))
 	if enabled:
 		place(game.hud.root.get_node("FarmWordmark"), Rect2(96, 16, 300, 58))
-		place(game.hud._season_strip, Rect2(16, 92, minf(w - 168, 540), 32))
+		place(game.hud._season_strip, Rect2(16, 92, w - 32, 32))
+		place(game.hud._play_band, Rect2(0,0,w,188))
+		place(game.hud._weather_button, Rect2(16,196,minf(w-32,430),68))
+		game.hud._weather_button.add_theme_font_size_override("font_size",22)
 		game.hud._season_jobs.layout()
+		game.hud._world_button(sell_button, Cozy.WOOD)
 	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
 	place(guide_button, Rect2(96, 16, 204, 68))
 	fit_drawer()
@@ -342,11 +346,12 @@ func _process(delta: float) -> void:
 	if blocked:
 		drawer.hide()
 	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._weather_button, hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	for item in [hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	hud._weather_button.visible = not blocked and (hud._tutorial.is_empty() or "climate" in hud._tutorial.get("features",[]))
 	if not hud._context_box.get_meta("warning", false) and not hud._context_box.get_meta("grade", false): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
-		status.text = "%s · %s" % [hud._top.coins.text, game.state.selected_crop.capitalize()]
+		status.text = "%s · %s %s / t" % [hud._top.coins.text, game.state.selected_crop.capitalize(), game.state.market_money(game.state.market[game.state.selected_crop].sell)]
 		var weather: Dictionary = game.state.climate_info()
 		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]

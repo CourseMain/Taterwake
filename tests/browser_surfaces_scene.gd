@@ -3,7 +3,7 @@ extends Node
 ## window.surfaceQA("title" | "accounts" | "market" | "climate" | "npc:nell"
 ##   | "run_summary" | "foreclosure" | "scroll:end" | "scroll:top" | "status").
 ## Await window.surfaceReport.ready before capturing the browser viewport.
-const PAGES: Array[String] = ["title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "tools", "quests", "loss_notices", "contracts", "sell_potatoes", "menu", "pause", "graphics", "debug", "help", "activities", "duck_patrol", "dex", "front_page"]
+const PAGES: Array[String] = ["play_spring", "play_summer", "play_autumn","title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "tools", "quests", "loss_notices", "contracts", "sell_potatoes", "menu", "pause", "graphics", "debug", "help", "activities", "duck_patrol", "dex", "front_page"]
 var game
 var callback
 var request := 0
@@ -50,6 +50,7 @@ func _ready() -> void:
 
 func _page_visible() -> bool:
 	match current_page:
+		"play_spring", "play_summer", "play_autumn": return not game.hud.is_panel_open() and not game.title_active()
 		"title": return game.title_active() if game.has_method("title_active") else game.year_intro.visible
 		"npc": return game.conversation.visible
 		"foreclosure": return game.hud._run_end.visible
@@ -101,6 +102,17 @@ func _present(action: String, ticket: int) -> void:
 	game.state.climate.data.event = ""
 	game.state.climate.data.timer = 0
 	game.state.season_clock.seconds = 75
+	if current_page.begins_with("play_"):
+		game.state.season_clock.season = {"play_spring":0,"play_summer":1,"play_autumn":2}[current_page]
+		game.state.season_clock.seconds = 142 if current_page == "play_autumn" else 75
+		for index in range(24):
+			var bed: Dictionary = game.state.plots[index]
+			bed.unlocked = true
+			bed.tilled = true
+			bed.crop = "russet"
+			bed.stage = 3 if index % 3 == 0 else 2
+			bed.elapsed = 60 if bed.stage == 3 else 36
+			bed.watered = true
 	if current_page in ["accounts", "climate", "run_summary", "foreclosure"]:
 		game.state.season_clock.season = 3
 		game.state.season_clock.seconds = 0
@@ -130,6 +142,7 @@ func _present(action: String, ticket: int) -> void:
 	game.hud._toast_box.hide()
 	game.hud._purchase_box.hide()
 	match current_page:
+		"play_spring", "play_summer", "play_autumn": game.world._animate_sun(3.4)
 		"title":
 			if game.has_method("_show_title"):
 				game._show_title(true)

@@ -41,7 +41,7 @@ func run() -> void:
 	world.set_day_time(150)
 	settle_sun(world)
 	check(dawn.y < noon.y and noon.y < world._sun.rotation_degrees.y and noon.x < dawn.x, "sun direction shows progress from dawn through noon to dusk")
-	check(dawn.is_equal_approx(Vector3(-40,160,0)) and noon.is_equal_approx(Vector3(-60,180,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-40,200,0)), "working-season arc has the requested bounds")
+	check(dawn.is_equal_approx(Vector3(-20,160,0)) and noon.is_equal_approx(Vector3(-35,180,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-20,200,0)), "working-season arc has the requested bounds")
 	for invalid in [NAN, INF, -1.0]:
 		world.set_day_time(invalid)
 		check(world.day_cycle_info().phase == 1, "invalid time cannot corrupt lighting")
@@ -51,9 +51,9 @@ func run() -> void:
 	var winter_dawn: Vector3 = world._sun.rotation_degrees
 	world.set_day_time(75, true)
 	settle_sun(world)
-	check(world.day_cycle_info().phase == 0.5 and world._sun.rotation_degrees.x > noon.x and world._sun.rotation_degrees.y > winter_dawn.y, "Winter sun moves across a lower arc")
-	check(winter_dawn.is_equal_approx(Vector3(-30,160,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-55,180,0)), "Winter has a 30 degree floor and 55 degree peak")
-	check(world._sun.light_color.b > 0.95 and world._sun.light_energy < 0.65, "Winter sunlight is pale and weaker")
+	check(world.day_cycle_info().phase == 0.5 and is_equal_approx(world._sun.rotation_degrees.x,noon.x) and world._sun.rotation_degrees.y > winter_dawn.y, "Winter uses the same long-shadow arc")
+	check(winter_dawn.is_equal_approx(Vector3(-20,160,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-35,180,0)), "Winter has a 20 degree floor and 35 degree peak")
+	check(world._sun.light_color.r > world._sun.light_color.b and world._sun.light_energy < 0.65, "Winter sunlight remains warm and weaker")
 	world.set_day_time(150, true)
 	settle_sun(world)
 	check(world.day_cycle_info().phase == 1 and world._sun.rotation_degrees.y > winter_dawn.y, "Winter reaches dusk at the season end")

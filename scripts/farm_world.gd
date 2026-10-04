@@ -32,6 +32,9 @@ var _crop_tubers: Dictionary = {}
 var _area_selection: Node3D
 var _area_key: String = ""
 var _furrow_roots: Array[Node3D] = []
+var ground_occlusion
+var _soil_materials: Dictionary = {}
+var play_sky: ShaderMaterial
 var _ripe_sparkles: Array[Node3D] = []
 var _rotor: Node3D
 var _clouds: Array[Node3D] = []
@@ -259,7 +262,51 @@ func _batch_world_geometry() -> void:
 	for collection: Array in [_soil_meshes, _snowflakes]:
 		for node: Node3D in collection:
 			mutable_meshes[node.get_instance_id()] = true
+	_bake_ground_contacts()
+	_geometry_batcher._compiler.occlusion = ground_occlusion.factor
 	_geometry_batcher.batch_tree(self, mutable_meshes)
+	_geometry_batcher._compiler.occlusion = Callable()
+
+
+func _bake_ground_contacts() -> void:
+	ground_occlusion = preload("res://scripts/ground_occlusion.gd").new()
+	var contacts: Array[Transform3D] = []
+	for tree: Dictionary in _tree_specs:
+		var at: Vector3 = tree.parent.global_position
+		var span := Vector2(tree.parent.scale.x,tree.parent.scale.z)*1.8
+		ground_occlusion.add_patch(at,span,.18)
+		contacts.append(Transform3D(Basis.from_scale(Vector3(span.x,1,span.y)), at+Vector3(0,.015,0)))
+	for roof: Dictionary in _roof_specs:
+		var at: Vector3 = roof.parent.global_position
+		var span := Vector2(roof.width,roof.depth)*Vector2(roof.parent.scale.x,roof.parent.scale.z)*.6
+		ground_occlusion.add_patch(at,span,.20)
+		contacts.append(Transform3D(Basis.from_scale(Vector3(span.x,1,span.y)),at+Vector3(0,.015,0)))
+	for fence: Dictionary in _fence_specs:
+		ground_occlusion.add_fence(fence.parent.to_global(fence.a),fence.parent.to_global(fence.b))
+	for point: Vector3 in plot_positions: ground_occlusion.add_patch(point,Vector2.ONE*1.6,.12)
+	var terrain: MeshInstance3D = get_node("IslandTerrainShell")
+	terrain.mesh = ground_occlusion.bake(terrain.mesh)
+	var Disc = preload("res://scripts/contact_disc.gd")
+	Disc.prepare()
+	var batch := MultiMeshInstance3D.new()
+	batch.name = "StaticContactDiscs"
+	batch.material_override = Disc.material
+	batch.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	batch.multimesh = MultiMesh.new()
+	batch.multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	batch.multimesh.mesh = Disc.mesh
+	batch.multimesh.instance_count = contacts.size()
+	for i in range(contacts.size()): batch.multimesh.set_instance_transform(i, contacts[i])
+	add_child(batch)
+	var people: Array = _villagers + _toolsmiths + _npc_actors.values() + [_player_body]
+	var seen: Dictionary = {}
+	for person: Node3D in people:
+		if not is_instance_valid(person) or seen.has(person): continue
+		seen[person] = true
+		var disc := Disc.make()
+		disc.position.y = .016
+		disc.scale = Vector3(.72,1,.57)
+		person.add_child(disc)
 
 
 func _prepare_tutorial_guidance() -> void:
@@ -423,6 +470,8 @@ func _clear_world() -> void:
 	_ducks.clear()
 	_duck_bodies.clear()
 	_materials.clear()
+	_soil_materials.clear()
+	ground_occlusion = null
 	_area_key = ""
 	_tool_time = 0.0
 	_time = 0.0
@@ -461,7 +510,13 @@ func _lighting() -> void:
 	var environment_node := WorldEnvironment.new()
 	environment_node.name = "DayNightEnvironment"
 	_day_environment = Environment.new()
-	_day_environment.background_mode = Environment.BG_COLOR
+	_day_environment.background_mode = Environment.BG_SKY
+	play_sky = ShaderMaterial.new()
+	play_sky.shader = preload("res://scripts/farm_sky.gdshader")
+	_day_environment.sky = Sky.new()
+	_day_environment.sky.sky_material = play_sky
+	_day_environment.sky.radiance_size = Sky.RADIANCE_SIZE_32
+	_day_environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	_day_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_day_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	environment_node.environment = _day_environment
@@ -594,7 +649,7 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var daylight: float = 0.25 + 0.75 * height
 	var twilight: float = pow(1.0 - height, 2.0 if _season_index == 2 else 3.0)
 	# North-centred arc lights the treads while the south-facing risers stay shaded.
-	_sun_desired = Vector3(-lerpf(30.0 if winter else 40.0, 55.0 if winter else 60.0, height), 180.0 + lerpf(-20.0, 20.0, phase), 0)
+	_sun_desired = Vector3(-lerpf(20.0, 35.0, height), 180.0 + lerpf(-20.0, 20.0, phase), 0)
 	if not _sun_pose_ready:
 		_sun_pose_ready = true
 		_sun_from = _sun_desired
@@ -603,10 +658,10 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
-	var day_sun: Color = Color("f0f6ff") if winter or current_island == 3 else Color("fff8ed")
-	var dusk_sun: Color = Color("ffcddc") if winter or current_island == 3 else Color("ffd1a0")
+	var day_sun: Color = Color("ffd9a8")
+	var dusk_sun: Color = Color("ffba7d")
 	_day_environment.background_color = night_sky.lerp(day_sky, daylight).lerp(dusk_sky, twilight * 0.72)
-	_day_environment.ambient_light_color = Color("9dafd0").lerp(Color("f0f3e8"), daylight).lerp(dusk_sun, twilight * 0.25)
+	_day_environment.ambient_light_color = Color("b8c8e0").lerp(Color("9fafd0"), twilight * .25)
 	_day_environment.ambient_light_energy = lerpf(0.44, 0.45, daylight)
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
 	_sun.light_energy = (0.48 if winter else 0.65) * daylight
@@ -623,6 +678,9 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 		_day_environment.ambient_light_color = _season_light.ambient.lerp(_day_environment.ambient_light_color, _season_blend)
 		_sun.light_color = _season_light.sun.lerp(_sun.light_color, _season_blend)
 		_sun.light_energy = lerpf(_season_light.energy, _sun.light_energy, _season_blend)
+	if play_sky != null:
+		play_sky.set_shader_parameter("top_color",_day_environment.background_color.darkened(.28))
+		play_sky.set_shader_parameter("horizon_color",_day_environment.background_color.lightened(.23))
 	if is_instance_valid(coast): coast.sync_light()
 
 
@@ -850,7 +908,15 @@ func _update_plot_ground(index: int, data: Dictionary) -> void:
 	var unlocked: bool = bool(data.get("unlocked",true))
 	_soil_meshes[index].position.y = .105 if unlocked else (.145 if _bed_winter else .027)
 	_soil_meshes[index].scale.y = 1.0 if unlocked else .12
-	_soil_meshes[index].material_override = _unused_ground_material if _bed_winter or not unlocked else _mat(Color("66513b") if data.get("watered",false) else (SOIL if data.get("tilled",true) else Color("8d9c70")))
+	_soil_meshes[index].material_override = _unused_ground_material if _bed_winter or not unlocked else _soil_skin(Color("66513b") if data.get("watered",false) else (SOIL if data.get("tilled",true) else Color("8d9c70")))
+
+func _soil_skin(colour: Color) -> ShaderMaterial:
+	if not _soil_materials.has(colour):
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://scripts/bed_soil.gdshader")
+		material.set_shader_parameter("soil_color", colour)
+		_soil_materials[colour] = material
+	return _soil_materials[colour]
 
 func _unused_blades(parent: Node3D, base: float) -> void:
 	# Three narrow, bent blades, with no rounded tufts or rock silhouettes.
@@ -893,7 +959,7 @@ func _create_crop_tuber(parent: Node3D, plot: Dictionary, event: String = "", st
 	if overview_stress:
 		appearance.crop = appearance.crop.lerp(STRESS_TINTS[event],.78)
 		appearance.foliage = appearance.foliage.lerp(STRESS_TINTS[event],.55)
-	var color: Color = appearance.crop
+	var color: Color = appearance.crop if int(plot.get("stage",0)) == 3 else appearance.foliage
 	_sphere(tuber, Vector3(0,.58,0), Vector3(1.03,.87,.83), color)
 	_sphere(tuber, Vector3(-.65,.48,.03), Vector3(.45,.52,.59), color.darkened(.07))
 	for eye: Vector3 in [Vector3(.35,1.19,.43), Vector3(-.30,.72,.79), Vector3(.65,.38,.63)]:
@@ -2077,10 +2143,10 @@ func _retire_climate_node(node: Node3D) -> void:
 ## Calendar presentation is deterministic; only the one-second blend uses real time.
 static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
 	var age: float = clampf((year - 1) / 9.0, 0, 1)
-	var grass: Color = [Color("699f61"), Color("8ba563"), Color("b8995b"), Color("f0f1f0")][season]
+	var grass: Color = [Color("699f61"), Color("a2a16a"), Color("b8995b"), Color("f0f1f0")][season]
 	if season == 1: grass = grass.lerp(Color("c4a16d"), clampf((year - 5) / 5.0, 0, 1) * 0.85)
 	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
-	return {"grass": grass, "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
+	return {"grass": grass, "grass_low": [Color("486b47"),Color("626b3d"),Color("79633f"),Color("c7cfd4")][season].lerp(grass,.1), "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
 		"haze": (0.12 + age * 0.26) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
 
@@ -2167,7 +2233,9 @@ func _apply_season() -> void:
 	var target: Dictionary = season_tints(_season_year, _season_index, _season_signal)
 	for key in target:
 		_season_palette[key] = _season_from.get(key, target[key]).lerp(target[key], _season_blend) if target[key] is Color else lerpf(float(_season_from.get(key, target[key])), float(target[key]), _season_blend)
-	if is_instance_valid(_ground_material): _ground_material.set_shader_parameter("grass_color", _season_palette.grass)
+	if is_instance_valid(_ground_material):
+		_ground_material.set_shader_parameter("grass_color", _season_palette.grass)
+		_ground_material.set_shader_parameter("grass_low", _season_palette.grass_low)
 	_set_winter_cover(_season_index == 3,float(_season_palette.snow))
 	for entry in _season_materials:
 		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass

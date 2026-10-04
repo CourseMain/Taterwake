@@ -32,7 +32,7 @@ func _build_water() -> void:
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
 	water_material.set_shader_parameter("sea_clip_depth", SEA_CLIP_DEPTH)
 	water_material.set_shader_parameter("title_mode", title_mode)
-	var colors: Array = [Color("91d8ca"), Color("5298a5"), Color("e3efd5")]
+	var colors: Array = [Color("8cc7bb"), Color("326d8a"), Color("e3efd5")]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water.material_override = water_material
 	add_child(water)

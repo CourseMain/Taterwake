@@ -3,6 +3,7 @@ extends RefCounted
 ## mutable meshes, labels and collisions retain their identities and animation.
 var _cache: Dictionary = {}
 var _materials: Dictionary = {}
+var occlusion: Callable
 
 func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 	var groups: Dictionary = {}
@@ -29,12 +30,13 @@ func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 		var items: Array = groups[key]
 		if items.size() < 2: continue
 		var signature: Array = [key]
+		if occlusion.is_valid(): signature.append(parent.global_transform)
 		for item: MeshInstance3D in items:
 			signature.append([item.mesh.get_rid(), item.transform, item.material_override.albedo_color])
 		# Array equality checks the complete geometry signature, not just a hash.
 		var mesh: ArrayMesh = _cache.get(signature)
 		if mesh == null:
-			mesh = _compile(items)
+			mesh = _compile(items, parent.global_transform)
 			if _cache.size() >= 128: _cache.erase(_cache.keys()[0])
 			_cache[signature] = mesh
 		if not _materials.has(key):
@@ -52,7 +54,7 @@ func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 		parent.add_child(combined)
 		for item: MeshInstance3D in items: item.free()
 
-func _compile(items: Array) -> ArrayMesh:
+func _compile(items: Array, world_transform: Transform3D = Transform3D.IDENTITY) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
 	var colours := PackedColorArray()
@@ -67,7 +69,9 @@ func _compile(items: Array) -> ArrayMesh:
 		for index: int in range(source.size()):
 			vertices.append(transform * source[index])
 			normals.append((normal_basis * source_normals[index]).normalized())
-			colours.append(item.material_override.albedo_color)
+			var shade: float = occlusion.call(world_transform * transform * source[index]) if occlusion.is_valid() else 1.0
+			var colour: Color = item.material_override.albedo_color
+			colours.append(Color(colour.r * shade, colour.g * shade, colour.b * shade, colour.a))
 		var source_indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
 		if source_indices.is_empty():
 			for index: int in range(source.size()): indices.append(offset + index)

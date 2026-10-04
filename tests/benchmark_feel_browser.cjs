@@ -129,7 +129,7 @@ async function main() {
     };
 
     if (!flag('boundary-only') && !flag('year-only')) {
-    for (const size of [4096, 2048]) {
+    for (const size of (argument('shadows','both') === '2048' ? [2048] : [4096, 2048])) {
       const id = `summer_rain_shadow_${size}`;
       console.log(`Starting ${label} ${id}, ${duration}s after 3s warmup`);
       await command(`rain:${size}:${duration}`);
@@ -139,6 +139,7 @@ async function main() {
       await collect(id);
       await page.screenshot({ path: path.join(directory, `${label}-${id}.png`) });
     }
+    if (report.results.length === 2) {
     const high = report.results[0];
     const low = report.results[1];
     report.shadow_comparison = { high: 4096, low: 2048,
@@ -147,6 +148,7 @@ async function main() {
       fps_delta: low.fps - high.fps,
       note: physical ? 'Measurements from the declared remote phone.'
         : 'Desktop phone emulation compares renderer cost; it cannot decide the real-phone shadow budget.' };
+    }
     }
 
     if (!flag('year-only')) {

@@ -141,6 +141,7 @@ var _context_layout_key: String = ""
 var _farm_hint: String = ""
 var _farm_hint_remaining: float = 0.0
 var _farm_busy_remaining: float = 0.0
+var _play_band: PanelContainer
 var _quick_sell: Button
 var _modal_card: PanelContainer
 var _crop_row: BoxContainer
@@ -846,6 +847,12 @@ func _place(control: Control, rect: Rect2) -> void:
 	control.size = rect.size
 
 func _build_top() -> void:
+	_play_band = _card(INK, 0)
+	_play_band.name = "PlayHudBand"
+	_play_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(_play_band, Rect2(0,0,1280,104))
+	_play_band.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_play_band.offset_bottom = 104
 	var brand: VBoxContainer = _vbox(0)
 	_place(brand, Rect2(88, 20, 290, 70))
 	brand.name = "FarmWordmark"
@@ -853,9 +860,9 @@ func _build_top() -> void:
 	var wordmark: BoxContainer = _hbox(8)
 	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	brand.add_child(wordmark)
-	wordmark.add_child(_label("TATER", 32, INK, true))
+	wordmark.add_child(_label("TATER", 32, CREAM, true))
 	wordmark.add_child(_label("/", 32, GOLD, true))
-	wordmark.add_child(_label("LAND", 32, INK, true))
+	wordmark.add_child(_label("LAND", 32, CREAM, true))
 	_top["season"] = _label("Year 1 · Spring", 16, INK, true)
 	brand.add_child(_top.season)
 	_top.season.hide()
@@ -863,7 +870,7 @@ func _build_top() -> void:
 	_season_strip.kind = "season"
 	_place(_season_strip, Rect2(88, 76, 330, 24))
 
-	var stats: PanelContainer = _card(CREAM, 12)
+	var stats: PanelContainer = _card(INK, 8)
 	_stats_card = stats
 	_place(stats, Rect2(387, 21, 524, 72))
 	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -875,9 +882,10 @@ func _build_top() -> void:
 	market_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(market_box)
-	_top["market_name"] = _label("RUSSET MARKET", 10, MUTED, true)
+	_top["market_name"] = _label("RUSSET MARKET", 10, CREAM.darkened(.25), true)
 	_top["price"] = _label("", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
+	_top["price"].add_theme_stylebox_override("normal", Cozy.paper(CREAM, 3, 3))
 	var quote_row: BoxContainer = _hbox(8)
 	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	market_box.add_child(quote_row)
@@ -890,13 +898,15 @@ func _build_top() -> void:
 		label.add_theme_font_override("font", stats_font)
 	stats.size.x = 763
 	_weather_button = _button("Weather & protection →", "climate")
-	_place(_weather_button, Rect2(28, 104, 302, 44))
+	_place(_weather_button, Rect2(28, 112, 302, 44))
+	_world_button(_weather_button, INK)
 	_weather_button.add_theme_font_size_override("font_size", 14)
 	var menu_button: Button = _button("", "menu")
 	_menu_button = menu_button
 	menu_button.name = "MainMenuButton"
 	menu_button.tooltip_text = "Farm menu · Debug money · Esc"
 	_place(menu_button, Rect2(1174, 21, 78, 72))
+	_world_button(menu_button, INK)
 	var menu_icon: VBoxContainer = _vbox(5)
 	menu_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	menu_button.add_child(menu_icon)
@@ -907,7 +917,7 @@ func _build_top() -> void:
 	menu_icon.offset_bottom = 10
 	for _line: int in range(3):
 		var bar: ColorRect = ColorRect.new()
-		bar.color = INK
+		bar.color = CREAM
 		bar.custom_minimum_size.y = 3
 		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		menu_icon.add_child(bar)
@@ -916,6 +926,12 @@ func _build_top() -> void:
 	save.add_theme_font_size_override("font_size", 12)
 	_place(save, Rect2(1154, 67, 98, 27))
 	save.hide()
+
+func _world_button(button: Button, tone: Color) -> void:
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		button.add_theme_stylebox_override(state, Cozy.paper(tone.lightened(.12) if state == "hover" else tone.darkened(.08) if state == "pressed" else tone, 10, 5))
+	for property: String in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
+		button.add_theme_color_override(property, CREAM.darkened(.3) if property == "font_disabled_color" else CREAM)
 
 func _build_hurry_badge() -> void:
 	_hurry_badge = _card(CREAM, 6)
@@ -958,8 +974,9 @@ func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> 
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(box)
-	box.add_child(_label(title, 10, MUTED, true))
+	box.add_child(_label(title, 10, CREAM.darkened(.25), true))
 	var number: Label = _label(value, 23, color, true)
+	number.add_theme_stylebox_override("normal", Cozy.paper(CREAM, 3, 3))
 	box.add_child(number)
 	return number
 
@@ -1002,6 +1019,7 @@ func _build_footer() -> void:
 		var tool: String = tools[index]
 		var button: Button = _button("", "tool:" + tool)
 		button.custom_minimum_size = Vector2(92, 80)
+		_world_button(button, Cozy.WOOD)
 		button.tooltip_text = "%d · %s — equip for field work" % [index + 1, tool_names[index]]
 		slots.add_child(button)
 		var content: VBoxContainer = _vbox(0)
@@ -1066,6 +1084,7 @@ func _build_footer() -> void:
 	sell_box.offset_bottom = -20
 	_quick_sell = _button("Sell held [F]", "quick_sell", true)
 	_quick_sell.custom_minimum_size.y = 46
+	_world_button(_quick_sell, Cozy.WOOD)
 	sell_box.add_child(_quick_sell)
 	_context_box = _card(Color(0.09, 0.20, 0.16, 0.93), 6)
 	var hint_skin: StyleBox = _context_box.get_theme_stylebox("panel")
@@ -1283,7 +1302,7 @@ func update_state(state: Node) -> void:
 	_top.price.text = state.market_money(float(quote.get("sell", 0)))
 	_top.price.add_theme_color_override("font_color", INK)
 	_top.price_change.text = "· " + state.price_percent_text(crop)
-	_top.price_change.add_theme_color_override("font_color", price_change_color(crop))
+	_top.price_change.add_theme_color_override("font_color", Color("e8c27b") if price_change_color(crop) == INK else price_change_color(crop).lightened(.4))
 	_top.price_change.show()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = state.trading.fresh_count(state, crop)
@@ -1326,9 +1345,9 @@ func set_tool(tool: String) -> void:
 		_tool_caption.text = "%s equipped · Click / E to use" % names[tool]
 	for key: Variant in _tool_buttons:
 		var button: Button = _tool_buttons[key]
-		button.add_theme_stylebox_override("normal", _style(Color("f9d782") if key == tool else PAPER, 5, 10, GOLD if key == tool else Color.TRANSPARENT))
+		button.add_theme_stylebox_override("normal", Cozy.paper(Color("a87b47") if key == tool else Cozy.WOOD, 5, 4, GOLD if key == tool else Cozy.WOOD.darkened(.25)))
 		var caption: Label = button.get_meta("caption")
-		caption.add_theme_color_override("font_color", INK)
+		caption.add_theme_color_override("font_color", CREAM)
 	_apply_tutorial_visibility()
 
 func set_context(text: String) -> void:
@@ -2303,7 +2322,7 @@ func _refresh_graphics() -> void:
 	var game = get_parent()
 	if game.get("shadow_size") != null:
 		_refs.graphics_current.text += " · %d shadows" % game.shadow_size
-		for size in [2048, 4096]: _refs["shadows_%d" % size].disabled = game.shadow_size == size
+		for size in [2048, 4096]: _refs["shadows_%d" % size].disabled = game.shadow_size == size or (game.touch_controls.enabled and size > 2048)
 	for mode: String in ["balanced", "smooth", "crisp"]:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 

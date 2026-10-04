@@ -56,8 +56,8 @@ func _draw() -> void:
 				width = (size.x - year_width) / 4
 			for index in range(4):
 				var rect := Rect2(index * width, 0, width - 3, size.y - 1)
-				draw_rect(rect, INK if index == season else Color("fffbed"))
+				draw_rect(rect, Color("a87b47") if index == season else Color("725237"))
 				draw_rect(rect, RULE, false)
-				draw_string(font, Vector2(rect.position.x + 5, size.y * 0.72), names[index], HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color("fffbed") if index == season else INK)
-			draw_rect(Rect2(size.x - year_width, 0, year_width, size.y - 1), Color("fffbed"))
-			draw_string(font, Vector2(size.x - year_width + 6, size.y * 0.72), year_words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, INK)
+				draw_string(font, Vector2(rect.position.x + 5, size.y * 0.72), names[index], HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color("fff0c9") if index == season else Color("decba7"))
+			draw_rect(Rect2(size.x - year_width, 0, year_width, size.y - 1), Color("17382d"))
+			draw_string(font, Vector2(size.x - year_width + 6, size.y * 0.72), year_words, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels, Color("fff0c9"))

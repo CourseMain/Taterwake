@@ -149,6 +149,7 @@ func layout() -> void:
 	var top: float = 208 if phone else 154
 	if phone and is_instance_valid(touch.status) and touch.status.visible:
 		top = maxf(top, touch.status.get_global_rect().end.y + 14)
+	if phone and hud._weather_button.visible: top = maxf(top, hud._weather_button.get_global_rect().end.y + 14)
 	position = Vector2(left, top)
 	var bottom: float = hud.root.size.y - 20
 	if phone and not landscape:
