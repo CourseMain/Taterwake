@@ -73,6 +73,8 @@ func _scatter(at: Vector3, count: int, heavy: bool) -> void:
 func animate(delta: float) -> void:
 	pull_pose = 0
 	var popped_grades: Dictionary = {}
+	var blocked: Array[Rect2] = []
+	if not active.is_empty(): blocked = _stamp_obstacles()
 	for i in range(active.size() - 1, -1, -1):
 		var entry: Dictionary = active[i]
 		entry.age += delta
@@ -95,8 +97,10 @@ func animate(delta: float) -> void:
 		for bed in range(field * 24, mini((field + 1) * 24, world.plot_positions.size())):
 			var bed_point: Vector2 = world.camera.unproject_position(world.plot_positions[bed] + Vector3(0, .3, 0)) * logical / Vector2(world.get_viewport().size)
 			top = minf(top, bed_point.y)
-		stamp.position = Vector2(clampf(point.x - stamp.size.x / 2, 8, logical.x - stamp.size.x - 8), maxf(8, top - stamp.size.y - 18 / scale))
+		var preferred := Vector2(clampf(point.x - stamp.size.x / 2, 8, logical.x - stamp.size.x - 8), maxf(8, top - stamp.size.y - 18 / scale))
+		stamp.position = _clear_stamp_position(preferred, stamp.size, blocked)
 		stamp.modulate.a = clampf(1 - (t - pull - STAMP_HOLD) / STAMP_FADE, 0, 1)
+		if stamp.visible and stamp.modulate.a > 0: blocked.append(Rect2(stamp.position, stamp.size).grow(4))
 		if t >= pull + STAMP_HOLD + STAMP_FADE:
 			_remove(i); continue
 		if t < pull:
@@ -142,3 +146,40 @@ func animate(delta: float) -> void:
 			entry.velocity = Vector3.ZERO
 		node.rotation.z += delta*3
 		node.scale = Vector3(entry.size)*minf(1,(.7-float(entry.age))/.2)
+
+func _stamp_obstacles() -> Array[Rect2]:
+	var result: Array[Rect2] = []
+	var factor: Vector2 = get_tree().root.get_visible_rect().size / Vector2(world.get_viewport().size)
+	for centre: Vector3 in world.plot_positions:
+		var rect: Rect2
+		var first: bool = true
+		for x in [-1.0, 1.0]:
+			for z in [-1.0, 1.0]:
+				var point: Vector2 = world.camera.unproject_position(centre + Vector3(x, .3, z) * world.LAND_SPACING) * factor
+				if first: rect = Rect2(point, Vector2.ZERO); first = false
+				else: rect = rect.expand(point)
+		result.append(rect)
+	if world.get_viewport() is SubViewport:
+		var hud = world.get_viewport().get_parent().get("hud")
+		if is_instance_valid(hud):
+			for control in [hud._stats_card, hud._spring_target, hud._season_jobs]:
+				if is_instance_valid(control) and control.is_visible_in_tree(): result.append(control.get_global_rect())
+	return result
+
+func _clear_stamp_position(preferred: Vector2, stamp_size: Vector2, obstacles: Array[Rect2]) -> Vector2:
+	var view: Vector2 = get_tree().root.get_visible_rect().size
+	var lanes: Array[float] = [preferred.x, 8.0, view.x - stamp_size.x - 8]
+	# Search above the receipt first, then below. Field borders and prices
+	# remain clear even when a Low receipt would otherwise sit over Home.
+	for down in [false, true]:
+		for x in lanes:
+			var point := Vector2(x, 8 if down else preferred.y)
+			for attempt in range(obstacles.size() + 1):
+				if point.y < 8 or point.y + stamp_size.y > view.y - 8: break
+				var hit: bool = false
+				for rect in obstacles:
+					if Rect2(point, stamp_size).intersects(rect):
+						point.y = rect.end.y + 8 if down else rect.position.y - stamp_size.y - 8
+						hit = true; break
+				if not hit: return point
+	return preferred

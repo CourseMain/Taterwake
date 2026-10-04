@@ -95,5 +95,20 @@ func run() -> void:
 	fx.animate(1.18); check(pop.modulate.a > .99, "harvest stamp holds for 1.2 seconds after pop")
 	fx.animate(.2); check(pop.modulate.a > 0 and pop.modulate.a < 1, "stamp fades after hold")
 	fx.animate(.5); check(fx.active.is_empty(), "faded receipt removes itself")
+	for index in [0, 24, 48, 71]:
+		fx.harvest({index:{"stage":3, "crop":"russet", "quality":100}}); fx.animate(.2)
+		var rect: Rect2 = fx.active[0].stamp.get_global_rect()
+		check(not fx._stamp_obstacles().any(func(obstacle): return rect.intersects(obstacle)), "stamp clears every bed and price fact for bed " + str(index))
+		fx.animate(2)
+	var batch: Dictionary = {}
+	for index in range(12): batch[index] = {"stage":3, "crop":"russet", "quality":100}
+	fx.harvest(batch); fx.animate(.2)
+	var stamp_rects: Array[Rect2] = []
+	for entry in fx.active:
+		var rect: Rect2 = entry.stamp.get_global_rect()
+		check(not stamp_rects.any(func(other): return rect.intersects(other)), "batch stamps remain readable without overlapping each other")
+		check(not fx._stamp_obstacles().any(func(obstacle): return rect.intersects(obstacle)), "batch stamp clears beds and price facts")
+		stamp_rects.append(rect)
+	fx.animate(2)
 	game.queue_free(); await settle(); await create_timer(.4).timeout
 	print("THREE NUMBERS: %d checks, %d failures" % [checks, failures]); quit(1 if failures else 0)
