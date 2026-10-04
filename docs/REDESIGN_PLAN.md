@@ -1631,7 +1631,170 @@ Ledger labels unchanged; no balance change; bot unchanged. Full suite
 before tagging; tag v2.0.0-underdevelopment-o.
 ```
 
-### Segment 22: The fun pass (after Segment 21e)
+### Segment 21f: The first tester (run now, before any more features)
+
+```
+Why: the first fresh tester, who never plays games, read the first
+screen for five seconds and quit. Her words: too much text, too small,
+too fast, too loud, could not tell what Table and Standard meant. Her
+run also hit a blocker: after "Walk to the farm" on a fresh launch the
+island was missing and the game had to be restarted. This segment is
+only what she hit. Nothing new is added.
+
+A. Blocker. farm_title.start() saves the camera transform and size on
+   the first frame, before the world has done its overview fit, and
+   finish() restores that stale transform, so the island is tiny or off
+   screen until a restart. On finish, do not restore saved values on a
+   fresh launch: re-run the overview fit (camera.size = overview_size(),
+   the overview position and look-at, then fit_camera_depth). Test on
+   the Web export at 1440x900 and 390x844: after Walk, the island fills
+   the frame on the first launch.
+
+B. One thing at a time in the guided year.
+   1. Hide everything the current step does not need: the Weather pill,
+      Sell, the Spring card, the market price, hurry, the season tabs.
+      Each appears the first time its step needs it and stays after.
+   2. Guide cards are full plain sentences, one instruction each, at
+      most twelve words, no semicolons, no "10x / 1x", no key codes on
+      phone. "Hoe ready. Tap gold bed." becomes "Tap the hoe, then tap
+      the glowing bed." "10x waits; 1x warnings. One mild Summer storm
+      teaches loss." becomes "Spring is passing. One small storm is
+      coming. Iris will warn you."
+   3. The guided storm is called what it is everywhere: "A small storm
+      is coming", never "SEVERE STORM". The alert says one thing:
+      "Harvest the glowing bed before the storm." Warning runs 30 s at
+      1x (GUIDED_WARNING_SECONDS 8 is too fast for a first player).
+   4. Grades, explained once with pictures: the first time a harvest is
+      graded, one card shows the three stamps with a plain gloss under
+      each: Table "best, sells for more", Standard "normal", Feed
+      "damaged, half price". The gloss also prints under the stamp for
+      the first three harvests, then only the word.
+   5. Pests: "Sprayer [5]" becomes "Tap the sprayer, then the bed with
+      bugs." Time to ready: tapping a growing bed shows "Ready in 40 s"
+      large, instead of a tiny label.
+   6. The Autumn Icecap rule and similar reminders are shown only when
+      the player tries the thing (tap a bed in Autumn: one line), never
+      as standing small text.
+
+C. Text floor. Nothing in the HUD below 14 px at 390 wide; game_hud has
+   22 labels at 10 to 13 px. Three sizes only: 22 heading, 16 body, 14
+   caption. Muted captions are 14, not 11.
+
+D. Top band. One row, not three: "Spring · Year 1" left, money centre,
+   Menu right. Height at most 56 px on phone, 64 on desktop. The
+   wordmark goes; the name is on the gate sign. The market price moves
+   onto the Sell button: "Sell · Russet 360/t". Season tabs become the
+   single "Spring · Year 1" label; tapping it opens the calendar.
+
+E. Sound: vary, do not delete. Target mix: ambience bed -24 dB with two
+   layered loops that cross-fade slowly; birds and cicadas in bursts
+   every 20-40 s, not continuous; wind peaks at -26 dB in the guided
+   year and -20 after; thunder -18; the pest alert -14 with three
+   different cues rotated, at most one per 20 s; tool cues -16. No two
+   alert sounds within two seconds of each other. A "Quieter" toggle in
+   the menu halves everything but tool cues.
+   The keeper voice ("uuua", npc-potato-1..3.wav at -12 dB on every
+   line) is the single most disliked sound; replace it with short,
+   soft, pitched chirps, two or three notes, a different pitch per
+   keeper, played once when a page opens and never per line. The
+   ambience bed is nature, light and calm: varied bird chirps (at least
+   six different calls, never the same twice in a row), a soft breeze,
+   leaves, a distant stream near the pond, cicadas in Summer, light
+   rain under grey skies, muffled quiet in Winter. All of it sits under
+   -24 dB and none of it loops audibly: every bed is at least 40 s long
+   with randomised gaps.
+
+F. Record the first sheet in PLAYTEST_22.md: tester 1, phone, quit at
+   minute 1, first screen. Her words: "too much text, too small, too
+   fast, too loud", "I didn't understand Table and Standard", "what do
+   I do while I wait?", and, asked whether she would open it again:
+   "No motivation, only pain. Who would play that?" That last line is
+   the Segment 22 brief in one sentence: the hook items (a reason to
+   come back, the Spring target, Nell's milestones, the first thing you
+   can afford) come before anything else in the fun pass. Three more
+   fresh testers after this segment, not before.
+
+G. One way to do each thing. There are 24 action routes into selling
+   alone (HUD Sell, barn building, Mara's Sell tab, quick sell, the
+   Winter stores lines, quest links). A first player cannot build a map
+   of the farm when every thing has five doors. Write the entrance map
+   and enforce it:
+     Sell or store potatoes ... the barn, and only the barn. The HUD
+       Sell button is a shortcut that opens the same barn page.
+     Buy seeds ................ Mara's stall. Remove the Sell tab from
+       her shop.
+     Accounts, bills, leases .. Nell, any season. In Winter Nell opens
+       the accounts, and the accounts page has one link "Go to the
+       barn"; the barn stays reachable by walking to it and by Sell.
+     Weather and protection ... the weather station and the Weather
+       pill, same page.
+     Quests and losses ........ Tess's board.
+     Tools and expansion ...... the Tools shed.
+   Every other route is removed, not hidden. Each page has exactly one
+   way to close it. Update the entrance test in test_ui_audit so a new
+   route fails the suite.
+
+H. Keepers open their service, not a conversation. Tapping Mara opens
+   the seed page with her one line as the page header; tapping Nell
+   opens the accounts the same way. The chat ("You mend all these
+   bags?", "How's the weather looking?") moves to a small "Talk" button
+   on that page. The screenshot of Mara's dialogue is a full screen of
+   portrait and empty brown panel with the real action third from the
+   top; that screen goes.
+
+I. Waiting. When a bed is growing and there is nothing to do, the game
+   says so instead of leaving the player to wonder: the wait card reads
+   "Nothing to do until it's ripe. Hold Hurry, or water the dry beds."
+   Hold to hurry is visible and named on every wait. The guided year's
+   wait card says the same in plain words, not "Summer in 40s · 10x".
+
+J. Remove the Tools tab from the inventory. Tools are not things you
+   hold a count of; the tray at the bottom already shows them. The
+   inventory shows potatoes by grade and seeds, nothing else.
+
+K. Something small to spend on. Bring back decorations as an honest,
+   cosmetic spend at the Tools shed: six items, priced 2,000 to 12,000
+   (a bench, a flower border, a scarecrow, a painted barn door, a
+   duck house, a flag on the gate). Placed from a short list; no
+   bonuses, no rarity, no timers, no currency but cash. They show in
+   the fifty-year epilogue as what the farm kept. The Tools card says
+   "Decorations · from 2,000" so a poor player can still buy one in
+   year one.
+
+L. The player's own farmer. Show the player's 3D model on the Menu page
+   turning slowly, with four choices: hat, shirt colour, skin tone,
+   name. Chosen at first launch after Walk to the farm, one card, skip
+   allowed; changeable from Menu. Keepers use the name in their lines.
+
+M. Cuter. The farm is already round and friendly; the interface and
+   the motion are not. Rules, not decoration:
+   1. Keepers and the player idle with a slow breathing bob and a blink
+      every 3-5 s; a small squash on tap and a stretch on release.
+   2. Ripe potatoes wobble once every few seconds; a harvested bed pops
+      with three soft petals or sparks and a two-note cue; a watered bed
+      shows a single drop with a bounce.
+   3. Ducks waddle, stop, look at the player, and quack once when
+      tapped. Blossom petals drift in Spring, leaves in Autumn, snow in
+      Winter, a few at a time.
+   4. Panels: corner radius 12 on cards, 999 on chips; stamps and chips
+      get soft pastel fills (Table warm gold, Standard sage, Feed
+      clay); portraits get a rounded frame with a 2 px cream inner
+      line; the Menu farmer gets a tiny animated hat tip on open.
+   5. Copy warmth: Nell, Mara, Tess and Iris each get one gentle
+      greeting line that changes with the season, in their own voice,
+      shown as the page header when their page opens.
+   6. Nothing in this part may add text, cover a tap target, or play a
+      sound within two seconds of another.
+
+Done when: a fresh Web launch reaches the farm every time, the guided
+year shows one card at a time with nothing else on screen until needed,
+no HUD text under 14 px, the top band is one row, the storm in the
+guided year is named small and arrives 30 s after its warning, and
+every thing on the farm has exactly one entrance. Full suite; A ships
+as v2.0.1, B to M as v2.0.2.
+```
+
+### Segment 22: The fun pass (after Segment 21f)
 
 ```
 Why: with Segments 1 to 21 done the game is honest, legible and simple,
