@@ -888,6 +888,7 @@ func _build_top() -> void:
 	var quote_row: BoxContainer = _hbox(8)
 	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var price_fact := _card(CREAM, 3)
+	price_fact.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	price_fact.get_theme_stylebox("panel").set_texture_margin_all(3)
 	market_box.add_child(price_fact)
 	price_fact.add_child(quote_row)
