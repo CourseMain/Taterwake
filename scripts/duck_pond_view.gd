@@ -3,6 +3,7 @@ extends Control
 var count: int = 0
 var capacity: int = 1
 var _clock: float = 0.0
+var _shore: StyleBoxTexture = preload("res://scripts/cozy_ui.gd").paper(Color("f8eac6"), 0, 8, Color("b59b6b"))
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(0, 156)
@@ -19,10 +20,7 @@ func _oval(at: Vector2, radius: Vector2, color: Color) -> void:
 	draw_set_transform(Vector2.ZERO)
 
 func _draw() -> void:
-	var shore := StyleBoxFlat.new()
-	shore.bg_color = Color("f8eac6")
-	shore.set_corner_radius_all(24)
-	draw_style_box(shore, Rect2(Vector2.ZERO, size))
+	draw_style_box(_shore, Rect2(Vector2.ZERO, size))
 	_oval(Vector2(size.x * .5, 84), Vector2(size.x * .46, 53), Color("a2d8df"))
 	_oval(Vector2(size.x * .5, 80), Vector2(size.x * .44, 44), Color("bde8e8"))
 	for i in range(5):

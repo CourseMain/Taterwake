@@ -3,17 +3,16 @@ const MAX_RENDER_EDGE: int = 896
 const MAX_RENDER_PIXELS: int = 600000
 var viewport: SubViewport
 var avatar: Node3D
-var _background: StyleBoxFlat
+var _background: StyleBoxTexture
 var _resolution_clock: float = 0.0
 const NpcAvatar = preload("res://scripts/npc_avatar.gd")
+const Cozy = preload("res://scripts/cozy_ui.gd")
 var camera: Camera3D
 var _entrance: float = 0.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_background = StyleBoxFlat.new()
-	_background.bg_color = Color("253b42")
-	_background.set_corner_radius_all(13)
+	_background = Cozy.paper(Cozy.INK, 0, 8, Cozy.WOOD)
 	viewport = SubViewport.new()
 	viewport.name = "VillagePortraitViewport"
 	viewport.size = Vector2i(300, 390)
@@ -104,7 +103,7 @@ func show_person(id: String) -> void:
 	avatar = NpcAvatar.new()
 	viewport.add_child(avatar)
 	avatar.configure(id)
-	_background.bg_color = Color(NpcAvatar.Roster.PEOPLE[id].color).darkened(.55)
+	_background = Cozy.paper(Color(NpcAvatar.Roster.PEOPLE[id].color).darkened(.55), 0, 8, Cozy.WOOD)
 	_entrance = 0.0
 	queue_redraw()
 	_sync_resolution()
