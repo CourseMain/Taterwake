@@ -16,18 +16,18 @@ const PEOPLE := {
 		"help":"Which upgrade helps?", "advice":"Wider head. More beds per swing. Pick the tool you wear out fastest. Test it on one small patch before the whole field.",
 		"thanks":"Hammer's sound again. Yours next.", "weather":"Tools can wait. Ripe crops can't. Go."},
 	"nell": {"name":"Nell", "role":"Accountant", "service":"barn", "service_label":"Open the barn", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
-		"first":"Nell. I keep the accounts and the barn. Both are easier if you bring things in before they rot.",
+		"first":"Nell. Barn and books. Crops in before rot.",
 		"daily":["Someone's been putting muddy boots on my clean bags. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
-		"help":"What goes in the accounts?", "advice":"Everything paid in and out. Seeds, sales, storage, mortgage, rent, living costs. Unsold potatoes are not income. I read the totals in Winter. Bring a chair.",
+		"help":"What goes in the accounts?", "advice":"Payments: seeds, sales, storage, mortgage, rent, living. Unsold potatoes aren’t income. Winter totals—bring a chair.",
 		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops."},
 	"tess": {"name":"Tess", "role":"Quest keeper", "service":"quests", "service_label":"Visit Tess’s board", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
-		"first":"Tess. I work the beds and count what the weather leaves. Those are two different jobs, lately.",
+		"first":"Tess. Beds first. Weather damage next.",
 		"daily":["Mud in both boots. That is the complete morning report.", "I sharpened the hoe. The clouds remain unimpressed."],
 		"topic":"Do you ever take a break?", "story":"I was going to have lunch with Pip. Then the drains backed up. Pip brought my lunch to the field instead. It had a duck feather in it.",
 		"reply":"You should still take that break.", "answer":"I should. Thank you. One more row, then I go. Hold me to it.",
-		"help":"How can I help out?", "advice":"Read the cause card after a loss. It says what hit, what we lost and what protection would have saved. I count tonnes. Nell does the wincing.",
+		"help":"How can I help out?", "advice":"Cause card: what hit, tonnes lost, protection’s savings. Nell winces.",
 		"thanks":"I took that break. Pip says you deserve the credit.", "weather":"I'm checking who needs help. Some farms got hit harder than ours."},
 	"pip": {"name":"Pip", "role":"Duck caretaker", "service":"duck_patrol", "service_label":"Visit Duck Patrol", "color":"e1b550", "skin":"eac291", "shape":Vector3(.93,.88,.94), "hat":"cap", "detail":"duck",
 		"first":"I'm Pip. That one's Button. Don't let the name fool you.",
@@ -73,7 +73,7 @@ static func weather_cost(state) -> String:
 		var entry: Dictionary = losses[i]
 		if int(entry.year) != state.season_clock.year or entry.event in ["pests", "spoilage"]: continue
 		var value: float = int(entry.sacks) * float(state.CropTable.CROPS[entry.crop].base)
-		return "%s took %d t of %s. That's %s at base prices, not a cash charge. The field is shorter; the bills aren't." % [str(entry.event).replace("_", " ").capitalize(), int(entry.sacks), state.CropTable.CROPS[entry.crop].name, state.money(value)]
+		return "%s: %d t of %s lost, %s base value. No cash charge. Same bills." % [str(entry.event).replace("_", " ").capitalize(), int(entry.sacks), state.CropTable.CROPS[entry.crop].name, state.money(value)]
 	return "No weather loss recorded this year. I'll take an empty page. The bills will still arrive."
 
 static func bank_line(state) -> String:

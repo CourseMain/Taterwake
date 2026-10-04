@@ -2,16 +2,16 @@ extends Node
 ## A guided first year through real Winter accounts. Later help is optional.
 const WAIT_SPEED: float = 10.0
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Your first year", "body": "Plant, water, weather, harvest. Then Nell reads the bills.\nThis guided year has one small Summer storm. Decisions pause time.\nWASD to walk; drag to look.", "next": true, "label": "Meet Mara →"},
-	{"id": "market", "title": "Choose your first crop card", "body": "Tap Mara’s whole stall or press B to read Russet’s card. You already have twelve starter seeds; use one for your first bed.", "focus": "market", "key": "B · SEEDS", "next": true, "label": "Use my starter seeds →"},
-	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe selected. Click the gold bed to walk over and till it.", "tool": "hoe", "key": "1 · HOE"},
-	{"id": "plant", "title": "Plant your seed", "body": "Seeds selected. Click the same gold bed to plant a Russet.", "tool": "plant", "key": "2 · SEEDS"},
-	{"id": "water", "title": "Water once", "body": "Watering can selected. Click the gold bed to start it growing.", "tool": "water", "key": "3 · WATER"},
-	{"id": "grow", "title": "Spring into Summer", "body": "The calendar runs at 10× while you wait, then at 1× from the storm warning. One mild Summer storm will show what a loss costs. Later years use the changing climate forecast."},
-	{"id": "loss", "title": "Tess counts the damage", "body": "Read the cause card. One tonne lost; two left to harvest. Continue when you are ready.", "next": true, "label": "Harvest what remains →"},
-	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest tool selected. Click the gold bed to put your potatoes in the barn.", "tool": "harvest", "key": "4 · HARVEST"},
-	{"id": "sell", "title": "Sell now or store?", "body": "Sell your Russet in the barn [F] for cash now. Or keep it: Winter charges storage and spoilage, while prices rise. Either choice leads to the same honest accounts.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
-	{"id": "winter", "title": "The bills are coming", "body": "Harvest the remaining starter beds before Winter. You can work the other beds now; Nell opens the accounts as Winter begins. Unsold crops stay in the barn."},
+	{"id": "welcome", "title": "Your first year", "body": "Plant, water, harvest. Nell counts bills.\nOne small Summer storm; decisions pause time.\nWASD walks; drag looks.", "next": true, "label": "Meet Mara →"},
+	{"id": "market", "title": "Choose your first crop card", "body": "Tap Mara’s stall [B]: Russet card. Twelve seeds; plant one.", "focus": "market", "key": "B · SEEDS", "next": true, "label": "Use my starter seeds →"},
+	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe ready. Tap gold bed.", "tool": "hoe", "key": "1 · HOE"},
+	{"id": "plant", "title": "Plant your seed", "body": "Seeds ready. Tap gold bed: Russet.", "tool": "plant", "key": "2 · SEEDS"},
+	{"id": "water", "title": "Water once", "body": "Can ready. Water the gold bed.", "tool": "water", "key": "3 · WATER"},
+	{"id": "grow", "title": "Spring into Summer", "body": "10× waits; 1× warnings. One mild Summer storm teaches loss. Later forecasts follow climate."},
+	{"id": "loss", "title": "Tess counts the damage", "body": "Cause card: one tonne lost; two to harvest.", "next": true, "label": "Harvest what remains →"},
+	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest ready. Tap gold bed; fill barn.", "tool": "harvest", "key": "4 · HARVEST"},
+	{"id": "sell", "title": "Sell now or store?", "body": "Barn [F]: sell Russet or store. Winter: higher prices, storage charges, spoilage. Nell counts both.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
+	{"id": "winter", "title": "The bills are coming", "body": "Harvest starters; tend others. Winter brings Nell’s books. Unsold crops stay stored."},
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
@@ -158,11 +158,11 @@ func allows_plot(index: int, tool: String) -> bool:
 
 func explain_block() -> void:
 	if not active: return
-	var message: String = "This tour only previews shops. Resume farming to use them."
+	var message: String = "Shop tour only. Return to farming first."
 	if not _tour_only():
 		var step: Dictionary = _steps()[_index()]
 		refresh()
-		message = "That action is not part of this step. You can skip the guided year to farm freely."
+		message = "Later. Skip guided year to farm freely."
 		if step.has("tool"):
 			game._select_tool(str(step.tool))
 			message = "%s selected again. Click the gold bed." % str(step.tool).capitalize()
@@ -181,19 +181,19 @@ func refresh() -> void:
 	if current_id() == "grow":
 		if game.state.season_clock.season == 0:
 			var seconds: int = ceili(game.state.season_clock.remaining(game.state.season_seconds()) / WAIT_SPEED)
-			body = "Spring is passing at 10×. Summer in %ds.\nIris will warn us before one small storm. Harvest the other ripe starter beds with tool 4 while Iris watches the sky." % seconds
+			body = "Summer in %ds · 10×.\nIris warns before one small storm. Tool 4: harvest other ripe starters." % seconds
 			wait_label = "Summer in %ds · 10×" % seconds
 		else:
 			forecaster = true
 			title = "Iris · Summer warning"
 			var seconds: int = ceili(game.state.climate.data.timer)
-			body = "Iris, on the radio: a small storm is coming in %ds. Watch the sky and your gold bed.\nThe warning runs at 1×. Harvest the other starter beds now; Tess will show the loss on the gold bed." % seconds
+			body = "Iris: small storm in %ds · 1×.\nTool 4: harvest other starters. Watch gold bed; Tess counts loss." % seconds
 			wait_label = "Storm in %ds · 1×" % seconds
 	elif current_id() == "winter":
 		var left: float = (3 - game.state.season_clock.season) * game.state.season_seconds() - game.state.season_clock.seconds
 		var ripe: int = game.state.plots.filter(func(bed): return int(bed.stage) == 3 and bed.crop != "icecap").size()
 		if ripe > 0:
-			body = "Harvest %d remaining ripe bed%s with tool 4. The calendar pauses so the guide cannot leave them to die in the cold. Unsold sacks stay in the barn." % [ripe, "" if ripe == 1 else "s"]
+			body = "Tool 4: harvest %d remaining ripe bed%s. Time paused; cold waits. Unsold sacks stay stored." % [ripe, "" if ripe == 1 else "s"]
 			wait_label = "Harvest remaining beds · time paused"
 		else:
 			body += "\nTend or hoe the other beds while time runs at 10×."
