@@ -176,7 +176,9 @@ func paper_pages() -> void:
 			await settle()
 			check_menu(tag + " " + kind)
 			if kind == "accounts":
+				check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000", tag + " grouped fixed land bill")
 				for category in game.state.Ledger.CATEGORIES:
+					if category in ["mortgage", "rent"]: continue
 					var amount: Label = game.hud._refs["accounts_" + category]
 					var row = amount.get_parent().get_parent()
 					if not row.visible: continue
@@ -216,7 +218,10 @@ func paper_pages() -> void:
 			if not button.is_visible_in_tree(): continue
 			var available_width: float = button.size.x - button.get_theme_stylebox("normal").get_minimum_size().x
 			var text_width: float = button.get_theme_font("font").get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, button.get_theme_font_size("font_size")).x
-			check(button.autowrap_mode == TextServer.AUTOWRAP_OFF and text_width <= available_width + .5, tag + " one unclipped Winter line: " + button.text)
+			if button.get_parent() == note.stores_lines:
+				check(button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and button.size.x <= note.scroll.size.x + 1, tag + " Stores fact wraps within its block: " + button.text)
+			else:
+				check(button.autowrap_mode == TextServer.AUTOWRAP_OFF and text_width <= available_width + .5, tag + " one unclipped Winter job: " + button.text)
 			check(minf(button.size.x, button.size.y) * front_scale >= 43.9, tag + " Winter touch target: " + button.text)
 		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-winter-jobs")
 		game.hud._run_end.show_report(game.state)

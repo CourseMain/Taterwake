@@ -152,15 +152,17 @@ func run() -> void:
 	game._start_conversation("iris")
 	check(talk.visible and talk.npc_id == "iris", "weather observer is available on the valley")
 	talk.finish()
-	# Winter commentary consists of two lines derived from the actual accounts.
+	# First Winter adds the arithmetic once; later reports keep the two account lines.
 	farm.climate.end_working_year()
 	farm.season_clock.season = 3
 	farm.ledger.post_fixed_costs(1)
 	game._start_conversation("nell")
-	check(talk.speech.text.split("\n").size() == 2 and talk.speech.text.contains(farm.money(farm.ledger.total(1))), "accountant reads two honest Winter lines")
+	check(talk.speech.text.contains(farm.money(farm.ledger.total(1))) and talk.speech.text.ends_with(Roster.YEAR_ONE_ACCOUNTS), "first Winter reports real net and the three-number arithmetic")
 	talk.choose(0)
 	check(game.hud._panel_kind == "accounts", "accountant opens annual ledger in Winter")
 	game._on_action("close")
+	farm.season_clock.year = 2
+	check(Roster.ledger_lines(farm).split("\n").size() == 2 and not Roster.ledger_lines(farm).contains(Roster.YEAR_ONE_ACCOUNTS), "later Winter reports do not repeat Year-one arithmetic")
 	farm.reset_game()
 	check(farm.npc_history.is_empty(),"new farm resets introductions")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
