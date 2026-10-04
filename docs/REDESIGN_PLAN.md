@@ -1249,7 +1249,7 @@ Release:
   release asset only.
 ```
 
-### Segment 21 follow-up: tag j fixes (run before Segment 22 step 0)
+### Segment 21b: Tag j fixes (run before Segment 22 step 0)
 
 ```
 Goal: close what the tag j review found, so the three fresh testers in
@@ -1322,6 +1322,56 @@ Phone:
 Done when: the full suite passes with no known failing check, the
 guided year cannot lose a bed the player could not act on, and the
 phone frame time is recorded from a real device.
+```
+
+### Segment 21c: Surfaces and voice (after Segment 21b, before Segment 22)
+
+```
+Goal: the interface stops looking white and generic. Testers in Segment
+22 step 0 must meet the finished look, or their boredom notes will be
+about paint instead of play.
+
+Why: every surface is one of four creams (fffbed, fffdf4, f3efdf,
+f9f7e9) tinted at most 7% toward an accent. One tone, used as base,
+paper and highlight at once. The first screen is the same 752x634 modal
+the accounts use, so the game opens on a settings dialog.
+
+1. Title scene. Delete the "Welcome to Taterland" modal. Open on the
+   farm at golden hour with a slow pan. The name sits on the gate sign
+   as a world object, not a label. Two bottom buttons only: "Walk to
+   the farm" and "Continue · Year N, Season" (the farm's own state). No
+   box, no close button, no body text. The world keeps moving behind
+   the buttons.
+2. Three tones. Promote INK (17382d) to a surface colour for frames and
+   the outer band of large panels; add one wood tone. Rule: never three
+   cream surfaces stacked; the third must be wood or ink. Cream is the
+   highlight, on about a third of the pixels, not the base.
+3. Material. Give the shared panel style a subtle paper texture
+   (StyleBoxTexture, 9-slice, a 64x64 grain) and a 1 px darker inner
+   edge. One edit, every panel. No flat colour boxes larger than a
+   button remain.
+4. One drawing per thing. Every crop card, the barn, the forecast and
+   the ledger get a small picture, so cards differ before they are
+   read. Keeper portraits already exist; match their style.
+5. Voice. Rewrite the twenty most-seen strings in Nell's or Tess's voice
+   at half the length. Buttons get verbs that belong to the world
+   ("Walk out to the field", not "Continue"). Ban the single card shape
+   "title / line / line / button" for everything; at least three card
+   shapes across the interface.
+6. Motion from the source. A panel slides in from the building that
+   was tapped and the farm stays live behind it. No panel appears from
+   nowhere on a frozen backdrop.
+7. Style board. Before touching code, pin ten screenshots of games with
+   the wanted feel in docs/style-board/ and write three rules under
+   them (wood, paper, dusk light). Check every screen against the board
+   before tagging.
+
+Keep Segment 19's rules: one shape per place, one accent per place,
+only applicable facts. Ledger labels stay frozen.
+
+Done when: the title, accounts, crop card and forecast are
+screenshotted before and after at 390x844, no screen shows three
+stacked cream surfaces, and the suite passes.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
