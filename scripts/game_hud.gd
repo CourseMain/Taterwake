@@ -1908,7 +1908,7 @@ func _style_choice(choice: OptionButton) -> void:
 func _build_dex() -> void:
 	_heading("Crop varieties", "")
 	_panel_crops = _known_crops()
-	_info("dex_entries", "", GREEN, 14)
+	_info("dex_entries", "", CREAM, 14)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
@@ -1917,7 +1917,8 @@ func _build_dex() -> void:
 	var ids: Array = _state.CROP_IDS
 	for index: int in range(ids.size()):
 		var id: String = str(ids[index])
-		var card := _surface("quest", _crop_color(id))
+		var card := _card(Cozy.WOOD, 14)
+		card.name = "VarietyBoard_" + id
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(card)
 		var column := _vbox(6)
@@ -1927,13 +1928,15 @@ func _build_dex() -> void:
 		var picture := _icon({"kind": "crop", "crop": id}, 76)
 		picture.name = "DexPicture_" + id
 		heading.add_child(picture)
-		var title := _wrap("#%02d · %s" % [index + 1, _crop_name(id)], 18, INK, true)
+		var title := _wrap("#%02d · %s" % [index + 1, _crop_name(id)], 18, CREAM, true)
 		title.custom_minimum_size.x = 155
 		heading.add_child(title)
-		var status := _wrap("", 12, GREEN, true)
+		var status := _wrap("", 12, CREAM, true)
 		column.add_child(status)
 		_refs["dex_status:" + id] = status
-		var detail := _wrap("", 15, GREEN, true)
+		var detail := _wrap("", 15, INK, true)
+		detail.add_theme_stylebox_override("normal", Cozy.paper(CREAM, 6, 3))
+		detail.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		column.add_child(detail)
 		_refs["dex_detail:" + id] = detail
 func _refresh_dex() -> void:
@@ -2512,27 +2515,27 @@ func _build_duck_patrol() -> void:
 	_modal_card.offset_top = -380
 	_modal_card.offset_bottom = 380
 	_modal_card.add_theme_stylebox_override("panel", Cozy.modal())
-	var hero_card := _card(Color("edf7f1"), 14)
+	var hero_card := _card(Cozy.WOOD, 14)
 	_body.add_child(hero_card)
 	var hero: VBoxContainer = _vbox(7)
 	hero_card.add_child(hero)
 	var pond := preload("res://scripts/duck_pond_view.gd").new()
 	hero.add_child(pond)
 	_refs.duck_pond = pond
-	var status: Label = _wrap("", 23, INK, true)
+	var status: Label = _wrap("", 23, CREAM, true)
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hero.add_child(status)
 	_refs["activity_status"] = status
-	var detail: Label = _wrap("", 14, MUTED)
+	var detail: Label = _wrap("", 14, CREAM.darkened(.1))
 	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hero.add_child(detail)
 	_refs["activity_detail"] = detail
 	_offer("Add a duck", "", "Hire a duck", "activity:duck", true)
 	_offer("Patrol speed", "", "Train ducks", "activity:duck:speed", true)
 	for action: String in ["activity:duck", "activity:duck:speed"]:
-		var skin: StyleBoxTexture = Cozy.paper(CREAM, 14, 6, Color("c9bea0"))
+		var skin: StyleBoxTexture = Cozy.paper(Cozy.WOOD, 14, 6, Cozy.WOOD.darkened(.25))
 		_refs[action + ":card"].add_theme_stylebox_override("panel", skin)
-		_refs[action + ":value"].add_theme_color_override("font_color", Color("435c6b"))
+		_refs[action + ":value"].add_theme_color_override("font_color", CREAM)
 	_refresh_duck_patrol()
 
 func _refresh_duck_patrol() -> void:
