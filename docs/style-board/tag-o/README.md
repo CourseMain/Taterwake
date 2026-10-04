@@ -1,12 +1,12 @@
 # Segment 21e phone review
 
 Godot 4.7.2 Compatibility, disposable browser fixture, 390×844 CSS pixels,
-DPR 1. Screens are captured from the running exported game; no player save
+DPR 1, with a second verification at DPR 3. Screens are captured from the running exported game; no player save
 is read or written. This verifies phone layout, not phone hardware performance.
 
 | Screen | Review |
 | --- | --- |
-| [Harvest pop](harvest.png) | Gold Table stamp on paper, 16 px rendered type; it holds 1.2 s after popping and fades. The canvas ignores taps. |
+| [Harvest pop](harvest.png) | Gold Table stamp on paper, 16.25 CSS px type; it holds 1.2 s after popping and fades. The canvas ignores taps. |
 | [Barn chips](barn.png) | Table gold, Standard ink, Feed brown. 22 logical pixels render at 14.3 px on this viewport. |
 | [Sell rows](sell_potatoes.png) | Same three inks and paper chips; grades sit below the price and chart. |
 | [Spring estimate](spring_target.png) | Bills, two-sowing estimate and shortfall, with assumptions stated below. |
@@ -18,3 +18,8 @@ Capture: `tests/capture_surfaces_browser.cjs --advice`, using the surfaces
 fixture exported with `tools/export_browser_benchmark.py --fixture surfaces`.
 The report at `artifacts/segment-o-phone/capture-report.json` contains no browser
 errors and records the 390×844 backing size on every screen.
+
+The DPR 3 check uses the existing shell’s DPR 2 backing-canvas cap (780×1688).
+Both runs assert visible grade type is at least 14 CSS px: harvest 16.25,
+barn and sell 14.3. Its report is
+`artifacts/segment-o-phone-dpr3/capture-report.json`, also with no browser errors.
