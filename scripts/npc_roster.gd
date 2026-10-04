@@ -1,5 +1,6 @@
 extends RefCounted
 ## Dialogue is flavour and guidance. Choices never spend money or change odds.
+const YEAR_ONE_ACCOUNTS: String = preload("res://scripts/farm_advice.gd").YEAR_ONE
 const GUIDED_CREDIT_LINE: String = "Dad's last harvest paid this year. From now on it's yours."
 const PEOPLE := {
 	"mara": {"name":"Mara", "role":"Seed seller", "service":"market", "service_label":"Browse seeds", "color":"769751", "skin":"dbab78", "shape":Vector3(1.0,1.0,1.0), "hat":"straw", "detail":"flower",
@@ -21,7 +22,7 @@ const PEOPLE := {
 		"daily":["Someone's been putting muddy boots on my clean bags. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
 		"reply":"I'll wipe mine next time.", "answer":"You're already my favourite visitor. Don't tell the others.",
-		"help":"What goes in the accounts?", "advice":"Payments: seeds, sales, storage, mortgage, rent, living. Unsold potatoes aren’t income. Winter totals—bring a chair.",
+		"help":"What goes in the accounts?", "advice":"Payments: seeds, sales, storage, mortgage and land, living. Unsold potatoes aren’t income. Winter totals—bring a chair.",
 		"thanks":"Look who's remembered to wipe their boots. Come in.", "weather":"I'm checking the stored crops."},
 	"tess": {"name":"Tess", "role":"Quest keeper", "service":"quests", "service_label":"Visit Tess’s board", "color":"bd766b", "skin":"c68c61", "shape":Vector3(.92,1.05,.96), "hat":"", "detail":"scarf",
 		"first":"Tess. Beds first. Weather damage next.",
@@ -68,6 +69,7 @@ static func available(id: String, state = null) -> bool:
 static func ledger_lines(state) -> String:
 	var line: String = "Year %d net: %s.\nPurse: %s. Unsold potatoes do not pay the mortgage." % [state.season_clock.year, state.money(state.ledger.total(state.season_clock.year)), state.money(state.coins)]
 	if state.ledger.guided_credit(state.season_clock.year) > 0: line = GUIDED_CREDIT_LINE + "\n" + line
+	if state.season_clock.year == 1: line += "\n" + YEAR_ONE_ACCOUNTS
 	return line
 
 static func weather_cost(state) -> String:

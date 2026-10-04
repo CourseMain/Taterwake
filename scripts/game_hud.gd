@@ -200,6 +200,7 @@ var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
 var _panel_hidden: Array[CanvasItem] = []
 var _season_strip: Control
+var _spring_target: PanelContainer
 var _season_jobs: PanelContainer
 var last_screenshot_path: String = ""
 
@@ -213,6 +214,7 @@ func _process(delta: float) -> void:
 	_update_context()
 	_update_farm_help()
 	_season_jobs.refresh()
+	if is_instance_valid(_spring_target): _spring_target.refresh()
 	if _purchase_remaining > 0.0:
 		_layout_purchase()
 		_purchase_remaining = maxf(0.0, _purchase_remaining - delta)
@@ -287,6 +289,9 @@ func build_ui() -> void:
 	_season_jobs = preload("res://scripts/season_jobs.gd").new()
 	root.add_child(_season_jobs)
 	_season_jobs.setup(self)
+	_spring_target = preload("res://scripts/spring_target.gd").new()
+	root.add_child(_spring_target)
+	_spring_target.setup(self)
 	_build_sidebar()
 	_build_footer()
 	_build_notices()
@@ -742,6 +747,10 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 
 func _act(action: String) -> void:
 	if action.is_empty(): return
+	if action == "land_bill_parts":
+		_refs.land_parts.visible = not _refs.land_parts.visible
+		_refs.land_bill.set_pressed_no_signal(_refs.land_parts.visible)
+		return
 	if action == "ledger_screenshot":
 		_capture_ledger()
 		return
@@ -1299,6 +1308,7 @@ func update_state(state: Node) -> void:
 	_season_strip.season = state.season_clock.season
 	_season_strip.queue_redraw()
 	_season_jobs.refresh()
+	if is_instance_valid(_spring_target): _spring_target.refresh()
 	_top.coins.text = _money(float(state.get("coins")))
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
 	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
@@ -1569,6 +1579,7 @@ func close_panel() -> void:
 	_apply_tutorial_visibility()
 	_layout_purchase()
 	_season_jobs.refresh()
+	if is_instance_valid(_spring_target): _spring_target.refresh()
 
 func show_panel(kind: String, state: Node) -> void:
 	if kind == "winter_stores": kind = "sell_potatoes"
@@ -1631,6 +1642,18 @@ func show_panel(kind: String, state: Node) -> void:
 		"barn", "inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
+		"store_advice":
+			_heading("Store half for Winter", "Nell’s barn note")
+			_body.add_child(_wrap("Sell half as you harvest. Leave half in the barn for Winter; pull and replant the moment a bed empties in Spring or Summer.", 22, INK))
+			_body.add_child(_wrap("Winter stores cost 4,800, spoil 5% and lose ten quality. Prices rise through Winter. Sell before Spring.", 20, MUTED))
+			_body.add_child(_button("Open the barn", "barn", true))
+		"winter_seed_choices":
+			_heading("Next Spring’s seed", "Table or Standard tonnes only")
+			for crop in _state.CROP_IDS:
+				var limit: int = preload("res://scripts/farm_advice.gd").seed_capacity(_state, crop)
+				if limit <= 0: continue
+				_body.add_child(_wrap("%s: keep up to %d t" % [_crop_name(crop), limit], 22, INK))
+				_body.add_child(_button("Choose " + _crop_name(crop) + " seed", "winter_seed_crop:" + crop))
 		"accounts":
 			if DisplayServer.get_name() != "headless":
 				_open_books(opening, _accounts_build_request)
@@ -1681,6 +1704,7 @@ func _finish_panel_build(kind: String, opening: bool) -> void:
 	_farm_help_card.hide()
 	_refresh_seed_visibility()
 	_season_jobs.hide()
+	_spring_target.hide()
 	_modal.move_to_front()
 	_update_weather_ui()
 	_apply_tutorial_visibility()
@@ -1707,6 +1731,7 @@ func _open_books(opening: bool, request: int) -> void:
 	_modal.move_to_front()
 	_modal_entrance_shield.show()
 	_season_jobs.hide()
+	_spring_target.hide()
 	# Paint the status before the first cold font and portrait work.
 	await get_tree().process_frame
 	if request != _accounts_build_request: return
@@ -1738,7 +1763,7 @@ func panel_source_position(kind: String) -> Vector2:
 	if kind in ["accounts", "run_summary"]:
 		_panel_source = ""
 		return ledger_screen_position()
-	var places := {"market":"market", "sell_potatoes":"market", "barn":"barn", "inventory":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "loss_notices":"quests", "contracts":"contracts", "bank":"bank", "businesses":"barn", "duck_patrol":"activities", "activities":"activities"}
+	var places := {"market":"market", "sell_potatoes":"market", "barn":"barn", "inventory":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "loss_notices":"quests", "contracts":"contracts", "bank":"bank", "businesses":"barn", "store_advice":"barn", "winter_seed_choices":"barn", "duck_patrol":"activities", "activities":"activities"}
 	var station: String = _panel_source if not _panel_source.is_empty() and Time.get_ticks_msec() - _panel_source_tick < 1000 else str(places.get(kind, ""))
 	_panel_source = ""
 	var game = get_parent()
@@ -2089,6 +2114,10 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_refs.accountant = _wrap("Nell · Accountant", 14, MUTED)
 	_body.add_child(_refs.accounts_net)
 	_body.add_child(_label("NET FOR THE YEAR", 12, MUTED))
+	if clock.year == 1:
+		_body.add_child(_wrap("Nell: " + _state.NpcRoster.YEAR_ONE_ACCOUNTS, 22, INK))
+		for action in [["Open 12 more Home beds · 48,000", "advice_home"], ["Mara's Golden card", "advice_golden"], ["Store half for Winter", "advice_stores"]]:
+			_body.add_child(_button(action[0], action[1]))
 	var columns := _hbox(32)
 	columns.name = "LedgerColumns"
 	columns.resized.connect(func(): columns.vertical = columns.size.x < 640)
@@ -2097,7 +2126,9 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	categories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_ledger_leaf(columns, categories)
 	categories.add_child(_label("THIS YEAR", 13, MUTED, true))
+	_build_land_bill(categories)
 	for category in _state.Ledger.CATEGORIES:
+		if category in ["mortgage", "rent"]: continue
 		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
 		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(clock.year, category))
 		if staged and not await _accounts_frame(request): return
@@ -2162,7 +2193,9 @@ func _refresh_accounts() -> void:
 	_refs.accountant.tooltip_text = _state.NpcRoster.ledger_lines(_state)
 	_refs.accounts_net.text = ("+" if net >= 0 else "−") + _state.money(absf(net))
 	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
+	_refresh_land_bill()
 	for category in _state.Ledger.CATEGORIES:
+		if category in ["mortgage", "rent"]: continue
 		var amount: float = _state.ledger.total(_state.season_clock.year, category) - (credit if category == "other" else 0.0)
 		_refs["accounts_" + category].text = _state.money(amount)
 		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(amount)
@@ -2947,3 +2980,39 @@ func _build_loss_cards(parent: Control, year: int, show_empty: bool = false) -> 
 		var pin = preload("res://scripts/paper_detail.gd").new(); pin.kind = "pin"; card.add_child(pin); pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		count += 1
 	if count == 0 and show_empty: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))
+
+func _build_land_bill(parent: VBoxContainer) -> void:
+	_refs.land_bill = _button("Mortgage and land · 60,000", "land_bill_parts")
+	_refs.land_bill.toggle_mode = true
+	_refs.land_bill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(_refs.land_bill)
+	_refs.land_parts = _vbox(2); parent.add_child(_refs.land_parts)
+	_refs.land_parts.hide()
+	for cost in _state.Ledger.FIXED_COSTS:
+		if cost.category not in ["mortgage", "rent"]: continue
+		var caption: String = "Land tax" if cost.category == "rent" else cost.label
+		var amount: Label = _account_row(_refs.land_parts, caption, "")
+		_refs["land_part:" + cost.label] = amount
+	_refs.land_activity = _vbox(2); parent.add_child(_refs.land_activity)
+	_refresh_land_bill()
+
+func _refresh_land_bill() -> void:
+	var fixed: float = 0
+	var year: int = _state.season_clock.year
+	for cost in _state.Ledger.FIXED_COSTS:
+		if cost.category not in ["mortgage", "rent"]: continue
+		var amount: float = 0
+		for entry in _state.ledger.entries:
+			if int(entry.year) == year and entry.label == cost.label and entry.category == cost.category: amount += float(entry.amount)
+		fixed -= amount
+		_refs["land_part:" + cost.label].text = _state.money(-amount)
+	_refs.land_bill.text = "Mortgage and land · " + _state.format_number(fixed)
+	for child in _refs.land_activity.get_children(): _refs.land_activity.remove_child(child); child.queue_free()
+	var activity: Dictionary = {}
+	for entry in _state.ledger.entries:
+		if int(entry.year) != year or entry.category != "rent": continue
+		if _state.Ledger.FIXED_COSTS.any(func(cost): return cost.label == entry.label): continue
+		var caption: String = "Home beds opened" if entry.label == "Field expansion" else entry.label
+		activity[caption] = float(activity.get(caption, 0)) + float(entry.amount)
+	for caption in activity:
+		if not is_zero_approx(activity[caption]): _account_row(_refs.land_activity, caption, _state.money(activity[caption]))

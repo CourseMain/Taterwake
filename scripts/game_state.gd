@@ -559,14 +559,14 @@ func affected_tiles(index: int, tool: String) -> Array[int]:
 
 func interact_plot(index: int, tool: String = "hoe") -> String:
 	if accounts_open: return "Close the accounts to return to the farm."
-	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Plant in Spring or Summer. Only Icecap can be planted in Autumn; prepare its beds before then.")
 	if ClimateSystem.Lesson.active(self): return ClimateSystem.Lesson.water(self, index, tool)
 	if run_over:
 		return "Run over. Start a new farm."
 	if index < 0 or index >= plots.size():
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
-		return _finish(Land.NAMES[Land.id(index)] + " · Rent or open more beds at the Winter accounts. Expansion: " + money(FIELD_EXPANSION_COST))
+		return _finish(preload("res://scripts/farm_advice.gd").locked(self, index))
+	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Plant in Spring or Summer. Only Icecap can be planted in Autumn; prepare its beds before then.")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")

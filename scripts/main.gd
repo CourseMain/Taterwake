@@ -836,7 +836,7 @@ func queue_plot(index: int) -> void:
 		return
 	hud.note_farm_action()
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
-		hud.show_farm_hint("Unlock more beds at Tools · \uE000 1,200")
+		hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(state, index))
 		return
 	pending_plot = index
 	pending_tool = selected_tool
@@ -977,9 +977,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 		elif bool(plot.get("pests", false)):
 			context_text = "Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0)))
 		elif not plot.unlocked:
-			var field: String = str(plot.field)
-			var land: Dictionary = state.field_expansion_info(field)
-			context_text = state.Land.NAMES[field] + (" · Rent at Winter accounts" if not state.Land.active(state, field) else " · Open 12 beds at Winter accounts · " + state.money(float(land.cost)))
+			context_text = preload("res://scripts/farm_advice.gd").locked(state, hover_plot)
 		elif int(plot.stage) == 3:
 			context_text = "%s is ripe · Click to %s" % [str(plot.crop).capitalize(), action]
 		elif int(plot.stage) in [1, 2] and not bool(plot.watered):
@@ -1168,7 +1166,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices", "businesses":
+		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices", "businesses", "store_advice", "winter_seed_choices":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1224,10 +1222,16 @@ func _on_action(action: String) -> void:
 			if hud._panel_kind == "sell_potatoes" and hud._refs.market_page.stored_mode:
 				state.trading.sell_stored(state, parts[1], int(parts[2]), parts[3])
 				_save_checkpoint.call_deferred()
-		"winter_seeds":
+		"advice_home": hud.show_panel("tools", state)
+		"advice_golden":
+			hud.show_panel("market", state)
+			hud._refs.market_page.focus_seed("golden")
+		"advice_stores": hud.show_panel("store_advice", state)
+		"winter_seeds": hud.show_panel("winter_seed_choices", state)
+		"winter_seed_crop":
 			hud.show_panel("sell_potatoes", state)
 			var page = hud._refs.market_page
-			for crop in state.CROP_IDS:
+			for crop in [parts[1]]:
 				for grade in ["Table", "Standard"]:
 					if state.stock_count(crop, grade) == 0: continue
 					page.stored_mode = state.Stock.count(state.trading.held, crop, grade) > 0

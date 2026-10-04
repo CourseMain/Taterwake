@@ -84,7 +84,9 @@ func run() -> void:
 				for id in game.state.Diversification.NAMES:
 					var effect: Label = game.hud._body.find_child("BusinessEffect_" + id, true, false)
 					check(effect != null and effect.text.count("·") <= 1 and effect.get_line_count() <= 2, "business effects stay brief on the ledger")
+				check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000" and not game.hud._refs.land_parts.visible, "land costs fold into one tappable line")
 				for category in game.state.Ledger.CATEGORIES:
+					if category in ["mortgage", "rent"]: continue
 					var ledger_row = game.hud._refs["accounts_" + category].get_parent().get_parent()
 					check(ledger_row.caption.text == game.state.Ledger.LABELS[category], "ledger label stays frozen")
 					check(ledger_row.visible == not is_zero_approx(game.state.ledger.total(3, category)), "ledger shows only applicable categories")

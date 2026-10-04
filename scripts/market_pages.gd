@@ -308,7 +308,7 @@ func _layout() -> void:
 		button.add_theme_font_override("font", _body_font)
 		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, hud.touch_target() if touch else 46)
 		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, hud.touch_target() if touch else 46)
-		if touch: button.add_theme_font_size_override("font_size", maxi(20, button.get_theme_font_size("font_size")))
+		if touch: button.add_theme_font_size_override("font_size", maxi(22 if button.has_meta("grade_stamp") else 20, button.get_theme_font_size("font_size")))
 	for label: Node in find_children("*", "Label", true, false) + hud._modal_trade_footer.find_children("*", "Label", true, false):
 		if touch: label.add_theme_font_size_override("font_size", maxi(18, label.get_theme_font_size("font_size")))
 
@@ -332,7 +332,7 @@ func refresh() -> void:
 			entry.grades[word].text = "%s %d t" % [word, stock(crop, word)]
 			entry.grades[word].visible = stock(crop, word) > 0
 			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
-			Place.pill(entry.grades[word], ACCENT)
+			preload("res://scripts/grade_stamp.gd").apply(entry.grades[word], word)
 		entry.history.set_history(price_history(crop, selected_grade if crop == selected else "Standard"), MUTED)
 		entry.history.set_expected_price(state.trading.peak_price(crop, selected_grade if crop == selected else "Standard"))
 		entry.owned.text = "%d fresh tonnes" % stock(crop)
@@ -396,3 +396,11 @@ func _choose_grade() -> void:
 		if stock(selected, word) > 0:
 			selected_grade = word
 			return
+
+func focus_seed(crop: String) -> void:
+	if selling or not seed_cards.has(crop): return
+	for frame in range(3): await get_tree().process_frame
+	if is_queued_for_deletion(): return
+	var swipe: ScrollContainer = grid.get_parent()
+	swipe.ensure_control_visible(seed_cards[crop])
+	hud._refs[crop + ":select"].grab_focus()
