@@ -1495,9 +1495,14 @@ E. Sound: vary, do not delete. Target mix: ambience bed -24 dB with two
    the menu halves everything but tool cues.
 
 F. Record the first sheet in PLAYTEST_22.md: tester 1, phone, quit at
-   minute 1, first screen, "too much text, too small, too fast, too
-   loud, did not understand Table and Standard." Three more fresh
-   testers after this segment, not before.
+   minute 1, first screen. Her words: "too much text, too small, too
+   fast, too loud", "I didn't understand Table and Standard", "what do
+   I do while I wait?", and, asked whether she would open it again:
+   "No motivation, only pain. Who would play that?" That last line is
+   the Segment 22 brief in one sentence: the hook items (a reason to
+   come back, the Spring target, Nell's milestones, the first thing you
+   can afford) come before anything else in the fun pass. Three more
+   fresh testers after this segment, not before.
 
 G. One way to do each thing. There are 24 action routes into selling
    alone (HUD Sell, barn building, Mara's Sell tab, quick sell, the
