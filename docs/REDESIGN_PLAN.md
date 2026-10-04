@@ -1533,12 +1533,30 @@ I. Waiting. When a bed is growing and there is nothing to do, the game
    Hold to hurry is visible and named on every wait. The guided year's
    wait card says the same in plain words, not "Summer in 40s · 10x".
 
+J. Remove the Tools tab from the inventory. Tools are not things you
+   hold a count of; the tray at the bottom already shows them. The
+   inventory shows potatoes by grade and seeds, nothing else.
+
+K. Something small to spend on. Bring back decorations as an honest,
+   cosmetic spend at the Tools shed: six items, priced 2,000 to 12,000
+   (a bench, a flower border, a scarecrow, a painted barn door, a
+   duck house, a flag on the gate). Placed from a short list; no
+   bonuses, no rarity, no timers, no currency but cash. They show in
+   the fifty-year epilogue as what the farm kept. The Tools card says
+   "Decorations · from 2,000" so a poor player can still buy one in
+   year one.
+
+L. The player's own farmer. Show the player's 3D model on the Menu page
+   turning slowly, with four choices: hat, shirt colour, skin tone,
+   name. Chosen at first launch after Walk to the farm, one card, skip
+   allowed; changeable from Menu. Keepers use the name in their lines.
+
 Done when: a fresh Web launch reaches the farm every time, the guided
 year shows one card at a time with nothing else on screen until needed,
 no HUD text under 14 px, the top band is one row, the storm in the
 guided year is named small and arrives 30 s after its warning, and
 every thing on the farm has exactly one entrance. Full suite; A ships
-as v2.0.1, the rest as v2.0.2.
+as v2.0.1, B to L as v2.0.2.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
