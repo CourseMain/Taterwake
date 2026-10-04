@@ -1397,9 +1397,10 @@ beds the best possible year nets about 45,000 against 104,000 of bills.
 That player cannot survive, and nothing on screen says so.
 
 1. Nell's Year 1 accounts speech states the arithmetic once, plainly:
-   "The bills are 104,000 a year. Twelve beds of Russet make about
-   45,000 at best. You need more beds, a dearer potato, and no empty
-   beds in Spring or Summer." Then the three actions as tappable lines:
+   "The bills are 104,000 a year: mortgage and land 60,000, living
+   32,000, upkeep 12,000. Twelve beds of Russet make about 45,000 at
+   best. You need more beds, a dearer potato, and no empty beds in
+   Spring or Summer." Then the three actions as tappable lines:
    "Open 12 more Home beds · 48,000", "Mara's Golden card", "Store half
    for Winter".
 2. Spring break-even card (pulled forward from Segment 22 F): at every
@@ -1413,7 +1414,21 @@ That player cannot survive, and nothing on screen says so.
 4. Every locked bed, when tapped, says which of the two it needs: "Home
    bed · open 12 more at the Tools shed, 48,000" or "Low Field · lease
    at the Winter accounts, 55,000 a year".
-Ledger labels unchanged; no balance change; bot unchanged.
+5. Grade stamps. The Table / Standard / Feed marks on harvest pops,
+   stock chips and sell rows are too small to read on a phone. Make
+   them a readable stamp: at least 14 px type at 390 wide, one colour
+   per grade (Table gold, Standard ink, Feed muted brown), on a small
+   paper chip, never covering the bed or the price beside it. The
+   harvest pop stamp holds for 1.2 s and fades; it must not block a
+   neighbouring bed's tap. Screenshot a harvest pop, the barn chips and
+   a sell row at 390x844.
+6. Accounts: show one land line, "Mortgage and land · 60,000", folding
+   mortgage interest, mortgage principal and rent and land tax. Tapping
+   it opens the three parts. Underlying ledger labels and amounts stay
+   as they are; no balance change. The word "rent" then appears only on
+   the Low and Hill field leases.
+Ledger labels unchanged; no balance change; bot unchanged. Full suite
+before tagging; tag v2.0.0-underdevelopment-o.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
