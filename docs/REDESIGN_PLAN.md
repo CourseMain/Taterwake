@@ -1518,6 +1518,14 @@ and [screen review](style-board/REVIEW.md) document this pass. Use the finished
 tag-l build for the three new-player baseline reports in [PLAYTEST_22.md](PLAYTEST_22.md).
 The preceding tag-k follow-up's real-phone measurement remains awaiting the owner.
 
+Title refinement requested during this pass: start close to the gate and pull
+back over eight seconds before the slow drift. Use a 15-degree warm sun, cool
+fill, a peach dusk sky and calm water. Hide all world lettering except TATERLAND,
+plus lease boards and crop markers, until entry. Make Walk to the farm the large
+ink action and Continue the smaller text action, keeping phone-sized tap targets.
+Restore the camera, sky, markers and saved farm's actual lighting on entry; the
+title must not advance or save the farm.
+
 ### Segment 22: The fun pass (after Segment 21c)
 
 ```

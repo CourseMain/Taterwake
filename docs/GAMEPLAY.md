@@ -4,7 +4,7 @@
 
 ## Keep the farm for ten years
 
-The game opens at the farm gate in warm evening light, with the name on its wooden sign and a slow camera pan. **Walk to the farm** starts a fresh farm; **Continue · Year N, Season** resumes the farm shown. Continue is unavailable without a saved farm. Choosing a new farm when one already exists asks before replacing it. The farmer, villagers and windmill keep moving at the gate while the saved calendar waits.
+The game opens close to the farm gate in low evening sunlight. Over eight seconds the camera draws back to reveal the farm, then drifts gently. Taterland is the only world lettering at the gate; ordinary signs and crop markers return when you enter. The sea stays calm under the warm sky. The large **Walk to the farm** action starts a fresh farm; smaller **Continue · Year N, Season** text resumes the farm shown. Continue is unavailable without a saved farm. Choosing a new farm when one already exists asks before replacing it. The farmer, villagers and windmill keep moving while the saved calendar waits.
 
 You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open Home Field beds, twelve more available through expansion, and two rentable fields. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 
