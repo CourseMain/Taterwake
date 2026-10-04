@@ -42,6 +42,9 @@ func run() -> void:
 	check(Advice.spring(farm).beds == 24, "estimate follows bed openings immediately")
 	# Replay the estimate as actual journal entries for every variety, including Low's quarter yields.
 	farm.season_clock.season = 3; farm.rent_field("low"); farm.rent_field("hill")
+	game.hud.show_panel("tools", farm)
+	check(game.hud._refs.expansion_title.text == "Open more Low Field beds", "the workbench names the actual field after Home is fully open")
+	game.hud.close_panel()
 	for crop in farm.CROP_IDS:
 		farm.selected_crop = crop
 		var target: Dictionary = Advice.spring(farm)

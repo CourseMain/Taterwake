@@ -18,6 +18,7 @@ static func build(page) -> void:
 		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); body.add_child(row)
 		row.add_child(hud._icon({"kind":"metric" if tool in ["expansion", "irrigation"] else "tool", "id":"beds" if tool == "expansion" else ("drop" if tool == "irrigation" else tool)}, 48))
 		var title: Label = hud._wrap({"hoe":"Hoe", "water":"Watering can", "harvest":"Harvest scythe", "expansion":"Open more Home beds", "irrigation":"Sprinklers"}[tool], 20, Place.INK, true); row.add_child(title)
+		if tool == "expansion": hud._refs.expansion_title = title
 		var level: Label = hud._label("", 16, Place.INK); row.add_child(level); page._levels[tool] = level
 		level.visible = tool != "expansion"
 		var effect: Label = hud._wrap("", 14, Place.MUTED); body.add_child(effect); hud._refs[action + ":detail"] = effect
@@ -34,6 +35,7 @@ static func refresh(page) -> void:
 	for id in farm.Land.IDS:
 		if farm.Land.active(farm, id) and not farm.field_expansion_info(id).complete: field = id; break
 	var land: Dictionary = farm.field_expansion_info(field)
+	hud._refs.expansion_title.text = "Open more Home beds" if field == "home" else "Open more " + farm.Land.NAMES[field] + " beds"
 	hud._refs["upgrade:expansion:detail"].text = "Open more Home beds · " + farm.format_number(land.cost) + " · any season" if field == "home" and not land.complete else farm.Land.NAMES[field] + (" · All beds open" if land.complete else " · open more beds · any season")
 	var expand: Button = hud._refs["upgrade:expansion"]
 	expand.set_meta("action", "upgrade:expansion:" + field); expand.set_meta("hud_action", expand.get_meta("action"))
