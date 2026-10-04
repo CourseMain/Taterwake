@@ -1499,11 +1499,46 @@ F. Record the first sheet in PLAYTEST_22.md: tester 1, phone, quit at
    loud, did not understand Table and Standard." Three more fresh
    testers after this segment, not before.
 
+G. One way to do each thing. There are 24 action routes into selling
+   alone (HUD Sell, barn building, Mara's Sell tab, quick sell, the
+   Winter stores lines, quest links). A first player cannot build a map
+   of the farm when every thing has five doors. Write the entrance map
+   and enforce it:
+     Sell or store potatoes ... the barn, and only the barn. The HUD
+       Sell button is a shortcut that opens the same barn page.
+     Buy seeds ................ Mara's stall. Remove the Sell tab from
+       her shop.
+     Accounts, bills, leases .. Nell, any season. In Winter Nell opens
+       the accounts, and the accounts page has one link "Go to the
+       barn"; the barn stays reachable by walking to it and by Sell.
+     Weather and protection ... the weather station and the Weather
+       pill, same page.
+     Quests and losses ........ Tess's board.
+     Tools and expansion ...... the Tools shed.
+   Every other route is removed, not hidden. Each page has exactly one
+   way to close it. Update the entrance test in test_ui_audit so a new
+   route fails the suite.
+
+H. Keepers open their service, not a conversation. Tapping Mara opens
+   the seed page with her one line as the page header; tapping Nell
+   opens the accounts the same way. The chat ("You mend all these
+   bags?", "How's the weather looking?") moves to a small "Talk" button
+   on that page. The screenshot of Mara's dialogue is a full screen of
+   portrait and empty brown panel with the real action third from the
+   top; that screen goes.
+
+I. Waiting. When a bed is growing and there is nothing to do, the game
+   says so instead of leaving the player to wonder: the wait card reads
+   "Nothing to do until it's ripe. Hold Hurry, or water the dry beds."
+   Hold to hurry is visible and named on every wait. The guided year's
+   wait card says the same in plain words, not "Summer in 40s · 10x".
+
 Done when: a fresh Web launch reaches the farm every time, the guided
 year shows one card at a time with nothing else on screen until needed,
-no HUD text under 14 px, the top band is one row, and the storm in the
-guided year is named small and arrives 30 s after its warning. Full
-suite; tag v2.0.1.
+no HUD text under 14 px, the top band is one row, the storm in the
+guided year is named small and arrives 30 s after its warning, and
+every thing on the farm has exactly one entrance. Full suite; A ships
+as v2.0.1, the rest as v2.0.2.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
