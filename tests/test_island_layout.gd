@@ -66,6 +66,16 @@ func run() -> void:
 	game._on_state_changed()
 	var world = game.world
 	world._process(1); world._animate_sun(3); world._animate_sun(.4)
+	var coast_mesh: Mesh = world.coast.water.mesh
+	var sea_palette = world.coast.water_material.get_shader_parameter("deep_color")
+	var sea_clock: float = world.coast.clock
+	world.coast.set_title_mode(true)
+	check(world.coast.title_mode and world.coast.water_material.get_shader_parameter("title_mode") == true, "title requests the calm coastal surface")
+	world.coast.animate(2)
+	check(is_equal_approx(world.coast.clock, sea_clock + 2), "calm title water keeps its live clock")
+	check(world.coast.water.mesh == coast_mesh and world.coast.water_material.get_shader_parameter("deep_color") == sea_palette, "calm water preserves coastal geometry and the gameplay palette")
+	world.coast.set_title_mode(false)
+	check(not world.coast.title_mode and world.coast.water_material.get_shader_parameter("title_mode") == false, "leaving the title restores the original gameplay water")
 	check(world.coast.water.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "sea projection never enlarges or casts into the shadow map")
 	check(world.find_children("IslandTerrainShell", "MeshInstance3D", true, false).size() == 1, "one continuous island shell")
 	check(world.find_children("GoldenShoresGround", "", true, false).is_empty() and world.find_children("FrosthollowGround", "", true, false).is_empty(), "no attached regional ground")

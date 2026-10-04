@@ -6,6 +6,7 @@ var water: MeshInstance3D
 var water_material: ShaderMaterial
 var clock: float = 0.0
 var water_enabled: bool = true
+var title_mode: bool = false
 const WATER_Y: float = -0.78
 const SEA_CLIP_DEPTH: float = -0.9999
 
@@ -30,6 +31,7 @@ func _build_water() -> void:
 	water_material = ShaderMaterial.new()
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
 	water_material.set_shader_parameter("sea_clip_depth", SEA_CLIP_DEPTH)
+	water_material.set_shader_parameter("title_mode", title_mode)
 	var colors: Array = [Color("91d8ca"), Color("5298a5"), Color("e3efd5")]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water.material_override = water_material
@@ -69,3 +71,9 @@ func sync_light() -> void:
 func set_effects_enabled(enabled: bool) -> void:
 	water_enabled = enabled
 	water.visible = enabled
+
+func set_title_mode(enabled: bool) -> void:
+	# Keep the live sea, palette and clock; only the welcome's surface calms.
+	title_mode = enabled
+	if is_instance_valid(water_material):
+		water_material.set_shader_parameter("title_mode", enabled)
