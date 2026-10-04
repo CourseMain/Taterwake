@@ -1470,6 +1470,13 @@ measurement. "Real-phone year measured" remains open until they paste
 the card text into DEVELOPMENT.md.
 ```
 
+Item 7a is implemented in tag m: the ordinary bills and one matching guided-year
+credit are shown separately, with Nell's exact explanation. Skips, tours and later
+years receive none. The full 96-suite run and standalone epilogue/tuning reruns
+are green; [DEVELOPMENT.md](DEVELOPMENT.md#segment-21b--guided-first-year-bills--tag-m)
+records the results and [phone accounts capture](style-board/tag-m-guided-accounts.png).
+The real-phone year remains awaiting owner measurement.
+
 ### Segment 21c: Surfaces and voice (after Segment 21b, before Segment 22)
 
 ```

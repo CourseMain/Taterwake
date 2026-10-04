@@ -11,7 +11,7 @@
 
 ## Development release
 
-Current `redesign` work targets **v2.0.0 (underdevelopment: m)** for Segment 21b item 7a: the guided first year's fixed bills remain visible and Dad's last harvest covers their total. Tag l completed Segment 21c; its 96-suite result and screen review remain recorded below. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
+The current `redesign` build is **v2.0.0 (underdevelopment: m)** for Segment 21b item 7a: the guided first year's fixed bills remain visible and Dad's last harvest covers their total. Tag l completed Segment 21c; its 96-suite result and screen review remain recorded below. The public browser build remains v1.0.3.1; source prereleases do not deploy `docs/index.*` or change `web/`.
 
 ## Saves
 
@@ -1062,7 +1062,7 @@ Phones now default to 2048 shadows, with the existing soft filter retained and 4
 
 To measure on a real phone:
 
-1. Download the tag-l **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-l/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-l/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
+1. Download the tag-m **Taterland-Phone-Test.zip**, extract it, and on the computer run `python3 serve.py --host 0.0.0.0 --https --port 8080` from the extracted folder. The local branch-only copy is `builds/underdevelopment-m/web/`; from this source checkout run `python3 tools/serve_web.py --directory builds/underdevelopment-m/web --host 0.0.0.0 --https --port 8080`. Keep the terminal open.
 2. Put the phone on the same Wi-Fi and open `https://<computer Wi-Fi IP>:8080/index.html`. Godot 4.7.2 requires HTTPS away from localhost. The server uses OpenSSL to create a temporary local certificate; accept its browser prompt through Advanced / Continue for this local preview. The temporary key is outside the served folder and is removed when the server stops. On macOS, find the address in System Settings → Wi-Fi → Details → TCP/IP.
 3. Finish the guided year. At the next Spring, choose Graphics → Balanced and 2048, then farm menu → Debug → **Measure a year**. No debug code or test funding is needed.
 4. Play through Spring, Summer, Autumn and Winter, including rain when it occurs; close Winter accounts. Copy the result card and paste its complete text into this row. If Copy is unavailable in the browser, select the report text. Do not describe desktop emulation as a real-phone result.
@@ -1111,13 +1111,18 @@ The plan branch's new item 7a is merged. The ordinary Winter settlement posts ev
 
 The annual accounts give the credit its own signed row and subtract it from the generic Other display so it is not counted twice. Its caption wraps on phones. Nell's exact line is visible on the same page and in her Winter greeting/advice: “Dad's last harvest paid this year. From now on it's yours.” The validator admits this new label only once, in closed Winter 1, in Other, with the exact fixed-cost amount. Purchases, storage fees, spoilage and principal repayment still work normally.
 
-Focused `tools/run_tests.sh` checks pass: tutorial state **47**, tutorial barn **62**, ledger **122** and save safety **28**, all with zero failures. These include starting cash plus starter-harvest sales, retained optional costs, skipped-guide/tour/year-two exclusions, save/load idempotence and malformed-credit rejection. Full release validation and exports are pending; the following row will be replaced with actual results before tagging.
+Focused `tools/run_tests.sh` checks pass: tutorial state **47**, tutorial barn **62**, ledger **122** and save safety **28**, all with zero failures. These include starting cash plus starter-harvest sales, retained optional costs, skipped-guide/tour/year-two exclusions, save/load idempotence and malformed-credit rejection. The full clean-checkout run at `60beab8` passes all **96 suites**, and every one of its 150 per-seed tuning reports is identical to tag l. Standalone epilogue and tuning reruns also pass **534 / 1,679 checks**, respectively, with no failures or errors. The exports contain the same committed runtime, preserving the owner's local editor settings separately.
 
 | Tag-m release check | Result |
 | --- | --- |
-| Full suite, standalone epilogue and tuning bot, exact boot | Pending. |
-| Web export and phone accounts view | Pending. |
+| Full `tools/run_tests.sh -j 4 --timeout 1500` | **96 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS**. |
+| Standalone epilogue, `-j 1 --timeout 1500` | **534 checks, 0 failures**. |
+| Standalone tuning bot, `-j 1 --timeout 1500` | **1,679 checks, 0 failures**; all 150 per-seed reports still match tag l exactly. |
+| Exact headless boot | **45 checks, 0 failures**. |
+| Web export and phone accounts view | Both exports built; normal Web loads at 390×844 without QA bridges or browser errors. A fresh emulated-phone guide reaches Winter 1 with one 104,000 credit, all bills retained, 4,800 storage cost and a 75,200 purse. [Accounts screenshot](style-board/tag-m-guided-accounts.png). The phone-test build also loads over local Wi-Fi HTTPS at 390×844, with zero browser errors. |
 | Real-phone year measured | **Awaiting owner measurement**; use the existing recorder and procedure above. |
+
+Final release validation on 2026-10-04 uses Godot 4.7.2 Compatibility and committed runtime `60beab8`. The review ZIP includes `m-full-suite.log`, `full-suite/results.json`, separate standalone logs, the exact boot, export/browser reports and the fresh guided-year screenshot. No tests are skipped or disabled. Expander remains **29/30**, mean cash **87,957**, maximum **215,971**. The standard Web ZIP keeps its PWA; the phone-test ZIP disables installation for the local HTTPS certificate and includes `README-PHONE.txt` with the owner's exact measurement steps. Published `docs/index.*` and `web/` have no diff.
 
 Segment 21c's finished title, materials, illustrations, motion and screenshots remain in this build. Segment 22 mechanics remain unimplemented; three new-player baseline reports are still pending.
 

@@ -45,3 +45,7 @@ The material rule is expressed through several distinct forms: seed packets on a
 | Full suite and standalone epilogue / tuning bot | **96/96 suites PASS**; standalone epilogue **534** and tuning bot **1,679** checks pass. Exact boot **45** checks passes. Zero failures, errors or skipped tests; final results are recorded in [DEVELOPMENT.md](../DEVELOPMENT.md). |
 | Physical-phone year measurement | Awaiting owner measurement using Debug → Measure a year, as recorded in DEVELOPMENT.md. Browser emulation supplies no physical-phone performance result. |
 | Segment 22 stranger playtests | Not started in this segment. Three new players' quit-risk notes and replay acceptance remain human work. |
+
+## Guided-year bills follow-up · tag m
+
+The [fresh guided Winter accounts](tag-m-guided-accounts.png) were captured at 390×844 through touch input. All ordinary bill rows remain on paper; the one signed 104,000 credit wraps inside its row, and Nell's exact explanation sits on ink. Other does not repeat the credit. There is no additional cream layer. The title, crop and forecast surfaces are unchanged from the twenty-page tag-l review above. This is desktop phone emulation; physical-phone frame time remains awaiting the owner.
