@@ -1493,6 +1493,16 @@ E. Sound: vary, do not delete. Target mix: ambience bed -24 dB with two
    different cues rotated, at most one per 20 s; tool cues -16. No two
    alert sounds within two seconds of each other. A "Quieter" toggle in
    the menu halves everything but tool cues.
+   The keeper voice ("uuua", npc-potato-1..3.wav at -12 dB on every
+   line) is the single most disliked sound; replace it with short,
+   soft, pitched chirps, two or three notes, a different pitch per
+   keeper, played once when a page opens and never per line. The
+   ambience bed is nature, light and calm: varied bird chirps (at least
+   six different calls, never the same twice in a row), a soft breeze,
+   leaves, a distant stream near the pond, cicadas in Summer, light
+   rain under grey skies, muffled quiet in Winter. All of it sits under
+   -24 dB and none of it loops audibly: every bed is at least 40 s long
+   with randomised gaps.
 
 F. Record the first sheet in PLAYTEST_22.md: tester 1, phone, quit at
    minute 1, first screen. Her words: "too much text, too small, too
