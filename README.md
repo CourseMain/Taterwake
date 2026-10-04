@@ -10,15 +10,15 @@ Choose what to plant, when to sell and what to protect. From year three, decide 
 
 The round potato farmer, villagers and handmade 3D island remain, with wood, ink-green frames and cream paper highlights. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-This is **v2.0.0**: the ten-year farming survival redesign through Segment 21e. Nell explains the bills and the changes a farm needs, Spring shows a live break-even estimate, and Winter separates work from stored-crop facts. The guided year, warm light, round potato farmer, villagers and handmade island remain. See the [phone screenshots](docs/style-board/tag-o/README.md), [gameplay guide](docs/GAMEPLAY.md), [release notes](docs/RELEASE_v2.0.0.md) and [redesign plan](docs/REDESIGN_PLAN.md). Segment 22 has not been implemented; human playtest notes are still pending.
+This is **v2.0.1**: the ten-year farming survival redesign through Segment 21e, with the first-launch camera fix and title-only breathing, blinks and Spring petals from Segment 21f. Nell explains the bills and the changes a farm needs, Spring shows a live break-even estimate, and Winter separates work from stored-crop facts. The guided year, warm light, round potato farmer, villagers and handmade island remain. See the [phone screenshots](docs/style-board/tag-o/README.md), [gameplay guide](docs/GAMEPLAY.md), [release notes](docs/RELEASE_v2.0.1.md) and [redesign plan](docs/REDESIGN_PLAN.md). Segment 22 has not been implemented; human playtest notes are still pending.
 
-**[Play Taterland v2.0.0](https://coursemain.github.io/Taterwake/)**
+**[Play Taterland v2.0.1](https://coursemain.github.io/Taterwake/)**
 
 Looking for the old Taterland? [Play the classic version.](https://coursemain.github.io/Taterwake/classic/)
 
 ## Download the browser release
 
-Download **Taterland-Web.zip** from [v2.0.0](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0). The release also includes **Taterland-Classic-Web.zip**, built from the original v1.0.3.1 source. To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+Download **Taterland-Web.zip** from [v2.0.1](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.1). The original v1.0.3.1 download remains **Taterland-Classic-Web.zip** in [v2.0.0](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0). To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 
@@ -28,7 +28,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `v2.0.0` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `v2.0.1` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .

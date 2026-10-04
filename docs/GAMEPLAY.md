@@ -1,10 +1,10 @@
 # Taterland gameplay guide
 
-**A farming game where you lose money.** This describes the current `redesign` source. The published browser build still uses the previous game’s rules.
+**A farming game where you lose money.** This describes the current `redesign` source and the published v2.0.1 browser game.
 
 ## Keep the farm for ten years
 
-Every launch opens at the wooden TATERLAND gate in golden-hour light. The camera pulls back for eight seconds, then drifts while the farm moves behind it. A fresh farm has one large ink button, **Walk to the farm**; the first guide card waits until its walk-in finishes. A saved farm puts **Continue · Year N, Season** on the large button and resumes directly into the field. **Start a new farm** is a smaller text action below it. Its ink confirmation names the farm being replaced and defaults to **Keep my farm**. Waiting at the gate does not advance the saved year.
+Every launch opens at the wooden TATERLAND gate in golden-hour light. The camera pulls back for eight seconds, then drifts while the farm moves behind it. The farmer, Mara and Bram breathe slowly and blink at the gate; a few blossom petals drift during Spring. This extra motion ends when the title closes. A fresh farm has one large ink button, **Walk to the farm**; the first guide card waits until its walk-in finishes, with the island fitted to the current screen. A saved farm puts **Continue · Year N, Season** on the large button and resumes directly into the field. **Start a new farm** is a smaller text action below it. Its ink confirmation names the farm being replaced and defaults to **Keep my farm**. Waiting at the gate does not advance the saved year.
 
 You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open Home Field beds, twelve more available through expansion, and two rentable fields. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 

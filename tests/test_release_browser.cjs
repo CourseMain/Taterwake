@@ -8,8 +8,8 @@ const fs=require('node:fs');
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
  const results=[];
  try {
-  for(const [path,version,name] of [['','2.0.1','redesign'],['classic/','1.0.3.1','classic']]){
-   const context=await browser.newContext({viewport:{width:1280,height:800}});
+  for(const [path,version,name,width,height] of [['','2.0.1','redesign',1440,900],['','2.0.1','redesign',390,844],['classic/','1.0.3.1','classic',1280,800]]){
+   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:width===390?3:1,hasTouch:width===390,isMobile:width===390});
    const page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
    page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
@@ -20,21 +20,25 @@ const fs=require('node:fs');
    assert.ok(await page.locator('#canvas').isVisible());
    const info=await page.evaluate(()=>({size:[document.querySelector('#canvas').width,document.querySelector('#canvas').height],qa:[typeof window.mobileQA,typeof window.mobileReport,typeof window.surfaceQA,typeof window.titleQA]}));
    assert.ok(info.qa.every(x=>x==='undefined'),'test fixtures excluded from both production games');
-   await page.screenshot({path:output+'/'+name+'-title-1280.png'});
+   await page.screenshot({path:output+'/'+name+'-title-'+width+'.png'});
    if(name==='redesign'){
     // A fresh title owns the screen and hides the shell controls until Walk.
     const canvas=await page.locator('#canvas').boundingBox();
-    await page.mouse.click(canvas.x+canvas.width/2,canvas.y+canvas.height*0.93);
+    if(width===390)await page.touchscreen.tap(canvas.x+canvas.width/2,canvas.y+canvas.height*0.947);
+    else await page.mouse.click(canvas.x+canvas.width/2,canvas.y+canvas.height*0.93);
     await page.waitForTimeout(3000);
    }
-   await page.locator('#fullscreen-button').click();
-   assert.equal(await page.evaluate(()=>!!document.fullscreenElement),true);
-   await page.locator('#fullscreen-button').click();
-   assert.equal(await page.evaluate(()=>!!document.fullscreenElement),false);
-   await page.screenshot({path:output+'/'+name+'-1280.png'});
+   await page.locator('#fullscreen-button').waitFor({state:'visible',timeout:15000});
+   if(width>=900){
+    await page.locator('#fullscreen-button').click();
+    assert.equal(await page.evaluate(()=>!!document.fullscreenElement),true);
+    await page.locator('#fullscreen-button').click();
+    assert.equal(await page.evaluate(()=>!!document.fullscreenElement),false);
+   }
+   await page.screenshot({path:output+'/'+name+'-'+width+'.png'});
    assert.deepEqual(errors,[]);
-   results.push({name,version,url:page.url(),...info,fullscreen:true,errors});
-   console.log(name+' '+version+': production load and fullscreen passed; no fixture bridge or browser errors');
+   results.push({name,version,resolution:[width,height],url:page.url(),...info,fullscreen:width>=900,errors});
+   console.log(name+' '+version+' '+width+'x'+height+': production entry passed; no fixture bridge or browser errors');
    await context.close();
   }
  } finally {fs.writeFileSync(output+'/report.json',JSON.stringify({results},null,2)+'\n');await browser.close();}
