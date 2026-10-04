@@ -4,6 +4,8 @@
 
 ## Keep the farm for ten years
 
+The game opens at the farm gate in warm evening light, with the name on its wooden sign and a slow camera pan. **Walk to the farm** starts a fresh farm; **Continue · Year N, Season** resumes the farm shown. Continue is unavailable without a saved farm. Choosing a new farm when one already exists asks before replacing it. The farmer, villagers and windmill keep moving at the gate while the saved calendar waits.
+
 You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open Home Field beds, twelve more available through expansion, and two rentable fields. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 
 Spring is for planting, Summer for tending, Autumn for bringing crops in, and Winter for accounts and protection work. Each season lasts **150 seconds**; a farm shop reduces Summer to **120 seconds**. The accounts pause time at Winter’s start. Close them to clear ice and prepare the farm; Spring follows automatically. A four-segment season strip under the wordmark shows the current season and year. Saves preserve your farm across sessions, with no offline growth.
@@ -12,7 +14,7 @@ The first-year guide reads Mara's Russet card and uses one of the **twelve start
 
 Harvest the demonstration crop, then **sell now or choose Store for Winter**. Bring in the other ripe starter beds too: the final guided wait pauses while any remain, so the guide cannot strand them in Autumn Cold. Nell opens the first Winter accounts and guidance ends. The gold cue follows your chosen bed; the correct tool is selected for each step. Blocked-action feedback appears below the instruction. **× → Skip guided year** leaves early without clearing hazards or refunding costs. Later help stays optional in **F1** or the farm menu. The optional Valley tour pauses and preserves the farm; it does not replay the introductory disaster.
 
-After the accounts close, a pinned **Winter jobs** card lists available work: iced beds; stored tonnes with current and late-Winter quotes; paid projects with work out of three; cleared beds ready for frost covers; ripe Icecap; tonnes eligible for seed; businesses from year three; and an approaching blizzard. The blizzard warning comes first. Each action stays on one line, including on phones; the card fits above the movement controls in portrait and between them in landscape. A single **now → late Winter / t** key explains the stored quotes. Lines walk to the bed or site, open the market or fit covers. Finished work ticks off, and the note collapses to **Winter · N jobs left**. Nell’s lighter timber barn has cream crate tiles and one **Sell** button; an ink outline marks its selected shelf. In Winter, Sell opens the market on stores with the rising quote first. Other seasons do not have a to-do list. **Sleep until Spring** appears on this card and in the farm menu before the final Winter. Its confirmation names the tonnes still in store and their total late-Winter price. Sleeping resolves active weather and the remaining Winter before the ordinary Spring save; unsold sacks return to the barn without being sold.
+After the accounts close, a pinned **Winter jobs** card lists available work: iced beds; stored tonnes with current and late-Winter quotes; paid projects with work out of three; cleared beds ready for frost covers; ripe Icecap; tonnes eligible for seed; businesses from year three; and an approaching blizzard. The blizzard warning comes first. Each action stays on one line, including on phones; the card fits above the movement controls in portrait and between them in landscape. A single **now → late Winter / t** key explains the stored quotes. Lines walk to the bed or site, open the market or fit covers. Finished work ticks off, and the note collapses to **Winter · N jobs left**. Nell’s barn has a cream capacity tally, wooden crop crates and one **Sell** button; an ink outline marks its selected shelf. In Winter, Sell opens the market on stores with the rising quote first. Other seasons do not have a to-do list. **Sleep until Spring** appears on this card and in the farm menu before the final Winter. Its confirmation names the tonnes still in store and their total late-Winter price. Sleeping resolves active weather and the remaining Winter before the ordinary Spring save; unsold sacks return to the barn without being sold.
 
 ## Three fields, one island
 
@@ -32,7 +34,7 @@ Walk, sprint or click around one continuous hexagonal Valley island with long an
 
 ### What to plant
 
-Tap anywhere on Mara's stall to open the shop. **Buy** and **Sell** stay reachable while its contents scroll. Buy opens her chalkboard with an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Harvested crops, sale prices and charts appear only on Sell. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone, with a swipe hint and part of the next packet visible. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
+Tap anywhere on Mara's stall to open the shop. **Buy** and **Sell** stay reachable while its contents scroll. Buy opens her wooden counter with an illustrated seed packet for each variety: seed cost, season pips, tonnes, thirst, heat and cold bars, a volatility badge and the seeds you own. Harvested crops, sale prices and charts appear only on Sell. Buy 1 and Buy 5 use pill buttons; packets swipe horizontally on a phone, with a swipe hint and part of the next packet visible. The selected packet lifts. Till a bed, select a seed, plant and water. Harvests enter the barn in **tonnes (t)**; sale prices are per tonne.
 
 | Variety | Seed cost | Base price / tonne | Water need | Heat tolerance | Cold tolerance | Grow seasons | Tonnes / bed | Price swings |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
@@ -89,7 +91,7 @@ Every loss has a **cause card**: the event, variety, tonnes lost, missing protec
 
 ## The ledger
 
-Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The cream ledger has ruled category rows, dot leaders, a large signed net, a filed-year stamp and a narrow ten-year column. The climate strip sits below the accounts; loss causes are pinned notes when losses occurred. Only categories with money, grades sold and closed years appear; their saved labels remain unchanged. Remaining debt is recorded below the ledger. Mortgage explanations sit behind a question mark. **Save screenshot** writes a PNG to the game’s user folder; the browser also downloads a copy. Accounts briefly show “Opening the books…” while their rows build over several frames, then slide out from Nell’s ledger book with a paper sound and a gentle camera push before their opaque paper settles over the HUD. The annual front page fades in; foreclosure sounds one low note. The final summary also uses an opaque paper background.
+Nell, the accountant, reads two dry lines each Winter: the year’s net and your remaining purse. Net includes every cash payment, including mortgage principal. Opening cash and unsold potatoes are not earnings. The ledger has ruled paper leaves inside an ink-green frame, dot leaders, a large signed net, a filed-year stamp and a narrow ten-year column. A little open-book drawing and Nell’s portrait identify the accounts. The climate strip sits below the accounts; loss causes are pinned notes when losses occurred. Only categories with money, grades sold and closed years appear; their saved labels remain unchanged. Remaining debt is recorded below the ledger. Mortgage explanations sit behind a question mark. **Save screenshot** writes a PNG to the game’s user folder; the browser also downloads a copy. Accounts briefly show “Opening the books…” while their rows build over several frames, then slide out from Nell’s ledger book with a paper sound and a gentle camera push. The normal farm controls tuck away while the animated island stays visible behind the frame. The annual front page fades and moves in from the weather station; foreclosure sounds one low note. The final summary uses the same ink frame and paper figures.
 
 Every Winter posts these fixed bills once:
 
@@ -128,11 +130,13 @@ The climate strip extends to fifty years with a headline for each decade. The ca
 
 ## Living in the Valley
 
-Mara sells seeds; Bram upgrades tools; Nell keeps the accounts and barn; Tess keeps the quest and loss board; Pip tends the ducks; Iris watches the weather; Edwin visits over the overdraft. Their outfits, portraits, potato voices, personal stories and remembered replies remain. Conversations pause the farm. Reveal speech with Space or a tap; choose with the mouse, touch or 1–3; leave with Escape.
+Mara sells seeds; Bram upgrades tools; Nell keeps the accounts and barn; Tess keeps the quest and loss board; Pip tends the ducks; Iris watches the weather; Edwin visits over the overdraft. Their outfits, portraits, potato voices, personal stories and remembered replies remain. Conversations pause the farm’s clock while the island keeps moving behind the keeper. Reveal speech with Space or a tap; choose with the mouse, touch or 1–3; leave with Escape.
 
 Use WASD or arrows to walk and Shift to sprint. Click a bed to walk over and use the selected tool, or press E beside it. Tools are **1 Hoe, 2 Seeds, 3 Water, 4 Harvest, 5 Sprayer**. **B** opens seeds, **F** selling, **I** inventory and **F1** optional help. Hold **H**, or the touch **Hold to hurry** button, for **3×** time with a small badge. Releasing it restores normal time. Accounts, conversations, cause cards and tutorial waits block this control. Drag or scroll to pan, use wheel/pinch to zoom, and Home to recenter. Touch has a movement stick and Tools drawer. Graphics settings offer Balanced, Smooth and Crisp.
 
 Tool upgrades widen your reach. Open another half-field for **48,000**; barn upgrades increase its initial **200-tonne** capacity. Pip hires up to two ducks to clear pests. Three local challenges pay **4,000** each and can be claimed once. These are optional purchases and goals; their costs and receipts still enter the ledger.
+
+Seed packets, wooden workbench slots, pinned quest notes and the open ledger have different shapes. Cream highlights facts; wood and ink-green hold the page. A crop, barn, forecast or ledger drawing identifies each before its heading. Shop pages and keeper conversations arrive from the building you opened; the farm keeps moving behind them. Nell and Tess keep the guide brief, with the action and the consequence together.
 
 See the [README](../README.md) for running or exporting the source and [development notes](DEVELOPMENT.md) for saves and tests.
 
@@ -142,13 +146,13 @@ Iris’s instrument panel combines radar, the next-season probability bracket an
 
 The buyer board displays each offer as a tacked paper slip: crop, tonnes, quote, Autumn-end due date and missing-tonne penalty. The Accept control stamps the order; a question mark holds the explanation.
 
-The year’s front page keeps its newspaper masthead and headline. A ten-box weather strip records disaster icons, with its legend behind a question mark. When a previous year has closed, a small Accounts box prints its net. Start the year remains outside the article scroll area.
+The year’s front page keeps its newspaper masthead and headline on an ink-green frame, with a small cream accounts leaf. A ten-box weather strip records disaster icons, with its legend behind a question mark. When a previous year has closed, a small Accounts box prints its net. Start the year remains outside the article scroll area.
 
 Bram’s pegboard has compact tool tiles with level pips and their current effect. Bed expansion says **Open 12 more beds** and names the next active field. Sprinklers and water practice live at the workbench. PotatoDex opens from the farm menu.
 
 Field boards print only the field’s name. A shelter, waves or hill symbol sits on the post; available fields have a **TO LET** board. World lettering is measured against the board and shrinks to fit.
 
-Foreclosure keeps the editorial page and opens on its final category ledger, with the real balance, overdraft limit and only applicable loss figures. The lead-in connects that final state to the farm’s future.
+Foreclosure keeps the editorial ink-green page and opens on its paper category ledger, with the real balance, overdraft limit and only applicable loss figures. The lead-in connects that final state to the farm’s future.
 
 This development build starts a new farm when a save contains the earlier lease or business rates. The incompatible save is preserved separately rather than changing its journal.
 

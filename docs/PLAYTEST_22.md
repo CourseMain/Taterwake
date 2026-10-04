@@ -1,10 +1,10 @@
 # Segment 22 · fresh-player playtest
 
-Step 0 is awaiting three people who have never played Taterland. These are human observations; the tag-k browser walkthrough and tuning bot do not substitute for them. Implementation order will be chosen after the three baseline reports arrive.
+Step 0 is awaiting three people who have never played Taterland. These are human observations; browser walkthroughs and the tuning bot do not substitute for them. Segment 21c finishes the surfaces and voice before this baseline is collected. Implementation order will be chosen after the three baseline reports arrive.
 
 ## Current build
 
-Use [v2.0.0-underdevelopment-k](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-k), source commit `ea69a35`. Download `Taterland-Web.zip` for a computer or `Taterland-Phone-Test.zip` for the local HTTPS phone preview. The phone ZIP includes `README-PHONE.txt`; [DEVELOPMENT.md](DEVELOPMENT.md#segment-21-follow-up--tag-k) also has the launch steps. Each person starts a fresh farm in a separate browser profile or with existing farm data cleared through the game's normal controls.
+Use the finished-look baseline [v2.0.0-underdevelopment-l](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0-underdevelopment-l) once published; wait for its release validation before starting these reports. Download `Taterland-Web.zip` for a computer or `Taterland-Phone-Test.zip` for the local HTTPS phone preview. The phone ZIP includes `README-PHONE.txt`; [DEVELOPMENT.md](DEVELOPMENT.md#segment-21-follow-up--tag-k) also has the launch steps. Each person starts a fresh farm in a separate browser profile or with existing farm data cleared through the game's normal controls.
 
 Ask each person to play as they normally would and say what they are thinking. Start the timer when they begin the game. Let the guide explain the controls; avoid coaching or describing planned features. Record every confusion or idle stretch with elapsed time, year, season and screen. If someone stops, record why. If they continue, ask afterward where they would have stopped when playing alone. Do not assume a completed run means they enjoyed it.
 
@@ -26,11 +26,11 @@ Additional observations:
 
 ## Implementation order
 
-Pending the three reports. Tie each priority to a recorded observation and its quit risk before changing A–F. Keep the potato farmer, villagers, hand-built island and cream UI. Do not add the prohibited rewards, offline timers, real-money purchases or compounding prices.
+Pending the three reports. Tie each priority to a recorded observation and its quit risk before changing A–F. Keep the potato farmer, villagers, hand-built island and the wood, paper and ink surfaces established in Segment 21c. Do not add the prohibited rewards, offline timers, real-money purchases or compounding prices.
 
 ## Balance baseline for A
 
-Tag k uses 150-second seasons, crop times Russet 60 / Golden 90 / Giant 110 / Sunburst 160 / Icecap 200 seconds, and twelve open Home Field beds. The fixed seeds 1–30 tuning cohort records:
+Tag l retains tag k’s 150-second seasons, crop times Russet 60 / Golden 90 / Giant 110 / Sunburst 160 / Icecap 200 seconds, and twelve open Home Field beds. The following fixed seeds 1–30 table was recorded at tag k; Segment 21c changes presentation only. Tag-l standalone tuning confirmation is part of its release validation:
 
 | Strategy | Ten-year survivors | Mean ending cash, scaled | Maximum ending cash, scaled |
 | --- | --- | --- | --- |

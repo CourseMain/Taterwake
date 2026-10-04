@@ -8,9 +8,9 @@ Grow potatoes, watch the weather and try to keep the farm for ten years. Every W
 
 Choose what to plant, when to sell and what to protect. From year three, decide whether to spend scarce money on a farm shop, contract growing or lodging. The climate keeps getting harder. Survive the tenth Winter to see forty more years play out under a caretaker—and find out what your farm becomes.
 
-The round potato farmer, villagers, handmade 3D island and cream interface remain. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
+The round potato farmer, villagers and handmade 3D island remain, with wood, ink-green frames and cream paper highlights. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-This is **v2.0.0 (underdevelopment: k)**, the redesign prerelease with tuned field rent and diversification, seasonal transitions and ambience, harvest grade stamps, Winter sleep, hold-to-hurry controls and the staged fifty-year ending. Tag k fixes guided-year starter harvests and seed copy, stages cold accounts construction, and adds one-tap phone frame-time recording. Read the [gameplay guide](docs/GAMEPLAY.md), [store copy](docs/STORE_COPY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use the `v2.0.0-underdevelopment-k` tag for this prerelease or the `redesign` branch for ongoing work.
+This is **v2.0.0 (underdevelopment: l)**, the surfaces-and-voice pass. The farm opens at a sunlit gate with two actions; shops, forecasts and accounts use shared paper grain, wood and dark green frames, with drawings that identify each place. Pages move out from their buildings while the farm keeps moving, and twenty everyday lines are half their old length. The ten-year rules, ledger labels, tuned economy and one-tap phone recorder remain. See the [style board and screen review](docs/style-board/README.md), [gameplay guide](docs/GAMEPLAY.md) and [redesign plan](docs/REDESIGN_PLAN.md). Use `v2.0.0-underdevelopment-l` for this prerelease or `redesign` for ongoing work.
 
 **[Play the existing v1.0.3.1 browser build](https://coursemain.github.io/Taterwake/)** — the published site still contains the previous game. To try this redesign, run or export the current source below.
 
@@ -26,7 +26,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `v2.0.0-underdevelopment-k` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `v2.0.0-underdevelopment-l` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
