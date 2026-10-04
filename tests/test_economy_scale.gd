@@ -130,7 +130,7 @@ func ui_checks() -> void:
 		root.size = size
 		game.hud.show_panel("accounts", farm)
 		for frame in range(8): await process_frame
-		check(game.hud._refs.accounts_net.text.contains("104,000") and game.hud._refs.accounts_mortgage.text == "-\uE000 48,000", "accounts show farm-sized annual costs")
+		check(game.hud._refs.accounts_net.text.contains("104,000") and game.hud._refs.land_bill.text == "Mortgage and land · 60,000", "accounts show farm-sized annual costs")
 		check(game.hud._refs.accounts_balance.text.contains("200,000") and game.hud._refs.accounts_loan.text.contains("456,000"), "accounts show grouped debt limit and remaining loan")
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()), "accounts fit desktop and phone")
 		await capture("ledger-%d" % size.x)

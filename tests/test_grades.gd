@@ -168,7 +168,7 @@ func ui_checks() -> void:
 	game.world.show_grade(0, game.state.plots[0])
 	check(game.world.grade_tag.visible and game.world.grade_tag.text == "Grade: Table", "bed context has a small grade tag")
 	game.world.harvest_feedback.harvest({0:game.state.plots[0].duplicate(true)})
-	check(game.world.harvest_feedback.active[0].node.get_node("HarvestGrade").text == "Table", "harvest pop names the grade")
+	check(game.world.harvest_feedback.active[0].stamp.text == "Table", "harvest pop names the grade")
 	game.world.grade_tag.hide()
 	if "--capture" in OS.get_cmdline_user_args():
 		await create_timer(.1).timeout; RenderingServer.force_draw()
