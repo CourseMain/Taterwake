@@ -1377,7 +1377,7 @@ Release:
   release asset only.
 ```
 
-### Segment 21 follow-up: tag j fixes (run before Segment 22 step 0)
+### Segment 21b: Tag j fixes (run before Segment 22 step 0)
 
 ```
 Goal: close what the tag j review found, so the three fresh testers in
@@ -1424,6 +1424,17 @@ Stall:
    again; the target is under 100 ms on the M4 baseline.
 
 Before testers (from PLAYTEST_J.md, highest quit risk first):
+7a. The guided year charges full fixed costs (104,000) against one
+   guided bed at 10x, so every new player opens year two at about
+   -28,000, while a full year one ends near +100,000. Keep the bills:
+   Nell reads them at Winter 1 and the ledger shows them. Post one
+   offsetting credit on the same page, "Year one covered by the last
+   harvest", equal to the fixed-cost total, guided first year only.
+   Nell: "Dad's last harvest paid this year. From now on it's yours."
+   New ledger label, validator updated; existing labels unchanged. The
+   bot never runs the guide, so the tuning table stands. Assert in
+   test_tutorial_state that a guided year ends at starting cash plus
+   its own sales.
 7. The guide asks the player to buy seeds while twelve starter seeds
    are already in the pouch. Either start with none (the guide buys
    them) or have the guide say plant the starter seeds.
