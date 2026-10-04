@@ -22,7 +22,7 @@ const output=process.argv[3] || 'artifacts/n-title-launch.json';
   await page.screenshot({path:'docs/style-board/tag-n-title-returning-390.png'});results.push({state:'saved first game render',...returning});
   await tap('secondary_rect');await wait('s.confirmation');const confirm=await state();assert.equal(confirm.confirmation,true);assert.equal(confirm.safe_default,true);assert.equal(confirm.pause_reset,false);assert.equal(confirm.hud,false);assert.equal(confirm.panel,false);
   await page.screenshot({path:'docs/style-board/tag-n-title-replace-390.png'});results.push({state:'title replacement confirmation',...confirm});
-  await tap('keep_rect');await wait('!s.confirmation');assert.equal((await state()).confirmation,false);await tap('primary_rect');await wait('!s.title');assert.equal((await state()).title,false);assert.equal((await state()).panel,false);results.push({state:'resumed farm',...await state()});
+  await tap('keep_rect');await wait('!s.confirmation');assert.equal((await state()).confirmation,false);await tap('primary_rect');await wait('!s.title');assert.equal((await state()).title,false);assert.equal((await state()).panel,false);assert.equal((await state()).guide,'welcome');results.push({state:'resumed farm',...await state()});
   assert.deepEqual(errors,[]);console.log('TITLE WEB: fresh first render, walk-in guide, persistent relaunch, safe replacement and direct Continue pass');
  }finally{fs.writeFileSync(output,JSON.stringify({url,resolution:[390,844],results,errors},null,2)+'\n');await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

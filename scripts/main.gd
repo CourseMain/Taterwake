@@ -199,8 +199,9 @@ func _resume_loaded_farm(returning: bool) -> void:
 	hud.close_panel()
 	if state.run_over:
 		_on_run_ended()
-	elif not returning and not bool(state.tutorial_progress.get("completed", false)):
+	elif not bool(state.tutorial_progress.get("completed", false)):
 		tutorial.start()
+		if returning: hud.close_panel()
 
 func _register_inputs() -> void:
 	var bindings: Dictionary = {

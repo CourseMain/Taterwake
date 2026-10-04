@@ -21,6 +21,9 @@ func run() -> void:
 	check(game.title_active() and not game.tutorial.active,"walk-in has no guide card halfway through")
 	game._process(.6)
 	check(not game.title_active() and game.tutorial.current_id() == "welcome","first guide card follows the finished walk-in")
+	game._show_title(true)
+	game.title_scene.walk.pressed.emit()
+	check(game.tutorial.current_id() == "welcome" and game.state.tutorial_active and not game.hud.is_panel_open(), "Continue preserves an unfinished guide without opening a modal")
 	game.tutorial.finish()
 	game.year_intro.stop()
 	game.state.tutorial_progress.completed = true
