@@ -133,17 +133,23 @@ func winter_pages() -> void:
 	game.hud.update_state(game.state)
 	var note = game.hud._season_jobs
 	check(note.visible, "Winter note appears after accounts close")
-	check(not game.hud._climate_alert.visible, "the Winter blizzard line replaces the overlapping transient banner")
-	check(note.lines.get_child(0).name == "WinterJob_blizzard", "the urgent blizzard action stays above the job scroll")
-	for key in ["ice", "stores:russet", "project:rainwater", "covers", "ripe", "seed", "business:grower", "blizzard"]:
+	check(game.hud._climate_alert.visible, "blizzard retains its weather warning outside the jobs list")
+	check([str(note.lines.get_child(0).name), str(note.lines.get_child(1).name), str(note.lines.get_child(2).name), str(note.lines.get_child(3).name)] == ["WinterJob_ice", "WinterJob_ripe", "WinterJob_covers", "WinterJob_project_rainwater"], "Winter jobs follow ice, ripe, covers, paid work order: " + str(note.jobs.keys()))
+	for key in ["ice", "project:rainwater", "covers", "ripe", "business:grower"]:
 		check(note.jobs.has(key), "live Winter job: " + key)
 	var previous_seeds: int = game.state.seed_inventory.russet
 	game.state.seed_inventory.russet = game.state.MAX_INVENTORY - 1
-	check(note.available().seed[0].begins_with("1 t"), "seed job respects remaining seed space")
+	check(preload("res://scripts/farm_advice.gd").seed_capacity(game.state, "russet") == 1, "per-crop seed offer respects remaining seed space")
 	game.state.seed_inventory.russet = previous_seeds
 	check(note.jobs["project:rainwater"][0].contains("1 / 3"), "paid project shows actual work")
 	check(note.quote_key.visible and note.quote_key.text.contains("now → late Winter"), "one key explains current and late-Winter store quotes")
-	check(note.jobs["stores:russet"][0].contains("%s → %s/t" % [game.state.market_money(game.state.trading.stored_price(game.state, "russet", "Table")), game.state.market_money(game.state.trading.peak_price("russet", "Table"))]), "stores show actual current and rising prices")
+	check(note.stores["stores:russet"][0].contains("%s/t now, %s/t late Winter → Sell" % [game.state.market_money(game.state.trading.stored_price(game.state, "russet", "Table")), game.state.market_money(game.state.trading.peak_price("russet", "Table"))]), "Stores says now and late Winter beside actual grade-weighted prices")
+	check(note.heading.text.contains("%d jobs left" % note.jobs.size()) and not note.jobs.has("seed") and not note.jobs.has("stores:russet"), "job count excludes Stores and seed facts")
+	check(note.stores_lines.get_child(-1).text == "Keep some as next Spring's seed →", "seed offer is last under Stores with no tonne total")
+	check(note.quote_key.get_parent() == note.stores_heading.get_parent() and note.quote_key.get_index() == note.stores_heading.get_index() + 1, "quote key sits under Stores heading")
+	game.hud._act("winter_seeds")
+	check(game.hud._panel_kind == "winter_seed_choices" and game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text.contains("Russet: keep up to")), "seed page shows per-crop capacity")
+	game.hud.close_panel()
 	note.heading.pressed.emit()
 	check(note.collapsed and not note.scroll.visible and note.heading.text.contains("jobs left"), "Winter card collapses with a live count")
 	note.heading.pressed.emit()
@@ -179,6 +185,11 @@ func winter_pages() -> void:
 			check(game.touch_controls.status.text.contains(game.state.climate_info().name), "phone layout includes the live blizzard status")
 			check(not note.get_global_rect().intersects(game.touch_controls.status.get_global_rect()), "Winter note clears the phone's live weather status")
 		await shot("winter-jobs-%d" % dimensions.x)
+	var saved_stores: Dictionary = game.state.trading.held.duplicate(true)
+	game.state.trading.held = game.state.Stock.empty()
+	note.refresh()
+	check(note.stores_heading.text == "Stores · empty" and not note.quote_key.visible, "empty Stores still has an explicit block without quotes")
+	game.state.trading.held = saved_stores
 	game.state.season_clock.season = 0
 	note.refresh()
 	check(not note.visible and note.jobs.is_empty(), "Spring has no Winter to-do list")
