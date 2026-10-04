@@ -65,9 +65,9 @@ func _run() -> void:
 		check(button("tool:" + action) != null, "hotbar tool is available: " + action)
 		press("tool:" + action)
 		check(game.selected_tool == action and game.hud._selected_tool == action, "mouse equips exactly one hotbar tool: " + action)
-		var selected_style: StyleBoxFlat = button("tool:" + action).get_theme_stylebox("normal") as StyleBoxFlat
+		var selected_style: StyleBox = button("tool:" + action).get_theme_stylebox("normal")
 		var other: Button = button("tool:" + tools[(index + 1) % tools.size()])
-		check(selected_style.bg_color != (other.get_theme_stylebox("normal") as StyleBoxFlat).bg_color, "selected slot is visibly highlighted: " + action)
+		check(selected_style.get_meta("surface_fill") != other.get_theme_stylebox("normal").get_meta("surface_fill"), "selected slot is visibly highlighted: " + action)
 		key(KEY_1 + ((index + 1) % tools.size()))
 		check(game.selected_tool == tools[(index + 1) % tools.size()], "keyboard equips matching numbered slot")
 	for entry in game.state.inventory_info():

@@ -885,10 +885,11 @@ func _build_top() -> void:
 	_top["market_name"] = _label("RUSSET MARKET", 10, CREAM.darkened(.25), true)
 	_top["price"] = _label("", 22, GREEN, true)
 	market_box.add_child(_top["market_name"])
-	_top["price"].add_theme_stylebox_override("normal", Cozy.paper(CREAM, 3, 3))
 	var quote_row: BoxContainer = _hbox(8)
 	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	market_box.add_child(quote_row)
+	var price_fact := _card(CREAM, 3)
+	market_box.add_child(price_fact)
+	price_fact.add_child(quote_row)
 	quote_row.add_child(_top["price"])
 	_top["price_change"] = _label("", 16, INK, true)
 	_top.price_change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -1302,7 +1303,7 @@ func update_state(state: Node) -> void:
 	_top.price.text = state.market_money(float(quote.get("sell", 0)))
 	_top.price.add_theme_color_override("font_color", INK)
 	_top.price_change.text = "· " + state.price_percent_text(crop)
-	_top.price_change.add_theme_color_override("font_color", Color("e8c27b") if price_change_color(crop) == INK else price_change_color(crop).lightened(.4))
+	_top.price_change.add_theme_color_override("font_color", price_change_color(crop))
 	_top.price_change.show()
 	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
 	var held: float = state.trading.fresh_count(state, crop)
