@@ -29,6 +29,10 @@ void fragment() {
 	float shore = UV.x;
 	vec3 water = mix(shallow_color, deep_color, smoothstep(0.0, 9.0, shore));
 	if (title_mode) {
+		// The orthographic sea fills the horizon: reflect the welcome's warm
+		// sky across the upper view while keeping the foreground cool and quiet.
+		float horizon_glow = 1.0 - smoothstep(0.0, 0.70, SCREEN_UV.y);
+		water = mix(water, horizon_color, horizon_glow * 0.52);
 		// Three quiet pools of dusk light, never a repeating wave texture.
 		// Screen coordinates keep their count bounded during the title pan.
 		vec2 drift = vec2(sin(water_clock * 0.07), cos(water_clock * 0.045)) * 0.007;
