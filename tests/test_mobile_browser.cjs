@@ -4,15 +4,16 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 require('node:fs').mkdirSync('artifacts/mobile-qa',{recursive:true});
 (async()=>{
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE,
+ args:process.platform==='darwin'?['--use-angle=metal']:[]});
 let errors=[];
 for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape',844,390,true],['ipad',768,1024,true],['ipad-landscape',1024,768,true],['laptop',1366,768,false]]){
  const context=await browser.newContext({viewport:{width,height},hasTouch:touch,deviceScaleFactor:name === 'phone' ? 3 : name.startsWith('ipad') ? 2 : 1});
  const page=await context.newPage();
  page.on('pageerror',e=>errors.push(name+': '+e.message));
  page.on('console',m=>{if(m.type()==='error'&& !m.text().includes('favicon'))errors.push(name+': '+m.text())});
- await page.goto(process.env.TATER_QA_URL || 'http://127.0.0.1:8766/index.html');
- await page.waitForFunction(()=>!!window.mobileQA,null,{timeout:60000});
+ await page.goto(process.env.TATER_QA_URL || 'http://127.0.0.1:8766/index.html',{waitUntil:'domcontentloaded',timeout:120000});
+ await page.waitForFunction(()=>!!window.mobileQA,null,{timeout:120000});
  const command=async a=>{await page.evaluate(a=>window.mobileQA(a),a);await page.waitForTimeout(300);return page.evaluate(()=>{window.mobileQA('status');return window.mobileReport})};
  const state=await command('status');assert.equal(state.touch,touch);
  const fullRect=await page.locator('#fullscreen-button').boundingBox();
@@ -20,10 +21,13 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  assert.equal(await page.locator('#fullscreen-button').getAttribute('aria-label'),'Enter fullscreen');
  assert.ok(await page.locator('#fullscreen-button .fullscreen-enter').isVisible(), 'expand arrows before fullscreen');
  assert.equal(await page.locator('#fullscreen-button').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)', 'fullscreen chrome is transparent');
- const shot=async suffix=>page.screenshot({path:`artifacts/mobile-qa/${name}-${suffix}.png`});
+ const shot=async suffix=>page.screenshot({path:`artifacts/mobile-qa/${name}-${suffix}.png`,timeout:60000});
  const tapButton=async text=>{
   const s=await command('status'); const b=s.buttons.find(b=>b.text===text);assert.ok(b,`${name} button ${text}`);
-  const [x,y,w,h]=b.rect;const p={x:(x+w/2)*width/s.logical[0],y:(y+h/2)*height/s.logical[1]};
+  const [x,y,w,h]=b.rect, canvas=await page.locator('#canvas').boundingBox();
+  const fit=Math.min(canvas.width/s.logical[0],canvas.height/s.logical[1]);
+  const p={x:canvas.x+(canvas.width-s.logical[0]*fit)/2+(x+w/2)*fit,
+    y:canvas.y+(canvas.height-s.logical[1]*fit)/2+(y+h/2)*fit};
   if(touch)await page.touchscreen.tap(p.x,p.y);else await page.mouse.click(p.x,p.y);
   await page.waitForTimeout(300);
  };
@@ -35,6 +39,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  await tapButton('Buy seeds');
  assert.equal((await command('status')).panel,'market','Mara opens seed counter');
  await tapButton('×');
+ assert.equal((await command('status')).panel,'',`${name}: Close returns to the farm`);
  await page.locator('#fullscreen-button').click();
  assert.ok(await page.evaluate(()=>!!document.fullscreenElement),`${name} fullscreen entered`);
  await page.locator('#fullscreen-button .fullscreen-exit').waitFor({state:'visible'});
