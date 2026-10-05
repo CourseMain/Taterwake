@@ -1691,7 +1691,10 @@ A. The kit (reference page, matched not interpreted):
       lists, no scrollbars. The "Your farmer" card: the whole farmer in
       the preview, hats and shirts as pictures on tiles, a name line
       and nothing else; it fits one phone screen.
-   6. Two typefaces, per the Segment 22 contract.
+   6. Two typefaces, per the Segment 22 contract. Owner's pick, made on
+      a phone from the kit's three samples: display face Slackey (SIL
+      Open Font License, bundle the licence file), body face Atkinson
+      Hyperlegible. Fixed for the whole game.
    7. The kit is published as mockups of: a practice tile at each
       rarity, the sale reveal, the Menu board, Your farmer, Nell's
       page, Mara's page, the Winter card, a harvest stamp. Codex builds
