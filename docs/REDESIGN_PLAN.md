@@ -1678,6 +1678,11 @@ F2. Price years. The first tester's verdict was "no motivation, only
       320,000 ceiling; if it does not, lower the frequency, never
       raise the cap. Ledger labels unchanged: the sale posts at the
       actual price under the existing sales label.
+   6. Seeds follow the same variety at half the swing: 1.5x seed in a
+      spike, 0.75x in a glut. Timing matters on both sides: hold stock
+      into a spike, buy seed in a glut. Mara's card shows the price in
+      plain words ("Russet seed · cheap this season"). Planting is
+      never blocked.
 G. Not allowed: login rewards, offline timers, anything bought with
    money, price multipliers that compound.
 
