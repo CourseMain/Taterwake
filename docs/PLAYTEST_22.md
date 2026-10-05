@@ -1,10 +1,10 @@
 # Segment 22 · fresh-player playtest
 
-Step 0 is awaiting three people who have never played Taterland. These are human observations; browser walkthroughs and the tuning bot do not substitute for them. Segment 21c finishes the surfaces and voice before this baseline is collected. Implementation order will be chosen after the three baseline reports arrive.
+The first human sheet is recorded below. Segment 21f responds to this player's blockers and confusion. Three more fresh testers play **after Segment 21f**, before the Segment 22 fun pass. Browser checks and the tuning bot do not replace these human observations.
 
 ## Current build
 
-Use [v2.0.0](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0), through Segment 21e, at [Play Taterland](https://coursemain.github.io/Taterwake/). The owner requested publication first and will collect the three human tester sheets afterward. All three reports remain pending; no bot run or browser check fills a human observation. Download `Taterland-Web.zip` for the local computer preview if needed. Each person starts a fresh farm in a separate browser profile or with existing farm data cleared through the game's normal controls.
+The first sheet concerns the public v2.0.0 build. Part A shipped as v2.0.1. Parts B–M are complete locally as v2.0.2, including the owner’s later NPC-first and no-Hurry changes; publishing remains paused. Each subsequent tester starts a fresh farm in a separate browser profile or clears existing farm data through the normal controls.
 
 Ask each person to play as they normally would and say what they are thinking. Start the timer when they begin the game. Let the guide explain the controls; avoid coaching or describing planned features. Record every confusion or idle stretch with elapsed time, year, season and screen. If someone stops, record why. If they continue, ask afterward where they would have stopped when playing alone. Do not assume a completed run means they enjoyed it.
 
@@ -14,19 +14,22 @@ Use tester IDs rather than names. All blank rows are pending, not successful tes
 
 | Tester | Device / browser | Minute they would quit | Year / season | Screen | Their reason, in their words |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Pending | Pending | Pending | Pending | Pending |
+| 1 | Phone; browser not supplied | 1 | Year 1 / Spring | First screen | “too much text, too small, too fast, too loud”; “I didn't understand Table and Standard”; “what do I do while I wait?” |
 | 2 | Pending | Pending | Pending | Pending | Pending |
 | 3 | Pending | Pending | Pending | Pending | Pending |
+| 4 | Pending | Pending | Pending | Pending | Pending |
+
+Tester 1 never plays games. Asked whether she would open the game again: **“No motivation, only pain. Who would play that?”** The owner reports that she read the first screen for five seconds; the requested sheet records the quit point within minute 1.
 
 Additional observations:
 
 | Tester | Elapsed minute | Year / season / screen | Confusion, boredom or enjoyable moment | What the player tried |
 | --- | --- | --- | --- | --- |
-| Pending | Pending | Pending | Pending | Pending |
+| 1 | Within minute 1 | Fresh launch / after “Walk to the farm” | Island missing; restart required | Walked to the farm and restarted |
 
 ## Implementation order
 
-Pending the three reports. Tie each priority to a recorded observation and its quit risk before changing A–F. Keep the potato farmer, villagers, hand-built island and the wood, paper and ink surfaces established in Segment 21c. Do not add the prohibited rewards, offline timers, real-money purchases or compounding prices.
+The first sheet sets the Segment 22 brief: the hook items—a reason to come back, the Spring target, Nell's milestones and the first thing the player can afford—come before anything else in the fun pass. Collect three more fresh sheets after Segment 21f. Tie each later priority to those observations and quit risks. Keep the potato farmer, villagers, hand-built island and the wood, paper and ink surfaces established in Segment 21c. Do not add the prohibited rewards, offline timers, real-money purchases or compounding prices.
 
 ## Balance baseline for A
 
