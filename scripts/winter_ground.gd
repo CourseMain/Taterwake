@@ -51,7 +51,6 @@ static func paths(lanes: Array) -> MeshInstance3D:
 	var material:=_material()
 	material.set_shader_parameter("ground_surface",false)
 	material.set_shader_parameter("snow_color",Color("dce1e0"))
-	material.set_shader_parameter("shadow_color",Color("cdd8db"))
 	strip.material_override=material
 	strip.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	return strip

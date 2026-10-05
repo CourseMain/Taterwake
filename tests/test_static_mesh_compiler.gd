@@ -53,6 +53,28 @@ func run() -> void:
 		if iteration == 0: first_mesh = combined.mesh
 		else: check(combined.mesh == first_mesh, "identical plants reuse compiled GPU geometry")
 		parent.free()
+	# An immutable unlit material cannot use transformed normals at runtime.
+	# Its fallback must visibly distinguish opposite faces, and changing the
+	# baked sun direction must invalidate the compiled mesh cache.
+	var paint_root := Node3D.new(); root.add_child(paint_root)
+	for direction in [Vector3.RIGHT, Vector3.LEFT]:
+		compiler.sun_direction = direction
+		for x in range(2):
+			var item := MeshInstance3D.new(); item.mesh = BoxMesh.new(); item.position.x = x*2
+			var material := StandardMaterial3D.new(); material.albedo_color=Color.WHITE
+			material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED; material.set_meta("static_colour",true)
+			item.material_override = material; paint_root.add_child(item)
+		compiler.merge_siblings(paint_root,{})
+		var combined: MeshInstance3D = paint_root.get_node("CompiledGeometry")
+		var arrays: Array = combined.mesh.surface_get_arrays(0)
+		var bright: float = 0; var dark: float = 1
+		for i in range(arrays[Mesh.ARRAY_NORMAL].size()):
+			var facing: float = arrays[Mesh.ARRAY_NORMAL][i].dot(direction)
+			if facing > .99: bright = maxf(bright, arrays[Mesh.ARRAY_COLOR][i].r)
+			if facing < -.99: dark = minf(dark, arrays[Mesh.ARRAY_COLOR][i].r)
+		check(bright > .99 and dark > .64 and dark < .66, "unlit paint bakes the sun-facing and opposite faces")
+		combined.free()
+	paint_root.free()
 	root.remove_meta("compiler_box")
 	print("STATIC MESH COMPILER: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

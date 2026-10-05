@@ -66,6 +66,7 @@ const SUN_STEP_SECONDS := 3.0
 const SUN_EASE_SECONDS := 0.4
 var _sun_step_elapsed := 0.0
 var _sun_ease_elapsed := SUN_EASE_SECONDS
+var _sun_sky_signature: Array = []
 var _sun_pose_ready := false
 var _sun_desired := Vector3.ZERO
 var _sun_from := Vector3.ZERO
@@ -267,6 +268,7 @@ func _batch_world_geometry() -> void:
 			mutable_meshes[node.get_instance_id()] = true
 	_bake_ground_contacts()
 	_geometry_batcher._compiler.occlusion = ground_occlusion.factor
+	_geometry_batcher._compiler.sun_direction = _sun.global_basis.z.normalized()
 	_geometry_batcher.batch_tree(self, mutable_meshes)
 	_geometry_batcher._compiler.occlusion = Callable()
 
@@ -486,6 +488,7 @@ func _clear_world() -> void:
 	_applied_day_time = -1.0
 	_sun = null
 	_sun_pose_ready = false
+	_sun_sky_signature.clear()
 	_sun_step_elapsed = 0.0
 	_sun_ease_elapsed = SUN_EASE_SECONDS
 	_moon = null
@@ -588,10 +591,9 @@ func _apply_graphics_quality() -> void:
 	_sun.directional_shadow_pancake_size = 0.0
 	_sun.shadow_bias = 0.025
 	_sun.shadow_normal_bias = 0.4
-	_sun.shadow_opacity = 0.45 if _winter_visible else 0.68
+	_sun.shadow_opacity = 0.85
 	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"
-	if is_instance_valid(visuals): visuals.set_shadow_mode(_sun.shadow_enabled)
 
 
 func set_climate_projects(projects: Dictionary) -> void:
@@ -651,7 +653,7 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
 	if winter_changed:
-		_sun.shadow_opacity = 0.45 if winter else 0.68
+		_sun.shadow_opacity = 0.85
 	if _applied_day_time >= 0.0 and absf(_day_elapsed - _applied_day_time) < LIGHTING_STEP_SECONDS and not winter_changed:
 		return
 	_applied_day_time = _day_elapsed
@@ -661,7 +663,9 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var daylight: float = 0.25 + 0.75 * height
 	var twilight: float = pow(1.0 - height, 2.0 if _season_index == 2 else 3.0)
 	# North-centred arc lights the treads while the south-facing risers stay shaded.
-	_sun_desired = Vector3(-lerpf(20.0, 35.0, height), 180.0 + lerpf(-20.0, 20.0, phase), 0)
+	var cold_season: bool = winter or _season_index == 2
+	var elevation: float = lerpf(14.0, 27.0, height) if cold_season else lerpf(20.0, 35.0, height)
+	_sun_desired = Vector3(-elevation, 180.0 + lerpf(-35.0, 35.0, phase), 0)
 	if not _sun_pose_ready:
 		_sun_pose_ready = true
 		_sun_from = _sun_desired
@@ -670,14 +674,14 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
-	var day_sun: Color = Color("ffd9a8")
+	var day_sun: Color = Color("ffcf94") if cold_season else Color("fff0ce")
 	var dusk_sun: Color = Color("ffba7d")
 	_day_environment.background_color = night_sky.lerp(day_sky, daylight).lerp(dusk_sky, twilight * 0.72)
 	_day_environment.ambient_light_color = Color("b8c8e0").lerp(Color("9fafd0"), twilight * .25)
-	_day_environment.ambient_light_energy = lerpf(0.44, 0.45, daylight)
+	_day_environment.ambient_light_energy = 0.22
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
-	_sun.light_energy = (0.48 if winter else 0.65) * daylight
-	_moon.light_energy = 0.48 * (1.0 - daylight)
+	_sun.light_energy = (1.25 if winter else 1.4) * lerpf(0.60, 1.0, height)
+	_moon.light_energy = .22 if winter else lerpf(.24, .28, height)
 	if _weather_strength > 0.0:
 		_day_environment.background_color = _day_environment.background_color.lerp(Color("b88b53") if _weather_drought else Color("344b5c"), minf(_weather_dimming_limit, _weather_strength * 0.85))
 		_day_environment.ambient_light_color = _day_environment.ambient_light_color.lerp(Color("e9b36b") if _weather_drought else Color("8da5b9"), minf(_weather_dimming_limit, _weather_strength * 0.55))
@@ -693,6 +697,25 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	if play_sky != null:
 		play_sky.set_shader_parameter("top_color",_day_environment.background_color.darkened(.28))
 		play_sky.set_shader_parameter("horizon_color",_day_environment.background_color.lightened(.23))
+	_sync_sun_sky()
+
+
+func sun_sky_info() -> Dictionary:
+	# A stylised horizon for the orthographic diorama. The side follows the
+	# actual light in camera space, including pans and the eased sun arc.
+	var direction: Vector3 = _sun.global_basis.z.normalized()
+	var right: Vector3 = camera.global_basis.x if is_instance_valid(camera) else Vector3.RIGHT
+	var horizontal: float = right.dot(direction)
+	return {"direction": direction, "screen": Vector2(clampf(.5 + horizontal * .65, .20, .80), lerpf(.19, .10, clampf(direction.y / .58, 0, 1))), "colour": _sun.light_color}
+
+func _sync_sun_sky() -> void:
+	if play_sky == null or not is_instance_valid(_sun): return
+	var signature: Array = [_sun.global_basis.z, camera.global_transform if is_instance_valid(camera) else Transform3D.IDENTITY, get_viewport().size, _day_environment.background_color, _sun.light_color, _sun.light_energy, _weather_strength, _weather_drought]
+	if signature == _sun_sky_signature: return
+	_sun_sky_signature = signature
+	play_sky.set_shader_parameter("sun_direction", _sun.global_basis.z.normalized())
+	play_sky.set_shader_parameter("sun_colour", _sun.light_color)
+	play_sky.set_shader_parameter("sun_visibility", 1.0 - minf(.9, _weather_strength * .8) if not _weather_drought else 1.0)
 	if is_instance_valid(coast): coast.sync_light()
 
 
@@ -1213,7 +1236,9 @@ func _scenery() -> void:
 	# A pond, bridge and dock form a quiet corner beside the village.
 	var pond := _sphere(self, Vector3(12.0, 0.0, 4.5), Vector3(3.45, 0.055, 2.6), Color("729f96"))
 	pond.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_sphere(self, Vector3(11.9, 0.04, 4.4), Vector3(3.1, 0.025, 2.28), Color("8bb9ab"))
+	pond.material_override = _reflective_material(Color("729f96"), .22)
+	var pond_surface := _sphere(self, Vector3(11.9, 0.04, 4.4), Vector3(3.1, 0.025, 2.28), Color("8bb9ab"))
+	pond_surface.material_override = _reflective_material(Color("8bb9ab"), .20)
 	for i in range(6):
 		_box(self, Vector3(9.4 + float(i) * 0.43, 0.24, 5.5), Vector3(0.38, 0.14, 1.2), Color("b59364"))
 	for pos in [Vector3(12, 0.1, 3.5), Vector3(13.5, 0.1, 4.7), Vector3(11, 0.1, 4.1)]:
@@ -1458,6 +1483,13 @@ func _mat(color: Color) -> StandardMaterial3D:
 	material.roughness = 0.88
 	material.set_meta("static_colour", true)
 	_materials[key] = material
+	return material
+
+func _reflective_material(color: Color, roughness: float) -> StandardMaterial3D:
+	var material: StandardMaterial3D = _mat(color).duplicate()
+	material.set_meta("static_colour", false)
+	material.roughness = roughness
+	material.metallic_specular = .85
 	return material
 
 func _box(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
@@ -2237,6 +2269,7 @@ func _animate_sun(delta: float) -> void:
 		_sun_ease_elapsed = minf(SUN_EASE_SECONDS, _sun_ease_elapsed + delta)
 		var weight: float = smoothstep(0.0, SUN_EASE_SECONDS, _sun_ease_elapsed)
 		_sun.rotation_degrees = _sun_from.lerp(_sun_target, weight)
+	_sync_sun_sky()
 
 func _process(delta: float) -> void:
 	_label_fit_clock += delta

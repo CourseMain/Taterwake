@@ -379,8 +379,8 @@ func _set_shadow_size(size: int, persist: bool = false) -> void:
 	shadow_size = size
 	# Keep Compatibility filtering stable when the editor drops default overrides.
 	for key in ["rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", "rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile"]:
-		ProjectSettings.set_setting(key, RenderingServer.SHADOW_QUALITY_SOFT_HIGH)
-	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_HIGH)
+		ProjectSettings.set_setting(key, RenderingServer.SHADOW_QUALITY_SOFT_LOW)
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_LOW)
 	RenderingServer.directional_shadow_atlas_set_size(size, true)
 	if persist and not test_mode: GraphicsPreferences.save_shadow_size(size)
 	if hud._panel_kind == "graphics": hud._refresh_graphics()

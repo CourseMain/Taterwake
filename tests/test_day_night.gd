@@ -30,7 +30,7 @@ func run() -> void:
 		previous = light
 		previous_color = color
 	check(world.day_cycle_info().phase == 1 and is_equal_approx(previous, 0.25), "season ends at dusk without wrapping to morning")
-	check(world._day_environment.ambient_light_energy >= 0.35 and world._sun.light_energy > 0, "dusk remains readable for the final harvest")
+	check(is_equal_approx(world._day_environment.ambient_light_energy, .22) and world._sun.light_energy >= .75, "dusk remains readable for the final harvest")
 	check(world._day_environment.get_instance_id() == environment_id and world._sun.get_instance_id() == sun_id and world.get_child_count() == children, "sky changes reuse existing lights and environment")
 	world.set_day_time(0)
 	settle_sun(world)
@@ -41,7 +41,7 @@ func run() -> void:
 	world.set_day_time(150)
 	settle_sun(world)
 	check(dawn.y < noon.y and noon.y < world._sun.rotation_degrees.y and noon.x < dawn.x, "sun direction shows progress from dawn through noon to dusk")
-	check(dawn.is_equal_approx(Vector3(-20,160,0)) and noon.is_equal_approx(Vector3(-35,180,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-20,200,0)), "working-season arc has the requested bounds")
+	check(dawn.is_equal_approx(Vector3(-20,145,0)) and noon.is_equal_approx(Vector3(-35,180,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-20,215,0)), "working-season arc has the requested bounds")
 	for invalid in [NAN, INF, -1.0]:
 		world.set_day_time(invalid)
 		check(world.day_cycle_info().phase == 1, "invalid time cannot corrupt lighting")
@@ -51,9 +51,9 @@ func run() -> void:
 	var winter_dawn: Vector3 = world._sun.rotation_degrees
 	world.set_day_time(75, true)
 	settle_sun(world)
-	check(world.day_cycle_info().phase == 0.5 and is_equal_approx(world._sun.rotation_degrees.x,noon.x) and world._sun.rotation_degrees.y > winter_dawn.y, "Winter uses the same long-shadow arc")
-	check(winter_dawn.is_equal_approx(Vector3(-20,160,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-35,180,0)), "Winter has a 20 degree floor and 35 degree peak")
-	check(world._sun.light_color.r > world._sun.light_color.b and world._sun.light_energy < 0.65, "Winter sunlight remains warm and weaker")
+	check(world.day_cycle_info().phase == 0.5 and world._sun.rotation_degrees.x > noon.x and world._sun.rotation_degrees.y > winter_dawn.y, "Winter runs a lower long-shadow arc")
+	check(winter_dawn.is_equal_approx(Vector3(-14,145,0)) and world._sun.rotation_degrees.is_equal_approx(Vector3(-27,180,0)), "Winter has a fourteen degree floor and twenty-seven degree peak")
+	check(world._sun.light_color.r > world._sun.light_color.b and is_equal_approx(world._sun.light_energy, 1.25), "Winter sunlight remains warm and weaker")
 	world.set_day_time(150, true)
 	settle_sun(world)
 	check(world.day_cycle_info().phase == 1 and world._sun.rotation_degrees.y > winter_dawn.y, "Winter reaches dusk at the season end")

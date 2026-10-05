@@ -45,7 +45,9 @@ static func _rainwater(w, root: Node3D, level: int) -> void:
 	var steel := Color("527f8a")
 	var rim := Color("b8d1c9")
 	w._box(root, Vector3(0, 0.16, 0), Vector3(3.7, 0.32, 3.6), Color("9ba79b"))
-	w._cylinder(root, Vector3(0, 1.85, 0), 1.5, 1.5, 3.15, steel, 20)
+	var tank: MeshInstance3D = w._cylinder(root, Vector3(0, 1.85, 0), 1.5, 1.5, 3.15, steel, 20)
+	tank.material_override = w._reflective_material(steel, .28)
+	tank.name = "TankSteel"
 	for y: float in [0.42, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.25]:
 		w._cylinder(root, Vector3(0, y, 0), 1.54, 1.54, 0.07, rim, 20)
 	w._cylinder(root,Vector3(0,3.44,0),1.48,1.48,.06,Color("629299"),20)

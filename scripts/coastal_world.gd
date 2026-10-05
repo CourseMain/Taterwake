@@ -65,8 +65,16 @@ func animate(delta: float) -> void:
 func sync_light() -> void:
 	# Match the sky in the same frame, including travel and abrupt weather changes.
 	water_material.set_shader_parameter("horizon_color", world._day_environment.background_color)
-	var light: float = clampf(world._sun.light_energy / 0.65, 0.0, 1.0)
+	var light: float = clampf(world._sun.light_energy / 1.4, 0.0, 1.0)
 	water_material.set_shader_parameter("daylight", light)
+	if is_instance_valid(world.camera): water_material.set_shader_parameter("camera_world", world.camera.global_position)
+	var sun: Dictionary = world.sun_sky_info()
+	water_material.set_shader_parameter("sun_screen", sun.screen)
+	water_material.set_shader_parameter("sun_direction", sun.direction)
+	water_material.set_shader_parameter("sun_colour", sun.colour)
+	water_material.set_shader_parameter("sky_top", world._day_environment.background_color.darkened(.22))
+	water_material.set_shader_parameter("sun_visibility", 1.0 - minf(.9, world._weather_strength * .8) if not world._weather_drought else 1.0)
+	water_material.set_shader_parameter("view_aspect", float(world.get_viewport().size.x) / maxf(1, world.get_viewport().size.y))
 
 func set_effects_enabled(enabled: bool) -> void:
 	water_enabled = enabled

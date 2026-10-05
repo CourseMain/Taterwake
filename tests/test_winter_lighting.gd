@@ -42,17 +42,15 @@ func run() -> void:
 	weather.phase = "calm"; weather.event = ""; weather.severity = 0; w.set_climate(weather)
 	var material: ShaderMaterial=w.visuals.snow_ground.material_override
 	check("unshaded" not in material.shader.code and "shadows_disabled" not in material.shader.code and "ambient_light_disabled" not in material.shader.code,"snow uses the ordinary lit surface and ambient path")
-	check("step(0.35, dot(NORMAL, LIGHT))" in material.shader.code,"snow normal band uses the requested 0.35 threshold")
-	for elevation in [25.1,30.0,40.0,55.0,60.0]:
-		check(Vector3.UP.dot(Vector3(0,sin(deg_to_rad(elevation)),cos(deg_to_rad(elevation))))>0.35,"upward ground is lit above 25 degrees")
+	check("void light()" not in material.shader.code, "snow uses the same physical sun response as ordinary farm materials")
 	for mode in ["balanced","crisp","smooth"]:
 		w.set_graphics_quality(mode)
 		check(w._sun.shadow_enabled==(mode!="smooth"),mode+" uses the same sun-shadow policy on snow as grass")
-		check(is_equal_approx(w._sun.shadow_opacity,.45),mode+" retains the soft Winter shadow opacity")
+		check(is_equal_approx(w._sun.shadow_opacity,.85),mode+" keeps the defined Winter shadow")
 	w.set_day_time(75,false)
-	check(is_equal_approx(w._sun.shadow_opacity,.68),"Spring restores its ordinary shadow opacity")
+	check(is_equal_approx(w._sun.shadow_opacity,.85),"Spring keeps the defined shadow opacity")
 	w.set_day_time(75,true)
-	check(is_equal_approx(w._sun.shadow_opacity,.45),"returning to Winter restores bounced-light shadows")
+	check(is_equal_approx(w._sun.shadow_opacity,.85),"returning to Winter retains the defined shadow opacity")
 	if DisplayServer.get_name()!="headless":
 		var probe: MeshInstance3D=w._box(w,Vector3(20,2,-8),Vector3(1.4,4,1.4),Color("6e645a"))
 		var point: Vector2=w.camera.unproject_position(Vector3(20,.18,-5.8))

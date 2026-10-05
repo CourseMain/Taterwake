@@ -50,7 +50,7 @@ func _run() -> void:
 		check(terrain == 1 and contained, "one terrain shell and all farm geometry fit the camera depth")
 		world.set_graphics_quality("balanced")
 		check(world._sun.shadow_enabled and world._sun.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL, "balanced uses one orthographic shadow map")
-		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and world._sun.shadow_opacity < 0.8, "balanced removes shadow pancaking and softens silhouette contrast")
+		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and is_equal_approx(world._sun.shadow_opacity, .85), "balanced removes shadow pancaking and keeps a defined silhouette")
 		world.set_day_time(0.0)
 		world._animate_sun(3.0); world._animate_sun(0.4)
 		var rotation: Vector3 = world._sun.rotation
@@ -59,7 +59,7 @@ func _run() -> void:
 		world._animate_sun(3.0); world._animate_sun(0.4)
 		check(not world._day_environment.background_color.is_equal_approx(daylight) and not world._sun.rotation.is_equal_approx(rotation), "seasonal light and direction advance toward noon")
 		world.set_day_time(150.0)
-		check(world._sun.light_energy > 0 and world._moon.light_energy >= 0.3, "season-end dusk retains readable fill light")
+		check(world._sun.light_energy >= .75 and world._moon.light_energy >= .18, "season-end dusk retains readable fill light")
 		world.set_day_time(75.0)
 		var plots: Array = []
 		for index: int in range(world.plot_positions.size()):

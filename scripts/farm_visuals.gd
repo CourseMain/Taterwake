@@ -218,7 +218,6 @@ func prepare_snow() -> void:
 	if not winter_dirty: return
 	_build_snow()
 	_snow_fade.collect(snow)
-	set_shadow_mode(world.graphics_quality!="smooth")
 	_snow_fade.set_opacity(snow_opacity)
 
 func set_winter(enabled: bool, opacity: float = -1.0) -> void:
@@ -243,14 +242,6 @@ func set_snow_opacity(amount: float) -> void:
 	winter_charm.visible=snow_opacity>0
 	_snow_fade.set_opacity(snow_opacity)
 	_charm_fade.set_opacity(snow_opacity)
-
-func set_shadow_mode(enabled: bool) -> void:
-	for material in [snow_material, snow_ground.material_override if is_instance_valid(snow_ground) else null, snow_paths.material_override if is_instance_valid(snow_paths) else null]:
-		if material!=null: material.set_shader_parameter("single_light_pass",not enabled)
-	# A quality change during a fade must survive restoration of opaque art.
-	for entry in _snow_fade.entries:
-		for material in [entry.original,entry.fade]:
-			if material is ShaderMaterial: material.set_shader_parameter("single_light_pass",not enabled)
 
 func _build_winter_charm() -> void:
 	winter_charm=_group("WinterCharm")

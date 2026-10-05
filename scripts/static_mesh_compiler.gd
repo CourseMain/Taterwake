@@ -4,6 +4,7 @@ extends RefCounted
 var _cache: Dictionary = {}
 var _materials: Dictionary = {}
 var occlusion: Callable
+var sun_direction := Vector3(0, .57, -.82).normalized()
 
 func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 	var groups: Dictionary = {}
@@ -30,6 +31,8 @@ func merge_siblings(parent: Node3D, mutable: Dictionary) -> void:
 		var items: Array = groups[key]
 		if items.size() < 2: continue
 		var signature: Array = [key]
+		if items[0].material_override.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+			signature.append([parent.global_basis, sun_direction])
 		if occlusion.is_valid(): signature.append(parent.global_transform)
 		for item: MeshInstance3D in items:
 			signature.append([item.mesh.get_rid(), item.transform, item.material_override.albedo_color])
@@ -70,6 +73,11 @@ func _compile(items: Array, world_transform: Transform3D = Transform3D.IDENTITY)
 			vertices.append(transform * source[index])
 			normals.append((normal_basis * source_normals[index]).normalized())
 			var shade: float = occlusion.call(world_transform * transform * source[index]) if occlusion.is_valid() else 1.0
+			# Lit materials keep transformed normals, so roofs, rails, sails and
+			# posts follow the live arc. Only immutable unlit paint needs baking.
+			if item.material_override.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+				var normal: Vector3 = (world_transform.basis * normal_basis * source_normals[index]).normalized()
+				shade *= lerpf(.65, 1.0, maxf(0, normal.dot(sun_direction)))
 			var colour: Color = item.material_override.albedo_color
 			colours.append(Color(colour.r * shade, colour.g * shade, colour.b * shade, colour.a))
 		var source_indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
