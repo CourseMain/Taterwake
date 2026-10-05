@@ -224,8 +224,8 @@ for local preview and is not a production hosting service.
 The ZIP has index.html at its root for static game-host upload forms.
 
 FONT LICENSES
-Nunito Sans, Fredoka, Ranchers, Patrick Hand, Oswald and Noto Sans Symbols 1/2 use the SIL Open
-Font License. Their complete licenses are included in the
+Atkinson Hyperlegible and Noto Sans Symbols 1/2 use the SIL Open
+Font License. Slackey uses Apache 2.0. Their complete licenses are included in the
 LICENSE-*.txt files alongside this README.
 
 ENGINE LICENSE
@@ -316,11 +316,8 @@ def build(engine: Path) -> tuple[Path, Path]:
         complete_offline_assets(staging)
         shutil.copyfile(PROJECT / "tools/serve_web.py", staging / "serve.py")
         font_licenses = {
-            "OFL.txt": "LICENSE-NunitoSans.txt",
-            "Fredoka-OFL.txt": "LICENSE-Fredoka.txt",
-            "PatrickHand-OFL.txt": "LICENSE-PatrickHand.txt",
-            "Ranchers-OFL.txt": "LICENSE-Ranchers.txt",
-            "Oswald-OFL.txt": "LICENSE-Oswald.txt",
+            "AtkinsonHyperlegible-OFL.txt": "LICENSE-AtkinsonHyperlegible.txt",
+            "Slackey-LICENSE.txt": "LICENSE-Slackey.txt",
             "OFL-NotoSymbols.txt": "LICENSE-NotoSansSymbols2.txt",
             "OFL-NotoSymbols1.txt": "LICENSE-NotoSansSymbols1.txt",
         }

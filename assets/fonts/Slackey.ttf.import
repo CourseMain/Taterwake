@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cgs8yipdn465e"
-path="res://.godot/imported/PatrickHand.ttf-8549a15b3cb877edbd42a2bb00d10ee6.fontdata"
+uid="uid://bgro8m65xith0"
+path="res://.godot/imported/Slackey.ttf-8fbc7cf9939701874537795adae79de1.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/PatrickHand.ttf"
-dest_files=["res://.godot/imported/PatrickHand.ttf-8549a15b3cb877edbd42a2bb00d10ee6.fontdata"]
+source_file="res://assets/fonts/Slackey.ttf"
+dest_files=["res://.godot/imported/Slackey.ttf-8fbc7cf9939701874537795adae79de1.fontdata"]
 
 [params]
 

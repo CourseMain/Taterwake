@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://cetc6ghnsl281"
-path="res://.godot/imported/Ranchers.ttf-40d1e75b2e33e9d6be21d41fc7699867.fontdata"
+uid="uid://c2rbj6sa0lf45"
+path="res://.godot/imported/AtkinsonHyperlegible.ttf-facd4a5d89ce07c3dcc7a78e1989eebf.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/Ranchers.ttf"
-dest_files=["res://.godot/imported/Ranchers.ttf-40d1e75b2e33e9d6be21d41fc7699867.fontdata"]
+source_file="res://assets/fonts/AtkinsonHyperlegible.ttf"
+dest_files=["res://.godot/imported/AtkinsonHyperlegible.ttf-facd4a5d89ce07c3dcc7a78e1989eebf.fontdata"]
 
 [params]
 

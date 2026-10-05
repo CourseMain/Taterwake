@@ -400,7 +400,7 @@ After exporting an updated game, copy all `index.*` files and the license notice
 
 ## Third-party notices
 
-Patrick Hand, Fredoka, Oswald, Nunito Sans and Noto Sans Symbols are distributed under the SIL Open Font License; see the license files in `assets/fonts/`. Godot's engine license and third-party notices are in `assets/licenses/` and are included in browser packages. These notices describe their respective dependencies.
+Atkinson Hyperlegible and Noto Sans Symbols use the SIL Open Font License; Slackey uses Apache 2.0. Their authentic licences are bundled in `assets/fonts/`. Godot's engine license and third-party notices are in `assets/licenses/` and are included in browser packages. These notices describe their respective dependencies.
 
 ### Optional contextual help
 
@@ -412,7 +412,7 @@ Base crop times are 60/90/110/160/200 seconds for Russet/Golden/Giant/Sunburst/I
 
 ### Quiet farming feedback and shop signs
 
-Shop signs use semibold Fredoka, matching the original rounded roll-button typography, with short names and a fine contrasting outline. Spud Valley uses cream lettering on dark signs. Board dimensions govern measured text fitting. Labels remain clickable and retain tutorial visibility. Fredoka also supplies compact shop and menu headings and buttons; Nunito Sans remains on body copy and numeric status text.
+Shop signs, names and amounts use Slackey. Atkinson Hyperlegible carries body copy and captions. Both use the shared solid Spudion fallback; phone text has three sizes: 22, 16 and 14 px.
 
 Normal field actions never create central toasts. No-op feedback (for example, “Already watered” or “Plant a seed first [2]”) shares one click-through footer slot with hover hints, expires after 1.4 seconds, and does not extend on rapid identical repeats. Successful work clears stale failure text. Plot notifications are handled through this path once; a full barn still gets a short actionable reminder. Other notifications appear in a smaller upper-right card.
 
