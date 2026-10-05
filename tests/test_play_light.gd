@@ -23,11 +23,11 @@ func run() -> void:
 		world._process(1.0)
 		world._animate_sun(3.0)
 		world._animate_sun(.4)
-		check(is_equal_approx(world._sun.rotation_degrees.x,-35),"every season has a thirty-five-degree noon")
+		check(is_equal_approx(world._sun.rotation_degrees.x,-27 if season >= 2 else -35),"Autumn and Winter noon stay lower than Spring and Summer")
 		check(world._sun.light_color.r > world._sun.light_color.b and world._day_environment.ambient_light_color.b > world._day_environment.ambient_light_color.r,"warm light contrasts with cool fill")
 	check(world.get_node("StaticContactDiscs").multimesh.instance_count >= world._tree_specs.size(),"trees and buildings have shared soft contacts")
 	check(game.hud._play_band.get_theme_stylebox("panel") is StyleBoxEmpty,"play HUD background is fully transparent")
-	check(game.hud._weather_button.get_theme_stylebox("normal").get_meta("surface_fill") == Color("17382d"),"weather pill belongs to the ink band")
+	check(game.hud._weather_button.get_theme_stylebox("normal").get_meta("surface_fill") == preload("res://scripts/place_ui.gd").WOOD,"weather picture sits on the rounded tool-tile wood")
 	game.touch_controls.enabled = true
 	game._set_shadow_size(4096)
 	check(game.shadow_size == 2048,"phone shadow maps never exceed 2048 even with an old 4096 preference")

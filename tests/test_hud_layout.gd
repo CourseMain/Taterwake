@@ -179,7 +179,7 @@ func winter_pages() -> void:
 			await process_frame
 			game.hud._process(.01)
 		if game.touch_controls.enabled:
-			check(game.hud._weather_button.text.to_lower().contains(game.state.climate_info().name.to_lower()), "phone layout includes the live blizzard status")
+			check(game.hud._weather_button.picture.id == "snow" and game.hud._weather_button.picture.warning, "phone layout includes the live blizzard status")
 			check(not note.get_global_rect().intersects(game.hud._weather_button.get_global_rect()), "Winter note clears the phone's live weather status")
 		await shot("winter-jobs-%d" % dimensions.x)
 	var saved_stores: Dictionary = game.state.trading.held.duplicate(true)

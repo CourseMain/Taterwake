@@ -3,8 +3,9 @@
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 require('node:fs').mkdirSync('artifacts/mobile-qa',{recursive:true});
+let activeBrowser;
 (async()=>{
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE,
+const browser=activeBrowser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE,
  args:process.platform==='darwin'?['--use-angle=metal']:[]});
 let errors=[];
 for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape',844,390,true],['ipad',768,1024,true],['ipad-landscape',1024,768,true],['laptop',1366,768,false]]){
@@ -17,7 +18,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  const command=async a=>{await page.evaluate(a=>window.mobileQA(a),a);await page.waitForTimeout(300);return page.evaluate(()=>{window.mobileQA('status');return window.mobileReport})};
  const state=await command('status');assert.equal(state.touch,touch);
  const fullRect=await page.locator('#fullscreen-button').boundingBox();
- assert.ok(fullRect.x>=width-60 && fullRect.y>=56 && fullRect.width===44, 'compact fullscreen stays clear of the top band and movement stick');
+ assert.ok(fullRect.x>=0 && fullRect.x<12 && fullRect.y>=0 && fullRect.y<12 && fullRect.width===44, 'drawn fullscreen occupies the top-left corner');
  assert.equal(await page.locator('#fullscreen-button').getAttribute('aria-label'),'Enter fullscreen');
  assert.ok(await page.locator('#fullscreen-button .fullscreen-enter').isVisible(), 'expand arrows before fullscreen');
  assert.equal(await page.locator('#fullscreen-button').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)', 'fullscreen chrome is transparent');
@@ -36,6 +37,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  await shot('npc-prompt');
  await tapButton('E');
  assert.equal((await command('status')).conversation.npc,'mara','NPC badge starts Mara conversation');
+ await shot('keeper-entry');
  await tapButton('Buy seeds');
  assert.equal((await command('status')).panel,'market','Mara opens seed counter');
  await tapButton('×');
@@ -83,4 +85,4 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
 }
 console.log('BROWSER ERRORS',JSON.stringify(errors));
 await browser.close();if(errors.length)process.exitCode=1;
-})().catch(e=>{console.error(e);process.exit(1)});
+})().catch(async e=>{console.error(e);await activeBrowser?.close();process.exitCode=1});

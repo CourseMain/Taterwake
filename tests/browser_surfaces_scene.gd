@@ -10,6 +10,10 @@ var request := 0
 var current_page := ""
 var is_ready := false
 var base_snapshot: Dictionary
+var probe_winter: bool = false
+var sun_probe: MeshInstance3D
+var probe_floor: MeshInstance3D
+var probe_point := Vector3.ZERO
 var last_report: Dictionary
 
 func _ready() -> void:
@@ -82,6 +86,9 @@ func command(args: Array) -> void:
 	if action.begins_with("scroll:"):
 		_scroll(action.get_slice(":", 1))
 		return
+	if action.begins_with("sun_probe:"):
+		_probe(action.get_slice(":", 1))
+		return
 	var page: String = action.get_slice(":", 0)
 	page = {"crop": "market", "crop_card": "market", "forecast": "climate"}.get(page, page)
 	if page not in PAGES:
@@ -103,6 +110,8 @@ func _present(action: String, ticket: int) -> void:
 	game.state.restore_snapshot(base_snapshot)
 	game.state.set_tutorial_active(false)
 	game.hud.set_tutorial({})
+	probe_winter = false
+	if is_instance_valid(probe_floor): probe_floor.hide(); sun_probe.hide()
 	game._cancel_walk()
 	game._recenter_camera()
 	game.world.camera.size = game._camera_home_size
@@ -247,6 +256,7 @@ func _publish() -> void:
 		"modal": _rect(modal), "scroll": _rect(scroll), "scroll_top": scroll.scroll_vertical,
 		"content_fits_width": game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1,
 		"modal_draw_alpha": game.hud._modal_motion.modulate.a, "panel_kind":game.hud._panel_kind,
+		"sun": {"energy":game.world._sun.light_energy,"ambient":game.world._day_environment.ambient_light_energy,"opacity":game.world._sun.shadow_opacity,"rotation":[game.world._sun.rotation_degrees.x,game.world._sun.rotation_degrees.y],"screen":[game.world.sun_sky_info().screen.x,game.world.sun_sky_info().screen.y],"probe_pixel":[game.world.camera.unproject_position(probe_point).x,game.world.camera.unproject_position(probe_point).y],"viewport":[game.farm_viewport.size.x,game.farm_viewport.size.y]},
 		"world_animation_time": game.world._time, "simulation_seconds": game.state.elapsed,
 		"title_available": game.has_method("_show_title"), "buttons": [], "labels": [], "surfaces": []}
 	_collect(get_tree().root)
@@ -262,7 +272,7 @@ func _collect(node: Node) -> void:
 			ancestor = ancestor.get_parent()
 		if visible:
 			if node is Button:
-				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled, "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size")})
+				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled, "picture": node.picture if node.has_method("has_picture") else {}, "drawn":node.has_picture() if node.has_method("has_picture") else false, "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size")})
 			elif (node is Label or node is RichTextLabel) and not node.text.is_empty():
 				last_report.labels.append({"text": node.text, "rect": _rect(node), "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size") if node is Label else node.get_theme_font_size("normal_font_size")})
 			if node is PanelContainer or node is Panel:
@@ -275,3 +285,25 @@ func _collect(node: Node) -> void:
 
 func _publish_raw() -> void:
 	if OS.has_feature("web"): JavaScriptBridge.eval("window.surfaceReport=" + JSON.stringify(last_report), true)
+
+func _probe(mode: String) -> void:
+	is_ready = false; _publish()
+	if not is_instance_valid(probe_floor):
+		probe_floor = game.world._box(game.world, Vector3(0,7,-6), Vector3(12,.1,12), Color("a2b67a"))
+		probe_floor.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		sun_probe = game.world._box(game.world, Vector3(0,8.05,-6), Vector3(.7,2,.7), Color("6e645a"))
+	probe_floor.show(); sun_probe.visible = mode == "shadow"
+	if mode == "winter":
+		probe_winter = true
+		game.world.set_calendar(3,3,75); game.world._season_blend = 1
+		game.world.set_day_time(74,true); game.world.set_day_time(75,true)
+		game.world._animate_sun(3); game.world._animate_sun(.4)
+		var material: ShaderMaterial = game.world.visuals.snow_ground.material_override.duplicate()
+		material.set_shader_parameter("ground_surface",false)
+		probe_floor.material_override = material
+	else:
+		if not probe_winter: probe_floor.material_override = game.world._mat(Color("a2b67a"))
+	var light: Vector3 = game.world._sun.global_basis.z
+	probe_point = Vector3(0,7.05,-6)-Vector3(light.x,0,light.z)*1.2/light.y
+	for frame in range(12): await get_tree().process_frame
+	is_ready = true; _publish()

@@ -23,7 +23,7 @@ func settle() -> void:
 
 func inside(control: Control, label: String) -> void:
 	var bounds: Rect2 = game.hud.root.get_global_rect().grow(0.5)
-	check(bounds.encloses(control.get_global_rect()), label + " remains inside the game canvas")
+	check(bounds.encloses(control.get_global_rect()), label + " remains inside the game canvas: " + str(control.get_global_rect()) + " within " + str(bounds))
 
 func shot(label: String) -> void:
 	if capture:
