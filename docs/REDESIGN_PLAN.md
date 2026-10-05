@@ -1653,6 +1653,31 @@ F. The hook (kept from the earlier draft): a break-even target card
    profitable year and the best year yet; the epilogue adds one
    sentence drawn from the run's largest avoidable loss; region choice
    at new run (Valley, Shores, Frosthollow) and one rare event per run.
+F2. Price years. The first tester's verdict was "no motivation, only
+   pain"; the economy has no upside. Real farming has one: a shortage
+   somewhere else and prices spike for a season. Add it as a rare,
+   honest event, not a system.
+   1. A price year hits one variety for one season. Up: the market
+      price is 3x base. Down: a glut, 0.5x base. Up and down are
+      separate rolls; an up roll about once every three years on
+      average, a down roll about once every four. Some runs get none.
+      Never guaranteed, never triggered by the player, never two in
+      the same year.
+   2. Every one has a cause in one newspaper line: "Floods in the east.
+      Golden potatoes scarce." or "Record harvest everywhere. Russet
+      prices collapse." Iris tips it the season before 60% of the
+      time, like the weather; the rest arrive unannounced.
+   3. Only held stock benefits or suffers: the season is over before a
+      crop planted into it is ripe. That is the point: it makes "Store
+      for Winter" a real bet with a reason.
+   4. The Spring target card and the Winter stores lines show the
+      current multiplier as plain words ("Golden · scarce · 3x") and
+      nothing else changes on screen. No meter, no countdown.
+   5. Bot: re-run all strategies. Survival must not change by more
+      than one seed per strategy and tidy's mean stays under the
+      320,000 ceiling; if it does not, lower the frequency, never
+      raise the cap. Ledger labels unchanged: the sale posts at the
+      actual price under the existing sales label.
 G. Not allowed: login rewards, offline timers, anything bought with
    money, price multipliers that compound.
 
