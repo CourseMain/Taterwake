@@ -1585,6 +1585,18 @@ M. Cuter. The farm is already round and friendly; the interface and
       shown as the page header when their page opens.
    6. Nothing in this part may add text, cover a tap target, or play a
       sound within two seconds of another.
+   7. The weather station and the tree in front of it look generated:
+      flat, unshadowed, floating. Rebuild both as hand-placed objects:
+      the station is a small timber hut with a dish on a pole, a
+      hinged sign on two posts (wood grain, chipped paint, a hanging
+      chain), and it casts and receives shadows like every other
+      building. The tree moves two metres to the side so it never
+      covers the station from the play camera, gets a trunk that
+      enters the ground with a baked contact shade, and a canopy with
+      three overlapping lobes instead of one blob. Same treatment for
+      any other sign that floats: Contracts, the field name boards, the
+      pier board. Screenshot the station from the play camera at noon
+      and dusk.
 
 Done when: a fresh Web launch reaches the farm every time, the guided
 year shows one card at a time with nothing else on screen until needed,
