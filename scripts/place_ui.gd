@@ -16,10 +16,10 @@ static func pill(button: Button, accent: Color, primary: bool = false) -> void:
 		if state == "hover": fill = fill.lightened(.08)
 		if state == "pressed": fill = fill.darkened(.07)
 		if state == "disabled": fill = Color("e6dfcd")
-		button.add_theme_stylebox_override(state, Cozy.box(fill, 10, 100, accent if primary else Color("cfc3aa")))
+		button.add_theme_stylebox_override(state, Cozy.box(fill, 10, 999, accent if primary else Color("cfc3aa")))
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: button.add_theme_color_override(state, PAPER if primary else INK)
 	button.add_theme_color_override("font_disabled_color", MUTED)
-	button.add_theme_stylebox_override("focus", Cozy.box(Color.TRANSPARENT, 10, 100, INK))
+	button.add_theme_stylebox_override("focus", Cozy.box(Color.TRANSPARENT, 10, 999, INK))
 static func header(hud, parent: Control, title: String, accent: Color, keeper: String = "") -> HBoxContainer:
 	hud._modal_title.hide(); hud._modal_subtitle.hide()
 	var panel := PanelContainer.new()
@@ -27,20 +27,23 @@ static func header(hud, parent: Control, title: String, accent: Color, keeper: S
 	panel.add_theme_stylebox_override("panel", skin(accent, 12, 3, accent))
 	parent.add_child(panel)
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 12); panel.add_child(row)
-	var label: Label = hud._wrap(title, 27, PAPER, true)
+	var label: Label = hud._wrap(title if keeper.is_empty() else hud._state.NpcRoster.service_greeting(keeper, hud._state), 22, PAPER, true)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(label)
 	if not keeper.is_empty():
 		var portrait = preload("res://scripts/npc_portrait.gd").new()
 		portrait.name = "KeeperPortrait_" + keeper
 		portrait.custom_minimum_size = Vector2(52, 64); row.add_child(portrait)
 		portrait.show_person(keeper)
+		if hud._tutorial.is_empty():
+			var talk: Button = hud._button("Talk", "talk:" + keeper)
+			row.add_child(talk)
 	return row
 static func tab(button: Button, selected: bool) -> void:
 	# Navigation stays cream; ink outlines identify the visible shelf or board.
 	pill(button, INK)
 	button.toggle_mode = true
 	button.set_pressed_no_signal(selected)
-	var active := Cozy.box(Color("e9e6d5"), 10, 100, INK)
+	var active := Cozy.box(Color("e9e6d5"), 10, 999, INK)
 	active.set_border_width_all(2)
 	button.add_theme_stylebox_override("pressed", active)
 static func help(hud, parent: Control, words: String) -> Button:

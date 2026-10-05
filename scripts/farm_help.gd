@@ -67,19 +67,19 @@ func refresh_pests(farm: Node) -> void:
 func tip(farm: Node) -> Dictionary:
 	if not data.enabled or data.hidden or farm.tutorial_active or farm.run_over: return {}
 	if int(data.pest_phase) == 1 and unseen("pests"):
-		return _tip("pests", "Pests on your potatoes", "Press 5, then click an infested bed. This first group cannot damage crops. Later pests eat a third every 5 seconds.", "Equip sprayer [5]", "tool:pest")
+		return _tip("pests", "Pests on your potatoes", "Tap the sprayer, then the bed with bugs.", "Tap the sprayer", "tool:pest")
 
 	if int(data.independent) < 4:
 		if unseen("repeat"):
 			return _tip("repeat", "Next harvest", "Hoe → plant → water → harvest → sell.", "Go farming", "dismiss")
 		return {}
 	if unseen("ducks") and is_instance_valid(farm.activity_system) and farm.activity_system.duck_count() == 0 and farm.coins >= farm.activity_system.duck_hire_cost():
-		return _tip("ducks", "A helper you can afford", "Duck Patrol can clear pests while you farm. Hiring costs %s. Keep enough for seeds." % farm.money(farm.activity_system.duck_hire_cost()), "Browse Duck Patrol", "duck_patrol")
+		return _tip("ducks", "A helper you can afford", "Duck Patrol can clear pests while you farm. Hiring costs %s. Keep enough for seeds." % farm.money(farm.activity_system.duck_hire_cost()), "Got it", "dismiss")
 	if unseen("tools"):
 		for tool: String in ["hoe", "water", "harvest"]:
 			var rank: int = int(farm.tools[tool])
 			if rank < 3 and farm.coins >= float(farm.TOOL_COSTS[tool][rank]):
-				return _tip("tools", "Work more beds per click", "A %s upgrade is within reach at %s. Click the toolsmith or press U to compare its area and cost." % [tool, farm.money(farm.TOOL_COSTS[tool][rank])], "Browse upgrades [U]", "tools")
+				return _tip("tools", "Work more beds per click", "A %s upgrade costs %s at the Tools shed." % [tool, farm.money(farm.TOOL_COSTS[tool][rank])], "Got it", "dismiss")
 	return {}
 
 func _tip(id: String, title: String, body: String, label: String, action: String) -> Dictionary:

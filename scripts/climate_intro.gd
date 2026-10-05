@@ -123,7 +123,7 @@ func present(farm) -> void:
 	last_net.text = farm.money(farm.ledger.total(year - 1))
 	super.start(chapter.text)
 	_update_presentation()
-	voice.begin_line("iris", forecaster.text.length())
+	voice.begin_page("iris")
 func stop() -> void:
 	if is_instance_valid(voice): voice.stop()
 	if is_instance_valid(portrait): portrait.hide()

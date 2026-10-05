@@ -18,7 +18,7 @@ const FALSE_ALARM_CHANCE: float = Balance.CLIMATE_FALSE_ALARM_CHANCE
 const ANNUAL_CAP: int = Balance.CLIMATE_ANNUAL_CAP
 const SEASON_EVENTS: Array = [["flood", "freeze"], ["drought", "storm"], ["storm", "flood"], ["deep_freeze", "blizzard"]]
 const WINTER_LOSS: Dictionary = Balance.CLIMATE_WINTER_LOSS
-const GUIDED_WARNING_SECONDS: float = 8.0
+const GUIDED_WARNING_SECONDS: float = 30.0
 const WARNING_SECONDS: float = 45.0
 const ACTIVE_SECONDS: float = 30.0
 const RECOVERY_SECONDS: float = 75.0
@@ -239,7 +239,7 @@ func info(farm) -> Dictionary:
 	result.rescued = data.operations.rescued.size()
 	result.available = true
 	result.forecast = Protection.forecast(farm)
-	result.name = "SMALL SUMMER STORM" if farm.guided_first_year() and data.event == "storm" else str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
+	result.name = "A small storm is coming" if farm.guided_first_year() and data.event == "storm" else str(EVENTS.get(data.event, {}).get("name", "CALM WEATHER"))
 	for index in range(farm.plots.size()):
 		if bool(farm.plots[index].get("winter_ice", false)): result.operations.ice[str(index)] = true
 	result.frozen_crops = result.operations.ice.size()

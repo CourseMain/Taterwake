@@ -77,20 +77,6 @@ func setup(owner_hud, sell_page: bool) -> void:
 	_layout.call_deferred()
 
 func _build_navigation() -> void:
-	# Both counters belong to Mara. Keep their tabs above the scrolling contents.
-	hud._modal_market_nav.show()
-	var group := ButtonGroup.new()
-	for mode in [false, true]:
-		var action: String = "sell_potatoes" if mode else "market"
-		var button := _local_button("Sell" if mode else "Buy", action, func():
-			if hud._panel_kind != action: hud._act(action))
-		button.name = "ShopSell" if mode else "ShopBuy"
-		button.toggle_mode = true
-		button.button_group = group
-		button.set_pressed_no_signal(mode == selling)
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		Place.pill(button, ACCENT, mode == selling)
-		hud._modal_market_nav.add_child(button)
 	tabs = HBoxContainer.new()
 	add_child(tabs)
 	tabs.hide()
@@ -122,7 +108,7 @@ func _build_buy() -> void:
 	Seeds.build(self)
 
 func _build_sell() -> void:
-	Place.header(hud, self, "MARA’S SHOP", ACCENT, "mara")
+	Place.header(hud, self, "THE BARN", ACCENT)
 	var help_row := HBoxContainer.new(); add_child(help_row)
 	storage_note = _label("", 14, Place.PAPER)
 	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
@@ -160,6 +146,10 @@ func _build_sell() -> void:
 	trade_open = hud._tutorial.get("id", "") == "sell"
 	seed_button = _local_button("Keep 1 t as seed", "market_keep_seed", func(): hud._act("keep_seed:" + selected + ":" + selected_grade))
 	footer.get_child(0).add_child(seed_button)
+	var seed_capacity: Label = _label("", 14, MUTED)
+	seed_capacity.name = "CropSeedCapacity"
+	footer.get_child(0).add_child(seed_capacity)
+	seed_button.set_meta("capacity_label", seed_capacity)
 
 func stock(crop: String, grade: String = "") -> int:
 	return hud._state.Stock.count(hud._state.trading.held, crop, grade) if stored_mode else hud._state.trading.fresh_count(hud._state, crop, grade)
@@ -281,11 +271,6 @@ func _layout() -> void:
 	for button: Node in tabs.get_children():
 		button.custom_minimum_size.y = hud.touch_target() if touch else 46
 		button.add_theme_font_override("font", _body_font)
-	for button: Button in hud._modal_market_nav.get_children():
-		button.custom_minimum_size = Vector2(hud.touch_target() if touch else 46, hud.touch_target() if touch else 46)
-		button.add_theme_font_override("font", _body_font)
-		button.add_theme_font_size_override("font_size", 22 if touch else 18)
-		button.set_pressed_no_signal((button.get_meta("action") == "sell_potatoes") == selling)
 	if not selling:
 		Seeds.layout(self, available_width, touch)
 	else:
@@ -351,6 +336,9 @@ func refresh() -> void:
 	storage_note.visible = state.season_clock.season == 3
 	hud._modal_trade_footer.visible = trade_open
 	seed_button.visible = state.season_clock.season == 3 and selected_grade != "Feed" and state.stock_count(selected, selected_grade) > 0
+	var seed_capacity: Label = seed_button.get_meta("capacity_label")
+	seed_capacity.visible = seed_button.visible
+	seed_capacity.text = "%s: keep up to %d t" % [State.CropTable.CROPS[selected].name.trim_suffix(" Potato"), preload("res://scripts/farm_advice.gd").seed_capacity(state, selected)]
 	seed_button.disabled = state.seed_inventory[selected] + state.trading.kept_seed[selected] >= State.MAX_INVENTORY
 	payout.text = state.market_money(price * amount) if quantity.valid and amount > 0 else state.money(0)
 	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])

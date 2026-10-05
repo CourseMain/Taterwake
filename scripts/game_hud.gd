@@ -96,7 +96,8 @@ var _top: Dictionary = {}
 var _crop_buttons: Dictionary = {}
 var _tool_buttons: Dictionary = {}
 var _selected_tool: String = "hoe"
-var _crop_detail: Label
+var _context_cue: Control
+var _wait_cue: Control
 var _context: Label
 var _barn_full_alert: PanelContainer
 var _barn_full_detail: Label
@@ -118,10 +119,10 @@ var _reward_detail: Label
 var _reward_rarity: Label
 var _reward_timer: Timer
 var _modal: Control
+var _modal_close: Button
 var _modal_title: Label
 var _modal_subtitle: Label
 var _body: VBoxContainer
-var _modal_market_nav: HBoxContainer
 var _modal_trade_footer: VBoxContainer
 var _modal_fixed: VBoxContainer
 var _panel_kind: String = ""
@@ -131,8 +132,6 @@ var _displayed_calendar: String = ""
 var _sell_crop: String = ""
 var _refs: Dictionary = {}
 var _reset_pending: bool = false
-var _sidebar_box: PanelContainer
-var _quest_button: Button
 var _panel_crops: Array[String] = []
 var _tool_caption: Label
 var _context_box: PanelContainer
@@ -141,13 +140,13 @@ var _context_layout_key: String = ""
 var _farm_hint: String = ""
 var _farm_hint_remaining: float = 0.0
 var _farm_busy_remaining: float = 0.0
+var _money_symbol: Label
 var _play_band: PanelContainer
 var _quick_sell: Button
 var _modal_card: PanelContainer
 var _crop_row: BoxContainer
 var _crop_defs: Dictionary = {}
 var _inventory_sections: Dictionary = {}
-var _inventory_tab: String = "crops"
 var _inventory_signature: String = ""
 var _price_moves: Dictionary = {}
 var _hud_clock: float = 0.0
@@ -162,12 +161,11 @@ var _tutorial_forecaster: Control
 var _tutorial_title: Label
 var _tutorial_body: Label
 var _tutorial_feedback: Label
-var _tutorial_progress: Label
+var _tutorial_cue: Control
 var _tutorial_next: Button
 var _tutorial_skip: Button
 var _tutorial_key: Label
 var _tutorial_icon: Control
-var _tutorial_meter: ProgressBar
 var _tutorial_exit_box: VBoxContainer
 var _tutorial_exit_pending: bool = false
 var _tutorial_pointer: Control
@@ -191,22 +189,29 @@ var _panel_source: String = ""
 var _panel_source_tick: int = 0
 var _entrance_offset := Vector2.ZERO
 var _entrance_request: int = 0
-var _hurry_badge: PanelContainer
-var hurry_active: bool = false
 var _climate_console: PanelContainer
 var _weather_button: Button
 var _climate_alert: Control
 var _climate_effect: Control
 var _collapse_hidden: Array[CanvasItem] = []
 var _panel_hidden: Array[CanvasItem] = []
-var _season_strip: Control
+var _season_strip: Button
 var _spring_target: PanelContainer
 var _season_jobs: PanelContainer
 var last_screenshot_path: String = ""
+var _ui_scale: float = 1.0
+var _text_fit_clock: float = 0.0
+var _wait_card: PanelContainer
+var _wait_label: Label
 
 func _process(delta: float) -> void:
 	advance_panel_entrance(delta)
-	_update_hurry_badge()
+	_layout_top()
+	_update_wait_card()
+	_text_fit_clock += delta
+	if _text_fit_clock >= .2:
+		_text_fit_clock = 0
+		fit_text(root)
 	_hud_clock += delta
 	_help_cooldown = maxf(0.0, _help_cooldown - delta)
 	_farm_hint_remaining = maxf(0.0, _farm_hint_remaining - delta)
@@ -224,23 +229,28 @@ func _process(delta: float) -> void:
 			_purchase_receipt.clear()
 	if not _tutorial.is_empty():
 		_apply_tutorial_visibility()
+		_tutorial_card.visible = not is_panel_open()
 		_update_tutorial_pointer()
 		_sync_panel_chrome()
 		return
 	_sync_panel_chrome()
 
 func _sync_panel_chrome() -> void:
-	if not is_panel_open():
+	if not farm_page_open():
 		for child in _panel_hidden:
 			if is_instance_valid(child): child.show()
 		_panel_hidden.clear()
 		return
 	for child in root.get_children():
 		if not child is CanvasItem or child in [_modal, _run_end, _climate_effect, _tutorial_pointer, _purchase_box, _toast_box, _reward_box]: continue
-		if child == _tutorial_card or (child is Control and child.is_ancestor_of(_tutorial_card)): continue
+		if is_panel_open() and (child == _tutorial_card or (child is Control and child.is_ancestor_of(_tutorial_card))): continue
 		if child.visible:
 			if child not in _panel_hidden: _panel_hidden.append(child)
 			child.hide()
+
+func farm_page_open() -> bool:
+	var conversation = get_parent().get("conversation")
+	return is_panel_open() or (is_instance_valid(conversation) and conversation.visible)
 
 func _refresh_seed_visibility() -> void:
 	var showing: bool = _selected_tool == "plant" and not is_panel_open() and (_tutorial.is_empty() or "plant" in _tutorial.get("tools", []))
@@ -279,20 +289,19 @@ func build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var theme: Theme = Theme.new()
 	theme.default_font = _font
-	theme.default_font_size = 15
+	theme.default_font_size = 16
 	root.theme = theme
 	add_child(root)
 	_climate_effect = load("res://scripts/climate_effect.gd").new()
 	root.add_child(_climate_effect)
 	_build_top()
-	_build_hurry_badge()
+	_build_wait_card()
 	_season_jobs = preload("res://scripts/season_jobs.gd").new()
 	root.add_child(_season_jobs)
 	_season_jobs.setup(self)
 	_spring_target = preload("res://scripts/spring_target.gd").new()
 	root.add_child(_spring_target)
 	_spring_target.setup(self)
-	_build_sidebar()
 	_build_footer()
 	_build_notices()
 	_build_modal()
@@ -324,8 +333,8 @@ func _update_weather_ui() -> void:
 	_tool_buttons.water.tooltip_text = "Watering can: %d / %d water. Each watered bed uses 1. Click the tank to refill." % [floori(climate.supply.can), int(climate.can_capacity)]
 	_climate_console.refresh(climate, is_panel_open() or bool(_state.run_over) or not _tutorial.is_empty())
 	_climate_effect.set_weather(climate, bool(_state.run_over) or (not _tutorial.is_empty() and not _state.guided_first_year()))
-	_weather_button.visible = _tutorial.is_empty() and not is_panel_open() and not _state.run_over
-	_weather_button.text = "Weather & protection →" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
+	_weather_button.visible = (_tutorial.is_empty() or "climate" in _tutorial.get("features", [])) and not is_panel_open() and not _state.run_over
+	_weather_button.text = "Weather" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
 	var game = get_parent()
 	if game.has_method("title_active") and game.title_active():
 		_run_end.hide()
@@ -363,7 +372,7 @@ func _refresh_climate() -> void:
 	if _refs.has("weather_page"): _refs.weather_page.refresh()
 
 func _build_tutorial() -> void:
-	_tutorial_card = _card(Color("17382d"), 15)
+	_tutorial_card = _card(Color(1, .984, .929, .88), 10)
 	_tutorial_card.name = "FirstIslandGuide"
 	_tutorial_card.mouse_filter = Control.MOUSE_FILTER_STOP
 	_place(_tutorial_card, Rect2(28, 108, 219, 0))
@@ -372,10 +381,11 @@ func _build_tutorial() -> void:
 	_tutorial_card.add_child(contents)
 	var top_row: BoxContainer = _hbox(2)
 	contents.add_child(top_row)
-	_tutorial_progress = _label("YOUR FIRST FARM", 11, GOLD, true)
-	_tutorial_progress.add_theme_font_override("font", _compact_heading_font())
-	_tutorial_progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top_row.add_child(_tutorial_progress)
+	_tutorial_cue = preload("res://scripts/hint_cue.gd").new()
+	top_row.add_child(_tutorial_cue)
+	var guide_space := Control.new()
+	guide_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_row.add_child(guide_space)
 	var graphics: Button = _button("⚙", "graphics")
 	graphics.name = "TutorialGraphics"
 	graphics.tooltip_text = "Graphics · smoother play"
@@ -394,16 +404,11 @@ func _build_tutorial() -> void:
 		_tutorial_skip.add_theme_stylebox_override(style_name, _style(Color("29493b") if style_name != "normal" else Color.TRANSPARENT, 0, 5))
 		_tutorial_skip.add_theme_color_override("font_" + ("color" if style_name == "normal" else style_name + "_color"), Color("acbfae"))
 	top_row.add_child(_tutorial_skip)
-	_tutorial_meter = ProgressBar.new()
-	_tutorial_meter.custom_minimum_size.y = 5
-	_tutorial_meter.show_percentage = false
-	_tutorial_meter.add_theme_stylebox_override("background", _style(Color("305140"), 0, 3))
-	_tutorial_meter.add_theme_stylebox_override("fill", _style(GOLD, 0, 3))
-	contents.add_child(_tutorial_meter)
 	_tutorial_icon = _icon({"kind": "crop", "crop": "russet"}, 54)
+	_tutorial_icon.custom_minimum_size = Vector2(30, 30)
 	_tutorial_icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	contents.add_child(_tutorial_icon)
-	_tutorial_title = _wrap("Welcome home", 21, CREAM, true)
+	_tutorial_title = _wrap("Welcome home", 21, INK, true)
 	_tutorial_title.add_theme_font_override("font", _compact_heading_font())
 	var speaker := HBoxContainer.new()
 	speaker.add_theme_constant_override("separation", 10)
@@ -415,11 +420,8 @@ func _build_tutorial() -> void:
 	_tutorial_forecaster.hide()
 	_tutorial_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	speaker.add_child(_tutorial_title)
-	_tutorial_body = _wrap("", 15, Color("e2ead9"))
-	var guide_font: FontVariation = FontVariation.new()
-	guide_font.base_font = UI_FONT
-	guide_font.variation_opentype = _font.variation_opentype
-	_tutorial_body.add_theme_font_override("font", guide_font)
+	_tutorial_body = _wrap("", 15, INK)
+	_tutorial_body.add_theme_font_override("font", Type.face(Type.DISPLAY, 500))
 	contents.add_child(_tutorial_body)
 	_tutorial_feedback = _wrap("", 13, GOLD)
 	contents.add_child(_tutorial_feedback)
@@ -457,6 +459,7 @@ func set_tutorial(info: Dictionary) -> void:
 		build_ui()
 	_restore_tutorial_buttons()
 	if info.get("step", -1) != _tutorial.get("step", -1):
+		_tutorial_cue.restart()
 		_tutorial_exit_pending = false
 		_tutorial_feedback.text = ""
 		_tutorial_feedback.hide()
@@ -467,8 +470,7 @@ func set_tutorial(info: Dictionary) -> void:
 		_tutorial_pointer.hide()
 		_stats_card.show()
 		_stats_card.size.x = 763.0
-		for key: String in ["coins", "market_name"]:
-			_top[key].get_parent().show()
+		_season_strip.show()
 		_menu_button.show()
 		_hotbar.show()
 		for button: Button in _tool_buttons.values():
@@ -479,12 +481,12 @@ func set_tutorial(info: Dictionary) -> void:
 		set_context(_context.text)
 		_refresh_seed_visibility()
 	else:
-		_tutorial_progress.text = ("VALLEY TOUR" if info.get("tour_only", false) else "FIRST YEAR") + "  ·  %d / %d" % [int(info.get("step", 1)), int(info.get("total", 1))]
 		_tutorial_forecaster.visible = bool(info.get("forecaster", false))
 		_tutorial_title.text = str(info.get("title", "Your first farm"))
 		_tutorial_body.text = str(info.get("body", ""))
 		_tutorial_next.text = str(info.get("continue_label", "Next stop →")) if bool(info.get("continue", false)) else "Click the gold bed" if str(info.get("focus", "")).begins_with("plot:") else "Follow the gold marker"
 		_tutorial_next.disabled = not bool(info.get("continue", false))
+		_tutorial_next.visible = bool(info.get("continue", false))
 		if info.get("id") == "inventory" and not bool(info.get("continue", false)):
 			_tutorial_next.text = "Open bag [I] →"
 			_tutorial_next.disabled = false
@@ -493,8 +495,7 @@ func set_tutorial(info: Dictionary) -> void:
 		elif info.get("id") in ["grow", "winter"]:
 			_tutorial_next.text = str(info.get("wait_label", "Work on the other beds"))
 		_tutorial_key.text = str(info.get("key", ""))
-		_tutorial_key.visible = not _tutorial_key.text.is_empty()
-		_tutorial_meter.value = 100.0 * float(info.get("step", 1)) / maxf(1.0, float(info.get("total", 20)))
+		_tutorial_key.hide()
 		var tool: String = str(info.get("tool", ""))
 		var activity: String = "duck" if info.get("id") == "ducks" else ""
 		_tutorial_icon.item = {"kind": "tool", "id": tool} if not tool.is_empty() else ({"kind": "activity", "id": activity} if not activity.is_empty() else {"kind": "crop", "crop": "russet"})
@@ -504,9 +505,6 @@ func set_tutorial(info: Dictionary) -> void:
 		_reward_timer.stop()
 		_apply_tutorial_visibility()
 	if is_panel_open():
-		if _panel_kind in ["barn", "inventory"] and _first_harvest_barn():
-			_inventory_tab = "crops"
-			_set_inventory_tab()
 		if _panel_kind in ["pause", "menu"] or (_panel_kind == "market" and _panel_crops != _market_crops()):
 			show_panel(_panel_kind, _state)
 		else:
@@ -541,6 +539,7 @@ func _apply_tutorial_buttons() -> void:
 	for node: Node in root.find_children("*", "Button", true, false):
 		if not node.has_meta("hud_action"):
 			continue
+		if _panel_kind == "farmer" and _modal_card.is_ancestor_of(node): continue
 		if not _tutorial_allows(str(node.get_meta("hud_action"))):
 			if not node.has_meta("tutorial_disabled"):
 				node.set_meta("tutorial_disabled", node.disabled)
@@ -553,14 +552,11 @@ func _apply_tutorial_visibility() -> void:
 		return
 	var features: Array = _tutorial.get("features", [])
 	var tools: Array = _tutorial.get("tools", [])
-	_stats_card.visible = "coins" in features or "stock" in features
-	_top.coins.get_parent().visible = "coins" in features
-	_top.market_name.get_parent().visible = "stock" in features
-	var revealed_stats: int = int("coins" in features) + int("stock" in features)
-	_stats_card.size.x = 763.0 if revealed_stats >= 3 else (510.0 if revealed_stats == 2 else 225.0)
-	if "stock" in features:
-		_top.market_name.text = "POTATO PRICES"
+	_stats_card.visible = "coins" in features
+	_tutorial_card.visible = not is_panel_open()
+	_season_strip.visible = "calendar" in features
 	_menu_button.visible = "menu" in features
+	_weather_button.visible = "climate" in features and not is_panel_open()
 	_hotbar.visible = not tools.is_empty()
 	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 92.0 + maxi(0, tools.size() - 1) * 6.0)
 	_hotbar.offset_left = -hotbar_width * 0.5
@@ -570,15 +566,14 @@ func _apply_tutorial_visibility() -> void:
 	if "stock" not in features:
 		for crop: String in _crop_buttons:
 			_crop_buttons[crop].visible = crop == "russet"
-	_quick_sell.visible = "market" in features and "harvest" in tools
-	_sidebar_box.hide()
+	_quick_sell.visible = "barn" in features and not is_panel_open()
 	_context_box.hide()
 	_toast_box.hide()
 	_reward_box.hide()
 	_refresh_seed_visibility()
 	var touch = get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
-		_tutorial_next.visible = not _tutorial_exit_pending
+		_tutorial_next.visible = not _tutorial_exit_pending and bool(_tutorial.get("continue", false))
 		_tutorial_exit_box.visible = _tutorial_exit_pending
 		_tutorial_card.move_to_front()
 		return
@@ -590,12 +585,12 @@ func _apply_tutorial_visibility() -> void:
 	var available_width: float = _modal_card.position.x - 44.0 if is_panel_open() else 219.0
 	var card_width: float = minf(219.0, maxf(138.0, available_width))
 	# progress label and exit controls cannot force a 214px overlap.
-	(_tutorial_progress.get_parent() as BoxContainer).vertical = card_width < 210
-	_tutorial_card.position = Vector2(28.0, 108.0)
+	(_tutorial_cue.get_parent() as BoxContainer).vertical = false
+	_tutorial_card.position = Vector2(28.0, 136.0)
 	_tutorial_title.custom_minimum_size.x = card_width - 30.0
 	_tutorial_body.custom_minimum_size.x = card_width - 30.0
 	_tutorial_card.size = Vector2(card_width, 0.0)
-	_tutorial_next.visible = not _tutorial_exit_pending
+	_tutorial_next.visible = not _tutorial_exit_pending and bool(_tutorial.get("continue", false))
 	_tutorial_exit_box.visible = _tutorial_exit_pending
 	if _tutorial_card.get_index() != root.get_child_count() - 1:
 		_tutorial_card.move_to_front()
@@ -611,7 +606,7 @@ func _update_tutorial_pointer() -> void:
 	elif not _tutorial_next.disabled:
 		target = _tutorial_next
 	elif is_panel_open():
-		var sale_action: String = "market_sell" if _panel_kind == "sell_potatoes" else "sell_potatoes"
+		var sale_action: String = "market_sell" if _panel_kind == "barn" else "barn"
 		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else (sale_action if _tutorial.get("id") == "sell" else "")
 		for node: Node in _modal_card.find_children("*", "Button", true, false):
 			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
@@ -623,7 +618,7 @@ func _update_tutorial_pointer() -> void:
 func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = Color.TRANSPARENT) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
-	style.set_corner_radius_all(mini(radius, 5))
+	style.set_corner_radius_all(radius)
 	style.content_margin_left = padding
 	style.content_margin_right = padding
 	style.content_margin_top = padding
@@ -636,7 +631,8 @@ func _style(color: Color, padding: int = 14, radius: int = 14, border: Color = C
 func _label(text: String, size: int = 15, color: Color = INK, bold: bool = false) -> Label:
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", size)
+	label.set_meta("text_tier", 22 if bold and size >= 17 else (14 if size <= 14 else 16))
+	label.add_theme_font_size_override("font_size", text_pixels(int(label.get_meta("text_tier"))))
 	label.add_theme_color_override("font_color", color)
 	if bold:
 		label.add_theme_font_override("font", _heading_font)
@@ -732,7 +728,8 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 	button.set_meta("action", action)
 	button.custom_minimum_size.y = 44
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	button.add_theme_font_size_override("font_size", 14)
+	button.set_meta("text_tier", 16)
+	button.add_theme_font_size_override("font_size", text_pixels(16))
 	button.add_theme_font_override("font", _heading_font)
 	button.add_theme_color_override("font_color", CREAM if primary else INK)
 	button.add_theme_color_override("font_hover_color", CREAM if primary else INK)
@@ -829,14 +826,6 @@ func _act(action: String) -> void:
 	if action == "menu":
 		show_panel("pause", _state)
 		return
-	if action.begins_with("inventory_tab:"):
-		var tab: String = action.get_slice(":", 1)
-		if tab not in ["crops", "tools"]: return
-		_inventory_tab = tab
-		_set_inventory_tab()
-		if is_instance_valid(_refs.get("shop_page")): _refs.shop_page.refresh()
-		(_body.get_parent() as ScrollContainer).scroll_vertical = 0
-		return
 	if action == "close":
 		close_panel()
 	elif action == "request_reset":
@@ -856,130 +845,95 @@ func _place(control: Control, rect: Rect2) -> void:
 	control.size = rect.size
 
 func _build_top() -> void:
-	_play_band = _card(INK, 0)
+	_play_band = _card(Color.TRANSPARENT, 0)
+	_play_band.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_play_band.name = "PlayHudBand"
 	_play_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place(_play_band, Rect2(0,0,1280,104))
-	_play_band.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_play_band.offset_bottom = 104
-	var brand: VBoxContainer = _vbox(0)
-	_place(brand, Rect2(88, 20, 290, 70))
-	brand.name = "FarmWordmark"
-	brand.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var wordmark: BoxContainer = _hbox(8)
-	wordmark.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	brand.add_child(wordmark)
-	wordmark.add_child(_label("TATER", 32, CREAM, true))
-	wordmark.add_child(_label("/", 32, GOLD, true))
-	wordmark.add_child(_label("LAND", 32, CREAM, true))
-	_top["season"] = _label("Year 1 · Spring", 16, INK, true)
-	brand.add_child(_top.season)
-	_top.season.hide()
-	_season_strip = preload("res://scripts/paper_detail.gd").new()
-	_season_strip.kind = "season"
-	_place(_season_strip, Rect2(88, 76, 330, 24))
-
-	var stats: PanelContainer = _card(INK, 8)
-	_stats_card = stats
-	_place(stats, Rect2(387, 21, 524, 72))
-	stats.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var row: BoxContainer = _hbox(20)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	stats.add_child(row)
-	_top["coins"] = _stat(row, "SPUDIONS", "\uE000 240", GOLD)
-	var market_box: VBoxContainer = _vbox(0)
-	market_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	market_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(market_box)
-	_top["market_name"] = _label("RUSSET MARKET", 10, CREAM.darkened(.25), true)
-	_top["price"] = _label("", 22, GREEN, true)
-	market_box.add_child(_top["market_name"])
-	var quote_row: BoxContainer = _hbox(8)
-	quote_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var price_fact := _card(CREAM, 3)
-	price_fact.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	price_fact.get_theme_stylebox("panel").set_texture_margin_all(3)
-	market_box.add_child(price_fact)
-	price_fact.add_child(quote_row)
-	quote_row.add_child(_top["price"])
-	_top["price_change"] = _label("", 16, INK, true)
-	_top.price_change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	quote_row.add_child(_top.price_change)
-	var stats_font: FontVariation = _compact_heading_font()
-	for label: Node in stats.find_children("*", "Label", true, false):
-		label.add_theme_font_override("font", stats_font)
-	stats.size.x = 763
-	_weather_button = _button("Weather & protection →", "climate")
-	_place(_weather_button, Rect2(28, 112, 302, 44))
+	_place(_play_band, Rect2(0, 0, 1280, 64))
+	_season_strip = _button("Spring · Year 1", "calendar")
+	_season_strip.name = "SeasonCalendar"
+	_transparent_top_button(_season_strip)
+	_place(_season_strip, Rect2(16, 8, 240, 48))
+	_top.season = _season_strip
+	_stats_card = _card(Color.TRANSPARENT, 0)
+	_stats_card.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_stats_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(_stats_card, Rect2(480, 8, 280, 48))
+	_top.coins = _label("", 16, GOLD, true)
+	_top.coins.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_top.coins.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var money_row := _hbox(6)
+	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	money_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stats_card.add_child(money_row)
+	_money_symbol = _label("\uE000", 16, GOLD, true)
+	_money_symbol.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	money_row.add_child(_money_symbol)
+	money_row.add_child(_top.coins)
+	for label in [_top.coins, _money_symbol]:
+		label.add_theme_color_override("font_outline_color", Color("161e18"))
+		label.add_theme_constant_override("outline_size", 2)
+	_menu_button = _button("Menu", "menu")
+	_menu_button.name = "MainMenuButton"
+	_transparent_top_button(_menu_button)
+	_place(_menu_button, Rect2(1172, 8, 92, 48))
+	_weather_button = _button("Weather", "climate")
 	_world_button(_weather_button, INK)
-	_weather_button.add_theme_font_size_override("font_size", 14)
-	var menu_button: Button = _button("", "menu")
-	_menu_button = menu_button
-	menu_button.name = "MainMenuButton"
-	menu_button.tooltip_text = "Farm menu · Debug money · Esc"
-	_place(menu_button, Rect2(1174, 21, 78, 72))
-	_world_button(menu_button, INK)
-	var menu_icon: VBoxContainer = _vbox(5)
-	menu_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	menu_button.add_child(menu_icon)
-	menu_icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	menu_icon.offset_left = -12
-	menu_icon.offset_right = 12
-	menu_icon.offset_top = -10
-	menu_icon.offset_bottom = 10
-	for _line: int in range(3):
-		var bar: ColorRect = ColorRect.new()
-		bar.color = CREAM
-		bar.custom_minimum_size.y = 3
-		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		menu_icon.add_child(bar)
-	var save: Button = _button("Save", "save")
-	save.custom_minimum_size.y = 27
-	save.add_theme_font_size_override("font_size", 12)
-	_place(save, Rect2(1154, 67, 98, 27))
-	save.hide()
+	_place(_weather_button, Rect2(28, 76, 280, 44))
+	_layout_top()
+
+func text_pixels(tier: int) -> int:
+	return ceili(float(tier) / maxf(.1, _ui_scale))
+
+func fit_text(node: Node) -> void:
+	if node is Label or node is Button or node is LineEdit or node is RichTextLabel:
+		var property: String = "normal_font_size" if node is RichTextLabel else "font_size"
+		if not node.has_meta("text_tier"):
+			var original: int = node.get_theme_font_size(property)
+			node.set_meta("text_tier", 22 if original >= 24 else (14 if original <= 14 else 16))
+		node.add_theme_font_size_override(property, text_pixels(int(node.get_meta("text_tier"))))
+	for child in node.get_children(): fit_text(child)
+
+func _layout_top() -> void:
+	if not is_instance_valid(_play_band): return
+	var touch = get_parent().get("touch_controls")
+	var phone: bool = is_instance_valid(touch) and touch.enabled
+	_ui_scale = touch.display_scale() if phone else 1.0
+	var band: float = 56.0 / _ui_scale if phone else 64.0
+	var margin: float = 6.0 / _ui_scale
+	var height: float = band - margin * 2
+	var width: float = root.size.x
+	var menu_width: float = 62.0 / _ui_scale if phone else 92.0
+	var season_width: float = 150.0 / _ui_scale if phone else 240.0
+	for control in [_play_band, _season_strip, _stats_card, _menu_button]:
+		control.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_play_band.position = Vector2.ZERO; _play_band.size = Vector2(width, band)
+	_season_strip.position = Vector2(margin, margin); _season_strip.size = Vector2(season_width, height)
+	_menu_button.position = Vector2(width - menu_width - margin, margin); _menu_button.size = Vector2(menu_width, height)
+	_stats_card.position = Vector2(season_width + margin * 2, margin)
+	_stats_card.size = Vector2(maxf(0, width - season_width - menu_width - margin * 4), height)
+	for label in [_season_strip, _menu_button]: label.set_meta("text_tier", 14 if phone else 16)
+	for label in [_top.coins, _money_symbol]: label.set_meta("text_tier", 22 if phone else 28)
+	fit_text(_play_band); fit_text(_season_strip); fit_text(_stats_card); fit_text(_menu_button)
+	_money_symbol.rotation = sin(_hud_clock * 1.1) * .025
+	_money_symbol.pivot_offset = _money_symbol.size * .5
+	_money_symbol.add_theme_constant_override("outline_size", ceili(2 / _ui_scale))
+	_top.coins.add_theme_constant_override("outline_size", ceili(2 / _ui_scale))
+	_weather_button.position = Vector2(16, band + 12)
+
+func _transparent_top_button(button: Button) -> void:
+	for variant in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(variant, StyleBoxEmpty.new())
+	for variant in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
+		button.add_theme_color_override(variant, CREAM)
+	button.add_theme_color_override("font_outline_color", Color("161e18"))
+	button.add_theme_constant_override("outline_size", 2)
 
 func _world_button(button: Button, tone: Color) -> void:
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		button.add_theme_stylebox_override(state, Cozy.paper(tone.lightened(.12) if state == "hover" else tone.darkened(.08) if state == "pressed" else tone, 10, 5))
 	for property: String in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
 		button.add_theme_color_override(property, CREAM.darkened(.3) if property == "font_disabled_color" else CREAM)
-
-func _build_hurry_badge() -> void:
-	_hurry_badge = _card(CREAM, 6)
-	_hurry_badge.name = "HurryBadge"
-	_hurry_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hurry_badge.z_index = 200
-	var badge: Label = _label("3×", 16, INK, true)
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hurry_badge.add_child(badge)
-	_place(_hurry_badge, Rect2(338, 112, 46, 28))
-	_hurry_badge.hide()
-
-func set_hurry_active(active: bool) -> void:
-	hurry_active = active
-	_update_hurry_badge()
-
-func _update_hurry_badge() -> void:
-	if not is_instance_valid(_hurry_badge): return
-	var touch = get_parent().get("touch_controls")
-	var phone: bool = is_instance_valid(touch) and touch.enabled
-	# Touch shows the badge in its held field button. A keyboard can still
-	# hurry an ordinary phone menu, where the field controls are hidden.
-	_hurry_badge.visible = hurry_active and (not phone or is_panel_open()) and is_instance_valid(_state) and not _state.run_over
-	if not _hurry_badge.visible: return
-	var badge: Label = _hurry_badge.get_child(0)
-	if phone:
-		var scale: float = minf(float(get_tree().root.size.x) / root.size.x, float(get_tree().root.size.y) / root.size.y)
-		var extent := Vector2(46, 28) / maxf(.1, scale)
-		_hurry_badge.position = Vector2(root.size.x - extent.x - 22, 24)
-		_hurry_badge.size = extent
-		badge.add_theme_font_size_override("font_size", ceili(16 / maxf(.1, scale)))
-	else:
-		_hurry_badge.position = Vector2(338, 112)
-		_hurry_badge.size = Vector2(46, 28)
-		badge.add_theme_font_size_override("font_size", 16)
 
 func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> Label:
 	var box: VBoxContainer = _vbox(0)
@@ -991,18 +945,6 @@ func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> 
 	number.add_theme_stylebox_override("normal", Cozy.paper(CREAM, 3, 3))
 	box.add_child(number)
 	return number
-
-func _build_sidebar() -> void:
-	_sidebar_box = _card(CREAM, 12)
-	_place(_sidebar_box, Rect2(28, 176, 219, 0))
-	_sidebar_box.hide()
-	var body: VBoxContainer = _vbox(7)
-	_sidebar_box.add_child(body)
-	_crop_detail = _wrap("Russet · 12 seeds", 16, INK, true)
-	body.add_child(_crop_detail)
-	_quest_button = _button("Quest board  [Q]", "quests")
-	_quest_button.custom_minimum_size.y = 30
-	body.add_child(_quest_button)
 
 func _build_footer() -> void:
 	_crop_row = _hbox(8)
@@ -1071,21 +1013,6 @@ func _build_footer() -> void:
 	_tool_caption.offset_bottom = -112
 	_tool_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_tool_caption.hide()
-	var nav_grid: GridContainer = GridContainer.new()
-	nav_grid.columns = 2
-	nav_grid.hide()
-	nav_grid.add_theme_constant_override("h_separation", 7)
-	nav_grid.add_theme_constant_override("v_separation", 7)
-	root.add_child(nav_grid)
-	nav_grid.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	nav_grid.offset_left = 28
-	nav_grid.offset_right = 326
-	nav_grid.offset_top = -106
-	nav_grid.offset_bottom = -21
-	for nav: Array in [["Buy Seeds [B]", "market"], ["Inventory [I]", "inventory"], ["Upgrades [U]", "tools"]]:
-		var button: Button = _button(nav[0], nav[1], nav[1] == "market")
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nav_grid.add_child(button)
 	var sell_box: VBoxContainer = _vbox(6)
 	root.add_child(sell_box)
 	sell_box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -1094,7 +1021,7 @@ func _build_footer() -> void:
 	sell_box.offset_right = -28
 	sell_box.offset_top = -66
 	sell_box.offset_bottom = -20
-	_quick_sell = _button("Sell held [F]", "quick_sell", true)
+	_quick_sell = _button("Sell · Russet 360/t", "barn", true)
 	_quick_sell.custom_minimum_size.y = 46
 	_world_button(_quick_sell, Cozy.WOOD)
 	sell_box.add_child(_quick_sell)
@@ -1111,9 +1038,18 @@ func _build_footer() -> void:
 	_context_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_context = _label("", 13, CREAM)
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_context.add_theme_font_override("font", _plain_font)
-	_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_context_box.add_child(_context)
+	var hint_font := Type.face(Type.DISPLAY, 500)
+	hint_font.fallbacks = []
+	_context.add_theme_font_override("font", hint_font)
+	_context.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var hint_row := _hbox(8)
+	hint_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_context_box.add_child(hint_row)
+	_context_cue = preload("res://scripts/hint_cue.gd").new()
+	hint_row.add_child(_context_cue)
+	_context.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint_row.add_child(_context)
+	_context.minimum_size_changed.connect(func(): _context_box.size.y = 0, CONNECT_DEFERRED)
 	_context_box.hide()
 	set_tool("hoe")
 
@@ -1144,7 +1080,7 @@ func _build_notices() -> void:
 	_barn_full_detail = _wrap("Sell crops to keep harvesting.", 15, Color("fff4e1"))
 	_barn_full_detail.add_theme_font_override("font", UI_FONT)
 	alert_words.add_child(_barn_full_detail)
-	var sell := _button("Sell crops", "sell_potatoes")
+	var sell := _button("Barn full", "")
 	sell.custom_minimum_size = Vector2(128, 52)
 	sell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	alert_row.add_child(sell)
@@ -1240,11 +1176,8 @@ func _build_modal() -> void:
 	_modal_subtitle = _wrap("", 14, MUTED)
 	titles.add_child(_modal_title)
 	titles.add_child(_modal_subtitle)
-	_modal_market_nav = HBoxContainer.new()
-	_modal_market_nav.add_theme_constant_override("separation", 8)
-	titles.add_child(_modal_market_nav)
-	_modal_market_nav.hide()
 	var close: Button = _button("×", "close")
+	_modal_close = close
 	close.custom_minimum_size.x = 44
 	close.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	header.add_child(close)
@@ -1296,7 +1229,7 @@ func update_state(state: Node) -> void:
 	var calendar: String = "%d:%d:%s" % [state.season_clock.year, state.season_clock.season, state.run_outcome]
 	var calendar_changed: bool = calendar != _displayed_calendar
 	_displayed_calendar = calendar
-	_top.season.text = "Year %d · %s" % [state.season_clock.year, state.SeasonClock.NAMES[state.season_clock.season]] + (" · %ds" % state.season_seconds() if state.season_clock.season == 1 and state.diversification.owns("shop") else "")
+	_top.season.text = "%s · Year %d" % [state.SeasonClock.NAMES[state.season_clock.season], state.season_clock.year]
 	# Reconcile from state on ordinary refreshes too, after the boundary save.
 	# Remember the calendar so Escape can dismiss Winter without reopening it.
 	if calendar_changed and state.run_outcome != "foreclosed":
@@ -1304,31 +1237,17 @@ func update_state(state: Node) -> void:
 		elif state.season_clock.season == 3: show_panel("accounts", state)
 		elif _panel_kind == "accounts": close_panel()
 		elif _panel_kind in ["menu", "pause"]: show_panel(_panel_kind, state)
-	_season_strip.year = state.season_clock.year
-	_season_strip.season = state.season_clock.season
-	_season_strip.queue_redraw()
 	_season_jobs.refresh()
 	if is_instance_valid(_spring_target): _spring_target.refresh()
-	_top.coins.text = _money(float(state.get("coins")))
+	_top.coins.text = _money(float(state.get("coins"))).replace("\uE000 ", "")
 	_top.coins.add_theme_color_override("font_color", Color("bb4334") if float(state.get("coins")) < 0.0 else GOLD)
-	_top.market_name.text = str(_crop_name(crop)).to_upper() + " MARKET"
-	_top.price.text = state.market_money(float(quote.get("sell", 0)))
-	_top.price.add_theme_color_override("font_color", INK)
-	_top.price_change.text = "· " + state.price_percent_text(crop)
-	_top.price_change.add_theme_color_override("font_color", price_change_color(crop))
-	_top.price_change.show()
-	_crop_detail.text = "%s · %s seeds" % [_crop_name(crop), _number(float(seeds.get(crop, 0)))]
-	var held: float = state.trading.fresh_count(state, crop)
-	var sale_value: float = 0
-	for word in state.Quality.GRADES: sale_value += state.trading.fresh_count(state, crop, word) * state.Quality.MULTIPLIER[word] * float(quote.get("sell", 0))
-	_quick_sell.text = "Sell held [F] · " + _money(sale_value)
-	_quick_sell.disabled = held <= 0
+	_quick_sell.text = "Sell · %s %s/t" % [_crop_name(crop), state.format_number(float(quote.get("sell", 0)))]
+	_quick_sell.disabled = false
 	var available: Array[String] = _market_crops()
 	for id: String in _all_crop_ids():
 		var button: Button = _crop_buttons[id]
 		button.visible = id in available
 		button.refresh(int(seeds.get(id, 0)), state.stock_count(id), id == crop)
-	_update_quest_sidebar()
 	_refresh_seed_visibility()
 	_apply_tutorial_visibility()
 	_apply_tutorial_buttons()
@@ -1336,11 +1255,11 @@ func update_state(state: Node) -> void:
 	_update_farm_help()
 	if is_panel_open():
 		var expected_crops: Array[String] = _market_crops() if _panel_kind == "market" else _known_crops()
-		if _panel_kind in ["inventory", "barn"] and _inventory_signature != _inventory_id_string(_inventory_data()):
+		if _panel_kind == "inventory" and _inventory_signature != _inventory_id_string(_inventory_data()):
 			show_panel(_panel_kind, state)
 			return
-		if _panel_kind == "sell_potatoes": expected_crops = preload("res://scripts/game_state.gd").crops_by_base_price(_known_crops())
-		if _panel_kind in ["market", "sell_potatoes", "barn", "inventory", "dex"] and _panel_crops != expected_crops:
+		if _panel_kind == "barn": expected_crops = preload("res://scripts/game_state.gd").crops_by_base_price(_known_crops())
+		if _panel_kind in ["market", "barn", "barn", "inventory", "dex"] and _panel_crops != expected_crops:
 			show_panel(_panel_kind, state)
 		else:
 			_refresh_panel()
@@ -1389,40 +1308,51 @@ func _update_context() -> void:
 	_update_barn_full_alert()
 	if is_instance_valid(_toast_box) and _toast_box.visible: _layout_toast()
 	var text: String = _farm_hint if _farm_hint_remaining > 0.0 else _hover_context
+	_context.tooltip_text = text
+	if text.contains("Grade:"):
+		var grade: String = text.split("Grade:")[1].strip_edges().get_slice(" · ", 0)
+		var activity: String = text.get_slice(" · ", 0)
+		if activity == "Dry": activity += " · " + text.get_slice(" · ", 1)
+		text = (activity + "\n" if not text.begins_with("Grade:") else "") + "Grade: " + grade
 	var warning: bool = _notice_is_warning(text)
 	if not _context_box.has_meta("surface_warning") or _context_box.get_meta("surface_warning") != warning:
-		var skin: StyleBoxTexture = Cozy.paper(Color("a5343c") if warning else INK, 6, 4, Color("ffbd9e") if warning else Color("657079"))
-		skin.content_margin_top = 2
-		skin.content_margin_bottom = 2
+		var skin: StyleBoxTexture = Cozy.paper(Color(.98, .88, .78, .88) if warning else Color(1, .984, .929, .86), 8, 12, Color(.77, .66, .46, .7))
+		skin.content_margin_top = 4
+		skin.content_margin_bottom = 4
 		_context_box.add_theme_stylebox_override("panel", skin)
 		_context_box.set_meta("surface_warning", warning)
 	_context_box.set_meta("warning", warning)
 	_context_box.set_meta("grade", text.contains("Table") or text.contains("Standard") or text.contains("Feed"))
+	if _context.text != text: _context_cue.restart()
 	_context.text = text
-	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not is_panel_open() and not (is_instance_valid(_state) and _state.run_over)
+	_context.add_theme_color_override("font_color", INK)
+	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not farm_page_open() and not (is_instance_valid(_state) and _state.run_over)
 	var touch = get_parent().get("touch_controls")
 	var touch_enabled: bool = is_instance_valid(touch) and touch.enabled
 	if touch_enabled:
-		_context_box.visible = _context_box.visible and (warning or _context_box.get_meta("grade", false))
+		_context_box.visible = _context_box.visible and (warning or text.begins_with("Ready in ") or _context_box.get_meta("grade", false))
 	var seed_row: bool = is_instance_valid(_crop_row) and _crop_row.visible
 	var layout_key: String = "%s|%s|%s|%s" % [text, root.size.x, touch_enabled, seed_row]
 	if layout_key == _context_layout_key: return
 	_context_layout_key = layout_key
 	# Measure at the displayed font size; reflow only when the hint or layout changes.
-	var font_size: int = 20 if touch_enabled else 13
+	_context.set_meta("text_tier", 22 if text.begins_with("Ready in ") else 14)
+	var font_size: int = text_pixels(int(_context.get_meta("text_tier")))
 	_context.add_theme_font_size_override("font_size", font_size)
-	var width: float = clampf(_plain_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 24.0, 120.0, minf(480.0, root.size.x - 24.0))
+	var width: float = clampf(_context.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 60.0, 120.0, minf(480.0, root.size.x - 24.0))
 	_context_box.offset_left = -width * 0.5
 	_context_box.offset_right = width * 0.5
 	_context_box.offset_top = -310 if touch_enabled else (-251 if seed_row else -152)
 	_context_box.offset_bottom = -268 if touch_enabled else (-221 if seed_row else -122)
-	_context.size.x = width - 12
+	_context.size.x = width - 60
+	_context_cue.custom_minimum_size = Vector2(22, 22) / maxf(.1, _ui_scale)
 	_context_box.size.y = 0
 	# Wrapping updates minimum height during container layout; release the old height afterward.
 	_context_box.set_size.call_deferred(Vector2(width, 0))
 
 func _notice_is_warning(text: String) -> bool:
 	var lower := text.to_lower()
+	if lower.contains("open 12 more") or lower.contains("lease at"): return true
 	for word: String in ["unlock", "full", "not enough", "need ", "needs ", "empty", "frozen", "no seeds", "no water", "out of", "cannot", "can't", "could not"]:
 		if lower.contains(word): return true
 	return false
@@ -1436,7 +1366,7 @@ func _update_barn_full_alert() -> void:
 	var top: float = 112
 	var touch = get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
-		top = maxf(touch.status.get_global_rect().end.y, touch.sell_button.get_global_rect().end.y) + 12
+		top = touch.sell_button.get_global_rect().end.y + 12
 		_barn_full_detail.add_theme_font_size_override("font_size", 19)
 		_barn_full_sell.custom_minimum_size.y = 68
 		_barn_full_sell.add_theme_font_size_override("font_size", 22)
@@ -1454,8 +1384,9 @@ func show_toast(text: String) -> void:
 	_toast_label.text = text
 	_toast_box.add_theme_stylebox_override("panel", Cozy.paper(Color("a5343c") if _notice_is_warning(text) else INK, 10, 6))
 	_toast_layout_key = ""
-	_layout_toast()
 	_toast_box.show()
+	_fit_shop_modal()
+	_layout_toast()
 	_toast_box.move_to_front()
 	_toast_timer.start()
 
@@ -1463,7 +1394,7 @@ func _layout_toast() -> void:
 	var in_menu: bool = is_panel_open()
 	var compact: bool = in_menu and root.size.y - _modal_card.get_global_rect().end.y < 60
 	var weather_on_right: bool = is_instance_valid(_climate_console) and _climate_console.visible and _climate_console.position.x > root.size.x * 0.5
-	var key: String = str([in_menu, compact, weather_on_right, _toast_label.text])
+	var key: String = str([in_menu, compact, weather_on_right, _toast_label.text, _modal_card.get_global_rect(), root.size])
 	if key == _toast_layout_key: return
 	_toast_layout_key = key
 	var width: float = 700 if in_menu else (302 if weather_on_right else 326)
@@ -1479,6 +1410,9 @@ func _layout_toast() -> void:
 	_toast_label.custom_minimum_size.y = lines * _toast_label.get_theme_font("font").get_height(_toast_label.get_theme_font_size("font_size"))
 	_toast_box.position = Vector2((root.size.x-width)*.5, root.size.y-(42 if compact else 70)) if in_menu else Vector2(root.size.x-width-28,104)
 	_toast_box.size = Vector2(width, 0)
+	if in_menu:
+		var height: float = _toast_box.get_combined_minimum_size().y
+		_toast_box.position.y = minf(root.size.y - height - 4, maxf(_modal_card.get_global_rect().end.y + 4, _toast_box.position.y))
 	_toast_label.tooltip_text = _toast_label.text
 
 func _layout_purchase() -> void:
@@ -1563,6 +1497,12 @@ func is_panel_open() -> bool:
 	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible)
 
 func close_panel() -> void:
+	if _panel_kind == "farmer" and is_instance_valid(_state):
+		_state.farmer_appearance.chosen = true
+		var game = get_parent()
+		if game.has_method("_save_checkpoint"):
+			game.world._player_body.apply_appearance(_state.farmer_appearance)
+			game._save_checkpoint.call_deferred()
 	_accounts_build_request += 1
 	accounts_building = false
 	if is_instance_valid(_state): _state.accounts_open = false
@@ -1582,7 +1522,7 @@ func close_panel() -> void:
 	if is_instance_valid(_spring_target): _spring_target.refresh()
 
 func show_panel(kind: String, state: Node) -> void:
-	if kind == "winter_stores": kind = "sell_potatoes"
+	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
 	_accounts_build_request += 1
 	accounts_building = false
 	_state = state
@@ -1595,6 +1535,7 @@ func show_panel(kind: String, state: Node) -> void:
 	if kind != _panel_kind:
 		_reset_pending = false
 	_panel_kind = kind
+	_modal_close.text = "Skip" if kind == "farmer" and not state.farmer_appearance.chosen else "×"
 	_body.add_theme_constant_override("separation", 6 if kind == "accounts" else 10)
 	var paper: bool = kind in ["accounts", "run_summary"]
 	(_modal.get_child(0) as ColorRect).color = Color(0.06, 0.13, 0.10, 0.28)
@@ -1604,7 +1545,7 @@ func show_panel(kind: String, state: Node) -> void:
 	_modal_card.offset_right = 376
 	_modal_card.offset_top = -317
 	_modal_card.offset_bottom = 317
-	if kind in ["market", "sell_potatoes"]:
+	if kind in ["market", "barn"]:
 		_modal_card.offset_left = -500
 		_modal_card.offset_right = 500
 		_modal_card.offset_top = -380
@@ -1614,12 +1555,8 @@ func show_panel(kind: String, state: Node) -> void:
 	_modal_title.add_theme_font_size_override("font_size", 28)
 	_modal_subtitle.add_theme_font_override("font", _plain_font)
 	_modal_subtitle.add_theme_color_override("font_color", Color("c5ccb7"))
-	_modal_title.visible = kind not in ["market", "sell_potatoes"]
-	_modal_subtitle.visible = kind not in ["market", "sell_potatoes"]
-	for child: Node in _modal_market_nav.get_children():
-		_modal_market_nav.remove_child(child)
-		child.queue_free()
-	_modal_market_nav.hide()
+	_modal_title.visible = kind not in ["market", "barn"]
+	_modal_subtitle.visible = kind not in ["market", "barn"]
 	_refs.clear()
 	for child: Node in _modal_trade_footer.get_children():
 		_modal_trade_footer.remove_child(child)
@@ -1638,41 +1575,27 @@ func show_panel(kind: String, state: Node) -> void:
 	match kind:
 		"farm_tip": _build_farm_tip()
 		"market": _build_market()
-		"sell_potatoes": _build_market(true)
-		"barn", "inventory": _build_barn()
+		"barn": _build_market(true)
+		"inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
-		"store_advice":
-			_heading("Store half for Winter", "Nell’s barn note")
-			_body.add_child(_wrap("Sell half as you harvest. Leave half in the barn for Winter; pull and replant the moment a bed empties in Spring or Summer.", 22, INK))
-			_body.add_child(_wrap("Winter stores cost 4,800, spoil 5% and lose ten quality. Prices rise through Winter. Sell before Spring.", 20, MUTED))
-			_body.add_child(_button("Open the barn", "barn", true))
-		"winter_seed_choices":
-			_heading("Next Spring’s seed", "Table or Standard tonnes only")
-			for crop in _state.CROP_IDS:
-				var limit: int = preload("res://scripts/farm_advice.gd").seed_capacity(_state, crop)
-				if limit <= 0: continue
-				_body.add_child(_wrap("%s: keep up to %d t" % [_crop_name(crop), limit], 22, INK))
-				_body.add_child(_button("Choose " + _crop_name(crop) + " seed", "winter_seed_crop:" + crop))
+		"calendar":
+			_heading("The farm calendar", "Year %d" % _state.season_clock.year)
+			for season in [["Spring", "Plant and water your potatoes."], ["Summer", "Tend the beds and harvest ripe crops."], ["Autumn", "Bring the harvest into the barn."], ["Winter", "Nell counts the bills. Clear ice and repair."]]:
+				_body.add_child(_wrap(season[0], 22, INK, true))
+				_body.add_child(_wrap(season[1], 16, INK))
+		"farmer": _build_farmer()
+		"grades":
+			_build_grade_explanation()
 		"accounts":
 			if DisplayServer.get_name() != "headless":
 				_open_books(opening, _accounts_build_request)
 				return
 			_build_winter()
 		"sleep_confirm": _build_sleep_confirm()
-		"bank":
-			_heading("The overdraft", "Edwin · Bank manager")
-			_body.add_child(_wrap(_state.NpcRoster.bank_line(_state), 20, INK))
-			_body.add_child(_wrap("Annual fixed bills: " + _state.money(_state.ledger.fixed_cost_total()) + ". Open Winter accounts for the full ledger.", 16, INK))
 		"run_summary": _build_run_summary()
 		"dex": _build_dex()
 		"quests": _build_quests()
-		"contracts": _build_contracts()
-		"businesses":
-			_heading("A second income", "WINTER · Plans for the coming year")
-			_build_diversification()
-		"loss_notices": _build_loss_notices()
-		"activities": _build_activities()
 		"duck_patrol": _build_duck_patrol()
 		"debug": _build_debug()
 		"measurement": _build_measurement()
@@ -1685,7 +1608,6 @@ func _finish_panel_build(kind: String, opening: bool) -> void:
 	var paper: bool = kind in ["accounts", "run_summary"]
 	_polish_card_typography(_body)
 	_polish_card_typography(_modal_trade_footer)
-	_polish_card_typography(_modal_market_nav)
 	if paper:
 		_paper_typography(_modal_card)
 	_surface_text(_modal_card)
@@ -1763,7 +1685,7 @@ func panel_source_position(kind: String) -> Vector2:
 	if kind in ["accounts", "run_summary"]:
 		_panel_source = ""
 		return ledger_screen_position()
-	var places := {"market":"market", "sell_potatoes":"market", "barn":"barn", "inventory":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "loss_notices":"quests", "contracts":"contracts", "bank":"bank", "businesses":"barn", "store_advice":"barn", "winter_seed_choices":"barn", "duck_patrol":"activities", "activities":"activities"}
+	var places := {"market":"market", "barn":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "accounts":"accounts", "duck_patrol":"duck_patrol"}
 	var station: String = _panel_source if not _panel_source.is_empty() and Time.get_ticks_msec() - _panel_source_tick < 1000 else str(places.get(kind, ""))
 	_panel_source = ""
 	var game = get_parent()
@@ -1836,7 +1758,7 @@ func _fit_shop_modal() -> void:
 	if is_instance_valid(touch) and touch.enabled:
 		touch.fit_modal()
 		return
-	var height: float = clampf(ShopPages.content_height(self), 240.0, minf(760.0, root.size.y - 40.0))
+	var height: float = clampf(ShopPages.content_height(self), 240.0, minf(760.0, root.size.y - (100.0 if _toast_box.visible else 40.0)))
 	_modal_card.offset_top = -height * 0.5
 	_modal_card.offset_bottom = height * 0.5
 	_layout_purchase.call_deferred()
@@ -1909,19 +1831,18 @@ func _build_market(selling: bool = false) -> void:
 	_body.add_child(page)
 	_refs.market_page = page
 	page.setup(self, selling)
+	if selling:
+		_build_contracts()
+		if _tutorial.get("id", "") == "sell":
+			_refs.store_continue = _button("Store for Winter →", "tutorial:next")
+			_modal_trade_footer.add_child(_refs.store_continue)
 	if not selling and _tutorial_seed_market():
 		_refs.starter_continue = _button("Use my starter seeds →", "tutorial:next", true)
 		_modal_trade_footer.add_child(_refs.starter_continue)
 		_modal_trade_footer.show()
 
 
-func _first_harvest_barn() -> bool:
-	return not _tutorial.is_empty() and not bool(_tutorial.get("tour_only", false))
-
 func _build_barn() -> void:
-	# The first sale opens the crop shelf.
-	if _first_harvest_barn():
-		_inventory_tab = "crops"
 	var page = ShopPages.new()
 	_body.add_child(page)
 	_refs.shop_page = page
@@ -2002,9 +1923,9 @@ func _build_help() -> void:
 	_modal_card.offset_right = 310
 	_modal_card.offset_top = -200
 	_modal_card.offset_bottom = 200
-	var entries: Array = [["Camera", "Hold click + drag"], ["Zoom", "Mouse wheel / pinch"], ["Recenter", "Home"], ["Move", "WASD / arrows"], ["Interact", "Click / E"], ["Sell", "F"], ["Hurry", "Hold H · 3×"]]
+	var entries: Array = [["Camera", "Hold click + drag"], ["Zoom", "Mouse wheel / pinch"], ["Recenter", "Home"], ["Move", "WASD / arrows"], ["Interact", "Click / E"], ["Sell", "F"]]
 	if is_instance_valid(get_parent().get("touch_controls")) and get_parent().get("touch_controls").enabled:
-		entries = [["Camera", "Drag farm"], ["Zoom", "Pinch"], ["Move", "Joystick"], ["Interact", "Tap bed or shop"], ["Recenter", "Tools → Recenter"], ["Hurry", "Hold to hurry · 3×"]]
+		entries = [["Camera", "Drag farm"], ["Zoom", "Pinch"], ["Move", "Joystick"], ["Interact", "Tap bed or shop"], ["Recenter", "Tools → Recenter"]]
 	var controls := _vbox(10)
 	_body.add_child(controls)
 	for entry: Array in entries:
@@ -2116,8 +2037,10 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	_body.add_child(_label("NET FOR THE YEAR", 12, MUTED))
 	if clock.year == 1:
 		_body.add_child(_wrap("Nell: " + _state.NpcRoster.YEAR_ONE_ACCOUNTS, 22, INK))
-		for action in [["Open 12 more Home beds · 48,000", "advice_home"], ["Mara's Golden card", "advice_golden"], ["Store half for Winter", "advice_stores"]]:
-			_body.add_child(_button(action[0], action[1]))
+		_body.add_child(_wrap("Open 12 more Home beds at Tools. Choose Golden at Mara's stall. Store half in the barn for Winter.", 16, INK))
+	_body.add_child(_wrap(_state.NpcRoster.service_greeting("nell", _state), 16, INK))
+	_body.add_child(_button("Talk", "talk:nell"))
+	_body.add_child(_button("Go to the barn", "barn"))
 	var columns := _hbox(32)
 	columns.name = "LedgerColumns"
 	columns.resized.connect(func(): columns.vertical = columns.size.x < 640)
@@ -2165,26 +2088,24 @@ func _build_winter(staged: bool = false, request: int = 0) -> void:
 	var lease_title := _wrap("FIELDS · leases for the coming year", 18, INK, true); lease_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lease_heading.add_child(lease_title)
 	preload("res://scripts/place_ui.gd").help(self, lease_heading, "Rent renews each Winter. Cancel for a refund of that renewal; standing crops are cleared. Purchased bed expansions remain.")
 	for field in _state.Land.IDS:
-		if field == "home": continue
+		if field == "home" or clock.season != 3: continue
 		_body.add_child(_wrap(_state.Land.NAMES[field], 16, INK))
 		var row := _hbox(12)
 		_body.add_child(row)
 		if field != "home":
 			row.add_child(_button(("Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year"), "lease:" + field))
 	if staged and not await _accounts_frame(request): return
-	_build_diversification()
+	if clock.season == 3: _build_diversification()
 	if staged and not await _accounts_frame(request): return
-	_build_loss_cards(_body, clock.year)
 	if staged and not await _accounts_frame(request): return
 	_ledger_actions()
-	var resume: Button = _button("Read ten years", "run_summary", true) if _state.run_outcome == "completed" else _button("Walk out to the field", "close", true)
-	resume.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_refs.ledger_actions.add_child(resume)
+	if _state.run_outcome == "completed":
+		_refs.ledger_actions.add_child(_button("Read ten years", "run_summary", true))
 	_modal_trade_footer.show()
 
 func _refresh_accounts() -> void:
 	if accounts_building: return
-	_refresh_diversification()
+	if _state.season_clock.season == 3: _refresh_diversification()
 	if not _refs.has("accounts_net") or _refs.accounts_net.get_meta("entries", -1) == _state.ledger.entry_count(): return
 	_refs.accounts_net.set_meta("entries", _state.ledger.entry_count())
 	var net: float = _state.ledger.total(_state.season_clock.year)
@@ -2258,9 +2179,6 @@ func _build_sleep_confirm() -> void:
 		_body.add_child(_wrap("The late Winter value uses the grades now in store. Weather losses may change it.", 15, MUTED))
 	var actions: BoxContainer = _hbox(10)
 	_body.add_child(actions)
-	var cancel: Button = _button("Keep working", "close")
-	cancel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	actions.add_child(cancel)
 	var confirm: Button = _button("Sleep until Spring", "confirm_sleep_spring", true)
 	confirm.name = "ConfirmSleepUntilSpring"
 	confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2269,7 +2187,15 @@ func _build_sleep_confirm() -> void:
 
 func _build_pause() -> void:
 	_heading("Your farm", "")
-	if _state.season_clock.season == 3: _body.add_child(_button("Annual accounts", "accounts", true))
+	var farmer = preload("res://scripts/farmer_preview.gd").new()
+	farmer.custom_minimum_size = Vector2(180, 210)
+	_body.add_child(farmer)
+	farmer.show_farmer(_state.farmer_appearance)
+	_body.add_child(_button("Your farmer", "farmer"))
+	var quieter: Button = _button("Quieter", "quieter")
+	quieter.toggle_mode = true
+	quieter.set_pressed_no_signal(preload("res://scripts/sound_mix.gd").quieter)
+	_body.add_child(quieter)
 	if _state.can_sleep_until_spring():
 		var sleep: Button = _button("Sleep until Spring", "sleep_spring")
 		sleep.name = "MenuSleepUntilSpring"
@@ -2280,14 +2206,10 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("h_separation", 10)
 	menu.add_theme_constant_override("v_separation", 10)
 	_body.add_child(menu)
-	var entries: Array = [["Inventory", "inventory", "I", "symbol"], ["Contracts", "contracts", "", "book"], ["Buy Seeds", "market", "B", "market"], ["Sell Potatoes", "sell_potatoes", "", "coin"], ["Debug", "debug", "", "debug"], ["Duck patrol", "activities", "", "duck"], ["Quests", "quests", "Q", "book"], ["Tool upgrades", "tools", "U", "hoe"], ["PotatoDex", "dex", "P", "magnify"]]
-	if _tutorial.is_empty():
-		entries.append(["Weather & protection", "climate", "", "book"])
+	var entries: Array = [["Inventory", "inventory", "", "symbol"], ["Debug", "debug", "", "debug"], ["PotatoDex", "dex", "", "magnify"]]
 	for entry: Array in entries:
 		var tutorial_feature: String = str(entry[1])
-		if tutorial_feature == "activities":
-			tutorial_feature = "duck_patrol"
-		elif tutorial_feature == "dex":
+		if tutorial_feature == "dex":
 			tutorial_feature = "inventory"
 		if not _tutorial.is_empty() and tutorial_feature not in _tutorial.get("features", []):
 			continue
@@ -2303,7 +2225,7 @@ func _build_pause() -> void:
 		row.offset_right = -8
 		row.offset_top = 8
 		row.offset_bottom = -8
-		var icon_kind: String = "activity" if entry[1] in ["activities", "duck_patrol", "debug"] else ("metric" if entry[3] == "coin" else ("tool" if entry[3] == "hoe" else "symbol"))
+		var icon_kind: String = "activity" if entry[1] == "debug" else "symbol"
 		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 36))
 		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
 		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -2329,7 +2251,6 @@ func _build_pause() -> void:
 		reset_button.add_theme_font_size_override("font_size", 12)
 		settings.add_child(reset_button)
 
-	_body.add_child(_button("Back to the farm", "close", true))
 
 func set_graphics_quality(mode: String) -> void:
 	_graphics_quality = mode
@@ -2348,7 +2269,6 @@ func _build_graphics() -> void:
 	for size in [2048, 4096]:
 		_refs["shadows_%d" % size] = _button(str(size), "shadows:%d" % size)
 		_body.add_child(_refs["shadows_%d" % size])
-	_body.add_child(_button("Back to farm", "close"))
 	_refresh_graphics()
 
 func _refresh_graphics() -> void:
@@ -2366,15 +2286,6 @@ func _refresh_panel() -> void:
 	if _panel_kind == "accounts":
 		_refresh_accounts()
 		return
-	if _panel_kind == "loss_notices":
-		_refresh_loss_notices()
-		return
-	if _panel_kind == "businesses":
-		_refresh_diversification()
-		return
-	if _panel_kind == "contracts":
-		_refresh_contracts()
-		return
 	if _panel_kind == "climate":
 		_refresh_climate()
 		return
@@ -2384,10 +2295,10 @@ func _refresh_panel() -> void:
 	var coins: float = float(_state.get("coins"))
 	var markets: Dictionary = _state.get("market")
 	match _panel_kind:
-		"market", "sell_potatoes":
+		"market", "barn":
 			_refs.market_page.refresh()
-		"barn", "inventory":
-			_refresh_inventory()
+			if _panel_kind == "barn": _refresh_contracts()
+		"inventory":
 			_refs.shop_page.refresh()
 		"tools":
 			for tool in ["hoe", "water", "harvest"]:
@@ -2401,8 +2312,6 @@ func _refresh_panel() -> void:
 			_refs.shop_page.refresh()
 		"dex": _refresh_dex()
 
-		"activities":
-			_refresh_activities()
 		"duck_patrol":
 			_refresh_duck_patrol()
 		"debug":
@@ -2458,14 +2367,6 @@ func _quests() -> Array[Dictionary]:
 		for quest: Dictionary in quests:
 			result.append(quest)
 	return result
-
-func _update_quest_sidebar() -> void:
-	_quest_button.visible = true
-	var ready: int = 0
-	for quest: Dictionary in _quests():
-		if bool(quest.get("complete", false)) and not bool(quest.get("claimed", false)):
-			ready += 1
-	_quest_button.text = "Claim %d reward%s  [Q]" % [ready, "" if ready == 1 else "s"] if ready > 0 else "Quest board  [Q]"
 
 func _sync_crop_catalog() -> void:
 	if _crop_defs.is_empty():
@@ -2524,45 +2425,6 @@ func _inventory_id_string(entries: Array[Dictionary]) -> String:
 		ids.append(str(entry.get("id", "")))
 	return "|".join(ids)
 
-func _set_inventory_tab() -> void:
-	_refs["upgrade:barn:card"].visible = _inventory_tab == "crops"
-	for section: Variant in _inventory_sections:
-		_inventory_sections[section].visible = str(section) == _inventory_tab
-		var button: Button = _refs.get("tab:" + str(section)) as Button
-		if is_instance_valid(button):
-			preload("res://scripts/place_ui.gd").tab(button, str(section) == _inventory_tab)
-
-func _refresh_inventory() -> void:
-	_set_inventory_tab()
-	_refs.inventory_total.text = "HELD VALUE %s  ·  %s / %s t crop storage" % [_money(float(_state.call("barn_value"))), _number(float(_state.call("storage_used"))), _number(float(_state.get("capacity")))]
-	for entry: Dictionary in _inventory_data():
-		var id: String = str(entry.id)
-		var key: String = "item:" + id
-		if not _refs.has(key + ":title"): continue
-		var kind: String = str(entry.kind)
-		_refs[key + ":title"].text = str(entry.name) + (" · " + _number(float(entry.count)) + " t" if kind == "crop" else " ×" + _number(float(entry.count)) if kind == "seed" else "")
-		var detail: String = str(entry.get("effect", ""))
-		var button: Button = _refs.get(key + ":action") as Button
-		match kind:
-			"crop":
-				detail = "Current value " + _money(float(entry.sell_value))
-				if is_instance_valid(button):
-					button.text = "View Winter stores" if _state.season_clock.season == 3 and _state.Stock.count(_state.trading.held, entry.crop) > 0 else "Sell potatoes"
-					button.disabled = int(entry.count) <= 0
-			"seed":
-				if is_instance_valid(button):
-					button.text = "Selected" if _state.selected_crop == entry.crop else "Select seeds"
-					button.disabled = entry.crop not in _state.available_crops() or _state.selected_crop == entry.crop
-			"tool":
-				detail = "Rank %d · %s" % [int(entry.level), str(entry.effect)]
-				if is_instance_valid(button): button.text = "Use tool"
-		_refs[key + ":detail"].text = detail
-		_refs[key + ":detail"].visible = not detail.is_empty()
-	var barn_cost: float = float(_state.BARN_COSTS[mini(2, int(_state.barn_level))])
-	var maxed: bool = int(_state.barn_level) >= 3
-	_refs["upgrade:barn:detail"].text = "Maximum capacity" if maxed else "+%s t storage" % _number(200.0 * pow(4.0, int(_state.get("barn_level"))))
-	_set_purchase_button("upgrade:barn", "Max level" if maxed else ("Upgrade · " + _money(barn_cost)), barn_cost, maxed)
-
 func _catalog_number(key: String, fallback: float) -> float:
 	var constants: Dictionary = _state.get_script().get_script_constant_map()
 	return float(constants.get(key, fallback))
@@ -2572,9 +2434,6 @@ func _activity_info() -> Dictionary:
 		return {}
 	var system: Object = _state.get("activity_system")
 	return system.call("info") if system != null and system.has_method("info") else {}
-
-func _build_activities() -> void:
-	_build_duck_patrol()
 
 func _build_duck_patrol() -> void:
 	_heading("Duck patrol", "")
@@ -2630,9 +2489,6 @@ func _refresh_duck_patrol() -> void:
 	_refs.activity_detail.text = "%.0fs per bed · %d pests cleared" % [float(data.get("duck_interval", 4)), int(data.get("duck_clears", 0))] if count > 0 else ""
 	_refs.activity_detail.visible = count > 0
 
-func _refresh_activities() -> void:
-	_refresh_duck_patrol()
-
 func _debug_info() -> Dictionary:
 	return _state.debug_info()
 
@@ -2684,7 +2540,6 @@ func _build_measurement() -> void:
 	_body.add_child(_button("Copy", "measurement_copy", true))
 	_refs.measurement_copy_status = _wrap("", 14, GREEN)
 	_body.add_child(_refs.measurement_copy_status)
-	_body.add_child(_button("Walk out to the field", "close"))
 
 func _build_debug() -> void:
 	_build_measure_controls()
@@ -2957,11 +2812,6 @@ func _refresh_diversification() -> void:
 	_refs.business_ledger.text = "\n".join(lines)
 	_refs.business_ledger.visible = not lines.is_empty()
 
-func _build_loss_notices() -> void:
-	_build_quests(true)
-func _refresh_loss_notices() -> void:
-	_refs.tess_board.refresh()
-
 func _build_loss_cards(parent: Control, year: int, show_empty: bool = false) -> void:
 	var Place = preload("res://scripts/place_ui.gd")
 	var count: int = 0
@@ -3016,3 +2866,89 @@ func _refresh_land_bill() -> void:
 		activity[caption] = float(activity.get(caption, 0)) + float(entry.amount)
 	for caption in activity:
 		if not is_zero_approx(activity[caption]): _account_row(_refs.land_activity, caption, _state.money(activity[caption]))
+
+func _build_wait_card() -> void:
+	_wait_card = _card(Color(1, .984, .929, .84), 8)
+	_wait_card.name = "WaitCard"
+	_wait_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(_wait_card, Rect2(28, 176, 330, 0))
+	_wait_label = _wrap(preload("res://scripts/first_island_tutorial.gd").WAIT_MESSAGE, 16)
+	_wait_label.add_theme_font_override("font", preload("res://scripts/ui_type.gd").face(preload("res://scripts/ui_type.gd").DISPLAY, 500))
+	var wait_row := _hbox(8)
+	wait_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wait_card.add_child(wait_row)
+	_wait_cue = preload("res://scripts/hint_cue.gd").new()
+	wait_row.add_child(_wait_cue)
+	_wait_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wait_row.add_child(_wait_label)
+	_wait_card.hide()
+
+func _update_wait_card() -> void:
+	if not is_instance_valid(_state): return
+	var game = get_parent()
+	var waiting: bool = _state.plots.any(func(bed): return bed.unlocked and int(bed.stage) in [1, 2])
+	var ready: bool = _state.plots.any(func(bed): return bed.unlocked and (int(bed.stage) == 3 or bed.pests))
+	var was_waiting: bool = _wait_card.visible
+	_wait_card.visible = waiting and not ready and _tutorial.is_empty() and not farm_page_open() and not _state.run_over
+	if _wait_card.visible and not was_waiting: _wait_cue.restart()
+	var touch = game.get("touch_controls")
+	if _wait_card.visible:
+		var width: float = minf(360.0 / maxf(.1, _ui_scale), root.size.x - 32)
+		var top: float = _spring_target.get_global_rect().end.y + 10 if _spring_target.visible else _play_band.size.y + 16
+		if _weather_button.visible: top = maxf(top, _weather_button.get_global_rect().end.y + 10)
+		if not is_instance_valid(touch) or not touch.enabled: top = maxf(top, 180)
+		_wait_card.position = Vector2(16 if is_instance_valid(touch) and touch.enabled else 28, top)
+		_wait_card.size = Vector2(width, 0)
+		_wait_cue.custom_minimum_size = Vector2(24, 24) / maxf(.1, _ui_scale)
+		_wait_label.set_meta("text_tier", 16)
+		fit_text(_wait_card)
+
+func _build_grade_explanation() -> void:
+	_heading("Your potato grades", "")
+	var stamps = preload("res://scripts/grade_stamp.gd")
+	for grade in stamps.COLORS:
+		var row := _hbox(16)
+		_body.add_child(row)
+		row.add_child(_icon({"kind": "crop", "crop": _state.selected_crop}, 48))
+		var words := _vbox(4)
+		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(words)
+		var chip: Label = _label(grade, 14)
+		stamps.apply(chip, grade, text_pixels(14))
+		words.add_child(chip)
+		words.add_child(_wrap(stamps.GLOSSES[grade], 16))
+
+func _build_farmer() -> void:
+	_heading("Your farmer", "")
+	var preview = preload("res://scripts/farmer_preview.gd").new()
+	preview.custom_minimum_size = Vector2(180, 260)
+	_body.add_child(preview); _refs.farmer_preview = preview
+	preview.show_farmer(_state.farmer_appearance)
+	var name_row := _hbox(12); _body.add_child(name_row)
+	name_row.add_child(_label("Name", 16))
+	var name_input := LineEdit.new(); name_input.text = _state.farmer_appearance.name
+	name_input.max_length = 20; name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL; name_input.custom_minimum_size.y = touch_target()
+	name_row.add_child(name_input); _refs.farmer_name = name_input
+	name_input.text_changed.connect(func(words):
+		var clean: String = words.strip_edges()
+		_state.farmer_appearance.name = "Farmer" if clean.is_empty() else clean
+		get_parent().world._player_body.apply_appearance(_state.farmer_appearance))
+	for field in ["hat", "shirt", "skin"]:
+		_body.add_child(_label({"hat":"Hat", "shirt":"Shirt colour", "skin":"Skin tone"}[field], 16))
+		var choices := HFlowContainer.new(); _body.add_child(choices)
+		var options: Array = _state.FarmerLook.HATS if field == "hat" else (_state.FarmerLook.SHIRTS if field == "shirt" else _state.FarmerLook.SKINS)
+		var group := ButtonGroup.new()
+		for choice in options:
+			var button: Button = _button(str(choice).capitalize() if field == "hat" else "●", "")
+			button.name = "FarmerChoice_" + field + "_" + choice
+			button.toggle_mode = true; button.button_group = group
+			button.set_pressed_no_signal(_state.farmer_appearance[field] == choice)
+			if field == "hat":
+				button.custom_minimum_size.x = maxf(touch_target(), _card_button_font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, text_pixels(16)).x + 24)
+			else:
+				for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: button.add_theme_color_override(state, Color(choice))
+			button.pressed.connect(func():
+				_state.farmer_appearance[field] = choice
+				preview.show_farmer(_state.farmer_appearance)
+				get_parent().world._player_body.apply_appearance(_state.farmer_appearance))
+			choices.add_child(button)

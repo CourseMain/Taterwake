@@ -1,6 +1,9 @@
 extends Node
 ## Original, prebuilt PCM foley and cues: playback never synthesizes samples.
+const Mix = preload("res://scripts/sound_mix.gd")
 const CLIPS: Dictionary = {
+	"quack": preload("res://assets/audio/duck-quack.wav"),
+	"harvest_notes": preload("res://assets/audio/harvest-two-notes.wav"),
 	"harvest": preload("res://assets/audio/farm-harvest.wav"),
 	"giant": preload("res://assets/audio/farm-giant.wav"),
 	"water": preload("res://assets/audio/farm-water.wav"),
@@ -8,9 +11,6 @@ const CLIPS: Dictionary = {
 	"pest": preload("res://assets/audio/farm-pest.wav"),
 	"plant": preload("res://assets/audio/farm-plant.wav"),
 	"ice": preload("res://assets/audio/farm-ice.wav"),
-	"grade_table": preload("res://assets/audio/grade-table.wav"),
-	"grade_standard": preload("res://assets/audio/grade-standard.wav"),
-	"grade_feed": preload("res://assets/audio/grade-feed.wav"),
 	"paper": preload("res://assets/audio/ledger-paper.wav"),
 	"foreclosure": preload("res://assets/audio/foreclosure-note.wav"),
 }
@@ -38,7 +38,7 @@ func _ready() -> void:
 	if DisplayServer.get_name() == "headless": return
 	for index in range(VOICE_COUNT):
 		var voice := AudioStreamPlayer.new()
-		voice.volume_db = -14.0
+		voice.volume_db = -16.0
 		add_child(voice)
 		voices.append(voice)
 
@@ -49,12 +49,13 @@ func _exit_tree() -> void:
 
 func play_action(kind: String) -> void:
 	last_kind = kind
+	if kind == "quack" and not Mix.allow_charm(): return
 	_play(bake(kind), "action:" + kind)
 
 func play_grade(grade: String) -> void:
 	if grade not in ["Table", "Standard", "Feed"]: return
 	last_grade = grade
-	_play(CLIPS["grade_" + grade.to_lower()], "grade:" + grade)
+	if Mix.allow_charm(): _play(CLIPS.harvest_notes, "grade:" + grade)
 
 func play_paper() -> void:
 	_play(CLIPS.paper, "paper")
@@ -79,11 +80,16 @@ func play_tone(frequency: float, duration: float, sparkle: bool = false) -> void
 	_play(nearest[2], "tone", frequency / float(nearest[0]))
 
 func _play(stream: AudioStreamWAV, cue: String, pitch: float = 1.0) -> void:
+	var alert: bool = cue == "tone" and stream in [TONES[1][2], TONES[2][2]]
+	if alert and not Mix.allow_alert(): return
+	var tool: bool = cue.begins_with("grade:") or cue.begins_with("action:") and cue != "action:quack" or stream == TONES[3][2]
+	if tool: Mix.tool_played()
 	last_cue = cue
 	played_count += 1
 	if voices.is_empty(): return
 	var voice: AudioStreamPlayer = voices[next_voice]
 	next_voice = (next_voice + 1) % voices.size()
+	voice.volume_db = (-16.0 if tool else -24.0) + Mix.gain(tool)
 	voice.stream = stream
 	voice.pitch_scale = clampf(pitch, .25, 4.0)
 	voice.play()

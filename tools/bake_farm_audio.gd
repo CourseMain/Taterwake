@@ -2,13 +2,10 @@ extends SceneTree
 ## Offline authoring only. Runtime playback uses these original PCM files.
 ## Run: godot --headless --path . --script res://tools/bake_farm_audio.gd
 const RATE: int = 22050
-const LOOP_SECONDS: float = 8.0
 
 func _initialize() -> void:
 	for kind in ["harvest", "giant", "water", "hoe", "pest", "plant", "ice"]:
 		write("farm-" + kind, foley(kind))
-	for season in range(4): write("season-" + ["birds", "cicadas", "wind", "snow"][season], ambience(season))
-	for grade in ["table", "standard", "feed"]: write("grade-" + grade, grade_stamp(grade))
 	write("ledger-paper", paper())
 	write("foreclosure-note", note(130.81, 0.65, false, true))
 	for cue in [[164.81, .6, "impact"], [220.0, .6, "warning"], [440.0, .1, "tool"], [740.0, .12, "purchase"], [523.25, .11, "c"], [659.25, .11, "e"], [783.99, .11, "g"], [1046.5, .11, "high-c"]]:
@@ -61,73 +58,6 @@ func foley(kind: String) -> PackedFloat32Array:
 				_: sample = (soft_noise * .5 + sin(TAU * 240 * t) * .18) * exp(-t * 23)
 		var edge: float = minf(1, t * 700) * minf(1, (duration - t) * 80)
 		samples[frame] = sample * edge
-	return samples
-
-func ambience(season: int) -> PackedFloat32Array:
-	var samples := PackedFloat32Array()
-	samples.resize(roundi(LOOP_SECONDS * RATE))
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 72161 + season
-	var breeze: float = 0
-	var muffled: float = 0
-	for frame in range(samples.size()):
-		var t: float = float(frame) / RATE
-		var noise: float = rng.randf_range(-1, 1)
-		breeze = lerpf(breeze, noise, .025)
-		muffled = lerpf(muffled, noise, .003)
-		var sample: float = 0
-		match season:
-			0:
-				sample = breeze * .20
-				for call in [[.7, .38, 1900.0], [1.35, .28, 2400.0], [3.8, .52, 1700.0], [6.1, .36, 2100.0], [6.6, .24, 2600.0]]:
-					var age: float = t - float(call[0])
-					if age < 0 or age >= float(call[1]): continue
-					var envelope: float = pow(sin(PI * age / float(call[1])), 2)
-					var trill: float = .65 + .35 * sin(age * TAU * 19)
-					sample += sin(TAU * (float(call[2]) * age + 380 * age * age + .35 * sin(age * TAU * 10))) * envelope * trill * .20
-			1:
-				var chorus: float = .4 + .3 * sin(TAU * t / 4) + .15 * sin(TAU * t / 2)
-				var trill: float = .55 + .45 * pow(sin(TAU * 36 * t), 2)
-				sample = (sin(TAU * 3100 * t) * .12 + sin(TAU * 3420 * t + sin(TAU * .5 * t)) * .08 + noise * .025) * chorus * trill + breeze * .15
-			2:
-				var gust: float = .6 + .25 * sin(TAU * t / 8) + .1 * sin(TAU * t / 2)
-				sample = breeze * gust * 1.5 + muffled * .65
-			3:
-				var hush: float = .7 + .2 * sin(TAU * t / 4)
-				sample = muffled * hush * 2.4 + breeze * .12
-				for at in [1.2, 4.5, 6.4]:
-					var age: float = t - at
-					if age >= 0 and age < .18: sample += breeze * .15 * sin(PI * age / .18)
-		# An inaudible-edge fade removes the discontinuity in the random beds.
-		var edge: float = minf(1, t / .03) * minf(1, (LOOP_SECONDS - t - 1.0 / RATE) / .03)
-		samples[frame] = sample * maxf(0, edge)
-	return samples
-
-func note(frequency: float, duration: float, sparkle: bool = false, low: bool = false) -> PackedFloat32Array:
-	var samples := PackedFloat32Array()
-	samples.resize(roundi(duration * RATE))
-	for frame in range(samples.size()):
-		var t: float = float(frame) / RATE
-		var envelope: float = minf(1, t * 80) * pow(maxf(0, 1 - t / duration), 1.5)
-		var harmonic: float = sin(TAU * frequency * t) + (.4 * sin(TAU * frequency * 1.5 * t) if sparkle else 0)
-		if low: harmonic = .6 * sin(TAU * frequency * .5 * t) + .25 * sin(TAU * frequency * t)
-		samples[frame] = harmonic * envelope * .4
-	return samples
-
-func grade_stamp(grade: String) -> PackedFloat32Array:
-	var samples := PackedFloat32Array()
-	samples.resize(roundi(.38 * RATE))
-	for frame in range(samples.size()):
-		var t: float = float(frame) / RATE
-		var stamp: float = sin(TAU * 145 * t) * exp(-t * 55) * .28
-		var frequency: float = {"table": 659.25, "standard": 392.0, "feed": 196.0}[grade]
-		var envelope: float = minf(1, t * 200) * exp(-t * (13 if grade == "feed" else 9)) * minf(1, (.38 - t) * 70)
-		var pitch: float = frequency * t - (60 * t * t if grade == "feed" else 0)
-		var ring: float = sin(TAU * pitch) * .26
-		if grade == "table" and t >= .09:
-			var second: float = t - .09
-			ring += sin(TAU * 783.99 * second) * exp(-second * 9) * minf(1, second * 200) * .18
-		samples[frame] = stamp + ring * envelope
 	return samples
 
 func paper() -> PackedFloat32Array:

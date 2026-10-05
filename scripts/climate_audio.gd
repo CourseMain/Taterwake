@@ -1,4 +1,6 @@
 extends Node
+const Mix = preload("res://scripts/sound_mix.gd")
+var guided: bool = false
 var wind: AudioStreamPlayer
 var thunder: AudioStreamPlayer
 var strength: float = 0.0
@@ -14,7 +16,7 @@ func _ready() -> void:
 	add_child(wind)
 	thunder = AudioStreamPlayer.new()
 	thunder.stream = preload("res://assets/audio/climate-thunder.wav")
-	thunder.volume_db = -12
+	thunder.volume_db = -18
 	add_child(thunder)
 func _exit_tree() -> void:
 	# Release active playback before the audio players leave the tree.
@@ -30,10 +32,11 @@ func set_weather(info: Dictionary, paused: bool) -> void:
 		thunder.stop()
 	elif not wind.playing: wind.play()
 func impact() -> void:
-	if strength > 0.0: thunder.play()
+	if strength > 0.0 and Mix.allow_alert():
+		thunder.volume_db = -18 + Mix.gain(); thunder.play()
 func _process(delta: float) -> void:
-	wind.volume_db = lerpf(wind.volume_db, lerpf(-40.0, -20.0, strength), minf(1.0, delta * 3.0))
+	wind.volume_db = lerpf(wind.volume_db, lerpf(-40.0, -26.0 if guided else -20.0, strength) + Mix.gain(), minf(1.0, delta * 3.0))
 	clock += delta
 	if clock >= 8.0:
 		clock = 0.0
-		if storm: thunder.play()
+		if storm: impact()

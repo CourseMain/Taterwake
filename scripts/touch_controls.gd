@@ -20,21 +20,16 @@ var use_button: Button
 var tools_button: Button
 var menu_button: Button
 var sell_button: Button
-var hurry_button: Button
-var hurry_held: bool = false
 var interaction_scans: int = 0
 var _interaction_clock: float = 1.0
 var _interaction_position := Vector3.INF
 var _interaction_target: Dictionary = {}
-var status: Label
 var drawer: PanelContainer
 var drawer_body: VBoxContainer
 var drawer_kind: String = ""
 var interaction_prompt: Button
 var fullscreen: Button
 var _browser_fullscreen_hidden: bool = false
-var guide_button: Button
-var guide_open: bool = false
 var last_size := Vector2.ZERO
 var _clock: float = 0.0
 var _blocked_before: bool = false
@@ -62,12 +57,8 @@ func _ready() -> void:
 	stick.add_child(knob)
 	use_button = button("Use Hoe", func(): game._interact_nearby())
 	tools_button = button("Tools", func(): open_drawer("tools"))
-	menu_button = button("Menu", func(): game.hud._act("menu"))
-	sell_button = button("Sell", func(): game.hud._act("quick_sell"))
-	hurry_button = button("Hold to hurry", func(): pass)
-	hurry_button.name = "HoldToHurry"
-	hurry_button.button_down.connect(func(): hurry_held = true)
-	hurry_button.button_up.connect(func(): hurry_held = false)
+	menu_button = game.hud._menu_button
+	sell_button = button("Sell", func(): game.hud._act("barn"))
 	fullscreen = preload("res://scripts/fullscreen_button.gd").new()
 	fullscreen.custom_minimum_size = Vector2(44, 44)
 	root.add_child(fullscreen)
@@ -92,15 +83,6 @@ func _ready() -> void:
 		interaction_prompt.add_theme_color_override(color,Color("111511"))
 	interaction_prompt.size = interaction_prompt.custom_minimum_size
 	interaction_prompt.hide()
-	guide_button = button("Show guide", func(): guide_open = not guide_open)
-	guide_button.hide()
-	status = Label.new()
-	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	status.add_theme_color_override("font_color", Color("fff3cf"))
-	status.add_theme_font_size_override("font_size", 22)
-	status.add_theme_stylebox_override("normal", Cozy.paper(Cozy.INK, 12, 5, Color("365747")))
-	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	root.add_child(status)
 	drawer = PanelContainer.new()
 	drawer.add_theme_stylebox_override("panel", Cozy.paper(Cozy.INK, 16, 5, Color("365747")))
 	root.add_child(drawer)
@@ -120,7 +102,7 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(resize, CONNECT_DEFERRED)
 	resize()
 	if not enabled:
-		for item in [stick, use_button, tools_button, menu_button, sell_button, hurry_button, status]: item.hide()
+		for item in [stick, use_button, tools_button, sell_button]: item.hide()
 	# Browser shell owns its button so fullscreen is requested in a trusted DOM gesture.
 	fullscreen.visible = not OS.has_feature("web")
 	get_tree().root.focus_exited.connect(release_all)
@@ -182,22 +164,19 @@ func resize() -> void:
 	if enabled: game.hud._climate_console.compact_layout = w > h
 	place(stick, Rect2(22, h - 190, 166, 166))
 	place(knob, Rect2(51, 51, 64, 64))
-	place(use_button, Rect2(w - 210, h - 100, 188, 78))
-	place(tools_button, Rect2(w - 210, h - 178, 188, 68))
-	place(hurry_button, Rect2(w - 210, h - 252, 188, 68))
-	place(menu_button, Rect2(w - 134, 16, 112, 68))
-	place(sell_button, Rect2(22, h - 268, 166, 68))
-	place(status, Rect2(16, 132, w - 32, 48))
+	var right_width: float = maxf(188, maxf(use_button.get_combined_minimum_size().x, tools_button.get_combined_minimum_size().x))
+	place(use_button, Rect2(w - right_width - 22, h - 100, right_width, 78))
+	place(tools_button, Rect2(w - right_width - 22, h - 178, right_width, 68))
+
+	place(sell_button, Rect2(22, h - 268, maxf(166, sell_button.get_combined_minimum_size().x), 68))
+	game.hud._layout_top()
 	if enabled:
-		place(game.hud.root.get_node("FarmWordmark"), Rect2(96, 16, 300, 58))
-		place(game.hud._season_strip, Rect2(16, 92, w - 32, 32))
-		place(game.hud._play_band, Rect2(0,0,w,188))
-		place(game.hud._weather_button, Rect2(16,196,minf(w-32,430),68))
-		game.hud._weather_button.add_theme_font_size_override("font_size",22)
+		place(game.hud._weather_button, Rect2(16, game.hud._play_band.size.y + 12, minf(w - 32, 430), 68))
 		game.hud._season_jobs.layout()
 		game.hud._world_button(sell_button, Cozy.WOOD)
-	place(fullscreen, Rect2(12, 16, 68 if enabled else 44, 68 if enabled else 44))
-	place(guide_button, Rect2(96, 16, 204, 68))
+	place(fullscreen, Rect2(w - 56, game.hud._play_band.size.y + 8, 44, 44))
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("Object.assign(document.getElementById('fullscreen-button').style, {top:'64px',right:'8px',left:'auto',bottom:'auto'});", true)
 	fit_drawer()
 	if enabled: fit_modal()
 	game.farm_viewport.sync_resolution.call_deferred()
@@ -216,7 +195,7 @@ func fit_modal() -> void:
 	if not enabled or not is_instance_valid(game.hud._modal_card): return
 	var hud = game.hud
 	var view := get_viewport().get_visible_rect().size
-	var trading: bool = hud._panel_kind in ["market", "sell_potatoes"]
+	var trading: bool = hud._panel_kind in ["market", "barn"]
 	var width := minf(1200 if trading else 940, view.x - 24)
 	# Filters and stake choices must also scroll on a short landscape phone.
 	if hud._modal_fixed.get_parent() != hud._body:
@@ -229,8 +208,9 @@ func fit_modal() -> void:
 	adapt(hud._modal_card.get_child(0).get_child(0), width - 64, false)
 	hud._modal_subtitle.hide()
 	hud._modal_title.add_theme_font_size_override("font_size", 28)
-	var height: float = minf(view.y - 24, 1000.0) if trading else view.y - 112
-	if hud._panel_kind in ["help", "sleep_confirm"]:
+	var notice_space: float = 80 if hud._toast_box.visible else 0
+	var height: float = (minf(view.y - 24, 1000.0) if trading else view.y - 112) - notice_space
+	if hud._panel_kind in ["help", "sleep_confirm", "grades"]:
 		height = minf(height, hud.modal_content_height())
 	elif hud._panel_kind in ["barn", "inventory", "tools"]:
 		height = minf(height, maxf(240.0, hud.ShopPages.content_height(hud)))
@@ -247,7 +227,7 @@ func adapt(node: Node, available: float, stack: bool) -> void:
 		node.custom_minimum_size.x = minf(original.x, available)
 		if node is Label or node is Button or node is LineEdit:
 			if not node.has_meta("touch_font"): node.set_meta("touch_font", node.get_theme_font_size("font_size"))
-			node.add_theme_font_size_override("font_size", maxi(22, int(node.get_meta("touch_font"))))
+			game.hud.fit_text(node)
 		if node is Label and not node.has_meta("paper_stamp"):
 			node.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -301,8 +281,8 @@ func update_interaction_prompt(force: bool = true) -> void:
 	if not Rect2(Vector2.ZERO, last_size).encloses(rect):
 		interaction_prompt.hide()
 		return
-	# Never cover the movement pad, status, or other touch controls.
-	for control in [stick, tools_button, use_button, menu_button, sell_button, hurry_button, status, fullscreen, guide_button]:
+	# Never cover the movement pad, or other touch controls.
+	for control in [stick, tools_button, use_button, menu_button, sell_button, fullscreen]:
 		if control.visible and control.get_global_rect().intersects(rect):
 			interaction_prompt.hide()
 			return
@@ -316,10 +296,11 @@ func _process(delta: float) -> void:
 	_interaction_clock += delta
 	if not at_title: update_interaction_prompt(false)
 	var hud = game.hud
-	var paper: bool = at_title or (hud.is_panel_open() and hud._panel_kind in ["accounts", "run_summary"]) or hud._run_end.visible
-	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
+	var paper: bool = at_title or hud.farm_page_open() or hud._run_end.visible
+	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "barn"])
 	if OS.has_feature("web"):
-		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "sell_potatoes"])
+		# Keep the existing browser button outside the one-row farm band.
+		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "barn"])
 		if cover_fullscreen != _browser_fullscreen_hidden:
 			_browser_fullscreen_hidden = cover_fullscreen
 			JavaScriptBridge.eval("document.getElementById('fullscreen-button').style.visibility = '%s';" % ("hidden" if cover_fullscreen else "visible"))
@@ -334,26 +315,25 @@ func _process(delta: float) -> void:
 	if blocked != _blocked_before and OS.has_feature("web"):
 		JavaScriptBridge.eval("document.body.classList.toggle('menu-open', %s)" % ("true" if blocked else "false"), true)
 	_blocked_before = blocked
-	guide_button.visible = hud.is_panel_open() and not hud._tutorial.is_empty()
-	guide_button.text = "Hide guide" if guide_open else "Show guide"
-	if not hud._tutorial.is_empty(): hud._tutorial_card.visible = not hud.is_panel_open() or guide_open
-	else: guide_open = false
-	for item in [stick, use_button, tools_button, menu_button, sell_button, hurry_button, status]: item.visible = not blocked
-	sell_button.visible = not blocked and not drawer.visible
-	hurry_button.disabled = not game.can_hurry()
-	if hurry_button.disabled: hurry_held = false
-	hurry_button.text = "Hold · 3×" if game.hurry_active else "Hold to hurry"
+	if not hud._tutorial.is_empty(): hud._tutorial_card.visible = not hud.is_panel_open()
+	for item in [stick, use_button, tools_button]: item.visible = not blocked
+	if not hud._tutorial.is_empty() and hud._tutorial.get("id", "") == "welcome": stick.hide()
+	var features: Array = hud._tutorial.get("features", [])
+	menu_button.visible = not blocked and (hud._tutorial.is_empty() or "menu" in features)
+	var tools: Array = hud._tutorial.get("tools", [])
+	if not hud._tutorial.is_empty():
+		tools_button.visible = not blocked and not tools.is_empty()
+		use_button.visible = not blocked and not tools.is_empty()
+	sell_button.visible = not blocked and not drawer.visible and (hud._tutorial.is_empty() or "barn" in features)
 	if blocked:
 		drawer.hide()
-	# Desktop information is summarized in one small status strip on touch.
-	for item in [hud._stats_card, hud._menu_button, hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
+	# Touch uses the same season, money and Menu row as desktop.
+	for item in [hud._hotbar, hud._quick_sell, hud._crop_row, hud._farm_help_card, hud._tutorial_pointer]: item.hide()
 	hud._weather_button.visible = not blocked and (hud._tutorial.is_empty() or "climate" in hud._tutorial.get("features",[]))
-	if not hud._context_box.get_meta("warning", false) and not hud._context_box.get_meta("grade", false): hud._context_box.hide()
+	if not hud._context_box.get_meta("warning", false) and not hud._context_box.get_meta("grade", false) and not hud._context.text.begins_with("Ready in "): hud._context_box.hide()
 	if _clock >= 0.2:
 		_clock = 0
-		status.text = "%s · %s %s / t" % [hud._top.coins.text, game.state.selected_crop.capitalize(), game.state.market_money(game.state.market[game.state.selected_crop].sell)]
-		var weather: Dictionary = game.state.climate_info()
-		if weather.phase != "calm": status.text += "\n%s · %ds" % [weather.name, ceili(weather.timer)]
+		sell_button.text = hud._quick_sell.text
 		use_button.text = "Use " + TOOL_NAMES[game.selected_tool]
 		if game.world.player.position.distance_to(game.world._climate_field.loop.tank_position() + Vector3(-0.4, 0, 2.3)) <= 2: use_button.text = "Refill can"
 		elif _nearby_target().has("station") and game.climate_target.is_empty(): use_button.text = "Interact"
@@ -361,8 +341,11 @@ func _process(delta: float) -> void:
 		sell_button.disabled = hud._quick_sell.disabled
 		if hud.is_panel_open(): fit_modal()
 		fit_auxiliary()
+	hud.fit_text(hud.root)
+	hud.fit_text(root)
 	knob.position = Vector2(51, 51) + movement * 46
 	tools_button.text = TOOL_NAMES[game.selected_tool] + "  /  Tools"
+	_layout_action_controls()
 
 func fit_auxiliary() -> void:
 	var hud = game.hud
@@ -371,16 +354,17 @@ func fit_auxiliary() -> void:
 	equipment_sheet.visible = hud._climate_console.visible
 	guide_sheet.visible = hud._tutorial_card.visible
 	if hud._tutorial_card.visible:
-		var width := minf(460, view.x - 172)
+		var width := view.x - 36
 		adapt(hud._tutorial_card, width - 30, false)
 		hud._tutorial_icon.hide()
 		hud._tutorial_key.hide()
-		hud._tutorial_body.add_theme_font_size_override("font_size", 21)
+		hud._tutorial_body.add_theme_font_size_override("font_size", hud.text_pixels(16))
 		for b in [hud._tutorial_next, hud._tutorial_skip]: b.custom_minimum_size.y = 68
 		hud._tutorial_skip.custom_minimum_size.x = 68
-		if not portrait: hud._tutorial_body.add_theme_font_size_override("font_size", 19)
+
 		hud._tutorial_body.text = hud._tutorial_body.text.replace("Click", "Tap").replace("click", "tap").replace("WASD", "the stick").replace("arrow keys", "the stick")
-		var top: float = maxf(104, status.get_global_rect().end.y + 12) if not hud.is_panel_open() else 104
+		var top: float = hud._play_band.size.y + 12
+		if hud._weather_button.visible: top = hud._weather_button.get_global_rect().end.y + 12
 		place(guide_sheet, Rect2(18, top, width, minf(view.y - top - 196, hud._tutorial_card.get_combined_minimum_size().y)))
 	if hud._climate_console.visible:
 		adapt(hud._climate_console, 380, false)
@@ -394,7 +378,11 @@ func fit_auxiliary() -> void:
 		adapt(panel, width - 64, false)
 		hud._climate_alert.title.add_theme_font_size_override("font_size", 32)
 		place(panel, Rect2((view.x - width) / 2, 100, width, 0))
-	for notice in [hud._toast_box, hud._purchase_box, hud._reward_box]:
+	if hud._toast_box.visible and hud.is_panel_open():
+		fit_modal()
+		var height: float = hud._toast_box.get_combined_minimum_size().y
+		place(hud._toast_box, Rect2(18, view.y - height - 8, view.x - 36, height))
+	for notice in [hud._purchase_box, hud._reward_box]:
 		if notice.visible:
 			place(notice, Rect2(96 if hud.is_panel_open() else 18, 10 if hud.is_panel_open() else view.y - 290, minf(440, view.x - (298 if hud.is_panel_open() else 36)), 0))
 	if game.state.run_over: adapt(hud._run_end, view.x - 72, true)
@@ -449,7 +437,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.device == InputEvent.DEVICE_ID_EMULATION:
 		if drawer.visible and drawer.get_global_rect().has_point(event.position): return
 		# Overlay actions are dispatched by finger ID, allowing stick + action.
-		for item in [use_button, tools_button, menu_button, sell_button, hurry_button, fullscreen, guide_button, interaction_prompt]:
+		for item in [use_button, tools_button, menu_button, sell_button, fullscreen, interaction_prompt]:
 			if item.is_visible_in_tree() and item.get_global_rect().has_point(event.position):
 				get_viewport().set_input_as_handled()
 				return
@@ -465,16 +453,14 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.pressed:
 			if drawer.visible and drawer.get_global_rect().has_point(event.position): return
-			for item in [use_button, tools_button, menu_button, sell_button, hurry_button, fullscreen, guide_button, interaction_prompt]:
+			for item in [use_button, tools_button, menu_button, sell_button, fullscreen, interaction_prompt]:
 				if item.is_visible_in_tree() and not item.disabled and item.get_global_rect().has_point(event.position):
 					button_fingers[event.index] = item
-					if item == hurry_button: hurry_held = true
 					get_viewport().set_input_as_handled()
 					return
 		elif button_fingers.has(event.index):
 			var target: Button = button_fingers[event.index]
 			button_fingers.erase(event.index)
-			if target == hurry_button: hurry_held = false
 			if not event.canceled and target.is_visible_in_tree() and not target.disabled and target.get_global_rect().has_point(event.position): target.pressed.emit()
 			get_viewport().set_input_as_handled()
 		elif world_fingers.has(event.index):
@@ -486,8 +472,6 @@ func _input(event: InputEvent) -> void:
 			move_stick(event.position)
 			get_viewport().set_input_as_handled()
 		elif button_fingers.has(event.index):
-			if button_fingers[event.index] == hurry_button:
-				hurry_held = hurry_button.is_visible_in_tree() and not hurry_button.disabled and hurry_button.get_global_rect().has_point(event.position)
 			get_viewport().set_input_as_handled()
 		elif world_fingers.has(event.index):
 			if not game._map_navigation_allowed():
@@ -543,7 +527,6 @@ func finish_world_touch(event: InputEventScreenTouch) -> void:
 		game._tap_world(event.position)
 
 func release_all() -> void:
-	hurry_held = false
 	movement = Vector2.ZERO
 	sprinting = false
 	stick_finger = -1
@@ -561,3 +544,17 @@ func toggle_fullscreen() -> void:
 		var window := get_tree().root
 		var active: bool = window.mode == Window.MODE_FULLSCREEN or window.mode == Window.MODE_EXCLUSIVE_FULLSCREEN
 		window.mode = Window.MODE_WINDOWED if active else Window.MODE_FULLSCREEN
+
+func display_scale() -> float:
+	var pixels: float = float(get_tree().root.size.x)
+	if OS.has_feature("web"):
+		pixels = float(JavaScriptBridge.eval("document.getElementById('canvas').clientWidth", true))
+	return maxf(.1, pixels / get_viewport().get_visible_rect().size.x)
+
+func _layout_action_controls() -> void:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var width: float = maxf(188, maxf(use_button.get_combined_minimum_size().x, tools_button.get_combined_minimum_size().x))
+	for control in [use_button, tools_button]:
+		var offset: float = 100 if control == use_button else 178
+		place(control, Rect2(view.x - width - 22, view.y - offset, width, maxf(78 if control == use_button else 68, control.get_combined_minimum_size().y)))
+	place(sell_button, Rect2(22, view.y - 268, maxf(166, sell_button.get_combined_minimum_size().x), maxf(68, sell_button.get_combined_minimum_size().y)))

@@ -9,7 +9,7 @@ static var _paper_textures: Dictionary = {}
 static func paper(fill: Color = CREAM, padding: int = 14, radius: int = 4, edge: Color = Color("c9bea0")) -> StyleBoxTexture:
 	# One material for every sheet, board and painted frame. Build each 64 px
 	# swatch once; nine-slice tiling keeps its grain and inner edge at 1 px.
-	var curve: int = clampi(radius, 0, 8)
+	var curve: int = 12 if padding >= 8 else clampi(radius, 0, 30)
 	var key: String = "%s:%s:%d" % [fill.to_html(), edge.to_html(), curve]
 	if not _paper_textures.has(key):
 		var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
@@ -30,7 +30,7 @@ static func paper(fill: Color = CREAM, padding: int = 14, radius: int = 4, edge:
 		_paper_textures[key] = ImageTexture.create_from_image(image)
 	var style := StyleBoxTexture.new()
 	style.texture = _paper_textures[key]
-	style.set_texture_margin_all(8)
+	style.set_texture_margin_all(maxi(8, curve))
 	style.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	style.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
 	style.set_content_margin_all(padding)
@@ -52,10 +52,10 @@ static func box(color: Color, padding: int = 14, radius: int = 14, border: Color
 	return style
 
 static func surface(_kind: String, accent: Color = GREEN, selected: bool = false) -> StyleBoxTexture:
-	return paper(CREAM, 14, 4, accent if selected else Color("c9bea0"))
+	return paper(CREAM, 14, 12, accent if selected else Color("c9bea0"))
 
 static func modal(_dark: bool = false) -> StyleBoxTexture:
-	return paper(INK, 24, 5, WOOD)
+	return paper(INK, 24, 12, WOOD)
 
 static func button_style(state: String, primary: bool) -> StyleBoxFlat:
 	var fill: Color = GREEN if primary else Color("f9f7e9")
@@ -66,7 +66,7 @@ static func button_style(state: String, primary: bool) -> StyleBoxFlat:
 		"disabled":
 			fill = Color("e7e7dc")
 			border = Color("d3d7c7")
-	var style := box(fill, 10, 3, border)
+	var style := box(fill, 10, 999, border)
 	style.border_width_bottom = 1 if state in ["pressed", "disabled"] else 3
 	# Reserve the same space in every state to prevent layout movement.
 	style.content_margin_bottom = 11
@@ -87,7 +87,7 @@ static func badge(label: Label, text: String, tone: String = "neutral") -> void:
 	var colors: Array = palettes.get(tone, palettes.neutral)
 	label.text = text
 	label.add_theme_color_override("font_color", colors[1])
-	var style := box(colors[0], 7, 3)
+	var style := box(colors[0], 7, 999)
 	style.content_margin_top = 3
 	style.content_margin_bottom = 3
 	label.add_theme_stylebox_override("normal", style)

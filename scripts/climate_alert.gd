@@ -64,7 +64,14 @@ func present(kind: String, info: Dictionary, farm) -> void:
 	title.add_theme_font_size_override("font_size", 25)
 	message.add_theme_font_size_override("font_size", 14)
 	remaining = 1.5 if kind == "impact" else 2.8
-	if kind == "warning":
+	if farm.guided_first_year() and info.event == "storm":
+		title.text = "A small storm is coming" if kind == "warning" else "The small storm has passed"
+		message.text = "Harvest the glowing bed before the storm." if kind == "warning" else "Tess can show you any damage."
+		# The guide carries this instruction; do not put a second card over it.
+		if farm.tutorial_active:
+			dismiss()
+			return
+	elif kind == "warning":
 		title.text = "%s IN %ds" % [info.name, ceili(info.timer)]
 		message.text = {"deep_freeze": "Sell stored tonnes and harvest Icecap before impact.", "blizzard": "Bring in Icecap and sell stored tonnes before the blizzard.", "freeze": "Ready your hoe to clear ice from crops.", "drought": "Save your harvest. The fields are drying out.", "flood": "Harvest now. Floodwater is on its way.", "storm": "Bring in your crops. A violent storm is coming."}.get(info.event, "Prepare your farm.")
 	elif kind == "impact":

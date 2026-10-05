@@ -26,9 +26,10 @@ func setup(owner_hud, barn_page: bool) -> void:
 func _queue_modal_fit() -> void:
 	if _fit_pending or not is_inside_tree(): return
 	_fit_pending = true
-	await get_tree().process_frame; await get_tree().process_frame
+	var tree: SceneTree = get_tree()
+	await tree.process_frame; await tree.process_frame
 	_fit_pending = false
-	if is_queued_for_deletion() or not is_instance_valid(hud): return
+	if not is_inside_tree() or is_queued_for_deletion() or not is_instance_valid(hud): return
 	if hud._refs.get("shop_page") == self: hud._fit_shop_modal()
 static func content_height(owner_hud) -> float:
 	return owner_hud.modal_content_height()

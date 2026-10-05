@@ -65,7 +65,7 @@ func available() -> Dictionary:
 	for id in farm.climate.data.protection.pending:
 		result["project:" + id] = ["%s paid · %d / 3 →" % [farm.ClimateSystem.Protection.NAMES[id], farm.climate.data.protection.pending[id]], "project_site:" + id]
 	for id in farm.Diversification.NAMES:
-		if farm.diversification.can_buy(farm, id): result["business:" + id] = [farm.Diversification.NAMES[id] + " · " + ("Free enrolment" if id == "grower" else farm.money(farm.Diversification.Balance.BUSINESS_COSTS[id])) + " →", "businesses"]
+		if farm.diversification.can_buy(farm, id): result["business:" + id] = [farm.Diversification.NAMES[id] + " · " + ("Free enrolment" if id == "grower" else farm.money(farm.Diversification.Balance.BUSINESS_COSTS[id])) + "", ""]
 	return result
 
 func store_facts() -> Dictionary:
@@ -82,9 +82,9 @@ func store_facts() -> Dictionary:
 				var count: int = farm.Stock.count(farm.trading.held, crop, grade)
 				now += count * farm.trading.stored_price(farm, crop, grade)
 				peak += count * farm.trading.peak_price(crop, grade)
-			result["stores:" + crop] = ["%s · %d t · %s/t now, %s/t late Winter → Sell" % [str(farm.CropTable.CROPS[crop].name).trim_suffix(" Potato"), held, farm.market_money(now / held), farm.market_money(peak / held)], "sell_potatoes"]
+			result["stores:" + crop] = ["%s · %d t · %s/t now, %s/t late Winter" % [str(farm.CropTable.CROPS[crop].name).trim_suffix(" Potato"), held, farm.market_money(now / held), farm.market_money(peak / held)], ""]
 		seed_available = seed_available or preload("res://scripts/farm_advice.gd").seed_capacity(farm, crop) > 0
-	if seed_available: result.seed = ["Keep some as next Spring's seed →", "winter_seeds"]
+	if seed_available: result.seed = ["Keep some as next Spring's seed", ""]
 	return result
 
 func refresh() -> void:
@@ -93,7 +93,7 @@ func refresh() -> void:
 	var key: String = "%d:%d" % [farm.season_clock.year, farm.season_clock.season]
 	if key != calendar:
 		calendar = key; jobs.clear(); completed.clear(); stores.clear(); signature = ""
-	visible = farm.season_clock.season == 3 and not farm.accounts_open and not farm.run_over and not hud.is_panel_open() and hud._tutorial.is_empty()
+	visible = farm.season_clock.season == 3 and not farm.accounts_open and not farm.run_over and not hud.farm_page_open() and hud._tutorial.is_empty()
 	if not visible: return
 	var next: Dictionary = available()
 	for id in jobs:
@@ -114,23 +114,22 @@ func refresh() -> void:
 		sleep_button.visible = can_sleep and not collapsed
 		quote_key.visible = not collapsed and stores.keys().any(func(id): return str(id).begins_with("stores:"))
 		for id in jobs:
+			if str(id).begins_with("business:"):
+				var fact: Label = hud._wrap(jobs[id][0], 14, Place.INK)
+				fact.name = "WinterJob_" + id.replace(":", "_")
+				lines.add_child(fact)
+				continue
 			var button: Button = hud._button(jobs[id][0], jobs[id][1])
 			button.name = "WinterJob_" + id.replace(":", "_")
-			button.autowrap_mode = TextServer.AUTOWRAP_OFF
-			button.clip_text = true
-			button.tooltip_text = jobs[id][0]
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			button.add_theme_font_override("font", hud._plain_font)
 			Place.pill(button, Place.INK)
 			lines.add_child(button)
 		stores_heading.text = "Stores" if stores.keys().any(func(id): return str(id).begins_with("stores:")) else "Stores · empty"
 		for id in stores:
-			var button: Button = hud._button(stores[id][0], stores[id][1])
-			button.name = "WinterStore_" + id.replace(":", "_")
-			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			Place.pill(button, Place.INK)
-			stores_lines.add_child(button)
+			var fact: Label = hud._wrap(stores[id][0], 14, Place.INK)
+			fact.name = "WinterStore_" + id.replace(":", "_")
+			stores_lines.add_child(fact)
 		for id in completed:
 			var done: Label = hud._label("✓ " + completion_text(str(id)), 13, hud.MUTED)
 			done.clip_text = true
@@ -148,26 +147,14 @@ func layout() -> void:
 	for button in find_children("*", "Button", true, false):
 		button.custom_minimum_size.y = target
 		button.custom_minimum_size.x = target
-		var pixels: int = 20 if phone else 14
-		var available_width: float = width - 20 - button.get_theme_stylebox("normal").get_minimum_size().x - 14
-		var font: Font = button.get_theme_font("font")
-		if button.get_parent() != stores_lines:
-			while pixels > 14 and font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, pixels).x > available_width: pixels -= 1
-		button.add_theme_font_size_override("font_size", pixels)
-	var key_pixels: int = 18 if phone else 12
-	while key_pixels > 12 and quote_key.get_theme_font("font").get_string_size(quote_key.text, HORIZONTAL_ALIGNMENT_LEFT, -1, key_pixels).x > width - 20: key_pixels -= 1
-	quote_key.add_theme_font_size_override("font_size", key_pixels)
-	for label in lines.find_children("*", "Label", true, false): label.add_theme_font_size_override("font_size", 20 if phone else 13)
-	var top: float = 208 if phone else 154
-	if phone and is_instance_valid(touch.status) and touch.status.visible:
-		top = maxf(top, touch.status.get_global_rect().end.y + 14)
+		button.add_theme_font_size_override("font_size", hud.text_pixels(16))
+	hud.fit_text(self)
+	var top: float = hud._play_band.get_global_rect().end.y + 16
 	if phone and hud._weather_button.visible: top = maxf(top, hud._weather_button.get_global_rect().end.y + 14)
 	position = Vector2(left, top)
 	var bottom: float = hud.root.size.y - 20
 	if phone and not landscape:
-		bottom = touch.stick.get_global_rect().position.y - 12
-		var hurry = touch.get("hurry_button")
-		if is_instance_valid(hurry): bottom = minf(bottom, hurry.get_global_rect().position.y - 12)
+		bottom = touch.sell_button.get_global_rect().position.y - 12
 	elif not phone: bottom = hud.root.size.y - 180
 	var chrome: float = get_theme_stylebox("panel").get_minimum_size().y + heading.get_combined_minimum_size().y + 4
 

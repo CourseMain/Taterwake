@@ -8,6 +8,7 @@ const ActivitiesScript = preload("res://scripts/island_activities.gd")
 const PestAlert = preload("res://scripts/pest_alert.gd")
 const TutorialScript = preload("res://scripts/first_island_tutorial.gd")
 const GraphicsPreferences = preload("res://scripts/graphics_preferences.gd")
+const SoundMix = preload("res://scripts/sound_mix.gd")
 const FarmViewport = preload("res://scripts/farm_viewport.gd")
 const WALK_SPEED: float = 7.0
 const SPRINT_MULTIPLIER: float = 1.65
@@ -50,7 +51,6 @@ var _title_returned := false
 var feedback_audio: Node
 var seasonal_ambience: Node
 var sleeping_until_spring: bool = false
-var hurry_active: bool = false
 var _accounts_camera_from: float = -1.0
 var _accounts_camera_elapsed: float = 0.0
 var pest_alert: Node
@@ -154,6 +154,7 @@ func _ready() -> void:
 	state.run_ended.connect(_on_run_ended)
 	state.climate_changed.connect(_on_climate_changed)
 	state.season_changed.connect(_on_season_changed)
+	if not test_mode: SoundMix.load_preference()
 	_setup_sound()
 	climate_audio = load("res://scripts/climate_audio.gd").new()
 	add_child(climate_audio)
@@ -202,12 +203,15 @@ func _resume_loaded_farm(returning: bool) -> void:
 	elif not bool(state.tutorial_progress.get("completed", false)):
 		tutorial.start()
 		if returning: hud.close_panel()
+	world._player_body.apply_appearance(state.farmer_appearance)
+	if not returning and not state.farmer_appearance.chosen:
+		hud.show_panel("farmer", state)
 
 func _register_inputs() -> void:
 	var bindings: Dictionary = {
 		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
 		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
-		"sprint": [KEY_SHIFT], "hurry": [KEY_H]
+		"sprint": [KEY_SHIFT]
 	}
 	for action in bindings:
 		if not InputMap.has_action(action):
@@ -219,18 +223,19 @@ func _register_inputs() -> void:
 
 func _process(delta: float) -> void:
 	if not _launch_ready: return
+	SoundMix.advance(delta)
 	if is_instance_valid(epilogue_screen): return
 	if world == null or hud == null:
 		return
+	climate_audio.guided = state.guided_first_year()
 	if title_active():
 		title_scene.advance(delta)
 		seasonal_ambience.set_season(state.season_clock.season, false)
 		world.animate(delta, false)
 		return
 	_update_accounts_camera(delta)
+	seasonal_ambience.set_environment(state.climate_info(), world.player.position.distance_to(world._duck_home) < 10)
 	seasonal_ambience.set_season(state.season_clock.season, state.run_over)
-	hurry_active = _hurry_requested() and can_hurry()
-	hud.set_hurry_active(hurry_active)
 	if sleeping_until_spring:
 		_advance_winter_sleep()
 		world.animate(delta, false)
@@ -372,30 +377,22 @@ func _set_shadow_size(size: int, persist: bool = false) -> void:
 	if size not in [2048, 4096]: return
 	if is_instance_valid(touch_controls) and touch_controls.enabled: size = mini(size, 2048)
 	shadow_size = size
+	# Keep Compatibility filtering stable when the editor drops default overrides.
+	for key in ["rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", "rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality.mobile"]:
+		ProjectSettings.set_setting(key, RenderingServer.SHADOW_QUALITY_SOFT_HIGH)
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_HIGH)
 	RenderingServer.directional_shadow_atlas_set_size(size, true)
 	if persist and not test_mode: GraphicsPreferences.save_shadow_size(size)
 	if hud._panel_kind == "graphics": hud._refresh_graphics()
-
-func _hurry_requested() -> bool:
-	return Input.is_action_pressed("hurry") or (is_instance_valid(touch_controls) and touch_controls.hurry_held)
-
-func can_hurry() -> bool:
-	if title_active(): return false
-	if state.run_over or state.accounts_open or state.climate_report_open or sleeping_until_spring or state.tutorial_active or state.ClimateSystem.Lesson.active(state): return false
-	if is_instance_valid(epilogue_screen) or (is_instance_valid(conversation) and conversation.visible) or (is_instance_valid(year_intro) and year_intro.visible): return false
-	if hud.is_panel_open() and hud._panel_kind in ["accounts", "loss_notices", "sleep_confirm", "debug"]: return false
-	return not get_viewport().gui_get_focus_owner() is LineEdit
 
 func _simulation_delta(delta: float) -> float:
 	if not is_finite(delta) or delta <= 0.0: return 0.0
 	if is_instance_valid(hud) and hud.is_panel_open() and hud._panel_kind == "debug": return 0.0
 	var multiplier: float = debug_time_multiplier if debug_unlocked else 1.0
-	if _hurry_requested() and can_hurry(): multiplier = 3.0
 	if state.guided_first_year():
 		# Draw the Summer warning before choosing the frame's speed.
 		if state.season_clock.seconds == 0.0 and state._tutorial_clock_running(): state.climate.start_season(state)
-		var warning: bool = tutorial.current_id() in ["grow", "loss"] and state.climate.data.phase != "calm"
-		multiplier = TutorialScript.WAIT_SPEED if state._tutorial_clock_running() and not warning else 1.0
+		multiplier = 1.0
 	return minf(delta * multiplier, MAX_ACCELERATED_STEP if debug_unlocked and debug_time_multiplier > 1.0 else 3600.0)
 
 func _advance_simulation(delta: float) -> void:
@@ -429,6 +426,8 @@ func _advance_winter_sleep() -> void:
 		_on_state_changed()
 
 func _on_panel_opened(kind: String) -> void:
+	var keeper: String = state.NpcRoster.for_station(kind)
+	if not keeper.is_empty() and is_instance_valid(conversation): conversation.voice.begin_page(keeper)
 	if kind == "accounts":
 		feedback_audio.play_paper()
 		if _accounts_camera_from < 0: _accounts_camera_from = world.camera.size
@@ -510,6 +509,9 @@ func _debug_action(parts: PackedStringArray) -> void:
 				state.save_game()
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT or event is InputEventScreenTouch:
+		if not title_active() and not hud.is_panel_open(): world.tap_actor_at(farm_viewport.to_farm_position(event.position), event.pressed)
+		elif not event.pressed: world.tap_actor_at(Vector2.ZERO, false)
 	# Keep ownership when a drag crosses HUD controls or is released over them.
 	if _map_drag_button == 0: return
 	if not _map_navigation_allowed() or _map_drag_window_size != get_tree().root.size:
@@ -560,13 +562,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					hud.close_panel()
 				else:
 					_on_user_action("menu")
-			KEY_B: _on_user_action("market")
-			KEY_V: _on_user_action("barn")
 			KEY_I: _on_user_action("inventory")
-			KEY_U: _on_user_action("tools")
 			KEY_P: _on_user_action("dex")
-			KEY_Q: _on_user_action("quests")
-			KEY_F: _on_user_action("quick_sell")
+			KEY_F: _on_user_action("barn")
 			KEY_F1: _on_user_action("help")
 			KEY_F5: _on_user_action("save")
 			KEY_F9: _on_user_action("load")
@@ -593,6 +591,8 @@ func _tap_world(point: Vector2) -> void:
 	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(point))
 	if hit.has("plot_index"):
 		queue_plot(int(hit.plot_index))
+	elif hit.has("duck_index"):
+		feedback_audio.play_action("quack")
 	elif hit.has("station"):
 		_interact_station(str(hit.station))
 
@@ -604,37 +604,24 @@ func _interact_station(station: String) -> void:
 	elif station.begins_with("equipment:"):
 		_select_equipment(station.trim_prefix("equipment:"))
 		if station == "equipment:tank": _queue_refill()
-	elif station == "market" and not _tutorial_active():
-		# Visiting Mara herself is a deliberate conversation, even after her intro.
-		_start_conversation("mara", "market")
 	else:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
-	if title_active():
+	if title_active() or conversation.visible: return
+	if action in ["market", "barn", "tools", "duck_patrol", "climate", "quests", "accounts"]:
+		if _tutorial_active() and not tutorial.allows_action(action): return
+		var keeper: String = {"market":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell"}[action]
+		_start_conversation(keeper, action, true)
 		return
-	if conversation.visible: return
-	if action in ["market", "sell_potatoes"]:
-		# Use the existing saved memory for ordinary re-entry, so a completed
-		# introduction stays completed after loading, too. The stall and talk:mara
-		# still allow players to start a conversation deliberately.
-		var met_mara: bool = int(state.npc_history.get("mara", {}).get("visits", 0)) > 0
-		if met_mara:
-			_on_action(action)
-			return
-	var id: String = state.NpcRoster.for_station(action)
-	if not id.is_empty() and state.NpcRoster.available(id, state) and not _tutorial_active():
-		_start_conversation(id, action)
-	else:
-		_on_action(action)
+	_on_action(action)
 
-func _start_conversation(id: String, requested_service: String = "") -> void:
+func _start_conversation(id: String, requested_service: String = "", before_shop: bool = false) -> void:
 	if title_active(): return
-	if not state.NpcRoster.available(id, state) or _tutorial_active() or state.run_over: return
-	var return_service: String = requested_service if not requested_service.is_empty() else hud._panel_kind
-	if return_service.is_empty(): return_service = state.NpcRoster.PEOPLE[id].service
-	if id == "nell" and state.season_clock.season == 3: return_service = "accounts"
-	if id == "edwin": return_service = "accounts" if state.season_clock.season == 3 else "bank"
+	if not state.NpcRoster.available(id, state) or (_tutorial_active() and not before_shop) or state.run_over: return
+	var return_service: String = requested_service if not requested_service.is_empty() else state.NpcRoster.PEOPLE[id].service
+	if id == "nell" and requested_service.is_empty(): return_service = "accounts"
+	if id == "edwin": return_service = "accounts"
 	hud.set_panel_source(return_service)
 	_cancel_walk()
 	_close_equipment()
@@ -644,7 +631,7 @@ func _start_conversation(id: String, requested_service: String = "") -> void:
 	touch_controls.drawer.hide()
 	hud.close_panel()
 	hud._climate_alert.dismiss()
-	conversation.start(id, state, return_service, touch_controls.enabled)
+	conversation.start(id, state, return_service, touch_controls.enabled, before_shop)
 	_save_checkpoint.call_deferred()
 
 func _finish_conversation(service: String) -> void:
@@ -838,6 +825,11 @@ func queue_plot(index: int) -> void:
 	if not state.plots[index].unlocked and not state.ClimateSystem.Lesson.active(state):
 		hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(state, index))
 		return
+	var bed: Dictionary = state.plots[index]
+	if int(bed.stage) in [1, 2]:
+		var speed: float = state.crop_growth_speed(str(bed.crop)) * (1.0 if bed.watered else state.DRY_GROWTH_SPEED)
+		var remaining: int = ceili(maxf(0, float(state.CropTable.CROPS[bed.crop].grow) - float(bed.elapsed)) / speed)
+		hud.show_farm_hint("Ready in %d s" % remaining)
 	pending_plot = index
 	pending_tool = selected_tool
 	_start_walk(world.plot_positions[index] + Vector3(0.0, 0.0, 0.65))
@@ -880,10 +872,15 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	if not changed_indices.is_empty():
 		hud.clear_farm_hint()
 		if tool == "harvest" and state.storage_used() >= state.capacity:
-			hud.show_farm_hint("Barn full · Sell crops [F]")
+			hud.show_farm_hint("Barn full. Open the barn to sell.")
 		world.play_farm_effect(changed_indices, action, int(state.tools.get("hoe" if action == "plant" else action, 0)), harvest_snapshots)
 	if _tutorial_active():
 		tutorial.update(0.0)
+	if not harvest_snapshots.is_empty():
+		state.graded_harvests += 1
+		if state.graded_harvests == 1:
+			hud.show_panel("grades", state)
+		_save_checkpoint.call_deferred()
 
 func _interact_nearby() -> void:
 	if hud.is_panel_open() or state.run_over: return
@@ -975,7 +972,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 		elif state.ClimateSystem.Protection.can_cover(state, hover_plot):
 			context_text = "Cleared bed · Walk beside it, then E / Cover bed to place a frost cover"
 		elif bool(plot.get("pests", false)):
-			context_text = "Pests · %d/3 left · Press 5, then click" % maxi(0, 3 - int(plot.get("pest_ticks", 0)))
+			context_text = "Tap the sprayer, then the bed with bugs."
 		elif not plot.unlocked:
 			context_text = preload("res://scripts/farm_advice.gd").locked(state, hover_plot)
 		elif int(plot.stage) == 3:
@@ -984,7 +981,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 			context_text = "Dry · growing slowly"
 		elif int(plot.stage) > 0 and bool(plot.watered):
 			var seconds: float = maxf(0.0, (float(state.CropTable.CROPS[str(plot.crop)].grow) - float(plot.elapsed)) / state.crop_growth_speed(str(plot.crop)))
-			context_text = "%s · Ready in %.0fs" % [str(plot.crop).capitalize(), seconds]
+			context_text = "Ready in %d s" % ceili(seconds)
 		else:
 			var area: int = state.affected_tiles(hover_plot, action).size()
 			context_text = "%s · Click to work %d bed%s" % [action.capitalize(), area, "" if area == 1 else "s"]
@@ -996,8 +993,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
-		var descriptions: Dictionary = {"market": "Mara’s shop · Click to buy or sell", "barn": "Barn · Click for inventory", "quests": "Quests · Click for challenges", "contracts": "Buyer board · Spring orders", "forge": "Tools · Click to upgrade", "climate": "Farm protection · Click to view upgrades"}
-		descriptions["activities"] = "Ducks · Click to hire pest patrol"
+		var descriptions: Dictionary = {"market": "Mara’s stall · Tap to buy seeds", "barn": "Barn · Tap to sell or store", "quests": "Quests · Click for challenges", "tools": "Tools · Tap to upgrade", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
 		context_text = descriptions.get(str(hit.station), "TATERLAND")
@@ -1031,6 +1027,7 @@ func _on_state_changed() -> void:
 	if world != null:
 		world.set_bank_visit(state.NpcRoster.available("edwin", state))
 		world.update_plots(state.ClimateSystem.Lesson.preview(state) if state.ClimateSystem.Lesson.active(state) else state.plots)
+		world.set_decorations(state.decorations)
 		world.set_climate(state.climate_info())
 		world.set_activity_state(activities.info())
 		world.visuals.sync_state(state)
@@ -1160,18 +1157,26 @@ func _on_action(action: String) -> void:
 				hud.show_farm_hint("Sleeping until Spring…")
 		"talk":
 			if parts.size() == 2: _start_conversation(parts[1])
+		"decorate":
+			if hud._panel_kind == "tools" and parts.size() == 3:
+				state.buy_decoration(parts[1], int(parts[2]))
+				_save_checkpoint.call_deferred()
+		"farmer": hud.show_panel("farmer", state)
+		"quieter":
+			SoundMix.quieter = not SoundMix.quieter
+			if not test_mode: SoundMix.save_preference()
+			hud.show_panel("pause", state)
 		"graphics":
 			if parts.size() == 2:
 				_apply_graphics_quality(parts[1], true)
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "market", "sell_potatoes", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "activities", "duck_patrol", "debug", "climate", "accounts", "bank", "run_summary", "winter_stores", "contracts", "loss_notices", "businesses", "store_advice", "winter_seed_choices":
+		"menu", "calendar", "grades", "market", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "duck_patrol", "debug", "climate", "accounts", "run_summary":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
 			if parts[0] == "run_summary" and state.run_outcome != "completed": return
-			if parts[0] == "accounts" and state.season_clock.season != 3: return
 			_cancel_walk()
 			hud.show_panel(parts[0], state)
 		"activity":
@@ -1215,30 +1220,12 @@ func _on_action(action: String) -> void:
 				state.climate.fund(state, parts[1])
 				_save_checkpoint.call_deferred()
 
-		"forge":
-			_cancel_walk()
-			hud.show_panel("tools", state)
 		"stored_sell":
-			if hud._panel_kind == "sell_potatoes" and hud._refs.market_page.stored_mode:
+			if hud._panel_kind == "barn" and hud._refs.market_page.stored_mode:
 				state.trading.sell_stored(state, parts[1], int(parts[2]), parts[3])
 				_save_checkpoint.call_deferred()
-		"advice_home": hud.show_panel("tools", state)
-		"advice_golden":
-			hud.show_panel("market", state)
-			hud._refs.market_page.focus_seed("golden")
-		"advice_stores": hud.show_panel("store_advice", state)
-		"winter_seeds": hud.show_panel("winter_seed_choices", state)
-		"winter_seed_crop":
-			hud.show_panel("sell_potatoes", state)
-			var page = hud._refs.market_page
-			for crop in [parts[1]]:
-				for grade in ["Table", "Standard"]:
-					if state.stock_count(crop, grade) == 0: continue
-					page.stored_mode = state.Stock.count(state.trading.held, crop, grade) > 0
-					page.select_variety(crop, grade)
-					return
 		"keep_seed":
-			state.trading.keep_seed(state, parts[1], parts[2])
+			if hud._panel_kind == "barn": state.trading.keep_seed(state, parts[1], parts[2])
 			_save_checkpoint.call_deferred()
 		"contract_accept":
 			state.trading.accept(state, int(parts[1]) if parts.size() > 1 else 0)
@@ -1257,8 +1244,8 @@ func _on_action(action: String) -> void:
 
 		"tool": _select_tool(parts[1])
 		"buy": state.buy_seeds(parts[1], int(parts[2]))
-		"sell": state.sell_crop(parts[1], int(parts[2]), parts[3] if parts.size() > 3 else "")
-		"quick_sell": state.sell_crop(state.selected_crop)
+		"sell":
+			if hud._panel_kind == "barn": state.sell_crop(parts[1], int(parts[2]), parts[3] if parts.size() > 3 else "")
 		"upgrade":
 			match parts[1]:
 				"barn": state.upgrade_barn()
@@ -1318,7 +1305,7 @@ func _on_climate_changed(phase: String) -> void:
 		if phase == "warning" and state.guided_first_year():
 			# Iris's persistent guide already gives this warning on small screens.
 			hud._climate_alert.dismiss()
-			conversation.voice.begin_line("iris", 100)
+
 		else:
 			hud._climate_alert.present(phase, info, state)
 		_play_tone(164.81 if phase == "impact" else 220.0, 0.6)
@@ -1340,7 +1327,6 @@ func _on_season_changed() -> void:
 	_close_equipment()
 	if (state.season_clock.season == 3):
 		hud._climate_alert.dismiss()
-		conversation.voice.begin_line("nell", state.NpcRoster.ledger_lines(state).length())
 	_on_state_changed()
 
 
@@ -1348,6 +1334,7 @@ func _on_run_ended() -> void:
 	_cancel_walk()
 	hud._climate_alert.dismiss()
 	climate_shake = 0.0
+	if is_instance_valid(climate_audio): climate_audio.guided = state.guided_first_year()
 	if is_instance_valid(climate_audio): climate_audio.set_weather(state.climate_info(), true)
 	pest_alert.update(0.0, 0)
 	world.camera.h_offset = 0.0
@@ -1401,7 +1388,6 @@ func play_tutorial_cue(kind: String) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_stop_map_navigation()
-		Input.action_release("hurry")
 		if is_instance_valid(touch_controls): touch_controls.release_all()
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		if state != null and not test_mode and not title_active():

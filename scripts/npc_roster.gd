@@ -17,7 +17,7 @@ const PEOPLE := {
 		"reply":"Sounds like it means a lot.", "answer":"Fits my hand. That's enough. Pass me your hoe.",
 		"help":"Which upgrade helps?", "advice":"Wider head. More beds per swing. Pick the tool you wear out fastest. Test it on one small patch before the whole field.",
 		"thanks":"Hammer's sound again. Yours next.", "weather":"Tools can wait. Ripe crops can't. Go."},
-	"nell": {"name":"Nell", "role":"Accountant", "service":"barn", "service_label":"Open the barn", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
+	"nell": {"name":"Nell", "role":"Accountant", "service":"accounts", "service_label":"Read the accounts", "color":"658c86", "skin":"edc797", "shape":Vector3(1.08,.94,1.0), "hat":"", "detail":"glasses",
 		"first":"Nell. Barn and books. Crops in before rot.",
 		"daily":["Someone's been putting muddy boots on my clean bags. I have my suspicions.", "I like it in here before everyone arrives. Nice and quiet."],
 		"topic":"Who left the muddy boots?", "story":"Ada claims the footprints are too small to be hers. Pip blames the ducks. I've never seen a duck wear a size six.",
@@ -48,7 +48,7 @@ const PEOPLE := {
 		"help":"How do I protect the farm?", "advice":"The forecast is a probability, not a promise. A better station narrows its uncertainty. Budget for tanks, drains, windbreaks or Spring frost covers in Winter. None protects against everything.",
 		"thanks":"Good to hear your voice again. I've got the latest readings here.", "weather":"The readings are changing quickly. Check your protection while there's time."},
 
-	"edwin": {"name":"Edwin", "role":"Bank manager", "service":"bank", "service_label":"Review the overdraft", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
+	"edwin": {"name":"Edwin", "role":"Bank manager", "service":"accounts", "service_label":"Review the overdraft", "color":"78847a", "skin":"ddbb91", "shape":Vector3(.94,1.07,.98), "hat":"visor", "detail":"spectacles",
 		"first":"Afternoon. Edwin. I've brought the figures. Shall we go through them?",
 		"daily":["I hope I'm not catching you at a bad time. I do seem to have a talent for it.", "Nell lent me a dry folder. I'd like to return it in the same condition."],
 		"topic":"Do people mind you visiting?", "story":"Some do. I understand. I try to explain the figures properly. My mother says I should ask about people's day before mentioning the paperwork.",
@@ -58,7 +58,6 @@ const PEOPLE := {
 }
 
 static func for_station(station: String) -> String:
-	if station == "activities": return "pip"
 	for id: String in PEOPLE:
 		if PEOPLE[id].service == station: return id
 	return ""
@@ -108,6 +107,7 @@ static func greeting(id: String, state, record: bool = false) -> String:
 	# an unfavourable balance or turns a physical loss into fictional spending.
 	if id == "nell" and state.season_clock.season == 3: line = ledger_lines(state)
 	if id == "edwin": line = bank_line(state)
+	if state.farmer_appearance.name != "Farmer": line = str(state.farmer_appearance.name) + ", " + line
 	if record:
 		state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false))}
 	return line
@@ -129,3 +129,14 @@ static func valid_history(raw: Variant) -> bool:
 		if not (visits is int or visits is float) or not is_finite(float(visits)) or visits < 0 or visits > 100000 or float(visits) != floorf(float(visits)): return false
 		if not m.get("kind") is bool or not m.get("last") is String or m.last.length() > 600: return false
 	return true
+
+const SEASON_GREETINGS := {
+	"mara": ["Fresh seeds for you, {name}. Let's start gently.", "Good to see you, {name}. Keep some water handy.", "Come in, {name}. The harvest smells lovely.", "Warm hands, {name}. Spring's seeds can wait."],
+	"nell": ["Come in, {name}. We'll count the year together.", "A quiet minute, {name}. Let's look at the books.", "Bring a chair, {name}. There's time for the figures.", "You're welcome here, {name}. Let's count what we kept."],
+	"tess": ["One bed at a time, {name}. You're doing fine.", "Take a breath, {name}. I'll keep watch with you.", "Good work, {name}. Let's see what made it home.", "Warm up, {name}. We can mend things together."],
+	"iris": ["Hello, {name}. The Spring readings are here.", "Good to hear you, {name}. I'll watch the clouds.", "Hello, {name}. Let's make time for the harvest.", "Keep warm, {name}. I'm still listening."],
+}
+static func service_greeting(id: String, state) -> String:
+	var words: Array = SEASON_GREETINGS.get(id, ["Good to see you, {name}.", "Good to see you, {name}.", "Good to see you, {name}.", "Good to see you, {name}."])
+	var farmer: String = str(state.farmer_appearance.get("name", "Farmer"))
+	return PEOPLE[id].name + ": " + str(words[state.season_clock.season]).replace("{name}", farmer)

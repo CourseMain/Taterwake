@@ -1,26 +1,26 @@
 extends Node
 ## A guided first year through real Winter accounts. Later help is optional.
-const WAIT_SPEED: float = 10.0
+const WAIT_MESSAGE: String = "Your potatoes are growing. Water any dry beds."
 const STEPS: Array[Dictionary] = [
-	{"id": "welcome", "title": "Your first year", "body": "Plant, water, harvest. Nell counts bills.\nOne small Summer storm; decisions pause time.\nWASD walks; drag looks.", "next": true, "label": "Meet Mara →"},
-	{"id": "market", "title": "Choose your first crop card", "body": "Tap Mara’s stall [B]: Russet card. Twelve seeds; plant one.", "focus": "market", "key": "B · SEEDS", "next": true, "label": "Use my starter seeds →"},
-	{"id": "hoe", "title": "Prepare the soil", "body": "Hoe ready. Tap gold bed.", "tool": "hoe", "key": "1 · HOE"},
-	{"id": "plant", "title": "Plant your seed", "body": "Seeds ready. Tap gold bed: Russet.", "tool": "plant", "key": "2 · SEEDS"},
-	{"id": "water", "title": "Water once", "body": "Can ready. Water the gold bed.", "tool": "water", "key": "3 · WATER"},
-	{"id": "grow", "title": "Spring into Summer", "body": "10× waits; 1× warnings. One mild Summer storm teaches loss. Later forecasts follow climate."},
-	{"id": "loss", "title": "Tess counts the damage", "body": "Cause card: one tonne lost; two to harvest.", "next": true, "label": "Harvest what remains →"},
-	{"id": "harvest", "title": "Bring in your crop", "body": "Harvest ready. Tap gold bed; fill barn.", "tool": "harvest", "key": "4 · HARVEST"},
-	{"id": "sell", "title": "Sell now or store?", "body": "Barn [F]: sell Russet or store. Winter: higher prices, storage charges, spoilage. Nell counts both.", "focus": "barn", "key": "F · SELL", "next": true, "label": "Store for Winter →"},
-	{"id": "winter", "title": "The bills are coming", "body": "Harvest starters; tend others. Winter brings Nell’s books. Unsold crops stay stored."},
+	{"id": "welcome", "title": "Your first year", "body": "Let's grow one potato together.", "next": true, "label": "Meet Mara →"},
+	{"id": "market", "title": "Choose your crop", "body": "Tap Mara's stall to see your starter seeds.", "focus": "market", "next": true, "label": "Use my starter seeds →"},
+	{"id": "hoe", "title": "Prepare the soil", "body": "Tap the hoe, then tap the glowing bed.", "tool": "hoe"},
+	{"id": "plant", "title": "Plant your seed", "body": "Tap the seeds, then tap the glowing bed.", "tool": "plant"},
+	{"id": "water", "title": "Water once", "body": "Tap the watering can, then tap the glowing bed.", "tool": "water"},
+	{"id": "grow", "title": "Spring is passing", "body": "Spring is passing. One small storm is coming. Iris will warn you."},
+	{"id": "loss", "title": "Tess counts the damage", "body": "Tap Tess's board to see what the storm damaged.", "next": true, "label": "Return to the field →"},
+	{"id": "harvest", "title": "Bring in your crop", "body": "Tap the harvest tool, then tap the glowing bed.", "tool": "harvest"},
+	{"id": "sell", "title": "Sell or store", "body": "Open the barn to sell, or leave your potatoes stored.", "focus": "barn", "next": true, "label": "Store for Winter →"},
+	{"id": "winter", "title": "Winter brings the bills", "body": "Harvest the ripe beds before Winter comes."},
 ]
 const TOUR: Array[Dictionary] = [
-	{"id": "welcome", "title": "Meet the Valley", "body": "An optional look around. Your farm pauses during this tour. Leave whenever you like.", "label": "Look around →"},
-	{"id": "market", "title": "Seed market", "body": "Click the market to browse. Seeds cost 75% of each variety’s base price.", "focus": "market"},
-	{"id": "sell", "title": "The barn", "body": "Click the barn to compare what you hold and what it is worth. F sells your selected raw crop.", "focus": "barn"},
-	{"id": "inventory", "title": "Your inventory", "body": "Press I to inspect your crops, seeds and tools."},
-	{"id": "tools", "title": "Toolsmith", "body": "Click the toolsmith to browse wider tools. Upgrades cover more beds per click.", "focus": "tools"},
-	{"id": "quests", "title": "Local challenges", "body": "Click the challenge board for goals and rewards. Claim rewards after meeting each goal.", "focus": "quests"},
-	{"id": "ducks", "title": "Duck Patrol", "body": "Click Ducks to browse a helper that clears pests. Up to two ducks can patrol your farm.", "focus": "duck_patrol"},
+	{"id": "welcome", "title": "Meet the Valley", "body": "Your farm pauses while we look around together.", "label": "Look around →"},
+	{"id": "market", "title": "Seed market", "body": "Tap Mara's stall to browse seeds.", "focus": "market"},
+	{"id": "sell", "title": "The barn", "body": "Tap the barn to sell or store your potatoes.", "focus": "barn"},
+	{"id": "inventory", "title": "Your inventory", "body": "Open your bag to inspect potatoes and seeds."},
+	{"id": "tools", "title": "Toolsmith", "body": "Tap the Tools shed to see upgrades.", "focus": "tools"},
+	{"id": "quests", "title": "Local challenges", "body": "Tap Tess's board to see your challenges.", "focus": "quests"},
+	{"id": "ducks", "title": "Duck Patrol", "body": "Tap Pip to meet the ducks that clear pests.", "focus": "duck_patrol"},
 	{"id": "finish", "title": "Back to your farm", "body": "Your crops, prices and timers resume where you left them.", "label": "Resume farming →"},
 ]
 var game: Node
@@ -96,8 +96,9 @@ func _enter_step() -> void:
 		game._on_climate_changed("warning")
 	if current_id() == "loss":
 		game.hud._climate_alert.dismiss()
-		game.hud.show_panel("loss_notices", game.state)
-		game.conversation.voice.begin_line("tess", game.state.NpcRoster.weather_cost(game.state).length(), true)
+		game.hud.show_panel("quests", game.state)
+		game.hud._refs.tess_board.losses = true
+		game.hud._refs.tess_board.refresh()
 	_save()
 
 func _tools() -> Array[String]:
@@ -112,23 +113,27 @@ func _tools() -> Array[String]:
 
 func _features() -> Array[String]:
 	if _tour_only():
-		return ["coins", "market", "barn", "inventory", "tools", "quests", "duck_patrol", "stock", "menu"]
-	return ["coins", "market", "barn"] if _index() >= 1 else []
+		return ["coins", "market", "barn", "inventory", "tools", "quests", "duck_patrol", "stock", "menu", "climate", "calendar"]
+	var result: Array[String] = []
+	if _index() >= 1: result.append_array(["coins", "market"])
+	if _index() >= 5: result.append_array(["climate", "calendar"])
+	if _index() >= 8: result.append("barn")
+	return result
 
 func allowed_actions() -> Array[String]:
-	var result: Array[String] = ["close", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
+	var result: Array[String] = ["close", "grades", "grade_acknowledge", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "sell_potatoes", "grade:", "barn", "inventory", "winter_stores", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "grade:", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)
 	if "barn" in _features(): result.append("inventory_tab:crops")
 	for tool: String in _tools(): result.append("tool:" + tool)
 	if current_id() == "market": result.append("buy:russet:1")
-	if current_id() == "sell": result.append_array(["sell:russet:", "quick_sell", "sell_potatoes", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
-	if current_id() in ["grow", "winter"]: result.append_array(["quick_sell", "sell_potatoes", "sell:russet:", "market_sell", "market_all", "quantity_minus", "quantity_plus", "grade:"])
+	if current_id() == "sell": result.append_array(["sell:russet:", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
+	if current_id() in ["grow", "winter"]: result.append_array(["sell:russet:", "market_sell", "market_all", "quantity_minus", "quantity_plus", "grade:"])
 	if current_id() == "plant": result.append("crop:russet")
-	if current_id() == "loss": result.append("loss_notices")
+	if current_id() == "loss": result.append("quests")
 	return result
 
 func allows_action(action: String) -> bool:
@@ -147,7 +152,7 @@ func allows_plot(index: int, tool: String) -> bool:
 	if id in ["grow", "winter"] and index >= 0 and index < game.state.plots.size():
 		# Keep only the demonstration crop for the disclosed gust; other beds
 		# are available immediately, before the guide could expose them to cold.
-		return game.state.plots[index].unlocked and tool in ["hoe", "water", "harvest"] and (id == "winter" or index != _plot_index())
+		return game.state.plots[index].unlocked and tool in ["hoe", "water", "harvest"]
 	# A different empty bed is a valid choice; move the cue to that bed.
 	if id == "hoe" and tool == "hoe" and index >= 0 and index < game.state.plots.size():
 		var candidate: Dictionary = game.state.plots[index]
@@ -180,24 +185,16 @@ func refresh() -> void:
 	var forecaster: bool = false
 	if current_id() == "grow":
 		if game.state.season_clock.season == 0:
-			var seconds: int = ceili(game.state.season_clock.remaining(game.state.season_seconds()) / WAIT_SPEED)
-			body = "Summer in %ds · 10×.\nIris warns before one small storm. Tool 4: harvest other ripe starters." % seconds
-			wait_label = "Summer in %ds · 10×" % seconds
+			body = WAIT_MESSAGE
 		else:
 			forecaster = true
-			title = "Iris · Summer warning"
-			var seconds: int = ceili(game.state.climate.data.timer)
-			body = "Iris: small storm in %ds · 1×.\nTool 4: harvest other starters. Watch gold bed; Tess counts loss." % seconds
-			wait_label = "Storm in %ds · 1×" % seconds
+			title = "A small storm is coming"
+			body = "Harvest the glowing bed before the storm."
+			wait_label = "Iris will warn you."
 	elif current_id() == "winter":
-		var left: float = (3 - game.state.season_clock.season) * game.state.season_seconds() - game.state.season_clock.seconds
 		var ripe: int = game.state.plots.filter(func(bed): return int(bed.stage) == 3 and bed.crop != "icecap").size()
-		if ripe > 0:
-			body = "Tool 4: harvest %d remaining ripe bed%s. Time paused; cold waits. Unsold sacks stay stored." % [ripe, "" if ripe == 1 else "s"]
-			wait_label = "Harvest remaining beds · time paused"
-		else:
-			body += "\nTend or hoe the other beds while time runs at 10×."
-			wait_label = "Accounts in %ds · 10×" % ceili(left / WAIT_SPEED)
+		body = "Harvest the ripe beds before Winter comes." if ripe > 0 else WAIT_MESSAGE
+		wait_label = "Harvest the ripe beds." if ripe > 0 else ""
 	game.hud.set_tutorial({"title": title, "body": body, "step": _index() + 1, "total": _steps().size(),
 		"tools": _tools(), "features": _features(), "continue": _tour_only() or bool(step.get("next", false)),
 		"continue_label": str(step.get("label", "Next place →")), "wait_label": wait_label, "forecaster": forecaster, "id": current_id(), "key": str(step.get("key", "")),
@@ -221,7 +218,12 @@ func update(_delta: float) -> void:
 		"hoe": done = bool(plot.tilled)
 		"plant": done = int(plot.stage) > 0
 		"water": done = bool(plot.watered)
-		"grow": done = not game.state.tutorial_loss().is_empty()
+		"grow":
+			if int(plot.stage) == 0 and game.state.stock_count("russet") > 0:
+				game.state.tutorial_progress.step = 8
+				_enter_step()
+				return
+			done = not game.state.tutorial_loss().is_empty()
 		"harvest": done = int(plot.stage) == 0 and game.state.stock_count("russet") > 0
 		"sell":
 			done = game.state.lifetime_sales > sale_baseline

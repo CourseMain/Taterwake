@@ -9,6 +9,7 @@ const Cozy = preload("res://scripts/cozy_ui.gd")
 var state
 var npc_id: String = ""
 var service: String = ""
+var before_shop: bool = false
 var page: String = ""
 var portrait
 var card: Panel
@@ -135,10 +136,11 @@ func button(text: String, callback: Callable) -> Button:
 	b.pressed.connect(callback)
 	return b
 
-func start(id: String, farm, return_service: String, touch: bool = false) -> void:
+func start(id: String, farm, return_service: String, touch: bool = false, shop_greeting: bool = false) -> void:
 	state = farm
 	npc_id = id
 	service = return_service
+	before_shop = shop_greeting
 	_touch = touch
 	if not is_instance_valid(portrait):
 		portrait = Portrait.new()
@@ -159,7 +161,8 @@ func start(id: String, farm, return_service: String, touch: bool = false) -> voi
 	var game = get_parent().get_parent()
 	_source_offset = game.hud.panel_source_position(return_service) - size * .5
 	layout()
-	show_page("greeting",Roster.greeting(id,state,true))
+	show_page("greeting",Roster.service_greeting(id,state) if before_shop else Roster.greeting(id,state,true))
+	voice.begin_page(id)
 	_update_entrance()
 	close_button.grab_focus()
 
@@ -172,7 +175,7 @@ func _update_entrance() -> void:
 func layout() -> void:
 	if not is_instance_valid(card): return
 	var width: float = minf(1160,size.x-32)
-	var height: float = minf(1100 if width < 700 else 760,size.y-32)
+	var height: float = minf(650 if width < 700 else 500,size.y-32)
 	var origin := Vector2((size.x-width)/2,(size.y-height)/2)
 	card.position = origin
 	card.size = Vector2(width,height)
@@ -185,7 +188,7 @@ func layout() -> void:
 	var inner := Rect2(origin+Vector2(16,top),Vector2(width-32,height-top-16))
 	if width < 700:
 		# Tall phones keep the face above the speech; choices scroll on tiny windows.
-		var ph: float = clampf(inner.size.y*.29,120,270)
+		var ph: float = clampf(inner.size.y*.20,100,140)
 		if is_instance_valid(portrait):
 			portrait.position = inner.position
 			portrait.size = Vector2(inner.size.x,ph)
@@ -212,6 +215,8 @@ func layout() -> void:
 	bubble.content_margin_bottom = bubble.content_margin_top
 	body.add_theme_constant_override("separation",6 if height < 640 else 10)
 	body.custom_minimum_size.y = maxf(0,text_card.size.y-48)
+	var game = get_parent().get_parent()
+	if is_instance_valid(game) and is_instance_valid(game.hud): game.hud.fit_text(self)
 	queue_redraw()
 
 func _draw() -> void:
@@ -224,28 +229,27 @@ func show_page(next_page: String, text: String = "") -> void:
 	match page:
 		"greeting":
 			if text.is_empty(): text = "What would you like to talk about?"
-			labels = [service_label(),str(p.topic),"How's the weather looking?"]
+			labels = [service_label(), str(p.topic), "How's the weather looking?"]
 			choice_ids = ["service","story","weather"]
 		"story":
 			text = p.story
 			labels = [str(p.reply),str(p.help),"Let's get back to work."]
-			choice_ids = ["reply","advice","service"]
+			choice_ids = ["reply","advice","greeting"]
 		"reply":
 			text = p.answer
 			state.npc_history[npc_id].kind = true
-			labels = [str(p.help),service_label(),"I'll see you later."]
-			choice_ids = ["advice","service","leave"]
+			labels = [str(p.help),"Can I ask you something else?","How's the weather looking?"]
+			choice_ids = ["advice","greeting","weather"]
 		"advice", "weather":
 			text = Roster.advice(npc_id, state) if page == "advice" else Roster.weather_line(npc_id,state)
-			labels = [service_label(),"Can I ask you something else?","Thanks. See you around."]
-			choice_ids = ["service","greeting","leave"]
+			labels = ["Tell me about yourself.","Can I ask you something else?","How's the weather looking?"]
+			choice_ids = ["story","greeting","weather"]
 	speech.text = text
 	speech.visible_characters = 0
 	_revealed = 0
 	elapsed = 0
 	portrait.avatar.speaking = true
 	portrait.avatar.expression = "concerned" if page == "weather" else "warm"
-	voice.begin_line(npc_id, speech.get_total_character_count(), page == "weather")
 	for i in range(3):
 		var b: Button = choice_buttons[i]
 		b.text = labels[i]
@@ -262,15 +266,16 @@ func show_page(next_page: String, text: String = "") -> void:
 	scroll.scroll_vertical = 0
 	layout()
 
-func service_label() -> String:
-	return "Read the annual accounts" if npc_id == "nell" and state.season_clock.season == 3 else str(Roster.PEOPLE[npc_id].service_label)
-
 func choose(index: int) -> void:
 	if not visible or index < 0 or index >= choice_ids.size(): return
 	var action: String = choice_ids[index]
-	if action == "service": finish(service)
-	elif action == "leave": finish()
-	else: show_page(action)
+	if action == "service":
+		finish(true)
+	else:
+		show_page(action)
+
+func service_label() -> String:
+	return {"market":"Buy seeds", "barn":"Sell or store potatoes", "tools":"Open the Tools shed", "duck_patrol":"Meet the ducks", "accounts":"Open the accounts", "climate":"Weather and protection", "quests":"Open Tess's board"}.get(service, "Open " + service)
 
 func reveal() -> void:
 	voice.stop()
@@ -307,11 +312,11 @@ func _input(event: InputEvent) -> void:
 		_: pass
 	get_viewport().set_input_as_handled()
 
-func finish(next_service: String = "") -> void:
+func finish(open_service: bool = false) -> void:
 	if not visible: return
 	RenderingServer.canvas_item_set_transform(get_canvas_item(), Transform2D.IDENTITY)
 	voice.stop()
 	hide()
 	set_process(false)
 	if is_instance_valid(portrait): portrait.avatar.speaking = false
-	finished.emit(next_service)
+	finished.emit(service if open_service else "")

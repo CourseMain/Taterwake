@@ -33,18 +33,20 @@ func setup(owner_hud) -> void:
 		row.add_child(hud._icon({"kind": "metric", "id": entry[0]}, 28)); row.add_child(hud._wrap(entry[1], 14, Place.INK))
 	_grid = GridContainer.new(); _grid.name = "ProtectionTiles"; _grid.columns = 2
 	_grid.add_theme_constant_override("h_separation", 12); _grid.add_theme_constant_override("v_separation", 12); add_child(_grid)
-	for id in ["rainwater", "drainage", "windbreaks", "frost"]:
+	for id in ["rainwater", "drainage", "windbreaks", "frost", "irrigation"]:
 		var tile := _panel(_grid); tile.name = "Protection_" + id
 		tile.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 12, 5, Place.WOOD.darkened(.25)))
 		var body: VBoxContainer = hud._vbox(8); tile.add_child(body)
 		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); body.add_child(row)
 		var drawing := Display.new(); drawing.kind = id; drawing.dark = true; drawing.custom_minimum_size = Vector2(42, 42); row.add_child(drawing)
-		var title: Label = hud._wrap(hud._state.ClimateSystem.Protection.NAMES[id], 20, Place.PAPER, true); row.add_child(title)
+		var title: Label = hud._wrap(hud._state.ClimateSystem.PROJECTS[id].name, 20, Place.PAPER, true); row.add_child(title)
 		var level: Label = hud._label("", 16, Place.PAPER); row.add_child(level); _levels[id] = level
 		var effect: Label = hud._wrap("", 15, Place.PAPER.darkened(.1)); body.add_child(effect); hud._refs["climate_effect:" + id] = effect
 		var button: Button = hud._button("", "")
 		button.pressed.connect(func(): hud._act("project_site:" + id if hud._state.climate.data.protection.pending.has(id) else "climate_fund:" + id))
 		Place.pill(button, ACCENT, true); body.add_child(button); hud._refs["climate_fund:" + id] = button
+	var practice: Button = hud._button("Water practice", "climate_operate:lesson_start")
+	add_child(practice); hud._refs.climate_practice = practice
 	var insurance := _panel(self); insurance.name = "InsuranceToggleRow"
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 12); insurance.add_child(row)
 	hud._refs.insurance = hud._button("", "insure"); hud._refs.insurance.toggle_mode = true
@@ -77,15 +79,17 @@ func refresh() -> void:
 		var level: int = int(info.projects.get(id, 0)); var full: bool = level >= 2
 		var pending: bool = info.protection.pending.has(id)
 		_levels[id].text = Place.pips(level, 2)
-		var effect: String = {"rainwater":"Drought", "drainage":"Flood", "windbreaks":"Storm", "frost":"Covered Spring freeze"}[id]
-		hud._refs["climate_effect:" + id].text = "%s loss −%d%%" % [effect, 75 if level == 2 else 50]
+		var effect: String = {"rainwater":"Drought", "drainage":"Flood", "windbreaks":"Storm", "frost":"Covered Spring freeze", "irrigation":"Water"}[id]
+		hud._refs["climate_effect:" + id].text = "%d tank water per patch" % (4 if level == 2 else 6) if id == "irrigation" else "%s loss −%d%%" % [effect, 75 if level == 2 else 50]
 		hud._refs["climate_effect:" + id].tooltip_text = "At level %d. " % maxi(1, level) + farm.ClimateSystem.PROJECTS[id].detail
 		var button: Button = hud._refs["climate_fund:" + id]
 		var cost: float = farm.ClimateSystem.PROJECTS[id].cost * (level + 1)
 		button.text = "Work %d / 3 →" % info.protection.pending[id] if pending else ("Built" if full else "Build%s · %s" % [" level 2" if level == 1 else "", farm.money(cost)])
 		button.set_meta("action", "project_site:" + id if pending else "climate_fund:" + id)
 		button.set_meta("hud_action", button.get_meta("action"))
-		button.disabled = farm.run_over or full or farm.season_clock.season != 3 or (not pending and not farm.can_purchase(cost))
+		button.disabled = farm.run_over or full or (farm.season_clock.season != 3 and id != "irrigation") or (not pending and not farm.can_purchase(cost))
+	hud._refs.climate_practice.visible = info.projects.get("irrigation", 0) > 0
+	hud._refs.climate_practice.disabled = farm.run_over or farm.climate.data.phase != "calm"
 	var insured: bool = farm.ClimateSystem.Protection.insured(farm)
 	hud._refs.insurance.text = "● Insured this year" if insured else "○ Insurance this year · " + farm.money(farm.ClimateSystem.Protection.PREMIUM)
 	hud._refs.insurance.set_pressed_no_signal(insured)
