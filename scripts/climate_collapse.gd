@@ -162,7 +162,7 @@ func rule() -> ColorRect:
 	return line
 
 func button(text: String, primary: bool = false) -> Button:
-	var result := Button.new()
+	var result := preload("res://scripts/illustrated_button.gd").new()
 	result.text = text
 	result.custom_minimum_size = Vector2(190, 45)
 	result.add_theme_font_override("font", _display)

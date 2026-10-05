@@ -118,7 +118,7 @@ func label(text: String, font_size: int, color: Color) -> Label:
 	return result
 
 func button(text: String, callback: Callable) -> Button:
-	var b := Button.new()
+	var b := preload("res://scripts/illustrated_button.gd").new()
 	b.text = text
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -175,7 +175,11 @@ func _update_entrance() -> void:
 func layout() -> void:
 	if not is_instance_valid(card): return
 	var width: float = minf(1160,size.x-32)
-	var height: float = minf(650 if width < 700 else 500,size.y-32)
+	var game = get_parent().get_parent()
+	var art_room: float = 86 / maxf(.1, game.hud._ui_scale)
+	# Keep the greeting and first service visible together after illustrating
+	# both the Leave button and the choices. Small landscapes still scroll.
+	var height: float = minf((650 if width < 700 else 500) + art_room,size.y-32)
 	var origin := Vector2((size.x-width)/2,(size.y-height)/2)
 	card.position = origin
 	card.size = Vector2(width,height)
@@ -215,7 +219,6 @@ func layout() -> void:
 	bubble.content_margin_bottom = bubble.content_margin_top
 	body.add_theme_constant_override("separation",6 if height < 640 else 10)
 	body.custom_minimum_size.y = maxf(0,text_card.size.y-48)
-	var game = get_parent().get_parent()
 	if is_instance_valid(game) and is_instance_valid(game.hud): game.hud.fit_text(self)
 	queue_redraw()
 

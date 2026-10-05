@@ -15,6 +15,7 @@ var completed: Dictionary = {}
 var collapsed: bool = false
 var calendar: String = ""
 var signature: String = ""
+var _layout_queued: bool = false
 
 func setup(owner_hud) -> void:
 	hud = owner_hud
@@ -47,6 +48,16 @@ func setup(owner_hud) -> void:
 	pin.kind = "pin"
 	add_child(pin)
 	pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	minimum_size_changed.connect(_queue_layout)
+
+func _queue_layout() -> void:
+	if _layout_queued or not visible: return
+	_layout_queued = true
+	call_deferred("_settle_layout")
+
+func _settle_layout() -> void:
+	_layout_queued = false
+	if visible: layout()
 
 func available() -> Dictionary:
 	var farm = hud._state
@@ -159,7 +170,9 @@ func layout() -> void:
 	var chrome: float = get_theme_stylebox("panel").get_minimum_size().y + heading.get_combined_minimum_size().y + 4
 
 	if sleep_button.visible: chrome += sleep_button.get_combined_minimum_size().y + 2
-	scroll.custom_minimum_size = Vector2(width - 20, minf(scroll.get_child(0).get_combined_minimum_size().y, maxf(target, bottom - top - chrome)))
+	# The viewport may be shorter than a job's touch target in landscape.
+	# The buttons keep their full targets inside the vertically scrollable list.
+	scroll.custom_minimum_size = Vector2(width - 20, minf(scroll.get_child(0).get_combined_minimum_size().y, maxf(0, bottom - top - chrome)))
 	size.y = 0
 	size.x = width
 

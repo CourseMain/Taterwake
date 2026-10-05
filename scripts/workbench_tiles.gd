@@ -34,7 +34,7 @@ static func build(page) -> void:
 	for id in farm_items():
 		var row: VBoxContainer = hud._vbox(4); notes.add_child(row)
 		row.add_child(hud._wrap(hud._state.Decorations.ITEMS[id], 16, Place.PAPER))
-		var site := OptionButton.new(); site.name = "DecorationSite_" + id
+		var site := preload("res://scripts/illustrated_choice.gd").new(); site.name = "DecorationSite_" + id
 		for location in hud._state.Decorations.PLACES: site.add_item(location)
 		if hud._state.Decorations.FIXED_PLACES.has(id):
 			site.selected = hud._state.Decorations.FIXED_PLACES[id]; site.disabled = true

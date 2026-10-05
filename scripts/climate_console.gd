@@ -85,7 +85,7 @@ func _skin(fill: Color, edge: Color, radius: int) -> StyleBoxFlat:
 	return skin
 
 func _button(emphasis: bool = false) -> Button:
-	var button := Button.new()
+	var button := preload("res://scripts/illustrated_button.gd").new()
 	button.custom_minimum_size.y = 34
 	button.add_theme_font_override("font", Type.face(Type.BODY, 700))
 	button.add_theme_font_size_override("font_size", 14)

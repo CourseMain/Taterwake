@@ -57,6 +57,7 @@ static func help(hud, parent: Control, words: String) -> Button:
 		var dialog := AcceptDialog.new()
 		dialog.title = "Field notes"; dialog.dialog_text = words; dialog.dialog_autowrap = true
 		dialog.borderless = true; dialog.exclusive = true
+		dialog.get_ok_button().set_script(preload("res://scripts/illustrated_button.gd"))
 		var font := Type.face(Type.BODY, 500); font.fallbacks = [Type.SPUDION]
 		dialog.add_theme_font_override("font", font)
 		dialog.add_theme_font_size_override("font_size", 22)
@@ -76,6 +77,7 @@ static func help(hud, parent: Control, words: String) -> Button:
 			var style: StyleBoxFlat = dialog.get_ok_button().get_theme_stylebox(state).duplicate()
 			style.content_margin_top = padding; style.content_margin_bottom = padding
 			dialog.get_ok_button().add_theme_stylebox_override(state, style)
+		dialog.get_ok_button().refresh_picture()
 		hud.root.add_child(dialog)
 		dialog.confirmed.connect(dialog.queue_free)
 		dialog.canceled.connect(dialog.queue_free)

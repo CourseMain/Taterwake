@@ -54,7 +54,7 @@ func _ready() -> void:
 	root.hide()
 
 func _button(words: String, primary: bool) -> Button:
-	var button := Button.new()
+	var button := preload("res://scripts/illustrated_button.gd").new()
 	button.text = words
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.add_theme_font_override("font", Type.face(Type.BODY, 750))
@@ -170,12 +170,16 @@ func _layout() -> void:
 	var gap: float = 14 if touch else 10
 	var left: float = (viewport_size.x - width) * .5
 	var bottom: float = viewport_size.y - 28
+	walk.add_theme_font_size_override("font_size", 28 if touch else 22)
+	resume.add_theme_font_size_override("font_size", 22 if touch else 16)
+	walk.refresh_picture()
+	resume.refresh_picture()
+	height = maxf(height, walk.get_combined_minimum_size().y)
+	continue_height = maxf(continue_height, resume.get_combined_minimum_size().y)
 	walk.position = Vector2(left, bottom - height - (continue_height + gap if has_saved_farm else 0.0))
 	walk.size = Vector2(width, height)
 	resume.position = Vector2(left, bottom - continue_height)
 	resume.size = Vector2(width, continue_height)
-	walk.add_theme_font_size_override("font_size", 28 if touch else 22)
-	resume.add_theme_font_size_override("font_size", 22 if touch else 16)
 	if is_instance_valid(confirmation):
 		confirmation.custom_minimum_size.x = width
 		confirmation_words.custom_minimum_size.x = maxf(1,width-44)

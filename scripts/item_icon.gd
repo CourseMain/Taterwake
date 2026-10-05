@@ -35,6 +35,8 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
 		"place": _place(c, id)
+		"control": _control(c, id)
+		"forecast": _forecast(c, id, bool(data.get("warning", false)))
 		"event": _event(c, id)
 		"metric": _metric(c, id)
 		"tool": _tool(c, str(data.get("tool", id.trim_prefix("tool:"))))
@@ -264,3 +266,102 @@ static func _event(c: CanvasItem, event: String) -> void:
 	elif event == "flood":
 		for y in [-22, 0, 22]: c.draw_polyline(PackedVector2Array([Vector2(-40,y), Vector2(-20,y-8), Vector2(0,y+3), Vector2(20,y-8), Vector2(40,y)]), Color("638396"), 5, true)
 	else: _metric(c, "weather")
+
+static func forecast_picture(climate: Dictionary) -> Dictionary:
+	var event: String = str(climate.get("event", ""))
+	if str(climate.get("phase", "calm")) == "calm": event = str(climate.get("signal", ""))
+	var sky: String = {"drought":"sun", "flood":"rain", "storm":"storm", "freeze":"snow", "deep_freeze":"snow", "blizzard":"snow"}.get(event, "cloud" if float(climate.get("forecast", {}).get("high", 0)) >= .4 else "sun")
+	return {"kind":"forecast", "id":sky, "warning":climate.get("phase", "calm") == "warning"}
+
+static func control_picture(action: String, words: String) -> Dictionary:
+	var text: String = (action + " " + words).to_lower()
+	if "sell" in text or action == "barn": return {"kind":"control", "id":"sack"}
+	for tool: String in ["hoe", "water", "harvest", "pest", "sprayer", "plant"]:
+		if tool in text: return {"kind":"tool", "id":"pest" if tool == "sprayer" else tool}
+	if "tools" in text or "upgrade" in text: return {"kind":"tool", "id":"hoe"}
+	if "seed" in text or "crop" in text: return {"kind":"seed", "crop":"russet"}
+	if "weather" in text or "forecast" in text or "climate" in text: return {"kind":"place", "id":"forecast"}
+	if "menu" in text or "help" in text or "dex" in text: return {"kind":"symbol", "id":"book"}
+	if "accounts" in text or "ledger" in text or "bill" in text: return {"kind":"place", "id":"ledger"}
+	if "duck" in text: return {"kind":"activity", "id":"duck"}
+	if "spring" in text or "calendar" in text or "year" in text: return {"kind":"control", "id":"calendar"}
+	if "talk" in text or "chat" in text or "story" in text or "news" in text: return {"kind":"control", "id":"talk"}
+	if "sleep" in text: return {"kind":"control", "id":"moon"}
+	if "sound" in text or "quiet" in text: return {"kind":"control", "id":"sound"}
+	if "graphics" in text or "resolution" in text or "smooth" in text or "crisp" in text or "balanced" in text or "shadow" in text: return {"kind":"control", "id":"eye"}
+	if "save" in text or "continue" in text or "keep" in text: return {"kind":"control", "id":"save"}
+	if "close" in text or "skip" in text or "return" in text or "leave" in text: return {"kind":"control", "id":"door"}
+	if "hat" in text or "farmer" in text or "look" in text or "seasonal" in text or "straw" in text or "cap" in text: return {"kind":"control", "id":"hat"}
+	if "shirt" in text: return {"kind":"control", "id":"shirt"}
+	if "quest" in text or "board" in text or "job" in text: return {"kind":"control", "id":"board"}
+	if "rent" in text or "bed" in text or "land" in text or "expand" in text: return {"kind":"metric", "id":"beds"}
+	if "buy" in text or "purchase" in text or "order" in text: return {"kind":"control", "id":"sack"}
+	return {"kind":"control", "id":"hand"}
+
+static func _forecast(c: CanvasItem, sky: String, warning: bool) -> void:
+	if sky == "sun": _metric(c, "sun")
+	else:
+		if sky == "cloud": c.draw_circle(Vector2(18,-20), 17, Color("f4c860"))
+		for point: Vector2 in [Vector2(-23,0),Vector2(0,-11),Vector2(23,0)]:
+			c.draw_circle(point+Vector2(0,3),18,Color("597582"))
+			c.draw_circle(point,16,Color("a9c4cd") if sky != "storm" else Color("718e9f"))
+		if sky == "rain":
+			for x in [-22,0,22]: c.draw_line(Vector2(x,23),Vector2(x-6,35),Color("6bbbd4"),5,true)
+		elif sky == "storm":
+			_poly(c,[Vector2(7,12),Vector2(-13,28),Vector2(0,28),Vector2(-9,42),Vector2(18,20),Vector2(5,20)],Color("ffcf62"))
+		elif sky == "snow":
+			for x in [-22,0,22]:
+				for i in range(3):
+					var d := Vector2.from_angle(i*PI/3.)*7
+					c.draw_line(Vector2(x,29)-d,Vector2(x,29)+d,Color("eff8ff"),2.5,true)
+	if warning:
+		c.draw_circle(Vector2(31,-31),10,Color("fff4d3"))
+		c.draw_circle(Vector2(31,-31),7,Color("d96c43"))
+
+static func _control(c: CanvasItem, id: String) -> void:
+	match id:
+		"sack":
+			_poly(c,[Vector2(-16,-28),Vector2(-9,-14),Vector2(-31,11),Vector2(-29,32),Vector2(0,40),Vector2(29,32),Vector2(31,11),Vector2(9,-14),Vector2(16,-28)],Color("d7ae74"))
+			c.draw_line(Vector2(-15,-14),Vector2(15,-14),INK,5,true)
+			c.draw_arc(Vector2(0,14),16,.1,2.9,14,Color("916846"),3,true)
+			for p in [Vector2(-9,2),Vector2(9,3)]: c.draw_circle(p,4,Color("efce93"))
+		"calendar", "board":
+			c.draw_style_box(_box(Color("fff3d6"),5),Rect2(-30,-29,60,65))
+			c.draw_rect(Rect2(-30,-29,60,16),Color("cf7953"))
+			for x in [-15,15]: c.draw_line(Vector2(x,-37),Vector2(x,-22),INK,5,true)
+			for x in [-17,0,17]:
+				for y in [-1,16]: c.draw_circle(Vector2(x,y),4,Color("688a60"))
+		"talk":
+			c.draw_style_box(_box(Color("fff3d6"),14),Rect2(-34,-28,68,48))
+			_poly(c,[Vector2(-15,14),Vector2(-21,35),Vector2(3,18)],Color("fff3d6"))
+			for x in [-18,0,18]: c.draw_circle(Vector2(x,-4),4,INK)
+		"moon":
+			c.draw_circle(Vector2(0,0),31,Color("edcf85"))
+			c.draw_circle(Vector2(15,-10),27,Color("e5dec6"))
+			_spark(c,Vector2(26,28),Color("f0b955"),9)
+		"save":
+			c.draw_style_box(_box(Color("6f9d8e"),5),Rect2(-30,-32,60,65))
+			c.draw_rect(Rect2(-19,-31,38,23),Color("fff3d6"))
+			c.draw_rect(Rect2(-19,5,38,28),Color("fff3d6"))
+			c.draw_rect(Rect2(7,-27,7,16),INK)
+		"door":
+			c.draw_style_box(_box(Color("b28457"),3),Rect2(-23,-33,46,68))
+			c.draw_circle(Vector2(12,4),4,Color("ffe19b"))
+			c.draw_line(Vector2(-37,30),Vector2(32,30),INK,4,true)
+		"eye":
+			_poly(c,[Vector2(-39,0),Vector2(-20,-22),Vector2(18,-22),Vector2(39,0),Vector2(18,22),Vector2(-20,22)],Color("fff3d6"))
+			c.draw_circle(Vector2.ZERO,15,Color("75aab7")); c.draw_circle(Vector2.ZERO,7,INK)
+		"sound":
+			_poly(c,[Vector2(-31,-12),Vector2(-14,-12),Vector2(8,-29),Vector2(8,29),Vector2(-14,12),Vector2(-31,12)],Color("789b92"))
+			for r in [22,34]: c.draw_arc(Vector2(4,0),r,-.8,.8,14,INK,3,true)
+		"hat":
+			c.draw_style_box(_box(Color("d6b474"),8),Rect2(-23,-25,46,38))
+			c.draw_line(Vector2(-23,7),Vector2(23,7),Color("6c9277"),8,true)
+			c.draw_style_box(_box(Color("f0cf8d"),7),Rect2(-40,12,80,14))
+		"shirt":
+			_poly(c,[Vector2(-15,-29),Vector2(-35,-18),Vector2(-25,2),Vector2(-17,-1),Vector2(-17,34),Vector2(17,34),Vector2(17,-1),Vector2(25,2),Vector2(35,-18),Vector2(15,-29),Vector2(0,-19)],Color("75a28a"))
+		"hand":
+			c.draw_style_box(_box(Color("edc993"),9),Rect2(-17,-6,36,40))
+			c.draw_style_box(_box(Color("edc993"),5),Rect2(-16,-34,12,39))
+			c.draw_line(Vector2(-27,7),Vector2(-9,27),Color("edc993"),12,true)
+			for x in [0,12]: c.draw_line(Vector2(x,-8),Vector2(x,15),Color("edc993"),10,true)

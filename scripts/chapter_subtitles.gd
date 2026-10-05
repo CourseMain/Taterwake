@@ -17,7 +17,7 @@ func _ready() -> void:
 	chapter.add_theme_font_size_override("font_size", 18)
 	chapter.add_theme_color_override("font_color", Color("f2dfb5"))
 	chapter.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	skip = Button.new()
+	skip = preload("res://scripts/illustrated_button.gd").new()
 	skip.text = "Skip →"
 	skip.focus_mode = Control.FOCUS_NONE
 	skip.add_theme_font_size_override("font_size", 22)

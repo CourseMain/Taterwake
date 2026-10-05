@@ -216,7 +216,7 @@ func _label(text: String, points: int, heading: bool = false) -> Label:
 	return label
 
 func _button(text: String, action: Callable) -> Button:
-	var button := Button.new()
+	var button := preload("res://scripts/illustrated_button.gd").new()
 	button.text = text
 	button.custom_minimum_size.y = 44
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

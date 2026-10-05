@@ -81,7 +81,7 @@ func _ready() -> void:
 		for text in column.find_children("*", "Label", true, false):
 			text.add_theme_font_size_override("font_size", maxi(int(text.get_meta("base_font_size", 14)), ceili(14 / maxf(scale, 0.1))))
 	resized.connect(fit_layout)
-	skip = Button.new(); skip.text = "Start the year →"; skip.custom_minimum_size.y = 68
+	skip = preload("res://scripts/illustrated_button.gd").new(); skip.text = "Start the year →"; skip.custom_minimum_size.y = 68
 	skip.add_theme_font_override("font", Type.face(Type.BODY)); skip.add_theme_font_size_override("font_size", 20)
 	for state in ["normal", "hover", "pressed"]: skip.add_theme_stylebox_override(state, preload("res://scripts/cozy_ui.gd").button_style(state, false))
 	preload("res://scripts/place_ui.gd").pill(skip, Color("34362c"))

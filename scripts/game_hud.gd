@@ -334,7 +334,10 @@ func _update_weather_ui() -> void:
 	_climate_console.refresh(climate, is_panel_open() or bool(_state.run_over) or not _tutorial.is_empty())
 	_climate_effect.set_weather(climate, bool(_state.run_over) or (not _tutorial.is_empty() and not _state.guided_first_year()))
 	_weather_button.visible = (_tutorial.is_empty() or "climate" in _tutorial.get("features", [])) and not is_panel_open() and not _state.run_over
-	_weather_button.text = "Weather" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
+	_weather_button.text = "Weather"
+	_weather_button.picture = ItemIcon.forecast_picture(climate)
+	_weather_button.tooltip_text = "Weather" if climate.phase == "calm" else "%s · %ds →" % [str(climate.name).capitalize(), ceili(climate.timer)]
+	_weather_button.queue_redraw()
 	var game = get_parent()
 	if game.has_method("title_active") and game.title_active():
 		_run_end.hide()
@@ -722,7 +725,7 @@ func _polish_card_typography(node: Node) -> void:
 		_polish_card_typography(child)
 
 func _button(text: String, action: String, primary: bool = false) -> Button:
-	var button: Button = Button.new()
+	var button: Button = preload("res://scripts/illustrated_button.gd").new()
 	button.set_meta("hud_action", action)
 	button.text = text
 	button.set_meta("action", action)
@@ -852,6 +855,7 @@ func _build_top() -> void:
 	_place(_play_band, Rect2(0, 0, 1280, 64))
 	_season_strip = _button("Spring · Year 1", "calendar")
 	_season_strip.name = "SeasonCalendar"
+	_season_strip.set_meta("plain_control", true)
 	_transparent_top_button(_season_strip)
 	_place(_season_strip, Rect2(16, 8, 240, 48))
 	_top.season = _season_strip
@@ -875,10 +879,13 @@ func _build_top() -> void:
 		label.add_theme_constant_override("outline_size", 2)
 	_menu_button = _button("Menu", "menu")
 	_menu_button.name = "MainMenuButton"
-	_transparent_top_button(_menu_button)
+	_menu_button.picture = {"kind":"symbol", "id":"book"}
+	_menu_button.picture_pixels = 26
+	_icon_tile(_menu_button)
 	_place(_menu_button, Rect2(1172, 8, 92, 48))
 	_weather_button = _button("Weather", "climate")
-	_world_button(_weather_button, INK)
+	_weather_button.picture_pixels = 32
+	_icon_tile(_weather_button)
 	_place(_weather_button, Rect2(28, 76, 280, 44))
 	_layout_top()
 
@@ -892,6 +899,9 @@ func fit_text(node: Node) -> void:
 			var original: int = node.get_theme_font_size(property)
 			node.set_meta("text_tier", 22 if original >= 24 else (14 if original <= 14 else 16))
 		node.add_theme_font_size_override(property, text_pixels(int(node.get_meta("text_tier"))))
+	if node.has_method("refresh_picture"):
+		node.picture_scale = _ui_scale
+		node.refresh_picture()
 	for child in node.get_children(): fit_text(child)
 
 func _layout_top() -> void:
@@ -903,12 +913,12 @@ func _layout_top() -> void:
 	var margin: float = 6.0 / _ui_scale
 	var height: float = band - margin * 2
 	var width: float = root.size.x
-	var menu_width: float = 62.0 / _ui_scale if phone else 92.0
+	var menu_width: float = 64.0 / _ui_scale if phone else 92.0
 	var season_width: float = 150.0 / _ui_scale if phone else 240.0
 	for control in [_play_band, _season_strip, _stats_card, _menu_button]:
 		control.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	_play_band.position = Vector2.ZERO; _play_band.size = Vector2(width, band)
-	_season_strip.position = Vector2(margin, margin); _season_strip.size = Vector2(season_width, height)
+	_season_strip.position = Vector2(margin + 44.0 / _ui_scale, margin); _season_strip.size = Vector2(season_width - 44.0 / _ui_scale, height)
 	_menu_button.position = Vector2(width - menu_width - margin, margin); _menu_button.size = Vector2(menu_width, height)
 	_stats_card.position = Vector2(season_width + margin * 2, margin)
 	_stats_card.size = Vector2(maxf(0, width - season_width - menu_width - margin * 4), height)
@@ -920,6 +930,10 @@ func _layout_top() -> void:
 	_money_symbol.add_theme_constant_override("outline_size", ceili(2 / _ui_scale))
 	_top.coins.add_theme_constant_override("outline_size", ceili(2 / _ui_scale))
 	_weather_button.position = Vector2(16, band + 12)
+	_weather_button.size = Vector2(menu_width, 64.0 / _ui_scale if phone else 80.0)
+	for button in [_menu_button, _weather_button]:
+		button.picture_pixels = 32 if phone else 49
+		button.picture_scale = _ui_scale; button.refresh_picture()
 
 func _transparent_top_button(button: Button) -> void:
 	for variant in ["normal", "hover", "pressed", "disabled", "focus"]:
@@ -928,6 +942,14 @@ func _transparent_top_button(button: Button) -> void:
 		button.add_theme_color_override(variant, CREAM)
 	button.add_theme_color_override("font_outline_color", Color("161e18"))
 	button.add_theme_constant_override("outline_size", 2)
+
+func _icon_tile(button: Button) -> void:
+	_world_button(button, Cozy.WOOD)
+	for variant in ["normal", "hover", "pressed", "disabled"]:
+		var skin: StyleBox = button.get_theme_stylebox(variant)
+		skin.content_margin_top = 3; skin.content_margin_bottom = 3
+		skin.content_margin_left = 4; skin.content_margin_right = 4
+	button.refresh_picture()
 
 func _world_button(button: Button, tone: Color) -> void:
 	for state: String in ["normal", "hover", "pressed", "disabled"]:

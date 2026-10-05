@@ -134,7 +134,7 @@ func skin(color: Color, radius: int) -> StyleBoxFlat:
 	return style
 
 func button(caption: String, callback: Callable, parent: Node = null) -> Button:
-	var result := Button.new()
+	var result := preload("res://scripts/illustrated_button.gd").new()
 	result.text = caption
 	result.custom_minimum_size = Vector2(68, 68)
 	result.add_theme_font_size_override("font_size", 22)
@@ -142,6 +142,7 @@ func button(caption: String, callback: Callable, parent: Node = null) -> Button:
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		result.add_theme_stylebox_override(state, skin(Color("426c53") if state == "pressed" else Color("193c33"), 12))
 	preload("res://scripts/place_ui.gd").pill(result, Color("193c33"), true)
+	result.picture_pixels = 32
 	result.focus_mode = Control.FOCUS_NONE
 	(parent if parent != null else root).add_child(result)
 	result.pressed.connect(callback)
@@ -171,12 +172,13 @@ func resize() -> void:
 	place(sell_button, Rect2(22, h - 268, maxf(166, sell_button.get_combined_minimum_size().x), 68))
 	game.hud._layout_top()
 	if enabled:
-		place(game.hud._weather_button, Rect2(16, game.hud._play_band.size.y + 12, minf(w - 32, 430), 68))
+		place(game.hud._weather_button, Rect2(16, game.hud._play_band.size.y + 12, 64 / display_scale(), 64 / display_scale()))
 		game.hud._season_jobs.layout()
 		game.hud._world_button(sell_button, Cozy.WOOD)
-	place(fullscreen, Rect2(w - 56, game.hud._play_band.size.y + 8, 44, 44))
+		for button in [use_button, tools_button]: game.hud._world_button(button, Cozy.WOOD)
+	place(fullscreen, Rect2(6 / game.hud._ui_scale, 6 / game.hud._ui_scale, 44 / game.hud._ui_scale, 44 / game.hud._ui_scale))
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("Object.assign(document.getElementById('fullscreen-button').style, {top:'64px',right:'8px',left:'auto',bottom:'auto'});", true)
+		JavaScriptBridge.eval("Object.assign(document.getElementById('fullscreen-button').style, {top:'6px',right:'auto',left:'6px',bottom:'auto'});", true)
 	fit_drawer()
 	if enabled: fit_modal()
 	game.farm_viewport.sync_resolution.call_deferred()
@@ -188,7 +190,8 @@ func place(control: Control, rect: Rect2) -> void:
 
 func fit_drawer() -> void:
 	var view := get_viewport().get_visible_rect().size
-	var height := minf(maxf(180, view.y - 280), drawer_body.get_combined_minimum_size().y + 12)
+	var bottom_room: float = 108 if view.x > view.y else 280
+	var height := minf(maxf(180, view.y - bottom_room), drawer_body.get_combined_minimum_size().y + 12)
 	place(drawer, Rect2(maxf(16, view.x - 430), 92, minf(view.x - 32, 408), height))
 
 func fit_modal() -> void:
@@ -345,6 +348,8 @@ func _process(delta: float) -> void:
 	hud.fit_text(root)
 	knob.position = Vector2(51, 51) + movement * 46
 	tools_button.text = TOOL_NAMES[game.selected_tool] + "  /  Tools"
+	tools_button.picture = {"kind":"tool", "id":game.selected_tool}
+	use_button.picture = preload("res://scripts/item_icon.gd").control_picture("", use_button.text)
 	_layout_action_controls()
 
 func fit_auxiliary() -> void:
@@ -554,7 +559,9 @@ func display_scale() -> float:
 func _layout_action_controls() -> void:
 	var view: Vector2 = get_viewport().get_visible_rect().size
 	var width: float = maxf(188, maxf(use_button.get_combined_minimum_size().x, tools_button.get_combined_minimum_size().x))
-	for control in [use_button, tools_button]:
-		var offset: float = 100 if control == use_button else 178
-		place(control, Rect2(view.x - width - 22, view.y - offset, width, maxf(78 if control == use_button else 68, control.get_combined_minimum_size().y)))
-	place(sell_button, Rect2(22, view.y - 268, maxf(166, sell_button.get_combined_minimum_size().x), maxf(68, sell_button.get_combined_minimum_size().y)))
+	var use_height: float = maxf(78, use_button.get_combined_minimum_size().y)
+	var tools_height: float = maxf(68, tools_button.get_combined_minimum_size().y)
+	place(use_button, Rect2(view.x-width-22, view.y-22-use_height, width, use_height))
+	place(tools_button, Rect2(view.x-width-22, use_button.position.y-10-tools_height, width, tools_height))
+	var sell_height: float = maxf(68, sell_button.get_combined_minimum_size().y)
+	place(sell_button, Rect2(22, stick.position.y-12-sell_height, maxf(166, sell_button.get_combined_minimum_size().x), sell_height))
