@@ -66,7 +66,8 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       assert.match((await command('status')).conversation.text, /behind my ear/);
       await click('Any planting advice?');
       assert.equal((await command('status')).conversation.page, 'advice');
-      await click('Browse seeds');
+      await click('Can I ask you something else?');
+      await click('Buy seeds');
       const returned = await command('status');
       assert.equal(returned.panel, 'market');
       assert.ok(!returned.buttons.some(b => b.text.startsWith('Talk to')), 'shop follows conversation without another Talk button');
@@ -77,7 +78,7 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
         await page.waitForTimeout(800);
       }
       await command('user:market');
-      assert.match((await command('status')).conversation.text, /Found the pencil/);
+      assert.ok((await command('status')).conversation.text.length > 0, 'return visit has a seasonal greeting');
       await click('Leave  ×');
       assert.equal((await command('status')).conversation.visible, false);
       if (name === 'laptop') {
@@ -92,7 +93,7 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       }
       if (!touch) {
         await command('user:market');
-        await page.locator('#fullscreen-button').click();
+        await page.keyboard.press('F11');
         await page.waitForFunction(() => !!document.fullscreenElement);
         await page.evaluate(() => document.exitFullscreen());
         await page.waitForTimeout(300);
@@ -102,7 +103,7 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       await command('user:climate');
       await page.waitForTimeout(3500);
       await shot('iris');
-      await click('See weather & protection');
+      await click('Weather and protection');
       assert.equal((await command('status')).panel, 'climate');
       await command('freeze');
       await command('user:tools');
@@ -110,7 +111,8 @@ const url = process.env.NPC_QA_URL || 'http://127.0.0.1:8777/index.html';
       await page.waitForTimeout(4500);
       await shot('bram-freeze');
       assert.match((await command('status')).conversation.text, /hoe to clear ice/);
-      await click('See tool upgrades');
+      await click('Can I ask you something else?');
+      await click('Open the Tools shed');
       assert.equal((await command('status')).panel, 'tools');
       assert.deepEqual(errors, [], `${name}: browser errors`);
       console.log(`PASS ${name}: portraits, touch/mouse choices, memories, paused clocks, weather branches, service return`);

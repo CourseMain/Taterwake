@@ -27,57 +27,32 @@ func run() -> void:
 	plot.merge({"stage": 3, "crop": "russet", "tilled": true, "watered": true, "elapsed": 10.0, "pests": true}, true)
 	game._on_state_changed()
 	check(game.pest_alert.alerts_played == 1 and game.pest_alert.last_kind == "attack", "real infested crop starts the dedicated warning")
-	check(game.pest_alert.player.stream == game.pest_alert.attack_sound, "attack uses the rising chirp sound")
-	var sound: AudioStreamWAV = game.pest_alert.attack_sound
-	var peak: int = 0
-	var sum_squares: float = 0.0
-	for index in range(0, sound.data.size(), 2):
-		var value: int = int(sound.data[index]) | (int(sound.data[index + 1]) << 8)
-		if value >= 32768: value -= 65536
-		peak = maxi(peak, absi(value))
-		sum_squares += float(value) * float(value)
-	check(peak > 12000 and peak < 32767 and sqrt(sum_squares / (sound.data.size() / 2.0)) > 4000.0, "warning PCM is audible and does not clip")
-	check(sound.get_length() > 0.8 and game.pest_alert.lost_sound.data != sound.data, "attack and crop-loss sounds are distinct and long enough to notice")
-	game._play_tone(440.0, 0.1)
-	check(game.pest_alert.player.stream == sound and game.pest_alert.player.playing, "tool sounds cannot overwrite the pest warning channel")
-	for index in range(10):
-		game._on_pest_warning(index, false)
-	check(game.pest_alert.alerts_played == 1, "a field-wide outbreak produces one grouped alarm")
-	game.pest_alert.update(5.9, 1)
-	check(game.pest_alert.alerts_played == 1, "warning reminder does not repeat early")
-	game.pest_alert.update(0.11, 1)
-	check(game.pest_alert.alerts_played == 2, "unresolved pests repeat an alert after six seconds")
+	var mix = preload("res://scripts/sound_mix.gd")
+	check(game.pest_alert.player.stream == game.pest_alert.CUES[0] and game.pest_alert.player.volume_db == -14, "first pest cue uses the target mix")
+	for cue in game.pest_alert.CUES:
+		check(cue.get_length() > .2 and cue.get_length() < 1, "each pest cue is short and prebuilt")
+	for index in range(10): game._on_pest_warning(index, false)
+	check(game.pest_alert.alerts_played == 1, "field-wide infestation makes one grouped cue")
+	mix.advance(19.9); game.pest_alert.update(19.9, 1)
+	check(game.pest_alert.alerts_played == 1, "pests cannot repeat inside twenty seconds")
+	mix.advance(.2); game.pest_alert.update(.2, 1)
+	check(game.pest_alert.alerts_played == 2 and game.pest_alert.last_cue == 1, "next cue rotates after twenty seconds")
+	mix.advance(20); game.pest_alert.update(20, 1)
+	check(game.pest_alert.alerts_played == 3 and game.pest_alert.last_cue == 2, "third reminder uses the third cue")
+	check(not mix.allow_alert(), "a second alert cannot overlap within two seconds")
+	mix.advance(20); game.pest_alert.update(20, 1)
+	check(game.pest_alert.last_cue == 0, "all three cues rotate in order")
 	game.perform_plot(4, "pest")
-	game._process(0.05)
-	check(not game.pest_alert.player.playing and game.pest_alert.infested_count == 0, "spraying the last infestation stops the attack alarm")
+	game._process(.05)
+	check(not game.pest_alert.player.playing and game.pest_alert.infested_count == 0, "cleared fields stop the reminder")
 	var alerts: int = game.pest_alert.alerts_played
-	game.pest_alert.update(12.0, 0)
+	mix.advance(40); game.pest_alert.update(40, 0)
 	check(game.pest_alert.alerts_played == alerts, "clean fields remain quiet")
-	plot.pests = true
-	game._on_state_changed()
-	game.state.update(15.0)
-	check(game.pest_alert.last_kind == "lost" and game.pest_alert.player.stream == game.pest_alert.lost_sound, "destroyed crop plays a separate descending loss alert")
-	alerts = game.pest_alert.alerts_played
-	game._on_pest_warning(5, true)
-	check(game.pest_alert.alerts_played == alerts, "simultaneous crop losses do not stack loud alarms")
-	game.pest_alert.update(0.01, 0)
-	check(game.pest_alert.player.playing, "crop-loss sound finishes even when no crops remain infested")
-	if "--capture" in OS.get_cmdline_user_args():
-		check(game.pest_alert.attack_sound.save_to_wav("res://artifacts/pest-attack-alert.wav") == OK, "attack warning exports as a playable sound")
-		check(game.pest_alert.lost_sound.save_to_wav("res://artifacts/pest-crop-lost.wav") == OK, "crop-loss warning exports as a playable sound")
-	# Release the test's own PCM reference before checking scene shutdown.
-	var attack_reference: WeakRef = weakref(game.pest_alert.attack_sound)
-	var loss_reference: WeakRef = weakref(game.pest_alert.lost_sound)
-	sound = null
+	mix.quieter = true
+	check(mix.gain() < -6 and mix.gain(true) == 0, "Quieter halves ordinary sounds while keeping tool cues")
+	mix.quieter = false
 	game.queue_free()
 	await process_frame
-	# AudioServer fades stopped streams out on its mixer thread. A short test
-	# must let that thread retire its playback references before engine exit.
-	await create_timer(0.3).timeout
-	for attempt in range(12):
-		if attack_reference.get_ref() == null and loss_reference.get_ref() == null:
-			break
-		await create_timer(0.05).timeout
-	check(attack_reference.get_ref() == null and loss_reference.get_ref() == null, "scene shutdown releases warning sounds and their mixer playback references")
+	await create_timer(.3).timeout
 	print("PEST AUDIO: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

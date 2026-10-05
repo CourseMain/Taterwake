@@ -76,7 +76,7 @@ func run() -> void:
 	check(game.world._time > world_time + 8.9, "the farm animates behind the title")
 	check(game.state._save_data() == before, "waiting at the gate never advances crops, weather, accounts or save state")
 	check(is_equal_approx(game.world._day_elapsed, game.world.DAY_CYCLE_SECONDS * .94), "title uses golden-hour light without changing the calendar")
-	check(not game.can_hurry() and not game._map_navigation_allowed(), "title blocks hurry and farm navigation")
+	check(not game._map_navigation_allowed(), "title blocks farm navigation")
 	game._on_user_action("quick_sell")
 	game._on_action("reset")
 	check(game.state._save_data() == before and game.title_active(), "hidden gameplay and reset shortcuts cannot change the title farm")

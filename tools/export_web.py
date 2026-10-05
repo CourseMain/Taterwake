@@ -170,6 +170,19 @@ def verify_export(directory: Path) -> None:
             raise BuildError(f"Unexpected non-Web file in export output: {relative}")
 
 
+def stamp_version(directory: Path, source: Path = PROJECT) -> None:
+    """Label the generated shell from project settings without changing web/."""
+    match = re.search(r'^config/version="([^"]+)"$', (source / "project.godot").read_text(), re.MULTILINE)
+    if not match:
+        raise BuildError("The project has no application version.")
+    shell = directory / "index.html"
+    text = shell.read_text(encoding="utf-8")
+    text, count = re.subn(r'(<meta name="game-version" content=")[^"]*(")', lambda m: m[1] + match[1] + m[2], text)
+    if count != 1:
+        raise BuildError("The generated Web shell needs one game-version meta tag.")
+    shell.write_text(text, encoding="utf-8")
+
+
 def package_readme(release: str) -> str:
     return f"""TATERLAND — BROWSER EDITION
 Built from the game's Web preset using Godot {release}.
@@ -192,8 +205,8 @@ the game's WebAssembly assets correctly.
 CONTROLS
 WASD moves your farmer. Click beds and shops to interact; hold and drag
 the farm to pan the camera. Keys 1–5 select farm tools.
-I opens inventory, B market, and Esc the menu.
-The three-line menu contains the remaining panels and activities.
+I opens inventory, F meets Nell at the barn to sell, and Esc opens Menu.
+Meet the keepers before entering their services.
 Touch: drag the stick to move (outer edge sprints), tap the farm to interact,
 and pinch with two fingers to zoom. Tools holds tools, seeds and zoom +/-.
 Swipe menus to scroll. Full screen or F11 expands the game; unsupported
@@ -299,6 +312,7 @@ def build(engine: Path) -> tuple[Path, Path]:
         output = run_engine(engine, ["--headless", "--path", str(PROJECT), "--export-release", PRESET, str(staging / "index.html")])
         (distribution / "web-export.log").write_text(output + "\n", encoding="utf-8")
         verify_export(staging)
+        stamp_version(staging)
         complete_offline_assets(staging)
         shutil.copyfile(PROJECT / "tools/serve_web.py", staging / "serve.py")
         font_licenses = {

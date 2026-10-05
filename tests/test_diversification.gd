@@ -226,7 +226,7 @@ func ui_checks() -> void:
 			root.get_texture().get_image().save_png("res://artifacts/diversification-accounts-%d.png" % size.x)
 	game.hud.close_panel()
 	game.state.update(150)
-	game._on_action("contracts")
+	game._on_action("barn")
 	check(game.hud._refs.has("contract_accept:1"), "enrolled buyer board offers two independent actions")
 	game.hud._refs.contract_accept.pressed.emit()
 	game.hud._refs["contract_accept:1"].pressed.emit()

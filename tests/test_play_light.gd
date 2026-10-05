@@ -26,7 +26,7 @@ func run() -> void:
 		check(is_equal_approx(world._sun.rotation_degrees.x,-35),"every season has a thirty-five-degree noon")
 		check(world._sun.light_color.r > world._sun.light_color.b and world._day_environment.ambient_light_color.b > world._day_environment.ambient_light_color.r,"warm light contrasts with cool fill")
 	check(world.get_node("StaticContactDiscs").multimesh.instance_count >= world._tree_specs.size(),"trees and buildings have shared soft contacts")
-	check(game.hud._play_band.get_theme_stylebox("panel").get_meta("surface_fill") == Color("17382d"),"play HUD sits on an ink band")
+	check(game.hud._play_band.get_theme_stylebox("panel") is StyleBoxEmpty,"play HUD background is fully transparent")
 	check(game.hud._weather_button.get_theme_stylebox("normal").get_meta("surface_fill") == Color("17382d"),"weather pill belongs to the ink band")
 	game.touch_controls.enabled = true
 	game._set_shadow_size(4096)

@@ -73,11 +73,7 @@ func run() -> void:
 	check(game.hud._refs["land_part:Mortgage interest"].text == farm.money(24000) and game.hud._refs["land_part:Mortgage principal"].text == farm.money(24000) and game.hud._refs["land_part:Rent and land tax"].text == farm.money(12000), "land parts preserve all three amounts")
 	game.hud._act("land_bill_parts")
 	check(farm.ledger.save_data() == frozen and farm.coins == cash, "folding bills never posts or changes a balance")
-	for action in ["advice_home", "advice_golden", "advice_stores"]:
-		game.hud.show_panel("accounts", farm); await settle()
-		check(game.hud._body.find_children("*", "Button", true, false).any(func(button): return button.get_meta("hud_action", "") == action), "Year-one accounts contain a tappable action: " + action)
-		game.hud._act(action); await settle()
-		check(game.hud._panel_kind == {"advice_home":"tools", "advice_golden":"market", "advice_stores":"store_advice"}[action], "advice action reaches its destination")
+	check(game.hud._body.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("hud_action", "") in ["tools", "market", "barn"]).size() == 1, "accounts have only Go to the barn, with no alternate service routes")
 	check(farm.ledger.save_data() == frozen and farm.coins == cash, "advice navigation never buys or sells")
 	farm.season_clock.year = 2; game.hud.show_panel("accounts", farm); await settle()
 	check(not game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text.contains(Advice.YEAR_ONE)), "later accounts don't repeat Year-one speech")
@@ -87,11 +83,11 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO; root.size = Vector2i(390,844)
 	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets(); game.touch_controls.resize()
 	await settle()
-	for page in ["barn", "sell_potatoes"]:
+	for page in ["inventory", "barn"]:
 		game.hud.show_panel(page, farm); await settle(); game.touch_controls.fit_modal(); await settle()
 		var scale: float = float(root.size.x) / game.hud.root.size.x
 		for grade in farm.Quality.GRADES:
-			var chip: Control = game.hud._refs["item:crop:russet:grade:" + grade] if page == "barn" else game.hud._refs.market_page.sale_rows.russet.grades[grade]
+			var chip: Control = game.hud._refs["item:crop:russet:grade:" + grade] if page == "inventory" else game.hud._refs.market_page.sale_rows.russet.grades[grade]
 			check(chip.is_visible_in_tree() and chip.get_theme_font_size("font_size") * scale >= 14, page + " readable " + grade + " stamp at 390")
 			check(chip.get_theme_color("font_color") == Stamp.COLORS[grade], page + " consistent grade ink")
 	game.hud.close_panel()

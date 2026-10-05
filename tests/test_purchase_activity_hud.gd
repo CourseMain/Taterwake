@@ -100,7 +100,7 @@ func run() -> void:
 		for button: Node in hud._body.find_children("*", "Button", true, false):
 			if str(button.get_meta("action", "")) == ("activities" if island == 1 else "duck_patrol"):
 				duck_entries += 1
-		check(duck_entries == 1, "island %d menu offers exactly one duck patrol entry" % island)
+		check(duck_entries == 0, "island %d menu has no alternate duck patrol entrance" % island)
 	hud.queue_free()
 	activities.queue_free()
 	state.queue_free()

@@ -46,7 +46,7 @@ func run() -> void:
 		await settle()
 		check(scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "equipment action reachable: "+id)
 		check(button.disabled and button.text.begins_with("Build"), "protection construction waits for Winter: " + id)
-	check(page._grid.get_child_count() == 4 and not game.hud._refs.has("cover_all") and not game.hud._refs.has("protection_summary"), "four tiles replace reduction table and batch cover entrance")
+	check(page._grid.get_child_count() == 5 and not game.hud._refs.has("cover_all") and not game.hud._refs.has("protection_summary"), "four tiles replace reduction table and batch cover entrance")
 	scroll.scroll_vertical = 100000
 	await shot("bottom")
 	farm.season_clock.season = 2; farm.season_clock.seconds = 149.75

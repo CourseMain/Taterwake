@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+from export_web import stamp_version
 
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
@@ -93,4 +94,5 @@ for command in [['--editor', '--import', '--quit'], ['--export-release', 'Web', 
     (output / 'export.log').write_text(run.stdout)
     if run.returncode or re.search(r'(SCRIPT ERROR:|ERROR:|Parse Error:)', run.stdout):
         raise RuntimeError(run.stdout)
+stamp_version(output, args.source)
 print(output / 'index.html')

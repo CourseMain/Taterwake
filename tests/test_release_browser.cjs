@@ -3,12 +3,13 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 (async()=>{
  const root=(process.env.TATER_RELEASE_URL || 'http://127.0.0.1:8767/').replace(/(?:index\.html)?$/, '').replace(/\/?$/, '/');
- const output='artifacts/update-browser/'+(process.env.TATER_RELEASE_URL?'github':'release');
+ const output=process.env.TATER_RELEASE_OUTPUT || 'artifacts/update-browser/'+(process.env.TATER_RELEASE_URL?'github':'release');
+ const expectedVersion=process.env.TATER_RELEASE_VERSION || '2.0.1';
  fs.mkdirSync(output,{recursive:true});
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
  const results=[];
  try {
-  for(const [path,version,name,width,height] of [['','2.0.1','redesign',1440,900],['','2.0.1','redesign',390,844],['classic/','1.0.3.1','classic',1280,800]]){
+  for(const [path,version,name,width,height] of [['',expectedVersion,'redesign',1440,900],['',expectedVersion,'redesign',390,844],['classic/','1.0.3.1','classic',1280,800]].filter(row=>!process.env.TATER_RED_DESIGN_ONLY || row[2]==='redesign')){
    const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:width===390?3:1,hasTouch:width===390,isMobile:width===390});
    const page=await context.newPage(),errors=[];
    page.on('pageerror',e=>errors.push(e.message));
@@ -27,6 +28,14 @@ const fs=require('node:fs');
     if(width===390)await page.touchscreen.tap(canvas.x+canvas.width/2,canvas.y+canvas.height*0.947);
     else await page.mouse.click(canvas.x+canvas.width/2,canvas.y+canvas.height*0.93);
     await page.waitForTimeout(3000);
+    if(version==='2.0.2'){
+     // Skip the new optional farmer card through its visible single exit.
+     await page.screenshot({path:output+'/'+name+'-farmer-'+width+'.png'});
+     const point=width===390?[530/600,160/1298]:[1088/1440,153/900];
+     if(width===390)await page.touchscreen.tap(canvas.x+canvas.width*point[0],canvas.y+canvas.height*point[1]);
+     else await page.mouse.click(canvas.x+canvas.width*point[0],canvas.y+canvas.height*point[1]);
+     await page.waitForTimeout(1000);
+    }
    }
    await page.locator('#fullscreen-button').waitFor({state:'visible',timeout:15000});
    if(width>=900){

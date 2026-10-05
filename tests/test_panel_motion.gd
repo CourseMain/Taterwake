@@ -94,6 +94,7 @@ func run() -> void:
 	check(not game.hud.is_panel_open() and not game.hud._modal_entrance_shield.visible, "closing immediately cancels the pending entrance and input shield")
 	# Enter through the actual tapped station path, then observe paused reading.
 	game._interact_station("market")
+	check(game.conversation.visible and game.conversation.npc_id == "mara", "tapping Mara opens her short greeting before seeds")
 	game.conversation.set_process(false)
 	check(game.conversation.visible and game.conversation.npc_id == "mara", "tapping Mara's stall opens her conversation")
 	var expected_offset: Vector2 = station_origin("market") - game.conversation.size * .5

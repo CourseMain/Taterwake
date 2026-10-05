@@ -208,7 +208,7 @@ func ui_checks() -> void:
 	game.state.coins = 1200000
 	plant(game.state, 0, "giant")
 	Protection.damage(game.state, 0, "")
-	game.hud.show_panel("loss_notices", game.state)
+	game.hud.show_panel("quests", game.state)
 	var notices: String = ""
 	for label in game.hud._body.find_children("*", "Label", true, false): notices += label.text
 	check(notices.contains("Spring") and notices.contains("Lost 5 t") and notices.contains("Giant"), "season notice cards expose the actual crop loss")
@@ -247,12 +247,14 @@ func ui_checks() -> void:
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
 		if game.touch_controls.enabled: game.touch_controls.resize()
-		for page in ["climate", "loss_notices", "accounts"]:
+		for page in ["climate", "quests", "accounts"]:
 			game.hud.show_panel(page, game.state)
-			if page == "accounts":
+			if page == "quests":
+				game.hud._refs.tess_board.losses = true
+				game.hud._refs.tess_board.refresh()
 				var account_words: String = ""
 				for label in game.hud._body.find_children("*", "Label", true, false): account_words += label.text
-				check(account_words.contains("Lost 5 t") and account_words.contains("Watering in time"), "Winter accounts retain the Spring cause card")
+				check(account_words.contains("Lost 5 t") and account_words.contains("Watering in time"), "Tess’s board retains the Spring cause card")
 			for i in range(10): await process_frame
 			check(game.hud._body.get_combined_minimum_size().x <= game.hud._body.get_parent().size.x + 1, page + " fits available width")
 			if "--capture" in OS.get_cmdline_user_args():

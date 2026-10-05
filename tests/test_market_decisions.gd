@@ -175,24 +175,24 @@ func ui_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game); game.set_process(false)
 	game.state.storage["russet"] = Stock.pile(40)
-	game.hud.show_panel("sell_potatoes", game.state)
+	game.hud.show_panel("barn", game.state)
 	var page = game.hud._refs.market_page
 	check(is_equal_approx(page.crop_history.expected_price, game.state.trading.peak_price("russet")) and not page.storage_note.visible and page.find_children("*", "Button", true, false).any(func(button): return button.text == "?" and button.tooltip_text.contains("Winter start")), "storage explanation is behind a question mark outside Winter")
 	var store_actions: Array = page.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("action", "") == "market_store" or button.text == "Store selected tonnes")
 	check(store_actions.is_empty() and not page.storage_note.text.contains("Set aside"), "sell page has no Store button or held marker")
 	check(Stock.count(game.state.trading.held, "russet") == 0, "opening the sell page does not reserve tonnes")
-	game._on_action("contracts")
-	check(game.hud._panel_kind == "contracts" and not game.hud._refs.contract_accept.disabled, "buyer board opens the Spring contract")
+	game._on_action("barn")
+	check(game.hud._panel_kind == "barn" and not game.hud._refs.contract_accept.disabled, "buyer board opens the Spring contract")
 	game.hud._refs.contract_accept.pressed.emit()
 	check(not game.state.trading.contracts.is_empty() and game.hud._refs.contract_accept.disabled, "accept button commits one order")
-	check(game.world.has_node("BuyerContracts"), "the buyer order board sits on the Spud Valley farm")
+	check(not game.world.has_node("BuyerContracts"), "orders share the barn instead of a second physical board")
 	game.hud.close_panel()
 	game.state.season_clock.season = 1; game.state.season_clock.seconds = 149.75
 	game.state.update(.25)
 	winter(game.state)
 	check(game.state.accounts_open and game.hud._panel_kind == "accounts", "storage posts before accounts pause opens")
 	check(game.hud._refs.accounts_storage.text == game.state.money(-State.MarketDecisions.STORAGE_FEE), "accounts list storage charges")
-	game.hud.close_panel(); game._on_action("winter_stores")
+	game.hud.close_panel(); game._on_action("barn")
 	game.state.season_clock.seconds = 140
 	game.hud.update_state(game.state)
 	check(game.hud._refs.market_page.stored_mode and game.hud._refs.market_page.sale_rows.russet.grades.Standard.visible, "Winter market opens on stocked stores")
@@ -205,23 +205,20 @@ func ui_checks() -> void:
 		check(is_equal_approx(page.crop_history.samples[-1], page.price_for("russet", grade)) and page.crop_history.samples[0] < page.crop_history.samples[-1], "Winter chart ends at the actual rising stored quote for " + grade)
 	var held_before_tabs: Dictionary = game.state.trading.held.duplicate(true)
 	var cash_before_tabs: float = game.state.coins
-	game.hud._modal_market_nav.get_child(0).pressed.emit()
-	if game.conversation.visible:
-		check(game.conversation.npc_id == "mara", "first Buy tab still introduces Mara")
-		game.conversation.choose(0)
-		await process_frame
-	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.sale_rows.is_empty(), "Winter Buy tab keeps held potatoes out of seed packets")
-	game.hud._modal_market_nav.get_child(1).pressed.emit()
-	check(game.hud._panel_kind == "sell_potatoes" and game.hud._refs.market_page.stored_mode, "Winter Sell tab returns to rising stored quotes")
+	game._on_action("market")
+	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.sale_rows.is_empty(), "Mara opens seeds directly, without a selling tab")
+	check(not game.hud._modal_card.find_children("*", "Button", true, false).any(func(b): return b.get_meta("hud_action", "") in ["market", "barn"]), "Buy and Sell have no cross-page tabs")
+	game._on_action("barn")
+	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.stored_mode, "barn returns to rising stored quotes")
 	check(game.state.trading.held == held_before_tabs and game.state.coins == cash_before_tabs, "Winter tab switches neither sell stock nor spend cash")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
 		if game.touch_controls.enabled: game.touch_controls.resize()
 		else: root.content_scale_size = Vector2i(maxi(600, size.x), roundi(size.y * maxf(1.0, 600.0 / size.x)))
-		for panel in ["sell_potatoes", "contracts", "winter_stores", "accounts"]:
+		for panel in ["barn", "market", "accounts"]:
 			game.hud.show_panel(panel, game.state)
 			if not game.touch_controls.enabled:
-				var width: float = minf(1000 if panel == "sell_potatoes" else 752, game.hud.root.size.x - 24)
+				var width: float = minf(1000 if panel == "barn" else 752, game.hud.root.size.x - 24)
 				game.hud._modal_card.offset_left = -width / 2
 				game.hud._modal_card.offset_right = width / 2
 			for i in range(10): await process_frame
@@ -230,7 +227,7 @@ func ui_checks() -> void:
 				await create_timer(.1).timeout
 				RenderingServer.force_draw()
 				root.get_texture().get_image().save_png("res://artifacts/decisions-%s-%d.png" % [panel, size.x])
-	game.hud.show_panel("winter_stores", game.state)
+	game.hud.show_panel("barn", game.state)
 	var before: float = game.state.coins
 	game.hud._refs.market_page.select_variety("russet", "Standard")
 	game.hud._refs.market_page.maximum.pressed.emit()

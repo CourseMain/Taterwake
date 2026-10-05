@@ -93,7 +93,7 @@ func run() -> void:
 	var inventory_tools: int = 0
 	for entry in farm.inventory_info():
 		if entry.kind == "tool": inventory_tools += 1
-	check(inventory_tools == 5, "inventory includes all five usable farming tools")
+	check(inventory_tools == 0, "inventory has no tools because the tray holds them")
 
 	clean_farm()
 	ready_crop(0)

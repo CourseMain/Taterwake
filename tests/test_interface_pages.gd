@@ -25,7 +25,7 @@ func run() -> void:
 	game.state.climate.data.outlook.records.append({"year":2, "season":1, "event":"storm", "severity":0.5})
 	game.state.ClimateSystem.Protection.record(game.state, "autumn_cold", "russet", 3, 0.0, 1.0, "Harvest before Winter", "field", 2)
 	game.hud._climate_alert.dismiss(); game.hud._toast_box.hide()
-	var pages: Array = ["market", "sell_potatoes", "quests", "loss_notices", "climate", "contracts", "barn", "tools", "front_page", "winter_stores", "accounts", "run_summary", "foreclosure"]
+	var pages: Array = ["market", "barn", "quests", "climate", "inventory", "tools", "front_page", "accounts", "run_summary", "foreclosure"]
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--page="): pages = [arg.trim_prefix("--page=")]
 	root.min_size = Vector2i.ZERO
@@ -38,10 +38,10 @@ func run() -> void:
 			game.state.season_clock.year = 3; game.state.run_outcome = ""; game.state.run_over = false
 			if kind == "run_summary":
 				game.state.run_outcome = "completed"; game.state.season_clock.year = 10
-			game.state.season_clock.season = 3 if kind in ["climate", "winter_stores", "accounts", "run_summary"] else 0
-			if kind == "sell_potatoes":
+			game.state.season_clock.season = 3 if kind in ["climate", "barn", "accounts", "run_summary"] else 0
+			if kind == "barn":
 				game.state.elapsed = 18.0; game.state._refresh_market()
-			if kind == "winter_stores":
+			if kind == "barn":
 				game.state.season_clock.seconds = 140
 				for crop in game.state.CROP_IDS: game.state.trading.held[crop] = game.state.Stock.pile(8)
 			if kind == "foreclosure":
@@ -68,11 +68,8 @@ func run() -> void:
 			var scroll: ScrollContainer = game.hud._body.get_parent()
 			check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1, kind + " fits width")
 			var scale: float = float(root.size.x) / game.hud.root.size.x
-			if kind in ["market", "sell_potatoes", "winter_stores"]:
-				var navigation: HBoxContainer = game.hud._modal_market_nav
-				check(navigation.is_visible_in_tree() and navigation.get_child_count() == 2, "shop has Buy and Sell above its contents")
-				check(navigation.get_child(0).text == "Buy" and navigation.get_child(1).text == "Sell", "shop navigation labels")
-				check(navigation.get_child(0).button_pressed == (kind == "market") and navigation.get_child(1).button_pressed == (kind != "market"), "shop highlights the active counter")
+			if kind in ["market", "barn"]:
+				check(not game.hud._modal_card.find_children("*", "Button", true, false).any(func(b): return b.get_meta("hud_action", "") in ["market", "barn"]), "seed and selling pages have no alternate entrance tabs")
 			for button in game.hud._modal_card.find_children("*", "Button", true, false):
 				if button.is_visible_in_tree(): check(minf(button.size.x, button.size.y) * scale >= 43.9, kind + " target " + button.text)
 			if kind == "accounts":
@@ -102,13 +99,13 @@ func run() -> void:
 					root.get_texture().get_image().save_png("res://artifacts/segment19-accounts-%d-calm.png" % dimensions.x)
 				game.state.climate.data.protection.losses.assign(recorded_losses)
 				game.hud.show_panel("accounts", game.state); await settle()
-			if kind == "sell_potatoes":
+			if kind == "barn":
 				var sale = game.hud._refs.market_page
 				check(not sale.trade_open, "sale stepper waits for a grade chip")
 				for crop in sale.sale_rows:
 					for grade in sale.sale_rows[crop].grades:
 						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade chip matches actual tonnes")
-			if kind == "winter_stores":
+			if kind == "barn":
 				var sale = game.hud._refs.market_page
 				check(sale.tabs.get_child(0).button_pressed and not sale.tabs.get_child(1).button_pressed, "Winter market marks the stores view")
 				sale.tabs.get_child(1).pressed.emit(); await settle()
@@ -120,9 +117,9 @@ func run() -> void:
 				check(game.hud._refs.market_page.sale_rows.is_empty() and game.hud._body.find_child("PriceHistory", true, false) == null, "Buy has seed packets without harvested stock or price charts")
 				for crop in game.hud._refs.market_page.crops:
 					check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), "packet excludes market statistics")
-			if kind in ["quests", "loss_notices"]:
+			if kind in ["quests", "quests"]:
 				var board = game.hud._refs.tess_board
-				var selected_tab: int = 1 if kind == "loss_notices" else 0
+				var selected_tab: int = 0
 				check(board.tabs[selected_tab].button_pressed and not board.tabs[1 - selected_tab].button_pressed, "Tess marks only the visible tab")
 				check(board.tabs[selected_tab].get_theme_stylebox("pressed").border_color != board.tabs[1 - selected_tab].get_theme_stylebox("normal").border_color, "Tess's active tab has a visible ink outline")
 				board.tabs[1 - selected_tab].pressed.emit(); await settle()
@@ -132,19 +129,15 @@ func run() -> void:
 				for label in board.loss_notes.find_children("*", "Label", true, false):
 					if label.text == "No crop losses recorded.": empty_notices += 1
 				check(empty_notices == 0 and board.loss_notes.find_child("PinnedCauseNote", true, false) != null, "a recorded loss has no contradictory empty notice")
-			if kind == "barn":
-				for shelf in ["tools", "crops"]:
-					game.hud._act("inventory_tab:" + shelf); await settle()
-					var active: Button = game.hud._refs["tab:" + shelf]
-					var other: Button = game.hud._refs["tab:" + ("crops" if shelf == "tools" else "tools")]
-					check(active.button_pressed and not other.button_pressed, "Nell marks only the selected shelf")
-					check(game.hud._inventory_sections[shelf].visible and active.get_theme_stylebox("pressed").border_color != other.get_theme_stylebox("normal").border_color, "Nell's outlined tab matches the visible crates")
+			if kind == "inventory":
+				check(not game.hud._refs.has("tab:tools"), "inventory has no Tools shelf")
+				check(game.state.inventory_info().all(func(entry): return entry.kind in ["crop", "seed"]), "inventory contains only potatoes and seeds")
 			if "--capture" in OS.get_cmdline_user_args():
 				await create_timer(.25).timeout; RenderingServer.force_draw()
 				check(root.get_texture().get_image().save_png("res://artifacts/segment19-%s-%d.png" % [kind, dimensions.x]) == OK, "capture " + kind)
 				scroll.scroll_vertical = 100000; await settle(); RenderingServer.force_draw()
 				root.get_texture().get_image().save_png("res://artifacts/segment19-%s-%d-end.png" % [kind, dimensions.x])
-			if kind == "contracts":
+			if kind == "barn":
 				for help_button in game.hud._body.find_children("*", "Button", true, false):
 					if help_button.text != "?": continue
 					help_button.pressed.emit(); await settle()
@@ -158,7 +151,7 @@ func run() -> void:
 						if "--capture" in OS.get_cmdline_user_args():
 							RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/segment19-help-%d.png" % dimensions.x)
 						notes.queue_free(); await settle()
-			if kind in ["sell_potatoes", "winter_stores"]:
+			if kind in ["barn", "barn"]:
 				var sale = game.hud._refs.market_page
 				var entry: Dictionary = sale.sale_rows.russet
 				entry.grades.Standard.pressed.emit(); await settle()

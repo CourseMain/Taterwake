@@ -27,7 +27,8 @@ func command(args: Array) -> void:
 func status() -> Dictionary:
 	var title = game.title_scene
 	return {"title":game.title_active(),"hud":game.hud.root.is_visible_in_tree(),
-		"panel":game.hud.is_panel_open(),"front_page":game.year_intro.visible,
+		"panel":game.hud.is_panel_open(),"panel_kind":game.hud._panel_kind,"farmer_exit_rect":_rect(game.hud._modal_close),"front_page":game.year_intro.visible,
+		"panel_ready":not game.hud._modal_entrance_shield.visible and game.hud._modal.modulate.a > .99,
 		"guide":game.tutorial.current_id() if game.tutorial.active else "",
 		"saved":title.has_saved_farm,"primary":title.walk.text,
 		"secondary_visible":title.resume.is_visible_in_tree(),"secondary":title.resume.text,

@@ -3,7 +3,7 @@ extends Node
 ## window.surfaceQA("title" | "accounts" | "market" | "climate" | "npc:nell"
 ##   | "run_summary" | "foreclosure" | "scroll:end" | "scroll:top" | "status").
 ## Await window.surfaceReport.ready before capturing the browser viewport.
-const PAGES: Array[String] = ["harvest", "spring_target", "winter_jobs", "year1_accounts", "winter_seed_choices", "play_spring", "play_summer", "play_autumn","title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "tools", "quests", "loss_notices", "contracts", "sell_potatoes", "menu", "pause", "graphics", "debug", "help", "activities", "duck_patrol", "dex", "front_page"]
+const PAGES: Array[String] = ["harvest", "spring_target", "winter_jobs", "year1_accounts", "play_spring", "play_summer", "play_autumn", "title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "inventory", "tools", "quests", "menu", "pause", "graphics", "debug", "help", "duck_patrol", "dex", "front_page", "grades", "farmer", "guide_welcome", "guide_grow", "guide_storm"]
 var game
 var callback
 var request := 0
@@ -17,7 +17,9 @@ func _ready() -> void:
 	add_child(game)
 	assert(game.test_mode, "Export this fixture with tools/export_browser_benchmark.py or --integration-test.")
 	game.set_process(false)
+	game.hud.set_process(false)
 	game.state.boundary_save_path = ""
+	game.state.climate_report_open = false
 	game.state.rng.seed = 712804
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
@@ -53,7 +55,7 @@ func _ready() -> void:
 
 func _page_visible() -> bool:
 	match current_page:
-		"harvest", "spring_target", "winter_jobs": return not game.hud.is_panel_open() and not game.title_active()
+		"harvest", "spring_target", "winter_jobs", "guide_welcome", "guide_grow", "guide_storm": return not game.hud.is_panel_open() and not game.title_active()
 		"year1_accounts": return game.hud.is_panel_open() and game.hud._panel_kind == "accounts"
 		"play_spring", "play_summer", "play_autumn": return not game.hud.is_panel_open() and not game.title_active()
 		"title": return game.title_active() if game.has_method("title_active") else game.year_intro.visible
@@ -63,6 +65,7 @@ func _page_visible() -> bool:
 
 func _process(delta: float) -> void:
 	if not is_instance_valid(game) or not is_instance_valid(game.world): return
+	game.hud._process(delta)
 	if game.has_method("title_active") and game.title_active():
 		game._process(delta)
 	else:
@@ -96,6 +99,7 @@ func _present(action: String, ticket: int) -> void:
 	game.year_intro.stop()
 	game.conversation.finish()
 	game.hud.close_panel()
+	game.tutorial.active = false
 	game.state.restore_snapshot(base_snapshot)
 	game.state.set_tutorial_active(false)
 	game.hud.set_tutorial({})
@@ -118,7 +122,7 @@ func _present(action: String, ticket: int) -> void:
 			bed.stage = 3 if index % 3 == 0 else 2
 			bed.elapsed = 60 if bed.stage == 3 else 36
 			bed.watered = true
-	if current_page in ["accounts", "year1_accounts", "winter_jobs", "winter_seed_choices", "climate", "run_summary", "foreclosure"]:
+	if current_page in ["accounts", "year1_accounts", "winter_jobs", "climate", "run_summary", "foreclosure"]:
 		game.state.season_clock.season = 3
 		game.state.season_clock.seconds = 0
 		game.state.ledger.post_fixed_costs(3)
@@ -127,7 +131,7 @@ func _present(action: String, ticket: int) -> void:
 			plot.tilled = false
 			plot.winter_ice = true
 	if current_page == "year1_accounts": game.state.season_clock.year = 1
-	if current_page in ["winter_jobs", "winter_seed_choices"]:
+	if current_page in ["winter_jobs"]:
 		game.state.trading.held = game.state.storage.duplicate(true)
 	if current_page == "run_summary":
 		game.state.season_clock.year = 10
@@ -169,8 +173,19 @@ func _present(action: String, ticket: int) -> void:
 		"npc":
 			var person: String = action.get_slice(":",1) if action.contains(":") else "nell"
 			if person not in game.state.NpcRoster.PEOPLE: person = "nell"
-			game._start_conversation(person, str(game.state.NpcRoster.PEOPLE[person].service))
+			game._start_conversation(person, str(game.state.NpcRoster.PEOPLE[person].service), true)
 			game.farm_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		"guide_welcome", "guide_grow", "guide_storm":
+			game.state.reset_game()
+			game.state.boundary_save_path = ""
+			game.tutorial.start()
+			if current_page != "guide_welcome":
+				game.state.tutorial_progress.step = 5
+				game.state.plots[5].merge({"stage":3, "crop":"russet", "quality":100, "watered":true}, true)
+				game.state.season_clock.season = 1 if current_page == "guide_storm" else 0
+				game.tutorial._enter_step()
+			game.hud._apply_tutorial_visibility()
+			game.hud._update_wait_card()
 		"foreclosure": game.hud.update_state(game.state)
 		_: game.hud.show_panel(current_page, game.state)
 	game.touch_controls.resize()
@@ -189,7 +204,9 @@ func _present(action: String, ticket: int) -> void:
 		game.state._clear_crop(game.state.plots[4])
 		game.state.plots[4].merge({"stage":3, "crop":"russet", "watered":true, "quality":100}, true)
 		game._on_state_changed()
+		game.state.graded_harvests = 0
 		game.perform_plot(4, "harvest")
+		game.hud.close_panel()
 		game.world.harvest_feedback.animate(.22)
 		game.hud._toast_box.hide(); game.hud._spring_target.hide()
 		for frame in range(3): await get_tree().process_frame
@@ -229,6 +246,7 @@ func _publish() -> void:
 		"backing_size": [get_tree().root.size.x, get_tree().root.size.y], "touch": game.touch_controls.enabled,
 		"modal": _rect(modal), "scroll": _rect(scroll), "scroll_top": scroll.scroll_vertical,
 		"content_fits_width": game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1,
+		"modal_draw_alpha": game.hud._modal_motion.modulate.a, "panel_kind":game.hud._panel_kind,
 		"world_animation_time": game.world._time, "simulation_seconds": game.state.elapsed,
 		"title_available": game.has_method("_show_title"), "buttons": [], "labels": [], "surfaces": []}
 	_collect(get_tree().root)
@@ -246,7 +264,7 @@ func _collect(node: Node) -> void:
 			if node is Button:
 				last_report.buttons.append({"text": node.text, "action": node.get_meta("action", node.get_meta("hud_action", "")), "rect": _rect(node), "disabled": node.disabled, "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size")})
 			elif (node is Label or node is RichTextLabel) and not node.text.is_empty():
-				last_report.labels.append({"text": node.text, "rect": _rect(node), "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size") if node is Label else 0})
+				last_report.labels.append({"text": node.text, "rect": _rect(node), "grade": node.get_meta("grade_stamp", ""), "font_size": node.get_theme_font_size("font_size") if node is Label else node.get_theme_font_size("normal_font_size")})
 			if node is PanelContainer or node is Panel:
 				var style: StyleBox = node.get_theme_stylebox("panel")
 				var fill := Color.TRANSPARENT

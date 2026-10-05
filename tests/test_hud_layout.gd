@@ -57,11 +57,11 @@ func run() -> void:
 	check(hint_removed, "persistent movement/zoom/inventory hint is removed")
 	check(not game.hud._tool_caption.visible, "equipped-tool control hint is absent from the persistent HUD")
 	check(game.hud._tool_buttons.size() == 5 and game.hud.root.get_node("MainMenuButton").visible, "five tools and menu remain available")
-	check(game.hud._top.coins.is_visible_in_tree() and game.hud._top.price.is_visible_in_tree(), "money and selected crop quote remain visible")
-	check(noninteractive(game.hud._top.coins.get_parent().get_parent().get_parent()), "noninteractive stats pass camera gestures through")
+	check(game.hud._top.coins.is_visible_in_tree() and game.hud._quick_sell.text.contains("360/t"), "money is in the top band and the quote is on Sell")
+	check(noninteractive(game.hud._stats_card), "noninteractive stats pass camera gestures through")
 	var hotbar: Control = game.hud.root.get_node("ToolHotbar")
 	await process_frame
-	check(game.hud._top.coins.get_parent().get_parent().get_parent().size.y <= 74.0, "numeric stats keep their compact height without symbol-font padding")
+	check(game.hud._play_band.size.y <= 64.0, "numeric stats keep their compact height without symbol-font padding")
 	check(absf(game.hud._quick_sell.get_global_rect().end.y - hotbar.get_global_rect().end.y) < 1.0, "sell action aligns with the bottom of the tool hotbar")
 	for island in [1]:
 		game.state._refresh_market()
@@ -143,13 +143,11 @@ func winter_pages() -> void:
 	game.state.seed_inventory.russet = previous_seeds
 	check(note.jobs["project:rainwater"][0].contains("1 / 3"), "paid project shows actual work")
 	check(note.quote_key.visible and note.quote_key.text.contains("now → late Winter"), "one key explains current and late-Winter store quotes")
-	check(note.stores["stores:russet"][0].contains("%s/t now, %s/t late Winter → Sell" % [game.state.market_money(game.state.trading.stored_price(game.state, "russet", "Table")), game.state.market_money(game.state.trading.peak_price("russet", "Table"))]), "Stores says now and late Winter beside actual grade-weighted prices")
+	check(note.stores["stores:russet"][0].contains("%s/t now, %s/t late Winter" % [game.state.market_money(game.state.trading.stored_price(game.state, "russet", "Table")), game.state.market_money(game.state.trading.peak_price("russet", "Table"))]), "Stores says now and late Winter beside actual grade-weighted prices")
 	check(note.heading.text.contains("%d jobs left" % note.jobs.size()) and not note.jobs.has("seed") and not note.jobs.has("stores:russet"), "job count excludes Stores and seed facts")
-	check(note.stores_lines.get_child(-1).text == "Keep some as next Spring's seed →", "seed offer is last under Stores with no tonne total")
+	check(note.stores_lines.get_child(-1).text == "Keep some as next Spring's seed", "seed offer is last under Stores with no tonne total")
 	check(note.quote_key.get_parent() == note.stores_heading.get_parent() and note.quote_key.get_index() == note.stores_heading.get_index() + 1, "quote key sits under Stores heading")
-	game.hud._act("winter_seeds")
-	check(game.hud._panel_kind == "winter_seed_choices" and game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text.contains("Russet: keep up to")), "seed page shows per-crop capacity")
-	game.hud.close_panel()
+	check(note.stores_lines.find_children("*", "Button", true, false).is_empty(), "Winter store facts have no alternate selling entrance")
 	note.heading.pressed.emit()
 	check(note.collapsed and not note.scroll.visible and note.heading.text.contains("jobs left"), "Winter card collapses with a live count")
 	note.heading.pressed.emit()
@@ -164,9 +162,8 @@ func winter_pages() -> void:
 	note.refresh()
 	check(note.completed.has("project:rainwater") and not note.jobs.has("project:rainwater"), "completed project ticks off")
 	game.hud.show_panel("barn", game.state)
-	check(game.hud._panel_kind == "barn" and game.hud._refs.has("upgrade:barn"), "Winter barn keeps capacity and crate shelves")
-	game.hud._act("sell_potatoes")
-	check(game.hud._panel_kind == "sell_potatoes" and game.hud._refs.market_page.stored_mode, "barn Sell opens the market on rising stores")
+	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.stored_mode, "barn directly opens rising Winter store quotes")
+	check(not game.hud._refs.has("upgrade:barn"), "barn capacity expansion belongs to Tools")
 	game.hud.close_panel()
 	root.min_size = Vector2i.ZERO
 	for dimensions in [Vector2i(1280, 800), Vector2i(390, 844)]:
@@ -182,8 +179,8 @@ func winter_pages() -> void:
 			await process_frame
 			game.hud._process(.01)
 		if game.touch_controls.enabled:
-			check(game.touch_controls.status.text.contains(game.state.climate_info().name), "phone layout includes the live blizzard status")
-			check(not note.get_global_rect().intersects(game.touch_controls.status.get_global_rect()), "Winter note clears the phone's live weather status")
+			check(game.hud._weather_button.text.to_lower().contains(game.state.climate_info().name.to_lower()), "phone layout includes the live blizzard status")
+			check(not note.get_global_rect().intersects(game.hud._weather_button.get_global_rect()), "Winter note clears the phone's live weather status")
 		await shot("winter-jobs-%d" % dimensions.x)
 	var saved_stores: Dictionary = game.state.trading.held.duplicate(true)
 	game.state.trading.held = game.state.Stock.empty()

@@ -33,23 +33,23 @@ func prepare_winter(farm, seconds: float = 25.0) -> void:
 func audio_checks() -> void:
 	var unique: Dictionary = {}
 	for stream in Ambience.STREAMS:
-		check(stream.get_length() >= 2 and stream.get_length() <= 10 and stream.data.size() > 0, "short audible seasonal loop exists")
+		check(stream.get_length() >= 40 and stream.data.size() > 0, "long natural ambience bed exists")
 		unique[hash(stream.data)] = true
-	check(unique.size() == 4, "birds, cicadas, wind and snow have distinct recordings")
+	check(unique.size() == 5, "breeze, leaves, stream, rain and Winter hush have distinct recordings")
 	for kind in ["hoe", "plant", "water", "harvest", "pest", "paper", "foreclosure"]:
 		check(Audio.CLIPS.has(kind) and Audio.CLIPS[kind].get_length() > 0, "prebuilt foley/cue present: " + kind)
-	check(Audio.CLIPS.grade_table.data != Audio.CLIPS.grade_standard.data and Audio.CLIPS.grade_standard.data != Audio.CLIPS.grade_feed.data, "three distinct grade sounds")
+	check(Audio.CLIPS.harvest_notes.get_length() > .2, "harvest has a short two-note cue")
 	var ambience = game.seasonal_ambience
 	ambience.set_process(false)
 	ambience.set_season(0)
-	ambience.advance(1.0)
-	ambience.set_season(1)
-	ambience.advance(.5)
-	check(is_equal_approx(ambience.gains[0], .5) and is_equal_approx(ambience.gains[1], .5), "ambience crossfades at the half-second")
-	ambience.advance(.499)
-	check(ambience.gains[0] > 0, "ambience does not finish early")
+	ambience.advance(6.0)
+	ambience.set_season(3)
 	ambience.advance(.001)
-	check(ambience.gains[0] == 0 and ambience.gains[1] == 1, "ambience finishes at exactly one second")
+	check(ambience.layer_age[0] < .01 and ambience.tails[0].stream != null, "season change retains an outgoing layer for a slow crossfade")
+	ambience.advance(3.0)
+	check(ambience.layer_age[0] > 3 and ambience.layer_age[0] < 6, "crossfade is still in progress after three seconds")
+	ambience.advance(3.0)
+	check(ambience.layer_age[0] == 6, "crossfade settles after six seconds")
 	check(is_instance_valid(game.climate_audio) and game.climate_audio.wind.stream != null and game.climate_audio.thunder.stream != null, "weather keeps its dedicated ClimateAudio channel")
 
 func transition_checks() -> void:
@@ -141,32 +141,23 @@ func pace_checks() -> void:
 	game.state.reset_game()
 	game.state.tutorial_progress.completed = true
 	game.state.climate.data.outlook.started = 0
-	var key := InputEventKey.new()
-	key.physical_keycode = KEY_H
-	key.pressed = true
-	game._unhandled_input(key)
-	check(InputMap.action_has_event("hurry", key) and not game.hud.is_panel_open(), "physical H is reserved for hurry without opening help")
-	Input.action_press("hurry")
+	check(not InputMap.has_action("hurry"), "removed speed control has no input action")
 	var before: float = game.state.elapsed
 	game._process(1)
-	check(is_equal_approx(game.state.elapsed - before, 3) and game.hurry_active, "holding H advances three simulation seconds per real second")
-	Input.action_release("hurry")
-	before = game.state.elapsed
-	game._process(1)
-	check(is_equal_approx(game.state.elapsed - before, 1) and not game.hurry_active, "releasing H immediately restores normal time")
-	Input.action_press("hurry")
+	check(is_equal_approx(game.state.elapsed - before, 1), "ordinary farming runs at real-time speed")
 	game.state.season_clock.season = 3
 	game.hud.show_panel("accounts", game.state)
 	before = game.state.elapsed
 	game._process(1)
-	check(game.state.elapsed == before and not game.hurry_active, "held H cannot advance accounts")
+	check(game.state.elapsed == before, "accounts pause time")
 	game.hud.close_panel()
 	game._start_conversation("mara")
 	game._process(1)
-	check(game.state.elapsed == before and not game.hurry_active, "held H cannot advance a conversation")
+	check(game.state.elapsed == before, "conversation pauses time")
 	game.conversation.finish()
-	game.hud.show_panel("loss_notices", game.state)
-	check(game._simulation_delta(1) == 1, "held H cannot accelerate a cause card")
+	game.hud.show_panel("quests", game.state)
+	game.hud._refs.tess_board.losses = true
+	check(game._simulation_delta(1) == 1, "cause card retains ordinary time scale")
 	game.hud.close_panel()
 	game.state.reset_game()
 	game.tutorial.start()
@@ -174,15 +165,14 @@ func pace_checks() -> void:
 	game.state.interact_plot(5, "hoe")
 	game.state.interact_plot(5, "plant")
 	game.state.interact_plot(5, "water")
-	check(game._simulation_delta(1) == 10, "guide wait is capped at ten and ignores H")
+	check(game._simulation_delta(1) == 1, "guided wait runs at ordinary speed")
 	game._process(1000)
 	check(game.state.season_clock.season == 1 and game.state.tutorial_loss().is_empty(), "accelerated Spring stops before the storm warning")
 	check(game._simulation_delta(1) == 1 and game.state.climate.data.phase == "warning", "storm warning switches the guide to one-times speed")
-	game._process(7)
-	check(game.state.tutorial_loss().is_empty(), "the warning gets its real eight seconds")
+	game._process(29)
+	check(game.state.tutorial_loss().is_empty(), "the warning gets its real thirty seconds")
 	game._process(1)
 	check(game.tutorial.current_id() == "loss" and game._simulation_delta(1) == 1, "cause card retains one-times scale and pauses reading")
-	Input.action_release("hurry")
 	game.tutorial.finish()
 	game.hud.close_panel()
 	game.state.climate.reset()
@@ -258,26 +248,7 @@ func touch_checks() -> void:
 	await settle()
 	var touch = game.touch_controls
 	touch._process(.2)
-	var physical_scale: float = float(root.size.x) / game.hud.root.size.x
-	check(touch.hurry_button.size.x * physical_scale >= 44 and touch.hurry_button.size.y * physical_scale >= 44, "touch hurry has a physical forty-four-pixel target")
-	var down := InputEventScreenTouch.new()
-	down.index = 12
-	down.pressed = true
-	down.position = touch.hurry_button.get_global_rect().get_center()
-	touch._input(down)
-	check(touch.hurry_held, "touch hurry starts on finger down")
-	var before: float = game.state.elapsed
-	game._process(1)
-	check(is_equal_approx(game.state.elapsed - before, 3), "touch hold uses the same three-times simulation")
-	var drag := InputEventScreenDrag.new()
-	drag.index = 12
-	drag.position = Vector2.ZERO
-	touch._input(drag)
-	check(not touch.hurry_held, "dragging off hurry releases its hold")
-	down.pressed = false
-	down.canceled = true
-	touch._input(down)
-	check(not touch.hurry_held and not touch.button_fingers.has(12), "cancelled touch cannot leave hurry latched")
+	check(touch.root.find_child("HoldToHurry", true, false) == null, "removed touch speed control leaves no overlay")
 	touch.update_interaction_prompt()
 	var scans: int = touch.interaction_scans
 	for frame in range(60): touch._process(1.0 / 60.0)
@@ -298,7 +269,6 @@ func run() -> void:
 	pace_checks()
 	sleep_checks()
 	await touch_checks()
-	Input.action_release("hurry")
 	game.queue_free()
 	await process_frame
 	await create_timer(.3).timeout

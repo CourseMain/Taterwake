@@ -45,7 +45,7 @@ func capture_polish() -> void:
 	for dimensions: Vector2i in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]:
 		root.size = dimensions
 		await settle()
-		game.hud.show_panel("sell_potatoes", state)
+		game.hud.show_panel("barn", state)
 		await settle()
 		game.hud._refs.market_page.quantity.value = 8
 		await settle()
@@ -61,7 +61,7 @@ func check_price_information(state) -> void:
 		state.elapsed = moment
 		state._refresh_market()
 		game.hud.show_panel("market", state)
-		game.hud.show_panel("sell_potatoes", state)
+		game.hud.show_panel("barn", state)
 		var page = game.hud._refs.market_page
 		for crop: String in page.crops:
 			page.selected = crop
@@ -72,7 +72,7 @@ func check_price_information(state) -> void:
 			var color: Color = Color("436733") if moment > 0 and moment < 300 else (Color("a63529") if moment > 300 else game.hud.INK)
 			check(page.crop_change.text == text and page.crop_change.get_theme_color("font_color") == color, crop + " sell signed percentage and color")
 			check(page.crop_history.samples == state.market[crop].history, crop + " sell navigation updates sparkline")
-			check(game.hud._top.price.text == state.market_money(state.market[crop].sell) and game.hud._top.price_change.text == "· " + text and game.hud._top.price_change.get_theme_color("font_color") == color, crop + " top bar live price, signed percentage and color")
+			check(game.hud._quick_sell.text.contains(state.format_number(state.market[crop].sell) + "/t"), crop + " top bar live price, signed percentage and color")
 
 func check_chart_scaling() -> void:
 	var chart = load("res://scripts/price_sparkline.gd").new()
@@ -117,7 +117,7 @@ func run() -> void:
 	var state = game.state
 	state.elapsed = 0.0
 	state._refresh_market()
-	game.hud.show_panel("sell_potatoes", state)
+	game.hud.show_panel("barn", state)
 	await settle()
 	var empty_page = game.hud._refs.market_page
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
@@ -148,10 +148,10 @@ func run() -> void:
 	await shot("buy-desktop")
 	state.storage["russet"] = Stock.pile(12)
 	state.storage["giant"] = Stock.pile(7)
-	game.hud.show_panel("sell_potatoes", state)
+	game.hud.show_panel("barn", state)
 	await settle()
 	page = game.hud._refs.market_page
-	check(game.hud._panel_kind == "sell_potatoes" and page.selected == "russet", "Sell counter opens selected crop")
+	check(game.hud._panel_kind == "barn" and page.selected == "russet", "Sell counter opens selected crop")
 	check(page.crops == expected, "buy and sell share base order")
 	page.quantity.value = 3
 	check(page.payout.text == state.money(3 * state.market.russet.sell), "quantity previews actual expected payout")
@@ -219,7 +219,7 @@ func run() -> void:
 		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "disaster seeds follow final quote " + crop)
 	game.hud.show_panel("market", state)
 	check(game.hud._refs.market_page.crops == State.crops_by_base_price(state.available_crops()), "buy preserves local island availability")
-	game.hud.show_panel("sell_potatoes", state)
+	game.hud.show_panel("barn", state)
 	page = game.hud._refs.market_page
 	check(page.crops == expected, "sell includes unlocked and held varieties in base order")
 	game.hud._climate_alert.dismiss()
@@ -247,7 +247,7 @@ func run() -> void:
 		for crop: String in game.hud._refs.market_page.crops:
 			check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), crop + " packet excludes sale statistics")
 		await shot("buy-%dx%d" % [dimensions.x, dimensions.y])
-		game.hud.show_panel("sell_potatoes", state)
+		game.hud.show_panel("barn", state)
 		page = game.hud._refs.market_page
 		await settle()
 	check_price_information(state)

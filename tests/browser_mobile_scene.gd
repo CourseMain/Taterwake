@@ -31,7 +31,6 @@ func command(args: Array) -> void:
 		game.state.reset_game()
 		game.state.tutorial_progress = {"version": 3, "step": 8, "completed": false, "plot": 4}
 		game.state.storage["russet"] = Stock.pile(9)
-		game.hud._inventory_tab = "tools"
 		game.tutorial.start()
 		game._on_action("barn")
 	elif action.begins_with("audit_state:"):
@@ -104,7 +103,7 @@ func command(args: Array) -> void:
 		"locked_beds":game.state.plots.filter(func(plot): return not plot.unlocked).size(),
 		"locked_ice":locked_ice_count()}
 	report.guide_visible = game.hud._tutorial_card.is_visible_in_tree()
-	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"step":game.tutorial.current_id(),"tab":game.hud._inventory_tab,"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
+	report.tutorial = {"active":game.tutorial.active,"completed":game.state.tutorial_progress.completed,"step":game.tutorial.current_id(),"russets":Stock.count(game.state.storage, "russet"),"coins":game.state.coins}
 	report.labels = []
 	collect_labels(game.hud._modal_card, report.labels)
 	collect_labels(game.conversation, report.labels)

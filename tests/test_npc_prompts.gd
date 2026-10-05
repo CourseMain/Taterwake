@@ -23,7 +23,7 @@ func run() -> void:
 		game._on_state_changed()
 		await frames()
 		game.hud.close_panel()
-		for station in ["market", "barn", "tools", "quests", "activities", "duck_patrol"]:
+		for station in ["market", "barn", "tools", "quests", "accounts", "climate", "duck_patrol"]:
 			if station == "activities" and island == 1: continue
 			var body: StaticBody3D
 			for target in game.world._interaction_targets:
@@ -65,7 +65,7 @@ func run() -> void:
 	mouse.pressed = false
 	root.push_input(mouse, true)
 	await frames()
-	check(game.conversation.visible and game.conversation.npc_id == "mara", "held badge opens seed vendor conversation")
+	check(game.conversation.visible and game.conversation.service == "market", "held badge greets Mara before seeds")
 	game.conversation.choose(0)
 	check(game.hud._panel_kind == "market", "seed service opens after talking")
 	var badge: Button = game.touch_controls.interaction_prompt
@@ -73,10 +73,10 @@ func run() -> void:
 	check(badge_style.bg_color == Color.WHITE and badge_style.border_color == Color("161916"), "white E with dark outline")
 	check(is_equal_approx(badge.size.x,badge.size.y),"E remains square")
 	game.state.barn_level = 0
-	game.hud.show_panel("barn", game.state)
+	game.hud.show_panel("tools", game.state)
 	check(not game.hud._refs.has("barn_tip"), "barn shelves omit the retired filler message")
-	var expansion_card: Control = game.hud._refs["upgrade:barn:card"]
-	check(game.hud._body.is_ancestor_of(expansion_card) and expansion_card.is_visible_in_tree(), "barn expansion is available inside the inventory page")
+	var expansion_card: Control = game.hud._refs["upgrade:barn"].get_parent().get_parent()
+	check(game.hud._body.is_ancestor_of(expansion_card) and expansion_card.is_visible_in_tree(), "barn expansion is available inside the Tools page")
 	var capacity: int = game.state.capacity
 	game.hud._act("upgrade:barn")
 	game.hud.update_state(game.state)

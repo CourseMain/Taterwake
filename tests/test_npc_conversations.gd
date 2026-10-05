@@ -31,7 +31,8 @@ func run() -> void:
 		if id == "edwin": farm.coins = farm.bankruptcy_limit() * 0.5 - 1
 		var expected_greeting: String = Roster.greeting(id, farm)
 		var service: String = Roster.PEOPLE[id].service
-		game._on_user_action("talk:edwin" if id == "edwin" else service)
+		preload("res://scripts/sound_mix.gd").advance(3)
+		game._on_user_action("talk:" + id)
 		check(talk.visible and talk.npc_id == id,"conversation before service at " + service)
 		await frames()
 		check(talk.visible and game.hud.is_panel_open(),"conversation is modal " + id)
@@ -64,8 +65,8 @@ func run() -> void:
 		check(talk.speech.text == Roster.advice(id, farm),"practical branch " + id)
 		var first_take: int = talk.voice.last_clip
 		var spoken: int = talk.voice.utterances
-		for i in range(100): talk.voice._process(.1)
-		check(talk.voice.utterances - spoken <= 2 and not talk.voice.is_processing(), "voice repeats stay bounded while reading " + id)
+		for i in range(100): talk._process(.1)
+		check(talk.voice.utterances == spoken, "voice repeats stay bounded while reading " + id)
 		if talk.voice.utterances == spoken + 1:
 			check(talk.voice.last_clip != first_take, "successive potato takes vary " + id)
 		talk.portrait.avatar.speaking = true
@@ -75,13 +76,13 @@ func run() -> void:
 		check(talk.portrait.avatar.talk_mouth.visible and talk.portrait.avatar.talk_mouth.scale != mouth_scale,"animated speech " + id)
 		check(talk.portrait.avatar.talk_mouth.scale.x < .1 and talk.portrait.avatar.talk_mouth.scale.y < .06,"talking mouth stays within the face")
 		talk.reveal()
-		check(not talk.voice.player.playing and not talk.voice.is_processing(), "revealing text immediately stops speech " + id)
+		check(not talk.voice.player.playing, "revealing text immediately stops speech " + id)
 		for i in range(20): talk.portrait.avatar.animate(.1)
 		check(not talk.portrait.avatar.talk_mouth.visible and talk.portrait.avatar._mouth.visible,"returns to listening " + id)
-		talk.choose(0)
+		talk.finish(true)
 		await frames()
 		check(not talk.visible and game.hud._panel_kind == service,"returns to service without spending " + id)
-		check(not talk.voice.player.playing and not talk.voice.is_processing(), "service transition leaves no voice playing " + id)
+		check(not talk.voice.player.playing, "service transition leaves no voice playing " + id)
 		check(talk.portrait.viewport.render_target_update_mode == SubViewport.UPDATE_DISABLED,"hidden portrait stops rendering " + id)
 		game._on_action("talk:" + id)
 		check(farm.npc_history[id].kind and talk.speech.text == (Roster.advice(id, farm) if id == "edwin" else Roster.PEOPLE[id].thanks),"friendly memory preserves current reports " + id)
@@ -96,7 +97,7 @@ func run() -> void:
 	check(not talk.visible and not game.world._npc_actors.edwin.visible, "exactly half overdraft has no bank visit")
 	farm.post_money("other", "Test overdraft crossing", -1)
 	game._on_state_changed()
-	game._on_user_action("bank")
+	game._on_user_action("talk:edwin")
 	check(talk.visible and talk.npc_id == "edwin" and game.world._npc_actors.edwin.visible, "crossing half brings manager to first farm")
 	check(talk.speech.text.contains("100,001") and talk.speech.text.contains("200,000"), "bank manager quotes actual debt and limit")
 	talk.finish()
@@ -145,7 +146,7 @@ func run() -> void:
 	escape.physical_keycode = KEY_ESCAPE
 	escape.pressed = true
 	talk._input(escape)
-	check(not talk.visible and not game.hud.is_panel_open(),"Escape leaves dialogue")
+	check(not talk.visible and not game.hud.is_panel_open(),"Escape leaves dialogue without opening a shop")
 	game._process(.1)
 	check(farm.climate.data.timer < remaining,"simulation resumes afterwards")
 	game.hud.close_panel()
@@ -158,7 +159,7 @@ func run() -> void:
 	farm.ledger.post_fixed_costs(1)
 	game._start_conversation("nell")
 	check(talk.speech.text.contains(farm.money(farm.ledger.total(1))) and talk.speech.text.ends_with(Roster.YEAR_ONE_ACCOUNTS), "first Winter reports real net and the three-number arithmetic")
-	talk.choose(0)
+	talk.finish()
 	check(game.hud._panel_kind == "accounts", "accountant opens annual ledger in Winter")
 	game._on_action("close")
 	farm.season_clock.year = 2

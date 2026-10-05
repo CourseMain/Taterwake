@@ -99,7 +99,7 @@ func ui_checks() -> void:
 		game.hud.show_panel("market", farm)
 		for frame in range(8): await process_frame
 		check(game.hud._refs["russet:seed_price"].text == "\uE000 270" and game.hud._refs["icecap:seed_price"].text == "\uE000 1,200", "seed packets show grouped per-seed prices")
-		game.hud.show_panel("sell_potatoes", farm)
+		game.hud.show_panel("barn", farm)
 		var page = game.hud._refs.market_page
 		page.selected = "icecap"
 		page.selected_grade = "Standard"

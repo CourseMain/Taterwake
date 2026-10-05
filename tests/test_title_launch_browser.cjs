@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const url=process.argv[2]||'http://127.0.0.1:8933/index.html';
-const output=process.argv[3]||'artifacts/v2.0.1-title-web';
+const output=process.argv[3]||'artifacts/v2.0.2-title-web';
 const repetitions=3;
 function fit(s){
  assert.ok(Math.abs(s.camera_size-s.overview_size)<0.01,'camera fits current overview');
@@ -39,6 +39,7 @@ function fit(s){
     const firstFarm=await page.evaluate(()=>window.titleReport.first_farm_frame);fit(firstFarm);
     assert.equal(firstFarm.front_page,false);assert.equal(firstFarm.idle.petals,0);assert.equal(firstFarm.idle.poses.length,0);
     await page.waitForTimeout(300);fit(await state());
+    assert.equal((await state()).panel_kind,"farmer");await wait("s.panel_ready");await tap("farmer_exit_rect");await wait("!s.panel && s.guide===\"welcome\"");
     if(attempt===0)await page.screenshot({path:`${output}/farm-${width}.png`});
     results.push({resolution:[width,height],attempt,first_farm_frame:firstFarm});
     if(attempt===0){

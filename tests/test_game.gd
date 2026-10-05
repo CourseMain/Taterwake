@@ -96,7 +96,7 @@ func _run() -> void:
 	game._on_action("barn")
 	await shot("barn")
 	before_coins = game.state.coins
-	press("sell_potatoes")
+	check(game.hud._panel_kind == "barn", "barn opens the sole selling page")
 	var sale = game.hud._refs.market_page
 	press("grade:russet:" + sale.selected_grade)
 	press("market_all")

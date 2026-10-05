@@ -71,7 +71,7 @@ func _run() -> void:
 		key(KEY_1 + ((index + 1) % tools.size()))
 		check(game.selected_tool == tools[(index + 1) % tools.size()], "keyboard equips matching numbered slot")
 	for entry in game.state.inventory_info():
-		check(entry.kind in ["seed", "crop", "tool"], "inventory contains only crops and tools")
+		check(entry.kind in ["seed", "crop"], "inventory contains only crops and tools")
 	game.state.quest_progress.starter_crash = 10
 	game._on_action("quests")
 	press("quest:starter_crash")
@@ -101,7 +101,6 @@ func _run() -> void:
 	game.state.storage["russet"] = Stock.pile(20)
 	game._on_action("inventory")
 	await shot("illustrated-inventory-crops")
-	press("inventory_tab:tools")
 	await shot("illustrated-inventory-tools")
 	game.hud.close_panel()
 	game.state.coins = 8000000000000.0
@@ -112,7 +111,7 @@ func _run() -> void:
 	await create_timer(0.35).timeout
 	game._on_action("menu")
 	await settle()
-	check(game.hud.is_panel_open() and button("inventory") != null and button("market") != null, "three-line menu contains inventory and market navigation")
+	check(game.hud.is_panel_open() and button("inventory") != null and button("farmer") != null, "Menu contains inventory and farmer choices")
 	await shot("main-menu")
 	game.hud.close_panel()
 	if capture:

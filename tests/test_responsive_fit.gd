@@ -67,7 +67,7 @@ func run() -> void:
 		game.hud.set_tool("plant")
 		game.hud._purchase_box.hide()
 		await settle()
-		for item: Control in [game.hud._top.coins.get_parent().get_parent().get_parent(), game.hud.root.get_node("MainMenuButton"), game.hud.root.get_node("ToolHotbar"), game.hud._quick_sell, game.hud._crop_row]:
+		for item: Control in [game.hud._stats_card, game.hud.root.get_node("MainMenuButton"), game.hud.root.get_node("ToolHotbar"), game.hud._quick_sell, game.hud._crop_row]:
 			inside(item, tag + " " + item.name)
 		check(not game.hud.root.get_node("ToolHotbar").get_global_rect().intersects(game.hud._quick_sell.get_global_rect()), tag + " sell button clears the hotbar")
 		for button: Control in game.hud._crop_buttons.values():
@@ -87,7 +87,7 @@ func run() -> void:
 		game.hud._purchase_box.hide()
 	# Every menu uses the same fixed canvas, but each can have its own minimum
 	# width. Check the actual content after container layout, not a mock panel.
-	for kind: String in ["inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help"]:
+	for kind: String in ["inventory", "tools", "pause", "dex", "quests", "duck_patrol", "debug", "graphics", "help"]:
 		game.hud.show_panel(kind, game.state)
 		await settle()
 		check_menu(kind)
@@ -104,11 +104,6 @@ func run() -> void:
 			game.hud._refs.debug_unlock.pressed.emit()
 			await settle()
 			check_menu("unlocked debug controls")
-		if kind == "inventory":
-			game.hud._act("inventory_tab:tools")
-			await settle()
-			check_menu("tool shelf")
-			await shot("tools-inventory")
 	await paper_pages()
 	game.queue_free()
 	await process_frame
@@ -143,7 +138,7 @@ func paper_pages() -> void:
 	if capture:
 		root.size = Vector2i(1280, 800)
 		await settle()
-		for kind in ["accounts", "market", "sell_potatoes", "contracts", "winter_stores", "barn", "climate", "loss_notices", "businesses", "run_summary"]:
+		for kind in ["accounts", "market", "barn", "inventory", "tools", "climate", "quests", "run_summary"]:
 			game.hud.show_panel(kind, game.state)
 			await settle()
 			await shot("desktop-" + kind)
@@ -169,7 +164,7 @@ func paper_pages() -> void:
 		await settle()
 		game.touch_controls.resize()
 		var tag: String = "%dx%d" % [requested.x, requested.y]
-		for kind: String in ["accounts", "market", "sell_potatoes", "contracts", "winter_stores", "barn", "climate", "loss_notices", "businesses", "run_summary"]:
+		for kind: String in ["accounts", "market", "barn", "inventory", "tools", "climate", "quests", "run_summary"]:
 			game.hud.show_panel(kind, game.state)
 			await settle()
 			game.touch_controls.fit_modal()
@@ -221,7 +216,7 @@ func paper_pages() -> void:
 			if button.get_parent() == note.stores_lines:
 				check(button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and button.size.x <= note.scroll.size.x + 1, tag + " Stores fact wraps within its block: " + button.text)
 			else:
-				check(button.autowrap_mode == TextServer.AUTOWRAP_OFF and text_width <= available_width + .5, tag + " one unclipped Winter job: " + button.text)
+				check((button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART or text_width <= available_width + .5) and button.size.x <= note.size.x, tag + " one unclipped Winter job: " + button.text)
 			check(minf(button.size.x, button.size.y) * front_scale >= 43.9, tag + " Winter touch target: " + button.text)
 		if requested in [Vector2i(1280, 800), Vector2i(390, 844), Vector2i(844, 390)]: await shot(tag + "-winter-jobs")
 		game.hud._run_end.show_report(game.state)

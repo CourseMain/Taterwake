@@ -17,14 +17,6 @@ func check(ok: bool, message: String) -> void:
 func settle() -> void:
 	for _i in range(5): await process_frame
 
-func navigate(action: String) -> void:
-	check(game.hud._modal_market_nav.is_visible_in_tree() and game.hud._modal_market_nav.get_child_count() == 2, "Mara’s shop has two fixed trading tabs")
-	for button: Node in game.hud._modal_market_nav.get_children():
-		if str(button.get_meta("action", "")) == action:
-			button.pressed.emit()
-			return
-	check(false, "shop tab exists: " + action)
-
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args():
 		quit(1)
@@ -43,69 +35,39 @@ func run() -> void:
 	state.storage["giant"] = Stock.pile(7)
 	game.hud.close_panel()
 
-	# The first ordinary Buy entry retains the intended introduction.
 	game._on_user_action("market")
-	check(game.conversation.visible and game.conversation.npc_id == "mara", "first Buy visit introduces Mara")
-	check(game.conversation.speech.text == state.NpcRoster.PEOPLE.mara.first, "first greeting remains intact")
+	check(game.conversation.visible and game.conversation.service == "market", "first visit meets Mara before seeds")
 	game.conversation.choose(0)
-	await settle()
-	check(game.hud._panel_kind == "market", "Mara's service opens Buy Seeds")
-	var memory: Dictionary = state.npc_history.duplicate(true)
+	check(not game.hud._modal_card.find_children("*", "Button", true, false).any(func(b): return b.get_meta("hud_action", "") in ["market", "barn"]), "Mara has no selling tab")
+	check(game.hud._body.find_children("*", "Button", true, false).any(func(button): return button.text == "Talk"), "flavour conversation has one small Talk entrance")
 	var inventory: Dictionary = state.storage.duplicate(true)
 	var seeds: Dictionary = state.seed_inventory.duplicate(true)
 	var cash: float = state.coins
 	var prices: Dictionary = state.market.duplicate(true)
-	await navigate("sell_potatoes")
-	await settle()
-	game.hud._refs.market_page.select_variety("giant")
-	var selected: String = game.hud._refs.market_page.selected
-	game.hud._refs.market_page.quantity.value = 2
-	await navigate("sell_potatoes")
-	check(game.hud._refs.market_page.quantity.value == 2 and game.hud._modal_market_nav.get_child(1).button_pressed, "active Sell tab keeps its selection and amount")
 	for _i in range(3):
-		await navigate("market")
-		await settle()
-		check(not game.conversation.visible and game.hud._panel_kind == "market", "Buy re-entry opens without replaying dialogue")
-		await navigate("sell_potatoes")
-		await settle()
-		check(not game.conversation.visible and game.hud._panel_kind == "sell_potatoes", "Sell tab opens Mara’s selling counter")
-		check(game.hud._refs.market_page.selected == selected, "page re-entry retains selected selling variety")
-	check(state.npc_history == memory, "shop tabs do not record extra NPC visits")
-	check(state.storage == inventory and state.seed_inventory == seeds and state.coins == cash, "navigation preserves inventory and wallet")
-	check(state.market == prices, "navigation preserves the live quotes and history")
-
-	# Ordinary re-entry uses the established save memory, not a transient flag.
-	game.hud.close_panel()
-	game._on_user_action("market")
-	check(not game.conversation.visible and game.hud._panel_kind == "market", "reopening Buy does not repeat a completed greeting")
-	check(state.save_game(SAVE), "save introduction using existing game save")
-	state.npc_history.clear()
-	check(state.load_game(SAVE), "restore existing NPC memory")
-	game.hud.close_panel()
-	game._on_user_action("market")
-	check(not game.conversation.visible and state.npc_history == memory, "loaded introduction stays completed")
-
-	# Both intentional paths to another conversation still work.
+		game._on_user_action("barn")
+		check(game.conversation.visible and game.conversation.service == "barn", "selling meets the barn keeper")
+		game.conversation.choose(0)
+		check(game.hud._panel_kind == "barn", "barn greeting opens the canonical sell page")
+		game._on_user_action("market")
+		check(game.conversation.visible and game.conversation.service == "market", "seed re-entry meets Mara again")
+		game.conversation.choose(0)
+	check(state.npc_history.is_empty(), "short seasonal shop greetings preserve intentional conversation memory")
+	check(state.storage == inventory and state.seed_inventory == seeds and state.coins == cash and state.market == prices, "service navigation changes no farm amounts")
 	game._on_action("talk:mara")
-	check(game.conversation.visible and game.conversation.npc_id == "mara", "explicit Talk to Mara remains available")
-	check(game.conversation.speech.text != state.NpcRoster.PEOPLE.mara.first, "intentional revisit uses remembered greeting")
-	game.conversation.choose(0)
-	check(game.hud._panel_kind == "market", "explicit conversation returns to its service")
+	check(game.conversation.visible and game.conversation.npc_id == "mara", "Talk opens Mara’s personal greeting")
+	game.conversation.choose(1)
+	check(game.conversation.speech.text == state.NpcRoster.PEOPLE.mara.story, "bag-mending story remains available")
+	game.conversation.finish(true)
+	check(game.hud._panel_kind == "market" and not game.conversation.visible, "the single conversation exit returns to seeds")
+	var memory: Dictionary = state.npc_history.duplicate(true)
+	check(state.save_game(SAVE), "save intentional conversation memory")
+	state.npc_history.clear()
+	check(state.load_game(SAVE) and state.npc_history == memory, "conversation memory survives reload")
 	game.hud.close_panel()
 	game._interact_station("market")
-	check(game.conversation.visible and game.conversation.npc_id == "mara", "visiting Mara's stall deliberately talks again")
+	check(game.conversation.visible and game.conversation.service == "market" and state.npc_history == memory, "walking to the stall meets Mara with the saved conversation memory")
 	game.conversation.choose(0)
-
-	# Selling has no keeper introduction; the next seed visit still meets Mara.
-	game.hud.close_panel()
-	state.npc_history.clear()
-	game._on_user_action("sell_potatoes")
-	await settle()
-	check(not game.conversation.visible and state.npc_history.is_empty(), "Sell does not fabricate a seed-counter introduction")
-	await navigate("market")
-	await settle()
-	check(game.conversation.visible and game.conversation.speech.text == state.NpcRoster.PEOPLE.mara.first, "first seed entry still introduces Mara after selling")
-	game.conversation.finish()
 	state.reset_game()
 	check(state.npc_history.is_empty(), "new farm keeps existing NPC reset behavior")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

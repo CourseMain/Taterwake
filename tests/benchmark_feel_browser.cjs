@@ -173,16 +173,6 @@ async function main() {
     }
 
     if (flag('year') || flag('year-only')) {
-      const initial = await state();
-      assert.equal(initial.hurry_action, true, 'Full year requires the actual H/hurry feature.');
-      const touchSession = input === 'touch' ? await context.newCDPSession(page) : null;
-      let holding = false;
-      const release = async () => {
-        if (!holding) return;
-        if (touchSession) await touchSession.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-        else await page.keyboard.up('KeyH');
-        holding = false;
-      };
       const point = async button => {
         const current = await state();
         const bounds = await page.locator('#canvas').boundingBox();
@@ -190,48 +180,33 @@ async function main() {
         return { x: bounds.x + (x + width / 2) * bounds.width / current.logical_canvas[0],
           y: bounds.y + (y + height / 2) * bounds.height / current.logical_canvas[1] };
       };
-      const hold = async current => {
-        if (holding) return;
-        if (touchSession) {
-          const button = current.buttons.find(button => /hurry/i.test(button.text) && !button.disabled);
-          assert.ok(button, 'Visible touch hurry button.');
-          const location = await point(button);
-          await touchSession.send('Input.dispatchTouchEvent', { type: 'touchStart',
-            touchPoints: [{ id: 77, ...location, radiusX: 5, radiusY: 5 }] });
-        } else await page.keyboard.down('KeyH');
-        holding = true;
-      };
-      console.log(`Starting ${label} full year with real ${input} hold; normal 150s seasons.`);
+      console.log(`Starting ${label} full year at normal speed; 150s seasons.`);
       await command('year');
-      await beginRAF('full_year_real_hold');
+      await beginRAF('full_year_normal_speed');
       const started = Date.now();
       let closedPages = 0;
       while (Date.now() - started < 910000) {
-        if (await page.evaluate(() => window.feelReport.measurements.some(result => result.id === 'full_year_real_hold'))) break;
+        if (await page.evaluate(() => window.feelReport.measurements.some(result => result.id === 'full_year_normal_speed'))) break;
         const current = await state();
         assert.equal(current.run_over, false);
         if (current.accounts || current.cause_card || current.conversation) {
-          assert.equal(current.hurry_active, false, 'Hurry stops while a paused page is open.');
-          await release();
           const button = current.buttons.find(button => button.action === 'close' && !button.disabled)
             || current.buttons.find(button => /return to farm|back to farm|continue|skip|finish|goodbye/i.test(button.text) && !button.disabled);
           assert.ok(button, 'A paused page has a normal visible way to continue.');
           const location = await point(button);
           await page.touchscreen.tap(location.x, location.y);
           closedPages++;
-        } else await hold(current);
+        }
         await page.waitForTimeout(500);
       }
-      await release();
-      if (touchSession) await touchSession.detach();
-      const result = await collect('full_year_real_hold');
+      const result = await collect('full_year_normal_speed');
       result.input = input;
       result.closed_pages_with_real_taps = closedPages;
       assert.equal(result.boundaries.length, 4, 'A full year reached all four ordinary boundary saves.');
       assert.deepEqual(result.boundaries.map(boundary => boundary.season), [1, 2, 3, 0]);
       assert.equal(result.saved_boundary.year, 2);
       assert.equal(result.saved_boundary.season, 0);
-      assert.ok(result.observed_pace <= 3.01, 'The year used the normal 3× hold, with no faster simulation shortcut.');
+      assert.ok(result.observed_pace <= 1.01, 'The year advances at normal speed.');
       await page.screenshot({ path: path.join(directory, `${label}-full-year.png`) });
     }
     report.performance_limitations = ['Frame intervals include browser scheduling and rendering; process monitors are engine CPU measurements, not GPU timings.',

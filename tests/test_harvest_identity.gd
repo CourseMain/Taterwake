@@ -49,14 +49,14 @@ func run() -> void:
 	game.perform_plot(4,"water")
 	var tuber: Node3D = game.world._crop_roots[4].get_node("PotatoTuber")
 	var start_size: float = tuber.scale.x
-	game._process(5.0 / game.tutorial.WAIT_SPEED)
+	game._process(5.0)
 	check(tuber.scale.x > start_size, "plant visibly expands before it becomes ripe")
 	var midway_size: float = tuber.scale.x
 	check(game.state.save_game(path) and game.state.load_game(path), "same-stage growing crop reloads")
 	game.tutorial.start()
-	game._process(1.0 / game.tutorial.WAIT_SPEED)
+	game._process(1.0)
 	check(tuber.scale.x > midway_size, "reloaded crop follows the new live plot dictionary")
-	game._process((float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1) / game.tutorial.WAIT_SPEED)
+	game._process((float(game.state.CropTable.CROPS.russet.grow) - 6.0 + 0.1))
 	check(game.state.plots[4].stage == 3 and game.tutorial.current_id() == "grow", "crop uses ordinary growth before Summer lesson")
 	for advance in range(6):
 		if game.tutorial.current_id() == "loss": break
@@ -72,14 +72,14 @@ func run() -> void:
 	var fx = game.world.harvest_feedback
 	check(game.state.storage_used()-stored == 2, "first Russet harvest excludes the one storm-lost tonne")
 	check(fx.active.size() == 1 and not fx.active[0].heavy, "committed Russet starts one visual receipt")
-	check(fx.audio.last_kind == "harvest", "ordinary crop uses harvest foley")
+	check(fx.audio.last_grade == "Standard", "committed harvest uses its soft two-note cue")
 	var grade_cues: int = fx.audio.played_count
 	fx.animate(.17)
-	check(fx.audio.played_count==grade_cues,"grade stamp sound waits for the tuber to pop")
 	fx.animate(.02)
-	check(fx.audio.played_count==grade_cues+1 and fx.audio.last_grade==fx.active[0].grade,"committed harvest pop plays its actual grade sound")
+	check(fx.audio.played_count == grade_cues, "harvest pop adds no second overlapping sound")
+	check(fx.active[0].stamp.text.contains(preload("res://scripts/grade_stamp.gd").GLOSSES[fx.active[0].grade]), "first harvest includes the grade gloss")
 	fx.animate(.02)
-	check(fx.audio.played_count==grade_cues+1,"harvest grade sound plays once")
+	check(fx.audio.played_count == grade_cues, "harvest cue plays only once")
 	fx.animate(2)
 	check(fx.active.is_empty() and fx.clods.is_empty(), "harvest cleans up without leaving props")
 	game.tutorial.finish()

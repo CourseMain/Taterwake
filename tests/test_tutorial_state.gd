@@ -29,7 +29,7 @@ func _run() -> void:
 	for action: String in ["hoe", "plant", "water"]: state.interact_plot(5, action)
 	state.tutorial_progress.step = 5
 	state.update(3600)
-	check(state.season_clock.season == 1 and is_equal_approx(state.season_clock.seconds, 8), "calendar advances through Spring to Summer warning impact")
+	check(state.season_clock.season == 1 and is_equal_approx(state.season_clock.seconds, 30), "calendar advances through Spring to Summer warning impact")
 	check(state.tutorial_loss().sacks == 1 and state.climate.year_count(1) == 1, "one small scripted disaster")
 	check(state.plots[5].stage == 3 and state.ClimateSystem.Protection.remaining(state.plots[5]) == 2, "normal growth survives partial storm loss")
 	check(state.ledger.total(1, "seeds") == -270, "seed cost is real")

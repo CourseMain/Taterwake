@@ -69,7 +69,7 @@ func command(args: Array) -> void:
 			_prepare_farm(1, 0)
 			full_year = true
 			year_started = 1
-			_start_sample("full_year_real_hold", 900.0, 0.0)
+			_start_sample("full_year_normal_speed", 900.0, 0.0)
 		"status": pass
 		_:
 			push_error("Unknown feel benchmark command: " + action)
@@ -239,8 +239,8 @@ func _publish() -> void:
 			"seconds": game.state.season_clock.seconds, "accounts": game.state.accounts_open, "cause_card": game.state.climate_report_open,
 			"conversation": game.conversation.visible, "panel": game.hud._panel_kind, "run_over": game.state.run_over,
 			"weather": game.state.climate.data.phase, "event": game.state.climate.data.event,
-			"hurry_active": game.get("hurry_active") == true, "simulation_elapsed": game.state.elapsed,
-			"touch": game.touch_controls.enabled, "hurry_action": InputMap.has_action("hurry"), "buttons": buttons,
+			"simulation_elapsed": game.state.elapsed,
+			"touch": game.touch_controls.enabled, "buttons": buttons,
 			"logical_canvas": [game.hud.root.size.x, game.hud.root.size.y]}, "metadata": _metadata()}
 	if OS.has_feature("web"): JavaScriptBridge.eval("window.feelReport=" + JSON.stringify(last_publication), true)
 

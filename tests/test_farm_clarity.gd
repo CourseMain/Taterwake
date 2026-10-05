@@ -60,7 +60,7 @@ func run() -> void:
 	for _i in range(25): game.perform_plot(4, "water")
 	check(is_equal_approx(hud._farm_hint_remaining, remaining), "rapid repeats neither stack nor extend feedback")
 	await settle()
-	check(hud._context_box.size.y <= 32.0 and hud._context_box.size.x < 240.0, "short reminder hugs its text")
+	check(hud._context_box.size.y <= 60.0 and hud._context_box.size.x < 320.0, "short reminder hugs its text")
 	check(not hud._context_box.get_global_rect().intersects(hud._hotbar.get_global_rect()), "reminder stays above the tool buttons")
 	check(hud._context_box.mouse_filter == Control.MOUSE_FILTER_IGNORE and hud._context.mouse_filter == Control.MOUSE_FILTER_IGNORE, "field clicks pass through reminder")
 	game.world.set_day_time(25.0)

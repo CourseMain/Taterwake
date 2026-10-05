@@ -16,7 +16,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  const command=async a=>{await page.evaluate(a=>window.mobileQA(a),a);await page.waitForTimeout(300);return page.evaluate(()=>{window.mobileQA('status');return window.mobileReport})};
  const state=await command('status');assert.equal(state.touch,touch);
  const fullRect=await page.locator('#fullscreen-button').boundingBox();
- assert.ok(fullRect.x<20 && fullRect.y<20 && fullRect.width===44, 'compact fullscreen at top left');
+ assert.ok(fullRect.x>=width-60 && fullRect.y>=56 && fullRect.width===44, 'compact fullscreen stays clear of the top band and movement stick');
  assert.equal(await page.locator('#fullscreen-button').getAttribute('aria-label'),'Enter fullscreen');
  assert.ok(await page.locator('#fullscreen-button .fullscreen-enter').isVisible(), 'expand arrows before fullscreen');
  assert.equal(await page.locator('#fullscreen-button').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)', 'fullscreen chrome is transparent');
@@ -32,7 +32,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  await shot('npc-prompt');
  await tapButton('E');
  assert.equal((await command('status')).conversation.npc,'mara','NPC badge starts Mara conversation');
- await tapButton('Browse seeds');
+ await tapButton('Buy seeds');
  assert.equal((await command('status')).panel,'market','Mara opens seed counter');
  await tapButton('×');
  await page.locator('#fullscreen-button').click();
@@ -67,10 +67,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  }
  if(touch){
   await command('guide_shop');
-  await tapButton('Show guide');
-  assert.equal((await command('status')).guide_visible,true,'tutorial guide opens above shop');
-  await tapButton('Hide guide');
-  assert.equal((await command('status')).guide_visible,false,'tutorial guide folds away');
+  assert.equal((await command('status')).guide_visible,false,'shop owns the only visible card');
   await page.setViewportSize({width:height,height:width});await page.waitForTimeout(800);
   const rotated=await command('status');
   assert.ok(Math.abs(rotated.logical[0]/rotated.logical[1]-height/width)<.01,`${name} rotation fills screen`);

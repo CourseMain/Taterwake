@@ -36,7 +36,7 @@ func observe(args: Array) -> void:
 		"coins": farm.coins, "run_over": farm.run_over, "outcome": farm.run_outcome,
 		"panel": game.hud._panel_kind if game.hud.is_panel_open() else "", "front_page": game.year_intro.visible,
 		"tutorial": game.tutorial.current_id() if game.tutorial.active else "complete", "tool": game.selected_tool,
-		"walking": game.walking, "hurry": game.hurry_active, "sleeping": game.sleeping_until_spring,
+		"walking": game.walking, "sleeping": game.sleeping_until_spring,
 		"weather": farm.climate_info(), "seeds": farm.seed_inventory, "stock": farm.storage,
 		"held": farm.trading.held, "tools": farm.tools, "businesses": farm.diversification.built,
 		"projects": farm.climate.data.projects, "can": farm.ClimateSystem.Operations.local(farm).can,

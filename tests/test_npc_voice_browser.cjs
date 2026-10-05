@@ -68,7 +68,7 @@ const assert = require('node:assert/strict');
    await page.waitForTimeout(1700);
    assert.ok(await page.evaluate(()=>Math.max(...window.voicePeaks)>0.001),id+' voice reaches the browser audio output');
    const after = await report();
-   assert.ok(after.voice.utterances-start.voice.utterances <= 2,'chatter is bounded');
+   assert.equal(after.voice.utterances,start.voice.utterances,'keeper chirp does not repeat while reading');
    await page.keyboard.press('Space');
    assert.equal((await report()).voice.playing,false,'reveal stops voice');
    await page.keyboard.press('Escape');
@@ -76,6 +76,6 @@ const assert = require('node:assert/strict');
   }
   assert.ok(pitches[1]<pitches[0] && pitches[2]>pitches[0],'villagers have different vocal pitches');
   assert.deepEqual(errors,[]);
-  console.log('NPC VOICE BROWSER: audible potato clips, varied villagers and immediate stop passed');
+  console.log('NPC VOICE BROWSER: audible soft keeper chirps, varied villagers and immediate stop passed');
  } finally { await browser.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

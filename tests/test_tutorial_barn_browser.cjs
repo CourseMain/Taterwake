@@ -17,11 +17,10 @@ const fs = require('node:fs');
   await page.evaluate(() => window.mobileQA('tutorial_sale'));
   await page.waitForTimeout(800);
   const before = await report();
-  assert.equal(before.tutorial.tab, 'crops', 'remembered Tools redirects to crops');
   assert.equal(before.tutorial.active, true);
-  assert.equal(before.buttons.find(b => b.action === 'inventory_tab:crops').disabled, false);
-  assert.equal(before.buttons.find(b => b.action === 'inventory_tab:tools').disabled, true);
-  // The sale button is inside the scrolling crop shelf, below the barn ledger.
+  assert.equal(before.panel, 'barn', 'first sale uses the canonical barn');
+  assert.ok(!before.buttons.some(b => b.action.startsWith('inventory_tab:')), 'inventory shelves do not add selling routes');
+  // The shared barn footer owns the amount and sale actions.
   const canvas = await page.locator('#canvas').boundingBox();
   const clickAction = async action => {
    let s = await report();
@@ -41,8 +40,8 @@ const fs = require('node:fs');
    if (touch) await page.touchscreen.tap(x,y); else await page.mouse.click(x,y);
    await page.waitForTimeout(500);
   };
-  await clickAction('inventory_tab:crops');
-  await clickAction('sell:russet:-1');
+  await clickAction('market_all');
+  await clickAction('market_sell');
   const after = await report();
   assert.equal(after.tutorial.russets, 0, 'actual click/tap sells entire harvest');
   assert.ok(after.tutorial.coins > before.tutorial.coins, 'sale credits coins');
@@ -50,7 +49,7 @@ const fs = require('node:fs');
   assert.equal(after.tutorial.step, "winter");
   assert.equal(after.tutorial.active, true);
   await page.screenshot({path:`artifacts/tutorial-barn/${name}-complete.png`});
-  console.log(name + ': first sale from remembered Tools proceeds to Winter using ' + (touch ? 'touch' : 'mouse'));
+  console.log(name + ': first sale from the barn proceeds to Winter using ' + (touch ? 'touch' : 'mouse'));
   await context.close();
  }
  await browser.close();

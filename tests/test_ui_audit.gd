@@ -55,18 +55,11 @@ func run() -> void:
 		game.state.storage[crop] = Stock.pile(10)
 	game.hud.update_state(game.state)
 	game.hud.set_debug_session(true)
-	for kind: String in ["market", "inventory", "tools", "pause", "dex", "island", "quests", "activities", "duck_patrol", "debug", "graphics", "help", "climate"]:
+	for kind: String in ["market", "barn", "inventory", "tools", "pause", "dex", "quests", "duck_patrol", "debug", "graphics", "help", "climate", "accounts", "calendar", "farmer", "grades"]:
 		await page(kind)
-	for tab: String in ["crops", "tools"]:
-		game.hud.show_panel("inventory", game.state)
-		game.hud._act("inventory_tab:" + tab)
-		await shot("inventory-" + tab + "-top")
-		await shot("inventory-" + tab + "-bottom", true)
 	game.hud.show_panel("dex", game.state)
 	await shot("dex-crops-top")
 	await shot("dex-crops-bottom", true)
-	for island: int in [1, 2]:
-		await page("activities", "activities-island-%d" % island)
 	game.state.climate.begin_warning(game.state, "storm", 1.0)
 	game.state.climate._impact(game.state)
 	game.state._refresh_market()
@@ -75,8 +68,52 @@ func run() -> void:
 	root.size = Vector2i(960, 600)
 	for kind: String in ["dex", "climate", "help", "debug"]:
 		await page(kind, "compact-" + kind)
+	await entrances()
 	game.queue_free()
 	await process_frame
 	await create_timer(0.2).timeout
 	print("UI AUDIT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+const SERVICES: Array[String] = ["market", "barn", "accounts", "climate", "quests", "tools"]
+const RETIRED: Array[String] = ["sell_potatoes", "quick_sell", "winter_stores", "winter_seeds", "winter_seed_choices", "loss_notices", "contracts", "store_advice", "advice:home", "advice:golden", "advice:stores", "forge", "bank", "activities"]
+func entrances() -> void:
+	game.hud.close_panel()
+	for node in game.hud.root.find_children("*", "Button", true, false):
+		var action: String = str(node.get_meta("hud_action", ""))
+		check(action not in RETIRED, "no retired HUD entrance: " + action)
+		if action in SERVICES: check(action in ["barn", "climate"], "farm HUD exposes only Sell and Weather shortcuts: " + action)
+	for kind in ["market", "barn", "accounts", "climate", "quests", "tools", "pause", "inventory", "help", "dex", "duck_patrol", "calendar", "farmer", "grades"]:
+		game.hud.show_panel(kind, game.state)
+		await settle()
+		var closes: int = 0
+		var service_links: Array[String] = []
+		for node in game.hud._modal_card.find_children("*", "Button", true, false):
+			var action: String = str(node.get_meta("hud_action", ""))
+			check(action not in RETIRED, kind + " has no retired route: " + action)
+			if action == "close": closes += 1
+			if action in SERVICES: service_links.append(action)
+		check(closes == 1, kind + " has exactly one Close")
+		check(service_links == (["barn"] if kind == "accounts" else []), kind + " has only its mapped service link: " + str(service_links))
+	game.hud.close_panel()
+	for action in RETIRED:
+		game._on_action(action)
+		check(not game.hud.is_panel_open(), "retired action cannot open a service: " + action)
+	game._on_user_action("market")
+	check(game.conversation.visible and game.conversation.service == "market" and game.conversation.choice_ids.count("service") == 1, "Mara has one conversation entrance to seeds")
+	game.conversation.choose(0)
+	var before: float = game.state.coins
+	game._on_action("sell:russet:1:Standard")
+	check(game.state.coins == before, "sales cannot bypass the barn")
+	for service in ["climate", "quests", "tools", "duck_patrol", "barn"]:
+		game.hud.close_panel()
+		game._on_user_action(service)
+		check(game.conversation.visible and game.conversation.service == service and game.conversation.choice_ids.count("service") == 1, "one keeper entrance before " + service)
+		game.conversation.choose(0)
+		check(game.hud._panel_kind == service, "keeper opens the canonical " + service)
+	for season in range(4):
+		game.state.season_clock.season = season
+		game._on_user_action("accounts")
+		check(game.conversation.visible and game.conversation.service == "accounts", "Nell greets before accounts in every season")
+		game.conversation.choose(0)
+		check(game.hud._panel_kind == "accounts", "Nell opens the same canonical accounts")

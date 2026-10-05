@@ -30,7 +30,7 @@ func run() -> void:
 		var station: Node3D = game.world.get_node(stations[island])
 		var aim: Vector2 = game.world.camera.unproject_position(station.global_position + Vector3(0, 1.2, 0))
 		check(str(game.world.pick(aim).get("station", "")) == ("duck_patrol" if island == 1 else "activities"), "island %d activity station is actually clickable" % island)
-		game.hud.show_panel("activities", game.state)
+		game.hud.show_panel("duck_patrol", game.state)
 		check(game.hud._refs.has("activity_status"), "island %d activity uses modal rather than adding HUD clutter" % island)
 		game.hud.close_panel()
 	game.queue_free()
