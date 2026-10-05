@@ -1656,6 +1656,88 @@ control has a drawing, and the money glyph is solid. Full suite; tag
 v2.0.3.
 ```
 
+### Segment 21h: The kit and the cast (after 21g, before Segment 22)
+
+```
+Why: every interface pass so far has come back as grey boxes on white,
+small type, too many words, no colour and no personality, however the
+brief was worded. Words are not working. This segment replaces words
+with two things Codex must match rather than interpret: a drawn UI kit
+(the owner's reviewer publishes it as a page of real mockups with the
+exact colours, type and components) and a cast bible. The "Your farmer"
+card is the latest example: a 3D preview cropped to the legs, word
+pills for hats, labels instead of pictures, a scrollbar on a card.
+
+A. The kit (reference page, matched not interpreted):
+   1. Surfaces: ink felt (17382d) is the ground every card sits on;
+      paper (f3efdf) carries facts; wood (79553d) frames and rails. No
+      grey, no white, no cream-on-cream.
+   2. Connection colour: everything about one thing shares one colour,
+      everywhere. Golden potato is gold on its seed card, its stamp,
+      its sale line, its price-year headline and its catalogue entry.
+      Russet is russet brown, Giant is clay, Sunburst is orange, Icecap
+      is ice blue. Keepers each own one colour (Nell slate, Mara leaf,
+      Tess brick, Iris sky, the toolsmith iron) used on their page
+      header, their portrait frame and their lines on the Winter card.
+   3. Rarity colour, for practices, varieties and clothing: common
+      sage edge, uncommon gold edge, rare clay-red edge, found sky-blue
+      edge; always the card edge, never a label.
+   4. Cards are chunky: 3 px wood edge, radius 12, a 2 px paper inner
+      line, a drop shadow; they tilt two degrees on hover and settle on
+      tap. Numbers and names in the display face, large. One drawing
+      per card, above the name.
+   5. Menus are boards: a drawn wooden board with six big tiles
+      (Farmer, What I've grown, Sound, Graphics, Save, Leave), no
+      lists, no scrollbars. The "Your farmer" card: the whole farmer in
+      the preview, hats and shirts as pictures on tiles, a name line
+      and nothing else; it fits one phone screen.
+   6. Two typefaces, per the Segment 22 contract.
+   7. The kit is published as mockups of: a practice tile at each
+      rarity, the sale reveal, the Menu board, Your farmer, Nell's
+      page, Mara's page, the Winter card, a harvest stamp. Codex builds
+      to match and screenshots each beside the mockup.
+
+B. The cast bible (words and looks, both):
+   Nell, accountant. Cold, exact, only money. Slate cardigan, round
+     glasses, mouth a line, ledger under one arm. Never smiles except
+     once, the first profitable year. Lines: "The bills don't care
+     about the weather." "Store it if you like. Spoilage is your side
+     of the ledger." "A profit. Write the date down."
+   Mara, seed seller. Warm, chatty, proud of her seed, mends her own
+     bags. Straw hat with a flower, leaf-green apron, sleeves rolled.
+     Lines: "Golden's fussy but it pays." "Twelve in the pouch. Start
+     with one." "Cheap seed this season; I'd buy."
+   Tess, quest keeper and losses. Blunt, practical, kind underneath.
+     Brick scarf, clipboard, muddy boots, hair tied back. Counts damage
+     without drama. Lines: "One tonne gone. Two to get in. Go." "Ice on
+     six beds. Hoe." "Three jobs left. None of them fun."
+   Iris, forecaster on the radio. Dreamy, hedging, right six times in
+     ten. Sky-blue headphones, wind-blown hair, a mug. Lines:
+     "Probably a storm. Probably." "Clear, I think. Don't quote me."
+     "That one I'm sure of. Get them in."
+   Oda, toolsmith. Gruff, five words at a time, loves a good hoe. Iron
+     apron, soot on one cheek, a pencil behind the ear. Lines: "Hoe's
+     fine. Use it." "Twelve more beds. Forty-eight." "Bench. Two
+     thousand. Looks nice."
+   The player: silent. Ducks: not silent.
+   Every keeper line in the game is rewritten in these voices, at most
+   eight words; the keeper's face in the portrait matches the line
+   (Nell frowns at a loss, Mara beams at a Table harvest).
+
+C. Clothing as rewards. Hats and shirts are earned, not bought, and
+   each is a drawing on a rarity card: first Table harvest gives
+   Mara's flower hat; surviving year five gives Tess's scarf; the first
+   profitable year gives Nell's glasses; a run with no foreclosure
+   gives Iris's headphones; a found variety gives its coloured shirt.
+   Worn on the farmer, shown in the epilogue, kept across runs. Nothing
+   worn changes any number.
+
+Done when: the kit page exists and every screen in A7 matches it side
+by side; every keeper line is in its voice; the farmer card fits one
+phone screen with pictures for every choice; the first three clothing
+rewards exist. Full suite; tag v2.0.4.
+```
+
 ### Segment 22: The run (replaces the fun pass; after 21g)
 
 ```
