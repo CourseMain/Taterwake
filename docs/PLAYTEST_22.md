@@ -4,7 +4,7 @@ The first human sheet is recorded below. Segment 21f responds to this player's b
 
 ## Current build
 
-The first sheet concerns the public v2.0.0 build. Part A shipped as v2.0.1. Parts B–M are complete locally as v2.0.2, including the owner’s later NPC-first and no-Hurry changes; publishing remains paused. Each subsequent tester starts a fresh farm in a separate browser profile or clears existing farm data through the normal controls.
+The first sheet concerns the public v2.0.0 build. Part A shipped as v2.0.1. Parts B–M and the owner’s NPC-first and no-Hurry changes remain in the local v2.0.3 build, which also includes Segment 21g's visible sun and illustrated controls. Publishing remains paused. Each subsequent tester starts a fresh farm in a separate browser profile or clears existing farm data through the normal controls.
 
 Ask each person to play as they normally would and say what they are thinking. Start the timer when they begin the game. Let the guide explain the controls; avoid coaching or describing planned features. Record every confusion or idle stretch with elapsed time, year, season and screen. If someone stops, record why. If they continue, ask afterward where they would have stopped when playing alone. Do not assume a completed run means they enjoyed it.
 
