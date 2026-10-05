@@ -151,7 +151,7 @@ func layout() -> void:
 	var touch = hud.get_parent().get("touch_controls")
 	var phone: bool = is_instance_valid(touch) and touch.enabled
 	var landscape: bool = phone and hud.root.size.x > hud.root.size.y
-	var left: float = touch.stick.get_global_rect().end.x + 24 if landscape else (16 if phone else 28)
+	var left: float = maxf(touch.stick.get_global_rect().end.x, touch.sell_button.get_global_rect().end.x) + 24 if landscape else (16 if phone else 28)
 	var width: float = minf(560 if phone else 390, hud.root.size.x - left - (244 if landscape else 16))
 	var scale: float = float(hud.get_tree().root.size.x) / hud.root.size.x
 	var target: float = maxf(44, 44 / scale) if phone else 44
@@ -161,7 +161,7 @@ func layout() -> void:
 		button.add_theme_font_size_override("font_size", hud.text_pixels(16))
 	hud.fit_text(self)
 	var top: float = hud._play_band.get_global_rect().end.y + 16
-	if phone and hud._weather_button.visible: top = maxf(top, hud._weather_button.get_global_rect().end.y + 14)
+	if phone and not landscape and hud._weather_button.visible: top = maxf(top, hud._weather_button.get_global_rect().end.y + 14)
 	position = Vector2(left, top)
 	var bottom: float = hud.root.size.y - 20
 	if phone and not landscape:
