@@ -14,7 +14,14 @@ func settle() -> void:
 	game.hud._process(.21); game.touch_controls._process(.21)
 func run() -> void:
 	game = load("res://scenes/main.tscn").instantiate(); root.add_child(game)
-	await settle(); game.set_process(false)
+	# Freeze before yielding: a slow parallel test boot must not advance the
+	# farm into random weather while a calm-noon light is being measured.
+	game.set_process(false)
+	game.state.climate.data.phase = "calm"
+	game.state.climate.data.event = ""
+	game.state.climate.data.timer = 0
+	game._on_state_changed()
+	await settle()
 	if game.title_active(): game.title_scene.finish()
 	game.tutorial.finish(); game.hud.close_panel()
 	var world = game.world
@@ -31,7 +38,7 @@ func run() -> void:
 		check(sky.direction.is_equal_approx(world._sun.global_basis.z.normalized()), "sky follows the rendered sun, including easing")
 		check(world.coast.water_material.get_shader_parameter("sun_direction").is_equal_approx(sky.direction) and world.play_sky.get_shader_parameter("sun_direction").is_equal_approx(sky.direction), "water reflection and sky share one direction")
 		check(sky.screen.x >= .2 and sky.screen.x <= .8 and sky.screen.y < .2, "sun stays in the sky behind farm geometry")
-	check(is_equal_approx(energies[0],1.4) and is_equal_approx(energies[1],1.4) and energies[3] < energies[0], "noon sun is 1.4 with weaker Winter light")
+	check(is_equal_approx(energies[0],1.4) and is_equal_approx(energies[1],1.4) and energies[3] < energies[0], "calm noon sun is 1.4 with weaker Winter light: " + str(energies))
 	check(elevations[2] < elevations[0] and elevations[3] < elevations[1], "Autumn and Winter have longer shadows")
 	world.set_calendar(3,0,75); world._season_blend=1
 	world.set_day_time(0); world._animate_sun(3); world._animate_sun(.4)
