@@ -66,3 +66,4 @@ const STATION_COST: float = 500.0 * MONEY_SCALE
 const QUEST_REWARD: float = 100.0 * MONEY_SCALE
 const MAX_MONEY: float = 100000.0 * MONEY_SCALE
 const DEBUG_BALANCES: Dictionary = {"Starter funds": STARTING_CASH, "Tool funds": 5000.0 * MONEY_SCALE, "Farm funds": 10000.0 * MONEY_SCALE}
+const DECORATION_COSTS := {"bench": 2000.0, "flowers": 4000.0, "scarecrow": 6000.0, "barn_door": 8000.0, "duck_house": 10000.0, "gate_flag": 12000.0}

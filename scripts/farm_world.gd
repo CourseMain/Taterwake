@@ -141,6 +141,10 @@ var _season_materials: Array[Dictionary] = []
 var _season_palette: Dictionary = {}
 var _winter_visible: bool = false
 var _winter_cover: Node3D
+var decorations_root: Node3D
+var _decoration_key: String = ""
+var season_drift: Node3D
+var _pressed_actor: Node3D
 var visuals: Node3D
 var _roof_specs: Array[Dictionary] = []
 var _tree_specs: Array[Dictionary] = []
@@ -173,7 +177,6 @@ func build_world() -> void:
 	_scenery()
 	_valley_dock()
 	_quest_board(Vector3(-12.0, 0.0, 8.1))
-	_buyer_board()
 	_activity_station()
 	_staff_stalls()
 	_expand_village()
@@ -459,6 +462,10 @@ func _clear_world() -> void:
 	_season_palette.clear()
 	_winter_cover = null
 	visuals = null
+	decorations_root = null
+	_decoration_key = ""
+	season_drift = null
+	_pressed_actor = null
 	_roof_specs.clear()
 	_tree_specs.clear()
 	_fence_specs.clear()
@@ -986,6 +993,10 @@ func _update_crop_tuber(entry: Dictionary) -> void:
 	var plot: Dictionary = entry.plot
 	var progress: float = 1.0 if int(plot.stage) == 3 else clampf(float(plot.get("elapsed", 0)) / float(FarmState.CropTable.CROPS[str(plot.crop)].grow), 0, 1)
 	entry.node.scale = Vector3.ONE * _crop_tuber_size(plot) * lerpf(.375, 1.0, smoothstep(0, 1, progress))
+	entry.node.rotation.z = 0
+	if int(plot.stage) == 3:
+		var beat: float = fmod(_time + float(entry.node.get_instance_id() % 11) * .31, 4.3)
+		if beat < .65: entry.node.rotation.z = sin(beat / .65 * TAU) * .045
 	if entry.get("event", "") == "drought":
 		entry.node.scale.y *= 1.0-float(entry.get("stress",0))*.25
 		entry.node.rotation.z = float(entry.get("stress",0))*.18
@@ -1016,6 +1027,12 @@ func animate(delta: float, moving: bool, sprint: float = 0.0) -> void:
 	if is_instance_valid(harvest_feedback): harvest_feedback.animate(delta)
 	for entry: Dictionary in _crop_tubers.values():
 		if is_instance_valid(entry.node): _update_crop_tuber(entry)
+	if not is_instance_valid(season_drift):
+		season_drift = preload("res://scripts/season_drift.gd").new()
+		add_child(season_drift); season_drift.setup()
+	var game = get_viewport().get_parent()
+	season_drift.visible = not (is_instance_valid(game) and game.has_method("title_active") and game.title_active())
+	if season_drift.visible: season_drift.advance(delta, _season_index)
 	if is_instance_valid(coast): coast.animate(delta)
 	if is_instance_valid(_tutorial_marker) and _tutorial_marker.visible:
 		_tutorial_marker.position.y = _tutorial_marker_height + sin(_time * 2.8) * 0.16
@@ -1077,6 +1094,8 @@ func pick(screen_pos: Vector2) -> Dictionary:
 	var collider: Node = result["collider"]
 	if collider.has_meta("plot_index"):
 		return {"plot_index": int(collider.get_meta("plot_index"))}
+	if collider.has_meta("duck_index"):
+		return {"duck_index": int(collider.get_meta("duck_index"))}
 	if collider.has_meta("station"):
 		return {"station": str(collider.get_meta("station"))}
 	return {"ground": result["position"]}
@@ -1251,12 +1270,12 @@ func _staff_stalls() -> void:
 	# Each keeper has a reason to stand here: serve the counter, mind the
 	# doorway, inspect the belt or watch the ducks. Leave their approaches open.
 	if not _npc_actors.has("edwin"):
-		_villagers.append(_npc_person(self, Vector3(8.4, 0, -4.0), "edwin", "bank"))
+		_villagers.append(_npc_person(self, Vector3(8.4, 0, -4.0), "edwin", "accounts"))
 	set_bank_visit(false)
 	_place_stallholder("mara", "market", "MarketStall", Vector3(-.25,.18,.68), -12)
-	_place_stallholder("nell", "barn", "RedBarn", Vector3(-1.8,.05,3.05), 75)
+	_place_stallholder("nell", "accounts", "RedBarn", Vector3(-1.8,.05,3.05), 75)
 	_place_stallholder("pip", "duck_patrol", "DuckPatrolHouse", Vector3(2.1,0,1.4), -84)
-	_place_stallholder("tess", "loss_notices", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
+	_place_stallholder("tess", "quests", "FarmingQuestBoard", Vector3(1.65,0,1.05), -58)
 
 func set_bank_visit(needed: bool) -> void:
 	if not _npc_actors.has("edwin"): return
@@ -1595,6 +1614,11 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 			continue
 		valid_indices.append(index)
 		if action in ["harvest"]: continue
+		if action == "water":
+			var drop = _sphere(self, plot_positions[index] + Vector3(0, .4, 0), Vector3(.09, .15, .09), Color("a8d7db"))
+			drop.name = "WaterDrop"
+			_effect_particles.append({"node": drop, "velocity": Vector3(0, 1.1, 0), "life": .8, "total": .8, "drop": true, "ground": drop.position.y, "bounced": false})
+			continue
 		var pos: Vector3 = plot_positions[index]
 		# Keep the action readable without filling a large field with hundreds of particles.
 		var budget: int = 40
@@ -1694,6 +1718,8 @@ func _animate_effects(delta: float) -> void:
 			continue
 		var velocity: Vector3 = data["velocity"]
 		node.position += velocity * delta
+		if bool(data.get("drop", false)) and node.position.y <= float(data.ground) and not data.bounced:
+			node.position.y = data.ground; velocity.y = .65; data.bounced = true
 		if bool(data.get("halo", false)):
 			node.rotation.y += delta * 0.7
 			var fade: float = minf(1.0, float(data["life"]) / 0.4)
@@ -2063,6 +2089,7 @@ func _duck_station() -> void:
 		var band_color: Color = [Color("72c888"), Color("edc35c"), Color("79c9e9")][current_island - 1]
 		_box(body, Vector3(0, 0.68, 0.29), Vector3(0.48, 0.10, 0.31), band_color)
 		duck.scale = Vector3.ONE * 1.25
+		_target(duck, Vector3(0, .5, 0), Vector3(.85, 1, .9), "duck_index", index)
 		_ducks.append(duck)
 		_duck_bodies.append(body)
 	_duck_body = _duck_bodies[0]
@@ -2099,24 +2126,17 @@ func _animate_activities(delta: float) -> void:
 			duck.position = duck.position.lerp(position_next, minf(1.0, delta * 16))
 		else:
 			duck.position=_duck_home+Vector3((index-.5)*1.0,.12,1.6)
+		var stopped: bool = fmod(_time + index * 2.1, 7.0) > 5.5 and not active
+		if stopped:
+			var facing: Vector3 = player.position - duck.position
+			duck.rotation.y = lerp_angle(duck.rotation.y, atan2(facing.x, facing.z), minf(1, delta * 2))
+		else:
+			if not active: duck.position += Vector3(sin(_time * .6 + index) * .32, 0, cos(_time * .6 + index) * .28)
 		var clock: float = _time + index * 0.7
-		body.rotation.z = sin(clock * (11 if active else 2)) * (0.10 if active else 0.03)
+		body.rotation.z = 0.0 if stopped else sin(clock * (11 if active else 2)) * (0.10 if active else 0.06)
 		body.position.y = absf(sin(clock * (11 if active else 2))) * (0.09 if active else 0.015)
 		body.rotation.x = sin(float(patrol.get("peck", 0)) * 18) * 0.35 if float(patrol.get("peck", 0)) > 0 else 0.0
 
-
-func _buyer_board() -> void:
-	# Paper orders hang on the village buyer board.
-	var booth: Node3D = _root("BuyerContracts", Vector3(8, 0, -9))
-	for x: float in [-1.25, 1.25]:
-		_box(booth, Vector3(x, 1.4, 0), Vector3(0.14, 2.8, 0.14), Color("826342"))
-	_box(booth, Vector3(0, 1.72, 0), Vector3(2.75, 1.75, 0.17), Color("87654b"))
-	for x: float in [-0.65, 0.65]:
-		_box(booth, Vector3(x, 1.76, 0.105), Vector3(1.03, 1.22, 0.055), Color("ffebbe"))
-		for y: float in [1.5, 1.7, 1.9]: _box(booth, Vector3(x, y, 0.14), Vector3(0.67, 0.04, 0.02), Color("bfaf7e"))
-	_roof(booth, 3.4, 1.55, 2.7, 0.5, Color("d19c54"))
-	_shop_label(booth, "Contracts", Vector3(0, 3.6, 0))
-	_target(booth, Vector3(0, 1.35, 0.4), Vector3(3.7, 3.2, 2.4), "station", "contracts")
 
 func set_protection_work(info: Dictionary) -> void:
 	var pending: Dictionary = info.get("pending", {})
@@ -2298,6 +2318,8 @@ var future_outcome: String = ""
 func show_future(ending: Dictionary) -> void:
 	# Future variants live on the existing island; a rebuild restores the run view.
 	if is_instance_valid(future_root): restore_present()
+	set_decorations(ending.get("decorations", {}))
+	if ending.has("farmer_appearance"): _player_body.apply_appearance(ending.farmer_appearance)
 	future_outcome = str(ending.outcome)
 	future_root = _root("FutureFarm", Vector3.ZERO)
 	var abandoned: bool = future_outcome in ["Dust", "Drowned", "Deserted", "Sold to the estate"]
@@ -2470,3 +2492,19 @@ func _exposure_icon(sign_root: Node3D, field: String) -> void:
 			_bar(sign_root, p + Vector3(0,y+.035,.045), p + Vector3(.17,y,.045), .022, ink)
 	else:
 		for pair in [[Vector3(-.17,-.13,.045),Vector3(0,.17,.045)], [Vector3(0,.17,.045),Vector3(.17,-.13,.045)], [Vector3(.17,-.13,.045),Vector3(-.17,-.13,.045)]]: _bar(sign_root, p + pair[0], p + pair[1], .025, ink)
+
+func set_decorations(kept: Dictionary) -> void:
+	var key: String = str(kept)
+	if key == _decoration_key: return
+	_decoration_key = key
+	if is_instance_valid(decorations_root): decorations_root.hide(); decorations_root.queue_free()
+	decorations_root = preload("res://scripts/farm_decorations.gd").build(self, kept)
+
+func tap_actor_at(point: Vector2, pressed: bool) -> void:
+	if not pressed:
+		if is_instance_valid(_pressed_actor): _pressed_actor.tap_pose(false)
+		_pressed_actor = null
+		return
+	var hit: Dictionary = pick(point)
+	_pressed_actor = _staff_by_station.get(str(hit.get("station", "")), _player_body)
+	if is_instance_valid(_pressed_actor): _pressed_actor.tap_pose(true)

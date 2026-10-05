@@ -24,13 +24,11 @@ func setup(owner_world) -> void:
 	add_child(audio)
 
 func harvest(snapshots: Dictionary) -> void:
-	var heavy_sound: bool = false
 	for raw_index in snapshots:
 		var index: int = int(raw_index)
 		var plot: Dictionary = snapshots[raw_index]
 		if index < 0 or index >= world.plot_positions.size() or int(plot.get("stage", 0)) != 3: continue
 		var heavy: bool = plot.get("crop") == "giant"
-		heavy_sound = heavy_sound or heavy
 		# Repeated partial harvests replace their own receipt. Big tools have a
 		# hard visual budget, independent of field size and stored crop count.
 		for i in range(active.size() - 1, -1, -1):
@@ -48,13 +46,18 @@ func harvest(snapshots: Dictionary) -> void:
 		var origin: Vector3 = world.plot_positions[index] + Vector3(0,.25 + .58 * size,0)
 		var tag := Label.new()
 		tag.text = preload("res://scripts/crop_quality.gd").grade(int(plot.get("quality", 100)))
+		var host = world.get_viewport().get_parent()
+		var farm = host.get("state") if is_instance_valid(host) and "state" in host else null
+		var gloss: bool = is_instance_valid(farm) and farm.graded_harvests < 3 and active.size() < 3
+		var grade: String = tag.text
 		tag.name = "HarvestGrade"
 		preload("res://scripts/grade_stamp.gd").apply(tag, tag.text)
+		if gloss: tag.text += "\n" + preload("res://scripts/grade_stamp.gd").GLOSSES[grade]
 		stamp_layer.add_child(tag)
 		tag.hide()
 		body.position = origin
-		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "grade":tag.text, "stamp":tag, "popped":false, "landed":false})
-	if not snapshots.is_empty(): audio.play_action("giant" if heavy_sound else "harvest")
+		active.append({"node":body, "index":index, "origin":origin, "age":0.0, "heavy":heavy, "size":size, "grade":grade, "stamp":tag, "popped":false, "landed":false})
+	if not snapshots.is_empty(): audio.play_grade("Standard")
 
 func _remove(index: int) -> void:
 	var node: Node3D = active[index].node
@@ -69,7 +72,7 @@ func _scatter(at: Vector3, count: int, heavy: bool) -> void:
 		var angle: float = i * 2.39996
 		var spread: float = (1.6 if heavy else 1.0) + float(i % 3) * .35
 		var size: Vector3 = Vector3(.095,.065,.08) * (1.4 if heavy else 1.0)
-		var piece: Node3D = world._sphere(self, at, size, Color("715239") if i % 2 else Color("a07b51"))
+		var piece: Node3D = world._sphere(self, at, size, Color("f3d7b5") if i % 2 else Color("e5bdc2"))
 		clods.append({"node":piece, "age":0.0, "size":size, "velocity":Vector3(cos(angle)*spread,1.6+float(i%3)*.4,sin(angle)*spread)})
 
 func animate(delta: float) -> void:
@@ -126,13 +129,10 @@ func animate(delta: float) -> void:
 			if settle >= .4: body.hide()
 		if t >= pull and not entry.popped:
 			entry.popped = true
-			if not popped_grades.has(entry.grade):
-				popped_grades[entry.grade] = true
-				audio.play_grade(entry.grade)
-			_scatter(origin, 7 if entry.heavy else 4, entry.heavy)
+			_scatter(origin, 3, entry.heavy)
 		if t >= pull+flight and not entry.landed:
 			entry.landed = true
-			_scatter(origin + Vector3(.22,-.1,.16), 9 if entry.heavy else 3, entry.heavy)
+
 	for i in range(clods.size() - 1, -1, -1):
 		var entry: Dictionary = clods[i]
 		entry.age += delta
@@ -171,6 +171,7 @@ func _stamp_obstacles() -> Array[Rect2]:
 func _clear_stamp_position(preferred: Vector2, stamp_size: Vector2, obstacles: Array[Rect2]) -> Vector2:
 	var view: Vector2 = get_tree().root.get_visible_rect().size
 	var lanes: Array[float] = [preferred.x, 8.0, view.x - stamp_size.x - 8]
+	for x in range(8, int(view.x - stamp_size.x - 8), 24): lanes.append(float(x))
 	# Search above the receipt first, then below. Field borders and prices
 	# remain clear even when a Low receipt would otherwise sit over Home.
 	for down in [false, true]:

@@ -63,11 +63,16 @@ var activity_system: Node = null
 const FarmHelp = preload("res://scripts/farm_help.gd")
 var farm_help = FarmHelp.new()
 var npc_history: Dictionary = {}
+const FarmerLook = preload("res://scripts/farmer_look.gd")
+const Decorations = preload("res://scripts/farm_decorations.gd")
+var farmer_appearance: Dictionary = FarmerLook.fresh()
+var decorations: Dictionary = {}
 var tutorial_progress: Dictionary = {"version": 3, "step": 0, "completed": false, "plot": 5}
 var tutorial_active: bool = false
 var climate = ClimateSystem.new()
 var run_over: bool = false
 var harvested_total: int = 0
+var graded_harvests: int = 0
 var coins: float:
 	get: return ledger.balance()
 	set(value):
@@ -202,9 +207,6 @@ func inventory_info() -> Array[Dictionary]:
 			entries.append({"id": "seed:" + crop, "kind": "seed", "crop": crop, "name": str(CropTable.CROPS[crop]["name"]) + " Seeds", "count": int(seed_inventory[crop]), "rarity": "seed", "description": "Plant in a prepared bed.", "effect": "Select these seeds for planting", "active": selected_crop == crop, "action": "crop:" + crop})
 		if stock_count(crop) > 0:
 			entries.append({"id": "crop:" + crop, "kind": "crop", "crop": crop, "name": CropTable.CROPS[crop]["name"], "count": stock_count(crop), "rarity": "crop", "description": "Harvested potatoes held for the live market.", "effect": "Sell or hold", "active": true, "sell_value": crop_barn_value(crop)})
-	for tool in ["hoe", "plant", "water", "harvest", "pest"]:
-		var title: String = {"hoe": "Hoe", "plant": "Seed pouch", "water": "Watering can", "harvest": "Scythe", "pest": "Pest sprayer"}[tool]
-		entries.append({"id": "tool:" + tool, "kind": "tool", "name": title, "count": 1, "level": int(tools.get(tool, 0)) + 1, "effect": "Use this farming tool", "action": "tool:" + tool})
 	return entries
 
 
@@ -381,7 +383,7 @@ func update(delta: float) -> void:
 		if is_instance_valid(activity_system) and activity_system.has_method("update"):
 			dirty = bool(activity_system.update(step)) or dirty
 		if ripe_infestation and int(farm_help.data.pest_phase) != 1:
-			notified.emit("Pests have reached a growing bed! Use the Bug Sprayer: pests eat 1/3 yield every 5 seconds!")
+			notified.emit("Tap the sprayer, then the bed with bugs.")
 		# Advance weather and its physical effects.
 		if climate.update(self, step):
 			_refresh_market()
@@ -566,7 +568,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
 		return _finish(preload("res://scripts/farm_advice.gd").locked(self, index))
-	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Plant in Spring or Summer. Only Icecap can be planted in Autumn; prepare its beds before then.")
+	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Only Icecap can be planted in Autumn." if season_clock.season == 2 else "Plant new crops in Spring or Summer.")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
@@ -904,8 +906,11 @@ func reset_game() -> void:
 	run_outcome = ""
 	season_clock = SeasonClock.new()
 	npc_history.clear()
+	farmer_appearance = FarmerLook.fresh()
+	decorations.clear()
 	run_over = false
 	harvested_total = 0
+	graded_harvests = 0
 	climate.reset()
 	tutorial_active = false
 	tutorial_progress = {"version": 3, "step": 0, "completed": false, "plot": 5}
@@ -937,6 +942,7 @@ func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
 		"diversification": diversification.save_data(), "trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
+		"farmer_appearance": farmer_appearance.duplicate(), "decorations": decorations.duplicate(), "graded_harvests": graded_harvests,
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
 		"selected_crop": selected_crop,
 		"seed_inventory": seed_inventory.duplicate(), "storage": storage.duplicate(true), "capacity": capacity, "tools": tools.duplicate(),
@@ -982,6 +988,9 @@ func restore_snapshot(data: Dictionary) -> void:
 	tutorial_progress = data.tutorial_progress.duplicate(true)
 	tutorial_active = false
 	npc_history = data.npc_history.duplicate(true)
+	farmer_appearance = data.get("farmer_appearance", FarmerLook.fresh()).duplicate()
+	decorations = data.get("decorations", {}).duplicate()
+	graded_harvests = int(data.get("graded_harvests", 3 if int(data.harvested_total) > 0 else 0))
 	for person in npc_history: npc_history[person].visits = int(npc_history[person].visits)
 	for key in ["version", "step", "plot"]: tutorial_progress[key] = int(tutorial_progress[key])
 	farm_help.data = data.farm_help.duplicate(true)
@@ -1064,6 +1073,9 @@ func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary: return false
 	var data: Dictionary = raw
 	if data.get("schema_version") != SAVE_VERSION or data.get("mechanics_revision") != MECHANICS_REVISION: return false
+	if data.has("farmer_appearance") and not FarmerLook.valid(data.farmer_appearance): return false
+	if data.has("decorations") and not Decorations.valid(data.decorations): return false
+	if data.has("graded_harvests") and not _number(data.graded_harvests, 0, MAX_INVENTORY, true): return false
 	if not NpcRoster.valid_history(data.get("npc_history")) or not FarmHelp.valid(data.get("farm_help")): return false
 	var progress: Variant = data.get("tutorial_progress")
 	if not progress is Dictionary or not _number(progress.get("version"), 2, 3, true) or not _number(progress.get("step"), 0, 100, true) or not progress.get("completed") is bool or not _number(progress.get("plot"), 0, 23, true): return false
@@ -1207,3 +1219,11 @@ func _number(value: Variant, minimum: float, maximum: float, integer_only: bool 
 		return false
 	var number: float = float(value)
 	return is_finite(number) and number >= minimum and number <= maximum and (not integer_only or number == floor(number))
+
+func buy_decoration(id: String, site: int) -> String:
+	if id not in Decorations.ITEMS or site < 0 or site > 2 or decorations.has(id): return _reject_purchase("Choose an unplaced decoration.")
+	var cost: float = Balance.DECORATION_COSTS[id]
+	if not can_purchase(cost): return _reject_purchase(purchase_refusal(cost))
+	post_money("other", "Decoration · " + Decorations.ITEMS[id], -cost)
+	decorations[id] = Decorations.FIXED_PLACES.get(id, site)
+	return _complete_purchase({"kind": "decoration", "id": id, "name": Decorations.ITEMS[id], "quantity": 1, "cost": cost}, Decorations.ITEMS[id] + " placed.")

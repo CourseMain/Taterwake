@@ -32,9 +32,10 @@ func _ready() -> void:
 	image.texture = viewport.get_texture()
 	add_child(image)
 	image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	image.offset_left = 6; image.offset_top = 6; image.offset_right = -6; image.offset_bottom = -6
 	var world_environment: WorldEnvironment = WorldEnvironment.new()
 	var environment: Environment = Environment.new()
-	environment.background_mode = Environment.BG_COLOR
+	environment.background_mode = Environment.BG_CLEAR_COLOR
 	environment.background_color = Color("253b42")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("e2f0e8")
@@ -67,6 +68,9 @@ func _ready() -> void:
 func _draw() -> void:
 	if _background != null:
 		draw_style_box(_background, Rect2(Vector2.ZERO, size))
+		var line := Cozy.box(Color.TRANSPARENT, 0, 12, Cozy.CREAM)
+		line.set_border_width_all(2)
+		draw_style_box(line, Rect2(Vector2.ONE * 2, size - Vector2.ONE * 4))
 
 func _sync_visibility() -> void:
 	var showing: bool = is_visible_in_tree()

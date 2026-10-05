@@ -23,6 +23,10 @@ var pour_pose: float = 0.0
 var harvest_pose: float = 0.0
 var _run_blend: float = 0.0
 var _built: bool = false
+var hat_style: String = "seasonal"
+var _winter_hat: Node3D
+var _tap_pose: float = 0.0
+var _tap_held: bool = false
 
 func setup() -> void:
 	if _built:
@@ -77,11 +81,12 @@ func animate(delta: float, moving: bool = false, sprint: float = 0.0) -> void:
 	_walk_blend = lerpf(_walk_blend, 1.0 if moving else 0.0, 1.0 - exp(-delta * 9.0))
 	_run_blend = lerpf(_run_blend, sprint if moving else 0.0, 1.0 - exp(-delta * 10))
 	_stride += delta * lerpf(2.0, lerpf(8.2, 12.0, _run_blend), _walk_blend)
-	var breath: float = sin(_time * 2.05)
+	var breath: float = sin(_time * TAU / 4.8)
 	_rig.position.y = breath * 0.015 * (1.0 - _walk_blend) + (1.0 - cos(_stride * 2.0)) * lerpf(0.026, 0.045, _run_blend) * _walk_blend
 	_rig.rotation.z = sin(_stride) * 0.051 * _walk_blend
 	_rig.rotation.x = -0.10 * _run_blend
-	_rig.scale = Vector3(1.0 + breath * 0.004, 1.0 - breath * 0.003, 1.0 + breath * 0.003)
+	_tap_pose = move_toward(_tap_pose, -.07 if _tap_held else 0.0, delta * .6)
+	_rig.scale = Vector3(1.0 + breath * .004 - _tap_pose * .5, 1.0 - breath * .003 + _tap_pose, 1.0 + breath * .003 - _tap_pose * .5)
 	for index in range(_legs.size()):
 		var step: float = sin(_stride + index * PI)
 		_legs[index].rotation.x = step * lerpf(0.29, 0.48, _run_blend) * _walk_blend
@@ -215,9 +220,10 @@ func set_season(season: int) -> void:
 		_body_band(winter,.28,1.13,Color("477078"),1.06)
 		_body_band(winter,1.03,1.17,Color("e4d8ba"),1.10)
 		for y in [.48,.70,.92]: _sphere(winter,_front(0,y,.075),Vector3.ONE*.04,Color("d9bd7c"))
-		_sphere(winter,Vector3(0,1.78,-.06),Vector3(.57,.25,.48),Color("a85f45"))
-		_sphere(winter,Vector3(0,2.04,-.05),Vector3.ONE*.12,Color("e4d8ba"))
-		for side in [-1,1]: _sphere(winter,Vector3(side*.46,1.61,-.04),Vector3(.13,.23,.27),Color("a85f45"))
+		_winter_hat = _group(_rig, "WinterBeanie")
+		_sphere(_winter_hat,Vector3(0,1.78,-.06),Vector3(.57,.25,.48),Color("a85f45"))
+		_sphere(_winter_hat,Vector3(0,2.04,-.05),Vector3.ONE*.12,Color("e4d8ba"))
+		for side in [-1,1]: _sphere(_winter_hat,Vector3(side*.46,1.61,-.04),Vector3(.13,.23,.27),Color("a85f45"))
 		for arm in _arms:
 			_winter_sleeves.append(_sphere(arm,Vector3(0,-.12,.025),Vector3(.151,.21,.17),Color("477078")))
 		_season_outfits={1:summer,3:winter}
@@ -226,5 +232,32 @@ func set_season(season: int) -> void:
 			for mesh in outfit.find_children("*","MeshInstance3D",true,false): mesh.material_override.set_meta("static_colour",true)
 			batcher.batch_tree(outfit,{})
 	for key in _season_outfits: _season_outfits[key].visible=int(key)==season
+	_sync_hat()
 	_neutral_body.visible=season!=3
 	for sleeve in _winter_sleeves: sleeve.visible=season==3
+
+func tap_pose(pressed: bool) -> void:
+	_tap_held = pressed
+	if not pressed: _tap_pose = .045
+
+func _sync_hat() -> void:
+	if _season_outfits.is_empty(): return
+	_season_outfits[1].visible = hat_style == "straw" or (hat_style == "seasonal" and outfit_season == 1)
+	if is_instance_valid(_winter_hat): _winter_hat.visible = hat_style == "seasonal" and outfit_season == 3
+
+func apply_appearance(look: Dictionary) -> void:
+	hat_style = str(look.hat)
+	var skin := Color(str(look.skin)); var shirt := Color(str(look.shirt))
+	for mesh in find_children("*", "MeshInstance3D", true, false):
+		if not mesh.material_override is StandardMaterial3D: continue
+		if not mesh.has_meta("original_colour"): mesh.set_meta("original_colour", mesh.material_override.albedo_color)
+		var original: Color = mesh.get_meta("original_colour")
+		var replacement: Color = original
+		if original.is_equal_approx(SKIN): replacement = skin
+		elif original.is_equal_approx(SKIN.lightened(.16)): replacement = skin.lightened(.16)
+		elif original.is_equal_approx(SKIN.lightened(.025)): replacement = skin.lightened(.025)
+		elif original.is_equal_approx(SKIN.darkened(.17)): replacement = skin.darkened(.17)
+		elif original.is_equal_approx(Color("719798")): replacement = shirt
+		var material: StandardMaterial3D = mesh.material_override.duplicate()
+		material.albedo_color = replacement; mesh.material_override = material
+	_sync_hat()
