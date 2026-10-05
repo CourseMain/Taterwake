@@ -1656,53 +1656,92 @@ control has a drawing, and the money glyph is solid. Full suite; tag
 v2.0.3.
 ```
 
-### Segment 22: The fun pass (after Segment 21)
+### Segment 22: The run (replaces the fun pass; after 21g)
 
 ```
-Why: with Segments 1 to 21 done the game is honest, legible and simple,
-and the owner's verdict is that it is boring. The plan under-invested in
-the two things that make farming games fun minute to minute: chores that
-feel good under pressure, and a farm that visibly grows. Honesty stays
-in the ledger. It never required a farm that stays the same size.
+Why: the game is honest and, after 21f, legible. It is not yet fun.
+Balatro's pull is not big numbers; it is a short run against a known
+wall, a build you assemble from a small offer, a scoring moment you
+watch happen, discovery, and a collection that grows even when you
+lose. All five fit a potato farm with no number larger than a real
+bill. The risk is complexity: each of these is a disaster if it adds
+clutter, jargon or a second font. So the contract comes first.
 
-Step 0, before any build: put the current build in front of three
-people who have not seen it. Note the minute each would have quit and
-on which screen. Use that to order the items below; the guess is that
-the first ten minutes and the middle years matter most.
+The simplicity contract (every part below is bound by it):
+- One concept per screen. A concept is one drawing, a name of at most
+  three words, and one sentence of at most eight words. No concept is
+  explained twice.
+- Images over text. If a thing can be shown, it is drawn; the word
+  sits under the drawing in the caption size.
+- Two typefaces in the whole game. One display face with hand-cut,
+  slightly irregular letterforms for names, numbers and signs; one
+  plain body face. The five bundled faces (Fredoka, Ranchers, Patrick
+  Hand, Oswald, Nunito Sans) go. The rounded-blob display look reads
+  as generated and is out. Owner picks the pair from three printed
+  samples on a phone before any screen is built.
+- No new number on the HUD. The bill and the purse are the only money
+  shown outside a page. Multipliers are never shown as digits larger
+  than 3 and never as a running total.
+- The five-second test: every new tile or card is shown to someone who
+  does not play games for five seconds. If they cannot say what it
+  does, it is redrawn or cut. Record each test in PLAYTEST_22.md.
+- Nothing from the old fun pass that fails the contract survives.
 
-A. Rush. Working seasons 100 s. Grow times cut a quarter (Russet 45,
-   Golden 70, Giant 85, Sunburst 120, Icecap 150). Home Field starts with
-   all 24 beds open. The aim is to always have one more job than time.
-   Re-run the tuning bot and re-tune fixed costs or prices to the
-   recorded survival numbers.
-B. Build. The island fills over ten years, each item visible on the map
-   and a line on the ledger: a greenhouse (grows one variety through
-   Winter, costs upkeep), a second barn (capacity and a safer store), an
-   orchard (a small steady income with Autumn labour), a hired farmhand
-   (Tess does one chore type for you each season for a wage). Unlock
-   order by year; nothing multiplies prices.
-C. Timed moments inside seasons, one or two per season, never more:
-   - a buyer at the gate for 60 s offering a premium for what you hold
-     now;
-   - a storm warning that gives 45 s to pull ripe beds before it lands
-     (already exists; make it louder and give sprint a reason);
-   - pests that spread to neighbouring beds every 20 s if unsprayed;
-   - a price rush: the market pays +20% for 30 s, announced by Mara.
-D. Skill in the hands. A perfect-ripeness window (the first 10 s after
-   ripe) that guarantees Table grade; hoeing adjacent beds in rhythm
-   speeds up; the watering can covers a row when swept along a path.
-   All visible, all learnable in the guided year.
-E. Things going wrong, with a choice. Ten handwritten yearly incidents,
-   one per year in Summer, each with two options and a ledger cost:
-   the tractor is too big, the ducks got out, a TV crew wants to film,
-   the well runs dry, a neighbour offers to buy the Low Field, and so
-   on. This is where the humour lives. No incident repeats in a run.
-F. The hook (kept from the earlier draft): a break-even target card
-   every Spring with live progress; one dilemma per season said out
-   loud; a comeback cap after a two-disaster year; Nell marks the first
-   profitable year and the best year yet; the epilogue adds one
-   sentence drawn from the run's largest avoidable loss; region choice
-   at new run (Valley, Shores, Frosthollow) and one rare event per run.
+Step 0 stays: three fresh testers on v2.0.3 before any part below is
+built, sheets in PLAYTEST_22.md, order chosen from their quit minutes.
+
+A. The wall. Nell's Winter bill is the ante. It is the one number on
+   the play screen besides the purse, printed from Spring, rising each
+   year with the climate. A run is ten years in about 45 minutes:
+   working seasons 60 s, every decision pauses time, Winter is a page
+   not a wait. Foreclosure is a clean ending card with one drawing and
+   one sentence, and a "Start again" button, nothing else.
+
+B. Practices. Each Winter Tess offers three farm practices; keep one;
+   five slots on the farm, shown as five small drawn tiles on the
+   gate sign. A practice changes a rule, never a number:
+     "Second sowing" .... a bed planted twice in a year gives one more
+                          tonne.
+     "Cold store" ....... stored potatoes do not age in a storm year.
+     "Duck patrol" ...... ducks eat the first pest wave.
+     "Seed saver" ....... kept seed is free of the glut and spike.
+     "Early riser" ...... the ripe window lasts twice as long.
+     "Windbreak rows" ... the Hill field counts as sheltered.
+   Twelve at launch, four unlocked, the rest found by playing. Two
+   together make a build (Second sowing plus Seed saver is a Russet
+   machine; Cold store plus Duck patrol is a hold-through-Winter
+   farm). Tile: drawing, name, one line. No stacking of the same
+   practice, no practice that adds a digit.
+
+C. The sale reveal. Selling is the hand. The sale card reveals the sale
+   in steps with a pop and a soft note each: the sacks, then the grade
+   stamp, then the season price in words ("Winter price"), then each
+   practice that fired as its tile lighting up, then the money. Same
+   money as now; the player watches it get built. One screen, no
+   text beyond the step names, under four seconds for the whole reveal,
+   tap to skip.
+
+D. Discovery. Eight varieties at launch (five now plus three found in
+   play), a seed trader who visits once per run with one variety not in
+   Mara's stall, price years as below, and one rare event per run
+   drawn from a short handwritten list. Each new thing is seen once as
+   a drawing with a name; the catalogue ("What I've grown") fills over
+   runs.
+
+E. The meta. The fifty-year epilogue's seven outcomes are the
+   collection; regions (Valley, Shores, Frosthollow) are the decks;
+   climate stakes (the curve starting one, two or three years in) are
+   the difficulty. Every ended run, won or lost, unlocks one practice
+   or variety, shown on the ending card as a drawing. Nell's two
+   milestones (first profitable year, best year yet) stay.
+
+F. Kept from the fun pass, only where they pass the contract: the
+   Spring target card as the wall's progress line; one dilemma per
+   season spoken by a keeper in one sentence; the comeback cap after a
+   two-disaster year; the gate buyer and the storm rush as timed
+   moments, at most one per season; the ten yearly incidents with two
+   options, each a drawing and two short lines.
+
 F2. Price years. The first tester's verdict was "no motivation, only
    pain"; the economy has no upside. Real farming has one: a shortage
    somewhere else and prices spike for a season. Add it as a rare,
