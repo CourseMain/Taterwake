@@ -1598,12 +1598,44 @@ M. Cuter. The farm is already round and friendly; the interface and
       pier board. Screenshot the station from the play camera at noon
       and dusk.
 
+N. Light with a source, and icons for the dull words (owner's Autumn
+   screenshot after the clutter cut: the farm is evenly lit from
+   nowhere, shadows are faint, and the top corners read "Weather" and
+   "Menu" as plain words).
+   1. One sun that is seen. Sun energy up to about 1.4, ambient down to
+      about 0.22 with the cool fill colour kept, shadow opacity 0.85,
+      soft filter at the tighter setting, so shade is clearly darker
+      than lit ground (about 60-70% as bright) and every object has one
+      lit side and one shaded side. The shadow direction moves with
+      the arc through the day. Autumn and Winter run the sun lower and
+      warmer than Spring and Summer.
+   2. The sky shows where the sun is: a soft disc with a halo on the
+      sun side of the gradient, a faint band of haze at the horizon, a
+      warmer sky colour toward the sun. Water and the tank catch a
+      specular highlight on the sun side.
+   3. Roofs, fences, the mill sails and the sign posts are lit on their
+      sun face and darkened on the other; the static batcher bakes
+      this difference into vertex colour if the material cannot show it.
+   4. Icons for the dull words. Weather is a live icon: the current
+      forecast drawn (sun, cloud, rain, storm, snow, with a small
+      warning dot when a warning is running) and the word under it.
+      Menu is a drawn notebook with the word under it. Both sit in
+      rounded wood buttons the size of the tool tiles. The fullscreen
+      control goes back to the top left, as a small drawn corner icon,
+      away from the clouds.
+   5. The same rule everywhere: a control that is a word in a box gets
+      a drawing above the word, using the tool-tile style. Sell gets a
+      sack, Hold to hurry gets a clock, Hoe / Tools gets the hoe.
+   Screenshot the play view at Spring noon, Summer noon and Autumn dusk
+   on phone and desktop; the sun disc, the long shadows and the two
+   icon buttons must be visible in each.
+
 Done when: a fresh Web launch reaches the farm every time, the guided
 year shows one card at a time with nothing else on screen until needed,
 no HUD text under 14 px, the top band is one row, the storm in the
 guided year is named small and arrives 30 s after its warning, and
 every thing on the farm has exactly one entrance. Full suite; A ships
-as v2.0.1, B to M as v2.0.2.
+as v2.0.1, B to M as v2.0.2, N as v2.0.3.
 ```
 
 ### Segment 22: The fun pass (after Segment 21)
