@@ -10,7 +10,8 @@ func setup(owner_hud) -> void:
 	name = "DecorationList"
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	Kit.configure(hud, true)
-	Place.header(hud, self, "Decorations", Kit.KEEPERS.bram, "bram", "Looks nice. That's all.")
+	var header := Place.header(hud, self, "Decorations", Kit.KEEPERS.bram, "bram", "Looks nice. That's all.")
+	header.get_parent().add_theme_stylebox_override("panel", Kit.skin(Kit.WOOD,Kit.WOOD,10,12,Kit.unit(hud),false))
 	grid = GridContainer.new()
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)

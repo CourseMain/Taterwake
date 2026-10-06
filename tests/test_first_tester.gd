@@ -24,7 +24,7 @@ func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	var source: String = FileAccess.get_file_as_string("res://scripts/game_hud.gd")
 	var small := RegEx.new()
-	small.compile("(?:_label|_wrap|_info)\\([^\\n]*?, (?:10|11|12|13)(?=[,)])|font_size\", (?:10|11|12|13)\\)")
+	small.compile("(?:_label|_wrap|_info)\\([^\\n]*?, (?:[0-9]|1[0-3])(?=[,)])|font_size\", (?:[0-9]|1[0-3])\\)")
 	check(small.search(source) == null, "every HUD label constructor meets the fourteen-pixel floor")
 	game = load("res://scenes/main.tscn").instantiate(); root.add_child(game)
 	await settle(); game.set_process(false)
