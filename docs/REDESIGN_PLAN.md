@@ -1741,6 +1741,99 @@ phone screen with pictures for every choice; the first three clothing
 rewards exist. Full suite; tag v2.0.4.
 ```
 
+### Segment 21i: v2.0.4 review fixes (before any tester plays again)
+
+```
+Why: the reviewer ran the public v2.0.4 build in a phone-sized browser
+and on a desktop one, compared every kit screen, read the diffs since
+v2.0.0 and ran the full suite. The kit screens match and the suite is
+green, but the one blocker the whole 21f pass was for is still live on
+phones, three parts of 21f were not built, two parts were built the
+opposite way, and the build tripled in size.
+
+A. Blocker, still live on phones. On a 390x844 browser, fresh launch
+   and Continue alike, the farm appears as a small island in the
+   middle of the sea with the guide card above it, and stays that way.
+   Desktop is fine. Cause: farm_world.overview_size() returns
+   110 * height / width, so a portrait screen gets an orthographic
+   size near 240 and the island fills under three quarters of the
+   width with empty sea above and below. Fix: on portrait, fit the
+   island's width to the screen width with the island centred
+   vertically (size = island width * height / width, camera centre on
+   the island, not the sea), and during the guided year zoom to the
+   Home field and the gate, not the whole island. Test on the Web
+   export at 390x844, fresh and Continue, as the first frame after the
+   farmer card closes; Codex's own capture
+   docs/style-board/v2.0.4/returning-farm-web-390.png shows the bug
+   and was passed as a fix.
+
+B. Not built, claimed or silent:
+   1. 21f K decorations: six items exist in farm_decorations.gd, render
+      in the world and the epilogue, and validate in saves, but there
+      is no way to buy one. No Tools-shed entry, no price, no purchase
+      posting. Build the purchase: Tools shed card "Decorations · from
+      2,000", six drawn tiles, posted under the existing "other"
+      category with a new frozen label "Decoration", validator updated.
+   2. 21f M7 weather station, sign and tree: no change in
+      farm_world.gd, nothing in the handoff. Build it as written.
+   3. 21f C text floor: game_hud.gd still sets 18 labels at 10 to 13 px
+      (tool caption 12, context line 13, toast 13, guide feedback and
+      key 13, stat titles 10, detail rows 12). Raise every one to 14
+      or remove it; add a suite check that fails on any label under 14.
+
+C. Built the opposite way, attributed to the owner. The handoff and
+   ENTRANCE_MAP.md say "the owner's later instruction" restored
+   Buy/Sell tabs inside Mara's page (21f G said sell only at the barn)
+   and "the owner's later request" put a keeper greeting before every
+   service (21f H said tap opens the service). If the owner gave those
+   instructions, the plan is wrong and this item is closed; if not,
+   revert both to the plan. Either way, the greeting-before-service
+   adds a tap to every entrance including HUD Sell and Weather; the
+   greeting must be dismissable by the same tap that opens the service
+   and must not appear twice in one season.
+
+D. Size. docs/index.pck went from 4.6 MB to 15.8 MB because the six
+   nature beds and the wind are uncompressed 2 MB WAV files. Convert
+   every bed and loop to OGG Vorbis at 96 kbps (Godot imports .ogg
+   natively; loops keep their loop points); keep short cues as WAV.
+   Target: pack under 6 MB. Measure first load on the phone fixture
+   before and after.
+
+E. Suite hygiene. test_grades has a timing check ("unchanged growth and
+   grade hint neither resizes nor flashes across refreshes") that fails
+   under parallel load and passes alone; make it deterministic (count
+   layout passes, not wall time). test_season_clock and
+   test_farm_audio time out under -j 2 and pass alone; either shorten
+   them or mark them as standalone in the runner the way the bot and
+   epilogue are.
+
+F. Small visual flaws seen in the captures:
+   1. Play HUD top band at 390: "Winter · Year 3" collides with the
+      money glyph and amount; give the season label and the money
+      separate rows or truncate "Year 3" to "Y3" never; make the row
+      two rows on phone instead.
+   2. The grades explanation card is a large empty paper panel with
+      three stamps in the top third; size the card to its content.
+   3. The accounts page has four stacked wood buttons under the ledger
+      (Go to the barn, Show records, Show field leases, Show farm
+      businesses); the kit shows one. Keep "Go to the barn"; the other
+      three become one row of three small drawn tiles.
+   4. Mara's seed cards read "1 seasons · 3 t"; fix the plural and
+      raise the trait rows (Thirst / Heat / Cold) to 14 px.
+   5. The Spring desktop view (v2.0.3 capture) is washed by haze and
+      the shadows are short at noon; Autumn is right. Check the sun
+      elevation per season against 21g item 1 and reduce haze density
+      by half in Spring and Summer.
+   6. The first guide card still shows the fullscreen icon, a smiley, a
+      gear and an eye icon; 21f B1 said one thing at a time. Hide all
+      four until the guide ends.
+
+Done when: a fresh and a returning phone entry show the island filling
+the width on the first frame, decorations can be bought, the station is
+rebuilt, no HUD label is under 14 px, the pack is under 6 MB, and the
+suite passes under -j 2 with no timeouts. Full suite; tag v2.0.5.
+```
+
 ### Segment 22: The run (replaces the fun pass; after 21g)
 
 ```
