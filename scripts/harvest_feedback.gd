@@ -44,15 +44,13 @@ func harvest(snapshots: Dictionary) -> void:
 		tuber.scale = Vector3.ONE * size
 		tuber.position.y = -.58 * size
 		var origin: Vector3 = world.plot_positions[index] + Vector3(0,.25 + .58 * size,0)
-		var tag := Label.new()
-		tag.text = preload("res://scripts/crop_quality.gd").grade(int(plot.get("quality", 100)))
+		var tag = preload("res://scripts/harvest_stamp.gd").new()
+		var grade: String = preload("res://scripts/crop_quality.gd").grade(int(plot.get("quality", 100)))
 		var host = world.get_viewport().get_parent()
 		var farm = host.get("state") if is_instance_valid(host) and "state" in host else null
 		var gloss: bool = is_instance_valid(farm) and farm.graded_harvests < 3 and active.size() < 3
-		var grade: String = tag.text
-		tag.name = "HarvestGrade"
-		preload("res://scripts/grade_stamp.gd").apply(tag, tag.text)
-		if gloss: tag.text += "\n" + preload("res://scripts/grade_stamp.gd").GLOSSES[grade]
+		tag.name = "HarvestReceipt"
+		tag.setup(grade, gloss)
 		stamp_layer.add_child(tag)
 		tag.hide()
 		body.position = origin
@@ -88,12 +86,11 @@ func animate(delta: float) -> void:
 		var flight: float = .48 if entry.heavy else .36
 		var body: Node3D = entry.node
 		var origin: Vector3 = entry.origin
-		var stamp: Label = entry.stamp
+		var stamp = entry.stamp
 		var logical: Vector2 = get_tree().root.get_visible_rect().size
 		var scale: float = _display_scale()
 		stamp.visible = t >= pull
-		var pixels: int = ceili(16 / scale)
-		if stamp.get_theme_font_size("font_size") != pixels: stamp.add_theme_font_size_override("font_size", pixels)
+		stamp.fit(scale)
 		stamp.size = stamp.get_combined_minimum_size()
 		var point: Vector2 = world.camera.unproject_position(origin) * logical / Vector2(world.get_viewport().size)
 		# A receipt rail sits above the whole field, so no chip covers a bed.

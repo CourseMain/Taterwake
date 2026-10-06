@@ -83,7 +83,7 @@ func run() -> void:
 	ambience.advance(3)
 	check(ambience.layer_age[1] == 6, "crossfade finishes after six seconds")
 	for player in ambience.players:
-		check(player.volume_db <= -30 and player.stream.get_length() >= 40, "two half-volume layers keep their combined bed below -24 dB")
+		check(player.volume_db <= -27 and player.stream.get_length() >= 40, "two half-volume layers keep their combined bed below -21 dB")
 	var last: int = -1
 	var heard: Dictionary = {}
 	for index in range(40):

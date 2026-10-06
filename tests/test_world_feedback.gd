@@ -82,6 +82,16 @@ func _run() -> void:
 		world.animate(2.0, false)
 		await process_frame
 		check(world._effect_particles.is_empty(), "reward particles expire cleanly on island %d" % island)
+	for action in ["hoe", "plant", "water", "harvest", "pest"]:
+		world.play_farm_effect([0], action)
+		check(world.harvest_feedback.audio.last_kind == action, action + " plays its original action cue")
+		world._animate_effects(.2)
+		check(world._tool_time > 0, action + " keeps a visible action beat")
+		if action == "water":
+			check(world._effect_particles.size() == 3, "watering shows three bouncing drops")
+		world._animate_effects(2)
+		await process_frame
+		check(world._tool_time == 0 and world._effect_particles.is_empty(), action + " finishes without lingering effects")
 	world.queue_free()
 	await process_frame
 	print("WORLD FEEDBACK: %d checks, %d failures" % [checks, failures])

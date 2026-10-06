@@ -1,16 +1,19 @@
 extends RefCounted
 ## Cosmetic mixer state. It never reads or advances the farm RNG.
-const HALF_DB: float = -6.0206
+const MUTED_DB: float = -80.0
 static var clock: float = 0.0
 static var last_alert: float = -100.0
 static var last_sound: float = -100.0
-static var quieter: bool = false
+static var quieter: bool = false:
+	set(value):
+		quieter = value
+		AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), value)
 
 static func advance(delta: float) -> void:
 	clock += maxf(0, delta)
 
-static func gain(tool: bool = false) -> float:
-	return HALF_DB if quieter and not tool else 0.0
+static func gain(_tool: bool = false) -> float:
+	return MUTED_DB if quieter else 0.0
 
 static func allow_alert() -> bool:
 	if clock - last_alert < 2.0: return false

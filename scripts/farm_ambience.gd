@@ -2,7 +2,7 @@ extends Node
 ## Two long nature layers and spaced, varied calls. Cosmetic RNG only.
 const Mix = preload("res://scripts/sound_mix.gd")
 const FADE_SECONDS: float = 6.0
-const VOLUME_DB: float = -24.0
+const VOLUME_DB: float = -21.0
 const STREAMS: Array[AudioStreamWAV] = [
 	preload("res://assets/audio/nature-breeze.wav"), preload("res://assets/audio/nature-leaves.wav"),
 	preload("res://assets/audio/nature-stream.wav"), preload("res://assets/audio/nature-rain.wav"),
@@ -101,7 +101,7 @@ func advance(delta: float) -> void:
 			if choice >= last_call: choice += 1
 			last_call = choice; call_player.stream = CALLS[choice]
 		call_player.pitch_scale = _rng.randf_range(.94, 1.06)
-		call_player.volume_db = -30 + Mix.gain()
+		call_player.volume_db = -27 + Mix.gain()
 		calls_played += 1
 		if DisplayServer.get_name() != "headless": call_player.play()
 

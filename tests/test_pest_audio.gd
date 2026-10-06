@@ -49,7 +49,7 @@ func run() -> void:
 	mix.advance(40); game.pest_alert.update(40, 0)
 	check(game.pest_alert.alerts_played == alerts, "clean fields remain quiet")
 	mix.quieter = true
-	check(mix.gain() < -6 and mix.gain(true) == 0, "Quieter halves ordinary sounds while keeping tool cues")
+	check(mix.gain() == mix.MUTED_DB and mix.gain(true) == mix.MUTED_DB and AudioServer.is_bus_mute(0), "Quieter completely mutes the master bus and tool cues")
 	mix.quieter = false
 	game.queue_free()
 	await process_frame

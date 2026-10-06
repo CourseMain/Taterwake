@@ -1618,7 +1618,7 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 		if action == "harvest" and not snapshots.is_empty(): harvest_feedback.harvest(snapshots)
 		else: harvest_feedback.audio.play_action(action)
 	_tool_action = action
-	_tool_duration = 0.5 / (1.0 + float(grade) * 0.35)
+	_tool_duration = 0.65 / (1.0 + float(grade) * 0.15)
 	_tool_time = _tool_duration
 	_tool_grade_scale = 1.0 + float(grade) * 0.2
 	_tool.scale = Vector3.ONE * 0.001
@@ -1647,9 +1647,10 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 		valid_indices.append(index)
 		if action in ["harvest"]: continue
 		if action == "water":
-			var drop = _sphere(self, plot_positions[index] + Vector3(0, .4, 0), Vector3(.09, .15, .09), Color("a8d7db"))
-			drop.name = "WaterDrop"
-			_effect_particles.append({"node": drop, "velocity": Vector3(0, 1.1, 0), "life": .8, "total": .8, "drop": true, "ground": drop.position.y, "bounced": false})
+			for offset in [-.18,0,.18]:
+				var drop = _sphere(self, plot_positions[index] + Vector3(offset, .4 + absf(offset), 0), Vector3(.09, .15, .09), Color("a8d7db"))
+				drop.name = "WaterDrop"
+				_effect_particles.append({"node": drop, "velocity": Vector3(offset, 1.1, 0), "life": .9, "total": .9, "drop": true, "ground": plot_positions[index].y + .4, "bounced": false})
 			continue
 		var pos: Vector3 = plot_positions[index]
 		# Keep the action readable without filling a large field with hundreds of particles.
@@ -1658,6 +1659,7 @@ func play_farm_effect(indices: Array, action: String, grade: int = 0, snapshots:
 		var particle_count: int = maxi(1, mini(per_patch, int(budget / maxi(1, indices.size()))))
 		for i in range(particle_count):
 			var color: Color = Color("72f4ce") if action == "pest" else (GOLD if action == "harvest" else (Color("bfe9fb") if action in ["ice", "break_ice"] or (current_island == 3 and action == "hoe") else (Color("8ddbe8") if action == "water" else Color("bc9669"))))
+			if action == "plant": color = Color("8fa98a")
 			var initial: Vector3 = pos + Vector3(_rng.randf_range(-0.65, 0.65), 1.3 if action in ["water", "pest"] else 0.35, _rng.randf_range(-0.65, 0.65))
 			var particle := _sphere(self, initial, Vector3(0.18, 0.07, 0.18) if action == "pest" else Vector3(0.08, 0.18 if action == "water" else 0.08, 0.08), color)
 			var velocity := Vector3(_rng.randf_range(-1.0, 1.0), -1.3 if action == "water" else (-0.3 if action == "pest" else _rng.randf_range(1.3, 3.0)), _rng.randf_range(-1.0, 1.0))
@@ -1735,7 +1737,7 @@ func _animate_effects(delta: float) -> void:
 		# Brief eased pickup/put-away avoids a full-size tool popping into existence.
 		var envelope: float = smoothstep(0, 0.18, progress) * (1.0 - smoothstep(0.76, 1.0, progress))
 		_tool.scale = Vector3.ONE * maxf(0.001, envelope) * _tool_grade_scale
-		_player_body.rotation.x = stroke * -0.14 if _tool_action != "harvest" else 0.0
+		_player_body.rotation.x = stroke * -0.22 if _tool_action != "harvest" else 0.0
 		_tool.visible = _tool_time > 0.0 and _tool_action not in ["water", "harvest"]
 		if _tool_time == 0.0:
 			_player_body.rotation.x = 0.0
