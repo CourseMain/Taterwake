@@ -10,13 +10,13 @@ const STEPS: Array[Dictionary] = [
 	{"id": "grow", "title": "Spring is passing", "body": "Spring is passing. One small storm is coming. Iris will warn you."},
 	{"id": "loss", "title": "Tess counts the damage", "body": "Tap Tess's board to see what the storm damaged.", "next": true, "label": "Return to the field →"},
 	{"id": "harvest", "title": "Bring in your crop", "body": "Tap the harvest tool, then tap the glowing bed.", "tool": "harvest"},
-	{"id": "sell", "title": "Sell or store", "body": "Open the barn to sell, or leave your potatoes stored.", "focus": "barn", "next": true, "label": "Store for Winter →"},
+	{"id": "sell", "title": "Sell or store", "body": "Open Mara’s Sell page, or leave potatoes stored.", "focus": "market", "next": true, "label": "Store for Winter →"},
 	{"id": "winter", "title": "Winter brings the bills", "body": "Harvest the ripe beds before Winter comes."},
 ]
 const TOUR: Array[Dictionary] = [
 	{"id": "welcome", "title": "Meet the Valley", "body": "Your farm pauses while we look around together.", "label": "Look around →"},
 	{"id": "market", "title": "Seed market", "body": "Tap Mara's stall to browse seeds.", "focus": "market"},
-	{"id": "sell", "title": "The barn", "body": "Tap the barn to sell or store your potatoes.", "focus": "barn"},
+	{"id": "sell", "title": "Sell or store", "body": "Tap Mara’s Sell page, or leave potatoes stored.", "focus": "market"},
 	{"id": "inventory", "title": "Your inventory", "body": "Open your bag to inspect potatoes and seeds."},
 	{"id": "tools", "title": "Toolsmith", "body": "Tap the Tools shed to see upgrades.", "focus": "tools"},
 	{"id": "quests", "title": "Local challenges", "body": "Tap Tess's board to see your challenges.", "focus": "quests"},
@@ -123,11 +123,11 @@ func _features() -> Array[String]:
 func allowed_actions() -> Array[String]:
 	var result: Array[String] = ["close", "grades", "grade_acknowledge", "save", "graphics", "graphics:", "tutorial:next", "tutorial:skip"]
 	if _tour_only():
-		result.append_array(["market", "grade:", "barn", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
+		result.append_array(["market", "grade:", "market:sell", "inventory", "inventory_tab:", "tools", "quests", "duck_patrol", "menu", "pause", "help", "toggle_details:"])
 		return result
 	for feature: String in _features():
 		if feature != "coins": result.append(feature)
-	if "barn" in _features(): result.append("inventory_tab:crops")
+	if "barn" in _features(): result.append_array(["inventory_tab:crops", "market:sell"])
 	for tool: String in _tools(): result.append("tool:" + tool)
 	if current_id() == "market": result.append("buy:russet:1")
 	if current_id() == "sell": result.append_array(["sell:russet:", "market_sell", "quantity_minus", "quantity_plus", "market_all", "history_older", "history_newer"])
@@ -137,6 +137,7 @@ func allowed_actions() -> Array[String]:
 	return result
 
 func allows_action(action: String) -> bool:
+	if action.begins_with("current_sell:"): action = action.replace("current_sell:", "sell:")
 	if not active: return true
 	for allowed: String in allowed_actions():
 		if action == allowed or (allowed.ends_with(":") and action.begins_with(allowed)): return true

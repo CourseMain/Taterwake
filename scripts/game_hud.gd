@@ -60,8 +60,9 @@ const MarketPages = preload("res://scripts/market_pages.gd")
 const ShopPages = preload("res://scripts/shop_pages.gd")
 const ItemIcon = preload("res://scripts/item_icon.gd")
 const Cozy = preload("res://scripts/cozy_ui.gd")
+const Kit = preload("res://scripts/ui_kit.gd")
 const Type = preload("res://scripts/ui_type.gd")
-const UI_FONT = preload("res://assets/fonts/NunitoSans.ttf")
+const UI_FONT = preload("res://assets/fonts/AtkinsonHyperlegible.ttf")
 const UI_SYMBOLS = preload("res://assets/fonts/NotoSansSymbols.ttf")
 const UI_SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
 const INK: Color = Color("17382d")
@@ -202,6 +203,9 @@ var last_screenshot_path: String = ""
 var _ui_scale: float = 1.0
 var _text_fit_clock: float = 0.0
 var _wait_card: PanelContainer
+var _component_receipt: Dictionary = {}
+var _nell_profit_greeting: bool = false
+var _market_selling: bool = false
 var _wait_label: Label
 
 func _process(delta: float) -> void:
@@ -517,6 +521,7 @@ func set_tutorial(info: Dictionary) -> void:
 		update_state(_state)
 
 func _tutorial_allows(action: String) -> bool:
+	if action.begins_with("current_sell:"): action = action.replace("current_sell:", "sell:")
 	if _tutorial.is_empty() or action in ["tutorial:next", "tutorial:skip", "tutorial:exit", "tutorial:stay", "close"]:
 		return true
 	if not _tutorial.has("allowed_actions"):
@@ -609,7 +614,7 @@ func _update_tutorial_pointer() -> void:
 	elif not _tutorial_next.disabled:
 		target = _tutorial_next
 	elif is_panel_open():
-		var sale_action: String = "market_sell" if _panel_kind == "barn" else "barn"
+		var sale_action: String = "market_sell" if _panel_kind == "market" and _market_selling else "market:sell"
 		var action: String = "buy:russet:1" if _tutorial.get("id") == "market" else (sale_action if _tutorial.get("id") == "sell" else "")
 		for node: Node in _modal_card.find_children("*", "Button", true, false):
 			if not action.is_empty() and str(node.get_meta("hud_action", "")) == action and node.is_visible_in_tree() and not node.disabled:
@@ -643,7 +648,7 @@ func _label(text: String, size: int = 15, color: Color = INK, bold: bool = false
 	return label
 
 func _compact_heading_font() -> FontVariation:
-	# Nunito plus our potato glyph keeps balances compact on native and web.
+	# Atkinson plus our potato glyph keeps balances compact on native and web.
 	var compact: FontVariation = FontVariation.new()
 	compact.base_font = UI_FONT
 	compact.fallbacks = [Type.SPUDION]
@@ -710,6 +715,7 @@ func _section_title(parent: Control, title: String, detail: String = "") -> void
 	if not detail.is_empty(): row.add_child(_label(detail, 12, MUTED))
 
 func _polish_card_typography(node: Node) -> void:
+	if node.get_meta("kit_type", false): return
 	# Symbol fallback fonts have tall line metrics. These illustrated menus
 	# use drawn icons, so keep text on the compact body/display font faces.
 	if node is Label:
@@ -747,6 +753,12 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 
 func _act(action: String) -> void:
 	if action.is_empty(): return
+	if action == "save_page":
+		show_panel("save_page", _state)
+		return
+	if action == "sound":
+		show_panel("sound", _state)
+		return
 	if action == "land_bill_parts":
 		_refs.land_parts.visible = not _refs.land_parts.visible
 		_refs.land_bill.set_pressed_no_signal(_refs.land_parts.visible)
@@ -830,7 +842,7 @@ func _act(action: String) -> void:
 		show_panel("pause", _state)
 		return
 	if action == "close":
-		close_panel()
+		dismiss_panel()
 	elif action == "request_reset":
 		_reset_pending = true
 		show_panel("pause", _state)
@@ -898,7 +910,10 @@ func fit_text(node: Node) -> void:
 		if not node.has_meta("text_tier"):
 			var original: int = node.get_theme_font_size(property)
 			node.set_meta("text_tier", 22 if original >= 24 else (14 if original <= 14 else 16))
-		node.add_theme_font_size_override(property, text_pixels(int(node.get_meta("text_tier"))))
+		node.add_theme_font_size_override(property, Kit.pixels(self, int(node.get_meta("text_tier"))) if node.get_meta("kit_type", false) else text_pixels(int(node.get_meta("text_tier"))))
+		var face: Font = node.get_theme_font("normal_font" if node is RichTextLabel else "font")
+		if Kit.desktop(self) and face is FontVariation and face.base_font == Type.DISPLAY:
+			node.add_theme_font_size_override(property, 18 if int(node.get_meta("text_tier")) == 22 else mini(24, int(node.get_meta("text_tier"))))
 	if node.has_method("refresh_picture"):
 		node.picture_scale = _ui_scale
 		node.refresh_picture()
@@ -923,7 +938,7 @@ func _layout_top() -> void:
 	_stats_card.position = Vector2(season_width + margin * 2, margin)
 	_stats_card.size = Vector2(maxf(0, width - season_width - menu_width - margin * 4), height)
 	for label in [_season_strip, _menu_button]: label.set_meta("text_tier", 14 if phone else 16)
-	for label in [_top.coins, _money_symbol]: label.set_meta("text_tier", 22 if phone else 28)
+	for label in [_top.coins, _money_symbol]: label.set_meta("text_tier", 22 if phone else 24)
 	fit_text(_play_band); fit_text(_season_strip); fit_text(_stats_card); fit_text(_menu_button)
 	_money_symbol.rotation = sin(_hud_clock * 1.1) * .025
 	_money_symbol.pivot_offset = _money_symbol.size * .5
@@ -1043,7 +1058,7 @@ func _build_footer() -> void:
 	sell_box.offset_right = -28
 	sell_box.offset_top = -66
 	sell_box.offset_bottom = -20
-	_quick_sell = _button("Sell · Russet 360/t", "barn", true)
+	_quick_sell = _button("Sell · Russet 360/t", "market:sell", true)
 	_quick_sell.custom_minimum_size.y = 46
 	_world_button(_quick_sell, Cozy.WOOD)
 	sell_box.add_child(_quick_sell)
@@ -1179,7 +1194,9 @@ func _build_modal() -> void:
 	_modal_motion.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_modal.add_child(_modal_motion)
 	_modal_motion.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var panel: PanelContainer = _card(CREAM, 24)
+	var panel: PanelContainer = preload("res://scripts/kit_card.gd").new()
+	panel.set_meta("kit_screen", false)
+	panel.set_meta("kit_modal", true)
 	_modal_card = panel
 	_modal_motion.add_child(panel)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -1258,7 +1275,7 @@ func update_state(state: Node) -> void:
 		if state.run_outcome == "completed": show_panel("run_summary", state)
 		elif state.season_clock.season == 3: show_panel("accounts", state)
 		elif _panel_kind == "accounts": close_panel()
-		elif _panel_kind in ["menu", "pause"]: show_panel(_panel_kind, state)
+		elif _panel_kind in ["menu", "pause"]: show_panel(_panel_kind, state, _market_selling)
 	_season_jobs.refresh()
 	if is_instance_valid(_spring_target): _spring_target.refresh()
 	_top.coins.text = _money(float(state.get("coins"))).replace("\uE000 ", "")
@@ -1276,13 +1293,13 @@ func update_state(state: Node) -> void:
 	_update_weather_ui()
 	_update_farm_help()
 	if is_panel_open():
-		var expected_crops: Array[String] = _market_crops() if _panel_kind == "market" else _known_crops()
+		var expected_crops: Array[String] = _market_crops() if _panel_kind == "market" and not _market_selling else _known_crops()
 		if _panel_kind == "inventory" and _inventory_signature != _inventory_id_string(_inventory_data()):
-			show_panel(_panel_kind, state)
+			show_panel(_panel_kind, state, _market_selling)
 			return
-		if _panel_kind == "barn": expected_crops = preload("res://scripts/game_state.gd").crops_by_base_price(_known_crops())
-		if _panel_kind in ["market", "barn", "barn", "inventory", "dex"] and _panel_crops != expected_crops:
-			show_panel(_panel_kind, state)
+
+		if _panel_kind in ["market", "inventory", "dex"] and _panel_crops != expected_crops:
+			show_panel(_panel_kind, state, _market_selling)
 		else:
 			_refresh_panel()
 	_update_barn_full_alert()
@@ -1441,6 +1458,12 @@ func _layout_purchase() -> void:
 	var touch: bool = is_instance_valid(get_parent().get("touch_controls")) and get_parent().touch_controls.enabled
 	if not is_instance_valid(_purchase_box) or _purchase_receipt.is_empty(): return
 	var menu: bool = is_instance_valid(_modal_card) and _modal.visible
+	if menu and not touch and _modal_card.get_meta("kit_screen", false):
+		_purchase_title.add_theme_font_size_override("font_size", 18)
+		_purchase_box.size = Vector2(340, _purchase_box.get_combined_minimum_size().y)
+		_purchase_box.position = Vector2((root.size.x - _purchase_box.size.x) * .5, 12)
+		Kit.fit(self)
+		return
 	var bounds: Rect2 = _modal_card.get_rect() if menu else Rect2()
 	var key: String = str([root.size, bounds, menu, touch])
 	if key == _purchase_layout_key: return
@@ -1518,6 +1541,17 @@ func show_reward(title: String, detail: String, rarity: String) -> void:
 func is_panel_open() -> bool:
 	return (is_instance_valid(_modal) and _modal.visible) or (is_instance_valid(_conversation) and _conversation.visible)
 
+func dismiss_panel() -> void:
+	if DisplayServer.get_name() == "headless": close_panel(); return
+	if not is_instance_valid(_modal) or not _modal.visible: return
+	var request: int = _entrance_request
+	if is_instance_valid(_modal_fade): _modal_fade.kill()
+	_modal_entrance_shield.show()
+	_modal_fade = create_tween()
+	_modal_fade.tween_property(_modal, "modulate:a", 0.0, .16).set_trans(Tween.TRANS_SINE)
+	_modal_fade.tween_callback(func():
+		if request == _entrance_request: close_panel())
+
 func close_panel() -> void:
 	if _panel_kind == "farmer" and is_instance_valid(_state):
 		_state.farmer_appearance.chosen = true
@@ -1543,8 +1577,12 @@ func close_panel() -> void:
 	_season_jobs.refresh()
 	if is_instance_valid(_spring_target): _spring_target.refresh()
 
-func show_panel(kind: String, state: Node) -> void:
-	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
+func show_market(selling: bool, state: Node) -> void:
+	show_panel("market", state, selling)
+
+func show_panel(kind: String, state: Node, market_selling: bool = false) -> void:
+	if kind == "market": _market_selling = market_selling
+	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sound", "save_page", "practice", "sale_reveal", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
 	_accounts_build_request += 1
 	accounts_building = false
 	_state = state
@@ -1554,11 +1592,16 @@ func show_panel(kind: String, state: Node) -> void:
 	var opening: bool = not _modal.visible or kind != _panel_kind
 	_entrance_request += 1
 	_finish_panel_entrance()
-	if kind != _panel_kind:
+	if kind != _panel_kind and kind not in ["pause", "menu"]:
 		_reset_pending = false
 	_panel_kind = kind
 	_modal_close.text = "Skip" if kind == "farmer" and not state.farmer_appearance.chosen else "×"
 	_body.add_theme_constant_override("separation", 6 if kind == "accounts" else 10)
+	_modal_card.set_meta("kit_screen", false)
+	(_body.get_parent() as ScrollContainer).vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_modal_card.set_anchors_preset(Control.PRESET_CENTER)
+	_modal_close.show()
+	_modal_close.get_parent().show()
 	var paper: bool = kind in ["accounts", "run_summary"]
 	(_modal.get_child(0) as ColorRect).color = Color(0.06, 0.13, 0.10, 0.28)
 	_modal.z_index = 150 if paper else 0
@@ -1580,6 +1623,8 @@ func show_panel(kind: String, state: Node) -> void:
 	_modal_title.visible = kind not in ["market", "barn"]
 	_modal_subtitle.visible = kind not in ["market", "barn"]
 	_refs.clear()
+	_body.custom_minimum_size = Vector2.ZERO
+	_modal_card.rotation = 0
 	for child: Node in _modal_trade_footer.get_children():
 		_modal_trade_footer.remove_child(child)
 		child.queue_free()
@@ -1596,8 +1641,8 @@ func show_panel(kind: String, state: Node) -> void:
 	scroll.scroll_vertical = 0
 	match kind:
 		"farm_tip": _build_farm_tip()
-		"market": _build_market()
-		"barn": _build_market(true)
+		"market": _build_market(_market_selling)
+		"barn": _build_buyer_page()
 		"inventory": _build_barn()
 		"tools": _build_tools()
 		"pause", "menu": _build_pause()
@@ -1607,6 +1652,10 @@ func show_panel(kind: String, state: Node) -> void:
 				_body.add_child(_wrap(season[0], 22, INK, true))
 				_body.add_child(_wrap(season[1], 16, INK))
 		"farmer": _build_farmer()
+		"sound": _build_sound()
+		"save_page": _build_save_page()
+		"practice": _build_practice_component()
+		"sale_reveal": _build_sale_component()
 		"grades":
 			_build_grade_explanation()
 		"accounts":
@@ -1638,6 +1687,7 @@ func _finish_panel_build(kind: String, opening: bool) -> void:
 	bottom_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_body.add_child(bottom_space)
 	_refresh_panel()
+	Kit.fit(self)
 	_modal.show()
 	if is_instance_valid(_modal_fade): _modal_fade.kill()
 	_modal.modulate.a = 1.0 if paper else 0.0
@@ -1775,6 +1825,7 @@ func _finish_panel_entrance() -> void:
 	if is_instance_valid(_modal): (_modal.get_child(0) as CanvasItem).modulate.a = 1
 
 func _fit_shop_modal() -> void:
+	if _modal_card.get_meta("kit_screen", false): Kit.fit(self); return
 	if _panel_kind not in ["barn", "inventory", "tools"] or not _modal.visible: return
 	var touch = get_parent().get("touch_controls")
 	if is_instance_valid(touch) and touch.enabled:
@@ -1799,7 +1850,7 @@ func _reveal_details(control: Control) -> void:
 	(_body.get_parent() as ScrollContainer).ensure_control_visible(target)
 
 func _details_section(key: String, title: String) -> VBoxContainer:
-	var toggle := _button("Show " + title, "toggle_details:" + key)
+	var toggle := Kit.button(self, "Show " + title, "toggle_details:" + key) if _modal_card.get_meta("kit_screen", false) else _button("Show " + title, "toggle_details:" + key)
 	toggle.set_meta("section_title", title)
 	_body.add_child(toggle)
 	_refs[key + ":toggle"] = toggle
@@ -1854,7 +1905,6 @@ func _build_market(selling: bool = false) -> void:
 	_refs.market_page = page
 	page.setup(self, selling)
 	if selling:
-		_build_contracts()
 		if _tutorial.get("id", "") == "sell":
 			_refs.store_continue = _button("Store for Winter →", "tutorial:next")
 			_modal_trade_footer.add_child(_refs.store_continue)
@@ -1863,6 +1913,11 @@ func _build_market(selling: bool = false) -> void:
 		_modal_trade_footer.add_child(_refs.starter_continue)
 		_modal_trade_footer.show()
 
+
+func _build_buyer_page() -> void:
+	Kit.configure(self)
+	preload("res://scripts/place_ui.gd").header(self, _body, "Nell", Kit.KEEPERS.nell, "nell", "Orders. Bring the promised tonnes.")
+	_build_contracts()
 
 func _build_barn() -> void:
 	var page = ShopPages.new()
@@ -1918,7 +1973,7 @@ func _build_dex() -> void:
 		var picture := _icon({"kind": "crop", "crop": id}, 76)
 		picture.name = "DexPicture_" + id
 		heading.add_child(picture)
-		var title := _wrap("#%02d · %s" % [index + 1, _crop_name(id)], 18, CREAM, true)
+		var title := _wrap("#%02d · %s" % [index + 1, _crop_name(id)], 22, Kit.CROPS.get(id, Kit.MONEY), true)
 		title.custom_minimum_size.x = 155
 		heading.add_child(title)
 		var status := _wrap("", 12, CREAM, true)
@@ -1963,7 +2018,7 @@ func _account_row(parent: Node, title: String, value: String) -> Label:
 	var row := preload("res://scripts/ledger_row.gd").new()
 	parent.add_child(row)
 	row.setup(self, title, value)
-	if not parent.get_meta("ledger_leaf", false): row.add_theme_stylebox_override("panel", Cozy.paper(CREAM, 5, 1))
+	if not parent.get_meta("ledger_leaf", false) and not _modal_card.get_meta("kit_screen", false): row.add_theme_stylebox_override("panel", Cozy.paper(CREAM, 5, 1))
 	return row.amount
 
 func _ledger_leaf(parent: Control, contents: VBoxContainer) -> void:
@@ -2017,6 +2072,7 @@ func touch_target() -> float:
 	return maxf(68, ceilf(44 / maxf(scale, 0.1)))
 
 func _paper_typography(node: Node) -> void:
+	if node.get_meta("kit_type", false): return
 	if node is Label and not node.has_meta("ledger_row_type"):
 		var heading: bool = node.get_theme_font("font") in [_card_heading_font, _heading_font, _paper_heading_font]
 		var font: FontVariation = _paper_heading_font if heading else _paper_body_font
@@ -2030,100 +2086,65 @@ func _paper_page() -> void:
 	_modal_card.offset_bottom = 370
 	_modal_card.add_theme_stylebox_override("panel", Cozy.paper(INK, 24, 5, Cozy.WOOD))
 
-func _build_winter(staged: bool = false, request: int = 0) -> void:
-	_paper_page()
+func _build_winter(_staged: bool = false, _request: int = 0) -> void:
+	Kit.configure(self)
 	var clock = _state.season_clock
-	_heading("The annual accounts", "Winter · Time paused")
-	var stamp := _badge("FILED · YEAR %02d" % clock.year, "neutral")
-	stamp.name = "LedgerYearStamp"
-	stamp.set_meta("paper_stamp", true)
-	var stamp_ink: StyleBoxFlat = Cozy.box(Color.TRANSPARENT, 5, 2, CHERRY)
-	stamp_ink.set_border_width_all(2)
-	stamp.add_theme_stylebox_override("normal", stamp_ink)
-	stamp.add_theme_color_override("font_color", CHERRY)
-	var filing := HBoxContainer.new(); filing.add_theme_constant_override("separation", 12)
-	var book: Control = _icon({"kind": "place", "id": "ledger"}, 66)
-	book.name = "LedgerDrawing"
-	filing.add_child(book)
-	filing.add_child(stamp)
-	var spacer := Control.new(); spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL; filing.add_child(spacer)
-	var portrait := preload("res://scripts/npc_portrait.gd").new()
-	portrait.custom_minimum_size = Vector2(52, 64); portrait.size_flags_horizontal = Control.SIZE_SHRINK_END; portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER; filing.add_child(portrait)
-	_body.add_child(filing)
-	portrait.show_person("nell")
-	if staged and not await _accounts_frame(request): return
+	preload("res://scripts/place_ui.gd").header(self, _body, "Nell", Kit.KEEPERS.nell, "nell", "A profit. Write the date down." if _nell_profit_greeting else "")
+	_nell_profit_greeting = false
 	var net: float = _state.ledger.total(clock.year)
-	_refs.accounts_net = _label(("+" if net >= 0 else "−") + _state.money(absf(net)), 42, GREEN if net >= 0 else Color("a63529"), true)
-	_refs.accountant = _wrap("Nell · Accountant", 14, MUTED)
+	_refs.accounts_net = Kit.label(self, ("+" if net >= 0 else "−") + _state.money(absf(net)), 22, Kit.MONEY if net >= 0 else Kit.RED, true)
 	_body.add_child(_refs.accounts_net)
-	_body.add_child(_label("NET FOR THE YEAR", 12, MUTED))
-	if clock.year == 1:
-		_body.add_child(_wrap("Nell: " + _state.NpcRoster.YEAR_ONE_ACCOUNTS, 22, INK))
-		_body.add_child(_wrap("Open 12 more Home beds at Tools. Choose Golden at Mara's stall. Store half in the barn for Winter.", 16, INK))
-	_body.add_child(_wrap(_state.NpcRoster.service_greeting("nell", _state), 16, INK))
-	_body.add_child(_button("Talk", "talk:nell"))
-	_body.add_child(_button("Go to the barn", "barn"))
-	var columns := _hbox(32)
-	columns.name = "LedgerColumns"
-	columns.resized.connect(func(): columns.vertical = columns.size.x < 640)
-	_body.add_child(columns)
-	var categories := _vbox(2)
-	categories.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_ledger_leaf(columns, categories)
-	categories.add_child(_label("THIS YEAR", 13, MUTED, true))
+	_body.add_child(Kit.label(self, "Net for year %d" % clock.year, 16, Kit.MUTED))
+	_refs.accountant = Kit.label(self, "", 14, Kit.MUTED); _refs.accountant.hide(); _body.add_child(_refs.accountant)
+	var categories := _vbox(0); categories.set_meta("ledger_leaf", true); _body.add_child(categories)
+	for category in ["sales", "seeds"]:
+		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], "")
 	_build_land_bill(categories)
+	for category in ["living", "upkeep"]:
+		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], "")
+	_body.add_child(Kit.button(self, "Go to the barn", "barn"))
+	if clock.year == 1:
+		var plan := _details_section("year_one_plan", "Year one plan")
+		plan.add_child(Kit.label(self, _state.NpcRoster.YEAR_ONE_ACCOUNTS, 16))
+		plan.add_child(Kit.label(self, "Open 12 Home beds. Choose Golden. Store half.", 16))
+	var records := _details_section("account_records", "Records")
+	_refs.accountant.reparent(records)
 	for category in _state.Ledger.CATEGORIES:
-		if category in ["mortgage", "rent"]: continue
-		_refs["accounts_" + category] = _account_row(categories, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(clock.year, category)))
-		_refs["accounts_" + category].get_parent().get_parent().visible = not is_zero_approx(_state.ledger.total(clock.year, category))
-		if staged and not await _accounts_frame(request): return
-	_refs.accounts_guided_credit = _account_row(categories, _state.Ledger.GUIDED_CREDIT_LABEL, "")
-	var credit_row = _refs.accounts_guided_credit.get_parent().get_parent()
-	credit_row.caption.set_meta("ledger_wrap", true)
-	credit_row.caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	credit_row._layout()
-	credit_row.hide()
-	var years := _vbox(2)
-	years.custom_minimum_size.x = 245
-	years.size_flags_horizontal = Control.SIZE_FILL
-	_ledger_leaf(columns, years)
-	years.add_child(_label("TEN-YEAR RECORD", 13, MUTED, true))
-	for year in range(1, 11):
-		_refs["accounts_year_%d" % year] = _account_row(years, "Year %d" % year, _state.money(_state.ledger.total(year)) if _state.ledger.is_closed(year) else "")
-		_refs["accounts_year_%d" % year].get_parent().get_parent().visible = _state.ledger.is_closed(year)
-		if staged and not await _accounts_frame(request): return
-	var strip = preload("res://scripts/climate_strip.gd").new()
-	strip.name = "AnnualClimateStrip"
-	strip.setup(_state.climate.data.outlook.records, clock.year)
-	_body.add_child(strip)
-	_body.add_child(_refs.accountant)
-	_refs.accounts_balance = _wrap("", 16, INK)
-	var balance_row := HBoxContainer.new(); _body.add_child(balance_row)
-	_refs.accounts_balance.size_flags_horizontal = Control.SIZE_EXPAND_FILL; balance_row.add_child(_refs.accounts_balance)
-	_refs.accounts_loan = _wrap("", 16, INK)
-	_body.add_child(_refs.accounts_loan)
-	preload("res://scripts/place_ui.gd").help(self, balance_row, "Mortgage: %s interest + %s principal on the original %s loan. Fixed bills total %s per year.\n" % [_state.money(-_state.Ledger.FIXED_COSTS[0].amount), _state.money(-_state.Ledger.FIXED_COSTS[1].amount), _state.money(_state.Ledger.INITIAL_LOAN), _state.money(_state.ledger.fixed_cost_total())] + _state.NpcRoster.ledger_lines(_state))
-	if staged and not await _accounts_frame(request): return
-	for word in _state.Quality.GRADES:
-		_refs["grade_sales:" + word] = _account_row(_body, word + " sales", "")
-	var lease_heading := HBoxContainer.new(); _body.add_child(lease_heading)
-	var lease_title := _wrap("FIELDS · leases for the coming year", 18, INK, true); lease_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; lease_heading.add_child(lease_title)
-	preload("res://scripts/place_ui.gd").help(self, lease_heading, "Rent renews each Winter. Cancel for a refund of that renewal; standing crops are cleared. Purchased bed expansions remain.")
-	for field in _state.Land.IDS:
-		if field == "home" or clock.season != 3: continue
-		_body.add_child(_wrap(_state.Land.NAMES[field], 16, INK))
-		var row := _hbox(12)
-		_body.add_child(row)
-		if field != "home":
-			row.add_child(_button(("Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year"), "lease:" + field))
-	if staged and not await _accounts_frame(request): return
-	if clock.season == 3: _build_diversification()
-	if staged and not await _accounts_frame(request): return
-	if staged and not await _accounts_frame(request): return
+		if category in ["mortgage", "rent", "sales", "seeds", "living", "upkeep"]: continue
+		_refs["accounts_" + category] = _account_row(records, _state.Ledger.LABELS[category], "")
+	_refs.accounts_guided_credit = _account_row(records, _state.Ledger.GUIDED_CREDIT_LABEL, "")
+	for year in range(1, 11): _refs["accounts_year_%d" % year] = _account_row(records, "Year %d" % year, "")
+	var strip = preload("res://scripts/climate_strip.gd").new(); strip.name = "AnnualClimateStrip"
+	strip.setup(_state.climate.data.outlook.records, clock.year); records.add_child(strip)
+	_refs.accounts_balance = Kit.label(self, "", 16); records.add_child(_refs.accounts_balance)
+	_refs.accounts_loan = Kit.label(self, "", 16); records.add_child(_refs.accounts_loan)
+	for word in _state.Quality.GRADES: _refs["grade_sales:" + word] = _account_row(records, word + " sales", "")
+	if clock.season == 3:
+		var leases := _details_section("account_leases", "Field leases")
+		for field in _state.Land.IDS:
+			if field == "home": continue
+			leases.add_child(Kit.label(self, _state.Land.NAMES[field], 16))
+			leases.add_child(Kit.button(self, "Cancel lease" if _state.land[field].rented else "Rent · " + _state.money(_state.Land.RENTS[field]) + "/year", "lease:" + field))
+		var businesses := _details_section("account_businesses", "Farm businesses")
+		var start: int = _body.get_child_count()
+		_build_diversification()
+		for child in _body.get_children().slice(start): child.reparent(businesses)
 	_ledger_actions()
-	if _state.run_outcome == "completed":
-		_refs.ledger_actions.add_child(_button("Read ten years", "run_summary", true))
-	_modal_trade_footer.show()
+	_refs.ledger_screenshot.reparent(records)
+	_refs.screenshot_status.reparent(records)
+	_modal_trade_footer.hide()
+	if Kit.desktop(self): _spread_accounts()
+
+func _spread_accounts() -> void:
+	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", ceili(28 * Kit.unit(self)))
+	var figures := VBoxContainer.new(); figures.custom_minimum_size.x = 550 * Kit.unit(self); figures.size_flags_horizontal = Control.SIZE_EXPAND_FILL; figures.add_theme_constant_override("separation", ceili(12 * Kit.unit(self)))
+	var details := VBoxContainer.new(); details.custom_minimum_size.x = 270 * Kit.unit(self); details.add_theme_constant_override("separation", ceili(16 * Kit.unit(self)))
+	var children: Array = _body.get_children(); var after_barn: bool = false
+	_body.add_child(row); row.add_child(figures); row.add_child(details)
+	for child in children:
+		if child.name == "PlaceHeader" or child == _modal_fixed: continue
+		child.reparent(details if after_barn else figures)
+		if child is Button and child.get_meta("hud_action", "") == "barn": after_barn = true
 
 func _refresh_accounts() -> void:
 	if accounts_building: return
@@ -2133,9 +2154,10 @@ func _refresh_accounts() -> void:
 	var net: float = _state.ledger.total(_state.season_clock.year)
 	var credit: float = _state.ledger.guided_credit(_state.season_clock.year)
 	_refs.accountant.text = "Nell: " + _state.NpcRoster.GUIDED_CREDIT_LINE if credit > 0 else "Nell · Accountant"
+	_refs.accountant.visible = credit > 0
 	_refs.accountant.tooltip_text = _state.NpcRoster.ledger_lines(_state)
 	_refs.accounts_net.text = ("+" if net >= 0 else "−") + _state.money(absf(net))
-	_refs.accounts_net.add_theme_color_override("font_color", GREEN if net >= 0 else Color("a63529"))
+	_refs.accounts_net.add_theme_color_override("font_color", Kit.MONEY if net >= 0 else Kit.RED)
 	_refresh_land_bill()
 	for category in _state.Ledger.CATEGORIES:
 		if category in ["mortgage", "rent"]: continue
@@ -2154,7 +2176,7 @@ func _refresh_accounts() -> void:
 	_refs.accounts_balance.text = "Purse %s · Overdraft limit %s" % [_state.money(_state.coins), _state.money(_state.bankruptcy_limit())]
 	_refs.accounts_loan.text = "Loan remaining " + _state.money(_state.ledger.loan_remaining())
 	_refs.accounts_loan.visible = _state.ledger.loan_remaining() > 0
-	_surface_text(_modal_card)
+	for key in ["accounts_sales", "accounts_seeds", "accounts_living", "accounts_upkeep"]: _refs[key].get_parent().get_parent().show()
 
 func _build_run_summary() -> void:
 	_paper_page()
@@ -2208,71 +2230,44 @@ func _build_sleep_confirm() -> void:
 	actions.add_child(confirm)
 
 func _build_pause() -> void:
-	_heading("Your farm", "")
-	var farmer = preload("res://scripts/farmer_preview.gd").new()
-	farmer.custom_minimum_size = Vector2(180, 210)
-	_body.add_child(farmer)
-	farmer.show_farmer(_state.farmer_appearance)
-	_body.add_child(_button("Your farmer", "farmer"))
-	var quieter: Button = _button("Quieter", "quieter")
-	quieter.toggle_mode = true
-	quieter.set_pressed_no_signal(preload("res://scripts/sound_mix.gd").quieter)
-	_body.add_child(quieter)
-	if _state.can_sleep_until_spring():
-		var sleep: Button = _button("Sleep until Spring", "sleep_spring")
-		sleep.name = "MenuSleepUntilSpring"
-		_body.add_child(sleep)
-	if _state.run_outcome == "completed": _body.add_child(_button("Ten-year summary", "run_summary", true))
-	var menu: GridContainer = GridContainer.new()
-	menu.columns = 3
-	menu.add_theme_constant_override("h_separation", 10)
-	menu.add_theme_constant_override("v_separation", 10)
-	_body.add_child(menu)
-	var entries: Array = [["Inventory", "inventory", "", "symbol"], ["Debug", "debug", "", "debug"], ["PotatoDex", "dex", "", "magnify"]]
-	for entry: Array in entries:
-		var tutorial_feature: String = str(entry[1])
-		if tutorial_feature == "dex":
-			tutorial_feature = "inventory"
-		if not _tutorial.is_empty() and tutorial_feature not in _tutorial.get("features", []):
-			continue
-		var button: Button = _button("", str(entry[1]))
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 61
-		menu.add_child(button)
-		var row: BoxContainer = _hbox(6)
-		button.add_child(row)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		row.offset_left = 8
-		row.offset_right = -8
-		row.offset_top = 8
-		row.offset_bottom = -8
-		var icon_kind: String = "activity" if entry[1] == "debug" else "symbol"
-		row.add_child(_icon({"kind": icon_kind, "id": str(entry[3])}, 36))
-		var name_label: Label = _wrap(str(entry[0]), 13, INK, true)
-		name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(name_label)
-	_body.add_child(_button("Settings & saves", "toggle_details:menu_settings"))
-	var settings := _vbox(8)
-	_body.add_child(settings)
-	_refs.menu_settings = settings
-	settings.hide()
-	var utility: BoxContainer = _hbox(8)
-	settings.add_child(utility)
-	for entry: Array in [["Save farm", "save"], ["Load farm", "load"], ["Graphics", "graphics"], ["Controls", "help"]]:
-		var button: Button = _button(entry[0], entry[1])
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		utility.add_child(button)
 	if _reset_pending:
-		settings.show()
-		settings.add_child(_wrap("Start over? This replaces your farm.", 14, CHERRY))
-		settings.add_child(_button("Keep my farm", "cancel_reset"))
-		settings.add_child(_button("Yes, start a new farm", "reset", true))
-	else:
-		var reset_button: Button = _button("Start a new farm…", "request_reset")
-		reset_button.add_theme_font_size_override("font_size", 12)
-		settings.add_child(reset_button)
+		Kit.configure(self)
+		_body.add_child(Kit.label(self, "Plant a new farm?", 22, Kit.INK, true))
+		_body.add_child(Kit.button(self, "Keep this farm", "cancel_reset", Kit.KEEPERS.mara))
+		_body.add_child(Kit.button(self, "Start again", "reset"))
+		return
+	Kit.configure(self, true)
+	_body.add_child(Kit.label(self, "Menu", 22, Kit.CREAM, true))
+	var menu := GridContainer.new(); menu.columns = 3
+	menu.add_theme_constant_override("h_separation", ceili(10 * Kit.unit(self)))
+	menu.add_theme_constant_override("v_separation", ceili(10 * Kit.unit(self)))
+	_body.add_child(menu)
+	for entry in [["Farmer", "farmer", "farmer"], ["Grown", "dex", "book"], ["Sound", "sound", "sound"], ["Graphics", "graphics", "sun"], ["Save", "save_page", "save"], ["Leave", "close", "leave"]]:
+		var tile: Button = Kit.button(self, entry[0], entry[1], Kit.PAPER, {"kind":"kit_menu", "id":"save" if entry[1] == "save_page" else entry[1]})
+		tile.name = "MenuTile_" + entry[1]; tile.set_meta("text_tier", 14)
+		tile.custom_minimum_size = Vector2(180, 130) * Kit.unit(self) if Kit.desktop(self) else Vector2(96, 98) * Kit.unit(self)
+		if Kit.desktop(self): tile.picture_pixels = 60
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		menu.add_child(tile)
 
+func _build_save_page() -> void:
+	Kit.configure(self)
+	_body.add_child(Kit.label(self, "Save", 22, Kit.INK, true))
+	for entry in [["Save farm", "save"], ["Restore farm", "load"], ["Plant a new farm", "request_reset"]]:
+		_body.add_child(Kit.button(self, entry[0], entry[1]))
+
+func _build_sound() -> void:
+	Kit.configure(self)
+	_body.add_child(Kit.label(self, "Sound", 22, Kit.INK, true))
+	var quieter: Button = Kit.button(self, "Quieter", "quieter", Kit.PAPER, {"kind":"symbol", "id":"sound"})
+	quieter.toggle_mode = true; quieter.set_pressed_no_signal(preload("res://scripts/sound_mix.gd").quieter)
+	_body.add_child(quieter)
+
+func show_clothing_reward(item: String) -> void:
+	if item == "glasses":
+		_nell_profit_greeting = true
+		if _panel_kind == "accounts" and is_panel_open(): show_panel("accounts", _state)
+	show_toast(_state.Clothing.ITEMS[item].name)
 
 func set_graphics_quality(mode: String) -> void:
 	_graphics_quality = mode
@@ -2317,9 +2312,8 @@ func _refresh_panel() -> void:
 	var coins: float = float(_state.get("coins"))
 	var markets: Dictionary = _state.get("market")
 	match _panel_kind:
-		"market", "barn":
-			_refs.market_page.refresh()
-			if _panel_kind == "barn": _refresh_contracts()
+		"market": _refs.market_page.refresh()
+		"barn": _refresh_contracts()
 		"inventory":
 			_refs.shop_page.refresh()
 		"tools":
@@ -2855,9 +2849,24 @@ func _build_loss_cards(parent: Control, year: int, show_empty: bool = false) -> 
 
 func _build_land_bill(parent: VBoxContainer) -> void:
 	_refs.land_bill = _button("Mortgage and land · 60,000", "land_bill_parts")
+	if _modal_card.get_meta("kit_screen", false):
+		_refs.land_bill.set_meta("plain_control", true)
+		_refs.land_bill.set_meta("kit_type", true)
+		_refs.land_bill.set_meta("text_tier", 16)
+		_refs.land_bill.add_theme_font_override("font", Type.face(Type.BODY, 400))
+		for variant in ["normal", "hover", "pressed", "disabled"]: _refs.land_bill.add_theme_stylebox_override(variant, StyleBoxEmpty.new())
 	_refs.land_bill.toggle_mode = true
 	_refs.land_bill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(_refs.land_bill)
+	if _modal_card.get_meta("kit_screen", false):
+		var row := HBoxContainer.new(); parent.add_child(row)
+		_refs.land_bill.custom_minimum_size.y = 44 * Kit.unit(self)
+		_refs.land_bill.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_refs.land_bill.add_theme_color_override("font_color", Kit.INK)
+		row.add_child(_refs.land_bill)
+		_refs.land_amount = Kit.label(self, "", 22, Kit.RED, true)
+		_refs.land_amount.autowrap_mode = TextServer.AUTOWRAP_OFF
+		_refs.land_amount.size_flags_horizontal = Control.SIZE_SHRINK_END; row.add_child(_refs.land_amount)
+	else: parent.add_child(_refs.land_bill)
 	_refs.land_parts = _vbox(2); parent.add_child(_refs.land_parts)
 	_refs.land_parts.hide()
 	for cost in _state.Ledger.FIXED_COSTS:
@@ -2878,7 +2887,8 @@ func _refresh_land_bill() -> void:
 			if int(entry.year) == year and entry.label == cost.label and entry.category == cost.category: amount += float(entry.amount)
 		fixed -= amount
 		_refs["land_part:" + cost.label].text = _state.money(-amount)
-	_refs.land_bill.text = "Mortgage and land · " + _state.format_number(fixed)
+	_refs.land_bill.text = "Mortgage and land ›" if _refs.has("land_amount") else "Mortgage and land · " + _state.format_number(fixed)
+	if _refs.has("land_amount"): _refs.land_amount.text = _state.money(-fixed)
 	for child in _refs.land_activity.get_children(): _refs.land_activity.remove_child(child); child.queue_free()
 	var activity: Dictionary = {}
 	for entry in _state.ledger.entries:
@@ -2926,51 +2936,80 @@ func _update_wait_card() -> void:
 		fit_text(_wait_card)
 
 func _build_grade_explanation() -> void:
-	_heading("Your potato grades", "")
-	var stamps = preload("res://scripts/grade_stamp.gd")
-	for grade in stamps.COLORS:
-		var row := _hbox(16)
-		_body.add_child(row)
-		row.add_child(_icon({"kind": "crop", "crop": _state.selected_crop}, 48))
-		var words := _vbox(4)
-		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(words)
-		var chip: Label = _label(grade, 14)
-		stamps.apply(chip, grade, text_pixels(14))
-		words.add_child(chip)
-		words.add_child(_wrap(stamps.GLOSSES[grade], 16))
+	Kit.configure(self)
+	_modal_card.fill = Kit.INK
+	_modal_card.queue_redraw()
+	_modal_card.add_theme_stylebox_override("panel", Kit.skin(Kit.INK, Kit.WOOD, 12, 12, Kit.unit(self)))
+	var stamps := HBoxContainer.new()
+	stamps.add_theme_constant_override("separation", ceili(14 * Kit.unit(self))); _body.add_child(stamps)
+	for word in _state.Quality.GRADES:
+		var row := VBoxContainer.new(); row.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.custom_minimum_size.x = (210 if Kit.desktop(self) else 142) * Kit.unit(self)
+		row.add_theme_constant_override("separation", ceili(6 * Kit.unit(self)))
+		if word == "Feed" and not Kit.desktop(self):
+			row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			_body.add_child(row)
+		else: stamps.add_child(row)
+		var stamp: Label = Kit.label(self, word, 16, INK)
+		preload("res://scripts/grade_stamp.gd").apply(stamp, word, text_pixels(16))
+		stamp.set_meta("text_tier", 16); stamp.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		row.add_child(stamp)
+		var gloss: Label = Kit.label(self, preload("res://scripts/grade_stamp.gd").GLOSSES[word], 14, Kit.CREAM)
+		gloss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; row.add_child(gloss)
 
 func _build_farmer() -> void:
-	_heading("Your farmer", "")
+	Kit.configure(self)
+	var u: float = Kit.unit(self)
 	var preview = preload("res://scripts/farmer_preview.gd").new()
-	preview.custom_minimum_size = Vector2(180, 260)
+	preview.name = "WholeFarmerPreview"
+	preview.custom_minimum_size = Vector2(120, 250 if Kit.desktop(self) else 170) * u
 	_body.add_child(preview); _refs.farmer_preview = preview
 	preview.show_farmer(_state.farmer_appearance)
-	var name_row := _hbox(12); _body.add_child(name_row)
-	name_row.add_child(_label("Name", 16))
 	var name_input := LineEdit.new(); name_input.text = _state.farmer_appearance.name
-	name_input.max_length = 20; name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL; name_input.custom_minimum_size.y = touch_target()
-	name_row.add_child(name_input); _refs.farmer_name = name_input
+	name_input.max_length = 20; name_input.custom_minimum_size.y = 48 * u
+	name_input.set_meta("kit_type", true); name_input.set_meta("text_tier", 22)
+	name_input.add_theme_font_override("font", Type.face(Type.DISPLAY))
+	name_input.add_theme_color_override("font_color", Kit.INK)
+	name_input.add_theme_stylebox_override("normal", Kit.skin(Kit.CREAM, Kit.RULE, 8, 12, u, false))
+	name_input.add_theme_stylebox_override("focus", Kit.skin(Kit.CREAM, Kit.MONEY, 8, 12, u, false))
+	_body.add_child(name_input); _refs.farmer_name = name_input
 	name_input.text_changed.connect(func(words):
 		var clean: String = words.strip_edges()
 		_state.farmer_appearance.name = "Farmer" if clean.is_empty() else clean
 		get_parent().world._player_body.apply_appearance(_state.farmer_appearance))
 	for field in ["hat", "shirt", "skin"]:
-		_body.add_child(_label({"hat":"Hat", "shirt":"Shirt colour", "skin":"Skin tone"}[field], 16))
-		var choices := HFlowContainer.new(); _body.add_child(choices)
-		var options: Array = _state.FarmerLook.HATS if field == "hat" else (_state.FarmerLook.SHIRTS if field == "shirt" else _state.FarmerLook.SKINS)
+		var choices := HBoxContainer.new(); choices.add_theme_constant_override("separation", ceili(8 * u)); _body.add_child(choices)
+		var options: Array = _state.FarmerLook.choices(_state, field)
 		var group := ButtonGroup.new()
 		for choice in options:
-			var button: Button = _button(str(choice).capitalize() if field == "hat" else "●", "")
+			var button = preload("res://scripts/kit_choice.gd").new()
+			button.field = field; button.choice = choice; button.unit = u
 			button.name = "FarmerChoice_" + field + "_" + choice
+			button.text = str(choice).capitalize() if field == "hat" else ""
+			button.tooltip_text = str(choice).capitalize() if field == "hat" else {"shirt":"Shirt colour", "skin":"Skin tone"}[field]
 			button.toggle_mode = true; button.button_group = group
+			button.disabled = field == "hat" and choice in ["flower", "scarf", "glasses"] and choice not in _state.clothing_unlocked
 			button.set_pressed_no_signal(_state.farmer_appearance[field] == choice)
-			if field == "hat":
-				button.custom_minimum_size.x = maxf(touch_target(), _card_button_font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, text_pixels(16)).x + 24)
-			else:
-				for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]: button.add_theme_color_override(state, Color(choice))
+			button.set_meta("text_tier", 14); button.add_theme_font_override("font", Type.face(Type.BODY))
+			button.add_theme_color_override("font_color", Kit.INK)
+			for variant in ["normal", "hover", "pressed", "disabled"]:
+				var empty := StyleBoxEmpty.new(); empty.content_margin_top = 44 * u if field == "hat" else 0
+				button.add_theme_stylebox_override(variant, empty)
+			button.custom_minimum_size = Vector2(44, 70 if field == "hat" else 44) * u
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL if field == "hat" else Control.SIZE_SHRINK_BEGIN
 			button.pressed.connect(func():
 				_state.farmer_appearance[field] = choice
 				preview.show_farmer(_state.farmer_appearance)
 				get_parent().world._player_body.apply_appearance(_state.farmer_appearance))
 			choices.add_child(button)
+	_body.add_child(Kit.button(self, "Walk out to the field", "close"))
+
+func _build_practice_component() -> void:
+	Kit.configure(self)
+	var grid := GridContainer.new(); grid.columns = 4 if Kit.desktop(self) else 2
+	grid.add_theme_constant_override("h_separation", ceili(14 * Kit.unit(self))); grid.add_theme_constant_override("v_separation", ceili(18 * Kit.unit(self))); _body.add_child(grid)
+	for id in preload("res://scripts/practice_tile.gd").DEFINITIONS:
+		var tile = preload("res://scripts/practice_tile.gd").new(); grid.add_child(tile); tile.setup(self, id)
+func _build_sale_component() -> void:
+	Kit.configure(self)
+	var reveal = preload("res://scripts/sale_reveal.gd").new(); _body.add_child(reveal)
+	if not _component_receipt.is_empty(): reveal.setup(self, _component_receipt, _component_receipt.get("fired", []))

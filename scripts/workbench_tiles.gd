@@ -4,12 +4,13 @@ const Board = preload("res://scripts/place_board.gd")
 const ACCENT := Color("7b684c")
 static func build(page) -> void:
 	var hud = page.hud
-	hud._modal_card.add_theme_stylebox_override("panel", Place.skin(Place.INK, 18, 3, Place.WOOD))
-	Place.header(hud, page, "BRAM’S WORKBENCH", ACCENT, "bram")
+	hud.Kit.configure(hud)
+	Place.header(hud, page, "Oda’s workbench", ACCENT, "bram")
 	page._wallet = hud._wrap("", 14, Place.PAPER); page._wallet.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; page.add_child(page._wallet)
 	var bench := Board.new(); bench.board_kind = "peg"; bench.name = "PegboardWorkbench"
 	bench.add_theme_stylebox_override("panel", Place.skin(Place.WOOD, 12, 3, Place.WOOD.darkened(.2))); page.add_child(bench)
 	var grid: GridContainer = page._grid(bench)
+	grid.columns = 2 if hud.Kit.desktop(hud) else 1
 	for tool in ["hoe", "water", "harvest", "expansion"]:
 		var action: String = "upgrade:" + tool
 		var tile := PanelContainer.new(); tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tile.name = "ToolTile_" + tool
@@ -29,34 +30,12 @@ static func build(page) -> void:
 	barn_body.add_child(hud._wrap("Barn extension", 22, Place.INK, true))
 	var detail: Label = hud._wrap("", 14, Place.MUTED); barn_body.add_child(detail); hud._refs["upgrade:barn:detail"] = detail
 	var upgrade: Button = hud._button("", "upgrade:barn"); barn_body.add_child(upgrade); hud._refs["upgrade:barn"] = upgrade
-	var notes: VBoxContainer = hud._vbox(8); notes.name = "DecorationList"; page.add_child(notes)
-	notes.add_child(hud._wrap("Decorations · from 2,000", 22, Place.INK, true))
-	for id in farm_items():
-		var row: VBoxContainer = hud._vbox(4); notes.add_child(row)
-		row.add_child(hud._wrap(hud._state.Decorations.ITEMS[id], 16, Place.PAPER))
-		var site := preload("res://scripts/illustrated_choice.gd").new(); site.name = "DecorationSite_" + id
-		for location in hud._state.Decorations.PLACES: site.add_item(location)
-		if hud._state.Decorations.FIXED_PLACES.has(id):
-			site.selected = hud._state.Decorations.FIXED_PLACES[id]; site.disabled = true
-		hud._style_choice(site); row.add_child(site)
-		var purchase: Button = hud._button("", "")
-		purchase.name = "BuyDecoration_" + id
-		purchase.set_meta("action", "decorate:" + id); purchase.set_meta("hud_action", "decorate:" + id)
-		purchase.pressed.connect(func(): hud._act("decorate:%s:%d" % [id, site.selected]))
-		row.add_child(purchase); hud._refs["decoration:" + id] = purchase
-static func farm_items() -> Array:
-	return preload("res://scripts/farm_decorations.gd").ITEMS.keys()
 static func refresh(page) -> void:
 	var hud = page.hud; var farm = hud._state
 	var rank: int = farm.barn_level
 	var barn_cost: float = farm.BARN_COSTS[mini(2, rank)]
 	hud._refs["upgrade:barn:detail"].text = "Maximum capacity" if rank >= 3 else "+%d t storage" % roundi(200 * pow(4, rank))
 	hud._set_purchase_button("upgrade:barn", "Complete" if rank >= 3 else "Open · " + farm.money(barn_cost), barn_cost, rank >= 3)
-	for id in farm_items():
-		var owned: bool = farm.decorations.has(id)
-		var button: Button = hud._refs["decoration:" + id]
-		button.text = "Placed" if owned else "Place · " + farm.money(farm.Balance.DECORATION_COSTS[id])
-		button.disabled = owned or not farm.can_purchase(farm.Balance.DECORATION_COSTS[id])
 	page._wallet.text = "Balance " + farm.money(farm.coins)
 	for tool in page._levels:
 		page._levels[tool].text = Place.pips(int(farm.tools.get(tool, 0)), 3)
@@ -73,11 +52,10 @@ static func refresh(page) -> void:
 	hud._set_purchase_button("upgrade:expansion", "Open · " + farm.money(land.cost) if not land.complete else "All beds open", land.cost, land.complete)
 static func layout(page) -> void:
 	Place.compact(page)
-	var touch: bool = is_instance_valid(page.hud.get_parent().get("touch_controls")) and page.hud.get_parent().touch_controls.enabled
-	for grid in page._grids: grid.columns = 1 if page.size.x < 650 else (3 if page.size.x >= 850 else 2)
+	for grid in page._grids: grid.columns = 2 if page.hud.Kit.desktop(page.hud) else 1
 	for button in page.find_children("*", "Button", true, false):
-		button.custom_minimum_size.y = page.hud.touch_target() if touch else 44
-		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, page.hud.touch_target() if touch else 44)
-		button.add_theme_font_size_override("font_size", 20 if touch else 15)
-	for label in page.find_children("*", "Label", true, false):
-		if touch: label.add_theme_font_size_override("font_size", maxi(20, label.get_theme_font_size("font_size")))
+		if str(button.get_meta("hud_action", "")).begins_with("upgrade:"):
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.custom_minimum_size.y = 44 * page.hud.Kit.unit(page.hud)
+		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, button.custom_minimum_size.y)
+	page.hud.fit_text(page)

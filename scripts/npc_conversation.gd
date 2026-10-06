@@ -252,7 +252,7 @@ func show_page(next_page: String, text: String = "") -> void:
 	_revealed = 0
 	elapsed = 0
 	portrait.avatar.speaking = true
-	portrait.avatar.expression = "concerned" if page == "weather" else "warm"
+	portrait.set_expression(Roster.expression(npc_id, state, text))
 	for i in range(3):
 		var b: Button = choice_buttons[i]
 		b.text = labels[i]
@@ -278,7 +278,7 @@ func choose(index: int) -> void:
 		show_page(action)
 
 func service_label() -> String:
-	return {"market":"Buy seeds", "barn":"Sell or store potatoes", "tools":"Open the Tools shed", "duck_patrol":"Meet the ducks", "accounts":"Open the accounts", "climate":"Weather and protection", "quests":"Open Tess's board"}.get(service, "Open " + service)
+	return {"market":"Buy and sell", "market:sell":"Sell potatoes", "barn":"Orders and deals", "tools":"Open the Tools shed", "duck_patrol":"Meet the ducks", "accounts":"Open the accounts", "climate":"Weather and protection", "quests":"Open Tess's board"}.get(service, "Open " + service)
 
 func reveal() -> void:
 	voice.stop()

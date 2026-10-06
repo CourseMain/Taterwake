@@ -1230,11 +1230,3 @@ func _number(value: Variant, minimum: float, maximum: float, integer_only: bool 
 		return false
 	var number: float = float(value)
 	return is_finite(number) and number >= minimum and number <= maximum and (not integer_only or number == floor(number))
-
-func buy_decoration(id: String, site: int) -> String:
-	if id not in Decorations.ITEMS or site < 0 or site > 2 or decorations.has(id): return _reject_purchase("Choose an unplaced decoration.")
-	var cost: float = Balance.DECORATION_COSTS[id]
-	if not can_purchase(cost): return _reject_purchase(purchase_refusal(cost))
-	post_money("other", "Decoration · " + Decorations.ITEMS[id], -cost)
-	decorations[id] = Decorations.FIXED_PLACES.get(id, site)
-	return _complete_purchase({"kind": "decoration", "id": id, "name": Decorations.ITEMS[id], "quantity": 1, "cost": cost}, Decorations.ITEMS[id] + " placed.")

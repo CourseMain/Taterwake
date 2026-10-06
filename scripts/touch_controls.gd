@@ -58,14 +58,14 @@ func _ready() -> void:
 	use_button = button("Use Hoe", func(): game._interact_nearby())
 	tools_button = button("Tools", func(): open_drawer("tools"))
 	menu_button = game.hud._menu_button
-	sell_button = button("Sell", func(): game.hud._act("barn"))
+	sell_button = button("Sell", func(): game.hud._act("market:sell"))
 	fullscreen = preload("res://scripts/fullscreen_button.gd").new()
 	fullscreen.custom_minimum_size = Vector2(44, 44)
 	root.add_child(fullscreen)
 	fullscreen.pressed.connect(toggle_fullscreen)
 	interaction_prompt = button("E", func(): game._interact_nearby())
 	interaction_prompt.custom_minimum_size = Vector2(68, 68) if enabled else Vector2(34, 34)
-	var key_font = preload("res://scripts/ui_type.gd").face(preload("res://assets/fonts/Fredoka.ttf"),600)
+	var key_font = preload("res://scripts/ui_type.gd").face(preload("res://assets/fonts/Slackey.ttf"),600)
 	key_font.fallbacks = [preload("res://scripts/ui_type.gd").SPUDION]
 	interaction_prompt.add_theme_font_override("font",key_font)
 	interaction_prompt.add_theme_font_size_override("font_size", 22)
@@ -159,6 +159,8 @@ func resize() -> void:
 		var logical := physical * (clampf(short_edge, 600, 900) / minf(physical.x, physical.y))
 		if get_tree().root.content_scale_size != Vector2i(logical):
 			get_tree().root.content_scale_size = Vector2i(logical)
+	else:
+		get_tree().root.content_scale_size = Vector2i(1280, 800)
 	last_size = get_viewport().get_visible_rect().size
 	var w := last_size.x
 	var h := last_size.y
@@ -195,8 +197,12 @@ func fit_drawer() -> void:
 	place(drawer, Rect2(maxf(16, view.x - 430), 92, minf(view.x - 32, 408), height))
 
 func fit_modal() -> void:
-	if not enabled or not is_instance_valid(game.hud._modal_card): return
+	if not is_instance_valid(game.hud._modal_card): return
 	var hud = game.hud
+	if hud._modal_card.get_meta("kit_screen", false):
+		hud.Kit.fit(hud)
+		return
+	if not enabled: return
 	var view := get_viewport().get_visible_rect().size
 	var trading: bool = hud._panel_kind in ["market", "barn"]
 	var width := minf(1200 if trading else 940, view.x - 24)

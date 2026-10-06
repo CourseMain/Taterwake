@@ -92,11 +92,14 @@ func _ready() -> void:
 	_register_inputs()
 	state = StateScript.new()
 	state.name = "FarmState"
+	state.clothing_profile_enabled = not test_mode
+	if not test_mode: state.clothing_unlocked = state.Clothing.read_profile()
 	if not test_mode: state.boundary_save_path = StateScript.DEFAULT_SAVE_PATH
 	add_child(state)
 	activities = ActivitiesScript.new()
 	activities.name = "IslandActivities"
 	activities.setup(state)
+	state.clothing_earned.connect(func(item): hud.show_clothing_reward(item) if is_instance_valid(hud) else null)
 	state.activity_system = activities
 	add_child(activities)
 	var returning: bool = false
@@ -564,7 +567,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					_on_user_action("menu")
 			KEY_I: _on_user_action("inventory")
 			KEY_P: _on_user_action("dex")
-			KEY_F: _on_user_action("barn")
+			KEY_F: _on_user_action("market:sell")
 			KEY_F1: _on_user_action("help")
 			KEY_F5: _on_user_action("save")
 			KEY_F9: _on_user_action("load")
@@ -609,9 +612,9 @@ func _interact_station(station: String) -> void:
 
 func _on_user_action(action: String) -> void:
 	if title_active() or conversation.visible: return
-	if action in ["market", "barn", "tools", "duck_patrol", "climate", "quests", "accounts"]:
+	if action in ["market", "market:sell", "barn", "tools", "duck_patrol", "climate", "quests", "accounts"]:
 		if _tutorial_active() and not tutorial.allows_action(action): return
-		var keeper: String = {"market":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell"}[action]
+		var keeper: String = {"market":"mara", "market:sell":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell"}[action]
 		_start_conversation(keeper, action, true)
 		return
 	_on_action(action)
@@ -993,7 +996,7 @@ func _update_hover_at(screen_position: Vector2) -> void:
 			var id: String = str(hit.station).trim_prefix("equipment:")
 			hud.set_context("Tank · Click to walk over and refill" if id == "tank" else ("Sprinkler · Click to see its connected beds" if id.begins_with("sprinkler") else "Click to see how this protects your farm"))
 			return
-		var descriptions: Dictionary = {"market": "Mara’s stall · Tap to buy seeds", "barn": "Barn · Tap to sell or store", "quests": "Quests · Click for challenges", "tools": "Tools · Tap to upgrade", "climate": "Farm protection · Click to view upgrades"}
+		var descriptions: Dictionary = {"market": "Mara’s stall · Buy seeds or sell potatoes", "barn": "Barn · Orders and deals", "quests": "Quests · Click for challenges", "tools": "Tools · Tap to upgrade", "climate": "Farm protection · Click to view upgrades"}
 		descriptions["duck_patrol"] = "Ducks · Click to hire pest patrol"
 		descriptions["tools"] = "Tools · Click to upgrade"
 		context_text = descriptions.get(str(hit.station), "TATERLAND")
@@ -1037,6 +1040,10 @@ func _on_state_changed() -> void:
 		_hud_update_frame = Engine.get_process_frames()
 
 func _update_weather_shake(delta: float) -> void:
+	if hud.farm_page_open():
+		world.camera.h_offset = 0
+		world.camera.v_offset = 0
+		return
 	weather_shake_clock += delta
 	var amplitude: float = 0.0
 	climate_shake = move_toward(climate_shake, 0.0, delta * 0.25)
@@ -1157,15 +1164,12 @@ func _on_action(action: String) -> void:
 				hud.show_farm_hint("Sleeping until Spring…")
 		"talk":
 			if parts.size() == 2: _start_conversation(parts[1])
-		"decorate":
-			if hud._panel_kind == "tools" and parts.size() == 3:
-				state.buy_decoration(parts[1], int(parts[2]))
-				_save_checkpoint.call_deferred()
+
 		"farmer": hud.show_panel("farmer", state)
 		"quieter":
 			SoundMix.quieter = not SoundMix.quieter
 			if not test_mode: SoundMix.save_preference()
-			hud.show_panel("pause", state)
+			hud.show_panel("sound", state)
 		"graphics":
 			if parts.size() == 2:
 				_apply_graphics_quality(parts[1], true)
@@ -1178,7 +1182,8 @@ func _on_action(action: String) -> void:
 				return
 			if parts[0] == "run_summary" and state.run_outcome != "completed": return
 			_cancel_walk()
-			hud.show_panel(parts[0], state)
+			if parts[0] == "market": hud.show_market(parts.size() > 1 and parts[1] == "sell", state)
+			else: hud.show_panel(parts[0], state)
 		"activity":
 			if parts.size() < 2:
 				return
@@ -1220,12 +1225,16 @@ func _on_action(action: String) -> void:
 				state.climate.fund(state, parts[1])
 				_save_checkpoint.call_deferred()
 
+		"current_sell":
+			if hud._panel_kind == "market" and hud._market_selling:
+				state.trading.sell(state, parts[1], int(parts[2]), parts[3], false, true)
+				_save_checkpoint.call_deferred()
 		"stored_sell":
-			if hud._panel_kind == "barn" and hud._refs.market_page.stored_mode:
+			if hud._panel_kind == "market" and hud._market_selling and hud._refs.market_page.stored_mode:
 				state.trading.sell_stored(state, parts[1], int(parts[2]), parts[3])
 				_save_checkpoint.call_deferred()
 		"keep_seed":
-			if hud._panel_kind == "barn": state.trading.keep_seed(state, parts[1], parts[2])
+			if hud._panel_kind == "market" and hud._market_selling: state.trading.keep_seed(state, parts[1], parts[2])
 			_save_checkpoint.call_deferred()
 		"contract_accept":
 			state.trading.accept(state, int(parts[1]) if parts.size() > 1 else 0)
@@ -1237,7 +1246,7 @@ func _on_action(action: String) -> void:
 				_save_checkpoint.call_deferred()
 		"quest": state.claim_quest(parts[1])
 		"epilogue": _show_epilogue()
-		"close": hud.close_panel()
+		"close": hud.dismiss_panel()
 		"crop":
 			state.select_crop(parts[1])
 			_select_tool("plant")
@@ -1245,7 +1254,7 @@ func _on_action(action: String) -> void:
 		"tool": _select_tool(parts[1])
 		"buy": state.buy_seeds(parts[1], int(parts[2]))
 		"sell":
-			if hud._panel_kind == "barn": state.sell_crop(parts[1], int(parts[2]), parts[3] if parts.size() > 3 else "")
+			if hud._panel_kind == "market" and hud._market_selling: state.sell_crop(parts[1], int(parts[2]), parts[3] if parts.size() > 3 else "")
 		"upgrade":
 			match parts[1]:
 				"barn": state.upgrade_barn()

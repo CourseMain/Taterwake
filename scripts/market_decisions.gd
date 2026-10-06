@@ -77,24 +77,36 @@ func begin_winter(farm) -> void:
 func sell_stored(farm, id: String, quantity: int = -1, grade: String = "") -> String:
 	return sell(farm, id, quantity, grade, true)
 
-func sell(farm, id: String, quantity: int, grade: String, stored: bool) -> String:
+func sell(farm, id: String, quantity: int, grade: String, stored: bool, current: bool = false) -> String:
 	if farm.run_over or farm.accounts_open: return farm._finish("Return to the farm before selling.")
-	if stored and farm.season_clock.season != 3: return farm._finish("Sell Winter stores at the barn during Winter only.")
+	if stored and farm.season_clock.season != 3: return farm._finish("Winter store prices apply during Winter only.")
 	if id not in Table.IDS or quantity == 0 or quantity < -1 or (not grade.is_empty() and grade not in Quality.GRADES): return farm._finish("Choose a crop, grade and amount.")
-	var owned: int = Stock.count(held, id, grade) if stored else fresh_count(farm, id, grade)
+	var owned: int = Stock.count(farm.storage, id, grade) if current else Stock.count(held, id, grade) if stored else fresh_count(farm, id, grade)
 	var amount: int = owned if quantity == -1 else quantity
-	if amount <= 0 or amount > owned: return farm._finish("Not enough tonnes of that grade. Sell stored tonnes from the market’s Winter stores tab.")
-	var lots: Array = Stock.take(held if stored else farm.storage, id, amount, grade, {} if stored else held)
-	if stored: Stock.remove_lots(farm.storage, id, lots)
+	if amount <= 0 or amount > owned: return farm._finish("Not enough tonnes of that grade.")
+	var lots: Array = []
+	if current and farm.season_clock.season == 3:
+		var held_amount: int = mini(amount, Stock.count(held, id, grade))
+		lots = Stock.take(held, id, held_amount, grade)
+		Stock.remove_lots(farm.storage, id, lots)
+		for lot in lots: lot["winter_store"] = true
+		lots.append_array(Stock.take(farm.storage, id, amount - held_amount, grade, held))
+	else:
+		lots = Stock.take(held if stored else farm.storage, id, amount, grade, {} if stored else held)
+		if stored: Stock.remove_lots(farm.storage, id, lots)
 	var earnings: float = 0
 	for word in Quality.GRADES:
 		var sacks: int = 0
+		var winter_sacks: int = 0
 		for lot in lots:
-			if lot.grade == word: sacks += int(lot.quantity)
+			if lot.grade == word:
+				sacks += int(lot.quantity)
+				if lot.get("winter_store", false): winter_sacks += int(lot.quantity)
 		if sacks == 0: continue
 		var price: float = stored_price(farm, id, word) if stored else float(farm.market[id].sell) * Quality.MULTIPLIER[word]
-		farm.post_money("sales", "Sold %d %s %s tonnes" % [sacks, word, id], price * sacks)
-		earnings += price * sacks
+		var total: float = price * (sacks - winter_sacks) + stored_price(farm, id, word) * winter_sacks
+		farm.post_money("sales", "Sold %d %s %s tonnes" % [sacks, word, id], total)
+		earnings += total
 	farm._record_sales(earnings)
 	farm._progress_quest("starter_spike", float(amount))
 	farm.farm_help.observe_sale(farm, id)

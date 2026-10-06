@@ -1,7 +1,5 @@
 extends RefCounted
-const Balance = preload("res://scripts/balance.gd")
 const ITEMS := {"bench": "Bench", "flowers": "Flower border", "scarecrow": "Scarecrow", "barn_door": "Painted barn door", "duck_house": "Duck house", "gate_flag": "Flag on the gate"}
-const PLACES := ["At the gate", "By the pond", "Beside the barn"]
 const FIXED_PLACES := {"barn_door": 2, "duck_house": 1, "gate_flag": 0}
 static func valid(raw: Variant) -> bool:
 	if not raw is Dictionary or raw.size() > ITEMS.size(): return false

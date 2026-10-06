@@ -2,7 +2,7 @@ extends RefCounted
 const Place = preload("res://scripts/place_ui.gd")
 const ACCENT := Color("a17c42")
 static func build(hud) -> void:
-	Place.header(hud, hud._body, "BUYER BOARD", ACCENT)
+	hud._body.add_child(hud.Kit.label(hud, "Orders and deals", 22, hud.Kit.INK, true))
 	var help_row := HBoxContainer.new(); hud._body.add_child(help_row)
 	Place.help(hud, help_row, "Accepting an order is binding. The buyer collects Standard or Table tonnes at Autumn end, before Winter storage. Feed cannot fulfil an order. Each missing tonne costs %s." % hud._state.money(hud._state.MarketDecisions.SHORTFALL_FEE))
 	for slot in range(hud._state.trading.order_limit(hud._state)):
@@ -13,8 +13,8 @@ static func build(hud) -> void:
 		var order: Dictionary = hud._state.trading.offer(hud._state.season_clock.year, slot, hud._state.trading.grower_active(hud._state))
 		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 18); body.add_child(row)
 		row.add_child(hud._icon({"kind":"crop", "crop":order.crop}, 84))
-		hud._refs["contract_details" + suffix] = hud._wrap("", 32, Place.INK, true); row.add_child(hud._refs["contract_details" + suffix])
-		hud._refs["contract_price" + suffix] = hud._wrap("", 27, Place.INK, true); body.add_child(hud._refs["contract_price" + suffix])
+		hud._refs["contract_details" + suffix] = hud.Kit.label(hud, "", 22, hud.Kit.INK, true); row.add_child(hud._refs["contract_details" + suffix])
+		hud._refs["contract_price" + suffix] = hud.Kit.label(hud, "", 16, hud.Kit.MONEY); body.add_child(hud._refs["contract_price" + suffix])
 		body.add_child(hud._wrap("DUE AUTUMN END", 15, Place.MUTED))
 		hud._refs["contract_status" + suffix] = hud._wrap("", 15, Place.INK); body.add_child(hud._refs["contract_status" + suffix])
 		body.add_child(hud._wrap("Missing tonne penalty · " + hud._state.money(hud._state.MarketDecisions.SHORTFALL_FEE), 13, Place.MUTED))
