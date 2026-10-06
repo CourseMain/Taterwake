@@ -33,8 +33,10 @@ func run() -> void:
 	var tree: Node3D = game.world._tree_specs[4].parent
 	check(is_equal_approx(tree.position.x - 17.3 * game.world.LAND_SPACING, 2.0), "station tree moves two world metres sideways")
 	var lobes: int = 0
-	for entry in game.world._season_materials:
-		if entry.kind == "canopy" and tree.is_ancestor_of(entry.mesh): lobes += 1
+	var materials: Array = game.world._season_materials.filter(func(entry): return entry.kind == "canopy").map(func(entry): return entry.material)
+	for mesh in game.world._tree_specs[4].canopy.get_children():
+		if mesh is MeshInstance3D and mesh.material_override in materials: lobes += 1
+		elif mesh is MultiMeshInstance3D and mesh.material_override in materials: lobes += mesh.multimesh.instance_count
 	check(lobes == 3, "station tree has three overlapping canopy lobes")
 	check(not game.world._project_nodes.has("irrigation"),"no unbought sprinkler geometry")
 	farm.climate.Lesson.start(farm)
