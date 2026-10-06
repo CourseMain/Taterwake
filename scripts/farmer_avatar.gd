@@ -24,6 +24,7 @@ var harvest_pose: float = 0.0
 var _run_blend: float = 0.0
 var _built: bool = false
 var hat_style: String = "seasonal"
+var _clothing: Node3D
 var _winter_hat: Node3D
 var _tap_pose: float = 0.0
 var _tap_held: bool = false
@@ -242,11 +243,12 @@ func tap_pose(pressed: bool) -> void:
 
 func _sync_hat() -> void:
 	if _season_outfits.is_empty(): return
-	_season_outfits[1].visible = hat_style == "straw" or (hat_style == "seasonal" and outfit_season == 1)
+	_season_outfits[1].visible = hat_style in ["straw", "flower"] or (hat_style == "seasonal" and outfit_season == 1)
 	if is_instance_valid(_winter_hat): _winter_hat.visible = hat_style == "seasonal" and outfit_season == 3
 
 func apply_appearance(look: Dictionary) -> void:
 	hat_style = str(look.hat)
+	_reward_clothing(hat_style)
 	var skin := Color(str(look.skin)); var shirt := Color(str(look.shirt))
 	for mesh in find_children("*", "MeshInstance3D", true, false):
 		if not mesh.material_override is StandardMaterial3D: continue
@@ -261,3 +263,17 @@ func apply_appearance(look: Dictionary) -> void:
 		var material: StandardMaterial3D = mesh.material_override.duplicate()
 		material.albedo_color = replacement; mesh.material_override = material
 	_sync_hat()
+
+func _reward_clothing(item: String) -> void:
+	if is_instance_valid(_clothing): _rig.remove_child(_clothing); _clothing.queue_free()
+	_clothing = _group(_rig, "EarnedClothing")
+	if item == "flower":
+		for i in range(5): _sphere(_clothing, Vector3(.35 + cos(i * TAU / 5) * .065, 1.84 + sin(i * TAU / 5) * .065, .32), Vector3(.055,.055,.02), Color("f4a3b0"))
+		_sphere(_clothing,Vector3(.35,1.84,.35),Vector3(.034,.035,.015),Color("d9a948"))
+	elif item == "scarf":
+		_sphere(_clothing,Vector3(0,1.08,.37),Vector3(.42,.07,.07),Color("b5523c"))
+		_sphere(_clothing,Vector3(.28,.91,.48),Vector3(.065,.19,.035),Color("b5523c"))
+	elif item == "glasses":
+		for side: float in [-1,1]:
+			var rim := _torus(_clothing,Vector3(side*.20,1.36,.489),.12,.135,Color("17382d")); rim.rotation.x = PI*.5
+		_bar(_clothing,Vector3(-.07,1.36,.489),Vector3(.07,1.36,.489),.015,Color("17382d"))

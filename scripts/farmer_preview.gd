@@ -16,5 +16,10 @@ func _process(delta: float) -> void:
 	avatar.animate(delta)
 	hat_tip = maxf(0, hat_tip - delta)
 	if hat_tip > 0: avatar._rig.rotation.x -= sin(hat_tip / .65 * PI) * .12
-	camera.size = 2.9; camera.look_at(Vector3(0, 1.12, 0))
+	camera.keep_aspect = Camera3D.KEEP_HEIGHT
+	camera.size = 2.45; camera.position = Vector3(0, 1.10, 4.4); camera.look_at(Vector3(0, 1.10, 0))
 	_sync_resolution()
+
+func _draw() -> void:
+	var image: Texture2D = preload("res://assets/ui/farmer_stage.svg")
+	draw_texture_rect(image, Rect2(Vector2.ZERO, size), false)

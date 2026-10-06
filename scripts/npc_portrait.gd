@@ -107,10 +107,13 @@ func show_person(id: String) -> void:
 	avatar = NpcAvatar.new()
 	viewport.add_child(avatar)
 	avatar.configure(id)
-	_background = Cozy.paper(Color(NpcAvatar.Roster.PEOPLE[id].color).darkened(.55), 0, 8, Cozy.WOOD)
+	_background = Cozy.paper(Cozy.CREAM if get_meta("kit_portrait", false) else Color(NpcAvatar.Roster.PEOPLE[id].color).darkened(.55), 0, 14, Color(NpcAvatar.Roster.PEOPLE[id].color))
 	_entrance = 0.0
 	queue_redraw()
 	_sync_resolution()
+
+func set_expression(value: String) -> void:
+	if is_instance_valid(avatar): avatar.set_expression(value)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree() or not is_instance_valid(avatar): return
@@ -122,6 +125,9 @@ func _process(delta: float) -> void:
 	var span: float = clampf(1.55 / maxf(.5,aspect),1.5,2.22)
 	camera.size = lerpf(span+.25,span,smoothstep(0,1,_entrance))
 	camera.look_at(Vector3(0,lerpf(1.48,1.18,(span-1.5)/.72),0))
+	if get_meta("kit_portrait", false):
+		camera.keep_aspect = Camera3D.KEEP_HEIGHT
+		camera.size = 1.05; camera.position = Vector3(0,1.42,4.4); camera.look_at(Vector3(0,1.42,0))
 	_resolution_clock += dt
 	if _resolution_clock >= .5:
 		_resolution_clock = 0

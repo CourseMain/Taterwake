@@ -65,6 +65,10 @@ var farm_help = FarmHelp.new()
 var npc_history: Dictionary = {}
 const FarmerLook = preload("res://scripts/farmer_look.gd")
 const Decorations = preload("res://scripts/farm_decorations.gd")
+signal clothing_earned(item: String)
+const Clothing = preload("res://scripts/clothing_rewards.gd")
+var clothing_unlocked: Array = []
+var clothing_profile_enabled: bool = false
 var farmer_appearance: Dictionary = FarmerLook.fresh()
 var decorations: Dictionary = {}
 var tutorial_progress: Dictionary = {"version": 3, "step": 0, "completed": false, "plot": 5}
@@ -462,6 +466,8 @@ func _season_boundary() -> void:
 		Land.renew(self)
 		ledger.post_fixed_costs(season_clock.year, guided_first_year())
 		if coins < OVERDRAFT_LIMIT and not caretaker_mode: _end_run("foreclosed")
+		if not caretaker_mode and not run_over and season_clock.year >= 5: Clothing.earned(self, "scarf")
+		if not caretaker_mode and ledger.total(season_clock.year) > 0: Clothing.earned(self, "glasses")
 		news = winter_notice()
 	else:
 		news = "Year %d · %s" % [season_clock.year, SeasonClock.NAMES[season_clock.season]]
@@ -679,6 +685,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 		return 0
 	plot["yield_taken"] = int(plot.get("yield_taken", 0)) + quantity
 	Stock.add(storage, id, quantity, int(plot.quality))
+	if not caretaker_mode and Quality.grade(int(plot.quality)) == "Table": Clothing.earned(self, "flower")
 	harvested_total = mini(MAX_INVENTORY, harvested_total + quantity)
 	plot["pending"] = int(plot["pending"]) - quantity
 	if int(plot["pending"]) == 0:
@@ -942,7 +949,7 @@ func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
 		"diversification": diversification.save_data(), "trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
-		"farmer_appearance": farmer_appearance.duplicate(), "decorations": decorations.duplicate(), "graded_harvests": graded_harvests,
+		"clothing_unlocked": clothing_unlocked.duplicate(), "farmer_appearance": farmer_appearance.duplicate(), "decorations": decorations.duplicate(), "graded_harvests": graded_harvests,
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
 		"selected_crop": selected_crop,
 		"seed_inventory": seed_inventory.duplicate(), "storage": storage.duplicate(true), "capacity": capacity, "tools": tools.duplicate(),
@@ -988,6 +995,9 @@ func restore_snapshot(data: Dictionary) -> void:
 	tutorial_progress = data.tutorial_progress.duplicate(true)
 	tutorial_active = false
 	npc_history = data.npc_history.duplicate(true)
+	for item in data.get("clothing_unlocked", []):
+		if item not in clothing_unlocked: clothing_unlocked.append(item)
+	if clothing_profile_enabled: Clothing.write_profile(clothing_unlocked)
 	farmer_appearance = data.get("farmer_appearance", FarmerLook.fresh()).duplicate()
 	decorations = data.get("decorations", {}).duplicate()
 	graded_harvests = int(data.get("graded_harvests", 3 if int(data.harvested_total) > 0 else 0))
@@ -1073,6 +1083,7 @@ func _valid_save(raw: Variant) -> bool:
 	if not raw is Dictionary: return false
 	var data: Dictionary = raw
 	if data.get("schema_version") != SAVE_VERSION or data.get("mechanics_revision") != MECHANICS_REVISION: return false
+	if data.has("clothing_unlocked") and not Clothing.valid(data.clothing_unlocked): return false
 	if data.has("farmer_appearance") and not FarmerLook.valid(data.farmer_appearance): return false
 	if data.has("decorations") and not Decorations.valid(data.decorations): return false
 	if data.has("graded_harvests") and not _number(data.graded_harvests, 0, MAX_INVENTORY, true): return false

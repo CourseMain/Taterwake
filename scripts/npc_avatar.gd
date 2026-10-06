@@ -44,8 +44,8 @@ func configure(id: String) -> void:
 				_sphere(accessories,Vector3(.35+cos(a)*.065,1.84+sin(a)*.065,.32),Vector3(.055,.055,.02),Color("efb2a5"))
 			_sphere(accessories,Vector3(.35,1.84,.35),Vector3(.034,.035,.015),Color("ffe3a0"))
 		"scarf":
-			_sphere(accessories,Vector3(0,1.08,.37),Vector3(.42,.07,.07),Color("f2cd88"))
-			_sphere(accessories,Vector3(.28,.91,.48),Vector3(.065,.19,.035),Color("f2cd88"))
+			_sphere(accessories,Vector3(0,1.08,.37),Vector3(.42,.07,.07),Color("b5523c"))
+			_sphere(accessories,Vector3(.28,.91,.48),Vector3(.065,.19,.035),Color("b5523c"))
 		"duck":
 			_sphere(accessories,_front(-.23,.9,.07),Vector3(.09,.06,.025),Color("fff2c8"))
 			_sphere(accessories,_front(-.18,.96,.10),Vector3(.044,.043,.02),Color("fff2c8"))
@@ -62,11 +62,13 @@ func configure(id: String) -> void:
 			brim.scale.z = .8
 			_sphere(accessories,Vector3(0,2.0,-.02),Vector3.ONE*.11,Color("ccd0b4"))
 		"headset":
-			var band := _torus(accessories,Vector3(0,1.47,0),.43,.475,Color("41555a"))
+			var band := _torus(accessories,Vector3(0,1.47,0),.43,.475,Color("5f9fd6"))
 			band.rotation.x = PI*.5
-			for side: float in [-1,1]: _sphere(accessories,Vector3(side*.47,1.44,.03),Vector3(.095,.13,.10),Color("41555a"))
-			_bar(accessories,Vector3(.49,1.39,.06),Vector3(.30,1.22,.49),.017,Color("41555a"))
-			_sphere(accessories,Vector3(.29,1.22,.49),Vector3(.065,.028,.03),Color("41555a"))
+			for side: float in [-1,1]: _sphere(accessories,Vector3(side*.47,1.44,.03),Vector3(.095,.13,.10),Color("5f9fd6"))
+			_bar(accessories,Vector3(.49,1.39,.06),Vector3(.30,1.22,.49),.017,Color("5f9fd6"))
+			_sphere(accessories,Vector3(.29,1.22,.49),Vector3(.065,.028,.03),Color("5f9fd6"))
+	set_expression("exact" if id == "nell" else ("practical" if id in ["tess", "bram"] else "beaming" if id == "mara" else "uncertain"))
+	_cast_props(accessories)
 	talk_mouth = _sphere(_head,Vector3(0,1.137,.493),Vector3(.081,.055,.014),Color("644638"))
 	talk_mouth.hide()
 	# Combine static costume parts; keep the mouth and articulated parent nodes live.
@@ -174,3 +176,37 @@ func dress(style: String, color: Color, hat_style: String) -> void:
 	if not hat_style.is_empty():
 		var tint: Color = {"straw": Color("e8c06c"), "cap": Color("6da067"), "visor": Color("73aec6"), "worklamp": Color("e0a34f")}[hat_style]
 		_build_hat(costume, hat_style, tint, Color("f3da92"))
+
+func set_expression(value: String) -> void:
+	expression = value
+	if not is_instance_valid(_mouth): return
+	for child in _mouth.get_children(): _mouth.remove_child(child); child.queue_free()
+	for index in range(8):
+		var a: float = -1.0 + index / 4.0
+		var b: float = -1.0 + (index + 1) / 4.0
+		var curve: float = -.04 if value in ["beaming", "pleased", "warm"] else (.035 if value in ["concerned", "uncertain"] else 0.0)
+		_bar(_mouth, Vector3(a * .11, 1.15 + curve * (1 - a * a), .50), Vector3(b * .11, 1.15 + curve * (1 - b * b), .50), .012, Color("17382d"))
+
+func _cast_props(parent: Node3D) -> void:
+	if npc_id == "nell":
+		var book := _group(parent, "NellsLedger")
+		book.position = Vector3(-.60,.81,.18); book.rotation.z = -.18
+		var mesh := BoxMesh.new(); mesh.size = Vector3(.30,.42,.10)
+		_mesh(book, Vector3.ZERO, mesh, Color("79553d"))
+		var pages := BoxMesh.new(); pages.size = Vector3(.24,.34,.105)
+		_mesh(book, Vector3(.02,0,0), pages, Color("f3efdf"))
+	elif npc_id == "mara":
+		_sphere(parent, _front(0,.88,.055), Vector3(.35,.23,.045), Color("6f9a4a"))
+		for side: float in [-1,1]: _bar(parent, _front(side*.24,.95,.06), _front(side*.28,1.12,.025), .025, Color("6f9a4a"))
+	elif npc_id == "tess":
+		_sphere(parent,Vector3(.53,1.40,-.30),Vector3(.12,.14,.12),Color("5e4030"))
+		var clipboard := BoxMesh.new(); clipboard.size = Vector3(.27,.36,.055)
+		_mesh(parent, Vector3(.59,.80,.26), clipboard, Color("79553d"))
+		var sheet := BoxMesh.new(); sheet.size = Vector3(.22,.29,.058)
+		_mesh(parent, Vector3(.59,.80,.27), sheet, Color("f3efdf"))
+	elif npc_id == "iris":
+		for i in range(4): _sphere(parent,Vector3(-.25+i*.14,1.66+i*.018,-.05),Vector3(.15,.09,.12),Color("5e4030"))
+		_cylinder(parent, Vector3(.59,.85,.26), .09,.10,.16, Color("5f9fd6"))
+	elif npc_id == "bram":
+		_sphere(parent,Vector3(.33,1.24,.41),Vector3(.09,.04,.015),Color("5e4030"))
+		_bar(parent, Vector3(.46,1.42,0),Vector3(.48,1.75,0),.024,Color("d9a948"))

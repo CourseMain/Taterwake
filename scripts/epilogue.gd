@@ -182,7 +182,7 @@ func _finish() -> void:
 	axes.land_health = health
 	var outcome: String = classify(axes, exposure, failed_year)
 	var value: float = maxf(0, Balance.INITIAL_LOAN * health + farm.coins - farm.ledger.loan_remaining())
-	result = {"decorations": farm.decorations.duplicate(), "farmer_appearance": farm.farmer_appearance.duplicate(), "outcome": outcome, "axes": axes, "failed_year": failed_year, "years": years.duplicate(true), "records": farm.climate.data.outlook.records.duplicate(true), "farm_value": value, "cash": farm.coins, "debt": farm.ledger.loan_remaining(), "projects": projects.duplicate(), "active_projects": farm.climate.data.projects.duplicate(), "conditions": conditions.duplicate(), "crops": crops.duplicate(), "headlines": headlines(farm.climate.data.outlook.records), "verdicts": verdicts(axes)}
+	result = {"clothing_unlocked": farm.clothing_unlocked.duplicate(), "decorations": farm.decorations.duplicate(), "farmer_appearance": farm.farmer_appearance.duplicate(), "outcome": outcome, "axes": axes, "failed_year": failed_year, "years": years.duplicate(true), "records": farm.climate.data.outlook.records.duplicate(true), "farm_value": value, "cash": farm.coins, "debt": farm.ledger.loan_remaining(), "projects": projects.duplicate(), "active_projects": farm.climate.data.projects.duplicate(), "conditions": conditions.duplicate(), "crops": crops.duplicate(), "headlines": headlines(farm.climate.data.outlook.records), "verdicts": verdicts(axes)}
 	if is_instance_valid(farm.activity_system): farm.activity_system.free()
 	farm.free()
 	farm = null
