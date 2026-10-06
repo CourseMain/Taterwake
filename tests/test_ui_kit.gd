@@ -88,6 +88,9 @@ func run() -> void:
 	check(tiles.get_child_count() == 3, "Winter account details share three tiles")
 	for tile in tiles.get_children():
 		check(tile.has_picture() and not tile.picture.is_empty(), "account detail has a drawing above its name")
+		var font: Font = tile.get_theme_font("font")
+		var inner: float = tile.size.x - tile.get_theme_stylebox("normal").get_minimum_size().x
+		check(Array(tile.text.split(" ")).all(func(word): return font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, tile.get_theme_font_size("font_size")).x <= inner), "account tile wraps between whole words")
 		var label: String = tile.text
 		tile.pressed.emit(); await settle()
 		check(tile.text == label and game.hud._refs[str(tile.get_meta("hud_action")).get_slice(":", 1)].visible, "detail tile opens its original section")

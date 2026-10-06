@@ -2166,7 +2166,13 @@ func _account_detail_tiles() -> void:
 		tile.set_meta("details_tile", true)
 		tile.set_meta("plain_control", false)
 		tile.set_meta("text_tier", 14)
-		tile.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tile.autowrap_mode = TextServer.AUTOWRAP_WORD
+		for variant in ["normal", "hover", "pressed", "disabled"]:
+			var skin: StyleBox = tile.get_theme_stylebox(variant)
+			skin.content_margin_left = ceili(4 * Kit.unit(self))
+			skin.content_margin_right = ceili(4 * Kit.unit(self))
+			skin.content_margin_bottom = ceili(6 * Kit.unit(self))
+			skin.set_meta("caption_top", ceili(6 * Kit.unit(self)))
 		tile.text = str(tile.get_meta("section_title"))
 		tile.picture = pictures[key]
 		tile.picture_pixels = 40
