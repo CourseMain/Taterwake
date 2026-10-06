@@ -2,7 +2,7 @@
 """Build the original potato currency glyph. Dev dependency: fonttools.
 
 The tiny bundled outline font avoids OS-dependent emoji and oversized emoji
-line metrics. It contains only U+E000; all normal text uses the existing fonts.
+line metrics. It contains U+E000 and drawn arrows; normal text uses the two UI faces.
 """
 from pathlib import Path
 from fontTools.fontBuilder import FontBuilder
@@ -41,10 +41,20 @@ contour(pen, [(265, 526), (260, 628), (365, 652), (409, 665), (420, 632),
               (428, 604), (384, 602), (308, 588), (311, 524),
               (290, 502), (265, 526)], reverse=True)
 font = FontBuilder(1000, isTTF=True)
-font.setupGlyphOrder([".notdef", "spudion"])
-font.setupCharacterMap({0xE000: "spudion"})
-font.setupGlyf({".notdef": TTGlyphPen(None).glyph(), "spudion": pen.glyph()})
-font.setupHorizontalMetrics({".notdef": (800, 0), "spudion": (800, 80)})
+arrow_points = [(100,340),(510,340),(375,475),(425,525),(650,300),(425,75),(375,125),(510,260),(100,260)]
+glyphs = {".notdef": TTGlyphPen(None).glyph(), "spudion": pen.glyph()}
+for name, turn in [("arrow", 0), ("up", 1), ("down", -1)]:
+    arrow = TTGlyphPen(None)
+    points = [(x, y) if turn == 0 else (375 - turn * (y - 300), 300 + turn * (x - 375)) for x, y in arrow_points]
+    arrow.moveTo(points[0])
+    for point in points[1:]:
+        arrow.lineTo(point)
+    arrow.closePath()
+    glyphs[name] = arrow.glyph()
+font.setupGlyphOrder(list(glyphs))
+font.setupCharacterMap({0xE000: "spudion", 0x2192: "arrow", 0x2191: "up", 0x2193: "down"})
+font.setupGlyf(glyphs)
+font.setupHorizontalMetrics({name: (800, 80) if name == "spudion" else (750, 100) for name in glyphs})
 font.setupHorizontalHeader(ascent=800, descent=-200, lineGap=0)
 font.setupNameTable({"familyName": "Taterland Spudion", "styleName": "Regular",
                     "uniqueFontIdentifier": "TaterlandSpudion-2.0",

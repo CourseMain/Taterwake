@@ -11,7 +11,7 @@ const SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
 static func face(source: Font, weight: float = 600.0) -> FontVariation:
 	var font := FontVariation.new()
 	font.base_font = BODY_BOLD if source == BODY and weight >= 600 else source
-	font.fallbacks = [SPUDION, SYMBOLS, SYMBOLS_2]
+	font.fallbacks = [SPUDION]
 	font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
 	return font
 

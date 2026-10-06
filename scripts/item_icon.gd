@@ -3,7 +3,7 @@ extends Control
 var item: Dictionary = {}
 const INK: Color = Color("30463a")
 const LEAF: Color = Color("5e7b50")
-const CROP: Dictionary = {"russet": Color("dfb36f"), "golden": Color("f5cc38"), "giant": Color("d7a37b"), "sunburst": Color("ffa629"), "icecap": Color("d8f1ff")}
+const CROP: Dictionary = preload("res://scripts/ui_kit.gd").CROPS
 
 func _ready() -> void:
 	if custom_minimum_size == Vector2.ZERO:
@@ -19,7 +19,7 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 	var id: String = str(data.get("id", "russet"))
 	var kind: String = str(data.get("kind", "crop"))
 	var crop: String = str(data.get("crop", id.get_slice(":", 1) if ":" in id else "russet"))
-	if kind != "metric":
+	if kind not in ["metric", "kit_menu", "practice", "winter_job"]:
 		var wash: Color = Color(str(data.get("backdrop", "e5dec6")))
 		var paper := PackedVector2Array()
 		for i in range(28):
@@ -34,6 +34,19 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			c.draw_circle(Vector2.ZERO, 27, Color("30463a", 0.13))
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
 	match kind:
+		"practice":
+			c.draw_set_transform(Vector2.ZERO)
+			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
+			c.draw_style_box(_box(Color("aeeaff"), 8), Rect2(-28,-22,56,44))
+			c.draw_line(Vector2(-28,-7),Vector2(28,-7),Color("5f9fd6"),4,true)
+		"winter_job":
+			if id in ["ice", "ripe"]:
+				for angle in [0, PI/3, PI*2/3]: c.draw_line(Vector2.from_angle(angle)*-38, Vector2.from_angle(angle)*38, Color("5f9fd6"), 10, true)
+			elif id == "covers": _poly(c, [Vector2(-34,28),Vector2(0,-28),Vector2(34,28),Vector2(-34,28)], Color("b5523c"))
+			else:
+				c.draw_style_box(_box(Color("b5523c"),8),Rect2(-34,-28,68,60))
+				c.draw_line(Vector2(-18,-8),Vector2(18,-8),Color("fffbed"),7,true); c.draw_line(Vector2(-18,12),Vector2(5,12),Color("fffbed"),7,true)
+		"kit_menu": _kit_menu(c, id)
 		"place": _place(c, id)
 		"control": _control(c, id)
 		"forecast": _forecast(c, id, bool(data.get("warning", false)))
@@ -365,3 +378,26 @@ static func _control(c: CanvasItem, id: String) -> void:
 			c.draw_style_box(_box(Color("edc993"),5),Rect2(-16,-34,12,39))
 			c.draw_line(Vector2(-27,7),Vector2(-9,27),Color("edc993"),12,true)
 			for x in [0,12]: c.draw_line(Vector2(x,-8),Vector2(x,15),Color("edc993"),10,true)
+
+static func _kit_menu(c: CanvasItem, id: String) -> void:
+	var kit = preload("res://scripts/ui_kit.gd")
+	match id:
+		"farmer":
+			c.draw_circle(Vector2(0, 5), 24, Color("edc797"))
+			c.draw_line(Vector2(-28,-14), Vector2(28,-14), Color("e4c060"),10,true)
+			c.draw_style_box(_box(Color("e4c060"),5),Rect2(-20,-29,40,15))
+		"dex":
+			c.draw_style_box(_box(kit.WOOD,4),Rect2(-28,-34,56,68))
+			c.draw_style_box(_box(kit.CREAM,3),Rect2(-22,-28,44,56))
+			c.draw_circle(Vector2(0,-5),13,kit.CROPS.golden); c.draw_line(Vector2(-15,20),Vector2(15,20),kit.WOOD,5,true)
+		"sound":
+			_poly(c,[Vector2(-28,-8),Vector2(-12,-8),Vector2(7,-28),Vector2(7,28),Vector2(-12,8),Vector2(-28,8)],kit.KEEPERS.iris)
+			c.draw_arc(Vector2(6,0),27,-.7,.7,20,kit.KEEPERS.iris,5,true)
+		"graphics": _metric(c, "sun")
+		"save":
+			c.draw_style_box(_box(kit.WOOD,4),Rect2(-28,-28,56,56))
+			c.draw_rect(Rect2(-16,-28,32,20),kit.PAPER); c.draw_rect(Rect2(-18,4,36,20),kit.PAPER)
+		"close":
+			c.draw_rect(Rect2(-25,-28,30,56),kit.WOOD2)
+			c.draw_line(Vector2(5,0),Vector2(29,0),kit.PAPER,5,true)
+			c.draw_polyline(PackedVector2Array([Vector2(22,-12),Vector2(34,0),Vector2(22,12)]),kit.PAPER,5,true)

@@ -2,7 +2,7 @@ extends RefCounted
 ## Shared surfaces and interaction states for the farm's illustrated menus.
 const INK: Color = Color("17382d")
 const GREEN: Color = Color("377858")
-const CREAM: Color = Color("fffbed")
+const CREAM: Color = Color("f3efdf")
 const WOOD: Color = Color("79553d")
 static var _paper_textures: Dictionary = {}
 
@@ -58,14 +58,14 @@ static func modal(_dark: bool = false) -> StyleBoxTexture:
 	return paper(INK, 24, 12, WOOD)
 
 static func button_style(state: String, primary: bool) -> StyleBoxFlat:
-	var fill: Color = GREEN if primary else Color("f9f7e9")
+	var fill: Color = GREEN if primary else Color("f3efdf")
 	var border: Color = Color("24563e") if primary else Color("bdc8b0")
 	match state:
 		"hover": fill = Color("3d805b") if primary else Color("e5eddc")
 		"pressed": fill = Color("254e39") if primary else Color("d4dfc9")
 		"disabled":
-			fill = Color("e7e7dc")
-			border = Color("d3d7c7")
+			fill = Color("e8e2cc")
+			border = Color("cdbf9f")
 	var style := box(fill, 10, 999, border)
 	style.border_width_bottom = 1 if state in ["pressed", "disabled"] else 3
 	# Reserve the same space in every state to prevent layout movement.
@@ -93,7 +93,7 @@ static func badge(label: Label, text: String, tone: String = "neutral") -> void:
 	label.add_theme_stylebox_override("normal", style)
 
 static func toggle_texture(enabled: bool) -> ImageTexture:
-	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="42" height="24"><rect x="1" y="1" width="40" height="22" rx="11" fill="%s" stroke="%s"/><circle cx="%d" cy="12" r="8" fill="#fffbed"/></svg>' % ["#377858" if enabled else "#929e89", "#24563e" if enabled else "#7b8873", 30 if enabled else 12]
+	var svg: String = '<svg xmlns="http://www.w3.org/2000/svg" width="42" height="24"><rect x="1" y="1" width="40" height="22" rx="11" fill="%s" stroke="%s"/><circle cx="%d" cy="12" r="8" fill="#fffbed"/></svg>' % ["#377858" if enabled else "#79553d", "#24563e" if enabled else "#5e4030", 30 if enabled else 12]
 	var image := Image.new()
 	image.load_svg_from_string(svg, 2.0)
 	image.resize(42, 24, Image.INTERPOLATE_LANCZOS)
