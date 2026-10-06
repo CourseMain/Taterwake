@@ -4,7 +4,7 @@ The first human sheet is recorded below. Segment 21f responds to this player's b
 
 ## Current build
 
-The first sheet concerns the public v2.0.0 build. Part A shipped as v2.0.1. Parts B–M and the owner’s NPC-first and no-Hurry changes remain in the local v2.0.3 build, which also includes Segment 21g's visible sun and illustrated controls. Publishing remains paused. Each subsequent tester starts a fresh farm in a separate browser profile or clears existing farm data through the normal controls.
+The first sheet concerns the public v2.0.0 build. Part A shipped as v2.0.1. The v2.0.4 playtest release includes the rest of Segment 21f, the owner’s NPC-first and no-Hurry changes, Segment 21g's visible sun and illustrated controls, and Segment 21h's kit and cast. Further owner changes prioritize computer shops, return buying and selling to Mara, remove decoration purchases, make Quieter silent, and fix New Farm and sea-only entry. Each subsequent tester starts a fresh farm in a separate browser profile or uses Menu → Save → Plant a new farm. The three later sheets remain pending.
 
 Ask each person to play as they normally would and say what they are thinking. Start the timer when they begin the game. Let the guide explain the controls; avoid coaching or describing planned features. Record every confusion or idle stretch with elapsed time, year, season and screen. If someone stops, record why. If they continue, ask afterward where they would have stopped when playing alone. Do not assume a completed run means they enjoyed it.
 

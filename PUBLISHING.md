@@ -1,19 +1,19 @@
 # Taterland publishing steps
 
-The v2.0.1 browser build is the ten-year farming survival redesign through Segment 21e, with the Segment 21f title-entry fix, published for playtesting. It is not a
+The v2.0.4 browser build is the ten-year farming survival redesign through Segment 21h, including the first-tester fixes, visible sun and illustrated controls, the UI kit and cast, and the owner's computer shop changes, published for playtesting. It is not a
 Steam submission. Spudions rename the existing game currency; balances,
 prices and save data retain their values.
 
 ## 1. Get the release and test a fresh farm
 
-1. Open https://github.com/CourseMain/Taterwake/releases/tag/v2.0.1.
+1. Open https://github.com/CourseMain/Taterwake/releases/tag/v2.0.4.
 2. Under **Assets**, download `Taterland-Web.zip` for the packaged browser build,
    or use https://coursemain.github.io/Taterwake/.
    The original v1.0.3.1 game is at https://coursemain.github.io/Taterwake/classic/
    and is packaged as `Taterland-Classic-Web.zip` in the v2.0.0 release.
 3. Keep your existing save. Use a separate browser profile for a fresh test farm.
 4. Ask 5–10 people to play without coaching. Watch their first planting,
-   harvest and sale, tool and land purchases, a build perk, island travel,
+   harvest and sale, tool and land purchases, Winter accounts,
    and recovery from debt. Record where they stop or get confused.
 5. Fix blockers before setting a commercial release date. Check an existing
    save as well as a fresh farm after every save-related fix.

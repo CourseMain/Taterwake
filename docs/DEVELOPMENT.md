@@ -11,7 +11,7 @@
 
 ## Development release
 
-The public release remains **v2.0.1**. Local **v2.0.2** implements Segment 21f B–M and the owner’s follow-up for NPC interaction before all services, compact hints and a transparent top row. Publication is paused. The first human sheet is recorded in `PLAYTEST_22.md`; three more fresh testers follow this segment. Segment 22 mechanics remain unstarted.
+The **v2.0.4** playtest release includes Segments 21f–21h and the owner's computer shop, sound, New Farm and sea-only entry fixes. GitHub Pages serves the redesign from `docs/`; the classic v1.0.3.1 page stays at `docs/classic/`. The first human sheet is recorded in `PLAYTEST_22.md`; three more fresh tester sheets remain pending. Segment 22 mechanics remain unstarted.
 
 ## Saves
 
@@ -1327,4 +1327,4 @@ Final validation on Godot **4.7.2 stable**, GL Compatibility, runtime `de73973`:
 
 Browser verification passes the computer Buy/Sell and New Farm buttons at 960×600, 1440×900 and 2888×1804; nine fresh title entries and three saved growing-guide entries; production desktop/phone entry and desktop fullscreen; and all five interaction layouts. The eight screens have phone and computer comparisons beside the kit. Reports and reviewed captures are linked below. Local QA servers and exports do not replace the published build.
 
-Visual review and final validation are recorded in [the v2.0.4 review](style-board/v2.0.4/README.md). Published `docs/index.*`, `docs/classic/` and `web/` remain unchanged. Export and tag are local; publishing remains paused.
+Visual review and final validation are recorded in [the v2.0.4 review](style-board/v2.0.4/README.md). The owner subsequently authorized publishing v2.0.4. The tested production export is copied to `docs/` and its self-contained ZIP accompanies the GitHub release. The classic files, `web/` source and repository visibility remain unchanged; the owner's unrelated project-setting edits stay unstaged. The annotated `v2.0.4` tag preserves the tested source and review, followed by the publication documentation and exported assets.

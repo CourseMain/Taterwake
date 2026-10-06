@@ -205,7 +205,7 @@ the game's WebAssembly assets correctly.
 CONTROLS
 WASD moves your farmer. Click beds and shops to interact; hold and drag
 the farm to pan the camera. Keys 1–5 select farm tools.
-I opens inventory, F meets Nell at the barn to sell, and Esc opens Menu.
+I opens inventory, F meets Mara to buy or sell, and Esc opens Menu.
 Meet the keepers before entering their services.
 Touch: drag the stick to move (outer edge sprints), tap the farm to interact,
 and pinch with two fingers to zoom. Tools holds tools, seeds and zoom +/-.

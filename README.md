@@ -10,15 +10,15 @@ Choose what to plant, when to sell and what to protect. From year three, decide 
 
 The round potato farmer, villagers and handmade 3D island remain, with wood, ink-green frames and cream paper highlights. Your guided first year takes one crop from its seed card through a small Summer storm, a real loss notice, harvest, a sell-or-store choice and the first annual ledger. Later help is optional.
 
-This is **v2.0.1**: the ten-year farming survival redesign through Segment 21e, with the first-launch camera fix and title-only breathing, blinks and Spring petals from Segment 21f. Nell explains the bills and the changes a farm needs, Spring shows a live break-even estimate, and Winter separates work from stored-crop facts. The guided year, warm light, round potato farmer, villagers and handmade island remain. See the [phone screenshots](docs/style-board/tag-o/README.md), [gameplay guide](docs/GAMEPLAY.md), [release notes](docs/RELEASE_v2.0.1.md) and [redesign plan](docs/REDESIGN_PLAN.md). Segment 22 has not been implemented; human playtest notes are still pending.
+This is **v2.0.4**: the ten-year farming survival redesign through Segment 21h, with the paper-and-wood kit, keeper voices and the first three clothing rewards. Computer shops have smaller headings and steady pages. Mara handles buying and selling; the barn holds buyer orders. New Farm works from Menu's Save tile, and entering from the gate keeps the island in view after focus or resize changes. See the [screenshots](docs/style-board/v2.0.4/README.md), [gameplay guide](docs/GAMEPLAY.md), [release notes](docs/RELEASE_v2.0.4.md) and [redesign plan](docs/REDESIGN_PLAN.md). Segment 22 gameplay has not been implemented; further human playtests remain pending.
 
-**[Play Taterland v2.0.1](https://coursemain.github.io/Taterwake/)**
+**[Play Taterland v2.0.4](https://coursemain.github.io/Taterwake/)**
 
 Looking for the old Taterland? [Play the classic version.](https://coursemain.github.io/Taterwake/classic/)
 
 ## Download the browser release
 
-Download **Taterland-Web.zip** from [v2.0.1](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.1). The original v1.0.3.1 download remains **Taterland-Classic-Web.zip** in [v2.0.0](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0). To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
+Download **Taterland-Web.zip** from [v2.0.4](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.4). The original v1.0.3.1 download remains **Taterland-Classic-Web.zip** in [v2.0.0](https://github.com/CourseMain/Taterwake/releases/tag/v2.0.0). To export the source yourself, follow [Build the browser edition](#build-the-browser-edition). Extract the entire archive. On macOS, double-click **Play Web.command**; on Windows, double-click **Play Web.bat**. These local launchers need Python 3. Keep their terminal open while playing.
 
 You can also run `python3 serve.py --open` from the extracted folder. Open the printed HTTP address instead of opening `index.html` directly.
 
@@ -28,7 +28,7 @@ Touch screens get a compact interface with large controls and scrolling menus. D
 
 ## Run the source
 
-Check out the `v2.0.1` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
+Check out the `v2.0.4` tag or the `redesign` branch. Use **Godot 4.7.2** with the Compatibility renderer. Import `project.godot` into Godot and press **F5**, or run:
 
 ```sh
 godot --path .
@@ -53,14 +53,12 @@ On macOS, **Play Taterland.command** locates Godot automatically. Set `GODOT_BIN
 | Home / Touch Tools → Recenter | Restore the camera |
 | Top-left expand/× icon / F11 | Toggle fullscreen |
 | Touch Tools drawer | Select tools and seeds, zoom +/−, recenter, cancel a task |
-| I | Crops and tools |
-| B / U | Market / tool upgrades |
-| F | Sell the selected crop |
-| Hold H / touch Hold to hurry | Run the simulation at 3× while held |
+| I | Potatoes by grade and seeds |
+| F / Sell button | Meet Mara and open her Sell page |
 | F1 | Optional help and Valley tour |
-| Escape / ☰ | Main menu and remaining activities |
+| Escape / Menu | Farmer, collection, sound, graphics, saves and leaving |
 
-The first-year guide selects your tools and pauses at each decision. After the first accounts, close the ledger to work through Winter and prepare for Spring. **F1** opens optional help and the Valley tour. Winter’s jobs card and farm menu offer **Sleep until Spring**, with a stored-crop quote before confirmation.
+The first-year guide selects your tools and pauses at each decision. After the first accounts, close the ledger to work through Winter and prepare for Spring. **F1** opens optional help and the Valley tour. Winter’s jobs card offers **Sleep until Spring**, with a stored-crop quote before confirmation. Use **Menu → Save → Plant a new farm** to start again after confirming.
 
 See the [gameplay guide](docs/GAMEPLAY.md) for crop choices, the annual bills, climate protection and the ending.
 
