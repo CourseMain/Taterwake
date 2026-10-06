@@ -613,7 +613,10 @@ func _interact_station(station: String) -> void:
 		_on_user_action(station)
 
 func _on_user_action(action: String) -> void:
-	if title_active() or conversation.visible: return
+	if title_active(): return
+	if conversation.visible:
+		if conversation.before_shop and action == conversation.service: conversation.finish(true)
+		return
 	if action in ["market", "market:sell", "barn", "tools", "duck_patrol", "climate", "quests", "accounts"]:
 		if _tutorial_active() and not tutorial.allows_action(action): return
 		var keeper: String = {"market":"mara", "market:sell":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell"}[action]
@@ -627,6 +630,9 @@ func _start_conversation(id: String, requested_service: String = "", before_shop
 	var return_service: String = requested_service if not requested_service.is_empty() else state.NpcRoster.PEOPLE[id].service
 	if id == "nell" and requested_service.is_empty(): return_service = "accounts"
 	if id == "edwin": return_service = "accounts"
+	if before_shop and not state.NpcRoster.claim_service_greeting(id, state):
+		_on_action(return_service)
+		return
 	hud.set_panel_source(return_service)
 	_cancel_walk()
 	_close_equipment()

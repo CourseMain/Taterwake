@@ -114,6 +114,6 @@ func entrances() -> void:
 	for season in range(4):
 		game.state.season_clock.season = season
 		game._on_user_action("accounts")
-		check(game.conversation.visible and game.conversation.service == "accounts", "Nell greets before accounts in every season")
-		game.conversation.choose(0)
+		check((game.conversation.visible and game.conversation.service == "accounts") if season > 0 else (not game.conversation.visible and game.hud._panel_kind == "accounts"), "Nell greets once per season across her services")
+		if game.conversation.visible: game.conversation.choose(0)
 		check(game.hud._panel_kind == "accounts", "Nell opens the same canonical accounts")

@@ -75,7 +75,9 @@ func _ready() -> void:
 	speech.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	speech.mouse_filter = Control.MOUSE_FILTER_STOP
 	speech.gui_input.connect(func(event: InputEvent):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: reveal())
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if before_shop: finish(true)
+			else: reveal())
 	speech_bubble = PanelContainer.new()
 	var bubble := Cozy.paper(Cozy.CREAM, 16, 8, Cozy.INK)
 	speech_bubble.add_theme_stylebox_override("panel",bubble)
@@ -309,7 +311,9 @@ func _input(event: InputEvent) -> void:
 		KEY_ESCAPE: finish()
 		KEY_SPACE:
 			# Space/E that opened a conversation cannot immediately close it.
-			if _entry_time > .15: reveal()
+			if _entry_time > .15:
+				if before_shop: finish(true)
+				else: reveal()
 		KEY_1,KEY_2,KEY_3: choose(event.physical_keycode-KEY_1)
 		KEY_TAB,KEY_ENTER: return
 		_: pass
@@ -323,3 +327,9 @@ func finish(open_service: bool = false) -> void:
 	set_process(false)
 	if is_instance_valid(portrait): portrait.avatar.speaking = false
 	finished.emit(service if open_service else "")
+
+func _gui_input(event: InputEvent) -> void:
+	if not visible or not before_shop: return
+	if (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch and event.pressed):
+		accept_event()
+		finish(true)

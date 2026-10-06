@@ -88,7 +88,7 @@ static func greeting(id: String, state, record: bool = false) -> String:
 	if line == str(memory.get("last", "")): line = str(p.daily[visits % p.daily.size()])
 	if id == "nell" and state.season_clock.season == 3: line = ledger_lines(state)
 	if id == "edwin": line = bank_line(state)
-	if record: state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false))}
+	if record: state.npc_history[id] = {"visits":mini(visits + 1, 100000), "last":line, "kind":bool(memory.get("kind", false)), "greeted_season":int(memory.get("greeted_season", 0))}
 	return line
 static func weather_line(id: String, state) -> String:
 	if id == "bram" and state.climate.data.event == "freeze": return "Use hoe. Then clear ice."
@@ -111,6 +111,7 @@ static func valid_history(raw: Variant) -> bool:
 		var m: Dictionary = raw[id]
 		var visits: Variant = m.get("visits")
 		if not (visits is int or visits is float) or not is_finite(float(visits)) or visits < 0 or visits > 100000 or float(visits) != floorf(float(visits)): return false
+		if m.has("greeted_season") and not preload("res://scripts/save_validation.gd").number(m.greeted_season, 0, 43, true): return false
 		if not m.get("kind") is bool or not m.get("last") is String or m.last.length() > 600: return false
 	return true
 
@@ -126,3 +127,11 @@ const SEASON_GREETINGS := {
 static func service_greeting(id: String, state) -> String:
 	var farmer: String = str(state.farmer_appearance.get("name", "Farmer")).split(" ")[0]
 	return str(SEASON_GREETINGS[id][state.season_clock.season]).replace("{name}", farmer)
+
+static func claim_service_greeting(id: String, state) -> bool:
+	var stamp: int = state.season_clock.year * 4 + state.season_clock.season
+	var memory: Dictionary = state.npc_history.get(id, {"visits":0,"last":"","kind":false})
+	if int(memory.get("greeted_season",0)) == stamp: return false
+	memory.greeted_season = stamp
+	state.npc_history[id] = memory
+	return true
