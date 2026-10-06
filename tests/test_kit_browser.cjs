@@ -6,7 +6,7 @@ const out = process.env.TATER_KIT_OUTPUT || 'docs/style-board/v2.0.4';
 fs.mkdirSync(out, { recursive: true });
 (async () => {
   const browser = await chromium.launch({
-    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    executablePath: process.env.CHROME_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     headless: true,
     args: ['--use-angle=metal'],
   });

@@ -121,6 +121,11 @@ func run() -> void:
 		if page == "market": check(game.hud._refs.market_page.grid.columns == 5, "five seed cards spread across the computer")
 		if page == "accounts": check(game.hud._refs.accounts_net.get_parent().get_parent() is HBoxContainer, "figures and records occupy separate desktop columns")
 	game.hud.close_panel(); game.hud.show_panel("menu", farm); await settle()
+	game.hud.show_market(true, farm); await settle()
+	for crop in game.hud._refs.market_page.sale_rows:
+		var row: Dictionary = game.hud._refs.market_page.sale_rows[crop]
+		check(row.title.get_theme_color("font_color") == Kit.CROPS[crop] and row.price.get_theme_color("font_color") == Kit.CROPS[crop] and row.history.line_color == Kit.CROPS[crop], "sale name, quote and chart share the crop colour")
+	game.hud.show_panel("menu", farm); await settle()
 	game.hud._body.find_child("MenuTile_save_page", true, false).pressed.emit(); await settle()
 	check(game.hud._panel_kind == "save_page", "Menu Save opens save and new-farm choices")
 	game.hud._body.find_children("*", "Button", true, false).filter(func(b):return b.get_meta("hud_action", "") == "request_reset")[0].pressed.emit(); await settle()

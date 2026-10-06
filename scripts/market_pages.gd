@@ -115,6 +115,8 @@ func _build_sell() -> void:
 	for crop in crops:
 		var pick := _local_button(hud._crop_name(crop), "market_crop:" + crop, func(): select_variety(crop))
 		pick.picture = {"kind":"crop", "crop":crop}; pick.picture_pixels = 38
+		for variant in ["font_color", "font_hover_color", "font_pressed_color"]:
+			pick.add_theme_color_override(variant, Kit.CROPS[crop])
 		pick.set_meta("plain_control", false)
 		pick.custom_minimum_size = Vector2(110, 76) * Kit.unit(hud); varieties.add_child(pick)
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
@@ -127,9 +129,9 @@ func _build_sell() -> void:
 		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); column.add_child(row)
 		row.add_child(hud._icon({"kind": "crop", "crop": crop}, 54))
 		var words: VBoxContainer = hud._vbox(2); words.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(words)
-		var title := _label(hud._crop_name(crop), 20, INK, true); words.add_child(title)
+		var title := _label(hud._crop_name(crop), 20, Kit.CROPS[crop], true); words.add_child(title)
 		var quotes := HBoxContainer.new(); quotes.add_theme_constant_override("separation", 8); words.add_child(quotes)
-		var price := _label("", 22); price.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quotes.add_child(price)
+		var price := _label("", 22, Kit.CROPS[crop]); price.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quotes.add_child(price)
 		var change := _label("", 14); change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; change.autowrap_mode = TextServer.AUTOWRAP_OFF; change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		change.add_theme_stylebox_override("normal", Place.skin(Place.PAPER, 5, 100)); quotes.add_child(change)
 		var tail: VBoxContainer = hud._vbox(5); tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL; column.add_child(tail)
@@ -323,7 +325,7 @@ func refresh() -> void:
 			entry.grades[word].visible = stock(crop, word) > 0
 			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
 			preload("res://scripts/grade_stamp.gd").apply(entry.grades[word], word)
-		entry.history.set_history(price_history(crop, selected_grade if crop == selected else "Standard"), MUTED)
+		entry.history.set_history(price_history(crop, selected_grade if crop == selected else "Standard"), Kit.CROPS[crop])
 		entry.history.set_expected_price(state.trading.peak_price(crop, selected_grade if crop == selected else "Standard"))
 		entry.owned.text = "%d fresh tonnes" % stock(crop)
 	var chosen: Dictionary = sale_rows[selected]
