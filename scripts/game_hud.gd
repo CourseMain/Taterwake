@@ -594,7 +594,8 @@ func _apply_tutorial_visibility() -> void:
 	var card_width: float = minf(219.0, maxf(138.0, available_width))
 	# progress label and exit controls cannot force a 214px overlap.
 	(_tutorial_cue.get_parent() as BoxContainer).vertical = false
-	_tutorial_card.position = Vector2(28.0, 136.0)
+	var top: float = maxf(136.0, _weather_button.get_global_rect().end.y + 10.0) if _weather_button.visible else 136.0
+	_tutorial_card.position = Vector2(28.0, top)
 	_tutorial_title.custom_minimum_size.x = card_width - 30.0
 	_tutorial_body.custom_minimum_size.x = card_width - 30.0
 	_tutorial_card.size = Vector2(card_width, 0.0)

@@ -87,6 +87,7 @@ func run() -> void:
 			check(game._camera_home_position.is_equal_approx(home), "Continue does not promote a saved pan into the Home overview")
 			center = camera.unproject_position(Vector3.ZERO) / game.farm_viewport.get_visible_rect().size
 			check(center.x > .2 and center.x < .8 and center.y > .2 and center.y < .8, "returning growing farm stays centred on its first entry")
+			check(not game.hud._tutorial_card.get_global_rect().intersects(game.hud._weather_button.get_global_rect()), "guided growing card leaves Weather clear at " + str(size))
 			if attempt == 0: await capture_view("returning-farm-" + str(size.x))
 			game.queue_free()
 			for frame in range(6): await process_frame
