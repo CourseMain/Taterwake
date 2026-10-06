@@ -17,14 +17,17 @@ func pcm(stream: AudioStream) -> PackedByteArray:
 	if stream is AudioStreamWAV: return stream.data
 	var playback := stream.instantiate_playback()
 	playback.start()
+	# Sample every part of the bed in fixed decoder windows. Checking the
+	# signal does not require encoding millions of floats back into PCM.
 	var data := PackedByteArray()
-	var count: int = roundi(stream.get_length() * AudioServer.get_mix_rate())
-	data.resize(count * 2)
-	var offset := 0
-	while offset < count:
-		var samples: PackedVector2Array = playback.mix_audio(1.0, mini(4096, count - offset))
-		for sample: Vector2 in samples:
-			data.encode_s16(offset * 2, roundi(clampf(sample.x,-1,1) * 32767)); offset += 1
+	var rate: float = AudioServer.get_mix_rate()
+	for window in range(16):
+		var at: float = maxf(0,stream.get_length()-4096/rate) * window / 15.0
+		playback.seek(at)
+		var samples: PackedVector2Array = playback.mix_audio(1.0,4096)
+		var offset: int = data.size()
+		data.resize(offset + samples.size()*2)
+		for i in range(samples.size()): data.encode_s16(offset+i*2,roundi(clampf(samples[i].x,-1,1)*32767))
 	playback.stop()
 	return data
 

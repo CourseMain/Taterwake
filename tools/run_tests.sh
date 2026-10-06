@@ -36,10 +36,10 @@ logs.mkdir(parents=True, exist_ok=True)
 summary_re = re.compile(r"^[^:\n]+: ([0-9]+ checks?, )?([0-9]+) failures?", re.MULTILINE)
 error_re = re.compile(r"^\s*(?:SCRIPT ERROR|ERROR|USER ERROR|Parse Error):", re.MULTILINE)
 
-def execute(command, log):
+def execute(command, log, timeout=None):
     try:
         with log.open("w") as output:
-            result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, timeout=args.timeout)
+            result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, timeout=timeout or args.timeout)
         return result.returncode, False
     except subprocess.TimeoutExpired:
         return None, True
@@ -61,7 +61,7 @@ if needs_import:
 
 def run(suite):
     log = logs / (suite.stem + ".log")
-    code, timed_out = execute([engine, "--headless", "--path", ".", "--script", "res://" + suite.as_posix(), "--", "--integration-test"], log)
+    code, timed_out = execute([engine, "--headless", "--path", ".", "--script", "res://" + suite.as_posix(), "--", "--integration-test"], log, max(args.timeout, STANDALONE.get(suite.stem, 0)))
     output = log.read_text(errors="replace")
     summaries = list(summary_re.finditer(output))
     summary = " | ".join(match.group(0) for match in summaries) or "no suite summary"
@@ -77,11 +77,21 @@ def run(suite):
         status = "PASS"
     return {"suite": suite.stem, "status": status, "summary": summary, "exit_code": code, "log": str(log)}
 
+# These suites own long simulations or decoder work; never compete for CPU.
+# They still run in every full invocation and report through the same checks.
+STANDALONE = {"test_tuning_bot": 1500, "test_epilogue": 1500,
+              "test_season_clock": 180, "test_farm_audio": 180}
+parallel = [suite for suite in suites if suite.stem not in STANDALONE]
+standalone = [suite for suite in suites if suite.stem in STANDALONE]
 results = []
 with concurrent.futures.ThreadPoolExecutor(max_workers=args.j) as pool:
-    for result in pool.map(run, suites):
+    for result in pool.map(run, parallel):
         results.append(result)
         print(f"{result['status']:7} {result['suite']} | {result['summary']}", flush=True)
+for suite in standalone:
+    result = run(suite)
+    results.append(result)
+    print(f"{result['status']:7} {result['suite']} | {result['summary']}", flush=True)
 (logs / "results.json").write_text(json.dumps(results, indent=2) + "\n")
 counts = {status: sum(r['status'] == status for r in results) for status in ("PASS", "FAIL", "TIMEOUT", "ERRORS")}
 print("Total: " + ", ".join(f"{count} {status}" for status, count in counts.items()) + f" | logs: {logs}")

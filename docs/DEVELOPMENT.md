@@ -36,7 +36,7 @@ tools/run_tests.sh -j 1 test_save_safety test_game
 
 The runner imports when `.godot/imported` is missing or an asset `.import` file is newer than it; `--import` forces a refresh. It discovers every `tests/test_*.gd` except `*_browser.*`, and passes `-- --integration-test` to each suite. Optional suite names can include `tests/` and `.gd`. `--timeout 180` sets the per-process timeout in seconds (180 by default, also used for import). Each suite prints one PASS/FAIL/TIMEOUT/ERRORS line with its own check/failure summary, including names containing spaces, slashes and plus signs. Nonzero failure counts or process exits fail; missing summaries and engine/script errors also fail, even with exit code zero. Full logs and `results.json` are in `artifacts/test-results/` and are replaced for the suites run. The runner exits nonzero unless every selected suite passes.
 
-The tuning bot simulates 150 runs; use a 1,500-second timeout and run it separately from the epilogue to avoid CPU contention; the runner’s default remains 180 seconds for short suites.
+The runner completes the parallel batch before running `test_epilogue`, `test_farm_audio`, `test_season_clock` and `test_tuning_bot` individually. Every full invocation includes all four. Bot and epilogue have a 1,500-second minimum budget; other suites retain the 180-second default. Explicit standalone reruns remain required before tagging. Audio signal checks sample sixteen fixed decoder windows across each bed; grade-hint stability counts actual layout passes rather than elapsed time or delayed resize signals.
 
 ### Baseline
 

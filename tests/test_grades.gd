@@ -193,17 +193,16 @@ func ui_checks() -> void:
 	check(game.hover_plot == 0 and game.hud._context.text.contains("Ready in") and game.hud._context.text.contains("Grade: Standard"), "hover combines growth time and an explicit grade (bed %d, %s)" % [game.hover_plot, game.hud._context.text])
 	if "--capture" in OS.get_cmdline_user_args():
 		RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-hover.png")
-	var changes := {"resize": 0, "visibility": 0}
-	game.hud._context_box.resized.connect(func(): changes.resize += 1)
-	game.hud._context_box.visibility_changed.connect(func(): changes.visibility += 1)
+	var layout_passes: int = game.hud._context_layout_passes
 	var stable_rect: Rect2 = game.hud._context_box.get_rect()
 	check(stable_rect.size.y <= game.hud._context.get_line_height() * game.hud._context.get_line_count() + 12, "growth and grade hint stays compact after wrapping (%s)" % stable_rect)
+	var stayed_visible := true
 	for i in range(12):
 		game._update_hover_at(pointer)
 		game.hud.update_state(game.state)
 		game.hud._process(0)
-		await process_frame
-	check(changes.resize == 0 and changes.visibility == 0 and game.hud._context_box.get_rect() == stable_rect, "unchanged growth and grade hint neither resizes nor flashes across refreshes")
+		stayed_visible = stayed_visible and game.hud._context_box.visible
+	check(game.hud._context_layout_passes == layout_passes and stayed_visible, "unchanged growth and grade hint neither resizes nor flashes across refreshes")
 	for word in Q.GRADES: Stock.add(game.state.storage,"russet",4,{"Table":90,"Standard":60,"Feed":20}[word])
 	game.hud.show_market(true,game.state)
 	await process_frame

@@ -138,6 +138,7 @@ var _tool_caption: Label
 var _context_box: PanelContainer
 var _hover_context: String = ""
 var _context_layout_key: String = ""
+var _context_layout_passes: int = 0
 var _farm_hint: String = ""
 var _farm_hint_remaining: float = 0.0
 var _farm_busy_remaining: float = 0.0
@@ -1375,6 +1376,7 @@ func _update_context() -> void:
 	var layout_key: String = "%s|%s|%s|%s" % [text, root.size.x, touch_enabled, seed_row]
 	if layout_key == _context_layout_key: return
 	_context_layout_key = layout_key
+	_context_layout_passes += 1
 	# Measure at the displayed font size; reflow only when the hint or layout changes.
 	_context.set_meta("text_tier", 22 if text.begins_with("Ready in ") else 14)
 	var font_size: int = text_pixels(int(_context.get_meta("text_tier")))
