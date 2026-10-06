@@ -170,6 +170,19 @@ func paper_pages() -> void:
 			game.touch_controls.fit_modal()
 			await settle()
 			check_menu(tag + " " + kind)
+			if kind == "climate" and requested == Vector2i(390,844):
+				var page = game.hud._refs.weather_page
+				var fonts: Dictionary = {}
+				var sizes: Dictionary = {}
+				for text: Control in page.find_children("*", "Control", true, false):
+					if text is Label or text is Button:
+						fonts[text] = text.get_theme_font("font")
+						sizes[text] = text.get_theme_font_size("font_size")
+				page._layout()
+				for text: Control in fonts:
+					check(text.get_theme_font("font") == fonts[text] and text.get_theme_font_size("font_size") == sizes[text], "Weather resize retains its fitted font: " + text.name)
+				await settle()
+				check_menu(tag + " settled climate")
 			if kind == "accounts":
 				game.hud._refs.account_records.show()
 				await settle()
