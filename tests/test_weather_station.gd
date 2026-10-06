@@ -30,6 +30,12 @@ func run() -> void:
 	await frames()
 	game._on_action("climate")
 	check(game.hud._refs.weather_page._grid.get_child_count() == 5,"protection effects live on four instrument tiles")
+	var tree: Node3D = game.world._tree_specs[4].parent
+	check(is_equal_approx(tree.position.x - 17.3 * game.world.LAND_SPACING, 2.0), "station tree moves two world metres sideways")
+	var lobes: int = 0
+	for entry in game.world._season_materials:
+		if entry.kind == "canopy" and tree.is_ancestor_of(entry.mesh): lobes += 1
+	check(lobes == 3, "station tree has three overlapping canopy lobes")
 	check(not game.world._project_nodes.has("irrigation"),"no unbought sprinkler geometry")
 	farm.climate.Lesson.start(farm)
 	check(not farm.climate.Lesson.active(farm),"lesson cannot grant irrigation")

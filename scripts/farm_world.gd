@@ -1252,7 +1252,7 @@ func _windmill(pos: Vector3) -> void:
 	_sphere(_rotor, Vector3(0.0, 0.0, 0.14), Vector3(0.27, 0.27, 0.18), GOLD)
 
 func _scenery() -> void:
-	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(19.3, 0, -0.5)]:
+	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3 + 2.0 / LAND_SPACING, 0, -0.5)]:
 		_tree(pos, _rng.randf_range(0.85, 1.2))
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
