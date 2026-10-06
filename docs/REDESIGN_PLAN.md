@@ -1519,10 +1519,10 @@ G. One way to do each thing. There are 24 action routes into selling
    Winter stores lines, quest links). A first player cannot build a map
    of the farm when every thing has five doors. Write the entrance map
    and enforce it:
-     Sell or store potatoes ... the barn, and only the barn. The HUD
-       Sell button is a shortcut that opens the same barn page.
-     Buy seeds ................ Mara's stall. Remove the Sell tab from
-       her shop.
+     Buy seeds, sell or store potatoes ... Mara's stall, Buy / Sell
+       tabs (owner's decision, replacing the earlier barn-only rule).
+       The HUD Sell button is a shortcut to Mara's Sell tab.
+     Buyer orders and deals ... the barn.
      Accounts, bills, leases .. Nell, any season. In Winter Nell opens
        the accounts, and the accounts page has one link "Go to the
        barn"; the barn stays reachable by walking to it and by Sell.
@@ -1534,11 +1534,13 @@ G. One way to do each thing. There are 24 action routes into selling
    way to close it. Update the entrance test in test_ui_audit so a new
    route fails the suite.
 
-H. Keepers open their service, not a conversation. Tapping Mara opens
-   the seed page with her one line as the page header; tapping Nell
-   opens the accounts the same way. The chat ("You mend all these
-   bags?", "How's the weather looking?") moves to a small "Talk" button
-   on that page. The screenshot of Mara's dialogue is a full screen of
+H. Keepers greet, then serve (owner's decision, replacing the earlier
+   service-first rule). Tapping a keeper shows their one-line seasonal
+   greeting with a single button for their service; the same tap
+   dismisses the greeting and opens the service, and the greeting does
+   not repeat for that keeper in the same season. The chat ("You mend
+   all these bags?", "How's the weather looking?") lives behind a small
+   "Talk" button on the service page. The screenshot of Mara's dialogue is a full screen of
    portrait and empty brown panel with the real action third from the
    top; that screen goes.
 
@@ -1781,16 +1783,12 @@ B. Not built, claimed or silent:
       key 13, stat titles 10, detail rows 12). Raise every one to 14
       or remove it; add a suite check that fails on any label under 14.
 
-C. Built the opposite way, attributed to the owner. The handoff and
-   ENTRANCE_MAP.md say "the owner's later instruction" restored
-   Buy/Sell tabs inside Mara's page (21f G said sell only at the barn)
-   and "the owner's later request" put a keeper greeting before every
-   service (21f H said tap opens the service). If the owner gave those
-   instructions, the plan is wrong and this item is closed; if not,
-   revert both to the plan. Either way, the greeting-before-service
-   adds a tap to every entrance including HUD Sell and Weather; the
-   greeting must be dismissable by the same tap that opens the service
-   and must not appear twice in one season.
+C. Closed. The owner confirms both later instructions: potatoes are
+   sold on Mara's page beside seeds (Buy / Sell tabs), and a keeper's
+   greeting shows before every service. Segment 21f G and H are
+   amended below to match. One rule still applies to the greeting: the
+   same tap that opens the service dismisses it, and it never shows
+   twice in one season for the same keeper.
 
 D. Size. docs/index.pck went from 4.6 MB to 15.8 MB because the six
    nature beds and the wind are uncompressed 2 MB WAV files. Convert
