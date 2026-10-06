@@ -206,6 +206,8 @@ func _resume_loaded_farm(returning: bool) -> void:
 	elif not bool(state.tutorial_progress.get("completed", false)):
 		tutorial.start()
 		if returning: hud.close_panel()
+	world.fit_overview(state.guided_first_year())
+	_reset_camera_view(true)
 	world._player_body.apply_appearance(state.farmer_appearance)
 	if not returning and not state.farmer_appearance.chosen:
 		hud.show_panel("farmer", state)
@@ -763,7 +765,7 @@ func _zoom_by_log_amount(amount: float) -> void:
 
 func _update_camera_zoom(delta: float) -> void:
 	if is_instance_valid(world.camera):
-		var overview: float = world.overview_size()
+		var overview: float = world.entry_size(state.guided_first_year())
 		if not is_equal_approx(overview, _camera_home_size):
 			var ratio: float = overview / _camera_home_size
 			world.camera.size *= ratio

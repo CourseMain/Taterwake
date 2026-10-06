@@ -56,13 +56,13 @@ func run() -> void:
 			game.title_scene.walk.pressed.emit()
 			game._process(1.2)
 			var camera: Camera3D = game.world.camera
-			check(is_equal_approx(camera.size,game.world.overview_size()),"fresh overview size ignores stale title snapshot at " + str(size))
+			check(is_equal_approx(camera.size,game.world.entry_size(true)),"fresh guided size ignores stale title snapshot at " + str(size))
 			check(camera.position.y > 0 and camera.position.x < 100,"fresh overview position ignores stale title snapshot")
 			check(game._camera_home_position.is_equal_approx(camera.global_position) and is_equal_approx(game._camera_home_size,camera.size),"fresh Home and zoom defaults adopt the fitted overview")
 			var entered: Transform3D = camera.transform
 			game._process(.1)
 			check(camera.transform.is_equal_approx(entered),"the next gameplay frame cannot pull the camera back to its stale Home position")
-			var center: Vector2 = camera.unproject_position(Vector3(0,0,0)) / game.farm_viewport.get_visible_rect().size
+			var center: Vector2 = camera.unproject_position(game.world.layout_point(Vector3(-2,0,3))) / game.farm_viewport.get_visible_rect().size
 			check(center.x > .2 and center.x < .8 and center.y > .2 and center.y < .8,"the island remains centred after fresh Walk")
 			if attempt == 0: await capture_view("fresh-farm-" + str(size.x))
 			game.hud.close_panel()
@@ -74,7 +74,6 @@ func run() -> void:
 			# the overview, while Continue restores that farmer's actual view.
 			camera.global_position += Vector3(2,0,1)
 			game._stop_map_navigation()
-			var returning_camera: Transform3D = camera.transform
 			var returning_pan: Vector3 = game._camera_pan_offset
 			game._show_title(true)
 			game.title_scene.advance(6)
@@ -83,9 +82,9 @@ func run() -> void:
 			check(game._camera_pan_offset.is_equal_approx(returning_pan), "title focus and resize cannot become farm navigation")
 			game.title_scene.walk.pressed.emit()
 			for frame in range(60): game._process(1.0/60.0)
-			check(camera.transform.is_equal_approx(returning_camera), "Continue stays on the island after title focus and resize at " + str(size))
+			check(camera.transform.is_equal_approx(entered) and is_equal_approx(camera.size,game.world.entry_size(true)), "Continue fits the guided farm after title focus and resize at " + str(size))
 			check(game._camera_home_position.is_equal_approx(home), "Continue does not promote a saved pan into the Home overview")
-			center = camera.unproject_position(Vector3.ZERO) / game.farm_viewport.get_visible_rect().size
+			center = camera.unproject_position(game.world.layout_point(Vector3(-2,0,3))) / game.farm_viewport.get_visible_rect().size
 			check(center.x > .2 and center.x < .8 and center.y > .2 and center.y < .8, "returning growing farm stays centred on its first entry")
 			check(not game.hud._tutorial_card.get_global_rect().intersects(game.hud._weather_button.get_global_rect()), "guided growing card leaves Weather clear at " + str(size))
 			if attempt == 0: await capture_view("returning-farm-" + str(size.x))

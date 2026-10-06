@@ -264,7 +264,10 @@ func finish() -> void:
 	active = false
 	game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false)
-	if not was_tour: game.state.farm_help.enable()
+	if not was_tour:
+		game.state.farm_help.enable()
+		game.world.fit_overview()
+		game._reset_camera_view(true)
 	game._cancel_walk()
 	if not game.state.accounts_open: game.hud.close_panel()
 	game.hud.set_tutorial({})

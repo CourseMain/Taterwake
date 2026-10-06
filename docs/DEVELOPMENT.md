@@ -1328,3 +1328,7 @@ Final validation on Godot **4.7.2 stable**, GL Compatibility, runtime `de73973`:
 Browser verification passes the computer Buy/Sell and New Farm buttons at 960×600, 1440×900 and 2888×1804; nine fresh title entries and three saved growing-guide entries; production desktop/phone entry and desktop fullscreen; and all five interaction layouts. The eight screens have phone and computer comparisons beside the kit. Reports and reviewed captures are linked below. Local QA servers and exports do not replace the published build.
 
 Visual review and final validation are recorded in [the v2.0.4 review](style-board/v2.0.4/README.md). The owner subsequently authorized publishing v2.0.4. The tested production export is copied to `docs/` and its self-contained ZIP accompanies the GitHub release. The classic files, `web/` source and repository visibility remain unchanged; the owner's unrelated project-setting edits stay unstaged. The annotated `v2.0.4` tag preserves the tested source and review, followed by the publication documentation and exported assets.
+
+## Segment 21i · v2.0.4 review fixes
+
+Owner's decision · 2026-10-06: Part C is closed. Mara keeps her Buy/Sell tabs and keeper greetings remain. The same service tap dismisses the greeting and opens that service; a keeper never greets twice in one season. Implement only A, B, D, E and F in that order, then tag v2.0.5. This segment does not authorize publication.

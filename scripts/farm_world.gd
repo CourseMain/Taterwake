@@ -512,9 +512,38 @@ func _clear_world() -> void:
 	_tutorial_plot_outline = null
 	_tutorial_trail.clear()
 
+func _entry_bounds(guided: bool = false) -> Rect2:
+	# Measure the actual silhouette along the play camera's axes.
+	var points: Array[Vector3] = []
+	if guided:
+		for x: float in [-9.0, 5.5]:
+			for z: float in [-3.5, 12.0]:
+				points.append(layout_point(Vector3(x, 0, z)))
+		points.append(title_gate.global_position + Vector3(0, 3.8, 0))
+	else:
+		for z: float in [-Surface.EXTENT.y * .5, 0, Surface.EXTENT.y * .5]:
+			for side: float in [-1, 1]:
+				var x: float = side * Surface.half_width(z)
+				points.append(Vector3(x, Surface.height_at(x, z), z))
+				points.append(Vector3(side * Surface.half_width(z), -2.2, z))
+	var bounds := Rect2()
+	for i in range(points.size()):
+		var point := Vector2(camera.basis.x.dot(points[i]), camera.basis.y.dot(points[i]))
+		if i == 0: bounds = Rect2(point, Vector2.ZERO)
+		else: bounds = bounds.expand(point)
+	return bounds
+
 func overview_size() -> float:
 	var view: Vector2 = get_viewport().get_visible_rect().size
+	if view.x < view.y:
+		return _entry_bounds().size.x * view.y / maxf(view.x, 1.0)
 	return maxf(76.0, 110.0 * view.y / maxf(view.x, 1.0))
+
+func entry_size(guided: bool = false) -> float:
+	if not guided: return overview_size()
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var bounds := _entry_bounds(true)
+	return maxf(18.0, maxf(bounds.size.y * 1.3, bounds.size.x * 1.08 * view.y / maxf(view.x, 1.0)))
 
 func _lighting() -> void:
 	var environment_node := WorldEnvironment.new()
@@ -552,14 +581,17 @@ func _lighting() -> void:
 	camera.current = true
 
 
-func fit_overview() -> void:
-	# Compute the overview from the current viewport, including first Web entry.
-	camera.size = overview_size()
+func fit_overview(guided: bool = false) -> void:
+	# Framing is ready before the first farm draw, including Continue.
 	camera.position = Vector3(14.0, 35.0, 43.0) * LAND_SPACING
 	camera.look_at(Vector3(-1.0, 0.3, -5.0))
-	# Orthographic scale is unchanged by backing away along the viewing axis.
-	# Keep even the lowest portrait ray above sea level.
-	camera.position += camera.basis.z * 190.0
+	camera.size = entry_size(guided)
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	if guided or view.x < view.y:
+		var centre: Vector2 = _entry_bounds(guided).get_center()
+		camera.position = camera.basis.x * centre.x + camera.basis.y * centre.y + camera.basis.z * 260.0
+	else:
+		camera.position += camera.basis.z * 190.0
 	fit_camera_depth()
 
 

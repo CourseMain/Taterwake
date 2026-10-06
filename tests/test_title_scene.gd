@@ -104,7 +104,7 @@ func run() -> void:
 	check(game.title_active() and title.walking_in and not game.tutorial.active, "guide waits for the walk-in")
 	title.advance(title.WALK_IN_SECONDS)
 	check(not game.title_active() and game.tutorial.current_id() == "welcome", "walking into a fresh farm starts the existing guided year")
-	check(is_equal_approx(game.world.camera.size, game.world.overview_size()), "fresh entry fits the overview to the current viewport")
+	check(is_equal_approx(game.world.camera.size, game.world.entry_size(true)), "fresh entry fits Home and the gate during the guided year")
 	check(title.idle.actors.is_empty() and title.idle.petals.is_empty(), "breathing overrides and petals stop at the title exit")
 	check(game.world._npc_actors.mara._rig.transform.is_equal_approx(mara_pose), "Mara returns to her original shop pose after the title")
 	var restored: bool = true

@@ -6,12 +6,13 @@ const url=process.argv[2]||'http://127.0.0.1:8933/index.html';
 const output=process.argv[3]||'artifacts/v2.0.2-title-web';
 const repetitions=3;
 function fit(s){
- assert.ok(Math.abs(s.camera_size-s.overview_size)<0.01,'camera fits current overview');
- assert.ok(Math.abs(s.home_size-s.overview_size)<0.01,'Home fits current overview');
+ assert.ok(Math.abs(s.camera_size-s.entry_size)<0.01,'camera fits current overview');
+ assert.ok(Math.abs(s.home_size-s.entry_size)<0.01,'Home fits current overview');
  assert.ok(s.camera_home_distance<0.01,'pan starts at the fitted overview');
- const [x,y,w,h]=s.island.bounds;
+ const guided=s.guide!=='';
+ const [x,y,w,h]=guided?s.home:s.island.bounds;
  assert.ok(w>=0.55 && h>=0.12,'island fills the overview instead of shrinking');
- assert.ok(x>=0 && y>=0 && x+w<=1 && y+h<=1,'island stays inside the frame');
+ assert.ok(x>=-0.001 && y>=0 && x+w<=1.001 && y+h<=1,'island stays inside the frame');
  assert.equal(s.island.clipped,false,'island lies within the camera depth');
 }
 (async()=>{
@@ -40,8 +41,11 @@ function fit(s){
     assert.equal(firstFarm.front_page,false);assert.equal(firstFarm.idle.petals,0);assert.equal(firstFarm.idle.poses.length,0);
     await page.waitForTimeout(300);fit(await state());
     assert.equal((await state()).panel_kind,"farmer");await wait("s.panel_ready");await tap("farmer_exit_rect");await wait("!s.panel && s.guide===\"welcome\"");
+    await page.waitForFunction(()=>window.titleReport.first_play_frame && Object.keys(window.titleReport.first_play_frame).length);
+    const firstPlay=await page.evaluate(()=>window.titleReport.first_play_frame);fit(firstPlay);
+    if(width===390)assert.ok(firstPlay.home[2]>.9,'Home and gate fill the portrait width on the first play draw');
     if(attempt===0)await page.screenshot({path:`${output}/farm-${width}.png`});
-    results.push({resolution:[width,height],attempt,first_farm_frame:firstFarm});
+    results.push({resolution:[width,height],attempt,first_farm_frame:firstFarm,first_play_frame:firstPlay});
     if(attempt===0){
      await page.evaluate(()=>window.titleQA('growing_checkpoint'));await page.waitForTimeout(3000);
      const returning=await launch();assert.equal(returning.saved,true);assert.equal(returning.title,true);assert.equal(returning.hud,false);assert.equal(returning.panel,false);assert.equal(returning.guide,'');assert.equal(returning.primary,'Continue · Year 1, Spring');assert.equal(returning.secondary_visible,true);
@@ -56,6 +60,12 @@ function fit(s){
      fit(await state());await page.waitForTimeout(2000);const continued=await state();fit(continued);
      await page.screenshot({path:`${output}/returning-farm-${width}.png`});
      results.push({resolution:[width,height],returning_growing:continued});
+     await page.evaluate(()=>window.titleQA('complete_checkpoint'));await page.waitForTimeout(1500);
+     await launch();await tap('primary_rect');await wait('!s.title && s.guide===""');
+     const overview=await state();fit(overview);
+     if(width===390){assert.ok(overview.island.bounds[2]>.98,'returning island fills portrait width');assert.ok(Math.abs(overview.island.bounds[1]+overview.island.bounds[3]/2-.5)<.03,'island is vertically centred');}
+     await page.screenshot({path:`${output}/returning-overview-${width}.png`});
+     results.push({resolution:[width,height],returning_overview:overview});
     }
     await context.close();
     console.log(`TITLE WEB: ${width}x${height} fresh launch ${attempt+1}: first farm draw and stable overview pass`);

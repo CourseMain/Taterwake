@@ -4,6 +4,7 @@ var game
 var callback
 var first_frame: Dictionary
 var first_farm_frame: Dictionary
+var first_play_frame: Dictionary
 var launch_report: Dictionary
 func _ready() -> void:
 	if OS.has_feature("web"):
@@ -20,12 +21,20 @@ func _draw() -> void:
 	elif first_farm_frame.is_empty() and not game.title_active():
 		first_farm_frame = status()
 		_publish()
+	if first_play_frame.is_empty() and not game.title_active() and not game.hud.is_panel_open():
+		first_play_frame = status()
+		game.set_process(false) # Preserve this exact first rendered entry for capture.
+		_publish()
 func command(args: Array) -> void:
 	if args.is_empty(): return
 	if str(args[0]) == "checkpoint": game._save_checkpoint()
 	if str(args[0]) == "growing_checkpoint":
 		game.state.tutorial_progress.step = 5
 		game.tutorial._enter_step()
+		game._save_checkpoint()
+	if str(args[0]) == "complete_checkpoint":
+		game.tutorial.finish()
+		game.state.farmer_appearance.chosen = true
 		game._save_checkpoint()
 	if str(args[0]) == "focus_lost": get_tree().root.focus_exited.emit()
 	_publish()
@@ -43,9 +52,9 @@ func status() -> Dictionary:
 		"primary_rect":_rect(title.walk),"secondary_rect":_rect(title.resume),
 		"keep_rect":_rect(title.keep_farm),"replace_rect":_rect(title.replace_farm),
 		"version":ProjectSettings.get_setting("application/config/version"),"test_mode":game.test_mode,
-		"camera_size":game.world.camera.size,"overview_size":game.world.overview_size(),
+		"camera_size":game.world.camera.size,"overview_size":game.world.overview_size(),"entry_size":game.world.entry_size(game.state.guided_first_year()),
 		"home_size":game._camera_home_size,"camera_home_distance":game.world.camera.global_position.distance_to(game._camera_home_position),
-		"island":_island_bounds(),"idle":_idle()}
+		"island":_island_bounds(),"home":_home_bounds(),"idle":_idle()}
 
 func _island_bounds() -> Dictionary:
 	var surface = game.world.Surface
@@ -75,10 +84,19 @@ func _rect(control: Control) -> Array:
 	var rect := control.get_global_rect()
 	return [rect.position.x,rect.position.y,rect.size.x,rect.size.y]
 func _publish() -> void:
-	launch_report = {"first_frame":first_frame,"first_farm_frame":first_farm_frame,"state":status(),"ready":not first_frame.is_empty()}
+	launch_report = {"first_frame":first_frame,"first_farm_frame":first_farm_frame,"first_play_frame":first_play_frame,"state":status(),"ready":not first_frame.is_empty()}
 	if OS.has_feature("web"): JavaScriptBridge.eval("window.titleReport="+JSON.stringify(launch_report),true)
 
 func _farmer_exit() -> Array:
 	for button in game.hud._body.find_children("*", "Button", true, false):
 		if button.is_visible_in_tree() and button.get_meta("hud_action", "") == "close": return _rect(button)
 	return [0,0,0,0]
+
+func _home_bounds() -> Array:
+	var bounds := Rect2()
+	var first := true
+	for point: Vector3 in [game.world.layout_point(Vector3(-9,0,-3.5)), game.world.layout_point(Vector3(5.5,0,-3.5)), game.world.layout_point(Vector3(-9,0,12)), game.world.layout_point(Vector3(5.5,0,12)), game.world.title_gate.global_position + Vector3(0,3.8,0)]:
+		var projected: Vector2 = game.world.camera.unproject_position(point) / game.farm_viewport.get_visible_rect().size
+		if first: bounds = Rect2(projected, Vector2.ZERO); first = false
+		else: bounds = bounds.expand(projected)
+	return [bounds.position.x,bounds.position.y,bounds.size.x,bounds.size.y]
