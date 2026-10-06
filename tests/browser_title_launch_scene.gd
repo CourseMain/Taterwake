@@ -23,6 +23,11 @@ func _draw() -> void:
 func command(args: Array) -> void:
 	if args.is_empty(): return
 	if str(args[0]) == "checkpoint": game._save_checkpoint()
+	if str(args[0]) == "growing_checkpoint":
+		game.state.tutorial_progress.step = 5
+		game.tutorial._enter_step()
+		game._save_checkpoint()
+	if str(args[0]) == "focus_lost": get_tree().root.focus_exited.emit()
 	_publish()
 func status() -> Dictionary:
 	var title = game.title_scene

@@ -325,5 +325,7 @@ func finish() -> void:
 	game.hud.root.visible = saved_hud_visible
 	game.touch_controls.root.show()
 	game.touch_controls.release_all()
-	if has_saved_farm: game._reset_camera_zoom()
+	if has_saved_farm:
+		game._stop_map_navigation()
+		game._reset_camera_zoom()
 	else: game._reset_camera_view(true)

@@ -19,7 +19,7 @@ function fit(s){
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
  const results=[],errors=[];
  try{
-  for(const [width,height] of [[1440,900],[390,844]]){
+  for(const [width,height] of [[1440,900],[390,844],[2888,1804]]){
    for(let attempt=0;attempt<repetitions;attempt++){
     const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:width<900});
     const page=await context.newPage();
@@ -43,10 +43,19 @@ function fit(s){
     if(attempt===0)await page.screenshot({path:`${output}/farm-${width}.png`});
     results.push({resolution:[width,height],attempt,first_farm_frame:firstFarm});
     if(attempt===0){
-     await page.evaluate(()=>window.titleQA('checkpoint'));await page.waitForTimeout(3000);
+     await page.evaluate(()=>window.titleQA('growing_checkpoint'));await page.waitForTimeout(3000);
      const returning=await launch();assert.equal(returning.saved,true);assert.equal(returning.title,true);assert.equal(returning.hud,false);assert.equal(returning.panel,false);assert.equal(returning.guide,'');assert.equal(returning.primary,'Continue · Year 1, Spring');assert.equal(returning.secondary_visible,true);
      await tap('secondary_rect');await wait('s.confirmation && s.keep_rect[0]>0 && s.keep_rect[1]>0');const confirmation=await state();assert.equal(confirmation.safe_default,true);assert.equal(confirmation.pause_reset,false);assert.equal(confirmation.hud,false);assert.equal(confirmation.panel,false);
-     await tap('keep_rect');await wait('!s.confirmation');await tap('primary_rect');await wait('!s.title');assert.equal((await state()).panel,false);assert.equal((await state()).guide,'welcome');
+     await tap('keep_rect');await wait('!s.confirmation');
+     await page.waitForTimeout(1500);
+     await page.evaluate(()=>window.titleQA('focus_lost'));
+     await page.setViewportSize({width:height,height:width});await page.waitForTimeout(250);
+     await page.setViewportSize({width,height});await page.waitForTimeout(250);
+     await tap('primary_rect');await wait('!s.title');
+     assert.equal((await state()).panel,false);assert.equal((await state()).guide,'grow');
+     fit(await state());await page.waitForTimeout(2000);const continued=await state();fit(continued);
+     await page.screenshot({path:`${output}/returning-farm-${width}.png`});
+     results.push({resolution:[width,height],returning_growing:continued});
     }
     await context.close();
     console.log(`TITLE WEB: ${width}x${height} fresh launch ${attempt+1}: first farm draw and stable overview pass`);

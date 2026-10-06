@@ -677,6 +677,9 @@ func _map_navigation_allowed() -> bool:
 
 func _stop_map_navigation() -> void:
 	_cancel_map_drag()
+	# Title cinematics do not belong to the farm's pan destination. Embedded
+	# windows can lose focus or resize before Continue restores the farm camera.
+	if title_active(): return
 	if is_instance_valid(world) and is_instance_valid(world.camera):
 		_camera_pan_offset = world.camera.global_position - _camera_home_position
 
