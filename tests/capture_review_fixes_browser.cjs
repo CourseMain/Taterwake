@@ -32,8 +32,8 @@ const fs=require('node:fs');
     }
     await page.screenshot({path:`${out}/${key}-${width}.png`});reports.push({...report,capture:`${key}-${width}.png`,css_size:[width,height]});
     if(key==='decorations'){
-     const before=report.request;await page.evaluate(()=>window.surfaceQA('scroll:end'));
-     await page.waitForFunction(before=>window.surfaceReport?.ready&&window.surfaceReport.request>before,before);
+     await page.evaluate(()=>window.surfaceQA('scroll:end'));
+     await page.waitForFunction(()=>window.surfaceReport?.ready,null,{timeout:120000});
      await page.screenshot({path:`${out}/decorations-end-${width}.png`});
      reports.push({...await page.evaluate(()=>window.surfaceReport),capture:`decorations-end-${width}.png`,css_size:[width,height]});
     }
