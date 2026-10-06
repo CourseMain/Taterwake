@@ -31,6 +31,12 @@ const fs=require('node:fs');
      assert.ok(Object.values(report.guide_icons).every(v=>!v),'guide hides the extra controls');assert.equal(await page.locator('#fullscreen-button').evaluate(b=>getComputedStyle(b).visibility),'hidden');
     }
     await page.screenshot({path:`${out}/${key}-${width}.png`});reports.push({...report,capture:`${key}-${width}.png`,css_size:[width,height]});
+    if(key==='decorations'){
+     const before=report.request;await page.evaluate(()=>window.surfaceQA('scroll:end'));
+     await page.waitForFunction(before=>window.surfaceReport?.ready&&window.surfaceReport.request>before,before);
+     await page.screenshot({path:`${out}/decorations-end-${width}.png`});
+     reports.push({...await page.evaluate(()=>window.surfaceReport),capture:`decorations-end-${width}.png`,css_size:[width,height]});
+    }
    }
    await context.close();
   }

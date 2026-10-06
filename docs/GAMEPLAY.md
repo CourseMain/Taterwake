@@ -1,14 +1,14 @@
 # Taterland gameplay guide
 
-**A farming game where you lose money.** This describes the local v2.0.3 redesign. The public browser game remains v2.0.1 while publishing is paused.
+**A farming game where you lose money.** This describes the local v2.0.5 redesign. The public browser game remains v2.0.4.
 
 ## Keep the farm for ten years
 
-Every launch opens at the wooden TATERLAND gate in golden-hour light. The camera pulls back for eight seconds, then drifts. A fresh farm has one large **Walk to the farm** button and fits the island to the current screen. One optional farmer card lets you choose a hat, shirt colour, skin tone and name, or Skip. The first guide follows. A saved farm offers **Continue · Year N, Season**, plus **Start a new farm** with a confirmation that defaults to **Keep my farm**. Continue returns to the farm view after resizing the window or switching away at the gate. Waiting at the gate does not advance the year.
+Every launch opens at the wooden TATERLAND gate in golden-hour light. The camera pulls back for eight seconds, then drifts. A fresh farm has one large **Walk to the farm** button and fits the island to the current screen. One optional farmer card lets you choose a hat, shirt colour, skin tone and name, or Skip. The first guide follows. A saved farm offers **Continue · Year N, Season**, plus **Start a new farm** with a confirmation that defaults to **Keep my farm**. Continue returns to the fitted farm view after resizing the window or switching away at the gate. Portrait play fits the island across the screen and centres it vertically. The guided year zooms to Home Field and the gate. Waiting at the gate does not advance the year.
 
 You inherit a Spud Valley farm with **80,000 Spudions**, a **480,000 mortgage**, twelve open Home Field beds, twelve more available through expansion, and two rentable fields. Your purse is opening cash plus every entry in the ledger. A harvest is not income until someone pays for it.
 
-Spring is for planting, Summer for tending, Autumn for harvesting, and Winter for accounts and protection work. Each season lasts **150 seconds**; a farm shop reduces Summer to **120 seconds**. Winter accounts pause time. Close them to clear ice and prepare for Spring. The top row shows the season and year and larger outlined money on transparent backgrounds. Its solid yellow potato Spudion has two eyes and a highlight and gently moves. Menu is a drawn notebook on a rounded wood tile, and Weather shows a live sun, cloud, rain, storm or snow drawing with a warning dot. Captions sit under the drawings; Sell shows a sack and Tools the equipped tool. Fullscreen sits at the upper left, clear of the calendar. Tap the season to open the calendar. Saves preserve the farm across sessions, with no offline growth.
+Spring is for planting, Summer for tending, Autumn for harvesting, and Winter for accounts and protection work. Each season lasts **150 seconds**; a farm shop reduces Summer to **120 seconds**. Winter accounts pause time. Close them to clear ice and prepare for Spring. The top band shows the season and year and larger outlined money on transparent backgrounds. Portrait phones give season and money separate rows. Its solid yellow potato Spudion has two eyes and a highlight and gently moves. Menu is a drawn notebook on a rounded wood tile, and Weather shows a live sun, cloud, rain, storm or snow drawing with a warning dot. Captions sit under the drawings; Sell shows a sack and Tools the equipped tool. Fullscreen sits at the upper left, clear of the calendar, after the guide ends. The guide also hides the smiley and Graphics icons. Tap the season to open the calendar. Saves preserve the farm across sessions, with no offline growth.
 
 The guided year shows one instruction card at a time. Weather, Sell, prices and the calendar appear when first needed and stay available afterward. Meet Mara, use a starter Russet seed, then hoe, plant and water the glowing bed. Decisions pause time; growing waits run at normal speed. Iris warns **“A small storm is coming”** for **30 seconds at normal speed**. Harvest the glowing bed before it arrives to avoid the demonstration loss. Otherwise the gust takes one of three tonnes and Tess explains it. Guided crop quality and pest damage are protected; seed costs, yield losses, sales, storage and bills remain real.
 
@@ -150,7 +150,7 @@ The barn’s buyer slips show crop, tonnes, quote, Autumn-end deadline and short
 
 The year’s front page keeps its newspaper masthead and headline on an ink-green frame, with a small cream accounts leaf. A ten-box weather strip records disaster icons, with its legend behind a question mark. When a previous year has closed, a small Accounts box prints its net. Start the year remains outside the article scroll area.
 
-Oda’s Tools shed offers tool upgrades, barn capacity and **Open more Home beds · 48,000 · any season**. Its lease reminder points to Winter accounts. Decorations are unavailable; previously owned decorations remain in saved farms and the fifty-year epilogue.
+Oda’s Tools shed offers tool upgrades, barn capacity and **Open more Home beds · 48,000 · any season**. Its lease reminder points to Winter accounts. Its **Decorations · from 2,000** card offers six drawn items and a choice of location. Purchases cost 2,000–12,000 and post as **Decoration** under **other**. Owned decorations remain in saved farms and the fifty-year epilogue, without changing harvests.
 
 Field boards print only the field’s name. A shelter, waves or hill symbol sits on the post; available fields have a **TO LET** board. World lettering is measured against the board and shrinks to fit.
 
@@ -169,3 +169,10 @@ Keepers and the player breathe slowly and blink every three to five seconds. Tap
 The Menu is a wooden board with six picture tiles. **Save** opens Save farm, Restore farm and Plant a new farm. New Farm asks for confirmation before resetting the run. **Farmer** opens the whole turning farmer with drawn hat choices, shirt colours, skin tones and a name. Computer pages spread their content across columns, with smaller Slackey headings and Atkinson Hyperlegible body text.
 
 The first Table harvest earns Mara’s flower hat, surviving year five earns Tess’s scarf, and the first profitable year earns Nell’s glasses. These clothes change no farming numbers. They stay across new runs and appear on the farmer in the fifty-year scene. Nell smiles once at that first profit; other keeper portraits follow their short seasonal lines.
+
+## Segment 21i services
+
+A keeper greets once per season, including after reload. Tap the greeting or the same entrance again to open its service. Mara keeps Buy and Sell tabs.
+
+
+Accounts keeps **Go to the barn**. **Records**, **Field leases** and **Farm businesses** share a row of drawn tiles in Winter; each opens its existing section.
