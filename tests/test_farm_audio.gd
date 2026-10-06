@@ -13,19 +13,39 @@ func check(ok: bool, label: String) -> void:
 		failures += 1
 		push_error("FAIL: " + label)
 
-func metrics(stream: AudioStreamWAV) -> Dictionary:
+func pcm(stream: AudioStream) -> PackedByteArray:
+	if stream is AudioStreamWAV: return stream.data
+	var playback := stream.instantiate_playback()
+	playback.start()
+	var data := PackedByteArray()
+	var count: int = roundi(stream.get_length() * AudioServer.get_mix_rate())
+	data.resize(count * 2)
+	var offset := 0
+	while offset < count:
+		var samples: PackedVector2Array = playback.mix_audio(1.0, mini(4096, count - offset))
+		for sample: Vector2 in samples:
+			data.encode_s16(offset * 2, roundi(clampf(sample.x,-1,1) * 32767)); offset += 1
+	playback.stop()
+	return data
+
+var _metrics: Dictionary = {}
+func metrics(stream: AudioStream) -> Dictionary:
+	if _metrics.has(stream): return _metrics[stream]
+	var data := pcm(stream)
 	var peak: int = 0
 	var squares: float = 0
 	var crossings: int = 0
 	var previous: int = 0
-	var stride: int = maxi(1, int(stream.data.size() / 2 / 200000))
-	for frame in range(0, stream.data.size() / 2, stride):
-		var sample: int = stream.data.decode_s16(frame * 2)
+	var stride: int = maxi(1, int(data.size() / 2 / 200000))
+	for frame in range(0, data.size() / 2, stride):
+		var sample: int = data.decode_s16(frame * 2)
 		peak = maxi(peak, absi(sample))
 		squares += float(sample) * sample
 		if sample != 0 and previous != 0 and signi(sample) != signi(previous): crossings += 1
 		if sample != 0: previous = sample
-	return {"peak": peak, "rms": sqrt(squares / ceili(float(stream.data.size() / 2) / stride)), "crossings": crossings}
+	var result := {"peak":peak, "rms":sqrt(squares / ceili(float(data.size()/2)/stride)), "crossings":crossings, "first":data.decode_s16(0), "last":data.decode_s16(data.size()-2)}
+	_metrics[stream] = result
+	return result
 
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args():
@@ -44,11 +64,11 @@ func run() -> void:
 	check(Foley.CLIPS.harvest_notes.get_length() > .2, "harvest has one authored two-note cue")
 	check(float(metrics(Foley.CLIPS.foreclosure).crossings) / Foley.CLIPS.foreclosure.get_length() / 2 < 100, "foreclosure is a low note")
 	for index in range(Ambience.STREAMS.size()):
-		var stream: AudioStreamWAV = Ambience.STREAMS[index]
+		var stream: AudioStreamOggVorbis = Ambience.STREAMS[index]
 		var level: Dictionary = metrics(stream)
 		check(stream.get_length() >= 40 and level.rms > 200 and level.peak < 32767, "season %d has an long nature bed" % index)
-		check(absi(stream.data.decode_s16(0)) < 100 and absi(stream.data.decode_s16(stream.data.size() - 2)) < 100, "season %d joins without a PCM seam" % index)
-		if index > 0: check(stream.data != Ambience.STREAMS[index - 1].data, "adjacent seasons have different sound beds")
+		check(absi(level.first) < 100 and absi(level.last) < 100, "season %d joins without a PCM seam" % index)
+		if index > 0: check(stream.resource_path != Ambience.STREAMS[index - 1].resource_path, "adjacent seasons have different sound beds")
 	check(metrics(Ambience.STREAMS[4]).rms < metrics(Ambience.STREAMS[0]).rms, "Winter wind is audibly muffled relative to Autumn")
 	var foley := Foley.new()
 	root.add_child(foley)

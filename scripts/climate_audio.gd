@@ -8,9 +8,9 @@ var storm: bool = false
 var clock: float = 0.0
 func _ready() -> void:
 	wind = AudioStreamPlayer.new()
-	var stream: AudioStreamWAV = preload("res://assets/audio/climate-wind.wav").duplicate()
-	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_end = int(stream.get_length() * stream.mix_rate)
+	var stream: AudioStreamOggVorbis = preload("res://assets/audio/climate-wind.ogg").duplicate()
+	stream.loop = true
+	stream.loop_offset = 0.0
 	wind.stream = stream
 	wind.volume_db = -60
 	add_child(wind)

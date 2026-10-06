@@ -3,10 +3,10 @@ extends Node
 const Mix = preload("res://scripts/sound_mix.gd")
 const FADE_SECONDS: float = 6.0
 const VOLUME_DB: float = -21.0
-const STREAMS: Array[AudioStreamWAV] = [
-	preload("res://assets/audio/nature-breeze.wav"), preload("res://assets/audio/nature-leaves.wav"),
-	preload("res://assets/audio/nature-stream.wav"), preload("res://assets/audio/nature-rain.wav"),
-	preload("res://assets/audio/nature-hush.wav"),
+const STREAMS: Array[AudioStreamOggVorbis] = [
+	preload("res://assets/audio/nature-breeze.ogg"), preload("res://assets/audio/nature-leaves.ogg"),
+	preload("res://assets/audio/nature-stream.ogg"), preload("res://assets/audio/nature-rain.ogg"),
+	preload("res://assets/audio/nature-hush.ogg"),
 ]
 const CALLS: Array[AudioStreamWAV] = [
 	preload("res://assets/audio/bird-call-1.wav"), preload("res://assets/audio/bird-call-2.wav"),
@@ -95,7 +95,7 @@ func advance(delta: float) -> void:
 		call_wait = _rng.randf_range(20, 40)
 		if season == 3: return
 		if season == 1 and calls_played % 3 == 2:
-			call_player.stream = preload("res://assets/audio/nature-cicadas.wav")
+			call_player.stream = preload("res://assets/audio/nature-cicadas.ogg")
 		else:
 			var choice: int = _rng.randi_range(0, CALLS.size() - 2)
 			if choice >= last_call: choice += 1

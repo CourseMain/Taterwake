@@ -19,7 +19,9 @@ func write(label: String, samples: PackedFloat32Array) -> void:
 	for index in range(samples.size()): bytes.encode_s16(index * 2, roundi(clampf(samples[index], -.9, .9) * 32767))
 	var stream := AudioStreamWAV.new(); stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = RATE; stream.data = bytes
-	if stream.save_to_wav("res://assets/audio/" + label + ".wav") != OK: quit(1); return
+	var folder: String = "res://artifacts/audio-source/" if label.begins_with("nature-") or label == "climate-wind" else "res://assets/audio/"
+	DirAccess.make_dir_recursive_absolute(folder)
+	if stream.save_to_wav(folder + label + ".wav") != OK: quit(1); return
 	print(label + ": " + str(stream.get_length()) + " s")
 
 func bed(kind: String) -> PackedFloat32Array:
