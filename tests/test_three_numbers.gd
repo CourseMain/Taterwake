@@ -67,7 +67,7 @@ func run() -> void:
 	farm.season_clock.year = 1; farm.season_clock.season = 3; farm.ledger.post_fixed_costs(1)
 	game.hud.show_panel("accounts", farm); await settle()
 	var frozen: Dictionary = farm.ledger.save_data(); cash = farm.coins
-	check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000" and not game.hud._refs.land_parts.visible, "one land line excludes expansions and leases")
+	check(game.hud._refs.land_bill.text == "Mortgage and land ›" and game.hud._refs.land_amount.text == farm.money(-60000) and not game.hud._refs.land_parts.visible, "one land line excludes expansions and leases")
 	game.hud._act("land_bill_parts")
 	check(game.hud._refs.land_parts.visible and game.hud._refs.land_parts.get_child_count() == 3, "land tap opens the three components")
 	check(game.hud._refs["land_part:Mortgage interest"].text == farm.money(24000) and game.hud._refs["land_part:Mortgage principal"].text == farm.money(24000) and game.hud._refs["land_part:Rent and land tax"].text == farm.money(12000), "land parts preserve all three amounts")
@@ -83,8 +83,11 @@ func run() -> void:
 	root.min_size = Vector2i.ZERO; root.size = Vector2i(390,844)
 	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets(); game.touch_controls.resize()
 	await settle()
-	for page in ["inventory", "barn"]:
-		game.hud.show_panel(page, farm); await settle(); game.touch_controls.fit_modal(); await settle()
+	for page in ["inventory", "market"]:
+		game.hud.show_panel(page, farm, page == "market"); await settle(); game.touch_controls.fit_modal(); await settle()
+		if page == "market":
+			game.hud._refs.market_page.select_variety("russet", "Standard")
+			await settle()
 		var scale: float = float(root.size.x) / game.hud.root.size.x
 		for grade in farm.Quality.GRADES:
 			var chip: Control = game.hud._refs["item:crop:russet:grade:" + grade] if page == "inventory" else game.hud._refs.market_page.sale_rows.russet.grades[grade]
@@ -93,7 +96,7 @@ func run() -> void:
 	game.hud.close_panel()
 	var fx = game.world.harvest_feedback
 	fx.harvest({0:{"stage":3, "crop":"russet", "quality":100}}); fx.animate(.2)
-	var pop: Label = fx.active[0].stamp
+	var pop = fx.active[0].stamp
 	check(pop.mouse_filter == Control.MOUSE_FILTER_IGNORE and pop.get_theme_font_size("font_size") * float(root.size.x) / game.hud.root.size.x >= 14, "harvest stamp is readable and passes neighbouring taps through")
 	fx.animate(1.18); check(pop.modulate.a > .99, "harvest stamp holds for 1.2 seconds after pop")
 	fx.animate(.2); check(pop.modulate.a > 0 and pop.modulate.a < 1, "stamp fades after hold")

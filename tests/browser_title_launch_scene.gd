@@ -27,7 +27,7 @@ func command(args: Array) -> void:
 func status() -> Dictionary:
 	var title = game.title_scene
 	return {"title":game.title_active(),"hud":game.hud.root.is_visible_in_tree(),
-		"panel":game.hud.is_panel_open(),"panel_kind":game.hud._panel_kind,"farmer_exit_rect":_rect(game.hud._modal_close),"front_page":game.year_intro.visible,
+		"panel":game.hud.is_panel_open(),"panel_kind":game.hud._panel_kind,"farmer_exit_rect":_farmer_exit(),"front_page":game.year_intro.visible,
 		"panel_ready":not game.hud._modal_entrance_shield.visible and game.hud._modal.modulate.a > .99,
 		"guide":game.tutorial.current_id() if game.tutorial.active else "",
 		"saved":title.has_saved_farm,"primary":title.walk.text,
@@ -72,3 +72,8 @@ func _rect(control: Control) -> Array:
 func _publish() -> void:
 	launch_report = {"first_frame":first_frame,"first_farm_frame":first_farm_frame,"state":status(),"ready":not first_frame.is_empty()}
 	if OS.has_feature("web"): JavaScriptBridge.eval("window.titleReport="+JSON.stringify(launch_report),true)
+
+func _farmer_exit() -> Array:
+	for button in game.hud._body.find_children("*", "Button", true, false):
+		if button.is_visible_in_tree() and button.get_meta("hud_action", "") == "close": return _rect(button)
+	return [0,0,0,0]

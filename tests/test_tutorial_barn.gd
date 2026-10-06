@@ -34,7 +34,7 @@ func walk_plot(tool: String, index: int = 4) -> void:
 		if not game.walking: break
 
 func check_crops() -> void:
-	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.selling, "first sale opens the sole barn page")
+	check(game.hud._panel_kind == "market" and game.hud._market_selling and game.hud._refs.market_page.selling, "first sale opens the Mara’s Sell page")
 	check(not game.hud._refs.has("tab:tools"), "no Tools tab can trap the first sale")
 	check(button("market_all") != null and not button("market_all").disabled, "real sale controls remain enabled")
 
@@ -72,7 +72,7 @@ func run() -> void:
 	check(game.tutorial.current_id() == "sell", "real Summer loss and harvest reach sell/store choice")
 	var path: String = "user://tutorial-barn-%d.json" % OS.get_process_id()
 	check(game.state.save_game(path), "save unfinished first sale")
-	game._on_action("barn")
+	game._on_action("market:sell")
 	await settle()
 	check_crops()
 	sell_harvest()
@@ -80,7 +80,7 @@ func run() -> void:
 	check(game.state.load_game(path), "reload unfinished first sale")
 	game.tutorial.start()
 	check(game.tutorial.current_id() == "sell", "saved guide resumes first sale")
-	game._on_action("barn")
+	game._on_action("market:sell")
 	await settle()
 	check_crops()
 	sell_harvest()
@@ -92,14 +92,15 @@ func run() -> void:
 	while game.hud.accounts_building: await process_frame
 	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
 	check(game.state.season_clock.autumn_loss == 0, "resumed barn lesson harvests starters before Autumn Cold")
+	game.hud._act("toggle_details:account_records")
 	var credit_row = game.hud._refs.accounts_guided_credit.get_parent().get_parent()
 	check(credit_row.is_visible_in_tree() and credit_row.caption.text == game.state.Ledger.GUIDED_CREDIT_LABEL and game.hud._refs.accounts_guided_credit.text == "+" + game.state.money(game.state.ledger.fixed_cost_total()), "accounts show the named credit at its exact amount")
 	check(not game.hud._refs.accounts_other.get_parent().get_parent().visible, "credit is not also counted in a generic Other row")
-	check(game.hud._refs.accountant.text == "Nell: Dad's last harvest paid this year. From now on it's yours.", "Nell's explanation stays visible after the guide closes")
+	check(game.hud._refs.accountant.is_visible_in_tree() and game.hud._refs.accountant.text == "Nell: " + game.state.NpcRoster.GUIDED_CREDIT_LINE, "Nell's explanation stays visible after the guide closes")
 	game._on_action("close")
 	game.tutorial.start(true)
-	game._on_action("barn")
-	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.selling, "optional tour uses the same barn entrance")
+	game._on_action("market:sell")
+	check(game.hud._panel_kind == "market" and game.hud._market_selling and game.hud._refs.market_page.selling, "optional tour uses the same Mara entrance")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	game.queue_free()
 	await process_frame

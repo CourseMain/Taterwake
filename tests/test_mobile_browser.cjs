@@ -38,7 +38,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
  await tapButton('E');
  assert.equal((await command('status')).conversation.npc,'mara','NPC badge starts Mara conversation');
  await shot('keeper-entry');
- await tapButton('Buy seeds');
+ await tapButton('Buy and sell');
  assert.equal((await command('status')).panel,'market','Mara opens seed counter');
  await tapButton('×');
  assert.equal((await command('status')).panel,'',`${name}: Close returns to the farm`);
@@ -67,7 +67,7 @@ for(const [name,width,height,touch] of [['phone',390,844,true],['phone-landscape
   await tapButton('Hoe  /  Tools'); await shot('tools'); await tapButton('Water');
   assert.equal((await command('status')).tool,'water');
   await tapButton('Menu'); assert.equal((await command('status')).panel,'pause');
-  await tapButton('×'); assert.equal((await command('status')).panel,'');
+  await tapButton('Leave'); assert.equal((await command('status')).panel,'');
  }
  for(const action of ['menu','market','climate','close','tank','close','tutorial']){
   await command(action);await shot(action.replace(':','-'));

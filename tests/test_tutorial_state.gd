@@ -110,7 +110,7 @@ func _run() -> void:
 	for cost in State.Ledger.FIXED_COSTS:
 		check(guided.ledger.entries.any(func(entry): return entry.category == cost.category and entry.label == cost.label and entry.amount == cost.amount), "guide still posts the real bill: " + cost.label)
 	check(guided._valid_save(guided._save_data()), "sale-route accounts with credit are valid")
-	check(guided.NpcRoster.ledger_lines(guided).begins_with("Dad's last harvest paid this year. From now on it's yours."), "Nell explains the one-year credit")
+	check(guided.NpcRoster.ledger_lines(guided).begins_with(guided.NpcRoster.GUIDED_CREDIT_LINE), "Nell explains the one-year credit")
 	guided.tutorial_progress.completed = true
 	guided.set_tutorial_active(false)
 	guided.season_clock.year = 2

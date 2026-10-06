@@ -211,7 +211,7 @@ func scene_checks() -> void:
 	check(not game.state.climate_report_open and game.state.climate.data.outlook.seen_year == 1, "skip resumes play and records the seen year")
 	game.hud.show_panel("accounts", game.state)
 	var accounts_strip: Control
-	for child in game.hud._body.get_children():
+	for child in game.hud._body.find_children("*", "Control", true, false):
 		if child.get_script() == preload("res://scripts/climate_strip.gd"): accounts_strip = child
 	check(accounts_strip != null and accounts_strip.records == game.year_intro.strip.records, "Winter accounts share the actual ten-year disaster strip")
 	game.hud.close_panel()

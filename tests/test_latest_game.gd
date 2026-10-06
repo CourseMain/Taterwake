@@ -111,7 +111,7 @@ func _run() -> void:
 	await create_timer(0.35).timeout
 	game._on_action("menu")
 	await settle()
-	check(game.hud.is_panel_open() and button("inventory") != null and button("farmer") != null, "Menu contains inventory and farmer choices")
+	check(game.hud.is_panel_open() and button("dex") != null and button("farmer") != null, "Menu contains grown crops and farmer choices")
 	await shot("main-menu")
 	game.hud.close_panel()
 	if capture:

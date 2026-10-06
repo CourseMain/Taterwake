@@ -49,7 +49,7 @@ func run() -> void:
 	for kind in ["market", "barn", "inventory", "tools", "quests", "climate", "accounts", "pause", "duck_patrol"]:
 		game.state.season_clock.season = 3 if kind in ["accounts", "climate"] else 0
 		game.hud.show_panel(kind, game.state); await settle(); game.touch_controls.fit_modal(); await settle()
-		check(game.hud._modal_card.get_theme_stylebox("panel") is StyleBoxTexture, kind + " frame uses the shared material")
+		check(game.hud._modal_card.get_theme_stylebox("panel").has_meta("surface_material"), kind + " frame uses the shared kit material")
 		var nested_cream := false
 		for panel in game.hud._modal_card.find_children("*", "PanelContainer", true, false):
 			if panel.is_visible_in_tree() and cream_layers(panel) >= 3: nested_cream = true
@@ -68,14 +68,10 @@ func run() -> void:
 				check(labels.size() == 1 and labels[0].get_theme_color("font_color").get_luminance() > .7, "duck offer text reads on timber: " + words)
 		elif kind == "pause":
 			check(game.hud._modal_title.get_theme_color("font_color").get_luminance() > .7, "farm title stays light against its ink frame")
-			var menu_labels := 0
-			for tile in game.hud._body.find_children("*", "Button", true, false):
-				if not tile.is_visible_in_tree(): continue
-				for label in tile.find_children("*", "Label", true, false):
-					if not label.is_visible_in_tree(): continue
-					menu_labels += 1
-					check(label.get_theme_color("font_color").get_luminance() < .3, "farm menu action remains dark on its paper button: " + label.text)
-			check(menu_labels == 3, "farm-menu contrast check covers every illustrated destination")
+			var tiles: Array = game.hud._body.find_children("MenuTile_*", "Button", true, false)
+			for tile in tiles:
+				check(tile.get_theme_color("font_color").get_luminance() < .3, "menu caption remains ink on paper: " + tile.text)
+			check(tiles.size() == 6, "menu contrast covers all six picture tiles")
 			var badge: Label = game.hud._badge("Ready", "ready")
 			game.hud._body.add_child(badge)
 			var badge_ink: Color = badge.get_theme_color("font_color")

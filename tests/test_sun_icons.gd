@@ -73,7 +73,7 @@ func run() -> void:
 		for page in ["market","barn","tools","accounts","pause"]:
 			hud.show_panel(page,game.state); await settle()
 			for button: Node in hud._modal_card.find_children("*","Button",true,false):
-				if button.is_visible_in_tree() and not button.text.is_empty() and button.text not in ["×","?","+","−","←","→"] and not button.text.is_valid_float() and not button.text.begins_with("×"):
+				if button.is_visible_in_tree() and not button.get_meta("kit_type", false) and not button.text.is_empty() and button.text not in ["×","?","+","−","←","→"] and not button.text.is_valid_float() and not button.text.begins_with("×"):
 					check(button.has_method("has_picture") and button.has_picture(), "every word control has art: " + button.text)
 					check(not Art.control_picture(str(button.get_meta("action","")),button.text).is_empty(), "page action keeps a drawing: " + button.text)
 			hud.close_panel()

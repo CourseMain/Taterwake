@@ -117,7 +117,7 @@ func run() -> void:
 			game.state.restore_snapshot(choice)
 			game.tutorial.start()
 		if decision == "sell":
-			game._on_action("barn")
+			game._on_action("market:sell")
 			await settle()
 			press("market_all")
 			press("market_sell")

@@ -28,10 +28,12 @@ const fs=require('node:fs');
     if(width===390)await page.touchscreen.tap(canvas.x+canvas.width/2,canvas.y+canvas.height*0.947);
     else await page.mouse.click(canvas.x+canvas.width/2,canvas.y+canvas.height*0.93);
     await page.waitForTimeout(3000);
-    if(['2.0.2','2.0.3'].includes(version)){
+    if(['2.0.2','2.0.3','2.0.4'].includes(version)){
      // Skip the new optional farmer card through its visible single exit.
      await page.screenshot({path:output+'/'+name+'-farmer-'+width+'.png'});
-     const point=width===390?[530/600,160/1298]:[1088/1440,153/900];
+     const point=version==='2.0.4'
+      ? (width===390?[.5,1002.4/1298]:[.5,631.5/800])
+      : (width===390?[530/600,160/1298]:[1088/1440,153/900]);
      if(width===390)await page.touchscreen.tap(canvas.x+canvas.width*point[0],canvas.y+canvas.height*point[1]);
      else await page.mouse.click(canvas.x+canvas.width*point[0],canvas.y+canvas.height*point[1]);
      await page.waitForTimeout(1000);

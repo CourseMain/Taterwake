@@ -99,7 +99,7 @@ func ui_checks() -> void:
 		game.hud.show_panel("market", farm)
 		for frame in range(8): await process_frame
 		check(game.hud._refs["russet:seed_price"].text == "\uE000 270" and game.hud._refs["icecap:seed_price"].text == "\uE000 1,200", "seed packets show grouped per-seed prices")
-		game.hud.show_panel("barn", farm)
+		game.hud.show_market(true, farm)
 		var page = game.hud._refs.market_page
 		page.selected = "icecap"
 		page.selected_grade = "Standard"
@@ -130,7 +130,7 @@ func ui_checks() -> void:
 		root.size = size
 		game.hud.show_panel("accounts", farm)
 		for frame in range(8): await process_frame
-		check(game.hud._refs.accounts_net.text.contains("104,000") and game.hud._refs.land_bill.text == "Mortgage and land · 60,000", "accounts show farm-sized annual costs")
+		check(game.hud._refs.accounts_net.text.contains("104,000") and game.hud._refs.land_bill.text == "Mortgage and land ›" and game.hud._refs.land_amount.text == game.state.money(-60000), "accounts show farm-sized annual costs")
 		check(game.hud._refs.accounts_balance.text.contains("200,000") and game.hud._refs.accounts_loan.text.contains("456,000"), "accounts show grouped debt limit and remaining loan")
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()), "accounts fit desktop and phone")
 		await capture("ledger-%d" % size.x)

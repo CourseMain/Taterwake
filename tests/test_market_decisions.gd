@@ -166,6 +166,7 @@ func run() -> void:
 		check(farm.ledger.total(1, "storage") == (-State.MarketDecisions.STORAGE_FEE if remaining > 0 else 0), "only the contract remainder incurs a storage fee")
 		check(farm.load_game(SAVE) and farm.trading.contracts.is_empty() and farm.trading.settled["1"][0].delivered == delivered, "boundary save contains complete contract settlement and storage")
 		farm.free()
+	await current_stock()
 	await ui_checks()
 	for suffix in ["", ".bak", ".tmp", ".rejected"]:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
@@ -175,7 +176,7 @@ func ui_checks() -> void:
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game); game.set_process(false)
 	game.state.storage["russet"] = Stock.pile(40)
-	game.hud.show_panel("barn", game.state)
+	game.hud.show_market(true, game.state)
 	var page = game.hud._refs.market_page
 	check(is_equal_approx(page.crop_history.expected_price, game.state.trading.peak_price("russet")) and not page.storage_note.visible and page.find_children("*", "Button", true, false).any(func(button): return button.text == "?" and button.tooltip_text.contains("Winter start")), "storage explanation is behind a question mark outside Winter")
 	var store_actions: Array = page.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("action", "") == "market_store" or button.text == "Store selected tonnes")
@@ -192,7 +193,7 @@ func ui_checks() -> void:
 	winter(game.state)
 	check(game.state.accounts_open and game.hud._panel_kind == "accounts", "storage posts before accounts pause opens")
 	check(game.hud._refs.accounts_storage.text == game.state.money(-State.MarketDecisions.STORAGE_FEE), "accounts list storage charges")
-	game.hud.close_panel(); game._on_action("barn")
+	game.hud.close_panel(); game._on_action("market:sell")
 	game.state.season_clock.seconds = 140
 	game.hud.update_state(game.state)
 	check(game.hud._refs.market_page.stored_mode and game.hud._refs.market_page.sale_rows.russet.grades.Standard.visible, "Winter market opens on stocked stores")
@@ -206,10 +207,10 @@ func ui_checks() -> void:
 	var held_before_tabs: Dictionary = game.state.trading.held.duplicate(true)
 	var cash_before_tabs: float = game.state.coins
 	game._on_action("market")
-	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.sale_rows.is_empty(), "Mara opens seeds directly, without a selling tab")
-	check(not game.hud._modal_card.find_children("*", "Button", true, false).any(func(b): return b.get_meta("hud_action", "") in ["market", "barn"]), "Buy and Sell have no cross-page tabs")
-	game._on_action("barn")
-	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.stored_mode, "barn returns to rising stored quotes")
+	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.sale_rows.is_empty(), "Mara opens Buy without a duplicate stock list")
+	check(not game.hud._modal_card.find_children("*", "Button", true, false).any(func(b): return b.get_meta("hud_action", "") in ["market", "barn"]), "Buy and Sell tabs stay inside Mara’s page")
+	game._on_action("market:sell")
+	check(game.hud._panel_kind == "market" and game.hud._refs.market_page.stored_mode, "Mara returns to rising stored quotes")
 	check(game.state.trading.held == held_before_tabs and game.state.coins == cash_before_tabs, "Winter tab switches neither sell stock nor spend cash")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
@@ -227,7 +228,7 @@ func ui_checks() -> void:
 				await create_timer(.1).timeout
 				RenderingServer.force_draw()
 				root.get_texture().get_image().save_png("res://artifacts/decisions-%s-%d.png" % [panel, size.x])
-	game.hud.show_panel("barn", game.state)
+	game.hud.show_market(true, game.state)
 	var before: float = game.state.coins
 	game.hud._refs.market_page.select_variety("russet", "Standard")
 	game.hud._refs.market_page.maximum.pressed.emit()
@@ -236,3 +237,21 @@ func ui_checks() -> void:
 	game.queue_free()
 	await process_frame
 	await create_timer(.25).timeout
+
+func current_stock() -> void:
+	var farm = fresh(); farm.boundary_save_path = ""
+	farm.season_clock.year = 2; farm.season_clock.season = 3; farm.season_clock.seconds = 75
+	farm.storage.russet = Stock.pile(5, 90)
+	farm.trading.held.russet = Stock.pile(3, 90)
+	var before: float = farm.coins
+	var expected: float = 3 * farm.trading.stored_price(farm, "russet", "Table") + farm.market.russet.sell * farm.Quality.MULTIPLIER.Table
+	var receipts: Array = []; farm.sale_completed.connect(func(receipt): receipts.append(receipt))
+	farm.trading.sell(farm, "russet", 4, "Table", false, true)
+	check(farm.stock_count("russet", "Table") == 1 and Stock.count(farm.trading.held, "russet") == 0, "one current stock consumes Winter stores once, then fresh harvest")
+	check(is_equal_approx(farm.coins - before, expected), "mixed current stock keeps both real prices")
+	check(receipts.size() == 1 and receipts[0].quantity == 4 and is_equal_approx(receipts[0].total, expected), "one sale produces one exact receipt")
+	check(farm.ledger.entries.back().label == "Sold 4 Table russet tonnes" and is_equal_approx(farm.ledger.entries.back().amount, expected), "mixed sale keeps the ledger label and total")
+	var stock_before = farm.storage.duplicate(true); var journal_before = farm.ledger.entries
+	farm.trading.sell(farm, "russet", 2, "Table", false, true)
+	check(farm.storage == stock_before and farm.ledger.entries == journal_before and receipts.size() == 1, "unavailable current stock cannot partly sell or charge")
+	farm.queue_free(); await process_frame

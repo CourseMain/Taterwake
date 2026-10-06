@@ -75,14 +75,14 @@ func run() -> void:
 	print("UI AUDIT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
 
-const SERVICES: Array[String] = ["market", "barn", "accounts", "climate", "quests", "tools"]
+const SERVICES: Array[String] = ["market:sell", "market", "barn", "accounts", "climate", "quests", "tools"]
 const RETIRED: Array[String] = ["sell_potatoes", "quick_sell", "winter_stores", "winter_seeds", "winter_seed_choices", "loss_notices", "contracts", "store_advice", "advice:home", "advice:golden", "advice:stores", "forge", "bank", "activities"]
 func entrances() -> void:
 	game.hud.close_panel()
 	for node in game.hud.root.find_children("*", "Button", true, false):
 		var action: String = str(node.get_meta("hud_action", ""))
 		check(action not in RETIRED, "no retired HUD entrance: " + action)
-		if action in SERVICES: check(action in ["barn", "climate"], "farm HUD exposes only Sell and Weather shortcuts: " + action)
+		if action in SERVICES: check(action in ["market:sell", "climate"], "farm HUD exposes only Sell and Weather shortcuts: " + action)
 	for kind in ["market", "barn", "accounts", "climate", "quests", "tools", "pause", "inventory", "help", "dex", "duck_patrol", "calendar", "farmer", "grades"]:
 		game.hud.show_panel(kind, game.state)
 		await settle()
@@ -91,7 +91,7 @@ func entrances() -> void:
 		for node in game.hud._modal_card.find_children("*", "Button", true, false):
 			var action: String = str(node.get_meta("hud_action", ""))
 			check(action not in RETIRED, kind + " has no retired route: " + action)
-			if action == "close": closes += 1
+			if action == "close" and node.is_visible_in_tree(): closes += 1
 			if action in SERVICES: service_links.append(action)
 		check(closes == 1, kind + " has exactly one Close")
 		check(service_links == (["barn"] if kind == "accounts" else []), kind + " has only its mapped service link: " + str(service_links))
@@ -104,7 +104,7 @@ func entrances() -> void:
 	game.conversation.choose(0)
 	var before: float = game.state.coins
 	game._on_action("sell:russet:1:Standard")
-	check(game.state.coins == before, "sales cannot bypass the barn")
+	check(game.state.coins == before, "buy mode cannot sell potatoes")
 	for service in ["climate", "quests", "tools", "duck_patrol", "barn"]:
 		game.hud.close_panel()
 		game._on_user_action(service)

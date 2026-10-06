@@ -205,7 +205,7 @@ func ui_checks() -> void:
 		await process_frame
 	check(changes.resize == 0 and changes.visibility == 0 and game.hud._context_box.get_rect() == stable_rect, "unchanged growth and grade hint neither resizes nor flashes across refreshes")
 	for word in Q.GRADES: Stock.add(game.state.storage,"russet",4,{"Table":90,"Standard":60,"Feed":20}[word])
-	game.hud.show_panel("barn",game.state)
+	game.hud.show_market(true,game.state)
 	await process_frame
 	var page = game.hud._refs.market_page
 	check(page.grade_buttons.size() == 3, "Sell Potatoes lists each grade")
@@ -223,7 +223,7 @@ func ui_checks() -> void:
 		check(page.grade_buttons.Table.size.x <= game.hud.root.size.x, "grade rows fit desktop and phone")
 		if "--capture" in OS.get_cmdline_user_args():
 			RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/grades-market-%d.png" % size.x)
-	game.hud.show_panel("barn", game.state)
+	game.hud.show_market(true, game.state)
 	game.hud._refs.market_page.select_variety("russet", "Table")
 	game.hud._refs.market_page.seed_button.pressed.emit()
 	check(game.state.trading.kept_seed.russet == 1, "barn control keeps a Table tonne as seed")

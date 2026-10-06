@@ -90,7 +90,7 @@ func run() -> void:
 	var market_page: Control = hud._refs.market_page
 	check(hud._panel_crops == ["russet"] and market_page.crops == ["russet"] and not hud._refs["buy:russet:5"].visible, "first market keeps only Russet and hides bulk purchases")
 	check(not market_page.selling and market_page.sell_button == null and hud._modal_trade_footer.visible and not hud._refs.has("market_sell"), "guided seed footer offers continuation without sell controls or price chart")
-	check(button_for("barn") != null and not button_for("barn").is_visible_in_tree(), "HUD selling waits for its introduction")
+	check(button_for("market:sell") != null and not button_for("market:sell").is_visible_in_tree(), "HUD selling waits for its introduction")
 	check(hud._known_crops().size() >= 4, "simplified seed market leaves full inventory crop catalog intact")
 	check(hud._refs["buy:russet:1"].text == "Buy 1 Russet", "guided purchase names the exact seed to buy")
 	hud._act("buy:russet:5")
@@ -123,7 +123,7 @@ func run() -> void:
 	sale_guide["continue_label"] = "Store for Winter →"
 	state.storage["russet"] = Stock.pile(3)
 	hud.set_tutorial(sale_guide)
-	hud.show_panel("barn", state)
+	hud.show_market(true, state)
 	await settle()
 	hud._update_tutorial_pointer()
 	var sale_page: Control = hud._refs.market_page
@@ -132,7 +132,7 @@ func run() -> void:
 	actions.clear()
 	sale_page.quantity.value = 2
 	sale_page._sell()
-	check(actions == ["sell:russet:2:Standard"], "guided sale dispatches the selected quantity through the existing whitelist")
+	check(actions == ["current_sell:russet:2:Standard"], "guided sale dispatches the selected quantity through the existing whitelist")
 	hud.set_tutorial(guide(["hoe", "plant", "water", "harvest", "pest"], ["coins", "market", "inventory", "tools", "quests", "duck_patrol", "stock", "island", "menu"], ["inventory_tab:", "close", "menu"]))
 	state.coins = 40000000000
 	for panel: String in ["barn", "inventory", "tools", "quests", "duck_patrol", "pause"]:
@@ -151,7 +151,7 @@ func run() -> void:
 	hud.show_panel("tools", state)
 	check(not hud._refs["upgrade:hoe"].disabled, "finishing releases tutorial lock while preserving actual affordability")
 	hud.show_panel("pause", state)
-	check(button_for("help") != null and not button_for("help").disabled, "normal menu offers the help page containing the guided introduction")
+	check(button_for("save_page") != null and not button_for("save_page").disabled, "normal menu releases the six-tile board")
 	hud.set_tutorial(guide(["hoe"], [], []))
 	hud.show_panel("market", state)
 	state.coins = state.bankruptcy_limit()

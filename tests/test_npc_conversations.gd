@@ -130,6 +130,9 @@ func run() -> void:
 		root.content_scale_size = viewport_size
 		root.size = viewport_size
 		talk._touch = viewport_size != Vector2i(1280,800)
+		game.touch_controls.enabled = talk._touch
+		if talk._touch: game.touch_controls._build_touch_sheets()
+		game.touch_controls.resize()
 		await frames()
 		talk.layout()
 		talk.reveal()
@@ -158,12 +161,12 @@ func run() -> void:
 	farm.season_clock.season = 3
 	farm.ledger.post_fixed_costs(1)
 	game._start_conversation("nell")
-	check(talk.speech.text.contains(farm.money(farm.ledger.total(1))) and talk.speech.text.ends_with(Roster.YEAR_ONE_ACCOUNTS), "first Winter reports real net and the three-number arithmetic")
+	check(talk.speech.text.contains(farm.money(farm.ledger.total(1))) and talk.speech.text.split(" ").size() <= 8, "first Winter reports the real net in eight words")
 	talk.finish()
 	check(game.hud._panel_kind == "accounts", "accountant opens annual ledger in Winter")
 	game._on_action("close")
 	farm.season_clock.year = 2
-	check(Roster.ledger_lines(farm).split("\n").size() == 2 and not Roster.ledger_lines(farm).contains(Roster.YEAR_ONE_ACCOUNTS), "later Winter reports do not repeat Year-one arithmetic")
+	check(Roster.ledger_lines(farm).split(" ").size() <= 8 and not Roster.ledger_lines(farm).contains(Roster.YEAR_ONE_ACCOUNTS), "later Winter reports do not repeat Year-one arithmetic")
 	farm.reset_game()
 	check(farm.npc_history.is_empty(),"new farm resets introductions")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))

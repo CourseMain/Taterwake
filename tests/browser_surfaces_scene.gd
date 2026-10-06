@@ -3,7 +3,7 @@ extends Node
 ## window.surfaceQA("title" | "accounts" | "market" | "climate" | "npc:nell"
 ##   | "run_summary" | "foreclosure" | "scroll:end" | "scroll:top" | "status").
 ## Await window.surfaceReport.ready before capturing the browser viewport.
-const PAGES: Array[String] = ["harvest", "spring_target", "winter_jobs", "year1_accounts", "play_spring", "play_summer", "play_autumn", "title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "inventory", "tools", "quests", "menu", "pause", "graphics", "debug", "help", "duck_patrol", "dex", "front_page", "grades", "farmer", "guide_welcome", "guide_grow", "guide_storm"]
+const PAGES: Array[String] = ["market_sell", "harvest", "spring_target", "winter_jobs", "kit_winter", "year1_accounts", "play_spring", "play_summer", "play_autumn", "title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "inventory", "tools", "quests", "menu", "pause", "graphics", "debug", "help", "duck_patrol", "dex", "front_page", "grades", "farmer", "practice", "sale_reveal", "guide_welcome", "guide_grow", "guide_storm"]
 var game
 var callback
 var request := 0
@@ -40,6 +40,7 @@ func _ready() -> void:
 	game.state.ledger.post(3, 0, "seeds", "Russet seed", -3240)
 	game.state.climate.data.outlook.records.append({"year":2, "season":1, "event":"storm", "severity":0.5})
 	game.state.ClimateSystem.Protection.record(game.state, "autumn_cold", "russet", 3, 0.0, 1.0, "Harvest before Winter", "field", 2)
+	game.hud._component_receipt = {"tonnes":14, "grade":"Table", "grade_factor":1.2, "season_name":"Winter", "price":672, "amount":11289.6, "fired":["cold_store"]}
 	base_snapshot = game.state._save_data()
 	if OS.has_feature("web"):
 		callback = JavaScriptBridge.create_callback(command)
@@ -59,7 +60,8 @@ func _ready() -> void:
 
 func _page_visible() -> bool:
 	match current_page:
-		"harvest", "spring_target", "winter_jobs", "guide_welcome", "guide_grow", "guide_storm": return not game.hud.is_panel_open() and not game.title_active()
+		"harvest", "spring_target", "winter_jobs", "kit_winter", "guide_welcome", "guide_grow", "guide_storm": return not game.hud.is_panel_open() and not game.title_active()
+		"market_sell": return game.hud.is_panel_open() and game.hud._panel_kind == "market" and game.hud._market_selling
 		"year1_accounts": return game.hud.is_panel_open() and game.hud._panel_kind == "accounts"
 		"play_spring", "play_summer", "play_autumn": return not game.hud.is_panel_open() and not game.title_active()
 		"title": return game.title_active() if game.has_method("title_active") else game.year_intro.visible
@@ -131,7 +133,7 @@ func _present(action: String, ticket: int) -> void:
 			bed.stage = 3 if index % 3 == 0 else 2
 			bed.elapsed = 60 if bed.stage == 3 else 36
 			bed.watered = true
-	if current_page in ["accounts", "year1_accounts", "winter_jobs", "climate", "run_summary", "foreclosure"]:
+	if current_page in ["accounts", "year1_accounts", "winter_jobs", "kit_winter", "climate", "run_summary", "foreclosure"]:
 		game.state.season_clock.season = 3
 		game.state.season_clock.seconds = 0
 		game.state.ledger.post_fixed_costs(3)
@@ -140,8 +142,16 @@ func _present(action: String, ticket: int) -> void:
 			plot.tilled = false
 			plot.winter_ice = true
 	if current_page == "year1_accounts": game.state.season_clock.year = 1
-	if current_page in ["winter_jobs"]:
+	if current_page in ["winter_jobs", "kit_winter"]:
 		game.state.trading.held = game.state.storage.duplicate(true)
+	if current_page == "kit_winter":
+		game.state.trading.held = game.state.Stock.empty()
+		game.state.Stock.add(game.state.trading.held, "golden", 12, 60)
+		game.state.diversification.built = {"shop":2, "grower":2, "lodging":2}
+		game.state.climate.data.protection.pending.drainage = 1
+		game.state.climate.data.projects.frost = 1
+		for index in range(3,12): game.state.plots[index].winter_ice = false
+		for index in range(9,12): game.state.climate.data.protection.covers[str(index)] = {"year":4,"level":1}
 	if current_page == "run_summary":
 		game.state.season_clock.year = 10
 		game.state.season_clock.seconds = game.state.SeasonClock.SEASON_SECONDS
@@ -168,7 +178,8 @@ func _present(action: String, ticket: int) -> void:
 			game.world.set_calendar(3, 0, 75)
 			game.world._animate_sun(3.4)
 			game.hud.update_state(game.state)
-		"winter_jobs": game.hud._season_jobs.refresh()
+		"winter_jobs", "kit_winter": game.hud._season_jobs.refresh()
+		"market_sell": game.hud.show_market(true, game.state)
 		"year1_accounts": game.hud.show_panel("accounts", game.state)
 		"play_spring", "play_summer", "play_autumn": game.world._animate_sun(3.4)
 		"title":
@@ -219,6 +230,7 @@ func _present(action: String, ticket: int) -> void:
 		game.world.harvest_feedback.animate(.22)
 		game.hud._toast_box.hide(); game.hud._spring_target.hide()
 		for frame in range(3): await get_tree().process_frame
+	if current_page == "sale_reveal": await get_tree().create_timer(3.0).timeout
 	is_ready = true
 	_publish()
 

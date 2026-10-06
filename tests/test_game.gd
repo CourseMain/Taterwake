@@ -93,16 +93,16 @@ func _run() -> void:
 	var held: int = Stock.count(game.state.storage, "russet")
 	game._process(4.0)
 	check(Stock.count(game.state.storage, "russet") == held, "market movement never automatically sells stored crops")
-	game._on_action("barn")
+	game._on_action("market:sell")
 	await shot("barn")
 	before_coins = game.state.coins
-	check(game.hud._panel_kind == "barn", "barn opens the sole selling page")
+	check(game.hud._panel_kind == "market" and game.hud._market_selling, "Mara opens the shared Sell page")
 	var sale = game.hud._refs.market_page
 	press("grade:russet:" + sale.selected_grade)
 	press("market_all")
 	press("market_sell")
-	check(Stock.count(game.state.storage, "russet") == 0, "barn Sell opens a grade sale that consumes held crops")
-	check(game.state.coins > before_coins, "barn sale pays farming proceeds")
+	check(Stock.count(game.state.storage, "russet") == 0, "Mara Sell opens a grade sale that consumes held crops")
+	check(game.state.coins > before_coins, "Mara sale pays farming proceeds")
 	game.hud.close_panel()
 	# Farming needs separate player actions to prepare, plant and water.
 

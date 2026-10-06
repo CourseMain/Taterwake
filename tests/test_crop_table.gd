@@ -105,18 +105,15 @@ func ui_checks() -> void:
 	check(game.state.selected_crop == "icecap" and game.selected_tool == "plant" and game.state.coins == balance, "selecting a card selects the seed tool without buying")
 	for size in [Vector2i(1280, 800), Vector2i(390, 844)]:
 		root.size = size
-		if game.touch_controls.enabled:
-			game.touch_controls.resize()
-		else:
-			root.content_scale_size = size
-			game.hud._modal_card.offset_left = -minf(500, size.x * 0.5 - 12)
-			game.hud._modal_card.offset_right = minf(500, size.x * 0.5 - 12)
+		game.touch_controls.enabled = size.x == 390
+		if game.touch_controls.enabled: game.touch_controls._build_touch_sheets()
+		game.touch_controls.resize(); game.hud.Kit.fit(game.hud)
 		for i in range(8): await process_frame
 		page._layout()
 		for i in range(8): await process_frame
-		check(page.grid.columns == 5 and page.find_child("SeedPacketSwipe", true, false) != null, "packets remain a swipe row on a phone")
+		check(page.grid.columns == (5 if game.hud.Kit.desktop(game.hud) else 2) and page.find_child("SeedPacketSwipe", true, false) == null, "seed cards use the kit grid without a card scrollbar")
 		for id in Table.IDS:
-			var swipe: ScrollContainer = page.find_child("SeedPacketSwipe", true, false)
+			var swipe: ScrollContainer = game.hud._body.get_parent()
 			swipe.ensure_control_visible(page.seed_cards[id])
 			for frame in range(8): await process_frame
 			for dial in ["water_need", "heat_tolerance", "cold_tolerance"]:

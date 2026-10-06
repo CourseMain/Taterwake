@@ -75,18 +75,19 @@ func run() -> void:
 			if kind == "accounts":
 				var paper_faces: Dictionary = {}
 				for label in game.hud._modal_card.find_children("*", "Label", true, false):
-					paper_faces[label.get_theme_font("font").get_instance_id()] = true
-				check(paper_faces.size() == 3, "annual accounts shares its two paper faces and one ledger face instead of creating one per label or row")
+					var font: Font = label.get_theme_font("font")
+					paper_faces[font.base_font.get_instance_id() if font is FontVariation else font.get_instance_id()] = true
+				check(paper_faces.size() == 3, "annual accounts uses Slackey and regular or bold Atkinson")
 				check(game.hud._refs["diversify:grower"].text == "Enrol free", "free enrolment has an action instead of a zero price")
 				for id in game.state.Diversification.NAMES:
 					var effect: Label = game.hud._body.find_child("BusinessEffect_" + id, true, false)
-					check(effect != null and effect.text.count("·") <= 1 and effect.get_line_count() <= 2, "business effects stay brief on the ledger")
-				check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000" and not game.hud._refs.land_parts.visible, "land costs fold into one tappable line")
+					check(effect != null and effect.text.count("·") <= 1 and effect.text.length() <= 100, "business effects stay brief on the ledger")
+				check(game.hud._refs.land_bill.text == "Mortgage and land ›" and game.hud._refs.land_amount.text.ends_with("60,000") and not game.hud._refs.land_parts.visible, "land costs fold into one tappable line")
 				for category in game.state.Ledger.CATEGORIES:
 					if category in ["mortgage", "rent"]: continue
 					var ledger_row = game.hud._refs["accounts_" + category].get_parent().get_parent()
 					check(ledger_row.caption.text == game.state.Ledger.LABELS[category], "ledger label stays frozen")
-					check(ledger_row.visible == not is_zero_approx(game.state.ledger.total(3, category)), "ledger shows only applicable categories")
+					check(ledger_row.visible == (category in ["sales", "seeds", "living", "upkeep"] or not is_zero_approx(game.state.ledger.total(3, category))), "ledger shows only applicable categories")
 				var recorded_losses: Array = game.state.climate.data.protection.losses.duplicate(true)
 				game.state.climate.data.protection.losses.clear()
 				game.hud.show_panel("accounts", game.state); await settle()
@@ -100,20 +101,9 @@ func run() -> void:
 				game.state.climate.data.protection.losses.assign(recorded_losses)
 				game.hud.show_panel("accounts", game.state); await settle()
 			if kind == "barn":
-				var sale = game.hud._refs.market_page
-				check(not sale.trade_open, "sale stepper waits for a grade chip")
-				for crop in sale.sale_rows:
-					for grade in sale.sale_rows[crop].grades:
-						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade chip matches actual tonnes")
-			if kind == "barn":
-				var sale = game.hud._refs.market_page
-				check(sale.tabs.get_child(0).button_pressed and not sale.tabs.get_child(1).button_pressed, "Winter market marks the stores view")
-				sale.tabs.get_child(1).pressed.emit(); await settle()
-				check(not sale.stored_mode and sale.tabs.get_child(1).button_pressed and not sale.tabs.get_child(0).button_pressed, "fresh harvest selection follows its visible view")
-				sale.tabs.get_child(0).pressed.emit(); await settle()
-				check(sale.stored_mode and sale.tabs.get_child(0).button_pressed and not sale.trade_open, "returning to stores highlights its tab without opening a sale")
+				check(not game.hud._refs.has("market_page") and game.hud._refs.has("contract_accept"), "barn has orders and deals, without a sale counter")
 			if kind == "market":
-				check(game.hud._body.find_child("MaraChalkboard", true, false) != null, "seeds sit on chalkboard")
+				check(game.hud._refs.market_page.grid.columns == (5 if game.hud.Kit.desktop(game.hud) else 2), "seeds sit on illustrated kit cards")
 				check(game.hud._refs.market_page.sale_rows.is_empty() and game.hud._body.find_child("PriceHistory", true, false) == null, "Buy has seed packets without harvested stock or price charts")
 				for crop in game.hud._refs.market_page.crops:
 					check(not game.hud._refs.has(crop + ":price") and not game.hud._refs.has(crop + ":history"), "packet excludes market statistics")
@@ -151,12 +141,16 @@ func run() -> void:
 						if "--capture" in OS.get_cmdline_user_args():
 							RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/segment19-help-%d.png" % dimensions.x)
 						notes.queue_free(); await settle()
-			if kind in ["barn", "barn"]:
+			if kind == "market":
+				game.hud._refs.market_page.tabs.get_child(1).pressed.emit(); await settle()
 				var sale = game.hud._refs.market_page
-				var entry: Dictionary = sale.sale_rows.russet
-				entry.grades.Standard.pressed.emit(); await settle()
-				check(sale.trade_open and sale.footer.is_visible_in_tree() and sale.selected_grade == "Standard", "stocked chip opens its amount stepper")
-				if "--capture" in OS.get_cmdline_user_args():
-					scroll.scroll_vertical = 0; await settle(); RenderingServer.force_draw(); root.get_texture().get_image().save_png("res://artifacts/segment19-%s-%d-stepper.png" % [kind, dimensions.x])
+				check(sale.selling and sale.tabs.get_child(1).button_pressed and sale.tabs.get_child_count() == 2, "Mara has one Buy tab and one Sell tab")
+				check(sale.trade_open and sale.footer.is_visible_in_tree(), "one current stock has one amount stepper")
+				for crop in sale.sale_rows:
+					check(sale.sale_rows[crop].card.visible == (crop == sale.selected), "only the selected stock is shown")
+					for grade in sale.sale_rows[crop].grades:
+						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade stamp matches actual current stock")
+				sale.tabs.get_child(0).pressed.emit(); await settle()
+				check(not game.hud._refs.market_page.selling, "Buy returns to seeds within Mara’s page")
 	game.queue_free(); await settle(); await create_timer(.25).timeout
 	print("INTERFACE PAGES: %d checks, %d failures" % [checks, failures]); quit(1 if failures else 0)

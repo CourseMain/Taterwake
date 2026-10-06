@@ -221,7 +221,7 @@ func sleep_checks() -> void:
 	game._on_state_changed()
 	check(game.hud._season_jobs.sleep_button.visible, "Winter jobs offer sleep outside the work count")
 	game._on_action("menu")
-	check(game.hud._body.find_children("MenuSleepUntilSpring", "Button", true, false).size() == 1, "farm menu offers the same sleep action")
+	check(game.hud._body.find_children("MenuTile_*", "Button", true, false).size() == 6, "Menu is the six-tile board; Winter owns sleep")
 	game.hud._act("sleep_spring")
 	check(game.hud._panel_kind == "sleep_confirm" and game.hud._refs.sleep_quote.text.contains("28 t") and game.hud._refs.sleep_quote.text.contains(game.state.money(game.state.winter_sleep_quote().peak_value)), "confirmation states stored tonnes and late Winter value")
 	var clock: Dictionary = game.state.season_clock.save_data()

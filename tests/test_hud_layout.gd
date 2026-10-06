@@ -119,9 +119,9 @@ func winter_pages() -> void:
 	game.hud.update_state(game.state)
 	check(game.hud._panel_kind == "accounts", "accounts open before Winter jobs")
 	check(not game.hud._season_jobs.visible, "Winter jobs stay hidden while accounts pause")
-	check(game.hud._body.find_child("LedgerYearStamp", true, false) != null, "accounts stamp the year")
+	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Net for year %d" % game.state.season_clock.year), "accounts name the year beside the net")
 	check(game.hud._refs.has("ledger_screenshot"), "annual accounts offer a screenshot")
-	check(game.hud._modal.get_child(0).color.a < 1 and game.hud._modal_card.get_theme_stylebox("panel").get_meta("surface_fill") == game.hud.INK, "ledger has an ink frame over the visible farm")
+	check(game.hud._modal.get_child(0).color == game.hud.Kit.INK and game.hud._modal_card.get_theme_stylebox("panel").get_meta("surface_fill") == game.hud.Kit.PAPER, "ledger uses kit paper over the ink felt")
 	game.hud.close_panel()
 	game.state.climate.data.protection.pending.rainwater = 1
 	game.state.climate.data.projects.frost = 1
@@ -161,8 +161,8 @@ func winter_pages() -> void:
 	game.state.climate.data.protection.pending.erase("rainwater")
 	note.refresh()
 	check(note.completed.has("project:rainwater") and not note.jobs.has("project:rainwater"), "completed project ticks off")
-	game.hud.show_panel("barn", game.state)
-	check(game.hud._panel_kind == "barn" and game.hud._refs.market_page.stored_mode, "barn directly opens rising Winter store quotes")
+	game.hud.show_market(true, game.state)
+	check(game.hud._panel_kind == "market" and game.hud._market_selling and game.hud._refs.market_page.stored_mode, "barn directly opens rising Winter store quotes")
 	check(not game.hud._refs.has("upgrade:barn"), "barn capacity expansion belongs to Tools")
 	game.hud.close_panel()
 	root.min_size = Vector2i.ZERO

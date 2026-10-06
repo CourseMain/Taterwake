@@ -178,8 +178,8 @@ func ui_checks() -> void:
 	game.state.update(450)
 	await process_frame
 	check(game.hud._panel_kind == "accounts" and game.hud._refs.accounts_net.text.contains(game.state.format_number(game.state.ledger.fixed_cost_total())), "annual accounts show the year net")
-	check((game.hud._modal.get_child(0) as ColorRect).color.a < 1 and game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS, "accounts keep the farm rendering behind a translucent shade")
-	check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000", "accounts group only fixed land costs")
+	check((game.hud._modal.get_child(0) as ColorRect).color == game.hud.Kit.INK and game.farm_viewport.render_target_update_mode == SubViewport.UPDATE_ALWAYS, "accounts use the kit ink backdrop while the farm keeps rendering")
+	check(game.hud._refs.land_bill.text == "Mortgage and land ›" and game.hud._refs.land_amount.text == game.state.money(-60000), "accounts group only fixed land costs")
 	for category in Ledger.CATEGORIES:
 		if category in ["mortgage", "rent"]: continue
 		check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == Ledger.LABELS[category]), "accounts include " + category)

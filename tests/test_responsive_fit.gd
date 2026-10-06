@@ -36,7 +36,7 @@ func check_menu(label: String) -> void:
 	var scroll: ScrollContainer = game.hud._body.get_parent()
 	check(game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 0.5, label + " content needs no unavailable horizontal scrolling")
 	var close: Control = game.hud._modal_card.get_child(0).get_child(0).get_child(1)
-	inside(close, label + " close button")
+	if close.is_visible_in_tree(): inside(close, label + " close button")
 
 func run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
@@ -171,13 +171,15 @@ func paper_pages() -> void:
 			await settle()
 			check_menu(tag + " " + kind)
 			if kind == "accounts":
-				check(game.hud._refs.land_bill.text == "Mortgage and land · 60,000", tag + " grouped fixed land bill")
+				game.hud._refs.account_records.show()
+				await settle()
+				check(game.hud._refs.land_bill.text == "Mortgage and land ›" and game.hud._refs.land_amount.text == game.state.money(-60000), tag + " grouped fixed land bill")
 				for category in game.state.Ledger.CATEGORIES:
 					if category in ["mortgage", "rent"]: continue
 					var amount: Label = game.hud._refs["accounts_" + category]
 					var row = amount.get_parent().get_parent()
 					if not row.visible: continue
-					check(amount.get_line_count() == 1 and absf(amount.global_position.y - row.caption.global_position.y) < 1, tag + " aligned ledger amount " + category)
+					check(amount.get_line_count() == 1 and absf(amount.get_global_rect().get_center().y - row.caption.get_global_rect().get_center().y) < 1, tag + " aligned ledger amount " + category)
 			var physical_scale: float = minf(float(root.size.x) / game.hud.root.size.x, float(root.size.y) / game.hud.root.size.y)
 			for button in game.hud._modal_card.find_children("*", "Button", true, false):
 				if not button.is_visible_in_tree(): continue
