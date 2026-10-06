@@ -33,6 +33,7 @@ func setup(owner_hud) -> void:
 		if fixed >= 0: site.select(fixed); site.disabled = true
 		hud._style_choice(site)
 		site.set_meta("text_tier", 14)
+		site.set_meta("kit_type", true)
 		for variant in ["normal", "hover", "pressed", "disabled"]:
 			site.add_theme_stylebox_override(variant, Kit.skin(Kit.WOOD, Kit.WOOD, 6, 10, Kit.unit(hud)))
 		for colour in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
