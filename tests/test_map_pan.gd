@@ -242,5 +242,7 @@ func run() -> void:
 		check_shadow_depth("viewport " + str(dimensions))
 	game.queue_free()
 	await process_frame
+	# Allow stopped OGG playback to release on the audio mixer thread.
+	await create_timer(.3).timeout
 	print("MAP PAN: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

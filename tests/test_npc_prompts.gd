@@ -65,9 +65,8 @@ func run() -> void:
 	mouse.pressed = false
 	root.push_input(mouse, true)
 	await frames()
-	check(game.conversation.visible and game.conversation.service == "market", "held badge greets Mara before seeds")
-	game.conversation.choose(0)
-	check(game.hud._panel_kind == "market", "seed service opens after talking")
+	check(not game.conversation.visible and game.hud._panel_kind == "market", "held badge returns to Mara directly after her seasonal greeting")
+	check(game.hud._panel_kind == "market", "seed service opens from the held badge")
 	var badge: Button = game.touch_controls.interaction_prompt
 	var badge_style: StyleBoxFlat = badge.get_theme_stylebox("normal")
 	check(badge_style.bg_color == Color.WHITE and badge_style.border_color == Color("161916"), "white E with dark outline")

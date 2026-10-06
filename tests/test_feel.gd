@@ -33,8 +33,12 @@ func prepare_winter(farm, seconds: float = 25.0) -> void:
 func audio_checks() -> void:
 	var unique: Dictionary = {}
 	for stream in Ambience.STREAMS:
-		check(stream.get_length() >= 40 and stream.data.size() > 0, "long natural ambience bed exists")
-		unique[hash(stream.data)] = true
+		var playback: AudioStreamPlayback = stream.instantiate_playback()
+		playback.start(stream.get_length() * .5)
+		var samples: PackedVector2Array = playback.mix_audio(1.0, 1024)
+		playback.stop()
+		check(stream.get_length() >= 40 and samples.size() == 1024 and Array(samples).any(func(sample): return sample.length_squared() > .000001), "long natural ambience bed decodes")
+		unique[hash(samples)] = true
 	check(unique.size() == 5, "breeze, leaves, stream, rain and Winter hush have distinct recordings")
 	for kind in ["hoe", "plant", "water", "harvest", "pest", "paper", "foreclosure"]:
 		check(Audio.CLIPS.has(kind) and Audio.CLIPS[kind].get_length() > 0, "prebuilt foley/cue present: " + kind)

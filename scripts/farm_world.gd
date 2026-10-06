@@ -320,7 +320,7 @@ func _prepare_tutorial_guidance() -> void:
 	for station_roots: Array in _tutorial_station_roots.values():
 		for station_root: Node3D in station_roots:
 			for label: Label3D in station_root.find_children("*", "Label3D", true, false):
-				if label.billboard == BaseMaterial3D.BILLBOARD_DISABLED:
+				if label.billboard == BaseMaterial3D.BILLBOARD_DISABLED and not label.get_meta("shop_label", false):
 					continue
 				var layer := Node3D.new()
 				layer.name = "TutorialSignVisibility"
@@ -1857,6 +1857,7 @@ func _valley_dock() -> void:
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
 	_dock_label = _hanging_sign(dock,Vector3(0,0,-.4),"Pier",Color("587653"),2.4)
+	_dock_label.set_meta("shop_label", true)
 
 
 func _sunburst_bloom(parent: Node3D, pos: Vector3) -> void:

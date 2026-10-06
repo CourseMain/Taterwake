@@ -56,13 +56,17 @@ function fit(s){
      await page.setViewportSize({width:height,height:width});await page.waitForTimeout(250);
      await page.setViewportSize({width,height});await page.waitForTimeout(250);
      await tap('primary_rect');await wait('!s.title');
+     await page.waitForFunction(()=>Object.keys(window.titleReport.first_play_frame).length);
+     const firstContinued=await page.evaluate(()=>window.titleReport.first_play_frame);fit(firstContinued);assert.equal(firstContinued.guide,'grow');
+     if(width===390)assert.ok(firstContinued.home[2]>.9,'Continue fills Home on its first play draw');
      assert.equal((await state()).panel,false);assert.equal((await state()).guide,'grow');
      fit(await state());await page.waitForTimeout(2000);const continued=await state();fit(continued);
      await page.screenshot({path:`${output}/returning-farm-${width}.png`});
-     results.push({resolution:[width,height],returning_growing:continued});
+     results.push({resolution:[width,height],returning_growing:continued,first_play_frame:firstContinued});
      await page.evaluate(()=>window.titleQA('complete_checkpoint'));await page.waitForTimeout(1500);
      await launch();await tap('primary_rect');await wait('!s.title && s.guide===""');
-     const overview=await state();fit(overview);
+     await page.waitForFunction(()=>Object.keys(window.titleReport.first_play_frame).length);
+     const overview=await page.evaluate(()=>window.titleReport.first_play_frame);fit(overview);
      if(width===390){assert.ok(overview.island.bounds[2]>.98,'returning island fills portrait width');assert.ok(Math.abs(overview.island.bounds[1]+overview.island.bounds[3]/2-.5)<.03,'island is vertically centred');}
      await page.screenshot({path:`${output}/returning-overview-${width}.png`});
      results.push({resolution:[width,height],returning_overview:overview});

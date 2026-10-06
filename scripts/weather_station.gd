@@ -41,6 +41,7 @@ func setup(w) -> void:
 	for side in [-1,1]: world._bar(bowl,Vector3(side*.5,.13,0),Vector3(0,.65,0),.025,WOOD)
 	world._sphere(bowl,Vector3(0,.65,0),Vector3.ONE*.09,IRIS)
 	status = world._hanging_sign(self,Vector3(0,0,2.0),"Weather station",IRIS,3.6)
+	status.set_meta("shop_label", true)
 	world._target(self,Vector3(0,1.5,0),Vector3(3.5,3.3,3.3),"station","climate")
 	# Match other moving instruments; the hut, mast and sign cast solid shadows.
 	for mesh: GeometryInstance3D in dish.find_children("*", "GeometryInstance3D", true, false): mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

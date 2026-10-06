@@ -107,7 +107,7 @@ func run() -> void:
 		for label: Label3D in game.world.find_children("*", "Label3D", true, false):
 			if not label.get_meta("shop_label", false): continue
 			signs += 1
-			check(label.font == game.world._shop_font and label.font_size <= 32 and label.outline_size > 0, "shared outlined shop typography: " + label.text)
+			check(label.font == game.world._shop_font and label.font_size <= 32 and label.billboard == BaseMaterial3D.BILLBOARD_DISABLED and not label.no_depth_test, "shared physical shop typography: " + label.text)
 		check(signs >= 7, "island %d retains discoverable shop signs" % island)
 		await shot("island-%d" % island)
 	state.coins = 8600000000

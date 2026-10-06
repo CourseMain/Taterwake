@@ -120,6 +120,8 @@ func run() -> void:
 		root.get_texture().get_image().save_png("res://artifacts/segment7-valley.png")
 	game.queue_free()
 	await process_frame
+	# Allow stopped OGG playback to release on the audio mixer thread.
+	await create_timer(.3).timeout
 	for suffix in ["", ".bak", ".rejected", ".tmp"]:
 		if FileAccess.file_exists(SAVE + suffix): DirAccess.remove_absolute(SAVE + suffix)
 	print("SINGLE FARM: %d checks, %d failures" % [checks, failures])

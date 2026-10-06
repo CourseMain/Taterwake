@@ -155,5 +155,7 @@ func run() -> void:
 		check(game.hud._panel_kind == "sleep_confirm", "real GUI click reaches Sleep through the weather overlay")
 	game.queue_free()
 	await frames()
+	# Allow stopped OGG playback to release on the audio mixer thread.
+	await create_timer(.3).timeout
 	print("TOUCH CONTROLS: %d checks, %d failures" % [checks,failures])
 	quit(1 if failures else 0)
