@@ -67,6 +67,7 @@ func sync_light() -> void:
 	water_material.set_shader_parameter("horizon_color", world._day_environment.background_color)
 	var light: float = clampf(world._sun.light_energy / 1.4, 0.0, 1.0)
 	water_material.set_shader_parameter("daylight", light)
+	water_material.set_shader_parameter("haze_density", .5 if world._season_index < 2 else 1.0)
 	if is_instance_valid(world.camera): water_material.set_shader_parameter("camera_world", world.camera.global_position)
 	var sun: Dictionary = world.sun_sky_info()
 	water_material.set_shader_parameter("sun_screen", sun.screen)

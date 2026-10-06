@@ -391,6 +391,7 @@ func _build_tutorial() -> void:
 	contents.add_child(top_row)
 	_tutorial_cue = preload("res://scripts/hint_cue.gd").new()
 	top_row.add_child(_tutorial_cue)
+	_tutorial_cue.hide()
 	var guide_space := Control.new()
 	guide_space.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_row.add_child(guide_space)
@@ -403,6 +404,7 @@ func _build_tutorial() -> void:
 		graphics.add_theme_stylebox_override(style_name, _style(Color("29493b") if style_name != "normal" else Color.TRANSPARENT, 0, 5))
 		graphics.add_theme_color_override("font_" + ("color" if style_name == "normal" else style_name + "_color"), Color("acbfae"))
 	top_row.add_child(graphics)
+	graphics.hide()
 	_tutorial_skip = _button("×", "tutorial:exit")
 	_tutorial_skip.name = "TutorialSkip"
 	_tutorial_skip.tooltip_text = "Skip the guided year"
@@ -779,7 +781,8 @@ func _act(action: String) -> void:
 		if _refs.has(key):
 			_refs[key].visible = not _refs[key].visible
 			if _refs.has(key + ":toggle"):
-				_refs[key + ":toggle"].text = ("Hide " if _refs[key].visible else "Show ") + str(_refs[key + ":toggle"].get_meta("section_title", "details"))
+				var toggle: Button = _refs[key + ":toggle"]
+				toggle.text = ("" if toggle.get_meta("details_tile", false) else "Hide " if _refs[key].visible else "Show ") + str(toggle.get_meta("section_title", "details"))
 			if _refs[key].visible: _reveal_details(_refs[key])
 		return
 	if is_instance_valid(_state) and bool(_state.get("run_over")) and action not in (["reset", "debug", "close", "menu", "accounts", "run_summary", "epilogue", "request_reset", "cancel_reset", "measurement", "measurement_copy"] if _state.run_outcome == "completed" else ["reset", "debug", "close", "cancel_reset", "measurement", "measurement_copy"]) and not action.begins_with("debug"):
@@ -926,7 +929,8 @@ func _layout_top() -> void:
 	var touch = get_parent().get("touch_controls")
 	var phone: bool = is_instance_valid(touch) and touch.enabled
 	_ui_scale = touch.display_scale() if phone else 1.0
-	var band: float = 56.0 / _ui_scale if phone else 64.0
+	var portrait: bool = phone and root.size.x < root.size.y
+	var band: float = (84.0 if portrait else 56.0) / _ui_scale if phone else 64.0
 	var margin: float = 6.0 / _ui_scale
 	var height: float = band - margin * 2
 	var width: float = root.size.x
@@ -939,6 +943,11 @@ func _layout_top() -> void:
 	_menu_button.position = Vector2(width - menu_width - margin, margin); _menu_button.size = Vector2(menu_width, height)
 	_stats_card.position = Vector2(season_width + margin * 2, margin)
 	_stats_card.size = Vector2(maxf(0, width - season_width - menu_width - margin * 4), height)
+	if portrait:
+		var row_width: float = width - menu_width - margin * 3 - 44.0 / _ui_scale
+		_season_strip.size = Vector2(row_width, 30.0 / _ui_scale)
+		_stats_card.position = Vector2(_season_strip.position.x, 42.0 / _ui_scale)
+		_stats_card.size = Vector2(row_width, 36.0 / _ui_scale)
 	for label in [_season_strip, _menu_button]: label.set_meta("text_tier", 14 if phone else 16)
 	for label in [_top.coins, _money_symbol]: label.set_meta("text_tier", 22 if phone else 24)
 	fit_text(_play_band); fit_text(_season_strip); fit_text(_stats_card); fit_text(_menu_button)
@@ -2141,7 +2150,30 @@ func _build_winter(_staged: bool = false, _request: int = 0) -> void:
 	_refs.ledger_screenshot.reparent(records)
 	_refs.screenshot_status.reparent(records)
 	_modal_trade_footer.hide()
+	_account_detail_tiles()
 	if Kit.desktop(self): _spread_accounts()
+
+func _account_detail_tiles() -> void:
+	var row := HBoxContainer.new()
+	row.name = "AccountDetailTiles"
+	row.add_theme_constant_override("separation", ceili(8 * Kit.unit(self)))
+	_body.add_child(row)
+	_body.move_child(row, _refs["account_records:toggle"].get_index())
+	var pictures: Dictionary = {"account_records": {"kind": "place", "id": "ledger"}, "account_leases": {"kind": "metric", "id": "beds"}, "account_businesses": {"kind": "place", "id": "barn"}}
+	for key: String in pictures:
+		if not _refs.has(key + ":toggle"): continue
+		var tile: Button = _refs[key + ":toggle"]
+		tile.set_meta("details_tile", true)
+		tile.set_meta("plain_control", false)
+		tile.set_meta("text_tier", 14)
+		tile.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		tile.text = str(tile.get_meta("section_title"))
+		tile.picture = pictures[key]
+		tile.picture_pixels = 40
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.custom_minimum_size = Vector2(0, 84 * Kit.unit(self))
+		tile.reparent(row)
+		tile.refresh_picture()
 
 func _spread_accounts() -> void:
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", ceili(28 * Kit.unit(self)))

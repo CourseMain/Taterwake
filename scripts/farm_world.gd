@@ -742,9 +742,10 @@ func sun_sky_info() -> Dictionary:
 
 func _sync_sun_sky() -> void:
 	if play_sky == null or not is_instance_valid(_sun): return
-	var signature: Array = [_sun.global_basis.z, camera.global_transform if is_instance_valid(camera) else Transform3D.IDENTITY, get_viewport().size, _day_environment.background_color, _sun.light_color, _sun.light_energy, _weather_strength, _weather_drought]
+	var signature: Array = [_sun.global_basis.z, camera.global_transform if is_instance_valid(camera) else Transform3D.IDENTITY, get_viewport().size, _day_environment.background_color, _sun.light_color, _sun.light_energy, _weather_strength, _weather_drought, _season_index]
 	if signature == _sun_sky_signature: return
 	_sun_sky_signature = signature
+	play_sky.set_shader_parameter("haze_density", .5 if _season_index < 2 else 1.0)
 	play_sky.set_shader_parameter("sun_direction", _sun.global_basis.z.normalized())
 	play_sky.set_shader_parameter("sun_colour", _sun.light_color)
 	play_sky.set_shader_parameter("sun_visibility", 1.0 - minf(.9, _weather_strength * .8) if not _weather_drought else 1.0)
@@ -2252,7 +2253,7 @@ static func season_tints(year: int, season: int, hint: String = "") -> Dictionar
 	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "grass_low": [Color("486b47"),Color("626b3d"),Color("79633f"),Color("c7cfd4")][season].lerp(grass,.1), "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
-		"haze": (0.12 + age * 0.26) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
+		"haze": (0.06 + age * 0.13) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
 
 func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	for entry in _season_materials:
@@ -2355,7 +2356,7 @@ func _apply_season() -> void:
 			entry.material.albedo_color = color
 
 func draw_season_signals(v, time: float) -> void:
-	var haze: float = float(_season_palette.get("haze", 0)) + (_weather_strength * 0.20 if _weather_drought else 0.0)
+	var haze: float = float(_season_palette.get("haze", 0)) + (_weather_strength * (0.10 if _season_index < 2 else 0.20) if _weather_drought else 0.0)
 	if haze > 0:
 		for band in range(5):
 			for j in range(15):

@@ -77,7 +77,6 @@ static func fit(hud) -> void:
 	height = minf(height, view.y - receipt_space - notice_space - 48 * u)
 	if hud._panel_kind == "farmer": height = minf(view.y - 32 * u, (620 if wide else 470) * u)
 	elif hud._panel_kind in ["menu", "pause"]: height = (350 if wide else 268) * u
-	elif hud._panel_kind == "grades": height = (190 if wide else 290) * u
 	var rect := Rect2((view - Vector2(width, height)) * .5, Vector2(width, height))
 	rect.position.y = receipt_space + (view.y - receipt_space - notice_space - height) * .5
 	hud._modal_card.set_anchors_preset(Control.PRESET_TOP_LEFT)

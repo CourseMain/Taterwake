@@ -87,9 +87,15 @@ func run() -> void:
 	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets(); game.touch_controls.resize()
 	await settle()
 	var scale: float = game.touch_controls.display_scale()
-	check(game.hud._play_band.size.y * scale <= 56.1, "phone top band is at most fifty-six pixels")
+	check(game.hud._play_band.size.y * scale <= 84.1, "phone top band fits two compact rows")
 	var row: Array[Control] = [game.hud._season_strip, game.hud._stats_card, game.hud._menu_button]
-	check(row[0].position.y == row[1].position.y and row[1].position.y == row[2].position.y, "season, money and Menu occupy one row")
+	check(row[0].get_global_rect().end.y <= row[1].get_global_rect().position.y, "season and money occupy separate phone rows")
+	game.state.season_clock.season = 3; game.state.season_clock.year = 10
+	game.state.coins = -210000; game.hud.update_state(game.state)
+	await settle()
+	check(game.hud._season_strip.text == "Winter · Year 10", "phone keeps the full year label")
+	check(not row[0].get_global_rect().intersects(row[1].get_global_rect()), "long Winter label clears negative money")
+	game.state.coins = 80000
 	check(game.hud.root.find_child("FarmWordmark", true, false) == null, "the wordmark lives on the gate, not in the HUD")
 	for page in ["market", "barn", "inventory", "tools", "decorations", "accounts", "climate", "quests", "pause", "farmer", "grades", "calendar"]:
 		game.hud.show_panel(page, game.state); await settle()

@@ -16,6 +16,7 @@ uniform vec3 sun_colour : source_color = vec3(1.,.94,.8);
 uniform vec3 sky_top : source_color = vec3(.4,.6,.7);
 uniform vec3 camera_world = vec3(14.,35.,43.);
 uniform float sun_visibility = 1.0;
+uniform float haze_density = 1.0;
 uniform float view_aspect = 1.6;
 varying vec2 sea_pos;
 void vertex() {
@@ -74,7 +75,7 @@ void fragment() {
 		vec3 sky = mix(horizon_color,sky_top,1.-smoothstep(.0,.22,SCREEN_UV.y));
 		sky = mix(sky,sun_colour,warmth);
 		sky = mix(sky,sun_colour,clamp((disc+halo)*sun_visibility,0.,1.));
-		float haze = exp(-pow((SCREEN_UV.y-.22)*35.,2.))*.17;
+		float haze = exp(-pow((SCREEN_UV.y-.22)*35.,2.))*.17*haze_density;
 		result = mix(result,horizon_color,haze);
 		result = mix(result,sky,1.-smoothstep(.19,.29,SCREEN_UV.y));
 		// Direct sun reflection uses the same light direction as the island.

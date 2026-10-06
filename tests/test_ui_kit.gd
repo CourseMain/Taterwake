@@ -81,6 +81,21 @@ func run() -> void:
 	reveal.skip()
 	check(reveal.completed and reveal.steps.all(func(step): return step.modulate.a == 1), "tap skips the presentation within four seconds")
 	check(game.state._save_data() == before_receipt, "sale reveal never posts or changes the supplied transaction")
+	game.hud.show_panel("grades", game.state); await settle()
+	check(absf(game.hud._modal_card.size.y - game.hud.modal_content_height()) * game.touch_controls.display_scale() <= 2, "grades card fits its stamps and captions")
+	game.hud.show_panel("accounts", game.state); await settle()
+	var tiles: HBoxContainer = game.hud._body.find_child("AccountDetailTiles", true, false)
+	check(tiles.get_child_count() == 3, "Winter account details share three tiles")
+	for tile in tiles.get_children():
+		check(tile.has_picture() and not tile.picture.is_empty(), "account detail has a drawing above its name")
+		var label: String = tile.text
+		tile.pressed.emit(); await settle()
+		check(tile.text == label and game.hud._refs[str(tile.get_meta("hud_action")).get_slice(":", 1)].visible, "detail tile opens its original section")
+	game.hud.show_panel("market", game.state); await settle()
+	var labels: Array[Node] = game.hud._body.find_children("*", "Label", true, false)
+	check(not labels.any(func(label): return label.text.begins_with("1 seasons")) and labels.any(func(label): return label.text.begins_with("1 season ·")), "seed packets use the singular season")
+	for label in labels:
+		if label.text in ["Thirst", "Heat", "Cold"]: check(label.get_theme_font_size("font_size") * game.touch_controls.display_scale() >= 14, "seed trait captions meet the fourteen-pixel floor")
 	game.hud.close_panel()
 	var farm = game.state
 	farm.reset_game()

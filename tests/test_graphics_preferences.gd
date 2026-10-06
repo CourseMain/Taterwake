@@ -76,7 +76,7 @@ func run() -> void:
 	game.tutorial.start()
 	var lesson: String = game.tutorial.current_id()
 	var guide_graphics: Button = game.hud.root.find_child("TutorialGraphics", true, false)
-	check(guide_graphics.is_visible_in_tree() and not guide_graphics.disabled, "graphics is reachable from the first tutorial card")
+	check(not guide_graphics.is_visible_in_tree() and not game.hud._tutorial_cue.is_visible_in_tree(), "guide hides the gear, eye and smiley")
 	guide_graphics.pressed.emit()
 	check(game.hud._panel_kind == "graphics", "tutorial settings icon opens Graphics")
 	game.hud._act("graphics:smooth")

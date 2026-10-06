@@ -305,10 +305,10 @@ func _process(delta: float) -> void:
 	_interaction_clock += delta
 	if not at_title: update_interaction_prompt(false)
 	var hud = game.hud
-	var paper: bool = at_title or hud.farm_page_open() or hud._run_end.visible
+	var paper: bool = at_title or hud.farm_page_open() or hud._run_end.visible or not hud._tutorial.is_empty()
 	fullscreen.visible = not OS.has_feature("web") and not paper and not (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "barn"])
 	if OS.has_feature("web"):
-		# Keep the existing browser button outside the one-row farm band.
+		# Keep the existing browser button outside the farm band.
 		var cover_fullscreen: bool = paper or (enabled and hud.is_panel_open() and hud._panel_kind in ["market", "barn"])
 		if cover_fullscreen != _browser_fullscreen_hidden:
 			_browser_fullscreen_hidden = cover_fullscreen

@@ -29,7 +29,7 @@ static func build(page) -> void:
 		price.add_theme_color_override("font_color", Kit.CROPS[crop])
 		var unit: Label = Kit.label(page.hud, "Per seed", 14, Kit.MUTED); unit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; body.add_child(unit)
 		var definition: Dictionary = page.State.CropTable.CROPS[crop]
-		body.add_child(Kit.label(page.hud, "%d seasons · %d t" % [definition.grow_seasons, definition["yield"]], 14))
+		body.add_child(Kit.label(page.hud, "%d %s · %d t" % [definition.grow_seasons, "season" if definition.grow_seasons == 1 else "seasons", definition["yield"]], 14))
 		for dial in [["water_need", "drop", "Thirst"], ["heat_tolerance", "sun", "Heat"], ["cold_tolerance", "snowflake", "Cold"]]:
 			var row := HBoxContainer.new(); row.add_theme_constant_override("separation", ceili(4 * Kit.unit(page.hud))); body.add_child(row)
 			row.add_child(page.hud._icon({"kind":"metric", "id":dial[1]}, 18 * Kit.unit(page.hud)))

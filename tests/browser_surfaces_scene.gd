@@ -3,7 +3,7 @@ extends Node
 ## window.surfaceQA("title" | "accounts" | "market" | "climate" | "npc:nell"
 ##   | "run_summary" | "foreclosure" | "scroll:end" | "scroll:top" | "status").
 ## Await window.surfaceReport.ready before capturing the browser viewport.
-const PAGES: Array[String] = ["market_sell", "harvest", "spring_target", "winter_jobs", "kit_winter", "year1_accounts", "play_spring", "play_summer", "play_autumn", "title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "inventory", "tools", "quests", "menu", "pause", "graphics", "debug", "help", "duck_patrol", "dex", "front_page", "grades", "farmer", "practice", "sale_reveal", "guide_welcome", "guide_grow", "guide_storm"]
+const PAGES: Array[String] = ["market_sell", "harvest", "spring_target", "winter_jobs", "kit_winter", "year1_accounts", "play_spring", "play_summer", "play_autumn", "play_winter", "station_noon", "station_dusk", "decorations", "title", "accounts", "market", "climate", "npc", "run_summary", "foreclosure", "barn", "inventory", "tools", "quests", "menu", "pause", "graphics", "debug", "help", "duck_patrol", "dex", "front_page", "grades", "farmer", "practice", "sale_reveal", "guide_welcome", "guide_grow", "guide_storm"]
 var game
 var callback
 var request := 0
@@ -63,7 +63,7 @@ func _page_visible() -> bool:
 		"harvest", "spring_target", "winter_jobs", "kit_winter", "guide_welcome", "guide_grow", "guide_storm": return not game.hud.is_panel_open() and not game.title_active()
 		"market_sell": return game.hud.is_panel_open() and game.hud._panel_kind == "market" and game.hud._market_selling
 		"year1_accounts": return game.hud.is_panel_open() and game.hud._panel_kind == "accounts"
-		"play_spring", "play_summer", "play_autumn": return not game.hud.is_panel_open() and not game.title_active()
+		"play_spring", "play_summer", "play_autumn", "play_winter", "station_noon", "station_dusk": return not game.hud.is_panel_open() and not game.title_active()
 		"title": return game.title_active() if game.has_method("title_active") else game.year_intro.visible
 		"npc": return game.conversation.visible
 		"foreclosure": return game.hud._run_end.visible
@@ -122,9 +122,9 @@ func _present(action: String, ticket: int) -> void:
 	game.state.climate.data.event = ""
 	game.state.climate.data.timer = 0
 	game.state.season_clock.seconds = 75
-	if current_page.begins_with("play_"):
-		game.state.season_clock.season = {"play_spring":0,"play_summer":1,"play_autumn":2}[current_page]
-		game.state.season_clock.seconds = 142 if current_page == "play_autumn" else 75
+	if current_page.begins_with("play_") or current_page.begins_with("station_"):
+		game.state.season_clock.season = {"play_spring":0,"play_summer":1,"play_autumn":2,"play_winter":3,"station_noon":0,"station_dusk":0}[current_page]
+		game.state.season_clock.seconds = 142 if current_page in ["play_autumn","station_dusk"] else 75
 		for index in range(24):
 			var bed: Dictionary = game.state.plots[index]
 			bed.unlocked = true
@@ -181,7 +181,15 @@ func _present(action: String, ticket: int) -> void:
 		"winter_jobs", "kit_winter": game.hud._season_jobs.refresh()
 		"market_sell": game.hud.show_market(true, game.state)
 		"year1_accounts": game.hud.show_panel("accounts", game.state)
-		"play_spring", "play_summer", "play_autumn": game.world._animate_sun(3.4)
+		"play_spring", "play_summer", "play_autumn", "play_winter", "station_noon", "station_dusk":
+			game.world.fit_overview()
+			game.world._animate_sun(3.4)
+			if current_page.begins_with("station_"):
+				var camera: Camera3D = game.world.camera
+				var view: Vector2 = game.hud.root.size
+				camera.size = maxf(18,20*view.y/view.x)
+				camera.position = game.world.weather_station.global_position + Vector3(1.5,1.5,0) + camera.basis.z*260
+				game.world.fit_camera_depth()
 		"title":
 			if game.has_method("_show_title"):
 				game._show_title(true)
@@ -199,6 +207,8 @@ func _present(action: String, ticket: int) -> void:
 			game.state.reset_game()
 			game.state.boundary_save_path = ""
 			game.tutorial.start()
+			game.world.fit_overview(true)
+			game._reset_camera_view(true)
 			if current_page != "guide_welcome":
 				game.state.tutorial_progress.step = 5
 				game.state.plots[5].merge({"stage":3, "crop":"russet", "quality":100, "watered":true}, true)
@@ -268,6 +278,8 @@ func _publish() -> void:
 		"modal": _rect(modal), "scroll": _rect(scroll), "scroll_top": scroll.scroll_vertical,
 		"content_fits_width": game.hud._body.get_combined_minimum_size().x <= scroll.size.x + 1,
 		"modal_draw_alpha": game.hud._modal_motion.modulate.a, "panel_kind":game.hud._panel_kind,
+		"modal_content_height": game.hud.modal_content_height(),
+		"guide_icons": {"smiley":game.hud._tutorial_cue.is_visible_in_tree(), "graphics":game.hud.root.find_child("TutorialGraphics",true,false).is_visible_in_tree(), "fullscreen":game.touch_controls.fullscreen.is_visible_in_tree()},
 		"sun": {"energy":game.world._sun.light_energy,"ambient":game.world._day_environment.ambient_light_energy,"opacity":game.world._sun.shadow_opacity,"rotation":[game.world._sun.rotation_degrees.x,game.world._sun.rotation_degrees.y],"screen":[game.world.sun_sky_info().screen.x,game.world.sun_sky_info().screen.y],"probe_pixel":[game.world.camera.unproject_position(probe_point).x,game.world.camera.unproject_position(probe_point).y],"viewport":[game.farm_viewport.size.x,game.farm_viewport.size.y]},
 		"world_animation_time": game.world._time, "simulation_seconds": game.state.elapsed,
 		"title_available": game.has_method("_show_title"), "buttons": [], "labels": [], "surfaces": []}
