@@ -1,0 +1,16 @@
+[
+  {
+    "suite": "test_epilogue",
+    "status": "PASS",
+    "summary": "Epilogue: 534 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/v2.0.5-standalone/test_epilogue.log"
+  },
+  {
+    "suite": "test_tuning_bot",
+    "status": "PASS",
+    "summary": "Tuning bot: 1679 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/v2.0.5-standalone/test_tuning_bot.log"
+  }
+]

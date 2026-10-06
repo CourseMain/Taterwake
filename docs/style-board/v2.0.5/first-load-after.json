@@ -1,0 +1,56 @@
+{
+  "viewport": [
+    390,
+    844
+  ],
+  "network": "10 Mbps, 40 ms latency, uncached, service workers blocked",
+  "samples": [
+    {
+      "ready_ms": 39955.94499993324,
+      "resources": [
+        {
+          "name": "index.wasm",
+          "bytes": 39514754,
+          "transfer_ms": 35958.670000076294
+        },
+        {
+          "name": "index.pck",
+          "bytes": 5370180,
+          "transfer_ms": 8641.605000019073
+        }
+      ]
+    },
+    {
+      "ready_ms": 39467.08500003815,
+      "resources": [
+        {
+          "name": "index.wasm",
+          "bytes": 39514754,
+          "transfer_ms": 35962.73000001907
+        },
+        {
+          "name": "index.pck",
+          "bytes": 5370180,
+          "transfer_ms": 8646.019999980927
+        }
+      ]
+    },
+    {
+      "ready_ms": 39415.705000162125,
+      "resources": [
+        {
+          "name": "index.wasm",
+          "bytes": 39514754,
+          "transfer_ms": 35968.03500008583
+        },
+        {
+          "name": "index.pck",
+          "bytes": 5370180,
+          "transfer_ms": 8644.185000181198
+        }
+      ]
+    }
+  ],
+  "median_ready_ms": 39467.08500003815,
+  "errors": []
+}

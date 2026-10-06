@@ -1,0 +1,2185 @@
+{
+  "url": "http://127.0.0.1:8993/index.html",
+  "repetitions": 3,
+  "results": [
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "attempt": 0,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          537,
+          653,
+          366,
+          47
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "returning_growing": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.106974005699158,
+          0.125156402587891,
+          0.786051511764526,
+          0.749689340591431
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814154744148254,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          482,
+          409,
+          476,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          482,
+          508,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.106974005699158,
+          0.125156402587891,
+          0.786051511764526,
+          0.749689340591431
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814154744148254,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          482,
+          409,
+          476,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          482,
+          508,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "returning_overview": {
+        "camera_home_distance": 0,
+        "camera_size": 76,
+        "confirmation": false,
+        "entry_size": 76,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "",
+        "home": [
+          0.372754037380219,
+          0.485591500997543,
+          0.186170160770416,
+          0.177558213472366
+        ],
+        "home_size": 76,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            0.185758084058762,
+            0.263123244047165,
+            0.619486927986145,
+            0.532810688018799
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "attempt": 1,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          537,
+          653,
+          366,
+          47
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "attempt": 2,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          537,
+          653,
+          366,
+          47
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.106974005699158,
+          0.125154703855515,
+          0.786051511764526,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.682564616203308,
+            -0.814156115055084,
+            2.61561107635498,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "attempt": 0,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          36.9230880737305,
+          965.923095703125,
+          526,
+          73
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "returning_growing": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.037036806344986,
+          0.372328966856003,
+          0.925925850868225,
+          0.255342751741409
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524013936519623,
+            3.08104729652405,
+            0.766225099563599
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          62,
+          608,
+          476,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          40,
+          1093,
+          520,
+          95
+        ],
+        "replace_rect": [
+          62,
+          707,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.037036806344986,
+          0.372328966856003,
+          0.925925850868225,
+          0.255342751741409
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524013936519623,
+            3.08104729652405,
+            0.766225099563599
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          62,
+          608,
+          476,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          40,
+          1093,
+          520,
+          95
+        ],
+        "replace_rect": [
+          62,
+          707,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "returning_overview": {
+        "camera_home_distance": 0,
+        "camera_size": 162.827835083008,
+        "confirmation": false,
+        "entry_size": 162.827838721642,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "",
+        "home": [
+          0.301856219768524,
+          0.47434538602829,
+          0.300523042678833,
+          0.0828753709793091
+        ],
+        "home_size": 162.827835083008,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -5.96046447753906e-8,
+            0.370508074760437,
+            0.99999988079071,
+            0.248689830303192
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          40,
+          1093,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "attempt": 1,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          36.9230880737305,
+          965.923095703125,
+          526,
+          73
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "attempt": 2,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          36.9230880737305,
+          965.923095703125,
+          526,
+          73
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 52.8482093811035,
+        "confirmation": false,
+        "entry_size": 52.8482093423697,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.037036806344986,
+          0.372328400611877,
+          0.925925850868225,
+          0.255343019962311
+        ],
+        "home_size": 52.8482093811035,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.892996549606323,
+            0.0524009764194489,
+            3.08104729652405,
+            0.766224980354309
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          600,
+          1298
+        ],
+        "overview_size": 162.827838721642,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          40,
+          1175,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          40,
+          1202,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        2888,
+        1804
+      ],
+      "attempt": 0,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          628.753479003906,
+          551.808837890625,
+          182,
+          24
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        2888,
+        1804
+      ],
+      "returning_growing": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.107301540672779,
+          0.125156402587891,
+          0.78539651632309,
+          0.749689340591431
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814154744148254,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          482,
+          409,
+          476,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          482,
+          508,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "grow",
+        "home": [
+          0.107301540672779,
+          0.125156402587891,
+          0.78539651632309,
+          0.749689340591431
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814154744148254,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          482,
+          409,
+          476,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          482,
+          508,
+          476,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        2888,
+        1804
+      ],
+      "returning_overview": {
+        "camera_home_distance": 0,
+        "camera_size": 76,
+        "confirmation": false,
+        "entry_size": 76,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "",
+        "home": [
+          0.372860074043274,
+          0.485591471195221,
+          0.186015009880066,
+          0.177558183670044
+        ],
+        "home_size": 76,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            0.186019986867905,
+            0.263123273849487,
+            0.618970632553101,
+            0.532810688018799
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": true,
+        "pause_reset": false,
+        "primary": "Continue · Year 1, Spring",
+        "primary_rect": [
+          460,
+          695,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": true,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        2888,
+        1804
+      ],
+      "attempt": 1,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          628.753479003906,
+          551.808837890625,
+          182,
+          24
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    },
+    {
+      "resolution": [
+        2888,
+        1804
+      ],
+      "attempt": 2,
+      "first_farm_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          628.753479003906,
+          551.808837890625,
+          182,
+          24
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": true,
+        "panel_kind": "farmer",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      },
+      "first_play_frame": {
+        "camera_home_distance": 0,
+        "camera_size": 18,
+        "confirmation": false,
+        "entry_size": 18,
+        "farmer_exit_rect": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "front_page": false,
+        "guide": "welcome",
+        "home": [
+          0.107301540672779,
+          0.125154703855515,
+          0.78539651632309,
+          0.749690175056458
+        ],
+        "home_size": 18,
+        "hud": true,
+        "idle": {
+          "petals": 0,
+          "poses": []
+        },
+        "island": {
+          "bounds": [
+            -0.681579053401947,
+            -0.814156055450439,
+            2.61343145370483,
+            2.24964570999146
+          ],
+          "clipped": false
+        },
+        "keep_rect": [
+          0,
+          0,
+          136,
+          81
+        ],
+        "logical_size": [
+          1440,
+          900
+        ],
+        "overview_size": 76,
+        "panel": false,
+        "panel_kind": "",
+        "panel_ready": false,
+        "pause_reset": false,
+        "primary": "Walk to the farm",
+        "primary_rect": [
+          460,
+          777,
+          520,
+          95
+        ],
+        "replace_rect": [
+          0,
+          0,
+          134,
+          68
+        ],
+        "safe_default": false,
+        "saved": false,
+        "secondary": "Start a new farm",
+        "secondary_rect": [
+          460,
+          804,
+          520,
+          68
+        ],
+        "secondary_visible": false,
+        "test_mode": false,
+        "title": false,
+        "version": "2.0.5",
+        "walking_in": false
+      }
+    }
+  ],
+  "errors": []
+}
