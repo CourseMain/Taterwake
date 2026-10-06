@@ -220,25 +220,44 @@ does the new core go in.
 ```
 Project: Taterland, Godot 4.7.2, GL Compatibility renderer, GDScript only,
 exported to the browser. Everything is built in code from scenes/main.tscn
-(one Node3D running scripts/main.gd). Read docs/REDESIGN_PLAN.md first: we
-are turning this big-number market game into a hard, honest farming survival
-game with a ten-year run, an annual ledger and climate change as the villain.
+(one Node3D running scripts/main.gd). It is a hard, honest farming
+survival game: a ten-year run, an annual ledger, climate change as the
+villain, no big numbers. v2.0.4 is public at the docs/ root.
+
+Before anything: merge claude/modest-hopper-yh83b7 into redesign and read
+docs/REDESIGN_PLAN.md. The segment I paste is the whole job.
 
 Rules for this session:
-- Do only the segment I paste. Do not start the next one.
-- Leave the game runnable at the end. Boot check: `godot --headless --path .
-  --script res://tests/test_game.gd -- --integration-test` must pass.
-- Run the suites named in the segment with tools/run_tests.sh (Segment 1
-  creates it). Delete tests that cover removed systems; never skip or
-  disable a test to get green.
-- Never touch docs/index.* (the published web build) or the web/ folder.
-- Keep commits small with plain messages. No AI attribution lines.
-- Keep the visual identity: the round potato farmer, the villagers, the
-  hand-built 3D islands, the cream UI. Remove systems, not charm.
-- If a removal reveals code that only served the removed system (a helper,
-  a shader, an audio file, a font glyph), remove that too.
-- Update docs/GAMEPLAY.md and docs/DEVELOPMENT.md paragraphs that describe
-  what you removed or added; delete rather than rewrite when unsure.
+- Do only the segment I paste, every part of it, in order. Do not start
+  the next one. Change nothing the segment does not name. If you think
+  something else needs changing, say so in the report; do not do it.
+- Do not make design decisions on your own. If the plan and I disagree,
+  ask me before building; record my answer in DEVELOPMENT.md as "owner's
+  decision" with the date.
+- The look is fixed by docs/style-board/ui-kit.html and the Segment 22
+  simplicity contract: ink felt, paper, wood; one colour per keeper and
+  per potato; rarity only as a card edge; Slackey for names, numbers and
+  signs, Atkinson Hyperlegible for body; no grey, no white, no cream on
+  cream; no text under 14 px at 390 wide; one drawing above every name;
+  a word in a box gets a picture. Anything in the kit's "sent back" list
+  fails.
+- Copy: full plain sentences, one instruction per card, at most twelve
+  words; keeper lines in the cast bible's voice, at most eight words.
+- Economy: balance.gd is the single source; ledger labels are frozen
+  (new labels may be added, none changed); the tuning bot's table must
+  not move unless the segment says so.
+- Entrances follow docs/ENTRANCE_MAP.md; each thing has one home.
+- Leave the game runnable. Full suite before tagging: tools/run_tests.sh
+  -j 2, plus test_epilogue and test_tuning_bot standalone. Fix flaky
+  tests; never skip, disable or delete a test to get green.
+- Never touch docs/index.*, docs/classic/ or web/ except in a release
+  step the segment names.
+- Commits small with plain messages, no AI attribution lines. Tag as the
+  segment says. Publish to docs/ only when the segment says.
+- Report at the end: what changed, the suite result with numbers, the
+  screenshots the segment asked for at 390x844 and desktop, and anything
+  left undone with the reason. A segment is not done until every part
+  is done or named as undone.
 ```
 
 ### Segment 1: Safety rails and test runner
