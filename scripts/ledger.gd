@@ -123,6 +123,8 @@ static func valid(raw: Variant, current_year: int, current_season: int) -> bool:
 		if int(entry.year) == current_year and int(entry.season) > current_season: return false
 		if entry.get("category") not in CATEGORIES or not entry.get("label") is String or entry.label.is_empty() or entry.label.length() > 256: return false
 		if not (entry.get("amount") is float or entry.get("amount") is int) or not is_finite(float(entry.amount)): return false
+		if entry.label == "Decoration":
+			if entry.category != "other" or -float(entry.amount) not in Balance.DECORATION_COSTS.values(): return false
 		if entry.label == GUIDED_CREDIT_LABEL:
 			credits += 1
 			if credits > 1 or int(entry.year) != 1 or int(entry.season) != 3 or entry.category != "other" or float(entry.amount) != credit_amount: return false

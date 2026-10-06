@@ -30,6 +30,9 @@ static func build(page) -> void:
 	barn_body.add_child(hud._wrap("Barn extension", 22, Place.INK, true))
 	var detail: Label = hud._wrap("", 14, Place.MUTED); barn_body.add_child(detail); hud._refs["upgrade:barn:detail"] = detail
 	var upgrade: Button = hud._button("", "upgrade:barn"); barn_body.add_child(upgrade); hud._refs["upgrade:barn"] = upgrade
+	var decorations: Button = hud._button("Decorations · from 2,000", "decorations")
+	decorations.picture = {"kind":"decoration", "id":"bench"}
+	page.add_child(decorations)
 static func refresh(page) -> void:
 	var hud = page.hud; var farm = hud._state
 	var rank: int = farm.barn_level

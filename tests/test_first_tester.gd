@@ -22,6 +22,10 @@ func typography(node: Node, scale: float, page: String) -> void:
 		if node.has_meta("text_tier"): check(node.get_meta("text_tier") in [14, 16, 22], "three text tiers only")
 func run() -> void:
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
+	var source: String = FileAccess.get_file_as_string("res://scripts/game_hud.gd")
+	var small := RegEx.new()
+	small.compile("(?:_label|_wrap|_info)\\([^\\n]*?, (?:10|11|12|13)(?=[,)])|font_size\", (?:10|11|12|13)\\)")
+	check(small.search(source) == null, "every HUD label constructor meets the fourteen-pixel floor")
 	game = load("res://scenes/main.tscn").instantiate(); root.add_child(game)
 	await settle(); game.set_process(false)
 	game._resume_loaded_farm(false)
@@ -45,12 +49,26 @@ func run() -> void:
 			check(game.state.NpcRoster.service_greeting(keeper, game.state).contains("Rowan"), "keeper uses the chosen name")
 	game.state.season_clock.season = 0
 	game.hud.show_panel("tools", game.state)
-	check(game.hud._body.find_child("DecorationList", true, false) == null, "Tools has no decoration shop")
+	check(game.hud._body.find_children("*", "Button", true, false).any(func(b): return b.text == "Decorations · from 2,000"), "Tools offers the six cosmetic purchases")
 	var cash: float = game.state.coins
+	game._on_action("decorations")
+	check(game.hud._refs.decoration_shop.tiles.size() == 6, "six drawn decoration tiles")
 	game._on_action("decorate:bench:0")
-	check(game.state.coins == cash and game.state.decorations.is_empty(), "removed decoration route cannot spend cash")
-	# Existing possessions remain readable, without a purchase interface.
-	game.state.decorations = {"bench":0}; game._on_state_changed()
+	check(game.state.coins == cash - 2000 and game.state.decorations.has("bench"), "bench purchase posts its original price")
+	var entry: Dictionary = game.state.ledger.entries.back()
+	check(entry.category == "other" and entry.label == "Decoration" and entry.amount == -2000, "decoration uses the new frozen ledger label")
+	game._on_action("decorate:bench:1")
+	check(game.state.coins == cash - 2000, "an owned decoration cannot be charged twice")
+	for id: String in game.state.Decorations.ITEMS:
+		if id == "bench": continue
+		game.state.buy_decoration(id, 1)
+	check(game.state.decorations.size() == 6, "all six original decorations can be bought")
+	check(game.state.decorations.barn_door == 2 and game.state.decorations.gate_flag == 0, "fixed props retain their authored sites")
+	var bad_decoration: Dictionary = game.state._save_data()
+	bad_decoration.ledger.entries.back().amount = 12000
+	check(not game.state._valid_save(bad_decoration), "validator rejects a positive decoration purchase")
+	# Appearance and possessions remain readable after buying.
+	game._on_state_changed()
 	check(game.state.save_game(SAVE) and game.state.load_game(SAVE), "appearance and older possessions survive a save reload")
 	check(game.state.farmer_appearance.name == "Rowan" and game.state.decorations.has("bench"), "reload preserves chosen identity and older possessions")
 	var old: Dictionary = game.state._save_data()
@@ -73,7 +91,7 @@ func run() -> void:
 	var row: Array[Control] = [game.hud._season_strip, game.hud._stats_card, game.hud._menu_button]
 	check(row[0].position.y == row[1].position.y and row[1].position.y == row[2].position.y, "season, money and Menu occupy one row")
 	check(game.hud.root.find_child("FarmWordmark", true, false) == null, "the wordmark lives on the gate, not in the HUD")
-	for page in ["market", "barn", "inventory", "tools", "accounts", "climate", "quests", "pause", "farmer", "grades", "calendar"]:
+	for page in ["market", "barn", "inventory", "tools", "decorations", "accounts", "climate", "quests", "pause", "farmer", "grades", "calendar"]:
 		game.hud.show_panel(page, game.state); await settle()
 		typography(game.hud.root, scale, page)
 	game.hud.close_panel()

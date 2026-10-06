@@ -430,10 +430,10 @@ func _build_tutorial() -> void:
 	_tutorial_body = _wrap("", 15, INK)
 	_tutorial_body.add_theme_font_override("font", Type.face(Type.DISPLAY, 500))
 	contents.add_child(_tutorial_body)
-	_tutorial_feedback = _wrap("", 13, GOLD)
+	_tutorial_feedback = _wrap("", 14, GOLD)
 	contents.add_child(_tutorial_feedback)
 	_tutorial_feedback.hide()
-	_tutorial_key = _label("", 13, GOLD, true)
+	_tutorial_key = _label("", 14, GOLD, true)
 	_tutorial_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	contents.add_child(_tutorial_key)
 	_tutorial_next = _button("Let's grow →", "tutorial:next")
@@ -685,7 +685,7 @@ func _surface(kind: String, accent: Color = GREEN, selected: bool = false) -> Pa
 	return panel
 
 func _badge(text: String, tone: String = "neutral") -> Label:
-	var label := _label(text, 11, INK, true)
+	var label := _label(text, 14, INK, true)
 	label.add_theme_font_override("font", Type.face(Type.BODY, 700))
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -704,7 +704,7 @@ func _meter(accent: Color = GREEN, height: float = 8) -> ProgressBar:
 func _metric(icon_id: String, text: String, color: Color = INK) -> BoxContainer:
 	var row := _hbox(5)
 	row.add_child(_icon({"kind": "metric", "id": icon_id}, 22))
-	row.add_child(_label(text, 13, color, true))
+	row.add_child(_label(text, 14, color, true))
 	return row
 
 func _section_title(parent: Control, title: String, detail: String = "") -> void:
@@ -713,7 +713,7 @@ func _section_title(parent: Control, title: String, detail: String = "") -> void
 	var heading := _label(title, 17, INK, true)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(heading)
-	if not detail.is_empty(): row.add_child(_label(detail, 12, MUTED))
+	if not detail.is_empty(): row.add_child(_label(detail, 14, MUTED))
 
 func _polish_card_typography(node: Node) -> void:
 	if node.get_meta("kit_type", false): return
@@ -978,7 +978,7 @@ func _stat(parent: BoxContainer, title: String, value: String, color: Color) -> 
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(box)
-	box.add_child(_label(title, 10, CREAM.darkened(.25), true))
+	box.add_child(_label(title, 14, CREAM.darkened(.25), true))
 	var number: Label = _label(value, 23, color, true)
 	number.add_theme_stylebox_override("normal", Cozy.paper(CREAM, 3, 3))
 	box.add_child(number)
@@ -1025,12 +1025,12 @@ func _build_footer() -> void:
 		var icon: Control = _icon({"id": tool, "kind": "tool", "tool": tool}, 49)
 		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		content.add_child(icon)
-		var caption: Label = _label("%d  %s" % [index + 1, tool_names[index]], 12, INK, true)
+		var caption: Label = _label("%d  %s" % [index + 1, tool_names[index]], 14, INK, true)
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		content.add_child(caption)
 		button.set_meta("caption", caption)
 		if tool == "water":
-			var count := _label("16/16", 11, CREAM, true)
+			var count := _label("16/16", 14, CREAM, true)
 			count.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			count.add_theme_stylebox_override("normal", _style(INK, 2, 5))
@@ -1041,7 +1041,7 @@ func _build_footer() -> void:
 			count.offset_top = 5
 			button.set_meta("water_count", count)
 		_tool_buttons[tool] = button
-	_tool_caption = _label("Hoe equipped · Click / E to use", 12, INK, true)
+	_tool_caption = _label("Hoe equipped · Click / E to use", 14, INK, true)
 	_tool_caption.add_theme_font_override("font", _compact_heading_font())
 	root.add_child(_tool_caption)
 	_tool_caption.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -1074,7 +1074,7 @@ func _build_footer() -> void:
 	_context_box.offset_top = -152
 	_context_box.offset_bottom = -122
 	_context_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_context = _label("", 13, CREAM)
+	_context = _label("", 14, CREAM)
 	_context.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var hint_font := Type.face(Type.DISPLAY, 500)
 	hint_font.fallbacks = []
@@ -1128,7 +1128,7 @@ func _build_notices() -> void:
 	_place(_toast_box, Rect2(926, 104, 326, 0))
 	_toast_box.z_index = 20
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_toast_label = _wrap("", 13, CREAM)
+	_toast_label = _wrap("", 14, CREAM)
 	_toast_label.add_theme_font_override("font", _plain_font)
 	_toast_box.add_child(_toast_label)
 	_toast_box.hide()
@@ -1144,7 +1144,7 @@ func _build_notices() -> void:
 	purchase_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_purchase_box.add_child(purchase_body)
 	_purchase_title = _wrap("", 18, GOLD, true)
-	_purchase_detail = _wrap("", 13, CREAM)
+	_purchase_detail = _wrap("", 14, CREAM)
 	_purchase_title.add_theme_font_override("font", _compact_heading_font())
 	_purchase_detail.add_theme_font_override("font", _plain_font)
 	purchase_body.add_child(_purchase_title)
@@ -1163,7 +1163,7 @@ func _build_notices() -> void:
 	_reward_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var reward_body: VBoxContainer = _vbox(8)
 	_reward_box.add_child(reward_body)
-	_reward_rarity = _label("★ RARE FIND", 12, GOLD, true)
+	_reward_rarity = _label("★ RARE FIND", 14, GOLD, true)
 	_reward_title = _wrap("A lovely surprise.", 23, CREAM, true)
 	_reward_detail = _wrap("", 14, Color("e1e6ce"))
 	reward_body.add_child(_reward_rarity)
@@ -1583,7 +1583,7 @@ func show_market(selling: bool, state: Node) -> void:
 
 func show_panel(kind: String, state: Node, market_selling: bool = false) -> void:
 	if kind == "market": _market_selling = market_selling
-	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sound", "save_page", "practice", "sale_reveal", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
+	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "decorations", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sound", "save_page", "practice", "sale_reveal", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
 	_accounts_build_request += 1
 	accounts_building = false
 	_state = state
@@ -1646,6 +1646,11 @@ func show_panel(kind: String, state: Node, market_selling: bool = false) -> void
 		"barn": _build_buyer_page()
 		"inventory": _build_barn()
 		"tools": _build_tools()
+		"decorations":
+			var page := preload("res://scripts/decoration_shop.gd").new()
+			_body.add_child(page)
+			page.setup(self)
+			_refs.decoration_shop = page
 		"pause", "menu": _build_pause()
 		"calendar":
 			_heading("The farm calendar", "Year %d" % _state.season_clock.year)
@@ -1882,7 +1887,7 @@ func _offer(title: String, detail: String, text: String, action: String, primary
 	description.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(description)
 	description.add_child(_wrap(title, 17, INK, true))
-	var detail_label: Label = _wrap(detail, 13, MUTED)
+	var detail_label: Label = _wrap(detail, 14, MUTED)
 	description.add_child(detail_label)
 	_refs[action + ":detail"] = detail_label
 	if action in ["activity:duck", "activity:duck:speed"]:
@@ -1936,7 +1941,7 @@ func _style_choice(choice: OptionButton) -> void:
 	choice.custom_minimum_size.y = 39
 	choice.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	choice.add_theme_font_override("font", _card_button_font)
-	choice.add_theme_font_size_override("font_size", 13)
+	choice.add_theme_font_size_override("font_size", 14)
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		choice.add_theme_stylebox_override(state, Cozy.button_style(state, false))
 	for color: String in ["font_color", "font_hover_color", "font_pressed_color"]:
@@ -1977,7 +1982,7 @@ func _build_dex() -> void:
 		var title := _wrap("#%02d · %s" % [index + 1, _crop_name(id)], 22, Kit.CROPS.get(id, Kit.MONEY), true)
 		title.custom_minimum_size.x = 155
 		heading.add_child(title)
-		var status := _wrap("", 12, CREAM, true)
+		var status := _wrap("", 14, CREAM, true)
 		column.add_child(status)
 		_refs["dex_status:" + id] = status
 		var detail := _wrap("", 15, INK, true)
@@ -2064,7 +2069,7 @@ func _ledger_actions() -> void:
 	_refs.ledger_screenshot = _button("Save screenshot", "ledger_screenshot")
 	_refs.ledger_screenshot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_child(_refs.ledger_screenshot)
-	_refs.screenshot_status = _wrap("", 12, MUTED)
+	_refs.screenshot_status = _wrap("", 14, MUTED)
 	_refs.screenshot_status.hide()
 	_modal_trade_footer.add_child(_refs.screenshot_status)
 
@@ -2187,7 +2192,7 @@ func _build_run_summary() -> void:
 	_refs.run_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; summary_header.add_child(_refs.run_title)
 	var keeper := preload("res://scripts/npc_portrait.gd").new(); keeper.custom_minimum_size = Vector2(52, 64); keeper.size_flags_vertical = Control.SIZE_SHRINK_CENTER; summary_header.add_child(keeper); keeper.show_person("nell")
 	_body.add_child(_label(_state.money(_state.ledger.total()), 40, INK, true))
-	_body.add_child(_label("NET OVER TEN YEARS", 12, MUTED))
+	_body.add_child(_label("NET OVER TEN YEARS", 14, MUTED))
 	for category in _state.Ledger.CATEGORIES:
 		if not is_zero_approx(_state.ledger.total(0, category)): _account_row(_body, _state.Ledger.LABELS[category], _state.money(_state.ledger.total(0, category)))
 	var final_strip := preload("res://scripts/climate_strip.gd").new()
@@ -2301,6 +2306,7 @@ func _refresh_graphics() -> void:
 		_refs["graphics_" + mode].disabled = mode == _graphics_quality
 
 func _refresh_panel() -> void:
+	if _panel_kind == "decorations" and _refs.has("decoration_shop"): _refs.decoration_shop.refresh(); return
 	if _panel_kind == "accounts":
 		_refresh_accounts()
 		return
@@ -2620,7 +2626,7 @@ func _build_debug() -> void:
 	fund_actions.add_child(_refs.debug_set_balance)
 	_refs.debug_recover = _button("Recover test farm", "debug_recover", true)
 	fund_actions.add_child(_refs.debug_recover)
-	funds.add_child(_wrap("Sets money directly, including from debt or \uE000 0. Recovery keeps your farm.", 13, MUTED))
+	funds.add_child(_wrap("Sets money directly, including from debt or \uE000 0. Recovery keeps your farm.", 14, MUTED))
 
 	var time_card: PanelContainer = _card(PAPER, 14)
 	_body.add_child(time_card)
@@ -2636,7 +2642,7 @@ func _build_debug() -> void:
 		choice.custom_minimum_size.x = 74
 		time_row.add_child(choice)
 		_refs["debug_time_%d" % speed] = choice
-	time_column.add_child(_wrap("Debug pauses game time while open. Outside this panel, 30× also speeds up weather.", 13, MUTED))
+	time_column.add_child(_wrap("Debug pauses game time while open. Outside this panel, 30× also speeds up weather.", 14, MUTED))
 
 	var access := _card(PAPER, 14)
 	_body.add_child(access)
@@ -2651,7 +2657,7 @@ func _build_debug() -> void:
 		var test := _button("Test " + weather, "debug:weather:" + weather)
 		weather_tests.add_child(test)
 		_refs["debug_weather_" + weather] = test
-	_refs.debug_weather_note = _wrap("", 13, MUTED)
+	_refs.debug_weather_note = _wrap("", 14, MUTED)
 	access_body.add_child(_refs.debug_weather_note)
 
 	var advanced: VBoxContainer = _details_section("debug_advanced", "money multiplier")
@@ -2677,7 +2683,7 @@ func _build_debug() -> void:
 	actions.add_child(_refs.debug_apply)
 	_refs.debug_reset = _button("Reset time", "debug:reset")
 	actions.add_child(_refs.debug_reset)
-	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps Spudions and all Debug history.", 13, MUTED))
+	advanced.add_child(_wrap("0.1 keeps 10% · 0 empties your purse. Multiplying debt increases debt. Reset keeps Spudions and all Debug history.", 14, MUTED))
 	_body.add_child(_button("Lock debug · restore 1× time", "debug:lock"))
 	_refresh_debug()
 func _debug_money_value() -> Dictionary:
@@ -2843,7 +2849,7 @@ func _build_loss_cards(parent: Control, year: int, show_empty: bool = false) -> 
 		note.add_child(_wrap("Lost %d t of %s" % [entry.sacks, _crop_name(entry.crop)], 20, INK, true))
 		note.add_child(_wrap("Worth %s" % _money(entry.sacks * _state.CropTable.CROPS[entry.crop].base), 15, MUTED))
 		note.add_child(_wrap(_state.ClimateSystem.Protection.counterfactual(entry), 16, INK))
-		var stamp := _wrap("Year %d · %s" % [entry.year, _state.SeasonClock.NAMES[entry.season]], 13, MUTED); note.add_child(stamp)
+		var stamp := _wrap("Year %d · %s" % [entry.year, _state.SeasonClock.NAMES[entry.season]], 14, MUTED); note.add_child(stamp)
 		var pin = preload("res://scripts/paper_detail.gd").new(); pin.kind = "pin"; card.add_child(pin); pin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		count += 1
 	if count == 0 and show_empty: parent.add_child(_wrap("No crop losses recorded.", 16, MUTED))

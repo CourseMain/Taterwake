@@ -828,6 +828,14 @@ func expand_field(field: String = "home") -> String:
 
 
 
+func buy_decoration(id: String, site: int) -> String:
+	if id not in Decorations.ITEMS or site < 0 or site >= Decorations.PLACES.size() or decorations.has(id): return _reject_purchase("Choose an unplaced decoration.")
+	var cost: float = Balance.DECORATION_COSTS[id]
+	if not can_purchase(cost): return _reject_purchase(purchase_refusal(cost))
+	post_money("other", "Decoration", -cost)
+	decorations[id] = Decorations.FIXED_PLACES.get(id, site)
+	return _complete_purchase({"kind": "decoration", "id": id, "name": Decorations.ITEMS[id], "quantity": 1, "cost": cost}, Decorations.ITEMS[id] + " placed.")
+
 func seasonal_price_factor(id: String = "russet") -> float:
 	return _price_factor_at(elapsed, id)
 
@@ -1001,7 +1009,9 @@ func restore_snapshot(data: Dictionary) -> void:
 	farmer_appearance = data.get("farmer_appearance", FarmerLook.fresh()).duplicate()
 	decorations = data.get("decorations", {}).duplicate()
 	graded_harvests = int(data.get("graded_harvests", 3 if int(data.harvested_total) > 0 else 0))
-	for person in npc_history: npc_history[person].visits = int(npc_history[person].visits)
+	for person in npc_history:
+		npc_history[person].visits = int(npc_history[person].visits)
+		if npc_history[person].has("greeted_season"): npc_history[person].greeted_season = int(npc_history[person].greeted_season)
 	for key in ["version", "step", "plot"]: tutorial_progress[key] = int(tutorial_progress[key])
 	farm_help.data = data.farm_help.duplicate(true)
 	for key in ["elapsed", "lifetime_sales"]: set(key, float(data[key]))

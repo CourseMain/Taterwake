@@ -1170,6 +1170,10 @@ func _on_action(action: String) -> void:
 		"talk":
 			if parts.size() == 2: _start_conversation(parts[1])
 
+		"decorations":
+			if hud._panel_kind == "tools": hud.show_panel("decorations", state)
+		"decorate":
+			if hud._panel_kind == "decorations" and parts.size() == 3: state.buy_decoration(parts[1], int(parts[2]))
 		"farmer": hud.show_panel("farmer", state)
 		"quieter":
 			SoundMix.quieter = not SoundMix.quieter

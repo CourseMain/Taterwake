@@ -1251,7 +1251,7 @@ func _windmill(pos: Vector3) -> void:
 	_sphere(_rotor, Vector3(0.0, 0.0, 0.14), Vector3(0.27, 0.27, 0.18), GOLD)
 
 func _scenery() -> void:
-	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3, 0, -0.5)]:
+	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(19.3, 0, -0.5)]:
 		_tree(pos, _rng.randf_range(0.85, 1.2))
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
@@ -1308,7 +1308,7 @@ func _scenery() -> void:
 func _tree(pos: Vector3, size: float) -> void:
 	var root := _root("OrchardTree", pos)
 	root.scale = Vector3.ONE * size
-	_cylinder(root,Vector3(0,1.1,0),.22,.13,2.2,Color("876346"),7)
+	_cylinder(root,Vector3(0,1.025,0),.22,.13,2.35,Color("876346"),7)
 	var canopy := Node3D.new(); root.add_child(canopy)
 	canopy.name = "DeciduousCanopy"
 	for branch in range(5):
@@ -1448,12 +1448,30 @@ func _build_title_gate() -> void:
 	for x: float in [.15, 1.5, 2.85]:
 		_box(swing, Vector3(x, .92, 0), Vector3(.12, 1.5, .13), Color("79553d"))
 
-func _sign(pos: Vector3, title: String, color: Color) -> Node3D:
+func _hanging_sign(parent: Node3D, pos: Vector3, title: String, colour: Color, width: float = 3.18, height: float = 2.1) -> Label3D:
+	var sign := Node3D.new(); sign.name = "HangingSign"; parent.add_child(sign); sign.position = pos
+	var wood := Color("79553d")
+	for x in [-width*.43,width*.43]:
+		_box(sign,Vector3(x,(height-.1)*.5,0),Vector3(.17,height+.2,.17),wood)
+		for y in [.3,.8,1.3,1.8]: _bar(sign,Vector3(x-.035,y,.092),Vector3(x+.02,y+.2,.092),.009,wood.lightened(.18))
+	_box(sign,Vector3(0,height,0),Vector3(width+.22,.16,.2),wood)
+	var board := Node3D.new(); board.name = "HingedBoard"; sign.add_child(board)
+	board.position.y = height-.58; board.rotation.z = -.035
+	_box(board,Vector3.ZERO,Vector3(width,.85,.16),wood)
+	_box(board,Vector3(0,0,.091),Vector3(width-.14,.69,.025),colour)
+	for side in [-1,1]:
+		for link in range(4):
+			var ring := TorusMesh.new(); ring.inner_radius = .027; ring.outer_radius = .045; ring.rings = 6; ring.ring_segments = 6
+			var mesh := MeshInstance3D.new(); mesh.mesh = ring; mesh.material_override = _mat(wood.darkened(.35)); sign.add_child(mesh)
+			mesh.position = Vector3(side*width*.3,height-.16-link*.065,.025); mesh.rotation.x = PI*.5; mesh.rotation.y = (link%2)*PI*.5
+	for x in [-width*.45,width*.4]: _box(board,Vector3(x,-.22,.111),Vector3(.15,.055,.012),wood)
+	var label := _label(board,title,Vector3(0,0,.13),27,CREAM,false)
+	bind_label(label,Vector2(width-.3,.58))
+	return label
+
+func _sign(pos: Vector3, title: String, colour: Color) -> Node3D:
 	var root := _root("VillageSign", pos)
-	for x in [-1.08, 1.08]:
-		_box(root, Vector3(x, 0.75, 0.0), Vector3(0.16, 1.5, 0.16), Color("816544"))
-	_box(root, Vector3(0.0, 1.25, 0.0), Vector3(3.18, 0.8, 0.19), color)
-	bind_label(_label(root, title, Vector3(0.0, 1.25, 0.13), 27, CREAM, false), Vector2(2.94, .6))
+	_hanging_sign(root,Vector3.ZERO,title,colour)
 	return root
 
 func _target(parent: Node3D, pos: Vector3, size: Vector3, key: String, value: Variant) -> void:
@@ -1579,14 +1597,9 @@ func _bar(parent: Node3D, start: Vector3, end: Vector3, radius: float, color: Co
 	return rod
 
 func _shop_label(parent: Node3D, text: String, pos: Vector3, distant: bool = false) -> Label3D:
-	var ink := Color("171c19")
-	var label := _label(parent, text, pos, 28 if distant else 32, Color("ffffff"))
-	label.font = _shop_font
-	label.pixel_size = 0.019
-	label.outline_modulate = ink
-	label.outline_size = 7
+	var label := _hanging_sign(parent,Vector3(pos.x,0,pos.z),text,Color("587653"),4.6,pos.y+.58)
+	label.font_size = 28 if distant else 32
 	label.set_meta("shop_label", true)
-	bind_label(label, Vector2(4.6, 1.2))
 	return label
 
 
@@ -1842,7 +1855,7 @@ func _valley_dock() -> void:
 	_dock_gate.position.z = -3.7
 	_box(_dock_gate, Vector3(0.0, 0.78, 0.0), Vector3(1.95, 0.30, 0.13), Color("746447"))
 	_box(_dock_gate, Vector3(0.0, 0.93, 0.12), Vector3(0.30, 0.34, 0.13), GOLD)
-	_dock_label = _shop_label(dock, "Pier", Vector3(0.0, 1.85, -0.4))
+	_dock_label = _hanging_sign(dock,Vector3(0,0,-.4),"Pier",Color("587653"),2.4)
 
 
 func _sunburst_bloom(parent: Node3D, pos: Vector3) -> void:

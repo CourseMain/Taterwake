@@ -46,6 +46,7 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 			else:
 				c.draw_style_box(_box(Color("b5523c"),8),Rect2(-34,-28,68,60))
 				c.draw_line(Vector2(-18,-8),Vector2(18,-8),Color("fffbed"),7,true); c.draw_line(Vector2(-18,12),Vector2(5,12),Color("fffbed"),7,true)
+		"decoration": _decoration(c, id)
 		"kit_menu": _kit_menu(c, id)
 		"place": _place(c, id)
 		"control": _control(c, id)
@@ -401,3 +402,33 @@ static func _kit_menu(c: CanvasItem, id: String) -> void:
 			c.draw_rect(Rect2(-25,-28,30,56),kit.WOOD2)
 			c.draw_line(Vector2(5,0),Vector2(29,0),kit.PAPER,5,true)
 			c.draw_polyline(PackedVector2Array([Vector2(22,-12),Vector2(34,0),Vector2(22,12)]),kit.PAPER,5,true)
+
+static func _decoration(c: CanvasItem, id: String) -> void:
+	var wood := Color("79553d")
+	var colour := Color("ad8158")
+	match id:
+		"bench":
+			for x in [-24,24]: c.draw_line(Vector2(x,12),Vector2(x,35),wood,7,true)
+			for y in [-16,-4,14]: c.draw_line(Vector2(-34,y),Vector2(34,y),wood,9,true)
+		"flowers":
+			for x in [-24,0,24]:
+				c.draw_line(Vector2(x,27),Vector2(x,-10),wood,4,true)
+				for i in range(5): c.draw_circle(Vector2(x,-10)+Vector2.from_angle(i*TAU/5)*11,8,colour)
+				c.draw_circle(Vector2(x,-10),6,wood)
+		"scarecrow":
+			c.draw_line(Vector2(0,-25),Vector2(0,38),wood,6,true)
+			c.draw_line(Vector2(-32,-4),Vector2(32,-4),wood,6,true)
+			c.draw_rect(Rect2(-15,-6,30,31),colour)
+			c.draw_circle(Vector2(0,-25),13,wood)
+			c.draw_line(Vector2(-22,-36),Vector2(22,-36),wood,6,true)
+		"barn_door":
+			c.draw_style_box(_box(wood,5),Rect2(-29,-37,58,74))
+			c.draw_rect(Rect2(-22,-30,44,60),colour)
+			for side in [-1,1]: c.draw_line(Vector2(side*20,-27),Vector2(-side*20,27),wood,5,true)
+		"duck_house":
+			c.draw_rect(Rect2(-29,-8,58,44),wood)
+			_poly(c,[Vector2(-36,-8),Vector2(0,-37),Vector2(36,-8)],colour)
+			c.draw_style_box(_box(INK,12),Rect2(-12,7,24,29))
+		"gate_flag":
+			c.draw_line(Vector2(-20,-38),Vector2(-20,37),wood,6,true)
+			_poly(c,[Vector2(-17,-35),Vector2(32,-28),Vector2(26,0),Vector2(-17,-7)],colour)

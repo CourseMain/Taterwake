@@ -23,7 +23,7 @@ func run() -> void:
 		var bounds: Vector2 = label.get_meta("board_bounds")
 		check(actual.x <= bounds.x + .001 and actual.y <= bounds.y + .001, label.text + " measured inside its board")
 	check(fields.size() == 3, "three field names without exposure copy")
-	for label in fields.values(): check(label.get_parent().find_child("Exposure_*", false, false) != null, "exposure is an icon on the post")
+	for label in fields.values(): check(label.get_parent().get_parent().get_parent().find_child("Exposure_*", false, false) != null, "exposure is an icon on the post")
 	for board in world._lease_boards:
 		var labels: Array = board.find_children("*", "Label3D", true, false)
 		check(labels.size() == 1 and labels[0].text == "TO LET", "lease board has only TO LET")
