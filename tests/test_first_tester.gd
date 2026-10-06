@@ -53,6 +53,9 @@ func run() -> void:
 	var cash: float = game.state.coins
 	game._on_action("decorations")
 	check(game.hud._refs.decoration_shop.tiles.size() == 6, "six drawn decoration tiles")
+	for tile in game.hud._refs.decoration_shop.tiles.values():
+		check(tile.site.get_theme_stylebox("normal").bg_color == game.hud.Kit.WOOD, "decoration location uses wood above its paper card")
+		check(tile.site.get_popup().get_theme_font_size("font_size") >= game.hud.Kit.pixels(game.hud, 14), "decoration popup keeps its caption floor")
 	game._on_action("decorate:bench:0")
 	check(game.state.coins == cash - 2000 and game.state.decorations.has("bench"), "bench purchase posts its original price")
 	var entry: Dictionary = game.state.ledger.entries.back()

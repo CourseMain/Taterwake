@@ -32,6 +32,17 @@ func setup(owner_hud) -> void:
 		var fixed: int = hud._state.Decorations.FIXED_PLACES.get(id, -1)
 		if fixed >= 0: site.select(fixed); site.disabled = true
 		hud._style_choice(site)
+		site.set_meta("text_tier", 14)
+		for variant in ["normal", "hover", "pressed", "disabled"]:
+			site.add_theme_stylebox_override(variant, Kit.skin(Kit.WOOD, Kit.WOOD, 6, 10, Kit.unit(hud)))
+		for colour in ["font_color", "font_hover_color", "font_pressed_color", "font_disabled_color"]:
+			site.add_theme_color_override(colour, Kit.CREAM)
+		var popup: PopupMenu = site.get_popup()
+		popup.add_theme_stylebox_override("panel", Kit.skin(Kit.WOOD, Kit.WOOD, 8, 10, Kit.unit(hud)))
+		popup.add_theme_stylebox_override("hover", Kit.skin(Kit.WOOD.lightened(.08), Kit.WOOD, 6, 10, Kit.unit(hud), false))
+		popup.add_theme_font_size_override("font_size", Kit.pixels(hud, 14))
+		popup.add_theme_color_override("font_color", Kit.CREAM)
+		popup.add_theme_color_override("font_hover_color", Kit.CREAM)
 		body.add_child(site)
 		var buy: Button = Kit.button(hud, "", "", Kit.WOOD, {"kind":"decoration", "id":id})
 		buy.pressed.connect(func(): hud._act("decorate:%s:%d" % [id, site.selected]))

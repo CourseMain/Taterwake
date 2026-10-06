@@ -133,6 +133,11 @@ func run() -> void:
 	game.touch_controls.resize(); await settle()
 	for page in ["farmer", "menu", "accounts", "market", "grades", "practice", "sale_reveal"]:
 		game.hud.show_panel(page, game.state); await settle()
+		if page == "accounts":
+			for tile in game.hud._body.find_child("AccountDetailTiles", true, false).get_children():
+				var font: Font = tile.get_theme_font("font")
+				var inner: float = tile.size.x - tile.get_theme_stylebox("normal").get_minimum_size().x
+				check(Array(tile.text.split(" ")).all(func(word): return font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, tile.get_theme_font_size("font_size")).x <= inner), "desktop account tile keeps whole words")
 		var scale: float = float(root.size.x) / game.hud.root.size.x
 		check(game.hud._modal_card.size.x * scale >= (560 if page == "farmer" else 700), page + " uses computer width")
 		check(Rect2(Vector2.ZERO, game.hud.root.size).encloses(game.hud._modal_card.get_global_rect()), page + " stays inside the computer screen")

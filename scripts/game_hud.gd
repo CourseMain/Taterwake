@@ -2184,7 +2184,7 @@ func _account_detail_tiles() -> void:
 func _spread_accounts() -> void:
 	var row := HBoxContainer.new(); row.add_theme_constant_override("separation", ceili(28 * Kit.unit(self)))
 	var figures := VBoxContainer.new(); figures.custom_minimum_size.x = 550 * Kit.unit(self); figures.size_flags_horizontal = Control.SIZE_EXPAND_FILL; figures.add_theme_constant_override("separation", ceili(12 * Kit.unit(self)))
-	var details := VBoxContainer.new(); details.custom_minimum_size.x = 270 * Kit.unit(self); details.add_theme_constant_override("separation", ceili(16 * Kit.unit(self)))
+	var details := VBoxContainer.new(); details.custom_minimum_size.x = 320 * Kit.unit(self); details.add_theme_constant_override("separation", ceili(16 * Kit.unit(self)))
 	var children: Array = _body.get_children(); var after_barn: bool = false
 	_body.add_child(row); row.add_child(figures); row.add_child(details)
 	for child in children:
