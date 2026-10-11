@@ -2049,18 +2049,67 @@ F. Vibrancy, second pass. The first pass came back neon: lime grass,
    edges and keeper headers use the full-chroma token; Weather and
    Menu icons are coloured. Screenshot Spring noon, Summer noon, the
    title and Mara's page at 390x844 and 1440x900, before and after.
+   Owner's check on the second pass: the shadows are gone entirely
+   (Summer storm and Spring noon both flat). That fails gate three on
+   its own. Shadows are not optional in any pass: the sun arc, the
+   2048 map and opacity 0.75 stay, and the gate is measured before
+   tagging.
 
 Deferred, not forgotten (do none of these now): decorations purchase
 (cut: the Fair trophies and oddities replace it), the weather station
 and tree rebuild, the top-band collision at 390, the oversized grades
 card, the four stacked accounts buttons, "1 seasons" plural, Spring
-haze, the four stray icons on the first guide card.
+haze, the four stray icons on the first guide card. Island layout
+QoL from the owner's Summer screenshot: fence posts standing on the
+path beside Home Field and Low Field; the Quests board hidden behind
+the orchard trees from the play camera; the "TO LET" boards (British
+for "available to rent", which testers will not know) become "For
+rent" with a small key drawing.
 
 Done when: a fresh and a returning phone entry show the island filling
 the width on the first frame, no HUD label is under 14 px, the pack is
 under 6 MB, the suite passes under -j 2 with no timeouts, and the
 Spring noon screenshot reads as a sunny day. Tag v2.0.5. Publish to
 docs/ root (the phone fix must reach players).
+```
+
+### Segment 21j: Quality of life from the deferred list (tag v2.0.6)
+
+```
+Why: small things the owner and the reviewer saw on v2.0.4 and v2.0.5
+that were deferred behind the blockers. None adds a feature. Each is
+one visible fix with one screenshot. Bound by the kit, the simplicity
+contract and the attention budget.
+
+1. Island layout. Fence posts standing on the path beside Home Field
+   and Low Field move onto the field edge. The Quests board is moved
+   or the orchard thinned so it is visible from the play camera in
+   every season. Screenshot: the Home and Low field edges and the
+   Quests board at noon, 1440x900.
+2. "TO LET" boards become "For rent" with a small drawn key; the same
+   wording in the locked-bed message and on the Winter accounts
+   leases block.
+3. Top band at 390: "Season · Year N" and the money glyph collide in
+   Winter. Put the money on its own row under the season on phone;
+   never truncate "Year 3".
+4. The grades explanation card is sized to its content: three stamps,
+   three glosses, nothing else; no empty paper.
+5. The accounts page's four stacked wood buttons become "Go to the
+   barn" plus one row of three small drawn tiles (Records, Leases,
+   Businesses).
+6. Mara's seed cards: "1 seasons" plural fixed; the three trait rows
+   (Thirst, Heat, Cold) at 14 px with their drawn icons.
+7. The first guide card hides the fullscreen icon, the smiley, the
+   gear and the eye until the guided year ends; one card, one button.
+8. A refused tap answers: a short shake of the control and one line
+   under the instruction, never replacing it. A sale shows "Undo" for
+   three seconds (attention budget item 10).
+9. Every tap gives a visible change within 100 ms and a sound within
+   300 ms; add the latency measurement for the five tools and all
+   card buttons to the browser fixture (attention budget item 6).
+
+Done when: each of the nine has its screenshot beside the before,
+the latency fixture passes, the suite passes under -j 2. Tag v2.0.6.
 ```
 
 ### Segment 22: The village (the slop) and the run (after 21i)
@@ -2083,9 +2132,27 @@ Lines that hold through every part:
 - No compounding, no meters, no countdowns, no login rewards.
 - Every new ledger line is a new frozen label under the existing
   "other" category; no existing label changes.
-- The bot is re-run after each part; survival may not move by more
-  than two seeds per strategy; tidy's mean stays under 320,000.
+- The bot is re-run after each part; the five honest strategies'
+  survival may not move by more than two seeds each; tidy's mean
+  stays under 320,000.
+- Variance strategies (gambler, punter, trader) are judged by spread,
+  not by rank: their mean lands between naive's and tidy's; at least
+  3 of 30 seeds beat tidy's mean and at least 3 of 30 foreclose. A
+  lucky variance run may end as high as 640,000, twice the ceiling,
+  never more. The slop must be able to make you rich or ruin you,
+  while the honest farm stays honest.
 - One concept per screen, as the contract below says.
+- Cause and effect, always both: every village event, pack result,
+  bet, boom and joker shows one line of cause ("Floods in the east.")
+  and one line of effect on the player ("Golden sells for 3x this
+  Winter."), in that order, nothing else. A player must never wonder
+  why something happened or what it does to them.
+- Balatro in the presentation, not the maths: cards flip from
+  face-down, results land with a pop and a note, a card tilts on
+  hover and settles on tap, multipliers appear as stamped words ("3x",
+  "kept Table") that slam onto the card, a chain of effects fires one
+  at a time with a rising note, and the best outcome of a screen gets
+  a flame or confetti. The money underneath stays farm-sized.
 
 The simplicity contract (every part below is bound by it):
 - One concept per screen. A concept is one drawing, a name of at most
@@ -2107,6 +2174,37 @@ The simplicity contract (every part below is bound by it):
   does, it is redrawn or cut. Record each test in PLAYTEST_22.md.
 - Nothing from the old fun pass that fails the contract survives.
 
+The attention budget (from tester 1, who does not play games: "think
+of it as limited attention"). The full version, 23 techniques each with
+the effect, where the game breaks it, the rule and the suite check, is
+docs/ATTENTION.md; it is part of the brief for every part below. The
+short form:
+- At most three tappable things on the play screen at once, and one of
+  them is visibly the next thing: bigger, warmer, the only one with a
+  drawing that moves. A new player must be able to say what to tap
+  within two seconds.
+- A control appears the first time it matters and not before: Weather
+  at the first warning, Sell at the first harvest, the Pub in the
+  second Summer, the Pedlar in the second Spring.
+- Chunks of three: three numbers, three packs, three rumours, three
+  jokers offered. Never four or more choices on one card.
+- Feedback within a second of every tap: something seen and something
+  heard, every time.
+- Recognition over recall: places and pictures, never menus; the
+  player remembers the stall with the orange roof.
+- One open loop per season left visible at the season's end: a bet
+  placed, a pack unopened, a rumour on the board.
+- Small wins early: first harvest within three minutes of play, first
+  pack flip within five, first Table stamp in year one.
+- Progress near the goal is louder than progress far from it: the
+  Winter bill shows as a bar, and the last tonne before break-even
+  gets the biggest pop.
+- Start with something endowed: twelve seeds, one filled joker slot,
+  one oddity already in the collection.
+- End every year on the sale reveal, not on the bill.
+- Banned, as in part G: streak guilt, timers that punish absence, fake
+  scarcity, hidden odds.
+
 Step 0 (three fresh testers) moves to after V3: test the slop, not the
 spreadsheet.
 
@@ -2115,25 +2213,74 @@ R the sale reveal, W the wall, M the meta. Each is one Codex session
 and one tag (v2.1.0 onward).
 
 V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
-   parks at the gate for the whole of Spring. Cast bible: cheerful,
+   parks at the gate for the whole of Spring from the second year on
+   (attention budget: a control appears the first time it matters).
+   In the first Spring the cart only passes along the road with a
+   bell and a wave, so the player has seen it before it stops. With
+   the Pedlar's arrival, year two has no climate events (the curve
+   starts in year three; the guided storm stays in year one), so the
+   second year is the pack year, not the disaster year; re-run the bot
+   for that change and re-record the table. The player names the farm
+   on the farmer card and the name goes on the gate sign. Cast bible: cheerful,
    never quite honest, patched coat, a cart with a bell. Lines:
-   "Three packs. One's good." "No refunds. Lovely weather." Three
-   face-down packs on the cart, each a drawn card with its price and
-   its odds printed on the back:
-     Seed pack · 3,000 ........ five seeds of one random variety;
-                               1 in 5 packs holds a rare variety.
-     Joker pack · 8,000 ....... one joker: common 6 in 10, uncommon
-                               3 in 10, rare 1 in 10.
-     Mystery pack · 2,000 ..... one of: ten Russet seeds (4 in 10),
-                               an oddity potato (3 in 10), 500 back
-                               (2 in 10), a lucky stone that does
-                               nothing (1 in 20), a Blue Pearl seed
-                               (1 in 20).
+   "Three packs. One's good." "No refunds. Lovely weather."
+
+   The pack table. Exact; Codex builds these numbers and prints these
+   fractions on the backs of the packs.
+
+   Seed pack · 3,000 · five seeds of one variety, chosen by weight:
+     Russet 1 in 4 · Giant 1 in 4 · Golden 1 in 5 · Sunburst 3 in 20 ·
+     Icecap 3 in 20. Expected value about 2,700: the house keeps a
+     tenth. When part D ships, one pack in five gives a found variety
+     instead, taken from Icecap's share.
+
+   Joker pack · 8,000 · one joker card, rarity by weight:
+     common 3 in 5 · uncommon 3 in 10 · rare 1 in 10.
+     Common: Second Sowing, Early Riser, Windbreak Rows, Oda's Spare
+     Hoe, Nell's Cat. Uncommon: Lucky Boot, Cold Store, Seed Saver,
+     Iris's Mug, Fennick's Thumb. Rare: Haunted Scarecrow, The Cursed
+     One. A joker already owned is re-rolled within its rarity; if
+     every joker of that rarity is owned, the pack pays 2,000 back and
+     the card says so. Until part J ships the card reads "Takes effect
+     next Winter" and sits in a joker slot doing nothing.
+
+   Mystery pack · 2,000 · one of:
+     ten Russet seeds ........ 2 in 5 (worth about 2,700)
+     one oddity potato ....... 3 in 10 (a Standard-grade potato of a
+                               random variety with an oddity name and
+                               face; sells for its grade plus 500;
+                               wins the Fair far more often than a
+                               plain one; before part V3 it is one of
+                               three placeholder oddities: the Twin,
+                               the Heart, the Glow Spud)
+     500 back ................ 1 in 5
+     the lucky stone ......... 1 in 20 (does nothing; shown in the
+                               collection; Segment 23 gives it one job
+                               in year ten)
+     a Blue Pearl seed ....... 1 in 20 (one seed of the sixth variety)
+     Expected value about 1,600: the house keeps a fifth. The Mystery
+     pack is the worst bet and the most fun.
+
+   Blue Pearl, the sixth variety, added to balance.gd with this part:
+     seed 1,400 (never sold by Mara; packs and oddities only); base
+     price 672 a tonne (sells like Golden); yield 3 t; grow 90 s;
+     water need 1; heat tolerance 1; cold tolerance 3; grow seasons 1;
+     volatility mid; colour 7fe3ff; plantable in Spring, Summer and
+     Autumn. The bot never plants it; the crop table test and the save
+     validator accept it; it appears on price boards only once held.
+
+   Rules for every pack: one of each per Spring; bought with cash on
+   hand only, never on the overdraft; the result card shows what was
+   won and, in caption size, the odds it had.
+
    Buying flips the pack with a drumroll and a two-note cue; the
-   contents land as cards. One of each pack per Spring. Ledger label
+   wind-up before the reveal is 0.6 to 1.2 s, never instant; the
+   contents land as cards. One of each pack per Spring. An unbought
+   pack stays face-down on the cart until the season ends, visible
+   from the play screen (the season's open loop). Ledger label
    "Pedlar's pack". The Pedlar is skipped by the bot (unchanged); add a
    "gambler" strategy that buys every pack every Spring and report its
-   survival; it may be worse than cautious, never better than tidy.
+   distribution under the variance rule above.
 
 V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    Summer and a betting slip. One weather rumour ("Storm this
@@ -2145,7 +2292,9 @@ V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    The weather rumour's odds come from the real forecast probability
    with noise, so Iris being right six times in ten matters here.
    Alongside: CLIMATE_ANNUAL_CAP 3 to 2, so a season's bet is about
-   one storm, not three. Re-run the bot and re-record the table.
+   one storm, not three. Re-run the bot and re-record the table. Add a
+   "punter" variant of the gambler that also bets the maximum on every
+   rumour, judged by the variance rule above.
 
 V3. The Fair and the oddities (Autumn). A tent by the pond on the
    first day of Autumn. Enter one potato. Oddities: 1 harvest in 20
@@ -2158,10 +2307,38 @@ V3. The Fair and the oddities (Autumn). A tent by the pond on the
    nothing, ledger label "Fair prize". Three village entries with
    random scores to beat. Confetti and a trumpet on a win.
 
-V4. The Exchange (Winter). Price years, as specified below, made loud:
-   a newspaper headline on the Winter card, a bell, the stores line
-   turning gold, Nell saying "Sell. Now." The Pub's price rumour pays
-   out here. Nothing else changes.
+V4. The Exchange: a live market board, all year. The owner's call,
+   reversing part of Segment 4: prices should move while you wait,
+   you should see every potato's line at once, and the lines should
+   look like a market, jagged, not a smooth curve to the Winter peak.
+   1. Ticks. Each variety's price moves every five seconds of play by
+      a small random step (drift as now, plus noise of up to 2% a
+      tick, mean zero), so a line is jagged. The Winter peak stays.
+   2. Mini-booms. Two to four times a year, one variety jumps 1.3x to
+      1.6x for about a quarter of a season, with a one-line reason in
+      the newspaper ("Chip shop opens in Shores. Russet wanted."),
+      then falls back over the next quarter. Price years (3x up, 0.5x
+      down, as below) stay rare and separate.
+   3. The board. On Mara's Sell page and on a board at the pier, all
+      five lines at once, one small chart each, stacked, each in its
+      potato's colour, the last 90 s of ticks, the current price large
+      at the right, and an arrow for the last change. One tap on a
+      line selects that potato for selling; no separate page per
+      potato. The board is one concept: "the market".
+   4. The HUD keeps only the selected potato's price on the Sell
+      button; the board is behind one tap. No other number joins the
+      play screen.
+   5. Mean price over a year is unchanged by ticks and mini-booms
+      (noise and booms are zero-mean over the year by construction: a
+      boom is paid for by a slightly lower base through the rest of
+      the year). Re-run the bot; add a "trader" strategy that sells
+      only on local highs, judged by the variance rule above; report
+      its distribution. Ledger labels unchanged; sales post at
+      the actual tick price under the existing sales label.
+   6. Winter: price years made loud, as specified below: a newspaper
+      headline on the Winter card, a bell, the stores line turning
+      gold, Nell saying "Sell. Now." The Pub's price rumour pays out
+      here.
 
 J. Jokers. The practices become jokers: absurd names, real rule
    changes, a face on every card. Twelve at launch, four unlocked:
