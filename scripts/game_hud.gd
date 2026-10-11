@@ -1415,7 +1415,7 @@ func _update_context() -> void:
 
 func _notice_is_warning(text: String) -> bool:
 	var lower := text.to_lower()
-	if lower.contains("open 12 more") or lower.contains("lease at"): return true
+	if lower.contains("open 12 more") or lower.contains("lease at") or lower.contains("for rent"): return true
 	for word: String in ["unlock", "full", "not enough", "need ", "needs ", "empty", "frozen", "no seeds", "no water", "out of", "cannot", "can't", "could not"]:
 		if lower.contains(word): return true
 	return false
