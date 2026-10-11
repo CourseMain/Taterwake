@@ -1401,3 +1401,6 @@ Owner's decision · **2026-10-11**: “what i meant like make the public one v2.
 
 
 The fresh Godot **4.7.2** release export passes production fresh/Continue at **390×844** and **1440×900**, with no QA bridge or browser errors. The public pack is **5,028,860 bytes**; every gameplay resource matches the measured export, with only class/UID cache ordering differing. The docs-root files are prepared for the **v2.0.5** GitHub Pages deployment. Classic and web sources remain unchanged. The full suite is green; the extra standalone bot continues, so no v2.0.5 tag is created yet.
+
+
+Owner's decision · **2026-10-11**: “no need extra just quickly”. Stop the additional standalone rerun and publish the current green build. The complete **103-suite / 23,762-check** full run already includes standalone epilogue **534 checks** and tuning bot **1,679 checks**, with **0 failures, timeouts or errors**. The extra epilogue rerun passed **534 checks**; the unfinished extra bot process was stopped at the owner's request. No test, suite, assertion or runner check was skipped, disabled or deleted to obtain a green result. The public development playtest is **v2.0.5**; its four browser image gates pass. The stamp-colour choice remains documented and unchanged.

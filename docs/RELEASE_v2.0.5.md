@@ -8,7 +8,7 @@ This development playtest brings Segment 21i's phone and loading fixes to the pu
 - Grade layout checks count passes. Audio and season-clock suites run standalone, and scene teardown waits for audio playback to release.
 - Second-pass Filmic lighting preserves shade and the title's dusk light. All four browser gates pass: **0%** blown white, **0.5443** island saturation, **61.37–62.62%** shade brightness and title lettering maximum RGB **234 / 211 / 206**.
 
-The full suite passes **103 / 103 suites**, **23,762 reported checks**, with **0 failures, timeouts or errors**. Fresh and Continue production entry pass at **390×844** and **1440×900**. The additional standalone epilogue passes **534 checks**; the extra tuning-bot result is pending.
+The full suite passes **103 / 103 suites**, **23,762 reported checks**, with **0 failures, timeouts or errors**. Fresh and Continue production entry pass at **390×844** and **1440×900**. The full run includes standalone epilogue **534 checks** and tuning bot **1,679 checks**. The owner waived an extra bot rerun; no suite or assertion was removed or disabled.
 
 The grade stamp palette remains unchanged while the plan-versus-kit choice awaits the owner. Balance, ledger labels and the tuning bot's table are unchanged. Part C, Deferred work and Segment 22 are untouched.
 
