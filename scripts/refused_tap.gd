@@ -3,6 +3,9 @@ extends RefCounted
 static func caption(message: String) -> String:
 	var text := message.to_lower()
 	var rules: Array = [
+		["hat locked", "Hat locked. Complete its quest first."],
+		["fully upgraded", "Fully upgraded. Choose another tool."],
+		["no ducks", "No ducks. Hire a duck first."],
 		["can empty", "Can empty. Fill it at the tank."],
 		["frozen", "Frozen beds. Clear the ice with Hoe."],
 		["sprayer empty", "Sprayer empty. Wait for fresh supplies."],

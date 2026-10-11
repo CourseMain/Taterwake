@@ -435,7 +435,7 @@ func _build_tutorial() -> void:
 	_tutorial_body = _wrap("", 15, INK)
 	_tutorial_body.add_theme_font_override("font", Type.face(Type.DISPLAY, 500))
 	contents.add_child(_tutorial_body)
-	_tutorial_feedback = _wrap("", 14, GOLD)
+	_tutorial_feedback = _wrap("", 14, INK)
 	contents.add_child(_tutorial_feedback)
 	_tutorial_feedback.hide()
 	_tutorial_key = _label("", 14, GOLD, true)
@@ -2805,13 +2805,19 @@ func show_refusal(message: String, control: Control = null) -> void:
 		_tutorial_feedback.text = caption
 		_tutorial_feedback.show()
 	elif farm_page_open():
-		var words: Label = _body.find_child("RefusedTapCaption", true, false)
+		var parent: Node = target.get_parent() if is_instance_valid(target) else _body
+		var branch: Node = target
+		while parent and parent != _body and not parent is VBoxContainer:
+			branch = parent
+			parent = parent.get_parent()
+		if not parent: parent = _body
+		var words: Label = parent.get_node_or_null("RefusedTapCaption")
 		if not words:
 			words = _wrap("", 14, INK)
 			words.name = "RefusedTapCaption"
-			_body.add_child(words)
-			# Keep the caption beneath the existing page instruction/header.
-			_body.move_child(words, mini(2, _body.get_child_count()-1))
+			parent.add_child(words)
+			# The action follows its instruction; insert the caption between them.
+			parent.move_child(words, branch.get_index() if is_instance_valid(branch) and branch.get_parent() == parent else mini(2, parent.get_child_count()-1))
 		words.text = caption
 	else:
 		_refusal_caption.text = caption

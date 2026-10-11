@@ -48,6 +48,7 @@ var test_mode: bool = false
 var launch_title_in_tests := false
 var _launch_ready := false
 var _title_returned := false
+var tap_feedback: Node
 var feedback_audio: Node
 var seasonal_ambience: Node
 var sleeping_until_spring: bool = false
@@ -159,6 +160,9 @@ func _ready() -> void:
 	state.season_changed.connect(_on_season_changed)
 	if not test_mode: SoundMix.load_preference()
 	_setup_sound()
+	tap_feedback = preload("res://scripts/tap_feedback.gd").new()
+	tap_feedback.game = self
+	add_child(tap_feedback)
 	climate_audio = load("res://scripts/climate_audio.gd").new()
 	add_child(climate_audio)
 	tutorial = TutorialScript.new()
