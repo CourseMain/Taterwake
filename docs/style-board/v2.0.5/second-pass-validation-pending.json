@@ -1,0 +1,16 @@
+{
+  "captured_utc": "2026-10-11T09:31:26.400681+00:00",
+  "tested_source": "d139b22",
+  "full_suite_command": "tools/run_tests.sh -j 2",
+  "completed_suites": 102,
+  "expected_suites": 103,
+  "reported_checks_completed": 22083,
+  "failures": 0,
+  "timeouts": 0,
+  "errors": 0,
+  "pending": [
+    "test_tuning_bot"
+  ],
+  "additional_standalone": "test_epilogue and test_tuning_bot queued after the full suite",
+  "release_pending": "Owner stamp-colour decision and completion of validation"
+}
