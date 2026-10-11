@@ -895,6 +895,10 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 			_target(root, Vector3(0.0, 0.17, 0.0), Vector3(2.08, 0.5, 2.08), "plot_index", index)
 	# A full fence with an open, swung gate on the connecting path.
 	var corners: Array[Vector3] = [Vector3(-9.05,0,-3.2),Vector3(5.45,0,-3.2),Vector3(5.45,0,6.3),Vector3(-9.05,0,6.3)]
+	if first_index == 24:
+		# Low's western posts belong beside the soil, outside the working lane.
+		corners[0].x = -8.4
+		corners[3].x = -8.4
 	for j in range(4):
 		var a: Vector3 = corners[j]+offset
 		var b: Vector3 = corners[(j+1)%4]+offset
@@ -903,7 +907,9 @@ func _garden_field(offset: Vector3, first_index: int) -> void:
 			var mid: Vector3 = a.lerp(b,0.35)
 			_fence(a,mid+Vector3(1.25,0,0),2)
 			_fence(mid-Vector3(1.25,0,0),b,4)
-			_fence(mid-Vector3(1.25,0,0),mid+Vector3(-1.25,0,1.6),1)
+			# Fold Home and Low's open gate back along the field edge.
+			var open_end: Vector3 = mid + (Vector3(-2.85,0,0) if first_index < 48 else Vector3(-1.25,0,1.6))
+			_fence(mid-Vector3(1.25,0,0),open_end,1)
 		else: _fence(a,b,7 if j % 2 == 0 else 5)
 
 func update_plots(plots: Array) -> void:
@@ -1263,7 +1269,11 @@ func _windmill(pos: Vector3) -> void:
 
 func _scenery() -> void:
 	for pos in [Vector3(-17.2, 0, -1), Vector3(-16.9, 0, 10.3), Vector3(-11.3, 0, 11.8), Vector3(17.4, 0, -10.5), Vector3(17.3 + 2.0 / LAND_SPACING, 0, -0.5)]:
-		_tree(pos, _rng.randf_range(0.85, 1.2))
+		var tree_size: float = _rng.randf_range(0.85, 1.2)
+		# This foreground canopy hides Tess's board from the play camera.
+		# Consume its size draw so the rest of the scenery stays in place.
+		if pos == Vector3(-11.3, 0, 11.8): continue
+		_tree(pos, tree_size)
 	for pos in [Vector3(-13, 0, 12), Vector3(-18, 0, 4), Vector3(17, 0, 5), Vector3(17, 0, -6), Vector3(-7, 0, -12)]:
 		for i in range(3):
 			_sphere(self, pos + Vector3(float(i) * 0.53, 0.38, 0.0), Vector3(0.65, 0.59, 0.6), Color("63905c"))
