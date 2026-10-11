@@ -2137,7 +2137,7 @@ func _build_winter(_staged: bool = false, _request: int = 0) -> void:
 	_refs.accounts_loan = Kit.label(self, "", 16); records.add_child(_refs.accounts_loan)
 	for word in _state.Quality.GRADES: _refs["grade_sales:" + word] = _account_row(records, word + " sales", "")
 	if clock.season == 3:
-		var leases := _details_section("account_leases", "Field leases")
+		var leases := _details_section("account_leases", "For rent")
 		for field in _state.Land.IDS:
 			if field == "home": continue
 			leases.add_child(Kit.label(self, _state.Land.NAMES[field], 16))

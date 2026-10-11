@@ -23,9 +23,9 @@ func run() -> void:
 		farm.season_clock.season = season
 		check(farm.interact_plot(12, "plant") == "Home bed · open 12 more at the Tools shed, 48,000", "locked Home direction is correct in season " + str(season))
 		game.hud.close_panel()
-		check(farm.interact_plot(24, "hoe") == "Low Field · lease at the Winter accounts, 55,000 a year", "Low lease direction is field-specific")
+		check(farm.interact_plot(24, "hoe") == "Low Field · for rent at the Winter accounts, 55,000 a year", "Low lease direction is field-specific")
 		game.hud.close_panel()
-		check(farm.interact_plot(48, "hoe") == "Hill Field · lease at the Winter accounts, 9,000 a year", "Hill lease direction is field-specific")
+		check(farm.interact_plot(48, "hoe") == "Hill Field · for rent at the Winter accounts, 9,000 a year", "Hill lease direction is field-specific")
 		game.hud.show_panel("tools", farm)
 		check(game.hud._refs["upgrade:expansion:detail"].text == "Open more Home beds · 48,000 · any season" and not game.hud._refs["upgrade:expansion"].disabled, "Home purchase remains available in every season")
 	check(farm.ledger.save_data() == initial, "reading advice and refused taps leave the journal untouched")

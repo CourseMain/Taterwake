@@ -26,7 +26,8 @@ func run() -> void:
 	for label in fields.values(): check(label.get_parent().get_parent().get_parent().find_child("Exposure_*", false, false) != null, "exposure is an icon on the post")
 	for board in world._lease_boards:
 		var labels: Array = board.find_children("*", "Label3D", true, false)
-		check(labels.size() == 1 and labels[0].text == "TO LET", "lease board has only TO LET")
+		check(labels.size() == 1 and labels[0].text == "For rent", "lease board says For rent")
+		check(board.find_child("RentKey", false, false) != null, "rent board has a drawn key")
 	var home: Label3D = fields["Home Field"]
 	var original_size: int = home.font_size
 	home.text = "Very long field name ".repeat(30); world.fit_label(home)

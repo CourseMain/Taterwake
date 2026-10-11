@@ -833,7 +833,17 @@ func _garden() -> void:
 			board.rotation.z = -0.10
 			_box(board,Vector3(0,0.6,0),Vector3(0.13,1.2,0.13),Color("95744e"))
 			_box(board,Vector3(0,1.0,0),Vector3(2.6,0.7,0.12),Color("baa174"))
-			bind_label(_label(board,"TO LET",Vector3(0,1.0,0.09),28,CREAM,false), Vector2(2.36, .5))
+			bind_label(_label(board,"For rent",Vector3(.2,1.0,0.09),28,CREAM,false), Vector2(1.96, .5))
+			var key := Node3D.new()
+			key.name = "RentKey"
+			board.add_child(key)
+			var centre := Vector3(-1.02,1.12,.1)
+			for segment in range(12):
+				var a: float = TAU * segment / 12
+				var b: float = TAU * (segment + 1) / 12
+				_bar(key,centre+Vector3(cos(a),sin(a),0)*.09,centre+Vector3(cos(b),sin(b),0)*.09,.019,CREAM)
+			_bar(key,centre+Vector3(0,-.09,0),centre+Vector3(0,-.31,0),.019,CREAM)
+			for y in [-.23,-.30]: _bar(key,centre+Vector3(0,y,0),centre+Vector3(.08,y,0),.019,CREAM)
 			for i in range(5): _leaf(board,Vector3(-0.8+i*0.4,0.35,0),Vector3(0.18,0.75,0.12),LEAF,0.3)
 			_lease_boards.append(board)
 

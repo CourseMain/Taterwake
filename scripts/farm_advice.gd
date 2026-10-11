@@ -19,7 +19,7 @@ static func locked(farm, index: int) -> String:
 	var field: String = farm.Land.id(index)
 	if field == "home": return "Home bed · open 12 more at the Tools shed, " + farm.format_number(farm.FIELD_EXPANSION_COST)
 	if not farm.Land.active(farm, field):
-		return "%s · lease at the Winter accounts, %s a year" % [farm.Land.NAMES[field], farm.format_number(farm.Land.RENTS[field])]
+		return "%s · for rent at the Winter accounts, %s a year" % [farm.Land.NAMES[field], farm.format_number(farm.Land.RENTS[field])]
 	return "%s bed · open 12 more at the Tools shed, %s" % [farm.Land.NAMES[field], farm.format_number(farm.FIELD_EXPANSION_COST)]
 
 static func seed_capacity(farm, crop: String) -> int:
