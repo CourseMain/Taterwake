@@ -57,13 +57,4 @@ func run() -> void:
 	quit(1 if failures else 0)
 
 func release_audio() -> void:
-	game.process_mode = Node.PROCESS_MODE_DISABLED
-	var playbacks: Array[WeakRef] = []
-	for player: AudioStreamPlayer in game.find_children("*", "AudioStreamPlayer", true, false):
-		if player.has_stream_playback(): playbacks.append(weakref(player.get_stream_playback()))
-		player.stop()
-		player.stream = null
-	for frame in range(120):
-		if playbacks.all(func(ref: WeakRef): return ref.get_ref() == null): break
-		await process_frame
-	check(playbacks.all(func(ref: WeakRef): return ref.get_ref() == null), "audio playbacks release before fullscreen fixture teardown")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "all audio playbacks release before fixture teardown")

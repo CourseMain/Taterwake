@@ -78,16 +78,7 @@ func run() -> void:
 # Audio mixes on its own thread. Wait for the stopped playbacks themselves,
 # rather than assuming a fixed delay is sufficient under parallel load.
 func release_audio() -> void:
-	game.process_mode = Node.PROCESS_MODE_DISABLED
-	var playbacks: Array[WeakRef] = []
-	for player: AudioStreamPlayer in game.find_children("*", "AudioStreamPlayer", true, false):
-		if player.has_stream_playback(): playbacks.append(weakref(player.get_stream_playback()))
-		player.stop()
-		player.stream = null
-	for frame in range(120):
-		if playbacks.all(func(ref: WeakRef): return ref.get_ref() == null): break
-		await process_frame
-	check(playbacks.all(func(ref: WeakRef): return ref.get_ref() == null), "all audio playbacks release before UI fixture teardown")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "all audio playbacks release before fixture teardown")
 
 const SERVICES: Array[String] = ["market:sell", "market", "barn", "accounts", "climate", "quests", "tools"]
 const RETIRED: Array[String] = ["sell_potatoes", "quick_sell", "winter_stores", "winter_seeds", "winter_seed_choices", "loss_notices", "contracts", "store_advice", "advice:home", "advice:golden", "advice:stores", "forge", "bank", "activities"]

@@ -106,7 +106,11 @@ func run() -> void:
 		var barn: Vector3 = [Vector3(-12, 2, -8), Vector3(-15, 2, -10), Vector3(-18, 2, -12)][island - 1]
 		var hit: Dictionary = game.world.pick(game.world.camera.unproject_position(game.world.layout_point(barn)))
 		check(str(hit.get("station", "")) == "barn", "island %d barn remains clickable after zooming out" % island)
+	await release_audio()
 	game.queue_free()
 	await process_frame
 	print("MAP ZOOM: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+func release_audio() -> void:
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "all audio playbacks release before fixture teardown")

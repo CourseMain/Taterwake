@@ -66,6 +66,7 @@ func run() -> void:
 	game.hud._refs["activity:duck"].pressed.emit()
 	await settle()
 	check(game.activities.duck_count() == 1 and game.hud._refs.duck_pond.count == 1, "hiring adds a real duck to the pond")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "all audio playbacks release before fixture teardown")
 	game.queue_free()
 	await settle()
 	print("FARM ALERTS: %d checks, %d failures" % [checks, failures])
