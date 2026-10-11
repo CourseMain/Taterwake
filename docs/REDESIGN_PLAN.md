@@ -1932,8 +1932,15 @@ Lines that hold through every part:
 - No compounding, no meters, no countdowns, no login rewards.
 - Every new ledger line is a new frozen label under the existing
   "other" category; no existing label changes.
-- The bot is re-run after each part; survival may not move by more
-  than two seeds per strategy; tidy's mean stays under 320,000.
+- The bot is re-run after each part; the five honest strategies'
+  survival may not move by more than two seeds each; tidy's mean
+  stays under 320,000.
+- Variance strategies (gambler, punter, trader) are judged by spread,
+  not by rank: their mean lands between naive's and tidy's; at least
+  3 of 30 seeds beat tidy's mean and at least 3 of 30 foreclose. A
+  lucky variance run may end as high as 640,000, twice the ceiling,
+  never more. The slop must be able to make you rich or ruin you,
+  while the honest farm stays honest.
 - One concept per screen, as the contract below says.
 
 The simplicity contract (every part below is bound by it):
@@ -2024,7 +2031,7 @@ V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
    from the play screen (the season's open loop). Ledger label
    "Pedlar's pack". The Pedlar is skipped by the bot (unchanged); add a
    "gambler" strategy that buys every pack every Spring and report its
-   survival; it may be worse than cautious, never better than tidy.
+   distribution under the variance rule above.
 
 V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    Summer and a betting slip. One weather rumour ("Storm this
@@ -2036,7 +2043,9 @@ V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    The weather rumour's odds come from the real forecast probability
    with noise, so Iris being right six times in ten matters here.
    Alongside: CLIMATE_ANNUAL_CAP 3 to 2, so a season's bet is about
-   one storm, not three. Re-run the bot and re-record the table.
+   one storm, not three. Re-run the bot and re-record the table. Add a
+   "punter" variant of the gambler that also bets the maximum on every
+   rumour, judged by the variance rule above.
 
 V3. The Fair and the oddities (Autumn). A tent by the pond on the
    first day of Autumn. Enter one potato. Oddities: 1 harvest in 20
@@ -2074,8 +2083,8 @@ V4. The Exchange: a live market board, all year. The owner's call,
       (noise and booms are zero-mean over the year by construction: a
       boom is paid for by a slightly lower base through the rest of
       the year). Re-run the bot; add a "trader" strategy that sells
-      only on local highs and report it; it may beat cautious and must
-      not beat tidy's ceiling. Ledger labels unchanged; sales post at
+      only on local highs, judged by the variance rule above; report
+      its distribution. Ledger labels unchanged; sales post at
       the actual tick price under the existing sales label.
    6. Winter: price years made loud, as specified below: a newspaper
       headline on the Winter card, a bell, the stores line turning
