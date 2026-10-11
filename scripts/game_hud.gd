@@ -135,6 +135,8 @@ var _refs: Dictionary = {}
 var _reset_pending: bool = false
 var _panel_crops: Array[String] = []
 var _tool_caption: Label
+var _refusal_caption: Label
+var last_tap: Control
 var _context_box: PanelContainer
 var _hover_context: String = ""
 var _context_layout_key: String = ""
@@ -738,6 +740,7 @@ func _polish_card_typography(node: Node) -> void:
 
 func _button(text: String, action: String, primary: bool = false) -> Button:
 	var button: Button = preload("res://scripts/illustrated_button.gd").new()
+	button.button_down.connect(func(): last_tap = button)
 	button.set_meta("hud_action", action)
 	button.text = text
 	button.set_meta("action", action)
@@ -1098,7 +1101,13 @@ func _build_footer() -> void:
 	_context_cue = preload("res://scripts/hint_cue.gd").new()
 	hint_row.add_child(_context_cue)
 	_context.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hint_row.add_child(_context)
+	var hint_words := _vbox(2)
+	hint_words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint_row.add_child(hint_words)
+	hint_words.add_child(_context)
+	_refusal_caption = _wrap("", 14, INK)
+	hint_words.add_child(_refusal_caption)
+	_refusal_caption.hide()
 	_context.minimum_size_changed.connect(func(): _context_box.size.y = 0, CONNECT_DEFERRED)
 	_context_box.hide()
 	set_tool("hoe")
@@ -1352,6 +1361,7 @@ func show_farm_hint(text: String) -> void:
 	_update_context()
 
 func clear_farm_hint() -> void:
+	_refusal_caption.hide()
 	_farm_hint_remaining = 0.0
 	_update_context()
 
@@ -1382,7 +1392,7 @@ func _update_context() -> void:
 	var touch = get_parent().get("touch_controls")
 	var touch_enabled: bool = is_instance_valid(touch) and touch.enabled
 	if touch_enabled:
-		_context_box.visible = _context_box.visible and (warning or text.begins_with("Ready in ") or _context_box.get_meta("grade", false))
+		_context_box.visible = _context_box.visible and (warning or _refusal_caption.visible or text.begins_with("Ready in ") or _context_box.get_meta("grade", false))
 	var seed_row: bool = is_instance_valid(_crop_row) and _crop_row.visible
 	var layout_key: String = "%s|%s|%s|%s" % [text, root.size.x, touch_enabled, seed_row]
 	if layout_key == _context_layout_key: return
@@ -1392,7 +1402,7 @@ func _update_context() -> void:
 	_context.set_meta("text_tier", 22 if text.begins_with("Ready in ") else 14)
 	var font_size: int = text_pixels(int(_context.get_meta("text_tier")))
 	_context.add_theme_font_size_override("font_size", font_size)
-	var width: float = clampf(_context.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 60.0, 120.0, minf(480.0, root.size.x - 24.0))
+	var width: float = clampf(_context.get_theme_font("font").get_string_size(text + (" " + _refusal_caption.text if _refusal_caption.visible else ""), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 60.0, 120.0, minf(480.0, root.size.x - 24.0))
 	_context_box.offset_left = -width * 0.5
 	_context_box.offset_right = width * 0.5
 	_context_box.offset_top = -310 if touch_enabled else (-251 if seed_row else -152)
@@ -2784,9 +2794,30 @@ func _refresh_debug() -> void:
 	_refs.debug_weather_note.text = "Starts a full 45-second warning; crops and stores can be lost." if can_weather else "Finish the current weather or lesson before starting a test."
 
 func show_tutorial_feedback(message: String) -> void:
+	show_refusal(message)
+
+func show_refusal(message: String, control: Control = null) -> void:
+	var refused = preload("res://scripts/refused_tap.gd")
+	var target: Control = control if is_instance_valid(control) else last_tap
+	refused.shake(target)
+	var caption: String = refused.caption(message)
 	if not _tutorial.is_empty():
-		_tutorial_feedback.text = message
+		_tutorial_feedback.text = caption
 		_tutorial_feedback.show()
+	elif farm_page_open():
+		var words: Label = _body.find_child("RefusedTapCaption", true, false)
+		if not words:
+			words = _wrap("", 14, INK)
+			words.name = "RefusedTapCaption"
+			_body.add_child(words)
+			# Keep the caption beneath the existing page instruction/header.
+			_body.move_child(words, mini(2, _body.get_child_count()-1))
+		words.text = caption
+	else:
+		_refusal_caption.text = caption
+		_refusal_caption.show()
+		_context_layout_key = ""
+		_update_context()
 
 func _build_farm_help() -> void:
 	# Keep the shared layout handle for older touch/capture callers. Contextual

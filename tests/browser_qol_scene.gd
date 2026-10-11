@@ -27,6 +27,19 @@ func _present_qol(action: String, ticket: int) -> void:
 		game.hud.root.visible = view == "qol_locked"
 		game.touch_controls.root.hide()
 		if view == "qol_locked": game.hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(game.state, 24))
+	if view == "qol_refused":
+		game.state.tutorial_progress.step = 4
+		game.state.tutorial_progress.plot = 5
+		game.state.plots[5].merge({"stage":1, "crop":"russet", "tilled":true, "watered":false},true)
+		game.state.climate.data.operations.supply.can = 0
+		game.tutorial._enter_step()
+		game.hud.last_tap = game.touch_controls.use_button
+		game.perform_plot(5,"water")
+	if view == "qol_undo":
+		var page = game.hud._refs.market_page
+		page.select_variety("russet","Table")
+		page.quantity.set_value_no_signal(1)
+		page._sell()
 	if view == "qol_accounts":
 		var scroll: ScrollContainer = game.hud._body.get_parent()
 		scroll.scroll_vertical = 100000

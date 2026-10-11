@@ -882,7 +882,7 @@ func perform_plot(index: int, tool: String = "hoe") -> void:
 	if lesson_before == "water" and state.climate.data.lesson.stage == "area": changed_indices.append(index)
 	if changed_indices.is_empty():
 		if _tutorial_active(): hud.show_tutorial_feedback(result)
-		else: hud.show_farm_hint(result)
+		else: hud.show_refusal(result)
 	if not changed_indices.is_empty():
 		hud.clear_farm_hint()
 		if tool == "harvest" and state.storage_used() >= state.capacity:
@@ -1372,7 +1372,7 @@ func _save_checkpoint() -> void:
 		state.save_game()
 
 func _on_purchase_rejected(message: String) -> void:
-	hud.show_toast(message)
+	hud.show_refusal(message)
 
 func _on_notification(message: String) -> void:
 	# Routine work, quotes and shipments are already visible in the field and HUD.
@@ -1383,7 +1383,7 @@ func _on_notification(message: String) -> void:
 		return
 	for marker in ["quest complete", "could not", "couldn't", "cannot", "can't", "not enough", "need ", "needs ", "full", "seeds left", "no potatoes", "no readable", "damaged", "failed", "already collected", "emergency"]:
 		if lower.contains(marker):
-			hud.show_toast(message)
+			hud.show_toast(message) if lower.contains("quest complete") else hud.show_refusal(message)
 			return
 
 func _on_reward(title: String, detail: String, rarity: String) -> void:

@@ -145,6 +145,7 @@ func button(caption: String, callback: Callable, parent: Node = null) -> Button:
 	result.picture_pixels = 32
 	result.focus_mode = Control.FOCUS_NONE
 	(parent if parent != null else root).add_child(result)
+	result.button_down.connect(func(): game.hud.last_tap = result)
 	result.pressed.connect(callback)
 	return result
 
