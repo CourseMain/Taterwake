@@ -1383,3 +1383,9 @@ The second-pass full run caught the same intermittent retained-audio resource in
 
 
 D's second-pass pack remains **5,028,860 bytes**. Three uncached phone-fixture loads have a median **39.264 seconds**, against the public v2.0.4 median **48.273 seconds**: **9.009 seconds / 18.66%** faster at 10 Mbps / 40 ms latency. The first timing attempt competed with other browser captures and is retained in ignored artifacts; the review uses the repeated quiet measurement. The final entry browser test again passes **15 cases** with no browser errors. All four image gates pass again after restoring the original half-haze setting. The fullscreen/UI-audit cleanup check passes **805 checks** in each of two parallel runs.
+
+
+E's subsequent parallel batch exposed the same retained-audio resource in **test_farm_alerts** and **test_map_zoom**, after their functional checks passed. These fixtures, fullscreen and UI audit now share **tests/audio_fixture.gd**, which stops streams and checks that their actual playback references release before scene destruction. The four affected suites pass together under **-j 2**: **839 reported checks**, **0 failures, 0 timeouts, 0 errors**. These are teardown changes only; all original functional assertions remain.
+
+
+The same retained-playback signature then appeared in **test_latest_game**. Fifteen remaining farm-scene fixtures that quit after short frame waits now assert audio release before teardown, using the same helper. Their gameplay assertions, inputs and results are unchanged. A focused parallel check passes **839 checks** across latest game, farm interaction, lighting, title launch and UI kit, with no failures or resource errors. The full suite is being rerun with these short teardowns repaired; no failed run is presented as a passing run.
