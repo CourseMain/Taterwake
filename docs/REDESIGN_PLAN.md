@@ -1849,12 +1849,22 @@ F. Vibrancy, second pass. The first pass came back neon: lime grass,
    edges and keeper headers use the full-chroma token; Weather and
    Menu icons are coloured. Screenshot Spring noon, Summer noon, the
    title and Mara's page at 390x844 and 1440x900, before and after.
+   Owner's check on the second pass: the shadows are gone entirely
+   (Summer storm and Spring noon both flat). That fails gate three on
+   its own. Shadows are not optional in any pass: the sun arc, the
+   2048 map and opacity 0.75 stay, and the gate is measured before
+   tagging.
 
 Deferred, not forgotten (do none of these now): decorations purchase
 (cut: the Fair trophies and oddities replace it), the weather station
 and tree rebuild, the top-band collision at 390, the oversized grades
 card, the four stacked accounts buttons, "1 seasons" plural, Spring
-haze, the four stray icons on the first guide card.
+haze, the four stray icons on the first guide card. Island layout
+QoL from the owner's Summer screenshot: fence posts standing on the
+path beside Home Field and Low Field; the Quests board hidden behind
+the orchard trees from the play camera; the "TO LET" boards (British
+for "available to rent", which testers will not know) become "For
+rent" with a small key drawing.
 
 Done when: a fresh and a returning phone entry show the island filling
 the width on the first frame, no HUD label is under 14 px, the pack is
@@ -1989,10 +1999,38 @@ V3. The Fair and the oddities (Autumn). A tent by the pond on the
    nothing, ledger label "Fair prize". Three village entries with
    random scores to beat. Confetti and a trumpet on a win.
 
-V4. The Exchange (Winter). Price years, as specified below, made loud:
-   a newspaper headline on the Winter card, a bell, the stores line
-   turning gold, Nell saying "Sell. Now." The Pub's price rumour pays
-   out here. Nothing else changes.
+V4. The Exchange: a live market board, all year. The owner's call,
+   reversing part of Segment 4: prices should move while you wait,
+   you should see every potato's line at once, and the lines should
+   look like a market, jagged, not a smooth curve to the Winter peak.
+   1. Ticks. Each variety's price moves every five seconds of play by
+      a small random step (drift as now, plus noise of up to 2% a
+      tick, mean zero), so a line is jagged. The Winter peak stays.
+   2. Mini-booms. Two to four times a year, one variety jumps 1.3x to
+      1.6x for about a quarter of a season, with a one-line reason in
+      the newspaper ("Chip shop opens in Shores. Russet wanted."),
+      then falls back over the next quarter. Price years (3x up, 0.5x
+      down, as below) stay rare and separate.
+   3. The board. On Mara's Sell page and on a board at the pier, all
+      five lines at once, one small chart each, stacked, each in its
+      potato's colour, the last 90 s of ticks, the current price large
+      at the right, and an arrow for the last change. One tap on a
+      line selects that potato for selling; no separate page per
+      potato. The board is one concept: "the market".
+   4. The HUD keeps only the selected potato's price on the Sell
+      button; the board is behind one tap. No other number joins the
+      play screen.
+   5. Mean price over a year is unchanged by ticks and mini-booms
+      (noise and booms are zero-mean over the year by construction: a
+      boom is paid for by a slightly lower base through the rest of
+      the year). Re-run the bot; add a "trader" strategy that sells
+      only on local highs and report it; it may beat cautious and must
+      not beat tidy's ceiling. Ledger labels unchanged; sales post at
+      the actual tick price under the existing sales label.
+   6. Winter: price years made loud, as specified below: a newspaper
+      headline on the Winter card, a bell, the stores line turning
+      gold, Nell saying "Sell. Now." The Pub's price rumour pays out
+      here.
 
 J. Jokers. The practices become jokers: absurd names, real rule
    changes, a face on every card. Twelve at launch, four unlocked:
