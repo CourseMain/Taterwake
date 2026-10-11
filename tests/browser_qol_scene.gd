@@ -86,14 +86,26 @@ func _latency_prepare(view: String) -> void:
 	latency_mode = false
 	armed = null
 	game.touch_controls.drawer.hide()
+	if is_instance_valid(game.epilogue_screen): game._close_epilogue(false)
 	var base: String = view.get_slice("/",0)
 	if base == "tool_tiles": base = "play_spring"
 	if base == "guide": base = "guide_welcome"
 	if base == "market_undo": base = "market_sell"
+	if base == "reset_confirm": base = "save_page"
+	if base == "epilogue": base = "run_summary"
+	if base == "farm_tip": game.hud._opened_farm_tip = game.state.farm_help.tip(game.state)
 	if base == "debug_locked": base = "debug"
 	game.hud._debug_unlocked = view == "debug"
 	await super._present(base,ticket)
 	is_ready = false
+	if view == "reset_confirm": game.hud._act("request_reset")
+	if view.begins_with("npc:") and view.contains("/"):
+		game.conversation.show_page(view.get_slice("/",1))
+		game.conversation.reveal()
+	if view == "epilogue":
+		game.epilogue_result = {"outcome":"Holding on", "projects":game.state.climate.data.projects.duplicate(true), "records":[], "headlines":[], "verdicts":[], "farm_value":0}
+		game._show_epilogue()
+		game.epilogue_screen.finish_reveal()
 	if view.begins_with("guide/"):
 		game.state.tutorial_progress.step = int(view.get_slice("/",1))
 		game.tutorial._enter_step()
@@ -122,6 +134,7 @@ func _latency_prepare(view: String) -> void:
 	var roots: Array = [game.hud._modal_card] if game.hud.is_panel_open() else [game.hud._tutorial_card]
 	if view == "tool_tiles": roots = [game.touch_controls.drawer]
 	if view.begins_with("npc"): roots = [game.conversation]
+	if view == "epilogue": roots = [game.epilogue_screen]
 	if view == "foreclosure": roots = [game.hud._run_end]
 	if view == "title": roots = [game.title_scene]
 	for branch in roots: _latency_collect(branch)
