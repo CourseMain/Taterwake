@@ -7,6 +7,7 @@ const Seeds = preload("res://scripts/seed_packets.gd")
 const Place = preload("res://scripts/place_ui.gd")
 const Kit = preload("res://scripts/ui_kit.gd")
 const Type = preload("res://scripts/ui_type.gd")
+const SaleUndo = preload("res://scripts/sale_undo.gd")
 const ACCENT = Seeds.ACCENT
 const INK := Color("3f2c1c")
 const MUTED := Color("705236")
@@ -48,6 +49,7 @@ var _amount_box: VBoxContainer
 var _total_box: VBoxContainer
 var _receipt_left: float = 0.0
 var _receipt: String = ""
+var _undo_sale: RefCounted
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
 var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 
@@ -348,7 +350,9 @@ func refresh() -> void:
 	seed_capacity.text = "%s: keep up to %d t" % [State.CropTable.CROPS[selected].name.trim_suffix(" Potato"), preload("res://scripts/farm_advice.gd").seed_capacity(state, selected)]
 	seed_button.disabled = state.seed_inventory[selected] + state.trading.kept_seed[selected] >= State.MAX_INVENTORY
 	payout.text = state.market_money(price_for(selected, selected_grade, amount) * amount) if quantity.valid and amount > 0 else state.money(0)
-	sell_button.disabled = not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount])
+	var can_undo: bool = is_instance_valid(_undo_sale) and _undo_sale.available(state)
+	sell_button.text = "Undo" if can_undo else "Sell"
+	sell_button.disabled = not can_undo and (not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount]))
 	minus.disabled = not quantity.valid or amount <= 1
 	plus.disabled = not quantity.valid or amount >= owned
 	maximum.disabled = owned == 0
@@ -358,12 +362,22 @@ func refresh() -> void:
 	_layout.call_deferred()
 
 func _sell() -> void:
+	if is_instance_valid(_undo_sale) and _undo_sale.available(hud._state):
+		if _undo_sale.undo(hud._state):
+			_receipt_left = 0
+			if hud.get_parent().tutorial.active: hud.get_parent().tutorial.refresh()
+			refresh()
+			if not hud.get_parent().test_mode: hud._state.save_game()
+		return
 	if not quantity.apply():
 		refresh()
 		return
 	refresh()
 	if sell_button.disabled: return
+	var reversal: RefCounted = SaleUndo.new(hud._state)
 	hud._act("current_sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
+	_undo_sale = reversal if reversal.commit(hud._state) else null
+	refresh()
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return
@@ -379,6 +393,9 @@ func _purchased(receipt: Dictionary) -> void:
 	refresh()
 
 func _process(delta: float) -> void:
+	if is_instance_valid(_undo_sale) and not _undo_sale.available(hud._state):
+		_undo_sale = null
+		refresh()
 	if _receipt_left > 0:
 		_receipt_left = maxf(0, _receipt_left - delta)
 		if _receipt_left == 0: refresh()

@@ -159,6 +159,9 @@ func run() -> void:
 	press(page, "market_sell")
 	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 3 * state.market.russet.sell, "sell commits chosen quantity at live price")
 	check(page.status.text.contains("sold") and page.status.text.contains(state.format_number(3 * state.market.russet.sell)), "successful sale confirms committed payout")
+	check(page.sell_button.text == "Undo" and not page.sell_button.disabled, "sale offers Undo before another sale")
+	page._undo_sale._deadline = Time.get_ticks_msec() - 1
+	page._process(0.0)
 	page.quantity.value = 10
 	check(page.quantity.value == 9 and page.payout.text == state.money(9 * state.market.russet.sell), "quantity is bounded by owned stock")
 	page.quantity.text = "2.5"
@@ -181,6 +184,8 @@ func run() -> void:
 	cash = state.coins
 	page._sell()
 	check(Stock.count(state.storage, "russet") == 5 and state.coins == cash + 4 * state.market.russet.sell, "typed quantity commits before selling")
+	page._undo_sale._deadline = Time.get_ticks_msec() - 1
+	page._process(0.0)
 	press(page, "grade:giant:Standard")
 	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 fresh tonnes", "variety row updates chart, quantity and inventory together")
 	page.quantity.value = 2
