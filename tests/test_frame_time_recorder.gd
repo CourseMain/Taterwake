@@ -54,6 +54,7 @@ func run() -> void:
 	game.frame_recorder.observe(16, 2, 3, true)
 	game.frame_recorder.observe(16, 2, 3, false)
 	check(not game.frame_recorder.recording, "a Winter start ends at next year's accounts closing")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("FRAME TIME RECORDER: %d checks, %d failures" % [checks, failures])

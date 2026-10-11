@@ -113,6 +113,7 @@ func run() -> void:
 			game.world.camera.position = station.global_position + Vector3(8,7,13)
 			game.world.camera.look_at(station.global_position + Vector3(0,1.8,0))
 			await shot("station-%d" % island)
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await settle()
 	print("WEATHER DASHBOARD: %d checks, %d failures" % [checks,failures])

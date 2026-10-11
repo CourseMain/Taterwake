@@ -46,6 +46,7 @@ func run() -> void:
 	game._on_action("tools")
 	game.hud.update_state(game.state)
 	await shot("tools-debt")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await settle()
 	print("PLAYABILITY AUDIT: %d checks, %d failures" % [checks, failures])

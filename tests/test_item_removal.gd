@@ -47,6 +47,7 @@ func run() -> void:
 		check(quest.id != "mutation" and not quest.has("item"), "quests retain only cash and seed rewards")
 	for suffix: String in ["", ".bak", ".tmp", ".rejected"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path + suffix))
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("ITEM REMOVAL: %d checks, %d failures" % [checks, failures])

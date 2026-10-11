@@ -84,6 +84,7 @@ func run() -> void:
 					game.hud.show_panel("pause", game.state); await settle(); game.touch_controls.fit_modal(); await settle()
 					RenderingServer.force_draw()
 					root.get_texture().get_image().save_png("res://artifacts/surfaces-farm-menu-%d.png" % dimensions.x)
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free(); await settle()
 	print("SURFACES: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

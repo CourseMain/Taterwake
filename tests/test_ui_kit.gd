@@ -171,5 +171,6 @@ func run() -> void:
 	game.hud._body.find_children("*", "Button", true, false).filter(func(b):return b.get_meta("hud_action", "") == "reset")[0].pressed.emit(); await settle()
 	check(farm.season_clock.year == 1 and farm.season_clock.season == 0 and farm.coins == farm.Ledger.STARTING_CASH and not farm.run_over, "confirmed New Farm creates a playable fresh Spring")
 	check(farm.clothing_unlocked.size() == 3, "New Farm keeps earned clothing")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free(); await process_frame
 	print("UI KIT: %d checks, %d failures" % [checks, failures]); quit(1 if failures else 0)

@@ -85,6 +85,7 @@ func run() -> void:
 		await process_frame
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://artifacts/graphics-menu.png")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("GRAPHICS PREFERENCES: %d checks, %d failures" % [checks, failures])
