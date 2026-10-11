@@ -1,5 +1,7 @@
 # Segment 21i · 11 October 2026
 
+**Under development:** `under-development/v2.0.5` contains the current implementation and review evidence. It is not a tagged release; public docs still serve v2.0.4.
+
 Scope: A, B, D, E and F’s second pass from `608a53e`. The branch `claude/modest-hopper-yh83b7` was merged into `redesign` before implementation. C is closed; the Deferred list and Segment 22 have no changes in this work. Earlier review captures remain historical evidence.
 
 Godot **4.7.2 stable**, GL Compatibility, GDScript. Chromium uses Metal ANGLE. Phone captures are **390×844 CSS pixels**, desktop **1440×900**. PNGs are unedited browser captures; timings use a browser fixture rather than physical phone hardware.
@@ -60,7 +62,7 @@ The production smoke uses the actual export without QA bridges and passes fresh/
 
 ## Validation and remaining work
 
-The current `tools/run_tests.sh -j 2` run has **102 / 103 completed suites passing**, **22,083 reported checks**, and **0 failures, 0 timeouts, 0 errors**. Its remaining tuning-bot process is running. The additionally requested standalone epilogue/bot checks are queued after it. This is an [in-progress snapshot](second-pass-validation-pending.json), not a completed full-suite result. All tests remain enabled.
+The completed `tools/run_tests.sh -j 2` run passes **103 / 103 suites**, **23,762 reported checks**, with **0 failures, 0 timeouts, 0 errors**. See the [full-suite results](second-pass-full-suite-results.json). The additionally requested standalone epilogue check passes **534 checks**; the extra standalone tuning-bot check remains running. The earlier [in-progress snapshot](second-pass-validation-pending.json) is retained as historical evidence. All tests remain enabled.
 
 Balance, crop economics, ledger labels and bot tuning are unchanged. The requested latest Oda token `7a7f8c` supersedes the older pending iron-token question. The earlier recorded white E badge and Slackey guide body are outside this segment's named changes. Owner-local layout and shadow-setting edits are excluded from the release checkout and preserved in the working checkout.
 
