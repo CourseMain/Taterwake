@@ -1813,34 +1813,42 @@ E. Suite hygiene. test_grades has a timing check ("unchanged growth and
    epilogue are.
 
 
-F. Vibrancy. The owner's verdict on the current look: "shady, dull and
-   sad; I wanted bright and vibrant." The light pass made shade darker
-   and the kit palette is muted by design; together they read as a
-   cloudy day. Fix both, world and interface, with these values (the
-   kit page is updated to match; it stays the reference):
+F. Vibrancy, second pass. The first pass came back neon: lime grass,
+   blown-out whites, a title scene with no shade. That was the base
+   colours brightened and then exposure and saturation pushed on top.
+   Vibrant means clean, saturated colour with the shadows kept, not
+   more light. Replace the first pass with these values and gate the
+   result with the measurements below.
    World:
-     Environment tone map ACES, exposure 1.15; colour adjustment on,
-     saturation 1.25, contrast 1.05, brightness 1.0. Ambient 0.32 with
-     a cool sky tint (c8dcf0) so shade is blue, not grey; shadow
-     opacity 0.7, so shadows are visible but not black. Haze density
-     halved in Spring and Summer, gone at noon.
-     Grass tops: Spring 6fc45a, Summer 9ec85a, Autumn e0a24a, Winter
-     f4f6f8; risers 15% darker. Canopies: Spring 8ed67a, Summer
-     6fb84f, Autumn ff8c3a. Water: shore 3fc6c0 to deep 1f7fb5, foam
-     white. Sky: zenith 2f8fe6 to horizon bfe6ff at noon, warm at
-     dusk as now. The sun disc stays.
-   Interface tokens (replace in ui_kit.gd and the kit page):
-     ink 1b4332 · paper fbf7e6 · wood 8a5a3c · money f0b429
-     russet b8803f · giant d98a4f · golden ffd23f · sunburst ff9f1c ·
-     icecap 7fe3ff
-     nell 4f8fa8 · mara 5fb33a · tess e0583a · iris 3fa9ff · oda 7a7f8c
-     common 7fc47a · uncommon f0b429 · rare e0583a · found 3fa9ff
-   Rules: a page never dims the farm behind it below 70% brightness;
-   stamps, chips, rarity edges and keeper headers use the full-chroma
-   token, never a tint of it; the Weather and Menu icons are coloured,
-   not ink on wood. Screenshot Spring noon, Summer noon and the Mara
-   page before and after at 390x844; the after must read as a sunny
-   day.
+     Tone map Filmic (not ACES), exposure 1.0, white 6.0. Colour
+     adjustment on: saturation 1.10, contrast 1.0, brightness 1.0.
+     Sun energy 1.2 (not 1.4), colour ffe0b8. Ambient 0.30, tint
+     c8dcf0, so shade is blue. Shadow opacity 0.75. Haze halved in
+     Spring and Summer. The title scene keeps its own dusk light at
+     energy 1.12 and is excluded from the colour adjustment.
+     Grass tops: Spring 7cc25c, Summer 93b957, Autumn d9a04e, Winter
+     eef1f4; risers 15% darker. Canopies: Spring 86cf72, Summer
+     6cb04d, Autumn f08a3e. Water: shore 46b8b3 to deep 2577a8. Sky at
+     noon: zenith 3a8fd9 to horizon c2e3f7.
+   Interface tokens as in docs/style-board/ui-kit.html (already set):
+     ink 1b4332 · paper fbf7e6 · wood 8a5a3c · money f0b429 · russet
+     b8803f · giant d98a4f · golden ffd23f · sunburst ff9f1c · icecap
+     7fe3ff · nell 4f8fa8 · mara 5fb33a · tess e0583a · iris 3fa9ff ·
+     oda 7a7f8c · common 7fc47a · uncommon f0b429 · rare e0583a ·
+     found 3fa9ff.
+   Gates, measured on the Spring noon Web screenshot at 1440x900 with
+   the HUD hidden (add the measurement to tests/ as a browser check):
+     - fewer than 0.5% of pixels at or above 250 in all three
+       channels (no blown whites);
+     - mean HSV saturation of the island region between 0.40 and
+       0.55 (v2.0.4 was about 0.30; the neon pass was above 0.65);
+     - shade on the ground 55-70% as bright as lit ground beside it;
+     - the gate sign's cream lettering stays under 245 in every
+       channel on the title scene.
+   A page never dims the farm behind it below 70%; stamps, chips,
+   edges and keeper headers use the full-chroma token; Weather and
+   Menu icons are coloured. Screenshot Spring noon, Summer noon, the
+   title and Mara's page at 390x844 and 1440x900, before and after.
 
 Deferred, not forgotten (do none of these now): decorations purchase
 (cut: the Fair trophies and oddities replace it), the weather station
