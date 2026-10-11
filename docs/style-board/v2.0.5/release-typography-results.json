@@ -1,0 +1,16 @@
+[
+  {
+    "suite": "test_first_tester",
+    "status": "PASS",
+    "summary": "FIRST TESTER: 553 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_first_tester.log"
+  },
+  {
+    "suite": "test_hud_layout",
+    "status": "PASS",
+    "summary": "HUD LAYOUT: 43 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_hud_layout.log"
+  }
+]
