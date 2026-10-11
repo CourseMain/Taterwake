@@ -2988,20 +2988,19 @@ func _build_grade_explanation() -> void:
 	_modal_card.queue_redraw()
 	_modal_card.add_theme_stylebox_override("panel", Kit.skin(Kit.INK, Kit.WOOD, 12, 12, Kit.unit(self)))
 	var stamps := HBoxContainer.new()
-	stamps.add_theme_constant_override("separation", ceili(14 * Kit.unit(self))); _body.add_child(stamps)
+	stamps.add_theme_constant_override("separation", ceili(8 * Kit.unit(self))); _body.add_child(stamps)
 	for word in _state.Quality.GRADES:
-		var row := VBoxContainer.new(); row.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.custom_minimum_size.x = (210 if Kit.desktop(self) else 142) * Kit.unit(self)
+		var row := VBoxContainer.new(); row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", ceili(6 * Kit.unit(self)))
-		if word == "Feed" and not Kit.desktop(self):
-			row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			_body.add_child(row)
-		else: stamps.add_child(row)
+		stamps.add_child(row)
 		var stamp: Label = Kit.label(self, word, 16, INK)
 		preload("res://scripts/grade_stamp.gd").apply(stamp, word, text_pixels(16))
 		stamp.set_meta("text_tier", 16); stamp.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		row.add_child(stamp)
 		var gloss: Label = Kit.label(self, preload("res://scripts/grade_stamp.gd").GLOSSES[word], 14, Kit.CREAM)
-		gloss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; row.add_child(gloss)
+		gloss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		gloss.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(gloss)
 
 func _build_farmer() -> void:
 	Kit.configure(self)
