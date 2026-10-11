@@ -122,6 +122,7 @@ func _run() -> void:
 		await settle()
 		await shot("compact-inventory-960x600")
 		game.hud.close_panel()
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("LATEST GAME FEATURES: %d checks, %d failures" % [checks, failures])

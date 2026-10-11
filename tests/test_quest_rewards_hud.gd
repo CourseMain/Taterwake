@@ -32,6 +32,7 @@ func run() -> void:
 			scroll.ensure_control_visible(claim)
 			await settle()
 			check(scroll.get_global_rect().grow(1).encloses(claim.get_global_rect()),"claim reachable: "+quest.id)
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await settle()
 	print("QUEST REWARDS HUD: %d checks, %d failures" % [checks,failures])

@@ -98,6 +98,7 @@ func run() -> void:
 		await shot("clarity-compact")
 		key(KEY_2)
 		await shot("clarity-compact-seeds")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("CLARITY UPDATE: %d checks, %d failures" % [checks, failures])

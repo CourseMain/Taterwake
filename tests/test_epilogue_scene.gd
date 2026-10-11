@@ -129,6 +129,7 @@ func run() -> void:
 	game.epilogue_screen.new_run.emit()
 	await frames()
 	check(not game.state.run_over and game.state.season_clock.year == 1 and game.epilogue_result.is_empty(), "new run resets ending cache")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await frames()
 	print("Epilogue scene: %d checks, %d failures" % [checks, failures])

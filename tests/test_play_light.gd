@@ -41,6 +41,7 @@ func run() -> void:
 	check(game.shadow_size == 2048,"phone shadow maps never exceed 2048 even with an old 4096 preference")
 	game.hud.show_panel("graphics",game.state)
 	check(game.hud._refs.shadows_4096.disabled,"phone graphics cannot request the desktop map")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	for i in range(6): await process_frame
 	print("PLAY LIGHT: %d checks, %d failures" % [checks,failures])

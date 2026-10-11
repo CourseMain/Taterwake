@@ -48,6 +48,7 @@ func run() -> void:
 				game._input(event)
 				check(game.pending_plot == 4, "scaled screen click queues exact plot on island%d / %s" % [island,mode])
 				game._cancel_walk()
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	await process_frame
 	print("FARM VIEWPORT: %d checks, %d failures" % [checks, failures])

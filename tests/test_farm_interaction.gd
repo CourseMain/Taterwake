@@ -124,5 +124,6 @@ func run() -> void:
 		loop.animate(game.state.climate_info(), 1.0 / 60.0)
 		largest_step = maxf(largest_step, before.distance_to(loop.can.position))
 	check(largest_step < 0.30 and loop.refill_blend < 0.01, "refill reaches the tap and returns without teleporting the can")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	print("FARM INTERACTION: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)

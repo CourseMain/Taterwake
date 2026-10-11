@@ -39,6 +39,7 @@ func run() -> void:
 	check(game.title_scene.walk.text == "Continue · Year 2, Winter" and game.title_scene.resume.text == "Start a new farm","returning title puts the saved farm on the main action")
 	game.title_scene.walk.pressed.emit()
 	check(not game.title_active() and not game.hud.is_panel_open(),"Continue enters the saved Winter farm directly without opening accounts")
+	check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 	game.queue_free()
 	for i in range(6): await process_frame
 	for size: Vector2i in [Vector2i(1440,900), Vector2i(390,844), Vector2i(2888,1804)]:
@@ -88,6 +89,7 @@ func run() -> void:
 			check(center.x > .2 and center.x < .8 and center.y > .2 and center.y < .8, "returning growing farm stays centred on its first entry")
 			check(not game.hud._tutorial_card.get_global_rect().intersects(game.hud._weather_button.get_global_rect()), "guided growing card leaves Weather clear at " + str(size))
 			if attempt == 0: await capture_view("returning-farm-" + str(size.x))
+			check(await preload("res://tests/audio_fixture.gd").release(game, self), "audio playback releases before fixture teardown")
 			game.queue_free()
 			for frame in range(6): await process_frame
 	print("TITLE LAUNCH: %d checks, %d failures" % [checks,failures])
