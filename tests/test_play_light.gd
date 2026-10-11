@@ -28,7 +28,7 @@ func run() -> void:
 		check(is_equal_approx(world._sun.rotation_degrees.x,-27 if season >= 2 else -35),"Autumn and Winter noon stay lower than Spring and Summer")
 		check(is_zero_approx(world.play_sky.get_shader_parameter("haze_density")) and is_zero_approx(world.coast.water_material.get_shader_parameter("haze_density")), "noon clears sky and coastal haze")
 		world.set_calendar(3,season,0,"")
-		check(is_equal_approx(world.haze_density(), .25 if season < 2 else 1.0), "warm seasons halve the previous haze density at dawn")
+		check(is_equal_approx(world.haze_density(), .5 if season < 2 else 1.0), "warm seasons halve the original haze density at dawn")
 		world._animate_sun(3.0)
 		world._animate_sun(.4)
 		check(is_equal_approx(world._sun.rotation_degrees.x,-14 if season >= 2 else -20), "season dawn elevation follows 21g")
