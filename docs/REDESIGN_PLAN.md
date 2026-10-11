@@ -1873,6 +1873,45 @@ Spring noon screenshot reads as a sunny day. Tag v2.0.5. Publish to
 docs/ root (the phone fix must reach players).
 ```
 
+### Segment 21j: Quality of life from the deferred list (tag v2.0.6)
+
+```
+Why: small things the owner and the reviewer saw on v2.0.4 and v2.0.5
+that were deferred behind the blockers. None adds a feature. Each is
+one visible fix with one screenshot. Bound by the kit, the simplicity
+contract and the attention budget.
+
+1. Island layout. Fence posts standing on the path beside Home Field
+   and Low Field move onto the field edge. The Quests board is moved
+   or the orchard thinned so it is visible from the play camera in
+   every season. Screenshot: the Home and Low field edges and the
+   Quests board at noon, 1440x900.
+2. "TO LET" boards become "For rent" with a small drawn key; the same
+   wording in the locked-bed message and on the Winter accounts
+   leases block.
+3. Top band at 390: "Season · Year N" and the money glyph collide in
+   Winter. Put the money on its own row under the season on phone;
+   never truncate "Year 3".
+4. The grades explanation card is sized to its content: three stamps,
+   three glosses, nothing else; no empty paper.
+5. The accounts page's four stacked wood buttons become "Go to the
+   barn" plus one row of three small drawn tiles (Records, Leases,
+   Businesses).
+6. Mara's seed cards: "1 seasons" plural fixed; the three trait rows
+   (Thirst, Heat, Cold) at 14 px with their drawn icons.
+7. The first guide card hides the fullscreen icon, the smiley, the
+   gear and the eye until the guided year ends; one card, one button.
+8. A refused tap answers: a short shake of the control and one line
+   under the instruction, never replacing it. A sale shows "Undo" for
+   three seconds (attention budget item 10).
+9. Every tap gives a visible change within 100 ms and a sound within
+   300 ms; add the latency measurement for the five tools and all
+   card buttons to the browser fixture (attention budget item 6).
+
+Done when: each of the nine has its screenshot beside the before,
+the latency fixture passes, the suite passes under -j 2. Tag v2.0.6.
+```
+
 ### Segment 22: The village (the slop) and the run (after 21i)
 
 ```
