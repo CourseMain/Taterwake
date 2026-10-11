@@ -86,6 +86,8 @@ if args.fixture == 'feel':
 shutil.copy2(root / f'tests/browser_{args.fixture}_scene.gd', project / 'qa.gd')
 if args.fixture == 'qol':
     shutil.copy2(root / 'tests/browser_surfaces_scene.gd', project / 'qa_base.gd')
+    fixture = project / 'qa.gd'
+    fixture.write_text(fixture.read_text().replace('res://tests/browser_surfaces_scene.gd', 'res://qa_base.gd'))
 (project / 'qa.tscn').write_text('[gd_scene load_steps=2 format=3]\n[ext_resource type="Script" path="res://qa.gd" id="1"]\n[node name="BrowserQA" type="Node"]\nscript = ExtResource("1")\n')
 config = (project / 'project.godot').read_text().replace('res://scenes/main.tscn', 'res://qa.tscn')
 (project / 'project.godot').write_text(config)

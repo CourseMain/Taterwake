@@ -1,4 +1,4 @@
-extends "res://qa_base.gd"
+extends "res://tests/browser_surfaces_scene.gd"
 ## Segment 21j review fixture. No normal save is read or written.
 
 func command(args: Array) -> void:
