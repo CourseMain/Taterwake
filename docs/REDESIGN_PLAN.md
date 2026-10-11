@@ -1907,6 +1907,34 @@ The simplicity contract (every part below is bound by it):
   does, it is redrawn or cut. Record each test in PLAYTEST_22.md.
 - Nothing from the old fun pass that fails the contract survives.
 
+The attention budget (from tester 1, who does not play games: "think
+of it as limited attention"). Every part below is also bound by this:
+- At most three tappable things on the play screen at once, and one of
+  them is visibly the next thing: bigger, warmer, the only one with a
+  drawing that moves. A new player must be able to say what to tap
+  within two seconds.
+- A control appears the first time it matters and not before: Weather
+  at the first warning, Sell at the first harvest, the Pub in the
+  second Summer, the Pedlar in the second Spring.
+- Chunks of three: three numbers, three packs, three rumours, three
+  jokers offered. Never four or more choices on one card.
+- Feedback within a second of every tap: something seen and something
+  heard, every time.
+- Recognition over recall: places and pictures, never menus; the
+  player remembers the stall with the orange roof.
+- One open loop per season left visible at the season's end: a bet
+  placed, a pack unopened, a rumour on the board.
+- Small wins early: first harvest within three minutes of play, first
+  pack flip within five, first Table stamp in year one.
+- Progress near the goal is louder than progress far from it: the
+  Winter bill shows as a bar, and the last tonne before break-even
+  gets the biggest pop.
+- Start with something endowed: twelve seeds, one filled joker slot,
+  one oddity already in the collection.
+- End every year on the sale reveal, not on the bill.
+- Banned, as in part G: streak guilt, timers that punish absence, fake
+  scarcity, hidden odds.
+
 Step 0 (three fresh testers) moves to after V3: test the slop, not the
 spreadsheet.
 
