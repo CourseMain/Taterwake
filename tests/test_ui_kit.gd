@@ -95,6 +95,8 @@ func run() -> void:
 	check(game.state._save_data() == before_receipt, "sale reveal never posts or changes the supplied transaction")
 	game.hud.show_panel("grades", game.state); await settle()
 	check(absf(game.hud._modal_card.size.y - game.hud.modal_content_height()) * game.touch_controls.display_scale() <= 2, "grades card fits its stamps and captions")
+	var grade_stamps: Array = game.hud._body.find_children("*", "Label", true, false).filter(func(label): return label.has_meta("grade_stamp"))
+	check(grade_stamps.size() == 3 and grade_stamps.all(func(label): return absf(label.get_global_rect().position.y - grade_stamps[0].get_global_rect().position.y) <= 1), "all three grade stamps share one phone row")
 	game.hud.show_panel("accounts", game.state); await settle()
 	var tiles: HBoxContainer = game.hud._body.find_child("AccountDetailTiles", true, false)
 	check(tiles.get_child_count() == 3, "Winter account details share three tiles")
