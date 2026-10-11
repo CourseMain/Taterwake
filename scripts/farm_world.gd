@@ -557,7 +557,12 @@ func _lighting() -> void:
 	_day_environment.sky.radiance_size = Sky.RADIANCE_SIZE_32
 	_day_environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	_day_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_day_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	_day_environment.tonemap_mode = Environment.TONE_MAPPER_ACES
+	_day_environment.tonemap_exposure = 1.15
+	_day_environment.adjustment_enabled = true
+	_day_environment.adjustment_saturation = 1.25
+	_day_environment.adjustment_contrast = 1.05
+	_day_environment.adjustment_brightness = 1.0
 	environment_node.environment = _day_environment
 	add_child(environment_node)
 	_sun = DirectionalLight3D.new()
@@ -623,7 +628,7 @@ func _apply_graphics_quality() -> void:
 	_sun.directional_shadow_pancake_size = 0.0
 	_sun.shadow_bias = 0.025
 	_sun.shadow_normal_bias = 0.4
-	_sun.shadow_opacity = 0.85
+	_sun.shadow_opacity = 0.7
 	# The calendar owns the sun direction; quality changes only shadow rendering.
 	_sun.shadow_enabled = graphics_quality != "smooth"
 
@@ -685,7 +690,7 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 	if not is_instance_valid(_sun) or _day_environment == null:
 		return
 	if winter_changed:
-		_sun.shadow_opacity = 0.85
+		_sun.shadow_opacity = 0.7
 	if _applied_day_time >= 0.0 and absf(_day_elapsed - _applied_day_time) < LIGHTING_STEP_SECONDS and not winter_changed:
 		return
 	_applied_day_time = _day_elapsed
@@ -703,14 +708,14 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 		_sun_from = _sun_desired
 		_sun_target = _sun_desired
 		_sun.rotation_degrees = _sun_desired
-	var day_sky: Color = Color("c3dce8") if current_island == 3 else (Color("b7e3df") if current_island == 2 else Color("c5deda"))
+	var day_sky: Color = Color("bfe6ff")
 	var night_sky: Color = Color("263758") if current_island == 3 else (Color("263951") if current_island == 2 else Color("28364f"))
 	var dusk_sky: Color = Color("b69bc5") if current_island == 3 else (Color("ecb986") if current_island == 2 else Color("d7a5a1"))
 	var day_sun: Color = Color("ffcf94") if cold_season else Color("fff0ce")
 	var dusk_sun: Color = Color("ffba7d")
 	_day_environment.background_color = night_sky.lerp(day_sky, daylight).lerp(dusk_sky, twilight * 0.72)
-	_day_environment.ambient_light_color = Color("b8c8e0").lerp(Color("9fafd0"), twilight * .25)
-	_day_environment.ambient_light_energy = 0.22
+	_day_environment.ambient_light_color = Color("c8dcf0")
+	_day_environment.ambient_light_energy = 0.32
 	_sun.light_color = day_sun.lerp(dusk_sun, twilight * 0.75)
 	_sun.light_energy = (1.25 if winter else 1.4) * lerpf(0.60, 1.0, height)
 	_moon.light_energy = .22 if winter else lerpf(.24, .28, height)
@@ -727,8 +732,8 @@ func set_day_time(elapsed: float, winter: bool = false) -> void:
 		_sun.light_color = _season_light.sun.lerp(_sun.light_color, _season_blend)
 		_sun.light_energy = lerpf(_season_light.energy, _sun.light_energy, _season_blend)
 	if play_sky != null:
-		play_sky.set_shader_parameter("top_color",_day_environment.background_color.darkened(.28))
-		play_sky.set_shader_parameter("horizon_color",_day_environment.background_color.lightened(.23))
+		play_sky.set_shader_parameter("top_color", night_sky.darkened(.28).lerp(Color("2f8fe6"), daylight).lerp(dusk_sky.darkened(.28), twilight * .72))
+		play_sky.set_shader_parameter("horizon_color",_day_environment.background_color)
 	_sync_sun_sky()
 
 
@@ -740,12 +745,16 @@ func sun_sky_info() -> Dictionary:
 	var horizontal: float = right.dot(direction)
 	return {"direction": direction, "screen": Vector2(clampf(.5 + horizontal * .65, .20, .80), lerpf(.19, .10, clampf(direction.y / .58, 0, 1))), "colour": _sun.light_color}
 
+func haze_density() -> float:
+	return (.25 if _season_index < 2 else 1.0) * (1.0 - sin(_day_elapsed / DAY_CYCLE_SECONDS * PI))
+
 func _sync_sun_sky() -> void:
 	if play_sky == null or not is_instance_valid(_sun): return
 	var signature: Array = [_sun.global_basis.z, camera.global_transform if is_instance_valid(camera) else Transform3D.IDENTITY, get_viewport().size, _day_environment.background_color, _sun.light_color, _sun.light_energy, _weather_strength, _weather_drought, _season_index]
 	if signature == _sun_sky_signature: return
 	_sun_sky_signature = signature
-	play_sky.set_shader_parameter("haze_density", .5 if _season_index < 2 else 1.0)
+	play_sky.set_shader_parameter("haze_density", haze_density())
+	if is_instance_valid(_ground_material): _ground_material.set_shader_parameter("haze_density", haze_density())
 	play_sky.set_shader_parameter("sun_direction", _sun.global_basis.z.normalized())
 	play_sky.set_shader_parameter("sun_colour", _sun.light_color)
 	play_sky.set_shader_parameter("sun_visibility", 1.0 - minf(.9, _weather_strength * .8) if not _weather_drought else 1.0)
@@ -2249,12 +2258,12 @@ func _retire_climate_node(node: Node3D) -> void:
 ## Calendar presentation is deterministic; only the one-second blend uses real time.
 static func season_tints(year: int, season: int, hint: String = "") -> Dictionary:
 	var age: float = clampf((year - 1) / 9.0, 0, 1)
-	var grass: Color = [Color("699f61"), Color("98aa68"), Color("b8995b"), Color("f0f1f0")][season]
+	var grass: Color = [Color("6fc45a"), Color("9ec85a"), Color("e0a24a"), Color("f4f6f8")][season]
 	if season == 1: grass = grass.lerp(Color("c4a16d"), clampf((year - 5) / 5.0, 0, 1) * 0.85)
 	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
-	return {"grass": grass, "grass_low": [Color("486b47"),Color("626b3d"),Color("79633f"),Color("c7cfd4")][season].lerp(grass,.1), "canopy": [Color("86a96b"), Color("789457"), Color("bb713f"), Color("727e65")][season],
+	return {"grass": grass, "grass_low": grass.darkened(.15), "canopy": [Color("8ed67a"), Color("6fb84f"), Color("ff8c3a"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
-		"haze": (0.06 + age * 0.13) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
+		"haze": (0.03 + age * 0.065) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
 
 func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	for entry in _season_materials:
@@ -2347,7 +2356,7 @@ func _apply_season() -> void:
 	for entry in _season_materials:
 		if entry.kind == "grass": entry.material.albedo_color = _season_palette.grass
 		elif entry.kind == "canopy":
-			var color: Color = _season_palette.canopy.darkened(clampf((0.68 - entry.base.g) * 1.8, 0, 0.24))
+			var color: Color = _season_palette.canopy
 			color.a = 1.0-float(_season_palette.snow)
 			entry.material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if color.a > 0.0 and color.a < 1.0 else BaseMaterial3D.TRANSPARENCY_DISABLED
 			entry.material.albedo_color = color
@@ -2358,6 +2367,7 @@ func _apply_season() -> void:
 
 func draw_season_signals(v, time: float) -> void:
 	var haze: float = float(_season_palette.get("haze", 0)) + (_weather_strength * (0.10 if _season_index < 2 else 0.20) if _weather_drought else 0.0)
+	haze *= 1.0 - sin(_day_elapsed / DAY_CYCLE_SECONDS * PI)
 	if haze > 0:
 		for band in range(5):
 			for j in range(15):

@@ -30,7 +30,7 @@ func run() -> void:
 		previous = light
 		previous_color = color
 	check(world.day_cycle_info().phase == 1 and is_equal_approx(previous, 0.25), "season ends at dusk without wrapping to morning")
-	check(is_equal_approx(world._day_environment.ambient_light_energy, .22) and world._sun.light_energy >= .75, "dusk remains readable for the final harvest")
+	check(is_equal_approx(world._day_environment.ambient_light_energy, .32) and world._sun.light_energy >= .75, "dusk remains readable for the final harvest")
 	check(world._day_environment.get_instance_id() == environment_id and world._sun.get_instance_id() == sun_id and world.get_child_count() == children, "sky changes reuse existing lights and environment")
 	world.set_day_time(0)
 	settle_sun(world)

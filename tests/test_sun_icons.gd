@@ -32,7 +32,7 @@ func run() -> void:
 		world._season_blend = 1.0; world.set_day_time(74, season == 3); world.set_day_time(75, season == 3)
 		world._animate_sun(3); world._animate_sun(.4)
 		energies.append(world._sun.light_energy); elevations.append(-world._sun.rotation_degrees.x)
-		check(is_equal_approx(world._day_environment.ambient_light_energy, .22) and is_equal_approx(world._sun.shadow_opacity, .85), "defined sun shadow with modest cool ambient in season %d" % season)
+		check(is_equal_approx(world._day_environment.ambient_light_energy, .32) and is_equal_approx(world._sun.shadow_opacity, .7), "defined sun shadow with modest cool ambient in season %d" % season)
 		check(world._day_environment.ambient_light_color.b > world._day_environment.ambient_light_color.r, "cool fill survives in each season")
 		var sky: Dictionary = world.sun_sky_info()
 		check(sky.direction.is_equal_approx(world._sun.global_basis.z.normalized()), "sky follows the rendered sun, including easing")

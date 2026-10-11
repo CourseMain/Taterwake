@@ -32,7 +32,7 @@ func _build_water() -> void:
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
 	water_material.set_shader_parameter("sea_clip_depth", SEA_CLIP_DEPTH)
 	water_material.set_shader_parameter("title_mode", title_mode)
-	var colors: Array = [Color("8cc7bb"), Color("326d8a"), Color("e3efd5")]
+	var colors: Array = [Color("3fc6c0"), Color("1f7fb5"), Color.WHITE]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water.material_override = water_material
 	add_child(water)
@@ -67,13 +67,13 @@ func sync_light() -> void:
 	water_material.set_shader_parameter("horizon_color", world._day_environment.background_color)
 	var light: float = clampf(world._sun.light_energy / 1.4, 0.0, 1.0)
 	water_material.set_shader_parameter("daylight", light)
-	water_material.set_shader_parameter("haze_density", .5 if world._season_index < 2 else 1.0)
+	water_material.set_shader_parameter("haze_density", world.haze_density())
 	if is_instance_valid(world.camera): water_material.set_shader_parameter("camera_world", world.camera.global_position)
 	var sun: Dictionary = world.sun_sky_info()
 	water_material.set_shader_parameter("sun_screen", sun.screen)
 	water_material.set_shader_parameter("sun_direction", sun.direction)
 	water_material.set_shader_parameter("sun_colour", sun.colour)
-	water_material.set_shader_parameter("sky_top", world._day_environment.background_color.darkened(.22))
+	water_material.set_shader_parameter("sky_top", world.play_sky.get_shader_parameter("top_color"))
 	water_material.set_shader_parameter("sun_visibility", 1.0 - minf(.9, world._weather_strength * .8) if not world._weather_drought else 1.0)
 	water_material.set_shader_parameter("view_aspect", float(world.get_viewport().size.x) / maxf(1, world.get_viewport().size.y))
 
