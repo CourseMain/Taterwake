@@ -1,0 +1,10 @@
+{
+  "pack_bytes": 5028860,
+  "pack_sha256": "dfbc789df5f605788f992990acc4b7abe47a5106531b17c51e4d8314a9339d02",
+  "entries": 326,
+  "changed_resource_content": [
+    ".godot/global_script_class_cache.cfg",
+    ".godot/uid_cache.bin"
+  ],
+  "difference": "Godot class and UID cache ordering only; mappings and every gameplay script and asset match the tested export."
+}

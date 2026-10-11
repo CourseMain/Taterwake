@@ -1,6 +1,6 @@
 # Segment 21i · 11 October 2026
 
-**Under development:** `under-development/v2.0.5` contains the current implementation and review evidence. It is not a tagged release; public docs still serve v2.0.4.
+**Public development playtest:** The current build is published as v2.0.5 at [GitHub Pages](https://coursemain.github.io/Taterwake/). The remaining stamp-colour choice stays open; no design answer has been inferred.
 
 Scope: A, B, D, E and F’s second pass from `608a53e`. The branch `claude/modest-hopper-yh83b7` was merged into `redesign` before implementation. C is closed; the Deferred list and Segment 22 have no changes in this work. Earlier review captures remain historical evidence.
 
@@ -33,7 +33,7 @@ F · The world uses **Filmic**, exposure **1.0**, white **6.0**, saturation **1.
 
 The [gate report](second-pass-gates.json) includes the masks, sample coordinates and measured values. [Spring noon, HUD hidden](second-pass-spring-noon-hud-hidden-1440.png) is the measured unedited Web capture. The island mask follows the projected terrain silhouette; shade compares three unobstructed orchard grass pairs, each required to pass. Lettering is measured from frozen title-frame differences within the wordmark bounds. Run `NODE_PATH=<Playwright modules> node tests/test_vibrancy_browser.cjs <surfaces fixture URL> <output directory>` after exporting the surfaces fixture. All four gates pass before any tag or publication.
 
-**Pending owner decision:** The new F rule requires full-chroma stamps and chips, while the reference kit still specifies the older dark stamp inks and pale fills. The owner has been asked whether Table, Standard and Feed should use money `f0b429`, common `7fc47a` and wood `8a5a3c`. No answer has been inferred, and stamp colours have not been changed. Tagging and publication remain pending this decision and final validation.
+**Pending owner decision:** The new F rule requires full-chroma stamps and chips, while the reference kit still specifies the older dark stamp inks and pale fills. The owner has been asked whether Table, Standard and Feed should use money `f0b429`, common `7fc47a` and wood `8a5a3c`. No answer has been inferred, and stamp colours have not been changed. The owner explicitly requested publication of the current build as public v2.0.5. The existing stamp palette is retained and this choice remains open. Tagging awaits the additional standalone validation.
 
 ## Requested before and after captures
 
@@ -66,4 +66,4 @@ The completed `tools/run_tests.sh -j 2` run passes **103 / 103 suites**, **23,76
 
 Balance, crop economics, ledger labels and bot tuning are unchanged. The requested latest Oda token `7a7f8c` supersedes the older pending iron-token question. The earlier recorded white E badge and Slackey guide body are outside this segment's named changes. Owner-local layout and shadow-setting edits are excluded from the release checkout and preserved in the working checkout.
 
-Not yet done: grade stamp colour decision, v2.0.5 tag and publication to the docs root. The production export is prepared in `dist/web/` and `dist/Taterland-Web.zip`; public docs still contain v2.0.4.
+The rebuilt v2.0.5 export is copied into the docs root, with its [public export manifest](public-export-manifest.json), [resource comparison](public-export-report.json) and [production entry checks](public-production-report.json). Every gameplay script and asset matches the measured export; only Godot cache entry ordering differs. The original v2.0.4/second-pass measurements remain unchanged. Not yet done: grade stamp colour decision and the v2.0.5 tag, pending the extra standalone bot check.

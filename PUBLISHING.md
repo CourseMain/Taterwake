@@ -1,12 +1,12 @@
 # Taterland publishing steps
 
-The v2.0.4 browser build is the ten-year farming survival redesign through Segment 21h, including the first-tester fixes, visible sun and illustrated controls, the UI kit and cast, and the owner's computer shop changes, published for playtesting. It is not a
+The v2.0.5 browser build adds Segment 21i phone framing, readable HUD labels, smaller Vorbis ambience, deterministic test fixes and second-pass Filmic lighting, published as a development playtest. It is not a
 Steam submission. Spudions rename the existing game currency; balances,
 prices and save data retain their values.
 
 ## 1. Get the release and test a fresh farm
 
-1. Open https://github.com/CourseMain/Taterwake/releases/tag/v2.0.4.
+1. Open https://github.com/CourseMain/Taterwake/releases/tag/v2.0.5.
 2. Under **Assets**, download `Taterland-Web.zip` for the packaged browser build,
    or use https://coursemain.github.io/Taterwake/.
    The original v1.0.3.1 game is at https://coursemain.github.io/Taterwake/classic/

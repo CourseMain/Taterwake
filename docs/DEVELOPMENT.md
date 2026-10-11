@@ -11,7 +11,7 @@
 
 ## Development release
 
-The **v2.0.4** playtest release includes Segments 21f–21h and the owner's computer shop, sound, New Farm and sea-only entry fixes. GitHub Pages serves the redesign from `docs/`; the classic v1.0.3.1 page stays at `docs/classic/`. The first human sheet is recorded in `PLAYTEST_22.md`; three more fresh tester sheets remain pending. Segment 22 mechanics remain unstarted.
+The **v2.0.5** development playtest adds Segment 21i phone entry, the 14 px HUD floor, Vorbis ambience, deterministic tests and second-pass Filmic lighting. The existing grade stamp palette remains pending an owner choice. GitHub Pages serves the redesign from `docs/`; the classic v1.0.3.1 page stays at `docs/classic/`. The first human sheet is recorded in `PLAYTEST_22.md`; three more fresh tester sheets remain pending. Segment 22 mechanics remain unstarted.
 
 ## Saves
 
@@ -1395,3 +1395,9 @@ Quick wrap requested · **2026-10-11**: The owner's request to finish quickly is
 
 
 Owner's decision · **2026-10-11**: Upload the current work to GitHub as a new under-development branch. The branch is **under-development/v2.0.5**; this instruction does not resolve the pending stamp-colour decision or authorize a completed release label. The full **tools/run_tests.sh -j 2** run has now finished: **103 / 103 suites pass**, **23,762 reported checks**, **0 failures, 0 timeouts and 0 errors**. The additional standalone epilogue passes **534 checks**; the extra standalone tuning-bot check is still running. Review evidence includes all sixteen requested before/after captures and the four passing browser image gates. The v2.0.5 tag and docs-root publication remain undone.
+
+
+Owner's decision · **2026-10-11**: “what i meant like make the public one v2.0.5” and “like i mean upload it to public”. Publish the current tested build at the existing GitHub Pages address as **v2.0.5**. This supersedes the earlier publication hold; no stamp-colour answer is inferred, and the current palette stays unchanged with the open choice documented. Owner-local edits remain preserved outside the release checkout.
+
+
+The fresh Godot **4.7.2** release export passes production fresh/Continue at **390×844** and **1440×900**, with no QA bridge or browser errors. The public pack is **5,028,860 bytes**; every gameplay resource matches the measured export, with only class/UID cache ordering differing. The docs-root files are prepared for the **v2.0.5** GitHub Pages deployment. Classic and web sources remain unchanged. The full suite is green; the extra standalone bot continues, so no v2.0.5 tag is created yet.
