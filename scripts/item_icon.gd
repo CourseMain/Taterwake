@@ -125,6 +125,7 @@ static func _box(color: Color, radius: int) -> StyleBoxFlat:
 static func _metric(c: CanvasItem, id: String) -> void:
 	match id:
 		"key":
+			c.draw_circle(Vector2(0,4),42,Kit.PAPER)
 			c.draw_arc(Vector2(-17,-16),14,0,TAU,24,Kit.WOOD,7,true)
 			c.draw_line(Vector2(-7,-6),Vector2(25,26),Kit.WOOD,7,true)
 			for p: Vector2 in [Vector2(12,13),Vector2(21,22)]: c.draw_line(p,p+Vector2(-8,8),Kit.WOOD,7,true)
