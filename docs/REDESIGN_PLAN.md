@@ -1908,7 +1908,10 @@ The simplicity contract (every part below is bound by it):
 - Nothing from the old fun pass that fails the contract survives.
 
 The attention budget (from tester 1, who does not play games: "think
-of it as limited attention"). Every part below is also bound by this:
+of it as limited attention"). The full version, 23 techniques each with
+the effect, where the game breaks it, the rule and the suite check, is
+docs/ATTENTION.md; it is part of the brief for every part below. The
+short form:
 - At most three tappable things on the play screen at once, and one of
   them is visibly the next thing: bigger, warmer, the only one with a
   drawing that moves. A new player must be able to say what to tap
