@@ -563,6 +563,8 @@ func _apply_tutorial_visibility() -> void:
 		return
 	var features: Array = _tutorial.get("features", [])
 	var tools: Array = _tutorial.get("tools", [])
+	_tutorial_skip.get_parent().visible = _tutorial.get("id", "") != "welcome"
+	_tutorial_skip.visible = _tutorial.get("id", "") != "welcome"
 	_stats_card.visible = "coins" in features
 	_tutorial_card.visible = not is_panel_open()
 	_season_strip.visible = "calendar" in features
