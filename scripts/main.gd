@@ -598,6 +598,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _tap_world(point: Vector2) -> void:
 	var hit: Dictionary = world.pick(farm_viewport.to_farm_position(point))
+	if not hit.is_empty() and not hit.has("duck_index"): feedback_audio.play_tone(440,.10)
 	if hit.has("plot_index"):
 		queue_plot(int(hit.plot_index))
 	elif hit.has("duck_index"):

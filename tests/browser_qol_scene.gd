@@ -113,6 +113,8 @@ func _latency_prepare(view: String) -> void:
 				game.hud._act("toggle_details:" + section)
 	preload("res://scripts/sound_mix.gd").quieter = false
 	latency_mode = true
+	game.seasonal_ambience.set_process(false)
+	game.climate_audio.set_process(false)
 	_silence_beds(game)
 	game.touch_controls.fit_modal()
 	for frame in range(8): await get_tree().process_frame

@@ -25,7 +25,7 @@ const views=['tool_tiles','market','market_sell/russet','market_sell/giant','mar
     }
     return connect.apply(this,args);
    };
-   addEventListener('pointerdown',()=>{window.qolDOMInput=performance.now()},true);
+   addEventListener('pointerdown',()=>{window.qolDOMInput=performance.now();window.qolAudio.onset=null;window.qolAudio.armed=true},true);
   });
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR:|ERROR:/.test(m.text()))errors.push(m.text())});
   await page.goto(URL);await page.waitForFunction(()=>window.surfaceReport?.ready,null,{timeout:120000});
@@ -48,7 +48,8 @@ const views=['tool_tiles','market','market_sell/russet','market_sell/giant','mar
     const x=(lx+lw/2)*sx,y=(ly+lh/2)*sy;
     assert(x>=0&&x<390&&y>=0&&y<844,`${view} ${target.text} must be visible for a real tap: ${x},${y}`);
     await page.waitForTimeout(180);
-    await page.evaluate(()=>{window.qolAudio.onset=null;window.qolAudio.armed=true;window.qolTap=null;window.qolDOMInput=null});
+    await page.waitForFunction(()=>window.qolAudio.peak!==undefined&&window.qolAudio.peak<0.00001,null,{timeout:5000});
+    await page.evaluate(()=>{window.qolAudio.onset=null;window.qolAudio.armed=false;window.qolTap=null;window.qolDOMInput=null});
     await page.mouse.move(x,y);await page.mouse.down();await page.waitForTimeout(45);await page.mouse.up();
     await page.waitForTimeout(320);
     const timing=await page.evaluate(()=>({tap:window.qolTap,dom:window.qolDOMInput,audio:window.qolAudio.onset,peak:window.qolAudio.peak}));
