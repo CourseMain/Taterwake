@@ -59,6 +59,7 @@ func run() -> void:
 		if outcome == Epilogue.OUTCOMES[0]:
 			check(screen.headline_labels.size() == 5 and screen.verdict_labels.size() == 4, "five decades and four verdicts have independent reveal controls")
 			check(screen.headline_labels[0].modulate.a == 0 and screen.verdict_labels[0].visible_characters == 0, "ending starts with the world fade before any text")
+			check(screen.veil.color.a <= .30001, "future farm retains at least seventy percent brightness during its reveal")
 			var footer_height: float = screen.bottom.size.y
 			screen._process(screen.WORLD_FADE_SECONDS + screen.HEADLINE_FADE_SECONDS * 0.5 - screen.presentation_time)
 			check(not screen.veil.visible and is_equal_approx(screen.headline_labels[0].modulate.a, 0.5), "first decade fades after the two-second world reveal")

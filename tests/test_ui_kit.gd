@@ -34,7 +34,18 @@ func audit(node: Node, scale: float, sizes: Dictionary, page: String) -> void:
 		var fill: Color = skin.bg_color if skin is StyleBoxFlat else skin.get_meta("surface_fill", Color.TRANSPARENT)
 		check(fill.a < .01 or fill not in [Color.WHITE, Color.GRAY, Color("e7e7dc")], page + " has no grey or white surface")
 	for child in node.get_children(): audit(child, scale, sizes, page)
+func kit_tokens() -> void:
+	var reference: String = FileAccess.get_file_as_string("res://docs/style-board/ui-kit.html")
+	var tokens: Dictionary = {"ink":Kit.INK, "ink2":Kit.INK2, "paper":Kit.PAPER, "paper2":Kit.PAPER2, "wood":Kit.WOOD, "wood2":Kit.WOOD2, "cream":Kit.CREAM, "money":Kit.MONEY, "red":Kit.RED}
+	for id in Kit.CROPS: tokens[id] = Kit.CROPS[id]
+	for id in ["nell", "mara", "tess", "iris"]: tokens[id] = Kit.KEEPERS[id]
+	tokens.oda = Kit.KEEPERS.bram
+	for id in Kit.RARITIES: tokens[id] = Kit.RARITIES[id]
+	for id in tokens:
+		check(reference.contains("--" + id + ":#" + tokens[id].to_html(false)), id + " matches the owner's reference token")
+
 func run() -> void:
+	kit_tokens()
 	if "--integration-test" not in OS.get_cmdline_user_args(): quit(1); return
 	game = load("res://scenes/main.tscn").instantiate(); root.add_child(game)
 	game.set_process(false); await settle()
@@ -57,6 +68,7 @@ func run() -> void:
 		game.hud.show_panel(page, game.state); await settle()
 		game.hud._modal_card._tilt(-2)
 		check(game.hud._modal_card.rotation == 0, page + " whole page stays still on hover")
+		check((game.hud._modal.get_child(0) as ColorRect).color.a <= .30001, page + " keeps at least seventy percent of the farm light")
 		var scale: float = game.touch_controls.display_scale()
 		var sizes: Dictionary = {}; audit(game.hud._modal_card, scale, sizes, page)
 		check(sizes.size() <= 3, page + " uses at most three type sizes")

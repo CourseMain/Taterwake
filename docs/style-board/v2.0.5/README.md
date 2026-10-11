@@ -1,5 +1,7 @@
 # Segment 21i · v2.0.5 review
 
+The current A/B/D/E/F work and its captures are recorded in [the 11 October review](RELEASE.md). The material below is the earlier review against the superseded plan.
+
 Godot 4.7.2 stable, GL Compatibility, Chromium with Metal ANGLE. Phone captures are **390×844 CSS pixels**; desktop captures are **1440×900**. These are browser fixtures, not a physical phone. PNGs are unedited captures.
 
 A, B, D, E and F are implemented, in order, with the owner’s closed-C greeting rule. Mara retains Buy/Sell tabs. The public v2.0.4 game is unchanged; this segment does not authorize publication. The v2.0.5 tag awaits the colour decision below.

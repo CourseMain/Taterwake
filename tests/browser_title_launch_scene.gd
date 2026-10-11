@@ -51,7 +51,7 @@ func status() -> Dictionary:
 		"logical_size":[get_viewport().get_visible_rect().size.x,get_viewport().get_visible_rect().size.y],
 		"primary_rect":_rect(title.walk),"secondary_rect":_rect(title.resume),
 		"keep_rect":_rect(title.keep_farm),"replace_rect":_rect(title.replace_farm),
-		"version":ProjectSettings.get_setting("application/config/version"),"test_mode":game.test_mode,
+		"version":ProjectSettings.get_setting("application/config/version"),"test_mode":game.test_mode,"touch":game.touch_controls.enabled,
 		"camera_size":game.world.camera.size,"overview_size":game.world.overview_size(),"entry_size":game.world.entry_size(game.state.guided_first_year()),
 		"home_size":game._camera_home_size,"camera_home_distance":game.world.camera.global_position.distance_to(game._camera_home_position),
 		"island":_island_bounds(),"home":_home_bounds(),"idle":_idle()}

@@ -1,0 +1,71 @@
+{
+  "assets": [
+    {
+      "asset": "climate-wind.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 361538
+    },
+    {
+      "asset": "nature-breeze.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 361538
+    },
+    {
+      "asset": "nature-cicadas.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 3.0,
+      "v2_0_4_seconds": 3.0,
+      "bytes": 16781
+    },
+    {
+      "asset": "nature-hush.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 362512
+    },
+    {
+      "asset": "nature-leaves.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 374549
+    },
+    {
+      "asset": "nature-rain.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 389660
+    },
+    {
+      "asset": "nature-stream.ogg",
+      "codec": "Vorbis",
+      "nominal_bps": 96000,
+      "rate": 44100,
+      "seconds": 48.0,
+      "v2_0_4_seconds": 48.0,
+      "bytes": 377457
+    }
+  ],
+  "wind_loop_offset_seconds": 0,
+  "wind_loop_end_seconds": 48,
+  "nature_playback": "Existing randomized gaps and crossfades retained.",
+  "pack_bytes": 5029100
+}

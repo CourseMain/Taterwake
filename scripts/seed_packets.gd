@@ -1,7 +1,7 @@
 extends RefCounted
 const Place = preload("res://scripts/place_ui.gd")
 const Kit = preload("res://scripts/ui_kit.gd")
-const ACCENT := Color("6f9a4a")
+const ACCENT := Kit.KEEPERS.mara
 static func build(page) -> void:
 	Kit.configure(page.hud)
 	Place.header(page.hud, page, "Mara", ACCENT, "mara")

@@ -65,12 +65,12 @@ const Type = preload("res://scripts/ui_type.gd")
 const UI_FONT = preload("res://assets/fonts/AtkinsonHyperlegible.ttf")
 const UI_SYMBOLS = preload("res://assets/fonts/NotoSansSymbols.ttf")
 const UI_SYMBOLS_2 = preload("res://assets/fonts/NotoSansSymbols2.ttf")
-const INK: Color = Color("17382d")
+const INK: Color = Kit.INK
 const MUTED: Color = Color("667569")
-const CREAM: Color = Color("fffbed")
-const PAPER: Color = Color("f3efdf")
+const CREAM: Color = Kit.CREAM
+const PAPER: Color = Kit.PAPER
 const GREEN: Color = Color("377858")
-const GOLD: Color = Color("d9a948")
+const GOLD: Color = Kit.MONEY
 const CHERRY: Color = Color("bb654d")
 const CropTable = preload("res://scripts/crop_table.gd")
 const CROP_IDS: Array[String] = CropTable.IDS
@@ -1196,7 +1196,7 @@ func _build_modal() -> void:
 	_modal.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_modal.mouse_filter = Control.MOUSE_FILTER_STOP
 	var shade: ColorRect = ColorRect.new()
-	shade.color = Color(0.06, 0.13, 0.10, 0.58)
+	shade.color = Color(Kit.INK, .30)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_modal.add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

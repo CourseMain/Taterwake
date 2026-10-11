@@ -121,7 +121,7 @@ func winter_pages() -> void:
 	check(not game.hud._season_jobs.visible, "Winter jobs stay hidden while accounts pause")
 	check(game.hud._body.find_children("*", "Label", true, false).any(func(label): return label.text == "Net for year %d" % game.state.season_clock.year), "accounts name the year beside the net")
 	check(game.hud._refs.has("ledger_screenshot"), "annual accounts offer a screenshot")
-	check(game.hud._modal.get_child(0).color == game.hud.Kit.INK and game.hud._modal_card.get_theme_stylebox("panel").get_meta("surface_fill") == game.hud.Kit.PAPER, "ledger uses kit paper over the ink felt")
+	check(game.hud._modal.get_child(0).color == Color(game.hud.Kit.INK, .30) and game.hud._modal_card.get_theme_stylebox("panel").get_meta("surface_fill") == game.hud.Kit.PAPER, "ledger uses kit paper over the translucent ink felt")
 	game.hud.close_panel()
 	game.state.climate.data.protection.pending.rainwater = 1
 	game.state.climate.data.projects.frost = 1

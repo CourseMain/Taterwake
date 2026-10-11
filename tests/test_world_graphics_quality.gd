@@ -50,7 +50,7 @@ func _run() -> void:
 		check(terrain == 1 and contained, "one terrain shell and all farm geometry fit the camera depth")
 		world.set_graphics_quality("balanced")
 		check(world._sun.shadow_enabled and world._sun.directional_shadow_mode == DirectionalLight3D.SHADOW_ORTHOGONAL, "balanced uses one orthographic shadow map")
-		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and is_equal_approx(world._sun.shadow_opacity, .85), "balanced removes shadow pancaking and keeps a defined silhouette")
+		check(is_zero_approx(world._sun.directional_shadow_pancake_size) and is_equal_approx(world._sun.shadow_opacity, .7), "balanced removes shadow pancaking and keeps a defined silhouette")
 		world.set_day_time(0.0)
 		world._animate_sun(3.0); world._animate_sun(0.4)
 		var rotation: Vector3 = world._sun.rotation

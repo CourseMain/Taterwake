@@ -1,7 +1,8 @@
 extends Control
 ## Shared, hand-drawn item illustrations. Geometry remains crisp at every HUD scale.
 var item: Dictionary = {}
-const INK: Color = Color("30463a")
+const Kit = preload("res://scripts/ui_kit.gd")
+const INK: Color = Kit.INK
 const LEAF: Color = Color("5e7b50")
 const CROP: Dictionary = preload("res://scripts/ui_kit.gd").CROPS
 
@@ -37,15 +38,15 @@ static func paint(c: CanvasItem, data: Dictionary, rect: Rect2) -> void:
 		"practice":
 			c.draw_set_transform(Vector2.ZERO)
 			c.draw_set_transform(rect.get_center(), 0, Vector2.ONE * scale_value)
-			c.draw_style_box(_box(Color("aeeaff"), 8), Rect2(-28,-22,56,44))
-			c.draw_line(Vector2(-28,-7),Vector2(28,-7),Color("5f9fd6"),4,true)
+			c.draw_style_box(_box(Kit.CROPS.icecap, 8), Rect2(-28,-22,56,44))
+			c.draw_line(Vector2(-28,-7),Vector2(28,-7),Kit.KEEPERS.iris,4,true)
 		"winter_job":
 			if id in ["ice", "ripe"]:
-				for angle in [0, PI/3, PI*2/3]: c.draw_line(Vector2.from_angle(angle)*-38, Vector2.from_angle(angle)*38, Color("5f9fd6"), 10, true)
-			elif id == "covers": _poly(c, [Vector2(-34,28),Vector2(0,-28),Vector2(34,28),Vector2(-34,28)], Color("b5523c"))
+				for angle in [0, PI/3, PI*2/3]: c.draw_line(Vector2.from_angle(angle)*-38, Vector2.from_angle(angle)*38, Kit.KEEPERS.iris, 10, true)
+			elif id == "covers": _poly(c, [Vector2(-34,28),Vector2(0,-28),Vector2(34,28),Vector2(-34,28)], Kit.KEEPERS.tess)
 			else:
-				c.draw_style_box(_box(Color("b5523c"),8),Rect2(-34,-28,68,60))
-				c.draw_line(Vector2(-18,-8),Vector2(18,-8),Color("fffbed"),7,true); c.draw_line(Vector2(-18,12),Vector2(5,12),Color("fffbed"),7,true)
+				c.draw_style_box(_box(Kit.KEEPERS.tess,8),Rect2(-34,-28,68,60))
+				c.draw_line(Vector2(-18,-8),Vector2(18,-8),Kit.CREAM,7,true); c.draw_line(Vector2(-18,12),Vector2(5,12),Kit.CREAM,7,true)
 		"decoration": _decoration(c, id)
 		"kit_menu": _kit_menu(c, id)
 		"place": _place(c, id)
@@ -77,19 +78,19 @@ static func _place(c: CanvasItem, id: String) -> void:
 	match id:
 		"barn":
 			_poly(c, [Vector2(-31, -10), Vector2(31, -10), Vector2(31, 33), Vector2(-31, 33)], Color("b07750"))
-			_poly(c, [Vector2(-37, -10), Vector2(0, -38), Vector2(38, -10)], Color("79553d"))
+			_poly(c, [Vector2(-37, -10), Vector2(0, -38), Vector2(38, -10)], Kit.WOOD)
 			_poly(c, [Vector2(-27, -9), Vector2(-2, -29), Vector2(26, -9)], Color("d5a06a"))
-			c.draw_rect(Rect2(-15, 5, 30, 28), Color("17382d"))
+			c.draw_rect(Rect2(-15, 5, 30, 28), Kit.INK)
 			for x: int in [-24, 22]: c.draw_line(Vector2(x, -5), Vector2(x, 28), Color("e3bb87"), 2, true)
 			c.draw_line(Vector2(-14, 7), Vector2(14, 30), Color("d5a06a"), 3, true)
 			c.draw_line(Vector2(14, 7), Vector2(-14, 30), Color("d5a06a"), 3, true)
 			c.draw_style_box(_box(Color("d8ba77"), 6), Rect2(17, 20, 23, 17))
 			c.draw_line(Vector2(18, 26), Vector2(39, 26), Color("967148"), 2, true)
 		"ledger":
-			c.draw_style_box(_box(Color("17382d"), 5), Rect2(-37, -31, 74, 67))
-			_poly(c, [Vector2(-31, -28), Vector2(-4, -24), Vector2(-4, 30), Vector2(-31, 26)], Color("fffbed"))
+			c.draw_style_box(_box(Kit.INK, 5), Rect2(-37, -31, 74, 67))
+			_poly(c, [Vector2(-31, -28), Vector2(-4, -24), Vector2(-4, 30), Vector2(-31, 26)], Kit.CREAM)
 			_poly(c, [Vector2(1, -24), Vector2(31, -28), Vector2(31, 26), Vector2(1, 30)], Color("f0e5c9"))
-			c.draw_line(Vector2(-1, -23), Vector2(-1, 30), Color("79553d"), 3, true)
+			c.draw_line(Vector2(-1, -23), Vector2(-1, 30), Kit.WOOD, 3, true)
 			for y: int in [-12, -2, 8, 18]:
 				c.draw_line(Vector2(-25, y), Vector2(-10, y + 1), Color("728575"), 1.5, true)
 				c.draw_line(Vector2(7, y + 1), Vector2(25, y), Color("728575"), 1.5, true)
@@ -123,8 +124,8 @@ static func _metric(c: CanvasItem, id: String) -> void:
 		"drop":
 			_poly(c, [Vector2(0, -33), Vector2(-22, 4), Vector2(-18, 24), Vector2(0, 32), Vector2(18, 24), Vector2(22, 4)], Color("508ba0"))
 		"sun":
-			c.draw_circle(Vector2.ZERO, 18, Color("bd783a"))
-			for i in range(8): c.draw_line(Vector2.from_angle(i * TAU / 8) * 23, Vector2.from_angle(i * TAU / 8) * 34, INK, 4, true)
+			c.draw_circle(Vector2.ZERO, 18, Kit.MONEY)
+			for i in range(8): c.draw_line(Vector2.from_angle(i * TAU / 8) * 23, Vector2.from_angle(i * TAU / 8) * 34, Kit.MONEY, 4, true)
 		"snowflake":
 			for i in range(6):
 				var direction := Vector2.from_angle(i * TAU / 6)
@@ -231,10 +232,10 @@ static func _tool(c: CanvasItem, id: String) -> void:
 static func _symbol(c: CanvasItem, id: String) -> void:
 	match id:
 		"book":
-			c.draw_style_box(_box(Color("5e8b62"), 4), Rect2(-29, -37, 58, 75))
-			c.draw_rect(Rect2(-25, 27, 50, 8), Color("fff3d2"))
-			c.draw_line(Vector2(-18, -33), Vector2(-18, 22), Color("a9bb80"), 3, true)
-			_spark(c, Vector2(5, -5), Color("e3c468"), 20)
+			c.draw_style_box(_box(Kit.KEEPERS.mara, 4), Rect2(-29, -37, 58, 75))
+			c.draw_rect(Rect2(-25, 27, 50, 8), Kit.PAPER)
+			c.draw_line(Vector2(-18, -33), Vector2(-18, 22), Kit.CROPS.golden, 3, true)
+			_spark(c, Vector2(5, -5), Kit.MONEY, 20)
 		"magnify":
 			c.draw_line(Vector2(10, 12), Vector2(33, 37), Color("845a40"), 10, true)
 			c.draw_circle(Vector2(-7, -7), 27, Color("588594"))
@@ -315,12 +316,12 @@ static func control_picture(action: String, words: String) -> Dictionary:
 static func _forecast(c: CanvasItem, sky: String, warning: bool) -> void:
 	if sky == "sun": _metric(c, "sun")
 	else:
-		if sky == "cloud": c.draw_circle(Vector2(18,-20), 17, Color("f4c860"))
+		if sky == "cloud": c.draw_circle(Vector2(18,-20), 17, Kit.MONEY)
 		for point: Vector2 in [Vector2(-23,0),Vector2(0,-11),Vector2(23,0)]:
-			c.draw_circle(point+Vector2(0,3),18,Color("597582"))
-			c.draw_circle(point,16,Color("a9c4cd") if sky != "storm" else Color("718e9f"))
+			c.draw_circle(point+Vector2(0,3),18,Kit.KEEPERS.nell)
+			c.draw_circle(point,16,Kit.CROPS.icecap if sky != "storm" else Kit.KEEPERS.nell)
 		if sky == "rain":
-			for x in [-22,0,22]: c.draw_line(Vector2(x,23),Vector2(x-6,35),Color("6bbbd4"),5,true)
+			for x in [-22,0,22]: c.draw_line(Vector2(x,23),Vector2(x-6,35),Kit.KEEPERS.iris,5,true)
 		elif sky == "storm":
 			_poly(c,[Vector2(7,12),Vector2(-13,28),Vector2(0,28),Vector2(-9,42),Vector2(18,20),Vector2(5,20)],Color("ffcf62"))
 		elif sky == "snow":
@@ -404,7 +405,7 @@ static func _kit_menu(c: CanvasItem, id: String) -> void:
 			c.draw_polyline(PackedVector2Array([Vector2(22,-12),Vector2(34,0),Vector2(22,12)]),kit.PAPER,5,true)
 
 static func _decoration(c: CanvasItem, id: String) -> void:
-	var wood := Color("79553d")
+	var wood := Kit.WOOD
 	var colour := Color("ad8158")
 	match id:
 		"bench":

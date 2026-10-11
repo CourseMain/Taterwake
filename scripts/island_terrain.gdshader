@@ -3,6 +3,7 @@ render_mode diffuse_burley;
 
 uniform vec4 grass_color : source_color = vec4(0.412, 0.624, 0.380, 1.0);
 uniform vec4 grass_low : source_color = vec4(.2,.3,.14,1.);
+uniform float haze_density = 1.0;
 varying vec3 terrain_position;
 varying float occlusion;
 varying float upper_surface;
@@ -41,7 +42,7 @@ void fragment() {
 	grass = mix(grass_low.rgb, grass, clamp((occlusion-.8)/.2,0.,1.));
 	grass *= occlusion;
 	// Faint far-side haze belongs to the terrain, without a screen-space pass.
-	grass = mix(grass, vec3(.45,.52,.55), (1.-smoothstep(-27.,-10.,p.y))*.045);
+	grass = mix(grass, vec3(.45,.52,.55), (1.-smoothstep(-27.,-10.,p.y))*.045*haze_density);
 	vec3 strata = mix(pow(vec3(0.54,0.388,0.275),vec3(2.2)),pow(vec3(0.714,0.545,0.349),vec3(2.2)),smoothstep(-0.9,-0.55,terrain_position.y));
 	ALBEDO = terrain_position.y > -0.25 ? grass : strata;
 	ROUGHNESS = 0.95;

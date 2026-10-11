@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "resolution": [
+        390,
+        844
+      ],
+      "version": "2.0.5",
+      "qa_bridges": false,
+      "errors": []
+    },
+    {
+      "resolution": [
+        1440,
+        900
+      ],
+      "version": "2.0.5",
+      "qa_bridges": false,
+      "errors": []
+    }
+  ]
+}

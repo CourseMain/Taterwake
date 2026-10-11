@@ -22,15 +22,15 @@ function fit(s){
  try{
   for(const [width,height] of [[1440,900],[390,844],[2888,1804]]){
    for(let attempt=0;attempt<repetitions;attempt++){
-    const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:width<900});
+    const context=await browser.newContext({viewport:{width,height},hasTouch:width===390,isMobile:width<900});
     const page=await context.newPage();
     page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
     const state=()=>page.evaluate(()=>{window.titleQA('status');return window.titleReport.state});
     const launch=async()=>{await page.goto(url);await page.waitForFunction(()=>window.titleReport?.ready,null,{timeout:120000});return page.evaluate(()=>window.titleReport.first_frame)};
-    const tap=async key=>{await page.waitForTimeout(100);const s=await state(),r=s[key],canvas=await page.locator('#canvas').boundingBox();await page.touchscreen.tap(canvas.x+(r[0]+r[2]/2)*canvas.width/s.logical_size[0],canvas.y+(r[1]+r[3]/2)*canvas.height/s.logical_size[1]);};
+    const tap=async key=>{await page.waitForTimeout(100);const s=await state(),r=s[key],canvas=await page.locator('#canvas').boundingBox();const x=canvas.x+(r[0]+r[2]/2)*canvas.width/s.logical_size[0],y=canvas.y+(r[1]+r[3]/2)*canvas.height/s.logical_size[1];if(width===390)await page.touchscreen.tap(x,y);else await page.mouse.click(x,y);};
     const wait=predicate=>page.waitForFunction(predicate=>{window.titleQA('status');return new Function('s',`return (${predicate})`)(window.titleReport.state)},predicate,{timeout:15000});
     const fresh=await launch();
-    assert.equal(fresh.test_mode,false);assert.equal(fresh.title,true);assert.equal(fresh.hud,false);assert.equal(fresh.panel,false);assert.equal(fresh.front_page,false);assert.equal(fresh.guide,'');assert.equal(fresh.primary,'Walk to the farm');assert.equal(fresh.secondary_visible,false);
+    assert.equal(fresh.touch,width===390);assert.equal(fresh.test_mode,false);assert.equal(fresh.title,true);assert.equal(fresh.hud,false);assert.equal(fresh.panel,false);assert.equal(fresh.front_page,false);assert.equal(fresh.guide,'');assert.equal(fresh.primary,'Walk to the farm');assert.equal(fresh.secondary_visible,false);
     assert.equal(fresh.idle.poses.length,3);assert.equal(fresh.idle.petals,6);
     if(attempt===1)await page.waitForTimeout(8500); // also enter after the pullback
     if(attempt===2){await page.setViewportSize({width:width===390?844:900,height:height===844?390:1440});await page.waitForTimeout(250);await page.setViewportSize({width,height});await page.waitForTimeout(250);}

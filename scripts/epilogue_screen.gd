@@ -3,6 +3,7 @@ extends Control
 ## so native and single-threaded browser exports keep responding while it runs.
 signal finished
 signal new_run
+const Kit = preload("res://scripts/ui_kit.gd")
 const Type = preload("res://scripts/ui_type.gd")
 const Epilogue = preload("res://scripts/epilogue.gd")
 const WORLD_FADE_SECONDS: float = 2.0
@@ -43,7 +44,7 @@ func setup(farm, farm_world, cached: Dictionary = {}) -> void:
 	saved_camera_transform = world.camera.transform
 	saved_camera_size = world.camera.size
 	veil = ColorRect.new()
-	veil.color = Color("17382d")
+	veil.color = Color(Kit.INK, .30)
 	add_child(veil)
 	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	progress = _label("Forty more years…\nThe caretaker keeps your crops and investments.", 24)
@@ -141,7 +142,7 @@ func reveal_duration() -> float:
 	return seconds + VALUE_FADE_SECONDS
 
 func _update_reveal() -> void:
-	veil.color.a = 1.0 - clampf(presentation_time / WORLD_FADE_SECONDS, 0, 1)
+	veil.color.a = .30 * (1.0 - clampf(presentation_time / WORLD_FADE_SECONDS, 0, 1))
 	if presentation_time >= WORLD_FADE_SECONDS: veil.hide()
 	for i in range(headline_labels.size()):
 		var start: float = WORLD_FADE_SECONDS + i * HEADLINE_STEP_SECONDS

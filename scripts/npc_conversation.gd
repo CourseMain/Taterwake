@@ -155,7 +155,7 @@ func start(id: String, farm, return_service: String, touch: bool = false, shop_g
 	portrait.show_person(id)
 	title.text = str(Roster.PEOPLE[id].name)
 	role.text = str(Roster.PEOPLE[id].role)
-	var accent := Color(Roster.PEOPLE[id].color).darkened(.32)
+	var accent := Color(Roster.PEOPLE[id].color)
 	title.add_theme_color_override("font_color",accent)
 	var name_tag := Cozy.paper(Cozy.CREAM, 10, 4, accent)
 	title.add_theme_stylebox_override("normal",name_tag)
