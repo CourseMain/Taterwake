@@ -32,7 +32,7 @@ func _build_water() -> void:
 	water_material.shader = preload("res://scripts/coastal_water.gdshader")
 	water_material.set_shader_parameter("sea_clip_depth", SEA_CLIP_DEPTH)
 	water_material.set_shader_parameter("title_mode", title_mode)
-	var colors: Array = [Color("3fc6c0"), Color("1f7fb5"), Color.WHITE]
+	var colors: Array = [Color("46b8b3"), Color("2577a8"), Color.WHITE]
 	for i in range(3): water_material.set_shader_parameter(["shallow_color", "deep_color", "foam_color"][i], colors[i])
 	water.material_override = water_material
 	add_child(water)
@@ -65,7 +65,7 @@ func animate(delta: float) -> void:
 func sync_light() -> void:
 	# Match the sky in the same frame, including travel and abrupt weather changes.
 	water_material.set_shader_parameter("horizon_color", world._day_environment.background_color)
-	var light: float = clampf(world._sun.light_energy / 1.4, 0.0, 1.0)
+	var light: float = clampf(world._sun.light_energy / 1.2, 0.0, 1.0)
 	water_material.set_shader_parameter("daylight", light)
 	water_material.set_shader_parameter("haze_density", world.haze_density())
 	if is_instance_valid(world.camera): water_material.set_shader_parameter("camera_world", world.camera.global_position)

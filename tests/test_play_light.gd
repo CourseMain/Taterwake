@@ -16,8 +16,8 @@ func run() -> void:
 	var scans: int = world.ground_occlusion.samples
 	world.animate(1.0,false)
 	check(world.ground_occlusion.samples == scans and not world._geometry_batcher._compiler.occlusion.is_valid(),"occlusion never scans during animation or dynamic crop batching")
-	check(world._day_environment.tonemap_mode == Environment.TONE_MAPPER_ACES and is_equal_approx(world._day_environment.tonemap_exposure, 1.15), "ACES uses the fixed exposure")
-	check(world._day_environment.adjustment_enabled and is_equal_approx(world._day_environment.adjustment_saturation, 1.25) and is_equal_approx(world._day_environment.adjustment_contrast, 1.05) and is_equal_approx(world._day_environment.adjustment_brightness, 1.0), "world colour adjustments match the vibrancy pass")
+	check(world._day_environment.tonemap_mode == Environment.TONE_MAPPER_FILMIC and is_equal_approx(world._day_environment.tonemap_exposure, 1.0) and is_equal_approx(world._day_environment.tonemap_white, 6.0), "Filmic uses the fixed exposure and white point")
+	check(world._day_environment.adjustment_enabled and is_equal_approx(world._day_environment.adjustment_saturation, 1.10) and is_equal_approx(world._day_environment.adjustment_contrast, 1.0) and is_equal_approx(world._day_environment.adjustment_brightness, 1.0), "world colour adjustments match the vibrancy pass")
 	var lower := preload("res://scripts/farm_world.gd").season_tints(1,1)
 	check(lower.grass != lower.grass_low and lower.grass.r > lower.grass_low.r,"Summer terrace tops and risers have distinct tones")
 	for season in range(4):

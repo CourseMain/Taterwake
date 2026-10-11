@@ -30,6 +30,7 @@ var saved_hud_visible := true
 var saved_player_position := Vector3.ZERO
 var hidden_world_items: Array[Dictionary] = []
 var saved_background: int
+var saved_adjustment_enabled := false
 var saved_sky: Sky
 var dusk_sky: Sky
 
@@ -89,6 +90,7 @@ func start(returning: bool) -> void:
 	saved_hud_visible = game.hud.root.visible
 	saved_background = game.world._day_environment.background_mode
 	saved_sky = game.world._day_environment.sky
+	saved_adjustment_enabled = game.world._day_environment.adjustment_enabled
 	_hide_world_text()
 	if is_instance_valid(game.world.coast) and game.world.coast.has_method("set_title_mode"): game.world.coast.set_title_mode(true)
 	game._cancel_walk()
@@ -136,6 +138,7 @@ func _process(_delta: float) -> void:
 func _light() -> void:
 	# Warm low sun and cool fill belong to this camera, never to farm history.
 	var world = game.world
+	world._day_environment.adjustment_enabled = false
 	if world._sun.light_color == Color("ffb76a") and is_equal_approx(world._sun.light_energy, 1.12) and world._sun.rotation_degrees.is_equal_approx(Vector3(-15, -32, 0)) and is_equal_approx(world._day_environment.ambient_light_energy, .4) and world._day_environment.sky == dusk_sky: return
 	world._sun_desired = Vector3(-15, -32, 0)
 	world._sun_from = world._sun_desired
@@ -315,6 +318,7 @@ func finish() -> void:
 	hidden_world_items.clear()
 	game.world._day_environment.background_mode = saved_background
 	game.world._day_environment.sky = saved_sky
+	game.world._day_environment.adjustment_enabled = saved_adjustment_enabled
 	if is_instance_valid(game.world.coast) and game.world.coast.has_method("set_title_mode"): game.world.coast.set_title_mode(false)
 	game.world.fit_camera_depth()
 	game.world._applied_day_time = -1.0

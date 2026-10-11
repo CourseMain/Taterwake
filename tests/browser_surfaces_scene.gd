@@ -85,6 +85,19 @@ func command(args: Array) -> void:
 	if args.is_empty(): return
 	var action: String = str(args[0])
 	if action == "status": _publish(); return
+	if action == "vibrancy:freeze":
+		game.hud.root.hide()
+		game.touch_controls.root.hide()
+		get_tree().paused = true
+		_publish()
+		return
+	if action == "vibrancy:hide_lettering":
+		game.world.title_gate.get_node("GateWordmark").hide()
+		_publish()
+		return
+	if action == "vibrancy:resume":
+		get_tree().paused = false
+		return
 	if action.begins_with("scroll:"):
 		_scroll(action.get_slice(":", 1))
 		return
@@ -282,6 +295,7 @@ func _publish() -> void:
 		"guide_icons": {"smiley":game.hud._tutorial_cue.is_visible_in_tree(), "graphics":game.hud.root.find_child("TutorialGraphics",true,false).is_visible_in_tree(), "fullscreen":game.touch_controls.fullscreen.is_visible_in_tree()},
 		"sun": {"energy":game.world._sun.light_energy,"ambient":game.world._day_environment.ambient_light_energy,"opacity":game.world._sun.shadow_opacity,"rotation":[game.world._sun.rotation_degrees.x,game.world._sun.rotation_degrees.y],"screen":[game.world.sun_sky_info().screen.x,game.world.sun_sky_info().screen.y],"probe_pixel":[game.world.camera.unproject_position(probe_point).x,game.world.camera.unproject_position(probe_point).y],"viewport":[game.farm_viewport.size.x,game.farm_viewport.size.y]},
 		"world_animation_time": game.world._time, "simulation_seconds": game.state.elapsed,
+		"vibrancy": _vibrancy_geometry(),
 		"title_available": game.has_method("_show_title"), "buttons": [], "labels": [], "surfaces": []}
 	_collect(get_tree().root)
 	_publish_raw()
@@ -331,3 +345,42 @@ func _probe(mode: String) -> void:
 	probe_point = Vector3(0,7.05,-6)-Vector3(light.x,0,light.z)*1.2/light.y
 	for frame in range(12): await get_tree().process_frame
 	is_ready = true; _publish()
+
+func _vibrancy_geometry() -> Dictionary:
+	# The mask follows the actual terrain mesh, including its terrace faces.
+	# Screen coordinates are scaled by the browser from the farm viewport.
+	var terrain: MeshInstance3D = game.world.get_node("IslandTerrainShell")
+	var vertices: PackedVector3Array = terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var points := PackedVector2Array()
+	for point: Vector3 in vertices:
+		points.append(game.world.camera.unproject_position(terrain.to_global(point)))
+	var hull: PackedVector2Array = Geometry2D.convex_hull(points)
+	var polygon: Array = []
+	for point: Vector2 in hull: polygon.append([point.x, point.y])
+	var samples: Array = []
+	var light: Vector3 = game.world._sun.global_basis.z
+	for tree: Dictionary in game.world._tree_specs:
+		var base: Vector3 = tree.parent.global_position
+		# Three western orchard trees shade an open, flat grass strip.
+		# Other projections cross paths, buildings, beds or the coastal edge.
+		if not is_equal_approx(base.x, -30.0) or base.z not in [-2.0, 4.0, 10.0]: continue
+		var height: float = 2.8 * tree.parent.scale.y
+		var shade: Vector3 = base - Vector3(light.x, 0, light.z) * height / light.y
+		var lit: Vector3 = shade + Vector3(3.5 * tree.parent.scale.x, 0, 0)
+		shade.y = game.world.ground_height(shade.x, shade.z)
+		lit.y = game.world.ground_height(lit.x, lit.z)
+		var a: Vector2 = game.world.camera.unproject_position(shade)
+		var b: Vector2 = game.world.camera.unproject_position(lit)
+		samples.append({"tree": [base.x, base.z], "shade": [a.x, a.y], "lit": [b.x, b.y]})
+	var lettering: Label3D = game.world.title_gate.get_node("GateWordmark")
+	var bounds: AABB = lettering.get_aabb()
+	var lettering_points := PackedVector2Array()
+	for index in range(8): lettering_points.append(game.world.camera.unproject_position(lettering.to_global(bounds.get_endpoint(index))))
+	var lettering_hull: Array = []
+	for point: Vector2 in Geometry2D.convex_hull(lettering_points): lettering_hull.append([point.x, point.y])
+	var environment: Environment = game.world._day_environment
+	return {"island_polygon": polygon, "ground_samples": samples, "lettering_polygon": lettering_hull,
+		"hud_hidden": not game.hud.root.visible, "paused": get_tree().paused,
+		"tonemap": environment.tonemap_mode, "exposure": environment.tonemap_exposure, "white": environment.tonemap_white,
+		"adjustment_enabled": environment.adjustment_enabled, "saturation": environment.adjustment_saturation,
+		"contrast": environment.adjustment_contrast, "brightness": environment.adjustment_brightness}
