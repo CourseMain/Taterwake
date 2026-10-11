@@ -2013,6 +2013,35 @@ E. Suite hygiene. test_grades has a timing check ("unchanged growth and
    epilogue are.
 
 
+F. Vibrancy. The owner's verdict on the current look: "shady, dull and
+   sad; I wanted bright and vibrant." The light pass made shade darker
+   and the kit palette is muted by design; together they read as a
+   cloudy day. Fix both, world and interface, with these values (the
+   kit page is updated to match; it stays the reference):
+   World:
+     Environment tone map ACES, exposure 1.15; colour adjustment on,
+     saturation 1.25, contrast 1.05, brightness 1.0. Ambient 0.32 with
+     a cool sky tint (c8dcf0) so shade is blue, not grey; shadow
+     opacity 0.7, so shadows are visible but not black. Haze density
+     halved in Spring and Summer, gone at noon.
+     Grass tops: Spring 6fc45a, Summer 9ec85a, Autumn e0a24a, Winter
+     f4f6f8; risers 15% darker. Canopies: Spring 8ed67a, Summer
+     6fb84f, Autumn ff8c3a. Water: shore 3fc6c0 to deep 1f7fb5, foam
+     white. Sky: zenith 2f8fe6 to horizon bfe6ff at noon, warm at
+     dusk as now. The sun disc stays.
+   Interface tokens (replace in ui_kit.gd and the kit page):
+     ink 1b4332 · paper fbf7e6 · wood 8a5a3c · money f0b429
+     russet b8803f · giant d98a4f · golden ffd23f · sunburst ff9f1c ·
+     icecap 7fe3ff
+     nell 4f8fa8 · mara 5fb33a · tess e0583a · iris 3fa9ff · oda 7a7f8c
+     common 7fc47a · uncommon f0b429 · rare e0583a · found 3fa9ff
+   Rules: a page never dims the farm behind it below 70% brightness;
+   stamps, chips, rarity edges and keeper headers use the full-chroma
+   token, never a tint of it; the Weather and Menu icons are coloured,
+   not ink on wood. Screenshot Spring noon, Summer noon and the Mara
+   page before and after at 390x844; the after must read as a sunny
+   day.
+
 Deferred, not forgotten (do none of these now): decorations purchase
 (cut: the Fair trophies and oddities replace it), the weather station
 and tree rebuild, the top-band collision at 390, the oversized grades
@@ -2021,8 +2050,9 @@ haze, the four stray icons on the first guide card.
 
 Done when: a fresh and a returning phone entry show the island filling
 the width on the first frame, no HUD label is under 14 px, the pack is
-under 6 MB, and the suite passes under -j 2 with no timeouts. Tag
-v2.0.5. Publish to docs/ root (the phone fix must reach players).
+under 6 MB, the suite passes under -j 2 with no timeouts, and the
+Spring noon screenshot reads as a sunny day. Tag v2.0.5. Publish to
+docs/ root (the phone fix must reach players).
 ```
 
 ### Segment 22: The village (the slop) and the run (after 21i)
