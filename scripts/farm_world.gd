@@ -747,7 +747,7 @@ func sun_sky_info() -> Dictionary:
 	return {"direction": direction, "screen": Vector2(clampf(.5 + horizontal * .65, .20, .80), lerpf(.19, .10, clampf(direction.y / .58, 0, 1))), "colour": _sun.light_color}
 
 func haze_density() -> float:
-	return (.25 if _season_index < 2 else 1.0) * (1.0 - sin(_day_elapsed / DAY_CYCLE_SECONDS * PI))
+	return (.5 if _season_index < 2 else 1.0) * (1.0 - sin(_day_elapsed / DAY_CYCLE_SECONDS * PI))
 
 func _sync_sun_sky() -> void:
 	if play_sky == null or not is_instance_valid(_sun): return
@@ -2264,7 +2264,7 @@ static func season_tints(year: int, season: int, hint: String = "") -> Dictionar
 	if hint == "drought" and season != 3: grass = grass.lerp(Color("c5ad7c"), 0.42)
 	return {"grass": grass, "grass_low": grass.darkened(.15), "canopy": [Color("86cf72"), Color("6cb04d"), Color("f08a3e"), Color("727e65")][season],
 		"blossom": 1.0 if season == 0 else 0.0, "flower": 1.0 if season == 0 else 0.0, "leaf": 1.0 if season == 2 else 0.0,
-		"haze": (0.03 + age * 0.065) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
+		"haze": (0.06 + age * 0.13) if season == 1 else 0.0, "snow": 1.0 if season == 3 else 0.0}
 
 func _season_mesh(mesh: MeshInstance3D, kind: String) -> void:
 	for entry in _season_materials:
