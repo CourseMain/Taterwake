@@ -1762,15 +1762,15 @@ phone screen with pictures for every choice; the first three clothing
 rewards exist. Full suite; tag v2.0.4.
 ```
 
-### Segment 21i: v2.0.4 review fixes (before any tester plays again)
+### Segment 21i: v2.0.4 fixes that block the slop (tag v2.0.5)
 
 ```
 Why: the reviewer ran the public v2.0.4 build in a phone-sized browser
-and on a desktop one, compared every kit screen, read the diffs since
-v2.0.0 and ran the full suite. The kit screens match and the suite is
-green, but the one blocker the whole 21f pass was for is still live on
-phones, three parts of 21f were not built, two parts were built the
-opposite way, and the build tripled in size.
+and on a desktop one. The kit screens match and the suite is green,
+but the phone entry is broken and three housekeeping items would make
+every later segment harder. Everything else from that review is
+deferred (see "Deferred" below); the owner's call is to stop polishing
+the serious layer and build the village (Segment 22) next.
 
 A. Blocker, still live on phones. On a 390x844 browser, fresh launch
    and Continue alike, the farm appears as a small island in the
@@ -1788,26 +1788,14 @@ A. Blocker, still live on phones. On a 390x844 browser, fresh launch
    docs/style-board/v2.0.4/returning-farm-web-390.png shows the bug
    and was passed as a fix.
 
-B. Not built, claimed or silent:
-   1. 21f K decorations: six items exist in farm_decorations.gd, render
-      in the world and the epilogue, and validate in saves, but there
-      is no way to buy one. No Tools-shed entry, no price, no purchase
-      posting. Build the purchase: Tools shed card "Decorations · from
-      2,000", six drawn tiles, posted under the existing "other"
-      category with a new frozen label "Decoration", validator updated.
-   2. 21f M7 weather station, sign and tree: no change in
-      farm_world.gd, nothing in the handoff. Build it as written.
-   3. 21f C text floor: game_hud.gd still sets 18 labels at 10 to 13 px
-      (tool caption 12, context line 13, toast 13, guide feedback and
-      key 13, stat titles 10, detail rows 12). Raise every one to 14
-      or remove it; add a suite check that fails on any label under 14.
+B. Text floor. game_hud.gd still sets 18 labels at 10 to 13 px (tool
+   caption 12, context line 13, toast 13, guide feedback and key 13,
+   stat titles 10, detail rows 12). Raise every one to 14 or remove it;
+   add a suite check that fails on any label under 14 at 390 wide.
 
-C. Closed. The owner confirms both later instructions: potatoes are
-   sold on Mara's page beside seeds (Buy / Sell tabs), and a keeper's
-   greeting shows before every service. Segment 21f G and H are
-   amended below to match. One rule still applies to the greeting: the
-   same tap that opens the service dismisses it, and it never shows
-   twice in one season for the same keeper.
+C. Closed: Mara's Buy / Sell tabs and the keeper greeting stand as the
+   owner decided. The greeting is dismissed by the same tap that opens
+   the service and never repeats for one keeper in one season.
 
 D. Size. docs/index.pck went from 4.6 MB to 15.8 MB because the six
    nature beds and the wind are uncompressed 2 MB WAV files. Convert
@@ -1824,43 +1812,42 @@ E. Suite hygiene. test_grades has a timing check ("unchanged growth and
    them or mark them as standalone in the runner the way the bot and
    epilogue are.
 
-F. Small visual flaws seen in the captures:
-   1. Play HUD top band at 390: "Winter · Year 3" collides with the
-      money glyph and amount; give the season label and the money
-      separate rows or truncate "Year 3" to "Y3" never; make the row
-      two rows on phone instead.
-   2. The grades explanation card is a large empty paper panel with
-      three stamps in the top third; size the card to its content.
-   3. The accounts page has four stacked wood buttons under the ledger
-      (Go to the barn, Show records, Show field leases, Show farm
-      businesses); the kit shows one. Keep "Go to the barn"; the other
-      three become one row of three small drawn tiles.
-   4. Mara's seed cards read "1 seasons · 3 t"; fix the plural and
-      raise the trait rows (Thirst / Heat / Cold) to 14 px.
-   5. The Spring desktop view (v2.0.3 capture) is washed by haze and
-      the shadows are short at noon; Autumn is right. Check the sun
-      elevation per season against 21g item 1 and reduce haze density
-      by half in Spring and Summer.
-   6. The first guide card still shows the fullscreen icon, a smiley, a
-      gear and an eye icon; 21f B1 said one thing at a time. Hide all
-      four until the guide ends.
+
+Deferred, not forgotten (do none of these now): decorations purchase
+(cut: the Fair trophies and oddities replace it), the weather station
+and tree rebuild, the top-band collision at 390, the oversized grades
+card, the four stacked accounts buttons, "1 seasons" plural, Spring
+haze, the four stray icons on the first guide card.
 
 Done when: a fresh and a returning phone entry show the island filling
-the width on the first frame, decorations can be bought, the station is
-rebuilt, no HUD label is under 14 px, the pack is under 6 MB, and the
-suite passes under -j 2 with no timeouts. Full suite; tag v2.0.5.
+the width on the first frame, no HUD label is under 14 px, the pack is
+under 6 MB, and the suite passes under -j 2 with no timeouts. Tag
+v2.0.5. Publish to docs/ root (the phone fix must reach players).
 ```
 
-### Segment 22: The run (replaces the fun pass; after 21g)
+### Segment 22: The village (the slop) and the run (after 21i)
 
 ```
-Why: the game is honest and, after 21f, legible. It is not yet fun.
-Balatro's pull is not big numbers; it is a short run against a known
-wall, a build you assemble from a small offer, a scoring moment you
-watch happen, discovery, and a collection that grows even when you
-lose. All five fit a potato farm with no number larger than a real
-bill. The risk is complexity: each of these is a disaster if it adds
-clutter, jargon or a second font. So the contract comes first.
+Why: the owner's verdict on v2.0.4: "the game is boring, frankly." The
+honest farm is a spreadsheet. Balatro is fun because its maths is
+honest and everything around the maths is slop: jokers with stupid
+names, packs you flip, a shop that sells garbage, a score that catches
+fire, a legendary once in fifty runs. We built the spreadsheet; this
+segment builds the slop. The split is by place: the farm stays honest
+(bills, ledger, weather, bot-tuned prices); the village is allowed to
+be silly (rumours, bets, packs, a fair, freak potatoes). The ledger
+records what the village does to you, truthfully.
+
+Lines that hold through every part:
+- No real money, ever. Odds printed on every pack and every bet.
+- A bet or a pack can never foreclose you: Pub stakes cap at a tenth
+  of the purse, pack prices are fixed and small.
+- No compounding, no meters, no countdowns, no login rewards.
+- Every new ledger line is a new frozen label under the existing
+  "other" category; no existing label changes.
+- The bot is re-run after each part; survival may not move by more
+  than two seeds per strategy; tidy's mean stays under 320,000.
+- One concept per screen, as the contract below says.
 
 The simplicity contract (every part below is bound by it):
 - One concept per screen. A concept is one drawing, a name of at most
@@ -1882,60 +1869,95 @@ The simplicity contract (every part below is bound by it):
   does, it is redrawn or cut. Record each test in PLAYTEST_22.md.
 - Nothing from the old fun pass that fails the contract survives.
 
-Step 0 stays: three fresh testers on v2.0.3 before any part below is
-built, sheets in PLAYTEST_22.md, order chosen from their quit minutes.
+Step 0 (three fresh testers) moves to after V3: test the slop, not the
+spreadsheet.
 
-A. The wall. Nell's Winter bill is the ante. It is the one number on
-   the play screen besides the purse, printed from Spring, rising each
-   year with the climate. A run is ten years in about 45 minutes:
-   working seasons 60 s, every decision pauses time, Winter is a page
-   not a wait. Foreclosure is a clean ending card with one drawing and
-   one sentence, and a "Start again" button, nothing else.
+Order: V1 Pedlar, V2 Pub, V3 Fair and oddities, V4 Exchange, J jokers,
+R the sale reveal, W the wall, M the meta. Each is one Codex session
+and one tag (v2.1.0 onward).
 
-B. Practices. Each Winter Tess offers three farm practices; keep one;
-   five slots on the farm, shown as five small drawn tiles on the
-   gate sign. A practice changes a rule, never a number:
-     "Second sowing" .... a bed planted twice in a year gives one more
-                          tonne.
-     "Cold store" ....... stored potatoes do not age in a storm year.
-     "Duck patrol" ...... ducks eat the first pest wave.
-     "Seed saver" ....... kept seed is free of the glut and spike.
-     "Early riser" ...... the ripe window lasts twice as long.
-     "Windbreak rows" ... the Hill field counts as sheltered.
-   Twelve at launch, four unlocked, the rest found by playing. Two
-   together make a build (Second sowing plus Seed saver is a Russet
-   machine; Cold store plus Duck patrol is a hold-through-Winter
-   farm). Tile: drawing, name, one line. No stacking of the same
-   practice, no practice that adds a digit.
+V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
+   parks at the gate for the whole of Spring. Cast bible: cheerful,
+   never quite honest, patched coat, a cart with a bell. Lines:
+   "Three packs. One's good." "No refunds. Lovely weather." Three
+   face-down packs on the cart, each a drawn card with its price and
+   its odds printed on the back:
+     Seed pack · 3,000 ........ five seeds of one random variety;
+                               1 in 5 packs holds a rare variety.
+     Joker pack · 8,000 ....... one joker: common 6 in 10, uncommon
+                               3 in 10, rare 1 in 10.
+     Mystery pack · 2,000 ..... one of: ten Russet seeds (4 in 10),
+                               an oddity potato (3 in 10), 500 back
+                               (2 in 10), a lucky stone that does
+                               nothing (1 in 20), a Blue Pearl seed
+                               (1 in 20).
+   Buying flips the pack with a drumroll and a two-note cue; the
+   contents land as cards. One of each pack per Spring. Ledger label
+   "Pedlar's pack". The Pedlar is skipped by the bot (unchanged); add a
+   "gambler" strategy that buys every pack every Spring and report its
+   survival; it may be worse than cautious, never better than tidy.
 
-C. The sale reveal. Selling is the hand. The sale card reveals the sale
-   in steps with a pop and a soft note each: the sacks, then the grade
-   stamp, then the season price in words ("Winter price"), then each
-   practice that fired as its tile lighting up, then the money. Same
-   money as now; the player watches it get built. One screen, no
-   text beyond the step names, under four seconds for the whole reveal,
-   tap to skip.
+V2. The Pub (Summer). A chalkboard by the pond with three rumours each
+   Summer and a betting slip. One weather rumour ("Storm this
+   Summer?"), one price rumour ("Golden up by Winter?"), one farm
+   rumour about you ("Twenty tonnes in by Autumn?"). Each shows its
+   odds (2x to 8x) drawn as a chalk number. Stake from 1,000 up to a
+   tenth of the purse. Settles at the season's end with one card:
+   cheer or groan, and the ledger line "Pub winnings" or "Pub stake".
+   The weather rumour's odds come from the real forecast probability
+   with noise, so Iris being right six times in ten matters here.
+   Alongside: CLIMATE_ANNUAL_CAP 3 to 2, so a season's bet is about
+   one storm, not three. Re-run the bot and re-record the table.
 
-D. Discovery. Eight varieties at launch (five now plus three found in
-   play), a seed trader who visits once per run with one variety not in
-   Mara's stall, price years as below, and one rare event per run
-   drawn from a short handwritten list. Each new thing is seen once as
-   a drawing with a name; the catalogue ("What I've grown") fills over
-   runs.
+V3. The Fair and the oddities (Autumn). A tent by the pond on the
+   first day of Autumn. Enter one potato. Oddities: 1 harvest in 20
+   yields an oddity, a potato with a name, a face and a rarity edge
+   (twelve at launch: the Twin, the Glow Spud, the Cursed One, the
+   Heart, the Giant's Giant, the Blue Pearl...). Oddities sit in a new
+   "Oddities" tab of "What I've grown", sell for 500 more than their
+   grade, and win the Fair far more often than a plain potato. Prizes:
+   a rosette on the farmer, a trophy on the gate, cash 5,000 / 2,000 /
+   nothing, ledger label "Fair prize". Three village entries with
+   random scores to beat. Confetti and a trumpet on a win.
 
-E. The meta. The fifty-year epilogue's seven outcomes are the
-   collection; regions (Valley, Shores, Frosthollow) are the decks;
-   climate stakes (the curve starting one, two or three years in) are
-   the difficulty. Every ended run, won or lost, unlocks one practice
-   or variety, shown on the ending card as a drawing. Nell's two
-   milestones (first profitable year, best year yet) stay.
+V4. The Exchange (Winter). Price years, as specified below, made loud:
+   a newspaper headline on the Winter card, a bell, the stores line
+   turning gold, Nell saying "Sell. Now." The Pub's price rumour pays
+   out here. Nothing else changes.
 
-F. Kept from the fun pass, only where they pass the contract: the
-   Spring target card as the wall's progress line; one dilemma per
-   season spoken by a keeper in one sentence; the comeback cap after a
-   two-disaster year; the gate buyer and the storm rush as timed
-   moments, at most one per season; the ten yearly incidents with two
-   options, each a drawing and two short lines.
+J. Jokers. The practices become jokers: absurd names, real rule
+   changes, a face on every card. Twelve at launch, four unlocked:
+     Lucky Boot ........ the first bed hoed each Spring yields double.
+     Nell's Cat ........ pests skip the bed nearest the barn.
+     Haunted Scarecrow . no pests ever; the ducks will not come.
+     Second Sowing ..... a bed planted twice gives one more tonne.
+     Cold Store ........ stored potatoes don't age in a storm year.
+     Seed Saver ........ kept seed ignores gluts and spikes.
+     Early Riser ....... the ripe window lasts twice as long.
+     Windbreak Rows .... Hill Field counts as sheltered.
+     Oda's Spare Hoe ... hoeing costs no time in Winter.
+     Iris's Mug ........ Iris is right eight times in ten.
+     Fennick's Thumb ... one extra pack on the cart each Spring.
+     The Cursed One .... every harvest is one grade worse; every sale
+                         pays double. (rare)
+   Five slots, drawn on the gate sign. Offered three at a time by Tess
+   each Winter, keep one; also found in Joker packs. A joker changes a
+   rule, never adds a digit on the HUD.
+
+R. The sale reveal, with fire. Sacks, stamp, season price, each joker
+   lighting up with a pop, then the money. When three jokers fire the
+   card catches fire and the cue goes up a note. Under four seconds,
+   tap to skip, same money as now.
+
+W. The wall. Nell's bill is the ante, the one number on the play
+   screen besides the purse. Seasons 60 s, every decision pauses time,
+   ten years in about 45 minutes. Foreclosure is one drawing, one
+   sentence, "Start again".
+
+M. The meta. The seven epilogue outcomes are the collection; regions
+   are the decks; climate stakes are the difficulty; every ended run
+   unlocks one joker, oddity or variety, shown on the ending card.
+   Clothing rewards stay as they are.
 
 F2. Price years. The first tester's verdict was "no motivation, only
    pain"; the economy has no upside. Real farming has one: a shortage
