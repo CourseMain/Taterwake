@@ -18,7 +18,7 @@ const fs=require('node:fs');
     if(report.panel_kind){const [x,y,w,h]=report.modal;assert.ok(x>=0&&x+w<=report.logical_size[0]+1,`${key} card stays within ${width}`);assert.ok(y>=0&&y+h<=report.logical_size[1]+1,`${key} card stays within height`);}
     if(key==='grades')assert.ok(Math.abs(report.modal[3]-report.modal_content_height)<2,'grades card fits content');
     if(key==='accounts'){
-     const tiles=report.buttons.filter(b=>['Records','Field leases','Farm businesses'].includes(b.text));assert.equal(tiles.length,3);assert.ok(tiles.every(b=>b.drawn&&Object.keys(b.picture).length&&Math.abs(b.rect[1]-tiles[0].rect[1])<1),'account detail drawings share one row');
+     const tiles=report.buttons.filter(b=>['Records','Leases','Businesses'].includes(b.text));assert.equal(tiles.length,3);assert.ok(tiles.every(b=>b.drawn&&Object.keys(b.picture).length&&Math.abs(b.rect[1]-tiles[0].rect[1])<1),'account detail drawings share one row');
     }
     if(key==='market'){
      assert.ok(!report.labels.some(l=>l.text.startsWith('1 seasons')));assert.ok(report.labels.some(l=>l.text.startsWith('1 season ·')));

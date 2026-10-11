@@ -76,6 +76,14 @@ static func _place(c: CanvasItem, id: String) -> void:
 	# The same warm outlines, soft cast shadows and lumpy geometry as the
 	# potatoes: pictures name the place before its text needs to be read.
 	match id:
+		"shop":
+			c.draw_style_box(_box(Kit.WOOD, 4), Rect2(-31,-24,62,58))
+			c.draw_rect(Rect2(-24,-6,48,26), Kit.INK)
+			c.draw_rect(Rect2(-35,-24,70,16), Kit.PAPER)
+			for x: int in [-35,-15,5,25]: c.draw_rect(Rect2(x,-24,10,16), Kit.WOOD)
+			c.draw_line(Vector2(-35,-8),Vector2(35,-8),Kit.INK,3,true)
+			c.draw_rect(Rect2(-25,18,50,10), Kit.PAPER2)
+			for x: int in [-16,0,16]: c.draw_circle(Vector2(x,14),5,Kit.MONEY)
 		"barn":
 			_poly(c, [Vector2(-31, -10), Vector2(31, -10), Vector2(31, 33), Vector2(-31, 33)], Color("b07750"))
 			_poly(c, [Vector2(-37, -10), Vector2(0, -38), Vector2(38, -10)], Kit.WOOD)
@@ -116,6 +124,10 @@ static func _box(color: Color, radius: int) -> StyleBoxFlat:
 
 static func _metric(c: CanvasItem, id: String) -> void:
 	match id:
+		"key":
+			c.draw_arc(Vector2(-17,-16),14,0,TAU,24,Kit.WOOD,7,true)
+			c.draw_line(Vector2(-7,-6),Vector2(25,26),Kit.WOOD,7,true)
+			for p: Vector2 in [Vector2(12,13),Vector2(21,22)]: c.draw_line(p,p+Vector2(-8,8),Kit.WOOD,7,true)
 		"home":
 			_poly(c, [Vector2(-32,0), Vector2(0,-32), Vector2(32,0)], INK)
 			c.draw_rect(Rect2(-23,0,46,32), Color("b99d6c"))

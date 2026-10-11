@@ -2138,6 +2138,7 @@ func _build_winter(_staged: bool = false, _request: int = 0) -> void:
 	for word in _state.Quality.GRADES: _refs["grade_sales:" + word] = _account_row(records, word + " sales", "")
 	if clock.season == 3:
 		var leases := _details_section("account_leases", "For rent")
+		leases.add_child(Kit.label(self, "For rent", 16))
 		for field in _state.Land.IDS:
 			if field == "home": continue
 			leases.add_child(Kit.label(self, _state.Land.NAMES[field], 16))
@@ -2159,7 +2160,8 @@ func _account_detail_tiles() -> void:
 	row.add_theme_constant_override("separation", ceili(8 * Kit.unit(self)))
 	_body.add_child(row)
 	_body.move_child(row, _refs["account_records:toggle"].get_index())
-	var pictures: Dictionary = {"account_records": {"kind": "place", "id": "ledger"}, "account_leases": {"kind": "metric", "id": "beds"}, "account_businesses": {"kind": "place", "id": "barn"}}
+	var pictures: Dictionary = {"account_records": {"kind": "place", "id": "ledger"}, "account_leases": {"kind": "metric", "id": "key"}, "account_businesses": {"kind": "place", "id": "shop"}}
+	var captions: Dictionary = {"account_records":"Records", "account_leases":"Leases", "account_businesses":"Businesses"}
 	for key: String in pictures:
 		if not _refs.has(key + ":toggle"): continue
 		var tile: Button = _refs[key + ":toggle"]
@@ -2173,7 +2175,8 @@ func _account_detail_tiles() -> void:
 			skin.content_margin_right = ceili(4 * Kit.unit(self))
 			skin.content_margin_bottom = ceili(6 * Kit.unit(self))
 			skin.set_meta("caption_top", ceili(6 * Kit.unit(self)))
-		tile.text = str(tile.get_meta("section_title"))
+		tile.text = captions[key]
+		tile.set_meta("section_title", captions[key])
 		tile.picture = pictures[key]
 		tile.picture_pixels = 40
 		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
