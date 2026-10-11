@@ -6,51 +6,51 @@
   "network": "10 Mbps, 40 ms latency, uncached, service workers blocked",
   "samples": [
     {
-      "ready_ms": 40377.53000000119,
+      "ready_ms": 39644.635000005364,
       "resources": [
         {
           "name": "index.wasm",
           "bytes": 39514754,
-          "transfer_ms": 35688.09499999881
+          "transfer_ms": 35689.94999998808
         },
         {
           "name": "index.pck",
-          "bytes": 5029100,
-          "transfer_ms": 8094.594999998808
+          "bytes": 5028860,
+          "transfer_ms": 8097.859999999404
         }
       ]
     },
     {
-      "ready_ms": 40347.875,
+      "ready_ms": 39263.84499999881,
       "resources": [
         {
           "name": "index.wasm",
           "bytes": 39514754,
-          "transfer_ms": 35689.715000003576
+          "transfer_ms": 35687.439999997616
         },
         {
           "name": "index.pck",
-          "bytes": 5029100,
-          "transfer_ms": 8096.254999995232
+          "bytes": 5028860,
+          "transfer_ms": 8093.969999998808
         }
       ]
     },
     {
-      "ready_ms": 41314.61999998987,
+      "ready_ms": 39235.12000000477,
       "resources": [
         {
           "name": "index.wasm",
           "bytes": 39514754,
-          "transfer_ms": 35778.31999999285
+          "transfer_ms": 35692.72500000894
         },
         {
           "name": "index.pck",
-          "bytes": 5029100,
-          "transfer_ms": 8096.550000011921
+          "bytes": 5028860,
+          "transfer_ms": 8095.319999992847
         }
       ]
     }
   ],
-  "median_ready_ms": 40377.53000000119,
+  "median_ready_ms": 39263.84499999881,
   "errors": []
 }

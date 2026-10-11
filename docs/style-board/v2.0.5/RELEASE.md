@@ -1,6 +1,6 @@
 # Segment 21i · 11 October 2026
 
-Scope: A, B, D, E and the new F from `61dc5c0`. The branch `claude/modest-hopper-yh83b7` was merged into `redesign` before implementation. C is closed; the Deferred list and Segment 22 have no changes in this work. Earlier review captures remain historical evidence.
+Scope: A, B, D, E and F’s second pass from `608a53e`. The branch `claude/modest-hopper-yh83b7` was merged into `redesign` before implementation. C is closed; the Deferred list and Segment 22 have no changes in this work. Earlier review captures remain historical evidence.
 
 Godot **4.7.2 stable**, GL Compatibility, GDScript. Chromium uses Metal ANGLE. Phone captures are **390×844 CSS pixels**, desktop **1440×900**. PNGs are unedited browser captures; timings use a browser fixture rather than physical phone hardware.
 
@@ -12,27 +12,39 @@ D · All six nature beds and wind are Vorbis with nominal **96,000 bits/second**
 
 | Phone first load | Public v2.0.4 | Rebuilt v2.0.5 |
 | --- | ---: | ---: |
-| Pack | 15,846,160 bytes | 5,029,100 bytes |
-| Median of three uncached loads | 48.273 s | 40.378 s |
+| Pack | 15,846,160 bytes | 5,028,860 bytes |
+| Median of three uncached loads | 48.273 s | 39.264 s |
 | Engine WASM | 39,514,754 bytes | 39,514,754 bytes |
 
-The fixture uses **10 Mbps, 40 ms latency**, cache disabled and service workers blocked. The reduction is **7.895 seconds / 16.36%**. See the [before](release-first-load-before.json), [after](release-first-load-after.json) and [codec/loop report](release-audio-report.json).
+The fixture uses **10 Mbps, 40 ms latency**, cache disabled and service workers blocked. The reduction is **9.009 seconds / 18.66%**. See the [before](release-first-load-before.json), [after](release-first-load-after.json) and [codec/loop report](release-audio-report.json).
 
-E · Unchanged grade hints count layout passes instead of elapsed time. The runner includes season clock and audio as standalone suites, alongside epilogue and bot. An additional intermittent UI-audit resource leak was fixed by stopping audio and waiting for the actual playback references to release before freeing the scene. Three focused audit runs pass **795 checks each**, with no resource error.
+E · Unchanged grade hints count layout passes instead of elapsed time. The runner includes season clock and audio as standalone suites, alongside epilogue and bot. Intermittent retained-audio resources in the UI-audit and fullscreen fixtures were fixed by stopping audio and waiting for the actual playback references to release before freeing the scene. Three focused audit runs pass **795 checks each**, with no resource error.
 
-F · The world uses ACES, exposure **1.15**, saturation **1.25**, contrast **1.05**, brightness **1.0**, ambient **0.32 / c8dcf0**, and shadow opacity **0.7**. Seasonal grass tops, 15% darker risers, canopies, shore/deep water, white foam and noon sky use the exact plan values. Spring/Summer haze is halved again from the previous setting and all calm noon haze clears. Dusk stays warm and the sun disc remains. Interface tokens match the updated kit. Keeper headers, crop colours and rarity edges use the tokens directly. Weather and Menu drawings use chromatic tokens. Page and ending overlays preserve at least 70% of farm light.
+F · The world uses **Filmic**, exposure **1.0**, white **6.0**, saturation **1.10**, contrast and brightness **1.0**, sun **1.2 / ffe0b8**, ambient **0.30 / c8dcf0**, and shadow opacity **0.75**. Grass, canopies, water and noon sky match the second-pass plan. Spring/Summer haze stays halved and calm noon clears. The title retains its own **1.12** dusk light and disables colour adjustment until farm entry. Interface tokens remain the kit's values. Keeper headers, crop colours and rarity edges use them directly. Weather and Menu drawings are coloured; page and ending overlays preserve at least 70% of farm light.
+
+| Browser image gate | Measured | Required | Result |
+| --- | ---: | ---: | --- |
+| Blown whites, all channels ≥250 | 0% | <0.5% | Pass |
+| Island mean HSV saturation | 0.5443 | 0.40–0.55 | Pass |
+| Ground shade / adjacent lit grass | 61.37–62.62%; mean 62.03% | 55–70% | Pass |
+| Title cream lettering, maximum RGB | 234 / 211 / 206 | Each <245 | Pass |
+
+The [gate report](second-pass-gates.json) includes the masks, sample coordinates and measured values. [Spring noon, HUD hidden](second-pass-spring-noon-hud-hidden-1440.png) is the measured unedited Web capture. The island mask follows the projected terrain silhouette; shade compares three unobstructed orchard grass pairs, each required to pass. Lettering is measured from frozen title-frame differences within the wordmark bounds. Run `NODE_PATH=<Playwright modules> node tests/test_vibrancy_browser.cjs <surfaces fixture URL> <output directory>` after exporting the surfaces fixture. All four gates pass before any tag or publication.
 
 **Pending owner decision:** The new F rule requires full-chroma stamps and chips, while the reference kit still specifies the older dark stamp inks and pale fills. The owner has been asked whether Table, Standard and Feed should use money `f0b429`, common `7fc47a` and wood `8a5a3c`. No answer has been inferred, and stamp colours have not been changed. Tagging and publication remain pending this decision and final validation.
 
 ## Requested before and after captures
 
+These before captures show the rejected neon pass. The after captures show the second-pass values. Each PNG is an unedited browser capture.
+
 | View | Phone before | Phone after | Desktop before | Desktop after |
 | --- | --- | --- | --- | --- |
-| Spring noon | [390](release-spring-noon-before-390.png) | [390](release-spring-noon-after-390.png) | [1440](release-spring-noon-before-1440.png) | [1440](release-spring-noon-after-1440.png) |
-| Summer noon | [390](release-summer-noon-before-390.png) | [390](release-summer-noon-after-390.png) | [1440](release-summer-noon-before-1440.png) | [1440](release-summer-noon-after-1440.png) |
-| Mara's page | [390](release-mara-before-390.png) | [390](release-mara-after-390.png) | [1440](release-mara-before-1440.png) | [1440](release-mara-after-1440.png) |
+| Spring noon | [390](second-pass-spring-noon-before-390.png) | [390](second-pass-spring-noon-after-390.png) | [1440](second-pass-spring-noon-before-1440.png) | [1440](second-pass-spring-noon-after-1440.png) |
+| Summer noon | [390](second-pass-summer-noon-before-390.png) | [390](second-pass-summer-noon-after-390.png) | [1440](second-pass-summer-noon-before-1440.png) | [1440](second-pass-summer-noon-after-1440.png) |
+| Title | [390](second-pass-title-before-390.png) | [390](second-pass-title-after-390.png) | [1440](second-pass-title-before-1440.png) | [1440](second-pass-title-after-1440.png) |
+| Mara's page | [390](second-pass-mara-before-390.png) | [390](second-pass-mara-after-390.png) | [1440](second-pass-mara-before-1440.png) | [1440](second-pass-mara-after-1440.png) |
 
-The after captures show a clear blue sky, bright fields and water, and a visible farm behind Mara's page. [Before report](release-vibrancy-before-report.json) / [after report](release-vibrancy-after-report.json).
+[Before capture report](second-pass-before-report.json) / [after capture report](second-pass-after-report.json). The earlier `release-*-before/after` set is preserved as historical v2.0.4/first-pass evidence.
 
 ## Entry captures
 
