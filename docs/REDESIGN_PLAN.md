@@ -1956,7 +1956,15 @@ R the sale reveal, W the wall, M the meta. Each is one Codex session
 and one tag (v2.1.0 onward).
 
 V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
-   parks at the gate for the whole of Spring. Cast bible: cheerful,
+   parks at the gate for the whole of Spring from the second year on
+   (attention budget: a control appears the first time it matters).
+   In the first Spring the cart only passes along the road with a
+   bell and a wave, so the player has seen it before it stops. With
+   the Pedlar's arrival, year two has no climate events (the curve
+   starts in year three; the guided storm stays in year one), so the
+   second year is the pack year, not the disaster year; re-run the bot
+   for that change and re-record the table. The player names the farm
+   on the farmer card and the name goes on the gate sign. Cast bible: cheerful,
    never quite honest, patched coat, a cart with a bell. Lines:
    "Three packs. One's good." "No refunds. Lovely weather." Three
    face-down packs on the cart, each a drawn card with its price and
@@ -1971,7 +1979,10 @@ V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
                                nothing (1 in 20), a Blue Pearl seed
                                (1 in 20).
    Buying flips the pack with a drumroll and a two-note cue; the
-   contents land as cards. One of each pack per Spring. Ledger label
+   wind-up before the reveal is 0.6 to 1.2 s, never instant; the
+   contents land as cards. One of each pack per Spring. An unbought
+   pack stays face-down on the cart until the season ends, visible
+   from the play screen (the season's open loop). Ledger label
    "Pedlar's pack". The Pedlar is skipped by the bot (unchanged); add a
    "gambler" strategy that buys every pack every Spring and report its
    survival; it may be worse than cautious, never better than tidy.
