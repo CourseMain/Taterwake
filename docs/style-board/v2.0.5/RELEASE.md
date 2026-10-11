@@ -60,7 +60,7 @@ The production smoke uses the actual export without QA bridges and passes fresh/
 
 ## Validation and remaining work
 
-The full `tools/run_tests.sh -j 2` run and additional standalone epilogue/bot run are in progress. Their final results will be recorded here. All tests remain enabled.
+The current `tools/run_tests.sh -j 2` run has **102 / 103 completed suites passing**, **22,083 reported checks**, and **0 failures, 0 timeouts, 0 errors**. Its remaining tuning-bot process is running. The additionally requested standalone epilogue/bot checks are queued after it. This is an [in-progress snapshot](second-pass-validation-pending.json), not a completed full-suite result. All tests remain enabled.
 
 Balance, crop economics, ledger labels and bot tuning are unchanged. The requested latest Oda token `7a7f8c` supersedes the older pending iron-token question. The earlier recorded white E badge and Slackey guide body are outside this segment's named changes. Owner-local layout and shadow-setting edits are excluded from the release checkout and preserved in the working checkout.
 
