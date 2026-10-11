@@ -50,7 +50,20 @@ func run() -> void:
 			var bounds := root.get_visible_rect()
 			check(bounds.encloses(button.get_global_rect()), "fullscreen remains in bounds on " + str(dimensions))
 			check(button.size.y * dimensions.y / bounds.size.y >= 43, "fullscreen retains a physical 44px touch target on " + str(dimensions))
+	await release_audio()
 	game.queue_free()
 	await settle()
 	print("NATIVE FULLSCREEN: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+func release_audio() -> void:
+	game.process_mode = Node.PROCESS_MODE_DISABLED
+	var playbacks: Array[WeakRef] = []
+	for player: AudioStreamPlayer in game.find_children("*", "AudioStreamPlayer", true, false):
+		if player.has_stream_playback(): playbacks.append(weakref(player.get_stream_playback()))
+		player.stop()
+		player.stream = null
+	for frame in range(120):
+		if playbacks.all(func(ref: WeakRef): return ref.get_ref() == null): break
+		await process_frame
+	check(playbacks.all(func(ref: WeakRef): return ref.get_ref() == null), "audio playbacks release before fullscreen fixture teardown")
