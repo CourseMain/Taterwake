@@ -1942,6 +1942,17 @@ Lines that hold through every part:
   never more. The slop must be able to make you rich or ruin you,
   while the honest farm stays honest.
 - One concept per screen, as the contract below says.
+- Cause and effect, always both: every village event, pack result,
+  bet, boom and joker shows one line of cause ("Floods in the east.")
+  and one line of effect on the player ("Golden sells for 3x this
+  Winter."), in that order, nothing else. A player must never wonder
+  why something happened or what it does to them.
+- Balatro in the presentation, not the maths: cards flip from
+  face-down, results land with a pop and a note, a card tilts on
+  hover and settles on tap, multipliers appear as stamped words ("3x",
+  "kept Table") that slam onto the card, a chain of effects fires one
+  at a time with a rising note, and the best outcome of a screen gets
+  a flame or confetti. The money underneath stays farm-sized.
 
 The simplicity contract (every part below is bound by it):
 - One concept per screen. A concept is one drawing, a name of at most
