@@ -12,9 +12,9 @@ const INK := Color("3f2c1c")
 const MUTED := Color("705236")
 const GAIN := Color("436733")
 const LOSS := Color("a63529")
-const PAPER := Color("fffbed")
+const PAPER := Kit.CREAM
 const FRAME := Color("795b32")
-const PRICE_TAG := Color("f3efdf")
+const PRICE_TAG := Kit.PAPER
 var hud
 var selling: bool = false
 var crops: Array[String] = []

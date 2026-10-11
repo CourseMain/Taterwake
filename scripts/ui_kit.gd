@@ -1,19 +1,19 @@
 extends RefCounted
 ## Exact tokens from the owner's UI kit; dimensions are screen pixels.
-const INK := Color("17382d")
-const INK2 := Color("1f4538")
-const PAPER := Color("f3efdf")
-const PAPER2 := Color("e8e2cc")
-const WOOD := Color("79553d")
-const WOOD2 := Color("5e4030")
-const CREAM := Color("fffbed")
+const INK := Color("1b4332")
+const INK2 := Color("235640")
+const PAPER := Color("fbf7e6")
+const PAPER2 := Color("eee8d2")
+const WOOD := Color("8a5a3c")
+const WOOD2 := Color("6a4430")
+const CREAM := Color("fffdf2")
 const RULE := Color("cdbf9f")
 const MUTED := Color("5f6b60")
-const MONEY := Color("d9a948")
-const RED := Color("c2503a")
-const CROPS := {"russet":Color("a87b45"), "giant":Color("c7855d"), "golden":Color("efc74c"), "sunburst":Color("ffab42"), "icecap":Color("aeeaff")}
-const KEEPERS := {"nell":Color("5e7a86"), "mara":Color("6f9a4a"), "tess":Color("b5523c"), "iris":Color("5f9fd6"), "bram":Color("6b6b70"), "pip":MONEY, "edwin":Color("5e7a86")}
-const RARITIES := {"common":Color("8fa98a"), "uncommon":MONEY, "rare":RED, "found":Color("5f9fd6")}
+const MONEY := Color("f0b429")
+const RED := Color("e0583a")
+const CROPS := {"russet":Color("b8803f"), "giant":Color("d98a4f"), "golden":Color("ffd23f"), "sunburst":Color("ff9f1c"), "icecap":Color("7fe3ff")}
+const KEEPERS := {"nell":Color("4f8fa8"), "mara":Color("5fb33a"), "tess":Color("e0583a"), "iris":Color("3fa9ff"), "bram":Color("7a7f8c"), "pip":MONEY, "edwin":Color("4f8fa8")}
+const RARITIES := {"common":Color("7fc47a"), "uncommon":MONEY, "rare":RED, "found":Color("3fa9ff")}
 const Type = preload("res://scripts/ui_type.gd")
 static func desktop(hud) -> bool:
 	var touch = hud.get_parent().get("touch_controls")
@@ -59,7 +59,7 @@ static func configure(hud, board: bool = false) -> void:
 	hud._modal_card.unit = unit(hud); hud._modal_card.fill = WOOD if board else PAPER
 	hud._modal_card.queue_redraw()
 	hud._modal_card.add_theme_stylebox_override("panel", skin(WOOD if board else PAPER, WOOD, 14 if board else 12, 16 if board else 14, unit(hud)))
-	(hud._modal.get_child(0) as ColorRect).color = INK
+	(hud._modal.get_child(0) as ColorRect).color = Color(INK, .30)
 static func fit(hud) -> void:
 	if not hud._modal_card.get_meta("kit_screen", false): return
 	var u: float = unit(hud)

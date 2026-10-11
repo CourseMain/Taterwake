@@ -1,9 +1,10 @@
 extends RefCounted
 ## Shared surfaces and interaction states for the farm's illustrated menus.
-const INK: Color = Color("17382d")
+const Kit = preload("res://scripts/ui_kit.gd")
+const INK: Color = Kit.INK
 const GREEN: Color = Color("377858")
-const CREAM: Color = Color("f3efdf")
-const WOOD: Color = Color("79553d")
+const CREAM: Color = Kit.PAPER
+const WOOD: Color = Kit.WOOD
 static var _paper_textures: Dictionary = {}
 
 static func paper(fill: Color = CREAM, padding: int = 14, radius: int = 4, edge: Color = Color("c9bea0")) -> StyleBoxTexture:
@@ -58,13 +59,13 @@ static func modal(_dark: bool = false) -> StyleBoxTexture:
 	return paper(INK, 24, 12, WOOD)
 
 static func button_style(state: String, primary: bool) -> StyleBoxFlat:
-	var fill: Color = GREEN if primary else Color("f3efdf")
+	var fill: Color = GREEN if primary else Kit.PAPER
 	var border: Color = Color("24563e") if primary else Color("bdc8b0")
 	match state:
 		"hover": fill = Color("3d805b") if primary else Color("e5eddc")
 		"pressed": fill = Color("254e39") if primary else Color("d4dfc9")
 		"disabled":
-			fill = Color("e8e2cc")
+			fill = Kit.PAPER2
 			border = Color("cdbf9f")
 	var style := box(fill, 10, 999, border)
 	style.border_width_bottom = 1 if state in ["pressed", "disabled"] else 3
