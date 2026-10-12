@@ -13,6 +13,9 @@ func _walk(node: Node) -> void:
 func _register(node: Node) -> void:
 	if not node is Button or not game.is_ancestor_of(node): return
 	if node.has_meta("tap_feedback"): return
+	# Native OptionButton opens on press by default. Let the press draw and
+	# sound first, then open the dropdown on release like the other controls.
+	if node is OptionButton: node.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	node.set_meta("tap_feedback", true)
 	node.gui_input.connect(func(event):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed or event is InputEventScreenTouch and event.pressed:
