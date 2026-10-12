@@ -81,7 +81,7 @@ func _latency_paint() -> void:
 	var card = armed.get_parent()
 	# Pack hit targets are transparent. Measure the drawing, not native press state.
 	var drawn: Array = [card.edge,card.scale,card.position]
-	var refusal = card.get_meta("refusal_tween",null)
+	var refusal = card.get_meta("refusal_tween") if card.has_meta("refusal_tween") else null
 	if tap_start < 0:
 		pack_visual_before = drawn; pack_refusal_before = refusal; pack_rotation_before = card.rotation
 		return
