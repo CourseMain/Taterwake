@@ -54,13 +54,13 @@ func run() -> void:
 	check(state.plots[4].watered and not hud._toast_box.visible and not hud._farm_help_card.visible, "successful watering is quiet and hides optional help")
 	hud.set_context("Russet · Ready in 10s")
 	game.perform_plot(4, "water")
-	check(hud._context.text == "Already watered" and not hud._toast_box.visible, "repeat water uses one brief footer reminder")
+	check(hud._context.text == "Russet · Ready in 10s" and hud._refusal_caption.text == "Already wet. Water a dry bed." and not hud._toast_box.visible, "repeat water uses one brief footer reminder")
 	hud._process(0.5)
-	var remaining: float = hud._farm_hint_remaining
+	var remaining: float = hud._refusal_remaining
 	for _i in range(25): game.perform_plot(4, "water")
-	check(is_equal_approx(hud._farm_hint_remaining, remaining), "rapid repeats neither stack nor extend feedback")
+	check(is_equal_approx(hud._refusal_remaining, remaining), "rapid repeats neither stack nor extend feedback")
 	await settle()
-	check(hud._context_box.size.y <= 60.0 and hud._context_box.size.x < 320.0, "short reminder hugs its text")
+	check(hud._context_box.size.y <= 70.0 and hud._context_box.size.x < 320.0, "short reminder hugs its text")
 	check(not hud._context_box.get_global_rect().intersects(hud._hotbar.get_global_rect()), "reminder stays above the tool buttons")
 	check(hud._context_box.mouse_filter == Control.MOUSE_FILTER_IGNORE and hud._context.mouse_filter == Control.MOUSE_FILTER_IGNORE, "field clicks pass through reminder")
 	game.world.set_day_time(25.0)
@@ -68,18 +68,18 @@ func run() -> void:
 	hud._process(1.0)
 	check(hud._context.text == "Russet · Ready in 10s", "expired feedback restores current hover instead of an old queue")
 	game.perform_plot(5, "water")
-	check(hud._context.text == "Plant a seed first [2]", "empty bed explains the specific missing step")
+	check(hud._refusal_caption.text == "Soil bare. Plant a seed here." and hud._context.text == "Russet · Ready in 10s", "empty bed explains the specific missing step")
 	state.seed_inventory.russet = 0
 	game.perform_plot(5, "plant")
-	check(hud._context.text.contains("No Russet seeds") and not hud._toast_box.visible, "seed failure has no duplicate central toast")
+	check(hud._refusal_caption.text == "No seeds. Buy them at Mara's stall." and not hud._toast_box.visible, "seed failure has no duplicate central toast")
 	game.perform_plot(5, "pest")
-	check(hud._context.text == "No pests here", "spraying empty area stays brief")
+	check(hud._refusal_caption.text == "No pests. Spray an infested bed.", "spraying empty area stays brief")
 	state.plots[5].stage = 3
 	state.plots[5].crop = "russet"
 	state.plots[5].tilled = true
 	state.storage["russet"] = Stock.pile(state.capacity)
 	game.perform_plot(5, "harvest")
-	check(hud._context.text == "Barn full · Sell crops [F]" and not hud._toast_box.visible, "full barn retains actionable feedback without a toast")
+	check(hud._refusal_caption.text == "Barn full. Sell crops at Mara's stall." and not hud._toast_box.visible, "full barn retains actionable feedback without a toast")
 	state.storage["russet"] = Stock.pile(0)
 	game.perform_plot(6, "hoe")
 	check(hud._farm_hint_remaining == 0.0, "successful work clears the previous failure reminder")

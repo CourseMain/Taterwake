@@ -30,11 +30,14 @@ func run() -> void:
 	await frames()
 	game._on_action("climate")
 	check(game.hud._refs.weather_page._grid.get_child_count() == 5,"protection effects live on four instrument tiles")
-	var tree: Node3D = game.world._tree_specs[4].parent
+	var station_trees: Array = game.world._tree_specs.duplicate()
+	station_trees.sort_custom(func(a,b): return a.parent.position.distance_squared_to(game.world.weather_station.position) < b.parent.position.distance_squared_to(game.world.weather_station.position))
+	var station_tree: Dictionary = station_trees.front()
+	var tree: Node3D = station_tree.parent
 	check(is_equal_approx(tree.position.x - 17.3 * game.world.LAND_SPACING, 2.0), "station tree moves two world metres sideways")
 	var lobes: int = 0
 	var materials: Array = game.world._season_materials.filter(func(entry): return entry.kind == "canopy").map(func(entry): return entry.material)
-	for mesh in game.world._tree_specs[4].canopy.get_children():
+	for mesh in station_tree.canopy.get_children():
 		if mesh is MeshInstance3D and mesh.material_override in materials: lobes += 1
 		elif mesh is MultiMeshInstance3D and mesh.material_override in materials: lobes += mesh.multimesh.instance_count
 	check(lobes == 3, "station tree has three overlapping canopy lobes")

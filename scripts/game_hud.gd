@@ -135,6 +135,7 @@ var _refs: Dictionary = {}
 var _reset_pending: bool = false
 var _panel_crops: Array[String] = []
 var _tool_caption: Label
+var _refusal_remaining: float = 0.0
 var _refusal_caption: Label
 var last_tap: Control
 var _context_box: PanelContainer
@@ -221,6 +222,10 @@ func _process(delta: float) -> void:
 		fit_text(root)
 	_hud_clock += delta
 	_help_cooldown = maxf(0.0, _help_cooldown - delta)
+	_refusal_remaining = maxf(0.0, _refusal_remaining - delta)
+	if is_instance_valid(_refusal_caption) and _refusal_caption.visible and _refusal_remaining <= 0:
+		_refusal_caption.hide()
+		_context_layout_key = ""
 	_farm_hint_remaining = maxf(0.0, _farm_hint_remaining - delta)
 	_farm_busy_remaining = maxf(0.0, _farm_busy_remaining - delta)
 	_update_context()
@@ -1362,6 +1367,8 @@ func show_farm_hint(text: String) -> void:
 
 func clear_farm_hint() -> void:
 	_refusal_caption.hide()
+	_refusal_remaining = 0.0
+	_context_layout_key = ""
 	_farm_hint_remaining = 0.0
 	_update_context()
 
@@ -1388,7 +1395,7 @@ func _update_context() -> void:
 	if _context.text != text: _context_cue.restart()
 	_context.text = text
 	_context.add_theme_color_override("font_color", INK)
-	_context_box.visible = not text.is_empty() and not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) and _tutorial.is_empty() and not farm_page_open() and not (is_instance_valid(_state) and _state.run_over)
+	_context_box.visible = (not text.is_empty() or _refusal_caption.visible) and (not (is_instance_valid(_barn_full_alert) and _barn_full_alert.visible) or _refusal_caption.visible) and _tutorial.is_empty() and not farm_page_open() and not (is_instance_valid(_state) and _state.run_over)
 	var touch = get_parent().get("touch_controls")
 	var touch_enabled: bool = is_instance_valid(touch) and touch.enabled
 	if touch_enabled:
@@ -1402,7 +1409,9 @@ func _update_context() -> void:
 	_context.set_meta("text_tier", 22 if text.begins_with("Ready in ") else 14)
 	var font_size: int = text_pixels(int(_context.get_meta("text_tier")))
 	_context.add_theme_font_size_override("font_size", font_size)
-	var width: float = clampf(_context.get_theme_font("font").get_string_size(text + (" " + _refusal_caption.text if _refusal_caption.visible else ""), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 60.0, 120.0, minf(480.0, root.size.x - 24.0))
+	var instruction_width: float = _context.get_theme_font("font").get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var caption_width: float = _refusal_caption.get_theme_font("font").get_string_size(_refusal_caption.text, HORIZONTAL_ALIGNMENT_LEFT, -1, _refusal_caption.get_theme_font_size("font_size")).x if _refusal_caption.visible else 0.0
+	var width: float = clampf(maxf(instruction_width,caption_width) + 60.0, 120.0, minf(480.0, root.size.x - 24.0))
 	_context_box.offset_left = -width * 0.5
 	_context_box.offset_right = width * 0.5
 	_context_box.offset_top = -310 if touch_enabled else (-251 if seed_row else -152)
@@ -1412,6 +1421,11 @@ func _update_context() -> void:
 	_context_box.size.y = 0
 	# Wrapping updates minimum height during container layout; release the old height afterward.
 	_context_box.set_size.call_deferred(Vector2(width, 0))
+	_fit_refusal_height.call_deferred()
+
+func _fit_refusal_height() -> void:
+	if _refusal_caption.visible and _hotbar.is_visible_in_tree():
+		_context_box.offset_top = minf(_context_box.offset_top, _hotbar.get_global_rect().position.y - root.size.y - _context_box.get_combined_minimum_size().y - 12)
 
 func _notice_is_warning(text: String) -> bool:
 	var lower := text.to_lower()
@@ -2820,6 +2834,7 @@ func show_refusal(message: String, control: Control = null) -> void:
 			parent.move_child(words, branch.get_index() if is_instance_valid(branch) and branch.get_parent() == parent else mini(2, parent.get_child_count()-1))
 		words.text = caption
 	else:
+		if _refusal_caption.text != caption or not _refusal_caption.visible: _refusal_remaining = 1.4
 		_refusal_caption.text = caption
 		_refusal_caption.show()
 		_context_layout_key = ""

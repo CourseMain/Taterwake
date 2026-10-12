@@ -22,6 +22,7 @@ func run() -> void:
 	tween.custom_step(.20)
 	check(is_zero_approx(game.hud._tutorial_next.rotation), "shake restores the control")
 	game.tutorial.active = false; game.hud.set_tutorial({})
+	check(game.hud._notice_is_warning("Low Field · for rent at the Winter accounts, 55,000 a year"), "phone keeps the full rental direction visible")
 	game.hud.set_context("Water this bed.")
 	game.hud.show_refusal("Can empty", game.hud._tutorial_next)
 	check(game.hud._context.text == "Water this bed.", "farm instruction remains above refusal")

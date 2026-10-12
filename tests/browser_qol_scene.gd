@@ -85,6 +85,8 @@ func _latency_prepare(view: String) -> void:
 	var ticket: int = request
 	latency_mode = false
 	armed = null
+	for dialog in game.hud.root.find_children("*","AcceptDialog",true,false):
+		dialog.hide(); dialog.queue_free()
 	game.touch_controls.drawer.hide()
 	if is_instance_valid(game.epilogue_screen): game._close_epilogue(false)
 	var base: String = view.get_slice("/",0)
