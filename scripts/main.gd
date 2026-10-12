@@ -60,6 +60,7 @@ var _camera_home_position := Vector3.ZERO
 var _camera_home_size: float = 38.0
 var _camera_home_id: int = 0
 var _camera_pan_offset := Vector3.ZERO
+var _camera_follow_player := Vector3.ZERO
 var _map_drag_origin := Vector2.ZERO
 var _map_drag_distance := Vector2.ZERO
 var _map_drag_moved := false
@@ -351,6 +352,7 @@ func _process(delta: float) -> void:
 		if hover_elapsed > 0.08:
 			hover_elapsed = 0.0
 			_update_hover()
+	_update_player_camera(moving)
 	world.animate(delta, moving, sprint_blend if moving else 0.0)
 	if _tutorial_active():
 		tutorial.update(delta)
@@ -672,6 +674,7 @@ func _reset_camera_view(new_overview: bool = false) -> void:
 		_recenter_camera()
 		world.camera.size = _camera_home_size
 		return
+	_camera_follow_player = world.player.position
 	_camera_home_id = world.camera.get_instance_id()
 	_camera_home_position = world.camera.global_position
 	_camera_home_size = world.camera.size
@@ -679,6 +682,7 @@ func _reset_camera_view(new_overview: bool = false) -> void:
 	_reset_camera_zoom()
 
 func _recenter_camera() -> void:
+	_camera_follow_player = world.player.position
 	_cancel_map_drag()
 	_camera_pan_offset = Vector3.ZERO
 	world.camera.global_position = _camera_home_position
@@ -739,6 +743,16 @@ func _pan_camera_by(screen_delta: Vector2) -> void:
 	_camera_pan_offset.x = clampf(_camera_pan_offset.x, -limit.x, limit.x)
 	_camera_pan_offset.y = 0.0
 	_camera_pan_offset.z = clampf(_camera_pan_offset.z, -limit.y, limit.y)
+
+func _update_player_camera(moving: bool) -> void:
+	var displacement: Vector3 = world.player.position - _camera_follow_player
+	_camera_follow_player = world.player.position
+	if not moving or not _map_navigation_allowed() or _map_drag_button != 0: return
+	displacement.y = 0
+	_camera_pan_offset += displacement
+	var limit: Vector2 = _camera_pan_limit()
+	_camera_pan_offset.x = clampf(_camera_pan_offset.x,-limit.x,limit.x)
+	_camera_pan_offset.z = clampf(_camera_pan_offset.z,-limit.y,limit.y)
 
 func _update_camera_pan(delta: float) -> void:
 	if not is_instance_valid(world.camera) or not is_finite(delta) or delta <= 0.0: return

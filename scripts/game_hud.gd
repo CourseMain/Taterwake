@@ -494,6 +494,7 @@ func set_tutorial(info: Dictionary) -> void:
 			button.show()
 		_hotbar.offset_left = -254
 		_hotbar.offset_right = 254
+		_layout_hotbar.call_deferred()
 		_quick_sell.show()
 		set_context(_context.text)
 		_refresh_seed_visibility()
@@ -522,8 +523,8 @@ func set_tutorial(info: Dictionary) -> void:
 		_reward_timer.stop()
 		_apply_tutorial_visibility()
 	if is_panel_open():
-		if _panel_kind in ["pause", "menu"] or (_panel_kind == "market" and _panel_crops != _market_crops()):
-			show_panel(_panel_kind, _state)
+		if _panel_kind in ["pause", "menu"] or (_panel_kind == "market" and _panel_crops != (_known_crops() if _market_selling else _market_crops())):
+			show_panel(_panel_kind, _state, _market_selling)
 		else:
 			_refresh_panel()
 	_apply_tutorial_buttons()
@@ -531,6 +532,7 @@ func set_tutorial(info: Dictionary) -> void:
 		update_state(_state)
 
 func _tutorial_allows(action: String) -> bool:
+	if action.begins_with("sell_amount:"): action = action.replace("sell_amount:", "sell:")
 	if action.begins_with("current_sell:"): action = action.replace("current_sell:", "sell:")
 	if _tutorial.is_empty() or action in ["tutorial:next", "tutorial:skip", "tutorial:exit", "tutorial:stay", "close"]:
 		return true
@@ -578,11 +580,12 @@ func _apply_tutorial_visibility() -> void:
 	_menu_button.visible = "menu" in features
 	_weather_button.visible = "climate" in features and not is_panel_open()
 	_hotbar.visible = not tools.is_empty()
-	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 92.0 + maxi(0, tools.size() - 1) * 6.0)
+	var hotbar_width: float = maxf(112.0, 14.0 + tools.size() * 108.0 + maxi(0, tools.size() - 1) * 6.0)
 	_hotbar.offset_left = -hotbar_width * 0.5
 	_hotbar.offset_right = hotbar_width * 0.5
 	for tool: String in _tool_buttons:
 		_tool_buttons[tool].visible = tool in tools
+	_layout_hotbar.call_deferred()
 	if "stock" not in features:
 		for crop: String in _crop_buttons:
 			_crop_buttons[crop].visible = crop == "russet"
@@ -1030,9 +1033,10 @@ func _build_footer() -> void:
 	for index: int in range(tools.size()):
 		var tool: String = tools[index]
 		var button: Button = _button("", "tool:" + tool)
-		button.custom_minimum_size = Vector2(92, 80)
+		button.custom_minimum_size = Vector2(108, 80)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_world_button(button, Cozy.WOOD)
-		button.tooltip_text = "%d · %s — equip for field work" % [index + 1, tool_names[index]]
+		button.tooltip_text = ""
 		slots.add_child(button)
 		var content: VBoxContainer = _vbox(0)
 		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1116,6 +1120,7 @@ func _build_footer() -> void:
 	_context.minimum_size_changed.connect(func(): _context_box.size.y = 0, CONNECT_DEFERRED)
 	_context_box.hide()
 	set_tool("hoe")
+	_layout_hotbar.call_deferred()
 
 func _icon(data: Dictionary, pixels: float = 62.0) -> Control:
 	var icon: Control = ItemIcon.new()
@@ -1125,6 +1130,21 @@ func _icon(data: Dictionary, pixels: float = 62.0) -> Control:
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon
+
+func _layout_hotbar() -> void:
+	if not is_instance_valid(_hotbar): return
+	var width: float = 0.0
+	var count: int = 0
+	for button in _tool_buttons.values():
+		if button.visible:
+			width = maxf(width,button.get_combined_minimum_size().x); count += 1
+	var total: float = count * width + maxi(0,count-1)*6 + 14
+	_hotbar.offset_left = -total*.5; _hotbar.offset_right = total*.5
+	_hotbar.offset_bottom = -20
+	_hotbar.offset_top = -20-_hotbar.get_combined_minimum_size().y
+	_tool_caption.offset_bottom = _hotbar.offset_top-8
+	_tool_caption.offset_top = _tool_caption.offset_bottom-_tool_caption.get_combined_minimum_size().y
+	_tool_caption.offset_left = -total*.5; _tool_caption.offset_right = total*.5
 
 func _build_notices() -> void:
 	_barn_full_alert = _card(Color("a52f38"), 16)
@@ -1424,6 +1444,12 @@ func _update_context() -> void:
 	_fit_refusal_height.call_deferred()
 
 func _fit_refusal_height() -> void:
+	var touch = get_parent().get("touch_controls")
+	if is_instance_valid(touch) and touch.enabled and _context_box.is_visible_in_tree():
+		var highest: float = root.size.y
+		for control in [touch.tools_button,touch.sell_button]:
+			if control.is_visible_in_tree(): highest = minf(highest,control.get_global_rect().position.y)
+		_context_box.offset_top = minf(_context_box.offset_top,highest-root.size.y-_context_box.get_combined_minimum_size().y-12)
 	if _refusal_caption.visible and _hotbar.is_visible_in_tree():
 		_context_box.offset_top = minf(_context_box.offset_top, _hotbar.get_global_rect().position.y - root.size.y - _context_box.get_combined_minimum_size().y - 12)
 
