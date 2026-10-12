@@ -54,3 +54,21 @@ After implementation, invite the same three testers to play the changed build. R
 | 1 | Pending | Pending | Pending | Awaiting replay |
 | 2 | Pending | Pending | Pending | Awaiting replay |
 | 3 | Pending | Pending | Pending | Awaiting replay |
+
+
+## V1 five-second cards · 2026-10-12
+
+The browser captures are prepared in `style-board/v2.1.0/`. The owner was asked for a non-gamer's five-second observations and authorized finishing without waiting. No tester observations were supplied; these rows remain unperformed, not passes. The three full fresh-player sessions remain scheduled after V3 under the updated plan.
+
+| New card or tile | Human observation | Outcome |
+| --- | --- | --- |
+| Seed pack, Superstition pack, Mystery pack and their printed odds | Pending | Pending |
+| Seed, superstition, oddity, refund, lucky stone and Blue Pearl result cards | Pending | Pending |
+| Twelve superstition collection cards, including “Not hung yet” | Pending | Pending |
+| the Twin, the Heart, the Glow Spud and lucky stone collection cards | Pending | Pending |
+| Varieties and Superstitions tabs | Pending | Pending |
+
+The automated 390×844 browser review checks real cart geometry, three packs, wind-up before contents, result landing and the gate's filled hook. It does not replace this human check.
+
+
+Owner's decision · **2026-10-13**: “nah just do it”. Finish V1 without waiting for the external non-gamer five-second check. The browser and suite checks continue; no human observation or pass is inferred. The unperformed human review remains named in PLAYTEST_22.md and the handoff.

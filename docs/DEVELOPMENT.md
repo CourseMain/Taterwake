@@ -1429,3 +1429,128 @@ Owner's decision · **2026-10-12**: “quickly finish up you dont have to test s
 The [v2.0.6 review](style-board/v2.0.6/RELEASE.md) contains **50 unedited browser screenshots** at **390×844** and **1440×900**, all requested before/after views, exact camera-centre measurements and raw test/latency results. The thirteen tracked owner-local UI/style edits remain uncommitted and preserved. Their untracked draft UI-fit test passes **283 checks** after adapting its obsolete Max-button reference to the new one/five-tonne controls; its original contents are backed up. Existing local style exceptions are named in the review and remain outside this scope.
 
 Tagged **v2.0.6**. **Not completed:** the extra standalone tuning-bot rerun, waived above. No requested implementation remains undone. Public `docs/index.*` stays v2.0.5; no docs-root publication, `docs/classic/`, `web/`, deferred-feature or Segment 22 changes are included.
+
+
+Owner's decision · **2026-10-12**: V1's rule-changing cards are called **superstitions**, never jokers or charms. The pack is **Superstition pack**; “Takes effect next Winter” remains. Rename every new string, identifier and test written in this session and merge the updated plan branch again.
+
+Owner's decision · **2026-10-12**: The gate has five hooks. A superstition won after those hooks are full goes into the **Superstitions** tab of **What I've grown**, as its card with **“Not hung yet”**. Hanging and swapping belong to Tess in Winter from part J onward and are not implemented in V1. Full hooks never refuse a Superstition pack. Owning every superstition in the rolled rarity still returns 2,000 with **“All of these are yours. Here's 2,000.”**
+
+
+Owner's decision · **2026-10-12** · Q1 · Gambler distribution (min −77,730 / mean −26,608 / max 21,943, 0 of 30 above tidy, 0 of 30 foreclosed). Which requirement changes.
+
+The pack table does not change. The timing of two gates does. The
+variance rule is a rule for the slop as a whole, and at V1 the slop
+has no upside yet: every superstition is inert until part J, the
+price years arrive with V4, and the Pub with V2. A player who buys
+three small fixed-price packs a year cannot get rich or ruined, and
+the bot has just proved it. So at V1:
+
+- Assert now: the gambler's mean lands between naive's and tidy's
+  (it does); the gambler's survival is within two seeds of
+  cautious's (packs are cash-only and can never foreclose anyone);
+  no gambler seed ends above 640,000.
+- Report, do not assert: seeds above tidy's mean and seeds
+  foreclosed. Print both lines in the bot output with the text
+  "(gate lands in part J)". The two gates (at least 3 of 30 above
+  tidy, at least 3 of 30 foreclosed) are asserted from part J
+  onward and re-checked at V2 and V4.
+- Add one check that V1 can honestly make and the player is owed:
+  the odds printed on the back of each pack are the odds rolled.
+  Roll each pack 10,000 times with a fixed seed; every outcome's
+  frequency lands within a tenth of its printed fraction (Blue Pearl
+  1 in 20 means 450 to 550 of 10,000). Fail on any outcome outside
+  that band.
+
+Also confirm in the handoff that the gambler plants the seeds it wins
+(Russet, Giant, Golden, Sunburst, Icecap) in the next free beds and
+sells the pack oddities with its ordinary stock, and that it never
+plants Blue Pearl, as the plan says for every bot.
+
+Owner's decision · **2026-10-12** · Q2 · Year two without climate events raises tidy's max to 350,722 and expander's mean to 152,848. May the old per-run 320,000 and expander 80,000–120,000 checks be replaced by V1's mean and survival checks.
+
+Yes. Both old checks were tuned under year-two disasters and the plan
+says to re-run and re-record for this change. In test_tuning_bot.gd:
+
+- Line 37, the per-run cash ceiling: keep a ceiling, raise it.
+  Honest strategies (naive, cautious, tidy, diversifier, expander):
+  no completed run above 400,000. Variance strategies (gambler, and
+  punter and trader when they arrive): no run above 640,000. Keep
+  the message format so the failing seed is named.
+- Line 45 stays as written: tidy's mean below 320,000. If the re-run
+  puts tidy's mean at or above 320,000, stop at that step and report
+  the number; that lever is the owner's, do not retune anything.
+- Line 48, the expander 80,000–120,000 band: delete. Line 47 stays
+  (expander between cautious and tidy). Add: expander's mean at least
+  40,000 above cautious's, the same gap the diversifier check uses.
+- Add the two-seed rule from the lines that hold: each honest
+  strategy's survival within two seeds of the frozen table (naive 0,
+  cautious 30, tidy 30, diversifier 28, expander 29). Hard-code those
+  five numbers in the test with a comment naming the tag they come
+  from; re-record them only when a plan part says re-record.
+- The tidy sales-advantage band (15–40%) and the rest stay.
+
+Re-record the full table (survived, median end year, mean, max, mean
+sales for all five honest strategies plus the gambler) in
+DEVELOPMENT.md and in the test's header comment, and name it the
+v2.1.0 table. The plan's §8 table is updated on the plan branch by the
+owner from your handoff.
+
+Owner's decision · **2026-10-12** · Q3 · Which starting superstition and oddity a fresh farm gets, or wait for J and V3.
+
+Build it now; the attention budget's endowed progress is part of V1
+because V1 is the part that creates the slots and the collection.
+
+- Hook one on the gate sign holds Second Sowing from the first day of
+  a fresh farm. Inert like every V1 superstition, card reads "Takes
+  effect next Winter". It is visible on the sign from the start and
+  gets no card of its own in the guided year. The first time the
+  Pedlar parks (second Spring) his greeting mentions it once, one
+  line, after his own: "That one on your gate? Keep it. Lovely
+  weather." Then never again.
+- The collection holds the Twin from the first day: a Russet,
+  Standard grade, same face and rarity edge as the mystery-pack
+  Twin, in the same tab the mystery-pack oddities use at V1. It
+  sells like any pack oddity (grade plus 500) if the player chooses
+  to; the bot never sells it, so the table does not move.
+- Twelve starter seeds already exist (the guide uses them); do not
+  add more.
+- A farm loaded from an older save gets the same two items once on
+  first load after this tag, with no card, so no returning tester
+  sees an empty collection.
+- Tests: a fresh save shows no empty collection page and hook one
+  filled (the check under ATTENTION.md 15); the save validator
+  accepts both items; the ledger does not record either (they are
+  not purchases).
+
+Nothing else in the prompt changes. Carry on from where you stopped.
+
+
+Owner's decision · **2026-10-13**: “nah just do it”. Finish V1 without waiting for the external non-gamer five-second check. The browser and suite checks continue; no human observation or pass is inferred. The unperformed human review remains named in PLAYTEST_22.md and the handoff.
+
+
+## Segment 22 V1 · v2.1.0 · 2026-10-12
+
+Merged the updated plan branch into `redesign` before implementation, including the owner's superstition rename. Fennick passes the gate untappable in the first Spring, with one bell and a wave over twenty seconds; from year two his cart is the sole Spring entrance. The copper-tinted page shows three cash-only packs, their exact printed fractions, a 0.70-second drumroll followed by the two-note cue, and the stamped result at 1.12 seconds. Bought packs stay Sold until next Spring; unbought backs and the independent pack RNG round-trip through saves. Full hooks collect further superstitions without refusing a pack. All twelve remain inert until J.
+
+Blue Pearl's exact values live in balance.gd. Mara never sells its seeds; price boards disclose it only once held. Oddities receive their grade price plus 500 through the existing sale labels, and Undo restores their ledger, stock and collection state. Only the two named Pedlar labels were added. Natural climate events now start in year three; the first guided storm remains. The farmer card saves the farm name for the gate and epilogue. Fresh and older saves receive Second Sowing and the Standard Russet Twin once, without ledger purchases or an extra guide card. Unknown collection cards stay silhouettes; owned cards keep quiet rarity edges.
+
+### v2.1.0 table
+
+Fixed seeds 1–30, with the five existing honest policies and the new gambler. The endowed Twin is retained as collection progress but excluded from simulation stock and never sold, as the owner required. No funds or yields are granted to the bot. The five frozen survival baselines remain those from v2.0.6 (0, 30, 30, 28, 29); all new counts are within two seeds. The plan's §8 table is left for the owner to update from this handoff.
+
+| Strategy | Survived | Median end year | Mean cash | Maximum cash | Mean sales |
+| --- | --- | --- | --- | --- | --- |
+| naive | 0/30 | 5.0 | −245,254.65 | −204,288.99 | 483,638.69 |
+| cautious | 30/30 | 10.0 | 60.75 | 95,596.63 | 1,402,986.83 |
+| tidy | 30/30 | 10.0 | 293,755.95 | 350,722.25 | 1,785,475.63 |
+| diversifier | 30/30 | 10.0 | 82,793.67 | 183,550.81 | 1,369,195.49 |
+| expander | 30/30 | 10.0 | 152,848.09 | 260,278.61 | 2,136,596.57 |
+| gambler | 30/30 | 10.0 | −33,917.73 | 7,696.63 | 1,385,359.37 |
+
+Gambler distribution: minimum **−79,688.57**, mean **−33,917.73**, maximum **7,696.63**; **0/30** above tidy's mean and **0/30** foreclosed. Both counts are reported with “(gate lands in part J)”; their three-seed gates are deferred exactly as the owner's decision says. The gambler plants its won Russet, Giant, Golden, Sunburst and Icecap seeds in the next free beds and sells pack oddities with ordinary stock. Every policy checks that it never plants Blue Pearl. Tidy's sales advantage is **27.26%**, and its mean stays below the unchanged 320,000 gate. The expander's mean exceeds cautious by more than 40,000. The test header records this full table.
+
+Each pack is rolled 10,000 times with fixed seeds; every printed outcome frequency must be within ten percent of its printed fraction. The browser review records eleven 390×844 views using real state, purchases and card phases. Review evidence and final suite totals are recorded in [the release review](style-board/v2.1.0/RELEASE.md).
+
+Final validation · **2026-10-13**: `tools/run_tests.sh -j 2` passes **109/109 suites**, **27,820 reported checks**, with **0 failures, timeouts or errors**. The required additional standalone runs pass **test_epilogue: 537 checks** and **test_tuning_bot: 2,266 checks**, each with zero failures. The new Pedlar suite passes **932 checks**. No test was skipped, disabled or deleted. The standalone bot table matches the full-suite table exactly.
+
+Left undone: the non-gamer five-second card review was not performed; the owner explicitly requested finishing without waiting. No human pass is inferred. The three full fresh-player sessions remain scheduled after V3. Hanging/swapping and superstition effects belong to J, and no later part or public docs-root export is included.

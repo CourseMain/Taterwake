@@ -2292,6 +2292,101 @@ V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
    "gambler" strategy that buys every pack every Spring and report its
    distribution under the variance rule above.
 
+
+#### Segment 22 V1 notes · owner’s decisions
+
+Owner's decision · **2026-10-12** · Q1 · Gambler distribution (min −77,730 / mean −26,608 / max 21,943, 0 of 30 above tidy, 0 of 30 foreclosed). Which requirement changes.
+
+The pack table does not change. The timing of two gates does. The
+variance rule is a rule for the slop as a whole, and at V1 the slop
+has no upside yet: every superstition is inert until part J, the
+price years arrive with V4, and the Pub with V2. A player who buys
+three small fixed-price packs a year cannot get rich or ruined, and
+the bot has just proved it. So at V1:
+
+- Assert now: the gambler's mean lands between naive's and tidy's
+  (it does); the gambler's survival is within two seeds of
+  cautious's (packs are cash-only and can never foreclose anyone);
+  no gambler seed ends above 640,000.
+- Report, do not assert: seeds above tidy's mean and seeds
+  foreclosed. Print both lines in the bot output with the text
+  "(gate lands in part J)". The two gates (at least 3 of 30 above
+  tidy, at least 3 of 30 foreclosed) are asserted from part J
+  onward and re-checked at V2 and V4.
+- Add one check that V1 can honestly make and the player is owed:
+  the odds printed on the back of each pack are the odds rolled.
+  Roll each pack 10,000 times with a fixed seed; every outcome's
+  frequency lands within a tenth of its printed fraction (Blue Pearl
+  1 in 20 means 450 to 550 of 10,000). Fail on any outcome outside
+  that band.
+
+Also confirm in the handoff that the gambler plants the seeds it wins
+(Russet, Giant, Golden, Sunburst, Icecap) in the next free beds and
+sells the pack oddities with its ordinary stock, and that it never
+plants Blue Pearl, as the plan says for every bot.
+
+Owner's decision · **2026-10-12** · Q2 · Year two without climate events raises tidy's max to 350,722 and expander's mean to 152,848. May the old per-run 320,000 and expander 80,000–120,000 checks be replaced by V1's mean and survival checks.
+
+Yes. Both old checks were tuned under year-two disasters and the plan
+says to re-run and re-record for this change. In test_tuning_bot.gd:
+
+- Line 37, the per-run cash ceiling: keep a ceiling, raise it.
+  Honest strategies (naive, cautious, tidy, diversifier, expander):
+  no completed run above 400,000. Variance strategies (gambler, and
+  punter and trader when they arrive): no run above 640,000. Keep
+  the message format so the failing seed is named.
+- Line 45 stays as written: tidy's mean below 320,000. If the re-run
+  puts tidy's mean at or above 320,000, stop at that step and report
+  the number; that lever is the owner's, do not retune anything.
+- Line 48, the expander 80,000–120,000 band: delete. Line 47 stays
+  (expander between cautious and tidy). Add: expander's mean at least
+  40,000 above cautious's, the same gap the diversifier check uses.
+- Add the two-seed rule from the lines that hold: each honest
+  strategy's survival within two seeds of the frozen table (naive 0,
+  cautious 30, tidy 30, diversifier 28, expander 29). Hard-code those
+  five numbers in the test with a comment naming the tag they come
+  from; re-record them only when a plan part says re-record.
+- The tidy sales-advantage band (15–40%) and the rest stay.
+
+Re-record the full table (survived, median end year, mean, max, mean
+sales for all five honest strategies plus the gambler) in
+DEVELOPMENT.md and in the test's header comment, and name it the
+v2.1.0 table. The plan's §8 table is updated on the plan branch by the
+owner from your handoff.
+
+Owner's decision · **2026-10-12** · Q3 · Which starting superstition and oddity a fresh farm gets, or wait for J and V3.
+
+Build it now; the attention budget's endowed progress is part of V1
+because V1 is the part that creates the slots and the collection.
+
+- Hook one on the gate sign holds Second Sowing from the first day of
+  a fresh farm. Inert like every V1 superstition, card reads "Takes
+  effect next Winter". It is visible on the sign from the start and
+  gets no card of its own in the guided year. The first time the
+  Pedlar parks (second Spring) his greeting mentions it once, one
+  line, after his own: "That one on your gate? Keep it. Lovely
+  weather." Then never again.
+- The collection holds the Twin from the first day: a Russet,
+  Standard grade, same face and rarity edge as the mystery-pack
+  Twin, in the same tab the mystery-pack oddities use at V1. It
+  sells like any pack oddity (grade plus 500) if the player chooses
+  to; the bot never sells it, so the table does not move.
+- Twelve starter seeds already exist (the guide uses them); do not
+  add more.
+- A farm loaded from an older save gets the same two items once on
+  first load after this tag, with no card, so no returning tester
+  sees an empty collection.
+- Tests: a fresh save shows no empty collection page and hook one
+  filled (the check under ATTENTION.md 15); the save validator
+  accepts both items; the ledger does not record either (they are
+  not purchases).
+
+Nothing else in the prompt changes. Carry on from where you stopped.
+
+
+
+Owner's decision · **2026-10-13**: “nah just do it”. Finish V1 without waiting for the external non-gamer five-second check. The browser and suite checks continue; no human observation or pass is inferred. The unperformed human review remains named in PLAYTEST_22.md and the handoff.
+
 V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    Summer and a betting slip. One weather rumour ("Storm this
    Summer?"), one price rumour ("Golden up by Winter?"), one farm
