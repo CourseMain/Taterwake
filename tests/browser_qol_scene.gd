@@ -101,6 +101,8 @@ var visual_start: float = -1
 var baseline_scale: Vector2
 var baseline_rotation: float
 var baseline_pressed: bool
+var baseline_draw_mode: int
+var baseline_focus: bool
 var baseline_text: String
 
 func _latency_prepare(view: String) -> void:
@@ -206,13 +208,14 @@ func _latency_target(index: int) -> void:
 	for frame in range(6): await get_tree().process_frame
 	tap_start = -1; visual_start = -1
 	baseline_scale = armed.scale; baseline_rotation = armed.rotation; baseline_pressed = armed.is_pressed(); baseline_text = armed.text
+	baseline_draw_mode = armed.get_draw_mode(); baseline_focus = armed.has_focus()
 	JavaScriptBridge.eval("window.qolTap=null",true)
 	is_ready = true
 	_publish()
 
 func _latency_paint() -> void:
 	if tap_start < 0 or visual_start >= 0: return
-	if not is_instance_valid(armed) or not armed.is_visible_in_tree() or armed.scale != baseline_scale or not is_equal_approx(armed.rotation,baseline_rotation) or armed.is_pressed() != baseline_pressed or armed.text != baseline_text:
+	if not is_instance_valid(armed) or not armed.is_visible_in_tree() or armed.scale != baseline_scale or not is_equal_approx(armed.rotation,baseline_rotation) or armed.is_pressed() != baseline_pressed or armed.get_draw_mode() != baseline_draw_mode or armed.has_focus() != baseline_focus or armed.text != baseline_text:
 		visual_start = float(JavaScriptBridge.eval("performance.now()",true))
 		JavaScriptBridge.eval("window.qolTap=" + JSON.stringify({"input":tap_start,"paint":visual_start,"visual_ms":visual_start-tap_start}),true)
 
