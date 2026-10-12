@@ -2135,6 +2135,14 @@ V4. The Exchange: a live market board, all year. The owner's call,
       at the right, and an arrow for the last change. One tap on a
       line selects that potato for selling; no separate page per
       potato. The board is one concept: "the market".
+      The chart must show change, not a flat line: each row's
+      vertical scale fits its own last 90 s (18 ticks at five
+      seconds), with a minimum span of 8% of the mean (so a 2% tick is
+      a quarter of the row's height) and a maximum of 60% (so a boom
+      still fits). Draw it as a stepped line, one step per tick, the
+      last step thicker, with the window's low and high as tiny
+      labels at the ends. Never a fixed 0 to 3x axis, never a smooth
+      curve. The kit's "The market board" mockup is the layout.
    4. The HUD keeps only the selected potato's price on the Sell
       button; the board is behind one tap. No other number joins the
       play screen.
