@@ -15,6 +15,14 @@ const fs=require('node:fs');
     const old=await page.evaluate(()=>window.surfaceReport.request);
     await page.evaluate(key=>window.surfaceQA(key),key);
     await page.waitForFunction(({old,key})=>window.surfaceReport?.ready&&window.surfaceReport.request>old&&window.surfaceReport.page===key.split(':')[0],{old,key},{timeout:120000});
+    if(key==='qol_hotbar'){
+     const report=await page.evaluate(()=>window.surfaceReport);
+     const tile=report.buttons.find(button=>button.action==='tool:harvest');
+     assert(tile,'Harvest tile is visible');
+     const [x,y,w,h]=tile.rect;
+     await page.mouse.move((x+w/2)*width/report.logical_size[0],(y+h/2)*height/report.logical_size[1]);
+     await page.waitForTimeout(650);
+    }
     const capture=key.replace(':','-')+'-'+width+'.png';
     await page.screenshot({path:out+'/'+capture});reports.push({...await page.evaluate(()=>window.surfaceReport),capture,css_size:[width,height]});
     console.log('Captured',key,width+'x'+height);
