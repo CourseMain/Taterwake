@@ -1,0 +1,1296 @@
+{
+  "results": [
+    {
+      "view": "pedlar_page",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        225,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 10,
+      "sound_ms": 10.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 9775.5,
+          "paint": 9784.5,
+          "visual_ms": 9
+        },
+        "dom": 9774.5,
+        "audio": 9784.79999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_page",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        49.2307815551758,
+        469.307678222656,
+        123.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 65.60000000892069,
+      "sound_ms": 15.300000011920929,
+      "diagnostic": {
+        "tap": {
+          "input": 12503,
+          "paint": 12568.299999997,
+          "visual_ms": 65.2999999970198
+        },
+        "dom": 12502.699999988079,
+        "audio": 12518,
+        "peak": 0.003959522116929293,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_page",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        210.23078918457,
+        469.307678222656,
+        178.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 66.40000000592045,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 15252.599999994,
+          "paint": 15318.599999994,
+          "visual_ms": 66
+        },
+        "dom": 15252.199999988079,
+        "audio": 15269.699999988079,
+        "peak": 0.00011437408102210611,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_page",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        426.230773925781,
+        469.307678222656,
+        124.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 66.59999999407955,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 18019.3999999911,
+          "paint": 18085.3999999911,
+          "visual_ms": 66
+        },
+        "dom": 18018.79999999702,
+        "audio": 18035.89999999106,
+        "peak": 0.00011437408102210611,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 6,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_refused",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        203,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.099999994079553,
+      "sound_ms": 15.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 22836.299999997,
+          "paint": 22850.8999999911,
+          "visual_ms": 14.5999999940395
+        },
+        "dom": 22835.79999999702,
+        "audio": 22851.09999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 8,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_refused",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        49.2307815551758,
+        491.307678222656,
+        123.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 66.7999999970416,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 25584.3999999911,
+          "paint": 25650.6999999881,
+          "visual_ms": 66.2999999970198
+        },
+        "dom": 25583.89999999106,
+        "audio": 25600.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 9,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_refused",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        210.23078918457,
+        491.307678222656,
+        178.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 66.89999999108113,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 28317.1999999881,
+          "paint": 28383.6999999881,
+          "visual_ms": 66.5
+        },
+        "dom": 28316.79999999702,
+        "audio": 28333.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 10,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_refused",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        426.230773925781,
+        491.307678222656,
+        124.384613037109,
+        567.384643554688
+      ],
+      "text": "",
+      "visual_ms": 66.29999999700158,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 31068,
+          "paint": 31133.799999997,
+          "visual_ms": 65.7999999970198
+        },
+        "dom": 31067.5,
+        "audio": 31083.79999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 11,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_collection",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        55.3846130371094,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.900000005938637,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 35383.799999997,
+          "paint": 35399.299999997,
+          "visual_ms": 15.5
+        },
+        "dom": 35383.39999999106,
+        "audio": 35399.59999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 12,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_collection",
+      "action": "dex_tab:varieties",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        205.384613037109,
+        255,
+        146
+      ],
+      "text": "Varieties",
+      "visual_ms": 16.60000000891887,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 37883.599999994,
+          "paint": 37899.799999997,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 37883.19999998808,
+        "audio": 37900,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 13,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_collection",
+      "action": "dex_tab:superstitions",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        299.923095703125,
+        205.384613037109,
+        255,
+        146
+      ],
+      "text": "Superstitions",
+      "visual_ms": 17.10000000891887,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 40399.599999994,
+          "paint": 40416.299999997,
+          "visual_ms": 16.7000000029802
+        },
+        "dom": 40399.19999998808,
+        "audio": 40416.59999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 14,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        36.9230880737305,
+        721,
+        121,
+        108
+      ],
+      "text": "Straw",
+      "visual_ms": 16.30000001192093,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 44784.099999994,
+          "paint": 44800,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 44783.69999998808,
+        "audio": 44800.19999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 15,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        170.923095703125,
+        721,
+        122,
+        108
+      ],
+      "text": "Flower",
+      "visual_ms": 15.99999999996362,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 47317.799999997,
+          "paint": 47333.099999994,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 47317.09999999404,
+        "audio": 47333.29999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 16,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": true,
+      "index": 2,
+      "rect": [
+        305.923095703125,
+        721,
+        122,
+        108
+      ],
+      "text": "Scarf",
+      "visual_ms": 17.299999997041596,
+      "sound_ms": 17.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 49850.5,
+          "paint": 49867.1999999881,
+          "visual_ms": 16.6999999880791
+        },
+        "dom": 49849.89999999106,
+        "audio": 49867.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 17,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        440.923095703125,
+        721,
+        122,
+        108
+      ],
+      "text": "None",
+      "visual_ms": 16.200000002980232,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 52400.6999999881,
+          "paint": 52416.5,
+          "visual_ms": 15.8000000119209
+        },
+        "dom": 52400.29999999702,
+        "audio": 52416.79999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 18,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        36.9230880737305,
+        845,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.5,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 54933.799999997,
+          "paint": 54950,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 54933.5,
+        "audio": 54950.19999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 19,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        117.92308807373,
+        845,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 17,
+      "sound_ms": 17.19999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 57482.8999999911,
+          "paint": 57499.5,
+          "visual_ms": 16.6000000089407
+        },
+        "dom": 57482.5,
+        "audio": 57499.69999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 20,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        198.923095703125,
+        845,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 15.700000002980232,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 60033.6999999881,
+          "paint": 60049,
+          "visual_ms": 15.3000000119209
+        },
+        "dom": 60033.29999999702,
+        "audio": 60049.29999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 21,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        279.923095703125,
+        845,
+        67.6923217773438,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.30000001192093,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 62583.599999994,
+          "paint": 62599.5,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 62583.19999998808,
+        "audio": 62599.69999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 22,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        36.9230880737305,
+        929,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 13.699999988100899,
+      "sound_ms": 14,
+      "diagnostic": {
+        "tap": {
+          "input": 65135.8999999911,
+          "paint": 65149.1999999881,
+          "visual_ms": 13.2999999970198
+        },
+        "dom": 65135.5,
+        "audio": 65149.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 23,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        117.92308807373,
+        929,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.500000000043656,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 67683.1999999881,
+          "paint": 67699.3999999911,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 67682.89999999106,
+        "audio": 67699.59999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 24,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        198.923095703125,
+        929,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 15.59999999399588,
+      "sound_ms": 15.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 70216.3999999911,
+          "paint": 70231.599999994,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 70216,
+        "audio": 70231.79999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 25,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        279.923095703125,
+        929,
+        67.6923217773438,
+        68
+      ],
+      "text": "",
+      "visual_ms": 17.200000003023888,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 72765.5,
+          "paint": 72782.3999999911,
+          "visual_ms": 16.8999999910593
+        },
+        "dom": 72765.19999998808,
+        "audio": 72782.59999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 26,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_farmer",
+      "action": "close",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        36.9230880737305,
+        1013,
+        526,
+        73
+      ],
+      "text": "Walk out to the field",
+      "visual_ms": 16.000000000043656,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 75299.6999999881,
+          "paint": 75315.3999999911,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 75299.39999999106,
+        "audio": 75315.69999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 27,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_greeting",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.599999994054087,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 79615.3999999911,
+          "paint": 79631.6999999881,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 79615.09999999404,
+        "audio": 79632,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 28,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_greeting",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        855.184631347656,
+        480,
+        110
+      ],
+      "text": "Open pedlar",
+      "visual_ms": 16.599999994054087,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 82115.5,
+          "paint": 82131.6999999881,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 82115.09999999404,
+        "audio": 82131.89999999106,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 29,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_greeting",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        973.184631347656,
+        480,
+        110
+      ],
+      "text": "Three packs. One's good.",
+      "visual_ms": 16.299999997005216,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 84632.3999999911,
+          "paint": 84648.299999997,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 84632,
+        "audio": 84648.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 30,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pedlar_greeting",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1091.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 16.499999999985448,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 87132.1999999881,
+          "paint": 87148.299999997,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 87131.79999999702,
+        "audio": 87148.5,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 31,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        186,
+        108,
+        368,
+        126
+      ],
+      "text": "Close controls",
+      "visual_ms": 16.100000008940697,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 91134,
+          "paint": 91149.5,
+          "visual_ms": 15.5
+        },
+        "dom": 91133.39999999106,
+        "audio": 91149.69999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 32,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        186,
+        242,
+        180,
+        125.846153259277
+      ],
+      "text": "Hoe",
+      "visual_ms": 16.500000000014552,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 93483.599999994,
+          "paint": 93499.6999999881,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 93483.19999998808,
+        "audio": 93500,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 33,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        374,
+        242,
+        180,
+        125.846153259277
+      ],
+      "text": "Seeds",
+      "visual_ms": 16.100000008926145,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 95850.099999994,
+          "paint": 95865.799999997,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 95849.69999998808,
+        "audio": 95866,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 34,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        186,
+        375,
+        180,
+        125.846153259277
+      ],
+      "text": "Water",
+      "visual_ms": 16.299999997005216,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 98217,
+          "paint": 98232.799999997,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 98216.5,
+        "audio": 98233.09999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 35,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        374,
+        375,
+        180,
+        125.846153259277
+      ],
+      "text": "Harvest",
+      "visual_ms": 16.400000005960464,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 100583.599999994,
+          "paint": 100599.5,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 100583.09999999404,
+        "audio": 100599.69999998808,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 36,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        186,
+        508,
+        180,
+        125.846153259277
+      ],
+      "text": "Sprayer",
+      "visual_ms": 13.799999996976112,
+      "sound_ms": 14.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 102952.299999997,
+          "paint": 102965.599999994,
+          "visual_ms": 13.2999999970198
+        },
+        "dom": 102951.79999999702,
+        "audio": 102965.89999999106,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 37,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        374,
+        508,
+        180,
+        125.846153259277
+      ],
+      "text": "Crop",
+      "visual_ms": 17.700000002980232,
+      "sound_ms": 18,
+      "diagnostic": {
+        "tap": {
+          "input": 105316.699999988,
+          "paint": 105334,
+          "visual_ms": 17.3000000119209
+        },
+        "dom": 105316.29999999702,
+        "audio": 105334.29999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 38,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        186,
+        641,
+        368,
+        126
+      ],
+      "text": "Zoom +",
+      "visual_ms": 15.900000005945913,
+      "sound_ms": 16.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 107683.299999997,
+          "paint": 107698.799999997,
+          "visual_ms": 15.5
+        },
+        "dom": 107682.89999999106,
+        "audio": 107699,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 39,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        186,
+        775,
+        368,
+        126
+      ],
+      "text": "Zoom −",
+      "visual_ms": 15.200000002922025,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 110050.099999994,
+          "paint": 110064.899999991,
+          "visual_ms": 14.7999999970198
+        },
+        "dom": 110049.69999998808,
+        "audio": 110065.09999999404,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 40,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        186,
+        909,
+        368,
+        126
+      ],
+      "text": "Recenter view",
+      "visual_ms": 16.799999996976112,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 112416.199999988,
+          "paint": 112432.599999994,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 112415.79999999702,
+        "audio": 112432.79999999702,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 41,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        186,
+        1043,
+        368,
+        126
+      ],
+      "text": "Cancel task",
+      "visual_ms": 15.299999996976112,
+      "sound_ms": 15.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 114783.099999994,
+          "paint": 114798.099999994,
+          "visual_ms": 15
+        },
+        "dom": 114782.79999999702,
+        "audio": 114798.39999999106,
+        "peak": 0,
+        "state": "running",
+        "sink": "",
+        "game": {
+          "muted": false,
+          "played": 42,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}

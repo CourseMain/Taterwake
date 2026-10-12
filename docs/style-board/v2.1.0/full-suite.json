@@ -1,0 +1,765 @@
+[
+  {
+    "suite": "test_branding",
+    "status": "PASS",
+    "summary": "TATERLAND BRANDING: 7 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_branding.log"
+  },
+  {
+    "suite": "test_camera_hotbar",
+    "status": "PASS",
+    "summary": "CAMERA HOTBAR: 28 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_camera_hotbar.log"
+  },
+  {
+    "suite": "test_clarity",
+    "status": "PASS",
+    "summary": "CLARITY UPDATE: 14 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_clarity.log"
+  },
+  {
+    "suite": "test_climate",
+    "status": "PASS",
+    "summary": "CLIMATE: 78 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate.log"
+  },
+  {
+    "suite": "test_climate_curve",
+    "status": "PASS",
+    "summary": "CLIMATE CURVE: 110 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_curve.log"
+  },
+  {
+    "suite": "test_climate_game",
+    "status": "PASS",
+    "summary": "CLIMATE GAME: 40 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_game.log"
+  },
+  {
+    "suite": "test_climate_lesson",
+    "status": "PASS",
+    "summary": "CLIMATE LESSON: 36 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_lesson.log"
+  },
+  {
+    "suite": "test_climate_operations",
+    "status": "PASS",
+    "summary": "CLIMATE OPERATIONS: 23 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_operations.log"
+  },
+  {
+    "suite": "test_climate_projects",
+    "status": "PASS",
+    "summary": "CLIMATE PROJECTS: 123 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_projects.log"
+  },
+  {
+    "suite": "test_climate_visuals",
+    "status": "PASS",
+    "summary": "CLIMATE VISUALS: 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_climate_visuals.log"
+  },
+  {
+    "suite": "test_crop_growth",
+    "status": "PASS",
+    "summary": "CROP GROWTH: 89 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_crop_growth.log"
+  },
+  {
+    "suite": "test_crop_table",
+    "status": "PASS",
+    "summary": "CROP TABLE: 137 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_crop_table.log"
+  },
+  {
+    "suite": "test_cute_snow",
+    "status": "PASS",
+    "summary": "CUTE SNOW: 32 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_cute_snow.log"
+  },
+  {
+    "suite": "test_day_night",
+    "status": "PASS",
+    "summary": "SEASON SKY: 327 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_day_night.log"
+  },
+  {
+    "suite": "test_debug_access_time",
+    "status": "PASS",
+    "summary": "DEBUG ACCESS AND TIME: 39 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_debug_access_time.log"
+  },
+  {
+    "suite": "test_debug_money_ui",
+    "status": "PASS",
+    "summary": "DEBUG MONEY UI: 29 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_debug_money_ui.log"
+  },
+  {
+    "suite": "test_debug_recovery",
+    "status": "PASS",
+    "summary": "DEBUG RECOVERY: 11 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_debug_recovery.log"
+  },
+  {
+    "suite": "test_disaster_markets",
+    "status": "PASS",
+    "summary": "DISASTER MARKETS: 24 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_disaster_markets.log"
+  },
+  {
+    "suite": "test_diversification",
+    "status": "PASS",
+    "summary": "DIVERSIFICATION: 89 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_diversification.log"
+  },
+  {
+    "suite": "test_economy_scale",
+    "status": "PASS",
+    "summary": "ECONOMY SCALE: 206 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_economy_scale.log"
+  },
+  {
+    "suite": "test_epilogue_scene",
+    "status": "PASS",
+    "summary": "Epilogue scene: 126 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_epilogue_scene.log"
+  },
+  {
+    "suite": "test_farm_alerts",
+    "status": "PASS",
+    "summary": "FARM ALERTS: 16 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_alerts.log"
+  },
+  {
+    "suite": "test_farm_clarity",
+    "status": "PASS",
+    "summary": "FARM CLARITY: 32 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_clarity.log"
+  },
+  {
+    "suite": "test_farm_help",
+    "status": "PASS",
+    "summary": "FARM HELP: 23 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_help.log"
+  },
+  {
+    "suite": "test_farm_interaction",
+    "status": "PASS",
+    "summary": "FARM INTERACTION: 18 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_interaction.log"
+  },
+  {
+    "suite": "test_farm_viewport",
+    "status": "PASS",
+    "summary": "FARM VIEWPORT: 51 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_viewport.log"
+  },
+  {
+    "suite": "test_farm_visuals",
+    "status": "PASS",
+    "summary": "FARM VISUALS: 165 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_visuals.log"
+  },
+  {
+    "suite": "test_feature_ui",
+    "status": "PASS",
+    "summary": "FEATURE PRESENTATION: 2 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_feature_ui.log"
+  },
+  {
+    "suite": "test_feel",
+    "status": "PASS",
+    "summary": "FEEL: 72 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_feel.log"
+  },
+  {
+    "suite": "test_first_tester",
+    "status": "PASS",
+    "summary": "FIRST TESTER: 631 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_first_tester.log"
+  },
+  {
+    "suite": "test_frame_time_recorder",
+    "status": "PASS",
+    "summary": "FRAME TIME RECORDER: 12 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_frame_time_recorder.log"
+  },
+  {
+    "suite": "test_fullscreen_controls",
+    "status": "PASS",
+    "summary": "NATIVE FULLSCREEN: 10 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_fullscreen_controls.log"
+  },
+  {
+    "suite": "test_gacha_removal",
+    "status": "PASS",
+    "summary": "GACHA REMOVAL: 18 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_gacha_removal.log"
+  },
+  {
+    "suite": "test_game",
+    "status": "PASS",
+    "summary": "SPUD VALLEY INTEGRATION: 51 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_game.log"
+  },
+  {
+    "suite": "test_grades",
+    "status": "PASS",
+    "summary": "GRADES: 84 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_grades.log"
+  },
+  {
+    "suite": "test_graphics_preferences",
+    "status": "PASS",
+    "summary": "GRAPHICS PREFERENCES: 37 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_graphics_preferences.log"
+  },
+  {
+    "suite": "test_guidance_polish",
+    "status": "PASS",
+    "summary": "GUIDANCE POLISH: 20 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_guidance_polish.log"
+  },
+  {
+    "suite": "test_harvest_identity",
+    "status": "PASS",
+    "summary": "HARVEST IDENTITY: 22 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_harvest_identity.log"
+  },
+  {
+    "suite": "test_hud_layout",
+    "status": "PASS",
+    "summary": "HUD LAYOUT: 43 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_hud_layout.log"
+  },
+  {
+    "suite": "test_interface_pages",
+    "status": "PASS",
+    "summary": "INTERFACE PAGES: 298 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_interface_pages.log"
+  },
+  {
+    "suite": "test_island_activities",
+    "status": "PASS",
+    "summary": "FARM DUCKS: 26 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_island_activities.log"
+  },
+  {
+    "suite": "test_island_layout",
+    "status": "PASS",
+    "summary": "ISLAND LAYOUT: 160 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_island_layout.log"
+  },
+  {
+    "suite": "test_item_removal",
+    "status": "PASS",
+    "summary": "ITEM REMOVAL: 16 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_item_removal.log"
+  },
+  {
+    "suite": "test_keeper_greeting",
+    "status": "PASS",
+    "summary": "KEEPER GREETINGS: 24 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_keeper_greeting.log"
+  },
+  {
+    "suite": "test_latest_game",
+    "status": "PASS",
+    "summary": "LATEST GAME FEATURES: 43 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_latest_game.log"
+  },
+  {
+    "suite": "test_ledger",
+    "status": "PASS",
+    "summary": "LEDGER: 121 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_ledger.log"
+  },
+  {
+    "suite": "test_map_pan",
+    "status": "PASS",
+    "summary": "MAP PAN: 39 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_map_pan.log"
+  },
+  {
+    "suite": "test_map_zoom",
+    "status": "PASS",
+    "summary": "MAP ZOOM: 18 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_map_zoom.log"
+  },
+  {
+    "suite": "test_market_decisions",
+    "status": "PASS",
+    "summary": "MARKET DECISIONS: 134 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_market_decisions.log"
+  },
+  {
+    "suite": "test_market_dialogue",
+    "status": "PASS",
+    "summary": "MARKET DIALOGUE: 21 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_market_dialogue.log"
+  },
+  {
+    "suite": "test_npc_conversations",
+    "status": "PASS",
+    "summary": "NPC CONVERSATIONS: 311 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_npc_conversations.log"
+  },
+  {
+    "suite": "test_npc_prompts",
+    "status": "PASS",
+    "summary": "NPC PROMPTS: 111 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_npc_prompts.log"
+  },
+  {
+    "suite": "test_pace_and_land",
+    "status": "PASS",
+    "summary": "Pace and land: 674 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_pace_and_land.log"
+  },
+  {
+    "suite": "test_panel_motion",
+    "status": "PASS",
+    "summary": "PANEL MOTION: 134 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_panel_motion.log"
+  },
+  {
+    "suite": "test_pedlar",
+    "status": "PASS",
+    "summary": "PEDLAR: 932 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_pedlar.log"
+  },
+  {
+    "suite": "test_pest_audio",
+    "status": "PASS",
+    "summary": "PEST AUDIO: 14 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_pest_audio.log"
+  },
+  {
+    "suite": "test_pest_schedule",
+    "status": "PASS",
+    "summary": "Pest schedule: 12107 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_pest_schedule.log"
+  },
+  {
+    "suite": "test_placeholder_market",
+    "status": "PASS",
+    "summary": "PLACEHOLDER MARKET: 281 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_placeholder_market.log"
+  },
+  {
+    "suite": "test_play_light",
+    "status": "PASS",
+    "summary": "PLAY LIGHT: 32 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_play_light.log"
+  },
+  {
+    "suite": "test_playability_audit",
+    "status": "PASS",
+    "summary": "PLAYABILITY AUDIT: 6 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_playability_audit.log"
+  },
+  {
+    "suite": "test_profession_removal",
+    "status": "PASS",
+    "summary": "PROFESSION REMOVAL: 172 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_profession_removal.log"
+  },
+  {
+    "suite": "test_protection",
+    "status": "PASS",
+    "summary": "PROTECTION: 245 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_protection.log"
+  },
+  {
+    "suite": "test_purchase_activity_hud",
+    "status": "PASS",
+    "summary": "PURCHASE + PATROL HUD: 23 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_purchase_activity_hud.log"
+  },
+  {
+    "suite": "test_purchase_game",
+    "status": "PASS",
+    "summary": "PURCHASE GAME: 16 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_purchase_game.log"
+  },
+  {
+    "suite": "test_purchase_receipts",
+    "status": "PASS",
+    "summary": "PURCHASE RECEIPTS: 292 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_purchase_receipts.log"
+  },
+  {
+    "suite": "test_purchase_world",
+    "status": "PASS",
+    "summary": "PURCHASE WORLD: 93 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_purchase_world.log"
+  },
+  {
+    "suite": "test_qol_state",
+    "status": "PASS",
+    "summary": "QOL STATE: 24 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_qol_state.log"
+  },
+  {
+    "suite": "test_qol_update",
+    "status": "PASS",
+    "summary": "QOL UPDATE: 40 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_qol_update.log"
+  },
+  {
+    "suite": "test_quest_rewards_hud",
+    "status": "PASS",
+    "summary": "QUEST REWARDS HUD: 8 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_quest_rewards_hud.log"
+  },
+  {
+    "suite": "test_refused_taps",
+    "status": "PASS",
+    "summary": "REFUSED TAPS: 36 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_refused_taps.log"
+  },
+  {
+    "suite": "test_responsive_fit",
+    "status": "PASS",
+    "summary": "RESPONSIVE FIT: 1317 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_responsive_fit.log"
+  },
+  {
+    "suite": "test_round_avatar",
+    "status": "PASS",
+    "summary": "ROUND AVATAR: 12 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_round_avatar.log"
+  },
+  {
+    "suite": "test_sale_undo",
+    "status": "PASS",
+    "summary": "SALE UNDO: 53 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_sale_undo.log"
+  },
+  {
+    "suite": "test_save_safety",
+    "status": "PASS",
+    "summary": "SAVE SAFETY: 28 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_save_safety.log"
+  },
+  {
+    "suite": "test_seed_market",
+    "status": "PASS",
+    "summary": "SEED MARKET: 181 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_seed_market.log"
+  },
+  {
+    "suite": "test_sell_page",
+    "status": "PASS",
+    "summary": "SELL PAGE: 103 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_sell_page.log"
+  },
+  {
+    "suite": "test_shadow_casters",
+    "status": "PASS",
+    "summary": "SHADOW CASTERS: 24 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_shadow_casters.log"
+  },
+  {
+    "suite": "test_simulation",
+    "status": "PASS",
+    "summary": "SPUD VALLEY SIMULATION: 54 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_simulation.log"
+  },
+  {
+    "suite": "test_single_farm",
+    "status": "PASS",
+    "summary": "SINGLE FARM: 256 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_single_farm.log"
+  },
+  {
+    "suite": "test_static_mesh_compiler",
+    "status": "PASS",
+    "summary": "STATIC MESH COMPILER: 295 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_static_mesh_compiler.log"
+  },
+  {
+    "suite": "test_sun_icons",
+    "status": "PASS",
+    "summary": "SUN AND ICONS: 119 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_sun_icons.log"
+  },
+  {
+    "suite": "test_surfaces",
+    "status": "PASS",
+    "summary": "SURFACES: 48 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_surfaces.log"
+  },
+  {
+    "suite": "test_tap_feedback",
+    "status": "PASS",
+    "summary": "TAP FEEDBACK: 8 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tap_feedback.log"
+  },
+  {
+    "suite": "test_three_numbers",
+    "status": "PASS",
+    "summary": "THREE NUMBERS: 83 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_three_numbers.log"
+  },
+  {
+    "suite": "test_title_launch",
+    "status": "PASS",
+    "summary": "TITLE LAUNCH: 82 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_title_launch.log"
+  },
+  {
+    "suite": "test_title_scene",
+    "status": "PASS",
+    "summary": "FARM TITLE: 61 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_title_scene.log"
+  },
+  {
+    "suite": "test_touch_controls",
+    "status": "PASS",
+    "summary": "TOUCH CONTROLS: 248 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_touch_controls.log"
+  },
+  {
+    "suite": "test_tutorial_barn",
+    "status": "PASS",
+    "summary": "TUTORIAL BARN: 37 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tutorial_barn.log"
+  },
+  {
+    "suite": "test_tutorial_game",
+    "status": "PASS",
+    "summary": "TUTORIAL SCENE: 73 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tutorial_game.log"
+  },
+  {
+    "suite": "test_tutorial_hud",
+    "status": "PASS",
+    "summary": "TUTORIAL HUD: 67 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tutorial_hud.log"
+  },
+  {
+    "suite": "test_tutorial_state",
+    "status": "PASS",
+    "summary": "Tutorial state: 47 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tutorial_state.log"
+  },
+  {
+    "suite": "test_tutorial_world",
+    "status": "PASS",
+    "summary": "TUTORIAL WORLD: 39 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tutorial_world.log"
+  },
+  {
+    "suite": "test_ui_audit",
+    "status": "PASS",
+    "summary": "UI AUDIT: 830 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_ui_audit.log"
+  },
+  {
+    "suite": "test_ui_kit",
+    "status": "PASS",
+    "summary": "UI KIT: 686 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_ui_kit.log"
+  },
+  {
+    "suite": "test_ui_polish",
+    "status": "PASS",
+    "summary": "UI POLISH: 38 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_ui_polish.log"
+  },
+  {
+    "suite": "test_village_identity",
+    "status": "PASS",
+    "summary": "VILLAGE IDENTITY: 74 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_village_identity.log"
+  },
+  {
+    "suite": "test_water_loop_game",
+    "status": "PASS",
+    "summary": "WATER LOOP GAME: 15 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_water_loop_game.log"
+  },
+  {
+    "suite": "test_water_loop_state",
+    "status": "PASS",
+    "summary": "CONNECTED WATER STATE: 75 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_water_loop_state.log"
+  },
+  {
+    "suite": "test_weather_dashboard",
+    "status": "PASS",
+    "summary": "WEATHER DASHBOARD: 82 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_weather_dashboard.log"
+  },
+  {
+    "suite": "test_weather_station",
+    "status": "PASS",
+    "summary": "WEATHER STATION: 76 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_weather_station.log"
+  },
+  {
+    "suite": "test_winter_lighting",
+    "status": "PASS",
+    "summary": "WINTER LIGHTING: 16 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_winter_lighting.log"
+  },
+  {
+    "suite": "test_world_feedback",
+    "status": "PASS",
+    "summary": "WORLD FEEDBACK: 60 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_world_feedback.log"
+  },
+  {
+    "suite": "test_world_graphics_quality",
+    "status": "PASS",
+    "summary": "WORLD GRAPHICS QUALITY: 15 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_world_graphics_quality.log"
+  },
+  {
+    "suite": "test_world_rendering_optimization",
+    "status": "PASS",
+    "summary": "WORLD RENDERING OPTIMIZATION: 97 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_world_rendering_optimization.log"
+  },
+  {
+    "suite": "test_world_signs",
+    "status": "PASS",
+    "summary": "WORLD SIGNS: 120 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_world_signs.log"
+  },
+  {
+    "suite": "test_epilogue",
+    "status": "PASS",
+    "summary": "Epilogue: 537 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_epilogue.log"
+  },
+  {
+    "suite": "test_farm_audio",
+    "status": "PASS",
+    "summary": "FARM AUDIO: 145 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_farm_audio.log"
+  },
+  {
+    "suite": "test_season_clock",
+    "status": "PASS",
+    "summary": "SEASON CLOCK: 127 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_season_clock.log"
+  },
+  {
+    "suite": "test_tuning_bot",
+    "status": "PASS",
+    "summary": "Tuning bot: 2266 checks, 0 failures",
+    "exit_code": 0,
+    "log": "artifacts/test-results/test_tuning_bot.log"
+  }
+]
