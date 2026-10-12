@@ -116,6 +116,8 @@ func _latency_prepare(view: String) -> void:
 	game.touch_controls.drawer.hide()
 	if is_instance_valid(game.epilogue_screen): game._close_epilogue(false)
 	var base: String = view.get_slice("/",0)
+	if base == "guide_exit": base = "guide_grow"
+	if base == "title_confirm": base = "title"
 	if base == "tool_tiles": base = "play_spring"
 	if base == "guide": base = "guide_welcome"
 	if base == "market_undo": base = "market_sell"
@@ -127,6 +129,8 @@ func _latency_prepare(view: String) -> void:
 	game.hud._debug_unlocked = view == "debug"
 	await super._present(base,ticket)
 	is_ready = false
+	if view == "guide_exit": game.hud._act("tutorial:exit")
+	if view == "title_confirm": game.title_scene._confirm_new_farm()
 	if view == "reset_confirm": game.hud._act("request_reset")
 	if view == "farm_tip":
 		game.state.farm_help.enable()
@@ -173,7 +177,7 @@ func _latency_prepare(view: String) -> void:
 	if view == "epilogue": roots = [game.epilogue_screen]
 	if view == "foreclosure": roots = [game.hud._run_end]
 	if view == "field_notes": roots = game.hud.root.find_children("*","AcceptDialog",true,false)
-	if view == "title": roots = [game.title_scene]
+	if view in ["title", "title_confirm"]: roots = [game.title_scene]
 	if view == "front_page": roots = [game.year_intro]
 	for branch in roots:
 		if branch is AcceptDialog and branch.visible: latency_buttons.append(branch.get_ok_button())
