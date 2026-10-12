@@ -1966,6 +1966,16 @@ The simplicity contract (every part below is bound by it):
   Hand, Oswald, Nunito Sans) go. The rounded-blob display look reads
   as generated and is out. Owner picks the pair from three printed
   samples on a phone before any screen is built.
+- Quiet theme, one pop (from tester 1: "too many things pop out").
+  Every page has one theme colour, its keeper's or its place's, used
+  quietly: a tint at about 30% strength on the header band, the card
+  edge and the selected row, never on fills. Everything else is paper,
+  ink and muted. Exactly one element on a page is at full chroma, the
+  one thing to tap next; at most one more may join it when a result
+  lands (a stamp, a won card, a boom). Rows, chips, lines and icons
+  that are not the pop use the muted version of their colour. The
+  farm behind a page stays at 70% light. Rule of thumb: squint at the
+  screen; if more than two things still stand out, it fails.
 - No new number on the HUD. The bill and the purse are the only money
   shown outside a page. Multipliers are never shown as digits larger
   than 3 and never as a running total.
