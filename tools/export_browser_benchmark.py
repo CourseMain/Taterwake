@@ -88,6 +88,11 @@ if args.fixture in ['qol', 'pedlar']:
     shutil.copy2(root / 'tests/browser_surfaces_scene.gd', project / 'qa_base.gd')
     fixture = project / 'qa.gd'
     fixture.write_text(fixture.read_text().replace('res://tests/browser_surfaces_scene.gd', 'res://qa_base.gd'))
+    if args.fixture == 'pedlar':
+        latency = project / 'qa_latency.gd'
+        shutil.copy2(root / 'tests/browser_qol_scene.gd', latency)
+        latency.write_text(latency.read_text().replace('res://tests/browser_surfaces_scene.gd', 'res://qa_base.gd'))
+        fixture.write_text(fixture.read_text().replace('res://tests/browser_qol_scene.gd', 'res://qa_latency.gd'))
 (project / 'qa.tscn').write_text('[gd_scene load_steps=2 format=3]\n[ext_resource type="Script" path="res://qa.gd" id="1"]\n[node name="BrowserQA" type="Node"]\nscript = ExtResource("1")\n')
 config = (project / 'project.godot').read_text().replace('res://scenes/main.tscn', 'res://qa.tscn')
 (project / 'project.godot').write_text(config)

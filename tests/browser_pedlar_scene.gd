@@ -1,7 +1,12 @@
-extends "res://tests/browser_surfaces_scene.gd"
+extends "res://tests/browser_qol_scene.gd"
 ## V1 screenshots use real state, purchases, card phases and cart geometry.
+var pack_visual_before: Array = []
+var pack_refusal_before
+var pack_rotation_before: float = 0.0
 func command(args: Array) -> void:
-	if not args.is_empty() and str(args[0]).begins_with("pedlar_"):
+	if not args.is_empty() and str(args[0]).begins_with("latency:page:pedlar_"):
+		request += 1; _pedlar_latency(str(args[0]).trim_prefix("latency:page:"),request)
+	elif not args.is_empty() and str(args[0]).begins_with("pedlar_"):
 		request += 1; _present_pedlar(str(args[0]),request)
 	else: super.command(args)
 func _present_pedlar(view: String, ticket: int) -> void:
@@ -47,6 +52,8 @@ func _present_pedlar(view: String, ticket: int) -> void:
 		game.state.seed_inventory.blue_pearl = 1; game.state.pedlar.data.discovered.append("blue_pearl")
 		game.hud.show_market(true,game.state)
 	if view == "pedlar_farmer": game.hud.show_panel("farmer",game.state)
+	if view == "pedlar_greeting":
+		game._start_conversation("fennick","pedlar",true); game.conversation.reveal()
 	game.hud.advance_panel_entrance(.8)
 	for frame in range(10): await get_tree().process_frame
 	game.hud.Kit.fit(game.hud); game.touch_controls.fit_modal()
@@ -61,3 +68,25 @@ func _publish() -> void:
 		last_report.pedlar.windup = page.windup_elapsed
 		last_report.pedlar.result_visible = page.result_card.visible
 	_publish_raw()
+
+func _pedlar_latency(view: String, ticket: int) -> void:
+	latency_mode = false; armed = null
+	await _present_pedlar(view,ticket)
+	is_ready = false
+	await _latency_ready(view)
+
+func _latency_paint() -> void:
+	if not is_instance_valid(armed) or not armed.has_meta("pack"):
+		super._latency_paint(); return
+	var card = armed.get_parent()
+	# Pack hit targets are transparent. Measure the drawing, not native press state.
+	var drawn: Array = [card.edge,card.scale,card.position]
+	var refusal = card.get_meta("refusal_tween",null)
+	if tap_start < 0:
+		pack_visual_before = drawn; pack_refusal_before = refusal; pack_rotation_before = card.rotation
+		return
+	# Hover tilt alone is not feedback. A new refusal tween rotates the drawing.
+	var shaken: bool = refusal != pack_refusal_before and not is_equal_approx(card.rotation,pack_rotation_before)
+	if visual_start >= 0 or drawn == pack_visual_before and not shaken: return
+	visual_start = float(JavaScriptBridge.eval("performance.now()",true))
+	JavaScriptBridge.eval("window.qolTap="+JSON.stringify({"input":tap_start,"paint":visual_start,"visual_ms":visual_start-tap_start}),true)

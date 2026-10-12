@@ -180,6 +180,9 @@ func _latency_prepare(view: String) -> void:
 			var section: String = str(key).trim_suffix(":toggle")
 			if game.hud._refs.has(section) and not game.hud._refs[section].visible:
 				game.hud._act("toggle_details:" + section)
+	await _latency_ready(view)
+
+func _latency_ready(view: String) -> void:
 	preload("res://scripts/sound_mix.gd").quieter = false
 	latency_mode = true
 	game.seasonal_ambience.set_process(false)
@@ -190,7 +193,7 @@ func _latency_prepare(view: String) -> void:
 	latency_buttons.clear()
 	var roots: Array = [game.hud._modal_card] if game.hud.is_panel_open() else [game.hud._tutorial_card]
 	if view == "tool_tiles": roots = [game.touch_controls.drawer]
-	if view.begins_with("npc"): roots = [game.conversation]
+	if view.begins_with("npc") or game.conversation.visible: roots = [game.conversation]
 	if view == "epilogue": roots = [game.epilogue_screen]
 	if view == "foreclosure": roots = [game.hud._run_end]
 	if view == "field_notes": roots = game.hud.root.find_children("*","AcceptDialog",true,false)

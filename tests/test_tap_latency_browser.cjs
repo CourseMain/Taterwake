@@ -5,38 +5,48 @@ const URL=process.argv[2],out=process.argv[3];
 const views=['tool_tiles','market','market_sell/russet','market_sell/giant','market_sell/golden','market_sell/sunburst','market_sell/icecap','market_undo','field_notes','accounts','year1_accounts','barn','inventory','tools','quests','menu','pause','calendar','grades','farmer','decorations','duck_patrol','dex','climate','help','farm_tip','graphics','save_page','reset_confirm','debug_locked','debug','measurement','sound','sleep_confirm','practice','sale_reveal','run_summary','foreclosure','epilogue','npc:mara','npc:nell','npc:bram','npc:tess','npc:pip','npc:iris','npc:edwin','npc:mara/story','npc:mara/reply','npc:mara/advice','npc:mara/weather','title','title_confirm','front_page','guide_exit',...Array.from({length:10},(_,i)=>'guide/'+i)];
 (async()=>{
  fs.mkdirSync(out,{recursive:true});
- const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal','--autoplay-policy=no-user-gesture-required']});
+ const browser=await chromium.launch({headless:true,ignoreDefaultArgs:['--mute-audio'],executablePath:process.env.CHROME_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal','--autoplay-policy=no-user-gesture-required']});
  const errors=[],results=[];
  try{
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   await context.addInitScript(()=>{
-   window.qolAudio={onset:null,armed:false,levels:[]};
-   const connect=AudioNode.prototype.connect;
+   window.qolAudio={onset:null,armed:false,outputs:[],sources:[]};
+   const connect=AudioNode.prototype.connect,observed=new WeakSet();
    AudioNode.prototype.connect=function(...args){
-    if(args[0] instanceof AudioDestinationNode && !this.context.__qolAnalyser){
-     const analyser=this.context.createAnalyser();analyser.fftSize=256;
-     const silent=this.context.createGain();silent.gain.value=0;
-     connect.call(this,analyser);connect.call(analyser,silent);connect.call(silent,this.context.destination);
-     this.context.__qolAnalyser=analyser;
+    if(args[0] instanceof AudioDestinationNode&&!observed.has(this)){
+     observed.add(this);window.qolAudio.sources.push(this);
      window.qolAudio.context=this.context;
-     const samples=new Float32Array(256);
-     setInterval(()=>{analyser.getFloatTimeDomainData(samples);let peak=0;for(const v of samples)peak=Math.max(peak,Math.abs(v));window.qolAudio.peak=peak;
-      if(window.qolAudio.armed&&window.qolAudio.onset===null&&peak>0.00001)window.qolAudio.onset=performance.now();
-     },2);
     }
     return connect.apply(this,args);
+   };
+   window.qolInstallAnalysers=()=>{
+    for(const source of window.qolAudio.sources){
+     const analyser=source.context.createAnalyser();analyser.fftSize=256;
+     const silent=source.context.createGain();silent.gain.value=0;
+     connect.call(source,analyser);connect.call(analyser,silent);connect.call(silent,source.context.destination);
+     const output={peak:0};window.qolAudio.outputs.push(output);
+     const samples=new Float32Array(256);
+     setInterval(()=>{
+      analyser.getFloatTimeDomainData(samples);output.peak=0;
+      for(const v of samples)output.peak=Math.max(output.peak,Math.abs(v));
+      window.qolAudio.peak=Math.max(...window.qolAudio.outputs.map(item=>item.peak));
+      if(window.qolAudio.armed&&window.qolAudio.onset===null&&window.qolAudio.peak>0.00001)window.qolAudio.onset=performance.now();
+     },2);
+    }
    };
    addEventListener('pointerdown',()=>{window.qolDOMInput=performance.now();window.qolAudio.onset=null;window.qolAudio.armed=true},true);
   });
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR:|ERROR:/.test(m.text()))errors.push(m.text())});
   await page.goto(URL);await page.waitForFunction(()=>window.surfaceReport?.ready,null,{timeout:120000});
+  // Observe the complete mix after Godot has finished building its audio graph.
+  await page.evaluate(()=>window.qolInstallAnalysers());
   async function prepare(view){
    const previous=await page.evaluate(()=>window.surfaceReport.request);
    await page.evaluate(v=>window.surfaceQA('latency:page:'+v),view);
    await page.waitForFunction(({previous,view})=>window.surfaceReport?.ready&&window.surfaceReport.request>previous&&window.surfaceReport.page==='latency:'+view,{previous,view},{timeout:120000});
    return await page.evaluate(()=>window.surfaceReport);
   }
-  for(const view of views.filter(v=>!process.env.QOL_LATENCY_VIEWS||process.env.QOL_LATENCY_VIEWS.split(',').includes(v))){
+  for(const view of (process.env.QOL_LATENCY_VIEWS ? process.env.QOL_LATENCY_VIEWS.split(',') : views)){
    let report=await prepare(view);const targets=report.latency_buttons;
    if(!targets.length)throw new Error('No card buttons enumerated: '+view);
    for(const target of targets){
@@ -53,7 +63,7 @@ const views=['tool_tiles','market','market_sell/russet','market_sell/giant','mar
     await page.evaluate(()=>{window.qolAudio.onset=null;window.qolAudio.armed=false;window.qolTap=null;window.qolDOMInput=null});
     await page.mouse.move(x,y);await page.mouse.down();await page.waitForTimeout(45);await page.mouse.up();
     await page.waitForTimeout(320);
-    const timing=await page.evaluate(()=>({tap:window.qolTap,dom:window.qolDOMInput,audio:window.qolAudio.onset,peak:window.qolAudio.peak,state:window.qolAudio.context?.state,game:window.qolSound}));
+    const timing=await page.evaluate(()=>({tap:window.qolTap,dom:window.qolDOMInput,audio:window.qolAudio.onset,peak:window.qolAudio.peak,state:window.qolAudio.context?.state,sink:window.qolAudio.context?.sinkId,audio_error:window.qolAudio.error,game:window.qolSound}));
     const visual=timing.tap?timing.tap.paint-timing.dom:null;
     const sound=timing.audio===null?null:timing.audio-timing.dom;
     results.push({view,...target,visual_ms:visual,sound_ms:sound,diagnostic:timing});
