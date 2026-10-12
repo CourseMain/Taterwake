@@ -1701,8 +1701,8 @@ A. The kit (reference page, matched not interpreted):
       Tess brick, Iris sky, the toolsmith iron) used on their page
       header, their portrait frame and their lines on the Winter card.
    3. Rarity colour, for practices, varieties and clothing: common
-      sage edge, uncommon gold edge, rare clay-red edge, found sky-blue
-      edge; always the card edge, never a label.
+      sage edge, uncommon gold edge, rare clay-red edge, new sky-blue
+      edge (a thing seen for the first time this run); always the card edge, never a label.
    4. Cards are chunky: 3 px wood edge, radius 12, a 2 px paper inner
       line, a drop shadow; they tilt two degrees on hover and settle on
       tap. Numbers and names in the display face, large. One drawing
@@ -1835,7 +1835,7 @@ F. Vibrancy, second pass. The first pass came back neon: lime grass,
      b8803f · giant d98a4f · golden ffd23f · sunburst ff9f1c · icecap
      7fe3ff · nell 4f8fa8 · mara 5fb33a · tess e0583a · iris 3fa9ff ·
      oda 7a7f8c · common 7fc47a · uncommon f0b429 · rare e0583a ·
-     found 3fa9ff.
+     new 3fa9ff.
    Gates, measured on the Spring noon Web screenshot at 1440x900 with
    the HUD hidden (add the measurement to tests/ as a browser check):
      - fewer than 0.5% of pixels at or above 250 in all three
