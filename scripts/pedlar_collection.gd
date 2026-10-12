@@ -12,15 +12,21 @@ func setup(hud, superstitions: bool) -> void:
 			for tier: String in Model.SUPERSTITIONS:
 				if id in Model.SUPERSTITIONS[tier]: rarity = tier
 			_card(hud,grid,"superstition_card",id,id,"Takes effect next Winter" if id in hud._state.pedlar.data.hooks else "Not hung yet",rarity)
+		for tier: String in Model.SUPERSTITIONS:
+			for id: String in Model.SUPERSTITIONS[tier]:
+				if id not in hud._state.pedlar.data.superstitions: _card(hud,grid,"unfound_card",id,"?","","",true)
 	else:
 		for item: Dictionary in hud._state.pedlar.data.oddities:
 			_card(hud,grid,"oddity",item.crop,item.name,"Sells for grade price plus 500.","uncommon")
+		for title: String in Model.ODDITIES:
+			if not hud._state.pedlar.data.oddities.any(func(item): return item.name == title): _card(hud,grid,"unfound_potato",title,"?","","",true)
 		if hud._state.pedlar.data.stone:
 			_card(hud,grid,"stone","stone","Lucky stone","It does nothing. Keep it.","common")
-func _card(hud, grid: GridContainer, kind: String, id: String, title: String, line: String, rarity: String) -> void:
+func _card(hud, grid: GridContainer, kind: String, id: String, title: String, line: String, rarity: String, unfound: bool = false) -> void:
 	var u: float = Kit.unit(hud)
-	var card = preload("res://scripts/kit_card.gd").new(); card.unit = u; card.edge = Kit.RARITIES[rarity]
-	card.name = "Collected_"+title.replace(" ","_")
+	var card = preload("res://scripts/kit_card.gd").new(); card.unit = u
+	card.edge = Kit.RULE if unfound else Kit.PAPER.lerp(Kit.RARITIES[rarity],.30)
+	card.name = ("Unfound_"+id if unfound else "Collected_"+title).replace(" ","_")
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.custom_minimum_size.x = maxf(0,(hud._body.custom_minimum_size.x-10*u)/2)
 	card.add_theme_stylebox_override("panel",Kit.skin(Kit.PAPER,card.edge,8,12,u)); grid.add_child(card)
@@ -28,4 +34,5 @@ func _card(hud, grid: GridContainer, kind: String, id: String, title: String, li
 	var picture = preload("res://scripts/pedlar_picture.gd").new(); picture.kind = kind; picture.id = id
 	picture.set_meta("oddity_name",title); picture.custom_minimum_size = Vector2(68,68)*u; body.add_child(picture)
 	for words in [[title,18,true],[line,14,false]]:
+		if str(words[0]).is_empty(): continue
 		var text: Label = Kit.label(hud,words[0],words[1],Kit.INK,words[2]); text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; body.add_child(text)

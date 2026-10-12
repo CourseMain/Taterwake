@@ -10,6 +10,11 @@ func _draw() -> void:
 	draw_set_transform(size*.5,0,Vector2.ONE*u)
 	draw_circle(Vector2(0,5),42,Kit.PAPER2)
 	match kind:
+		"unfound_card":
+			draw_rect(Rect2(-25,-35,50,70),Kit.MUTED)
+			draw_rect(Rect2(-25,-35,50,70),Kit.INK,false,3)
+		"unfound_potato":
+			draw_ellipse_silhouette()
 		"seed", "seeds":
 			draw_colored_polygon(PackedVector2Array([Vector2(-20,-26),Vector2(-31,27),Vector2(-20,35),Vector2(22,35),Vector2(31,25),Vector2(19,-26)]),colour)
 			draw_polyline(PackedVector2Array([Vector2(-20,-26),Vector2(-31,27),Vector2(-20,35),Vector2(22,35),Vector2(31,25),Vector2(19,-26),Vector2(-20,-26)]),Kit.INK,3,true)
@@ -46,6 +51,11 @@ func _draw() -> void:
 		_:
 			preload("res://scripts/item_icon.gd").paint(self,{"kind":"crop","crop":id},Rect2(Vector2.ZERO,size))
 	draw_set_transform(Vector2.ZERO)
+func draw_ellipse_silhouette() -> void:
+	var outline := PackedVector2Array()
+	for i in range(32): outline.append(Vector2(cos(i*TAU/32)*26,sin(i*TAU/32)*33))
+	draw_colored_polygon(outline,Kit.MUTED)
+	outline.append(outline[0]); draw_polyline(outline,Kit.INK,2,true)
 func _spud(at: Vector2, scale_value: Vector2, paint: Color) -> void:
 	var points := PackedVector2Array()
 	for i in range(32): points.append(at+Vector2(cos(i*TAU/32)*26,sin(i*TAU/32)*33)*scale_value)

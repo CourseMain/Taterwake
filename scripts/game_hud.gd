@@ -2033,7 +2033,7 @@ func _build_dex() -> void:
 	_body.add_child(Kit.label(self,"What I've grown",22,Kit.INK,true))
 	var tabs := HBoxContainer.new(); tabs.add_theme_constant_override("separation",8); _body.add_child(tabs)
 	for entry in [["Varieties","varieties"],["Superstitions","superstitions"]]:
-		var tab: Button = Kit.button(self,entry[0],"dex_tab:"+entry[1],Kit.PAPER2,{"kind":"symbol","id":"book"})
+		var tab: Button = Kit.button(self,entry[0],"dex_tab:"+entry[1],Kit.PAPER2,{"kind":"place","id":"ledger"})
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tab.button_pressed = _dex_tab == entry[1]
 		tabs.add_child(tab)
 	_panel_crops = _known_crops()

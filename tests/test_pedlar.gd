@@ -164,6 +164,8 @@ func run() -> void:
 	var labels: Array[Node] = game.hud._body.find_children("*","Label",true,false)
 	check(labels.any(func(label): return label.text=="Not hung yet"),"sixth card is visible in Superstitions with Not hung yet")
 	check(game.hud._body.find_children("Collected_*","PanelContainer",true,false).size()==6,"collection retains all owned superstitions")
+	check(game.hud._body.find_children("Unfound_*","PanelContainer",true,false).size()==6 and not labels.any(func(label): return label.text=="Haunted Scarecrow"),"unowned superstitions remain silhouettes without revealed names")
+	check(game.hud._body.find_children("Collected_*","PanelContainer",true,false).all(func(card): return card.edge not in game.hud.Kit.RARITIES.values()),"collection rarity edges stay quiet outside the reveal")
 	game.state.seed_inventory.blue_pearl = 1
 	game.hud.show_market(true,game.state); await settle(); game.hud.advance_panel_entrance(.8)
 	check(game.hud._refs.market_page.sale_rows.size()==6 and game.hud._refs.market_page.sale_rows.has("blue_pearl"),"held Blue Pearl joins the price and sale page")
