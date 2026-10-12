@@ -73,7 +73,7 @@ const GREEN: Color = Color("377858")
 const GOLD: Color = Kit.MONEY
 const CHERRY: Color = Color("bb654d")
 const CropTable = preload("res://scripts/crop_table.gd")
-const CROP_IDS: Array[String] = CropTable.IDS
+const CROP_IDS: Array[String] = CropTable.MARA_IDS
 const ALL_CROP_IDS: Array[String] = CropTable.IDS
 
 const TOOL_COSTS: Dictionary = Balance.TOOL_COSTS
@@ -190,6 +190,7 @@ var _modal_entrance_shield: Control
 var _entrance_elapsed: float = ACCOUNTS_ENTRANCE_SECONDS
 var _entrance_duration: float = ACCOUNTS_ENTRANCE_SECONDS
 var _entrance_origin := Vector2.ZERO
+var _dex_tab: String = "varieties"
 var _panel_source: String = ""
 var _panel_source_tick: int = 0
 var _entrance_offset := Vector2.ZERO
@@ -770,6 +771,8 @@ func _button(text: String, action: String, primary: bool = false) -> Button:
 
 func _act(action: String) -> void:
 	if action.is_empty(): return
+	if action.begins_with("dex_tab:"):
+		_dex_tab = action.get_slice(":",1); show_panel("dex",_state); return
 	if action == "save_page":
 		show_panel("save_page", _state)
 		return
@@ -1649,7 +1652,7 @@ func show_market(selling: bool, state: Node) -> void:
 
 func show_panel(kind: String, state: Node, market_selling: bool = false) -> void:
 	if kind == "market": _market_selling = market_selling
-	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "decorations", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sound", "save_page", "practice", "sale_reveal", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help"]: return
+	if kind not in ["farm_tip", "market", "barn", "inventory", "tools", "decorations", "pause", "menu", "calendar", "grades", "farmer", "accounts", "sound", "save_page", "practice", "sale_reveal", "sleep_confirm", "run_summary", "dex", "quests", "duck_patrol", "debug", "measurement", "graphics", "climate", "help", "pedlar"]: return
 	_accounts_build_request += 1
 	accounts_building = false
 	_state = state
@@ -1708,6 +1711,9 @@ func show_panel(kind: String, state: Node, market_selling: bool = false) -> void
 	scroll.scroll_vertical = 0
 	match kind:
 		"farm_tip": _build_farm_tip()
+		"pedlar":
+			var page := preload("res://scripts/pedlar_page.gd").new()
+			_body.add_child(page); _refs.pedlar_page = page; page.setup(self)
 		"market": _build_market(_market_selling)
 		"barn": _build_buyer_page()
 		"inventory": _build_barn()
@@ -1829,7 +1835,7 @@ func panel_source_position(kind: String) -> Vector2:
 	if kind in ["accounts", "run_summary"]:
 		_panel_source = ""
 		return ledger_screen_position()
-	var places := {"market":"market", "barn":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "accounts":"accounts", "duck_patrol":"duck_patrol"}
+	var places := {"market":"market", "barn":"barn", "tools":"tools", "climate":"climate", "quests":"quests", "accounts":"accounts", "duck_patrol":"duck_patrol", "pedlar":"pedlar"}
 	var station: String = _panel_source if not _panel_source.is_empty() and Time.get_ticks_msec() - _panel_source_tick < 1000 else str(places.get(kind, ""))
 	_panel_source = ""
 	var game = get_parent()
@@ -2023,15 +2029,25 @@ func _style_choice(choice: OptionButton) -> void:
 	popup.add_theme_color_override("font_hover_color", INK)
 
 func _build_dex() -> void:
-	_heading("Crop varieties", "")
+	Kit.configure(self)
+	_body.add_child(Kit.label(self,"What I've grown",22,Kit.INK,true))
+	var tabs := HBoxContainer.new(); tabs.add_theme_constant_override("separation",8); _body.add_child(tabs)
+	for entry in [["Varieties","varieties"],["Superstitions","superstitions"]]:
+		var tab: Button = Kit.button(self,entry[0],"dex_tab:"+entry[1],Kit.PAPER2,{"kind":"symbol","id":"book"})
+		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL; tab.button_pressed = _dex_tab == entry[1]
+		tabs.add_child(tab)
+	_panel_crops = _known_crops()
+	if _dex_tab == "superstitions":
+		var collection = preload("res://scripts/pedlar_collection.gd").new(); _body.add_child(collection); collection.setup(self,true)
+		return
 	_panel_crops = _known_crops()
 	_info("dex_entries", "", CREAM, 14)
 	var grid := GridContainer.new()
-	grid.columns = 2
+	grid.columns = 2 if Kit.desktop(self) else 1
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
 	_body.add_child(grid)
-	var ids: Array = _state.CROP_IDS
+	var ids: Array = _known_crops()
 	for index: int in range(ids.size()):
 		var id: String = str(ids[index])
 		var card := _card(Cozy.WOOD, 14)
@@ -2056,9 +2072,11 @@ func _build_dex() -> void:
 		detail.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		column.add_child(detail)
 		_refs["dex_detail:" + id] = detail
+	var finds = preload("res://scripts/pedlar_collection.gd").new(); _body.add_child(finds); finds.setup(self,false)
 func _refresh_dex() -> void:
-	_refs.dex_entries.text = "%d varieties" % _state.CROP_IDS.size()
-	for id: String in _state.CROP_IDS:
+	if _dex_tab == "superstitions": return
+	_refs.dex_entries.text = "%d varieties" % _known_crops().size()
+	for id: String in _known_crops():
 		_refs["dex_status:" + id].text = "%ds base growth · Spud Valley" % _crop_grow(id)
 		_refs["dex_detail:" + id].text = "%d t per bed" % int(_state.CropTable.CROPS[id]["yield"])
 
@@ -2473,6 +2491,7 @@ func _tutorial_seed_market() -> bool:
 	return not _tutorial.is_empty() and "stock" not in _tutorial.get("features", [])
 
 func _known_crops() -> Array[String]:
+	if is_instance_valid(_state) and _state.has_method("known_crops"): return _state.known_crops()
 	var result: Array[String] = []
 	var seeds: Dictionary = _state.get("seed_inventory") if is_instance_valid(_state) else {}
 	var available: Array[String] = _market_crops()
@@ -3108,6 +3127,18 @@ func _build_farmer() -> void:
 		var clean: String = words.strip_edges()
 		_state.farmer_appearance.name = "Farmer" if clean.is_empty() else clean
 		get_parent().world._player_body.apply_appearance(_state.farmer_appearance))
+	var farm_row := HBoxContainer.new(); farm_row.add_theme_constant_override("separation",ceili(8*u)); _body.add_child(farm_row)
+	farm_row.add_child(Kit.label(self,"Farm name",14))
+	var farm_input := LineEdit.new(); farm_input.text = _state.farm_name(); farm_input.max_length = 20
+	farm_input.custom_minimum_size.y = 44*u; farm_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	farm_input.set_meta("kit_type",true); farm_input.set_meta("text_tier",16)
+	farm_input.add_theme_font_override("font",Type.face(Type.DISPLAY)); farm_input.add_theme_color_override("font_color",Kit.INK)
+	for variant in ["normal","focus"]: farm_input.add_theme_stylebox_override(variant,Kit.skin(Kit.CREAM,Kit.RULE,8,12,u,false))
+	farm_row.add_child(farm_input); _refs.farm_name = farm_input
+	farm_input.text_changed.connect(func(words):
+		var clean: String = str(words).strip_edges().replace("\n","").replace("\r","")
+		_state.farmer_appearance.farm_name = "Taterland" if clean.is_empty() else clean
+		get_parent().pedlar_cart.sync_state())
 	for field in ["hat", "shirt", "skin"]:
 		var choices := HBoxContainer.new(); choices.add_theme_constant_override("separation", ceili(8 * u)); _body.add_child(choices)
 		var options: Array = _state.FarmerLook.choices(_state, field)

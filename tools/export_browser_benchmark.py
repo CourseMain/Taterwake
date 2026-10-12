@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--godot', required=True)
 parser.add_argument('--source', type=Path, default=root)
 parser.add_argument('--label', default='current')
-parser.add_argument('--fixture', choices=['performance', 'climate', 'mobile', 'feel', 'playthrough', 'surfaces', 'title_launch', 'qol'], default='performance')
+parser.add_argument('--fixture', choices=['performance', 'climate', 'mobile', 'feel', 'playthrough', 'surfaces', 'title_launch', 'qol', 'pedlar'], default='performance')
 parser.add_argument('--feel-stage-timings', action='store_true', help='Instrument HUD/touch stages only in the disposable feel fixture')
 args = parser.parse_args()
 assert re.fullmatch(r'[a-zA-Z0-9-]+', args.label)
@@ -84,7 +84,7 @@ if args.fixture == 'feel':
         instrument('farm_visuals.gd', ['sync_state', 'set_winter', 'set_snow_opacity'])
         instrument('main.gd', ['_on_state_changed'])
 shutil.copy2(root / f'tests/browser_{args.fixture}_scene.gd', project / 'qa.gd')
-if args.fixture == 'qol':
+if args.fixture in ['qol', 'pedlar']:
     shutil.copy2(root / 'tests/browser_surfaces_scene.gd', project / 'qa_base.gd')
     fixture = project / 'qa.gd'
     fixture.write_text(fixture.read_text().replace('res://tests/browser_surfaces_scene.gd', 'res://qa_base.gd'))
