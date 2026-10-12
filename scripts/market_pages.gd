@@ -133,7 +133,7 @@ func _build_sell() -> void:
 		var owned := _label("", 14); owned.autowrap_mode = TextServer.AUTOWRAP_OFF; caption.add_child(owned)
 		var quotes := VBoxContainer.new(); quotes.size_flags_horizontal = Control.SIZE_EXPAND_FILL; quotes.add_theme_constant_override("separation", 0); top.add_child(quotes)
 		var quote_row := HBoxContainer.new(); quotes.add_child(quote_row)
-		var price := _label("", 14, Kit.INK, true); price.size_flags_horizontal = Control.SIZE_EXPAND_FILL; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quote_row.add_child(price)
+		var price := _label("", 14, Kit.CROPS[crop], true); price.size_flags_horizontal = Control.SIZE_EXPAND_FILL; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quote_row.add_child(price)
 		var change := _label("", 14); change.autowrap_mode = TextServer.AUTOWRAP_OFF; quote_row.add_child(change)
 		var history := _sparkline(quotes); history.custom_minimum_size = Vector2(0, 32 * u); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var actions := BoxContainer.new(); actions.add_theme_constant_override("separation", ceili(4 * u)); column.add_child(actions)

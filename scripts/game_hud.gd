@@ -2906,7 +2906,7 @@ func _refresh_contracts() -> void:
 
 func _build_diversification() -> void:
 	if _state.season_clock.year < _state.Diversification.Balance.DIVERSIFY_YEAR: return
-	_body.add_child(_label("DIVERSIFY OR DOUBLE DOWN", 18, INK, true))
+	_body.add_child(_wrap("DIVERSIFY OR DOUBLE DOWN", 18, INK, true))
 	var descriptions: Dictionary = {
 		"shop": "Earn %s each Winter after a full year. Running the shop shortens each Summer by %d seconds (%d seconds to farm)." % [_state.money(_state.Diversification.Balance.SHOP_INCOME), _state.Diversification.Balance.SHOP_SUMMER_SECONDS, _state.SeasonClock.SEASON_SECONDS - _state.Diversification.Balance.SHOP_SUMMER_SECONDS],
 		"grower": "From next Spring, accept two different orders at %.1f× the ordinary contract price. Shortfall penalties still apply." % _state.Diversification.Balance.GROWER_PRICE_FACTOR,

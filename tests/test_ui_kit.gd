@@ -108,6 +108,7 @@ func run() -> void:
 		var label: String = tile.text
 		tile.pressed.emit(); await settle()
 		check(tile.text == label and game.hud._refs[str(tile.get_meta("hud_action")).get_slice(":", 1)].visible, "detail tile opens its original section")
+	check(Rect2(Vector2.ZERO, game.hud.root.size).encloses(game.hud._modal_card.get_global_rect()), "expanded account details keep the close button inside the phone")
 	game.hud.show_panel("market", game.state); await settle()
 	var labels: Array[Node] = game.hud._body.find_children("*", "Label", true, false)
 	check(not labels.any(func(label): return label.text.begins_with("1 seasons")) and labels.any(func(label): return label.text.begins_with("1 season ·")), "seed packets use the singular season")
