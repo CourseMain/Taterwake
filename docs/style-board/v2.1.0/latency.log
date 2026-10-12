@@ -1,0 +1,7 @@
+pedlar_page: 4 real button taps
+pedlar_refused: 4 real button taps
+pedlar_collection: 3 real button taps
+pedlar_farmer: 13 real button taps
+pedlar_greeting: 4 real button taps
+tool_tiles: 11 real button taps
+TAP LATENCY: 39 checks, 0 failures; slowest visual 66.90 ms; sound 18.00 ms

@@ -1,0 +1,13 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+naive: survived 0/30, median end year 5.0, mean cash -245254.65, max cash -204288.99, mean sales 483638.69
+cautious: survived 30/30, median end year 10.0, mean cash 60.75, max cash 95596.63, mean sales 1402986.83
+tidy: survived 30/30, median end year 10.0, mean cash 293755.95, max cash 350722.25, mean sales 1785475.63
+diversifier: survived 30/30, median end year 10.0, mean cash 82793.67, max cash 183550.81, mean sales 1369195.49
+expander: survived 30/30, median end year 10.0, mean cash 152848.09, max cash 260278.61, mean sales 2136596.57
+gambler: survived 30/30, median end year 10.0, mean cash -33917.73, max cash 7696.63, mean sales 1385359.37
+Gambler spread: min -79688.57, mean -33917.73, max 7696.63, above tidy mean 0/30, foreclosed 0/30
+Gambler above tidy mean: 0/30 (gate lands in part J)
+Gambler foreclosed: 0/30 (gate lands in part J)
+Tidy ten-year sales advantage: 27.26%
+Tuning bot: 2266 checks, 0 failures
