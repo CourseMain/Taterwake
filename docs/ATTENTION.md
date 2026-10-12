@@ -142,7 +142,7 @@ end of.
 ### 15. Endowed progress
 A card with one stamp on it is a set to complete; an empty card is a
 chore.
-- Rule: new players start with twelve seeds, one filled charm slot and one
+- Rule: new players start with twelve seeds, one filled superstition slot and one
   oddity already in the collection. Every collection page has at least one
   entry before the player has done anything.
 - Check: a fresh save shows no empty collection page.
@@ -172,7 +172,7 @@ year two is a cliff.
 - Check: the bot's cautious strategy survives year two in 30 of 30 seeds.
 
 ### 19. Investment and ownership
-People value what they have shaped. The farmer they dressed, the charm
+People value what they have shaped. The farmer they dressed, the superstition
 they chose, the oddity they named.
 - Rule: the player names the farmer and the farm; the farm name is on the
   gate sign; the epilogue uses both.
@@ -187,9 +187,9 @@ line about you, the Pub cheering, Nell's one smile.
   a fixed list.
 
 ### 21. Curiosity gaps
-A face-down card, a locked tile with a silhouette, a charm name with no
+A face-down card, a locked tile with a silhouette, a superstition name with no
 description until owned.
-- Rule: the collection shows silhouettes of unfound oddities and charms,
+- Rule: the collection shows silhouettes of unfound oddities and superstitions,
   never a blank slot and never a full reveal.
 - Check: the "What I've grown" page shows silhouettes for unknowns.
 

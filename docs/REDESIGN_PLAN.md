@@ -1917,7 +1917,7 @@ the latency fixture passes, the suite passes under -j 2. Tag v2.0.6.
 ```
 Why: the owner's verdict on v2.0.4: "the game is boring, frankly." The
 honest farm is a spreadsheet. Balatro is fun because its maths is
-honest and everything around the maths is slop: charms with stupid
+honest and everything around the maths is slop: superstitions with stupid
 names, packs you flip, a shop that sells garbage, a score that catches
 fire, a legendary once in fifty runs. We built the spreadsheet; this
 segment builds the slop. The split is by place: the farm stays honest
@@ -1943,7 +1943,7 @@ Lines that hold through every part:
   while the honest farm stays honest.
 - One concept per screen, as the contract below says.
 - Cause and effect, always both: every village event, pack result,
-  bet, boom and charm shows one line of cause ("Floods in the east.")
+  bet, boom and superstition shows one line of cause ("Floods in the east.")
   and one line of effect on the player ("Golden sells for 3x this
   Winter."), in that order, nothing else. A player must never wonder
   why something happened or what it does to them.
@@ -1997,7 +1997,7 @@ short form:
   at the first warning, Sell at the first harvest, the Pub in the
   second Summer, the Pedlar in the second Spring.
 - Chunks of three: three numbers, three packs, three rumours, three
-  charms offered. Never four or more choices on one card.
+  superstitions offered. Never four or more choices on one card.
 - Feedback within a second of every tap: something seen and something
   heard, every time.
 - Recognition over recall: places and pictures, never menus; the
@@ -2009,7 +2009,7 @@ short form:
 - Progress near the goal is louder than progress far from it: the
   Winter bill shows as a bar, and the last tonne before break-even
   gets the biggest pop.
-- Start with something endowed: twelve seeds, one filled charm slot,
+- Start with something endowed: twelve seeds, one filled superstition slot,
   one oddity already in the collection.
 - End every year on the sale reveal, not on the bill.
 - Banned, as in part G: streak guilt, timers that punish absence, fake
@@ -2018,7 +2018,7 @@ short form:
 Step 0 (three fresh testers) moves to after V3: test the slop, not the
 spreadsheet.
 
-Order: V1 Pedlar, V2 Pub, V3 Fair and oddities, V4 Exchange, J charms,
+Order: V1 Pedlar, V2 Pub, V3 Fair and oddities, V4 Exchange, J superstitions,
 R the sale reveal, W the wall, M the meta. Each is one Codex session
 and one tag (v2.1.0 onward).
 
@@ -2044,15 +2044,15 @@ V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
      tenth. When part D ships, one pack in five gives a found variety
      instead, taken from Icecap's share.
 
-   Charm pack · 8,000 · one charm card, rarity by weight:
+   Superstition pack · 8,000 · one superstition card, rarity by weight:
      common 3 in 5 · uncommon 3 in 10 · rare 1 in 10.
      Common: Second Sowing, Early Riser, Windbreak Rows, Oda's Spare
      Hoe, Nell's Cat. Uncommon: Lucky Boot, Cold Store, Seed Saver,
      Iris's Mug, Fennick's Thumb. Rare: Haunted Scarecrow, The Cursed
-     One. A charm already owned is re-rolled within its rarity; if
-     every charm of that rarity is owned, the pack pays 2,000 back and
+     One. A superstition already owned is re-rolled within its rarity; if
+     every superstition of that rarity is owned, the pack pays 2,000 back and
      the card says so. Until part J ships the card reads "Takes effect
-     next Winter" and sits in a charm slot doing nothing.
+     next Winter" and sits in a superstition slot doing nothing.
 
    Mystery pack · 2,000 · one of:
      ten Russet seeds ........ 2 in 5 (worth about 2,700)
@@ -2158,8 +2158,9 @@ V4. The Exchange: a live market board, all year. The owner's call,
       gold, Nell saying "Sell. Now." The Pub's price rumour pays out
       here.
 
-J. Charms (the game's jokers, never called that in-game: a charm is
-   a thing you hang on the gate). The practices become charms: absurd
+J. Superstitions (the game's jokers, never called that in-game: a superstition is
+   a thing country folk swear by, hung on the gate; Tess offers them
+   with "Folk swear by it."). The practices become superstitions: absurd
    names, real rule changes, a face on every card. Twelve at launch, four unlocked:
      Lucky Boot ........ the first bed hoed each Spring yields double.
      Nell's Cat ........ pests skip the bed nearest the barn.
@@ -2175,11 +2176,11 @@ J. Charms (the game's jokers, never called that in-game: a charm is
      The Cursed One .... every harvest is one grade worse; every sale
                          pays double. (rare)
    Five slots, drawn on the gate sign. Offered three at a time by Tess
-   each Winter, keep one; also found in Charm packs. A charm changes a
+   each Winter, keep one; also found in Superstition packs. A superstition changes a
    rule, never adds a digit on the HUD.
 
-R. The sale reveal, with fire. Sacks, stamp, season price, each charm
-   lighting up with a pop, then the money. When three charms fire the
+R. The sale reveal, with fire. Sacks, stamp, season price, each superstition
+   lighting up with a pop, then the money. When three superstitions fire the
    card catches fire and the cue goes up a note. Under four seconds,
    tap to skip, same money as now.
 
@@ -2190,7 +2191,7 @@ W. The wall. Nell's bill is the ante, the one number on the play
 
 M. The meta. The seven epilogue outcomes are the collection; regions
    are the decks; climate stakes are the difficulty; every ended run
-   unlocks one charm, oddity or variety, shown on the ending card.
+   unlocks one superstition, oddity or variety, shown on the ending card.
    Clothing rewards stay as they are.
 
 F2. Price years. The first tester's verdict was "no motivation, only
