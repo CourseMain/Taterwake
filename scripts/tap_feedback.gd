@@ -36,11 +36,11 @@ func _press(button: Button) -> void:
 		var reason := "Unavailable now."
 		var action: String = str(button.get_meta("action", ""))
 		if game.tutorial.active: reason = "Follow the guided year."
-		elif action == "market_sell": reason = "Not enough tonnes."
+		elif game.state.run_over: reason = "Run over."
+		elif action == "market_sell" or action.begins_with("sell_amount:"): reason = "Not enough tonnes."
 		elif button.name.begins_with("FarmerChoice_"): reason = "Hat locked. Complete its quest first."
 		elif button.text.contains("Fully upgraded") or button.text.contains("Top speed"): reason = "Fully upgraded. Choose another tool."
 		elif button.text.contains("Hire a duck first"): reason = "No ducks. Hire a duck first."
-		elif game.state.run_over: reason = "Run over."
 		elif action.begins_with("buy") or action.begins_with("upgrade") or action.begins_with("lease") or action.begins_with("build"): reason = game.state.purchase_refusal()
 		game.hud.show_refusal(reason,button)
 	tapped.emit(button)

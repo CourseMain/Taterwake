@@ -24,6 +24,9 @@ func run() -> void:
 	button.gui_input.emit(event)
 	check(button.has_meta("refusal_tween"), "a disabled control answers a refused tap")
 	check(game.state.ledger.save_data() == journal, "disabled feedback cannot commit a transaction")
+	button.set_meta("action", "sell_amount:russet:5"); game.tap_feedback._last_tick -= 31
+	button.gui_input.emit(event)
+	check(game.hud._refusal_caption.text == "Too little stock. Reduce the quantity.", "disabled tonne buttons explain their stock refusal")
 	check(await preload("res://tests/audio_fixture.gd").release(game,self), "audio releases")
 	game.queue_free()
 	for frame in range(8): await process_frame
