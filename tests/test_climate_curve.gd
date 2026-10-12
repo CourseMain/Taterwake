@@ -19,9 +19,9 @@ func fresh():
 func run() -> void:
 	var farm = fresh()
 	for year in range(1, 16):
-		check(is_equal_approx(Climate.chance(year), minf(0.6, 0.15 + 0.04 * (year - 1))), "year chance follows capped curve")
+		check(is_equal_approx(Climate.chance(year), 0.0 if year < 3 else minf(0.6, 0.15 + 0.04 * (year - 3))), "year chance follows capped curve")
 		check(is_equal_approx(Climate.severity_mean(year), 0.5 + 0.03 * (year - 1)), "severity mean follows curve")
-	for year in [1, 6, 10]:
+	for year in [3, 6, 10]:
 		var total: float = 0
 		farm.rng.seed = 410 + year
 		for i in range(12000): total += Climate.draw_severity(farm.rng, year)
@@ -29,7 +29,7 @@ func run() -> void:
 	var counts := {"drought": [0, 0, 0, 0], "flood": [0, 0, 0, 0], "storm": [0, 0, 0, 0]}
 	var outcomes_match: bool = true
 	var signals_match: bool = true
-	for year in [1, 6, 10]:
+	for year in [3, 6, 10]:
 		var strikes: int = 0
 		var signalled: int = 0
 		var signalled_strikes: int = 0
@@ -72,7 +72,7 @@ func run() -> void:
 	for event in counts:
 		check(absf(float(counts[event][1]) / counts[event][0] - 0.7) < 0.025, "seventy percent of actual " + event + " seasons are signalled")
 		check(absf(float(counts[event][3]) / counts[event][2] - 0.1) < 0.025, "ten percent of calm potential " + event + " seasons give false alarms")
-	for year in [1, 6, 10]:
+	for year in [3, 6, 10]:
 		var strikes: int = 0
 		for seed_value in range(2000):
 			farm.climate.reset(); farm.rng.seed = seed_value + year * 2000
@@ -110,14 +110,17 @@ func run() -> void:
 	check(farm.climate.data.phase == "calm" and farm.climate.year_count(1) == 3, "annual cap overrides a saved true occurrence roll")
 	farm.climate.data.outlook.next.fires = true
 	farm.season_clock.year = 2; farm.season_clock.season = 0; farm.climate.start_season(farm)
-	check(farm.climate.data.phase == "warning" and farm.climate.year_count(2) == 1, "new year can honor its saved occurrence after last year's cap")
+	check(farm.climate.data.phase == "calm" and farm.climate.year_count(2) == 0, "year two overrides an old saved true occurrence")
+	farm.climate.data.outlook.next = {"year":3,"season":0,"event":"flood","severity":.5,"fires":true}
+	farm.season_clock.year = 3; farm.climate.start_season(farm)
+	check(farm.climate.data.phase == "warning" and farm.climate.year_count(3) == 1, "year three can honor its saved occurrence after the quiet year")
 	farm.climate.prime_next(farm)
 	for level in range(3):
 		farm.climate.data.protection.station = level
 		farm.climate.data.outlook.next.fires = false
 		var calm_forecast: Dictionary = Protection.forecast(farm)
 		farm.climate.data.outlook.next.fires = true
-		check(Protection.forecast(farm) == calm_forecast and is_equal_approx(calm_forecast.chance, Climate.chance(2)), "forecast at level %d reads curve, never the hidden occurrence roll" % level)
+		check(Protection.forecast(farm) == calm_forecast and is_equal_approx(calm_forecast.chance, Climate.chance(3)), "forecast at level %d reads curve, never the hidden occurrence roll" % level)
 	var malformed: Dictionary = farm.climate.data.outlook.duplicate(true)
 	malformed.next.erase("fires")
 	check(not Climate.valid_outlook(malformed), "saved outlook requires its occurrence roll")

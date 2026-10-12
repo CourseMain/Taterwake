@@ -3,9 +3,13 @@ const HATS := ["seasonal", "straw", "none", "flower", "scarf", "glasses"]
 const SHIRTS := ["5f9fd6", "b5523c", "6f9a4a", "d9a948", "719798", "a86f62", "6c875b", "b99b50"]
 const SKINS := ["f5d9b8", "dbab78", "b57a4a", "7a4a2a", "f0cc9d", "dca86d", "b9825c", "78533b"]
 static func fresh() -> Dictionary:
-	return {"name": "Farmer", "hat": "straw", "shirt": "5f9fd6", "skin": "dbab78", "chosen": false}
+	return {"name": "Farmer", "farm_name":"Taterland", "hat": "straw", "shirt": "5f9fd6", "skin": "dbab78", "chosen": false}
 static func valid(raw: Variant) -> bool:
+	if raw is Dictionary and raw.has("farm_name") and not valid_name(raw.farm_name): return false
 	return raw is Dictionary and raw.get("name") is String and raw.name.length() > 0 and raw.name.length() <= 20 and raw.name == raw.name.strip_edges() and not raw.name.contains("\n") and raw.get("hat") in HATS and raw.get("shirt") in SHIRTS and raw.get("skin") in SKINS and raw.get("chosen") is bool
+
+static func valid_name(value: Variant) -> bool:
+	return value is String and value.length() > 0 and value.length() <= 20 and value == value.strip_edges() and not value.contains("\n") and not value.contains("\r")
 
 static func choices(farm, field: String) -> Array:
 	if field == "hat":

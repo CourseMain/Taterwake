@@ -7,6 +7,7 @@ const CROPS: Dictionary = {
 	"golden": {"name": "Golden Potato", "seed": 12.6 * MONEY_SCALE, "base": 16.8 * MONEY_SCALE, "volatility": "mid", "water_need": 1, "heat_tolerance": 2, "cold_tolerance": 2, "grow_seasons": 1, "grow": 90.0, "yield": 4, "color": "efc74c"},
 	"sunburst": {"name": "Sunburst Potato", "seed": 17.1 * MONEY_SCALE, "base": 22.8 * MONEY_SCALE, "volatility": "high", "water_need": 2, "heat_tolerance": 3, "cold_tolerance": 1, "grow_seasons": 2, "grow": 160.0, "yield": 3, "color": "ffab42"},
 	"icecap": {"name": "Icecap Potato", "seed": 30.0 * MONEY_SCALE, "base": 30.0 * MONEY_SCALE, "volatility": "high", "water_need": 3, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 2, "grow": 200.0, "yield": 2, "color": "aeeaff"},
+	"blue_pearl": {"name": "Blue Pearl Potato", "seed": 1400.0, "base": 672.0, "volatility": "mid", "water_need": 1, "heat_tolerance": 1, "cold_tolerance": 3, "grow_seasons": 1, "grow": 90.0, "yield": 3, "color": "7fe3ff"},
 }
 const VOLATILITY: Dictionary = {
 	"low": {"drift": 0.05, "storage_peak_factor": 1.2},
@@ -34,6 +35,7 @@ const STORAGE_FEE: float = 120.0 * MONEY_SCALE
 const SPOILAGE: float = 0.05
 const SHORTFALL_FEE: float = 5.0 * MONEY_SCALE
 const CLIMATE_BASE_CHANCE: float = 0.15
+const CLIMATE_FIRST_YEAR: int = 3
 const CLIMATE_CHANCE_STEP: float = 0.04
 const CLIMATE_MAX_CHANCE: float = 0.6
 const CLIMATE_BASE_SEVERITY: float = 0.5
@@ -68,3 +70,15 @@ const MAX_MONEY: float = 100000.0 * MONEY_SCALE
 const DEBUG_BALANCES: Dictionary = {"Starter funds": STARTING_CASH, "Tool funds": 5000.0 * MONEY_SCALE, "Farm funds": 10000.0 * MONEY_SCALE}
 
 const DECORATION_COSTS := {"bench": 2000.0, "flowers": 4000.0, "scarecrow": 6000.0, "barn_door": 8000.0, "duck_house": 10000.0, "gate_flag": 12000.0}
+
+# Segment 22 V1. Integer tickets are the printed fractions' exact weights.
+const PEDLAR_PACKS := {
+	"seed": {"price":3000.0, "tickets":20, "outcomes":[["russet",5,"1 in 4"],["giant",5,"1 in 4"],["golden",4,"1 in 5"],["sunburst",3,"3 in 20"],["icecap",3,"3 in 20"]]},
+	"superstition": {"price":8000.0, "tickets":10, "outcomes":[["common",6,"3 in 5"],["uncommon",3,"3 in 10"],["rare",1,"1 in 10"]]},
+	"mystery": {"price":2000.0, "tickets":20, "outcomes":[["russet_seeds",8,"2 in 5"],["oddity",6,"3 in 10"],["refund",4,"1 in 5"],["stone",1,"1 in 20"],["blue_pearl",1,"1 in 20"]]},
+}
+const PEDLAR_SEED_COUNT: int = 5
+const PEDLAR_MYSTERY_SEEDS: int = 10
+const PEDLAR_REFUND: float = 500.0
+const PEDLAR_OWNED_REFUND: float = 2000.0
+const ODDITY_BONUS: float = 500.0

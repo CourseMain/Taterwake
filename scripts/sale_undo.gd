@@ -15,7 +15,7 @@ func _capture(farm: Node) -> Dictionary:
 	return {"stock":farm.storage.duplicate(true), "held":farm.trading.held.duplicate(true),
 		"year":farm.season_clock.year, "season":farm.season_clock.season,
 		"sales":farm.lifetime_sales, "quests":farm.quest_progress.duplicate(true),
-		"help":farm.farm_help.data.duplicate(true), "tutorial":farm.tutorial_progress.duplicate(true)}
+		"help":farm.farm_help.data.duplicate(true), "tutorial":farm.tutorial_progress.duplicate(true), "oddities":farm.pedlar.data.oddities.duplicate(true)}
 
 func commit(farm: Node) -> bool:
 	_entries = farm.ledger.entries.slice(_start)
@@ -42,6 +42,8 @@ func undo(farm: Node) -> bool:
 	farm.lifetime_sales = _before.sales if farm.lifetime_sales == _after.sales else farm.lifetime_sales - (float(_after.sales) - float(_before.sales))
 	for key in _before.quests:
 		farm.quest_progress[key] = _before.quests[key] if farm.quest_progress[key] == _after.quests[key] else farm.quest_progress[key] - (float(_after.quests[key]) - float(_before.quests[key]))
+	for index in range(mini(_before.oddities.size(), farm.pedlar.data.oddities.size())):
+		_restore_fields(farm.pedlar.data.oddities[index], _before.oddities[index], _after.oddities[index])
 	_restore_fields(farm.farm_help.data, _before.help, _after.help)
 	_restore_fields(farm.tutorial_progress, _before.tutorial, _after.tutorial)
 	_deadline = 0

@@ -11,8 +11,8 @@ const RULE := Color("cdbf9f")
 const MUTED := Color("5f6b60")
 const MONEY := Color("f0b429")
 const RED := Color("e0583a")
-const CROPS := {"russet":Color("b8803f"), "giant":Color("d98a4f"), "golden":Color("ffd23f"), "sunburst":Color("ff9f1c"), "icecap":Color("7fe3ff")}
-const KEEPERS := {"nell":Color("4f8fa8"), "mara":Color("5fb33a"), "tess":Color("e0583a"), "iris":Color("3fa9ff"), "bram":Color("7a7f8c"), "pip":MONEY, "edwin":Color("4f8fa8")}
+const CROPS := {"russet":Color("b8803f"), "giant":Color("d98a4f"), "golden":Color("ffd23f"), "sunburst":Color("ff9f1c"), "icecap":Color("7fe3ff"), "blue_pearl":Color("7fe3ff")}
+const KEEPERS := {"nell":Color("4f8fa8"), "mara":Color("5fb33a"), "tess":Color("e0583a"), "iris":Color("3fa9ff"), "bram":Color("7a7f8c"), "pip":MONEY, "edwin":Color("4f8fa8"), "fennick":Color("a2703f")}
 const RARITIES := {"common":Color("7fc47a"), "uncommon":MONEY, "rare":RED, "found":Color("3fa9ff")}
 const Type = preload("res://scripts/ui_type.gd")
 static func desktop(hud) -> bool:
@@ -65,17 +65,17 @@ static func fit(hud) -> void:
 	var u: float = unit(hud)
 	var view: Vector2 = hud.root.size
 	var wide: bool = desktop(hud)
-	var target: float = {"farmer":600, "menu":780, "pause":780, "accounts":960, "market":1120, "barn":900, "grades":760, "practice":900, "sale_reveal":780}.get(hud._panel_kind, 780) if wide else 390
+	var target: float = {"farmer":600, "menu":780, "pause":780, "accounts":960, "market":1120, "barn":900, "grades":760, "pedlar":760, "practice":900, "sale_reveal":780}.get(hud._panel_kind, 780) if wide else 390
 	var width: float = minf(target * u, view.x - (64 if wide else 24) * u)
 	var scroll: ScrollContainer = hud._body.get_parent()
-	var card_only: bool = hud._panel_kind in ["farmer", "menu", "pause", "grades", "practice", "sale_reveal"] or hud._panel_kind == "market" and hud._market_selling
+	var card_only: bool = hud._panel_kind in ["farmer", "menu", "pause", "grades", "practice", "sale_reveal", "pedlar"] or hud._panel_kind == "market" and hud._market_selling
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if card_only else ScrollContainer.SCROLL_MODE_AUTO
 	hud._body.custom_minimum_size.x = maxf(0, width - 30 * u)
 	var height: float = minf(view.y - 48 * u, hud.modal_content_height())
 	var receipt_space: float = hud._purchase_box.size.y + 24 if wide and hud._purchase_box.is_visible_in_tree() and not hud._purchase_receipt.is_empty() else 0
 	var notice_space: float = hud._toast_box.get_combined_minimum_size().y + 32 if wide and hud._toast_box.visible else 0
 	height = minf(height, view.y - receipt_space - notice_space - 48 * u)
-	if hud._panel_kind == "farmer": height = minf(view.y - 32 * u, (620 if wide else 470) * u)
+	if hud._panel_kind == "farmer": height = minf(view.y - 32 * u, (668 if wide else 518) * u)
 	elif hud._panel_kind in ["menu", "pause"]: height = (350 if wide else 268) * u
 	var rect := Rect2((view - Vector2(width, height)) * .5, Vector2(width, height))
 	rect.position.y = receipt_space + (view.y - receipt_space - notice_space - height) * .5

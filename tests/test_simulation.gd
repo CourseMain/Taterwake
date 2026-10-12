@@ -28,7 +28,7 @@ func _run() -> void:
 	root.add_child(farm)
 	farm.rng.seed = 4481
 	check(farm.plots.size() == 72 and not farm.plots[12].unlocked, "starter field has twelve unlocked plots")
-	check(farm.CropTable.CROPS.size() == 5 and farm.available_crops().size() == 5 and farm.coins == 80000.0, "five crop economy starts with earned-currency budget")
+	check(farm.CropTable.CROPS.size() == 6 and farm.available_crops().size() == 5 and farm.coins == 80000.0, "five shop crops and sixth pack crop start with earned-currency budget")
 	farm.interact_plot(4, "hoe")
 	check(farm.plots[4].tilled and farm.seed_inventory.russet == 12, "hoe is a separate manual action")
 	farm.interact_plot(4, "plant")

@@ -44,9 +44,11 @@ func keep_seed(farm, id: String, grade: String, quantity: int = 1) -> String:
 	if Stock.count(farm.storage, id, grade) < quantity or int(kept_seed[id]) + int(farm.seed_inventory[id]) + quantity > farm.MAX_INVENTORY: return farm._finish("Not enough tonnes or seed space.")
 	# Prefer fresh sacks; any remainder comes from stores with the same cohort.
 	var fresh: int = mini(quantity, fresh_count(farm, id, grade))
-	Stock.take(farm.storage, id, fresh, grade, held)
+	var fresh_lots: Array = Stock.take(farm.storage, id, fresh, grade, held)
+	farm.pedlar.consume_oddities(id, fresh_lots)
 	var lots: Array = Stock.take(held, id, quantity - fresh, grade)
 	Stock.remove_lots(farm.storage, id, lots)
+	farm.pedlar.consume_oddities(id, lots)
 	kept_seed[id] += quantity
 	return farm._finish("Kept %d %s tonnes as seed for next Spring. Outside saleable stores and spoilage." % [quantity, id.capitalize()])
 
@@ -66,10 +68,12 @@ func begin_winter(farm) -> void:
 		var loss: int = mini(farm.stock_count(id), remaining_loss)
 		remaining_loss -= loss
 		report.spoiled[id] = loss
-		Stock.take(farm.storage, id, loss)
+		var lost_lots: Array = Stock.take(farm.storage, id, loss)
+		farm.pedlar.consume_oddities(id, lost_lots)
 		farm.ClimateSystem.Protection.record(farm, "spoilage", id, loss, 0.0, 1.0, "Sell before Winter storage", "barn")
 		if loss > 0: farm.ledger.post(farm.season_clock.year, 3, "storage", "Spoilage: %d %s tonnes" % [loss, id], 0.0, true)
 	farm.storage = Stock.age(farm.storage)
+	farm.pedlar.age_oddities()
 	held = farm.storage.duplicate(true)
 	if report.fee > 0: farm.post_money("storage", "Winter storage fee", -float(report.fee))
 	winters[year] = report
@@ -94,6 +98,7 @@ func sell(farm, id: String, quantity: int, grade: String, stored: bool, current:
 	else:
 		lots = Stock.take(held if stored else farm.storage, id, amount, grade, {} if stored else held)
 		if stored: Stock.remove_lots(farm.storage, id, lots)
+	var oddity_bonus: Dictionary = farm.pedlar.consume_oddities(id, lots)
 	var earnings: float = 0
 	for word in Quality.GRADES:
 		var sacks: int = 0
@@ -104,7 +109,7 @@ func sell(farm, id: String, quantity: int, grade: String, stored: bool, current:
 				if lot.get("winter_store", false): winter_sacks += int(lot.quantity)
 		if sacks == 0: continue
 		var price: float = stored_price(farm, id, word) if stored else float(farm.market[id].sell) * Quality.MULTIPLIER[word]
-		var total: float = price * (sacks - winter_sacks) + stored_price(farm, id, word) * winter_sacks
+		var total: float = price * (sacks - winter_sacks) + stored_price(farm, id, word) * winter_sacks + float(oddity_bonus.get(word, 0.0))
 		farm.post_money("sales", "Sold %d %s %s tonnes" % [sacks, word, id], total)
 		earnings += total
 	farm._record_sales(earnings)
@@ -121,7 +126,7 @@ func order_limit(farm) -> int:
 	return 2 if grower_active(farm) else 1
 
 func offer(year: int, slot: int = 0, grower: bool = false) -> Dictionary:
-	var id: String = Table.IDS[(year - 1 + slot) % Table.IDS.size()]
+	var id: String = Table.MARA_IDS[(year - 1 + slot) % Table.MARA_IDS.size()]
 	return {"year": year, "slot": slot, "crop": id, "quantity": Balance.CONTRACT_QUANTITY, "price": float(Table.CROPS[id].base) * Balance.CONTRACT_PRICE_FACTOR * (Balance.GROWER_PRICE_FACTOR if grower else 1.0)}
 
 func active_order(slot: int) -> Dictionary:
@@ -158,8 +163,8 @@ func settle(farm) -> void:
 		var delivered: int = mini(eligible_contract(farm, id), int(order.quantity))
 		var missing: int = int(order.quantity) - delivered
 		var standard: int = mini(delivered, Stock.count(farm.storage, id, "Standard"))
-		Stock.take(farm.storage, id, standard, "Standard")
-		Stock.take(farm.storage, id, delivered - standard, "Table")
+		farm.pedlar.consume_oddities(id, Stock.take(farm.storage, id, standard, "Standard"))
+		farm.pedlar.consume_oddities(id, Stock.take(farm.storage, id, delivered - standard, "Table"))
 		clamp_stock(farm)
 		var grower: bool = grower_active(farm)
 		if delivered > 0: farm.post_money("contracts", collection_label(delivered, id, grower), delivered * float(order.price))

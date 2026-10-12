@@ -36,7 +36,7 @@ func run() -> void:
 			check(stocked.climate.data.protection.losses.is_empty(), "weather on an empty field creates no barn cause cards")
 			check(stocked.save_game(SAVE) and stocked.load_game(SAVE), "safe barn stock and field-only weather history survive reload")
 			winter(stocked)
-			check(stocked.climate.data.protection.winters["1"].payout == 0 and stocked.storage_used() == 475, "Winter storage spoilage remains, without a weather insurance claim")
+			check(stocked.climate.data.protection.winters["1"].payout == 0 and stocked.storage_used() == State.CROP_IDS.size()*95, "Winter storage spoilage remains, without a weather insurance claim")
 			stocked.free()
 	for event in Protection.PROJECT_FOR:
 		for rank in range(3):

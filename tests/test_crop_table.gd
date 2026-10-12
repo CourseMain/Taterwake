@@ -28,10 +28,10 @@ func stress(crop: String, event: String = "") -> float:
 	farm.free()
 	return result
 func run() -> void:
-	check(Table.IDS == ["russet", "giant", "golden", "sunburst", "icecap"] and Table.CROPS.size() == 5, "exactly five varieties in one table")
+	check(Table.MARA_IDS == ["russet", "giant", "golden", "sunburst", "icecap"] and Table.IDS == Table.MARA_IDS + ["blue_pearl"] and Table.CROPS.size() == 6, "five shop varieties and pack-only Blue Pearl in one table")
 	var last_price: float = 0
 	var last_tolerance: int = 10
-	for id in Table.IDS:
+	for id in Table.MARA_IDS:
 		var crop: Dictionary = Table.CROPS[id]
 		check(crop.seed > 0 and crop.seed <= crop.base and crop["yield"] >= 2 and crop["yield"] <= 5, id + " has legible seed cost and yield")
 		check(crop.base > last_price and Table.total_tolerance(id) < last_tolerance, id + " pays more for lower combined water/heat/cold resilience")
@@ -39,6 +39,8 @@ func run() -> void:
 		for dial in ["water_need", "heat_tolerance", "cold_tolerance"]: check(crop[dial] in [1, 2, 3], id + " bounded " + dial)
 		check(crop.grow_seasons in [1, 2] and crop.grow <= crop.grow_seasons * 150 and crop.grow > (crop.grow_seasons - 1) * 150, id + " ripens within its advertised season budget")
 		check(Table.VOLATILITY.has(crop.volatility), id + " has known volatility")
+	var pearl: Dictionary = Table.CROPS.blue_pearl
+	check(pearl.seed == 1400 and pearl.base == 672 and pearl["yield"] == 3 and pearl.grow == 90 and pearl.water_need == 1 and pearl.heat_tolerance == 1 and pearl.cold_tolerance == 3 and pearl.grow_seasons == 1 and pearl.volatility == "mid" and pearl.color == "7fe3ff", "Blue Pearl has the exact pack-only values")
 	var farm = fresh()
 	for id in Table.IDS:
 		for second in [150, 450]:
@@ -112,7 +114,7 @@ func ui_checks() -> void:
 		page._layout()
 		for i in range(8): await process_frame
 		check(page.grid.columns == (5 if game.hud.Kit.desktop(game.hud) else 2) and page.find_child("SeedPacketSwipe", true, false) == null, "seed cards use the kit grid without a card scrollbar")
-		for id in Table.IDS:
+		for id in Table.MARA_IDS:
 			var swipe: ScrollContainer = game.hud._body.get_parent()
 			swipe.ensure_control_visible(page.seed_cards[id])
 			for frame in range(8): await process_frame

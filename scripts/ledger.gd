@@ -125,6 +125,10 @@ static func valid(raw: Variant, current_year: int, current_season: int) -> bool:
 		if not (entry.get("amount") is float or entry.get("amount") is int) or not is_finite(float(entry.amount)): return false
 		if entry.label == "Decoration":
 			if entry.category != "other" or -float(entry.amount) not in Balance.DECORATION_COSTS.values(): return false
+		if entry.label == "Pedlar's pack":
+			if entry.category != "other" or int(entry.year) < 2 or int(entry.season) != 0 or -float(entry.amount) not in Balance.PEDLAR_PACKS.values().map(func(pack): return float(pack.price)): return false
+		if entry.label == "Pedlar's refund":
+			if entry.category != "other" or int(entry.year) < 2 or int(entry.season) != 0 or float(entry.amount) not in [Balance.PEDLAR_REFUND, Balance.PEDLAR_OWNED_REFUND]: return false
 		if entry.label == GUIDED_CREDIT_LABEL:
 			credits += 1
 			if credits > 1 or int(entry.year) != 1 or int(entry.season) != 3 or entry.category != "other" or float(entry.amount) != credit_amount: return false

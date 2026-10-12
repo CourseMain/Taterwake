@@ -37,7 +37,8 @@ func audit(node: Node, scale: float, sizes: Dictionary, page: String) -> void:
 func kit_tokens() -> void:
 	var reference: String = FileAccess.get_file_as_string("res://docs/style-board/ui-kit.html")
 	var tokens: Dictionary = {"ink":Kit.INK, "ink2":Kit.INK2, "paper":Kit.PAPER, "paper2":Kit.PAPER2, "wood":Kit.WOOD, "wood2":Kit.WOOD2, "cream":Kit.CREAM, "money":Kit.MONEY, "red":Kit.RED}
-	for id in Kit.CROPS: tokens[id] = Kit.CROPS[id]
+	for id in preload("res://scripts/crop_table.gd").MARA_IDS: tokens[id] = Kit.CROPS[id]
+	check(Kit.CROPS.blue_pearl == Color(preload("res://scripts/balance.gd").CROPS.blue_pearl.color), "Blue Pearl uses its specified balance colour")
 	for id in ["nell", "mara", "tess", "iris"]: tokens[id] = Kit.KEEPERS[id]
 	tokens.oda = Kit.KEEPERS.bram
 	for id in Kit.RARITIES: tokens[id] = Kit.RARITIES[id]

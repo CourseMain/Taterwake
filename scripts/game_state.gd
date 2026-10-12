@@ -37,6 +37,8 @@ const DEFAULT_SAVE_PATH: String = "user://taterland_save_v4.json"
 const PROTECTED_SAVE_PATHS: Array[String] = ["user://spud_valley_save.json", "user://spud_valley_save_v3.json"]
 const MarketDecisions = preload("res://scripts/market_decisions.gd")
 var trading = MarketDecisions.new()
+const Pedlar = preload("res://scripts/pedlar_state.gd")
+var pedlar = Pedlar.new()
 const Diversification = preload("res://scripts/diversification.gd")
 var diversification = Diversification.new()
 const CropTable = preload("res://scripts/crop_table.gd")
@@ -112,6 +114,7 @@ func _init() -> void:
 
 
 func _build_starters() -> void:
+	pedlar.endow(storage)
 	seed_inventory.russet = 12
 	plots = []
 	for index in range(72):
@@ -124,7 +127,7 @@ func _build_starters() -> void:
 
 
 func can_plant_crop(id: String) -> bool:
-	return season_clock.can_plant() or (season_clock.season == 2 and id == "icecap")
+	return season_clock.can_plant() or (season_clock.season == 2 and id in ["icecap", "blue_pearl"])
 
 func crop_grow_time(id: String) -> float:
 	return float(CropTable.CROPS[id]["grow"]) / crop_growth_speed(id)
@@ -221,10 +224,15 @@ func field_rows() -> int:
 	return 4
 
 func farm_name() -> String:
-	return "SPUD VALLEY"
+	return str(farmer_appearance.get("farm_name", "Taterland"))
 
 func available_crops() -> Array[String]:
-	return CROP_IDS.duplicate()
+	return CropTable.MARA_IDS.duplicate()
+
+func known_crops() -> Array[String]:
+	var ids: Array[String] = CropTable.MARA_IDS.duplicate()
+	if seed_inventory.blue_pearl > 0 or stock_count("blue_pearl") > 0 or "blue_pearl" in pedlar.data.discovered: ids.append("blue_pearl")
+	return ids
 
 func bankruptcy_limit() -> float:
 	return OVERDRAFT_LIMIT
@@ -441,7 +449,9 @@ func run_title() -> String:
 func _season_boundary() -> void:
 	# Short Summers end during recovery, before the next season's warning draw.
 	if season_clock.season == 2 and diversification.owns("shop") and climate.data.phase == "recovery": climate.end_working_year()
-	if season_clock.season == 0: trading.begin_spring(self)
+	if season_clock.season == 0:
+		trading.begin_spring(self)
+		pedlar.begin_spring(season_clock.year)
 	if season_clock.season == 1: climate.data.protection.covers.clear()
 	var was_over: bool = run_over
 	if season_clock.finished():
@@ -574,11 +584,11 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 		return _finish("Choose a farm patch first.")
 	if not plots[index]["unlocked"]:
 		return _finish(preload("res://scripts/farm_advice.gd").locked(self, index))
-	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Only Icecap can be planted in Autumn." if season_clock.season == 2 else "Plant new crops in Spring or Summer.")
+	if tool == "plant" and not can_plant_crop(selected_crop): return _finish("Plant Icecap or Blue Pearl in Autumn." if season_clock.season == 2 else "Plant new crops in Spring or Summer.")
 	var action: String = tool
 	if action not in ["hoe", "plant", "water", "harvest", "pest"]:
 		return _finish("Choose Hoe, Plant, Water, Harvest, or Bug Sprayer.")
-	if action == "plant" and not available_crops().has(selected_crop):
+	if action == "plant" and not known_crops().has(selected_crop):
 		return _finish("Choose seeds [2]")
 	var climate_thawed: int = 0
 	var ice_blocked: bool = false
@@ -649,6 +659,7 @@ func interact_plot(index: int, tool: String = "hoe") -> String:
 			if int(bed.stage) == 0: return _finish("Nothing to harvest yet")
 			return _finish("Still growing" if bed.watered else "Water this crop first [3]")
 		if action == "plant":
+			if int(seed_inventory[selected_crop]) == 0 and selected_crop == "blue_pearl": return _finish("No Blue Pearl seeds. Try a pack.")
 			if int(seed_inventory[selected_crop]) == 0: return _finish("No %s seeds · Buy at Seeds [B]" % selected_crop.capitalize())
 			return _finish("Already planted" if int(bed.stage) > 0 else "Till the soil first [1]")
 		if action == "water":
@@ -695,7 +706,7 @@ func _harvest_plot(plot: Dictionary) -> int:
 
 
 func select_crop(id: String) -> String:
-	if not available_crops().has(id):
+	if not known_crops().has(id):
 		return _finish("Choose one of the five varieties at Buy Seeds.")
 	selected_crop = id
 	return _finish("Selected %s. You have %s seeds ready to plant." % [CropTable.CROPS[id]["name"], format_number(seed_inventory[id])])
@@ -939,6 +950,7 @@ func reset_game() -> void:
 	seed_inventory = CropTable.empty_stock()
 	storage = Stock.empty()
 	trading = MarketDecisions.new()
+	pedlar = Pedlar.new()
 	diversification = Diversification.new()
 	capacity = 200
 	tools = {"hoe": 0, "water": 0, "harvest": 0}
@@ -955,7 +967,7 @@ func reset_game() -> void:
 
 func _save_data() -> Dictionary:
 	var data: Dictionary = {"schema_version": SAVE_VERSION, "mechanics_revision": MECHANICS_REVISION,
-		"diversification": diversification.save_data(), "trading": trading.save_data(), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
+		"diversification": diversification.save_data(), "trading": trading.save_data(), "pedlar":pedlar.data.duplicate(true), "ledger": ledger.save_data(), "run_outcome": run_outcome, "season_clock": season_clock.save_data(), "climate": climate.data.duplicate(true), "run_over": run_over, "harvested_total": harvested_total,
 		"tutorial_progress": tutorial_progress.duplicate(true), "npc_history": npc_history.duplicate(true),
 		"clothing_unlocked": clothing_unlocked.duplicate(), "farmer_appearance": farmer_appearance.duplicate(), "decorations": decorations.duplicate(), "graded_harvests": graded_harvests,
 		"farm_help": farm_help.data.duplicate(true), "lifetime_sales": lifetime_sales,
@@ -981,6 +993,7 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	var json := JSON.new()
 	var error: Error = json.parse(file.get_as_text())
 	file.close()
+	if error == OK and json.data is Dictionary: json.data = _prepare_v1_save(json.data)
 	if error != OK or not _valid_save(json.data):
 		_reject_save(path)
 		return false
@@ -989,12 +1002,14 @@ func load_game(path: String = DEFAULT_SAVE_PATH) -> bool:
 	return true
 
 func restore_snapshot(data: Dictionary) -> void:
+	data = _prepare_v1_save(data)
 	land = data.land.duplicate(true)
 	# Caller supplies either a validated save or a trusted in-memory snapshot.
 	climate.data = data.climate.duplicate(true)
 	season_clock.load_data(data.season_clock)
 	ledger.load_data(data.ledger)
 	trading.load_data(data.trading)
+	pedlar.data = data.get("pedlar", Pedlar.fresh()).duplicate(true)
 	diversification.load_data(data.diversification)
 	accounts_open = false
 	climate_report_open = false
@@ -1007,6 +1022,7 @@ func restore_snapshot(data: Dictionary) -> void:
 		if item not in clothing_unlocked: clothing_unlocked.append(item)
 	if clothing_profile_enabled: Clothing.write_profile(clothing_unlocked)
 	farmer_appearance = data.get("farmer_appearance", FarmerLook.fresh()).duplicate()
+	if not farmer_appearance.has("farm_name"): farmer_appearance.farm_name = "Taterland"
 	decorations = data.get("decorations", {}).duplicate()
 	graded_harvests = int(data.get("graded_harvests", 3 if int(data.harvested_total) > 0 else 0))
 	for person in npc_history:
@@ -1104,6 +1120,7 @@ func _valid_save(raw: Variant) -> bool:
 	if int(progress.version) == 3 and int(progress.step) > (7 if progress.get("tour_only", false) else 9): return false
 	if progress.has("choice") and progress.choice not in ["sell", "store"]: return false
 	if not SeasonClock.valid(data.get("season_clock")): return false
+	if data.has("pedlar") and not Pedlar.valid(data.pedlar, int(data.season_clock.year)): return false
 	if not ClimateSystem.valid(data.get("climate"), MAX_MONEY): return false
 	if int(data.climate.outlook.seen_year) > int(data.season_clock.year): return false
 	for record in data.climate.outlook.records:
@@ -1135,6 +1152,13 @@ func _valid_save(raw: Variant) -> bool:
 	for level in range(int(data.barn_level)): expected_capacity += int(200.0 * pow(4.0, level))
 	if int(data.capacity) != expected_capacity: return false
 	if not Stock.valid(data.get("storage")): return false
+	if data.has("pedlar"):
+		var owned_oddities: Dictionary = {}
+		for item: Dictionary in data.pedlar.oddities:
+			if not item.held: continue
+			var key: String = str(item.crop)+":"+str(int(item.score))
+			owned_oddities[key] = int(owned_oddities.get(key,0)) + 1
+			if int(owned_oddities[key]) > int(data.storage[item.crop][Quality.grade(int(item.score))].get(str(int(item.score)),0)): return false
 	for key in ["seed_inventory"]:
 		if not data.get(key) is Dictionary or data[key].size() != CROP_IDS.size(): return false
 		for id in CROP_IDS:
@@ -1166,6 +1190,22 @@ func _valid_save(raw: Variant) -> bool:
 	var used: int = 0
 	for id in CROP_IDS: used += Stock.count(data.storage, id)
 	return used <= MAX_INVENTORY
+
+func _prepare_v1_save(raw: Dictionary) -> Dictionary:
+	var data: Dictionary = raw.duplicate(true)
+	# v2.0.x saves used exactly five crops. Only that complete old shape migrates.
+	if not data.has("pedlar") and data.get("seed_inventory") is Dictionary and data.seed_inventory.size() == CropTable.MARA_IDS.size():
+		var old: bool = CropTable.MARA_IDS.all(func(id): return data.seed_inventory.has(id) and data.get("storage", {}).has(id))
+		if old and data.get("storage") is Dictionary and data.storage.size() == CropTable.MARA_IDS.size() and data.get("trading") is Dictionary:
+			data.seed_inventory.blue_pearl = 0; data.storage.blue_pearl = Stock.pile()
+			for field in ["held", "kept_seed"]:
+				if data.trading.get(field) is Dictionary and data.trading[field].size() == CropTable.MARA_IDS.size():
+					data.trading[field].blue_pearl = Stock.pile() if field == "held" else 0
+			if data.trading.get("winters") is Dictionary:
+				for row in data.trading.winters.values():
+					if row is Dictionary and row.get("spoiled") is Dictionary and row.spoiled.size() == CropTable.MARA_IDS.size(): row.spoiled.blue_pearl = 0
+			var endowed = Pedlar.new(); endowed.endow(data.storage); data.pedlar = endowed.data
+	return data
 
 
 func _valid_plots(raw: Variant, data: Dictionary) -> bool:

@@ -1,7 +1,8 @@
 extends RefCounted
 const Balance = preload("res://scripts/balance.gd")
 ## Water bars mean demand; heat/cold bars mean tolerance (higher is tougher).
-const IDS: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
+const MARA_IDS: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
+const IDS: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap", "blue_pearl"]
 const CROPS: Dictionary = Balance.CROPS
 const VOLATILITY: Dictionary = Balance.VOLATILITY
 static func empty_stock() -> Dictionary:

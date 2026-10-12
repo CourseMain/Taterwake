@@ -53,11 +53,12 @@ func run() -> void:
 		corrupt.climate.erase(field)
 		check(not farm._valid_save(corrupt), "missing climate component rejects safely: " + field)
 	# Empty crops prevent unrelated pest RNG from consuming the weather draw.
-	# Every season uses exactly the documented threshold, including season one.
+	# The first natural-weather year uses exactly the documented threshold.
 	var hits := 0
 	for seed_value in range(100):
 		farm.reset_game()
 		for plot in farm.plots: farm._clear_crop(plot)
+		farm.season_clock.year = 3
 		farm.rng.seed = seed_value
 		var expected := RandomNumberGenerator.new()
 		expected.seed = seed_value
@@ -66,7 +67,7 @@ func run() -> void:
 		check(farm.season_clock.season == 0, "first weather draw occurs in Spring")
 		check((farm.climate.data.phase == "warning") == event_expected, "single 15 percent draw at season boundary")
 		if event_expected: hits += 1
-	check(hits > 0 and hits < 100 and Climate.chance(1) == 0.15, "both calm and disaster seasons are reachable")
+	check(hits > 0 and hits < 100 and Climate.chance(3) == 0.15, "both calm and disaster seasons are reachable")
 	farm.reset_game()
 	for plot in farm.plots: farm._clear_crop(plot)
 	farm.update(149.5)

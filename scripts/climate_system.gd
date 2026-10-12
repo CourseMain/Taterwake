@@ -102,7 +102,7 @@ func update(farm, delta: float) -> bool:
 	return operated
 
 static func chance(year: int) -> float:
-	return minf(MAX_CHANCE, BASE_CHANCE + CHANCE_STEP * (maxi(1, year) - 1))
+	return 0.0 if year < Balance.CLIMATE_FIRST_YEAR else minf(MAX_CHANCE, BASE_CHANCE + CHANCE_STEP * (year - Balance.CLIMATE_FIRST_YEAR))
 
 static func severity_mean(year: int) -> float:
 	return BASE_SEVERITY + SEVERITY_STEP * (maxi(1, year) - 1)
@@ -150,7 +150,7 @@ func start_season(farm) -> void:
 	var occupied: bool = false
 	for record in data.outlook.records:
 		if int(record.year) == farm.season_clock.year and int(record.season) == farm.season_clock.season: occupied = true
-	if not occupied and year_count(farm.season_clock.year) < ANNUAL_CAP and data.phase == "calm" and fires: begin_warning(farm, event)
+	if farm.season_clock.year != 2 and not occupied and year_count(farm.season_clock.year) < ANNUAL_CAP and data.phase == "calm" and fires: begin_warning(farm, event)
 	prime_next(farm)
 
 func end_working_year() -> void:
@@ -198,6 +198,7 @@ func _winter_impact(farm) -> void:
 		var lost: int = roundi(farm.Stock.count(farm.trading.held, crop) * rate)
 		var lots: Array = farm.Stock.take(farm.trading.held, crop, lost)
 		farm.Stock.remove_lots(farm.storage, crop, lots)
+		farm.pedlar.consume_oddities(crop, lots)
 		Protection.record(farm, data.event, crop, lost, 0.0, 1.0, "Stored tonnes exposed; sell before impact", "barn")
 	farm.trading.clamp_stock(farm)
 	for index in range(farm.plots.size()):

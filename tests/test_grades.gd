@@ -11,6 +11,7 @@ func check(ok: bool, note: String) -> void:
 	if not ok: failures += 1; push_error(note)
 func fresh():
 	var farm = State.new(); root.add_child(farm)
+	farm.storage = Stock.empty(); farm.pedlar.data.oddities.clear()
 	farm.coins = 4000000
 	farm.rng.seed = 6
 	for plot in farm.plots: farm._clear_crop(plot); plot.tilled = plot.unlocked
@@ -26,7 +27,7 @@ func run() -> void:
 	var farm = fresh()
 	for crop in State.CROP_IDS:
 		check(farm.market[crop].sell == State.CropTable.CROPS[crop].base, "initial quote uses base for " + crop)
-		check(State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "bounded seed price for " + crop)
+		check(State.CropTable.CROPS[crop].seed == 1400 if crop == "blue_pearl" else State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "bounded seed price for " + crop)
 	plant(farm)
 	check(farm.plots[5].quality == 100, "planting starts quality at 100")
 	farm.update(9.75)
