@@ -156,6 +156,7 @@ func _latency_prepare(view: String) -> void:
 	if view == "foreclosure": roots = [game.hud._run_end]
 	if view == "field_notes": roots = game.hud.root.find_children("*","AcceptDialog",true,false)
 	if view == "title": roots = [game.title_scene]
+	if view == "front_page": roots = [game.year_intro]
 	for branch in roots:
 		if branch is AcceptDialog and branch.visible: latency_buttons.append(branch.get_ok_button())
 		else: _latency_collect(branch)
