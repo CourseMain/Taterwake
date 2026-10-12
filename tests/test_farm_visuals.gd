@@ -114,15 +114,30 @@ func run() -> void:
 	farm.plots[12].winter_ice=false
 	farm.climate.data.operations.ice.erase("24")
 	game._on_state_changed()
-	# Footprints originate only from real movement along lanes and stay bounded.
+	# Real movement leaves Winter tracks on paths, open ground and raised beds.
 	w.player.position=Vector3(-14.7,0,15)
 	for i in range(240):
 		var z: float=15+(i%12)*.5
 		w.set_player_position(Vector3(-14.7,0,z))
 	check(art.print_count==art.PRINT_LIMIT,"Winter walking uses a bounded footprint pool")
-	var prints: int=art.print_count
+	var cursor: int=art.print_cursor
 	art.walked(Vector3(0,0,0),Vector3(0,0,.6))
-	check(art.print_count==prints,"walking off paths does not stamp road footprints")
+	check(art.print_cursor==(cursor+2)%art.PRINT_LIMIT,"walking off paths stamps both Winter footprints")
+	var bed: Vector3=w.plot_positions[0]
+	var soil: MeshInstance3D=w._soil_meshes[0]
+	var soil_visible: bool=soil.visible
+	soil.show()
+	cursor=art.print_cursor
+	art.walked(bed-Vector3(0,0,.6),bed)
+	check(art.print_cursor==(cursor+2)%art.PRINT_LIMIT,"walking through a field stamps Winter footprints")
+	# Headless Godot's dummy renderer cannot return MultiMesh transforms.
+	# Check the computed placement against the actual raised field mesh.
+	var track: Vector3=bed+Vector3(-.18,0,-.07)
+	check(art._footprint_height(track)>w.ground_height(track.x,track.z)+.20,"field tracks sit above the raised soil instead of underneath it")
+	soil.visible=soil_visible
+	cursor=art.print_cursor
+	art.walked(bed,bed+Vector3(8,0,0))
+	check(art.print_cursor==cursor,"a load or teleport cannot draw a Winter trail")
 	# Live forecast values, including the narrower upgraded interval, reach the face.
 	var old_range: Vector2=w.weather_station.forecast_range
 	farm.ClimateSystem.Protection.upgrade_station(farm)

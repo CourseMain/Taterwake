@@ -15,7 +15,7 @@ func _present_qol(action: String, ticket: int) -> void:
 	latency_mode = false
 	live_player = false
 	var view: String = action.get_slice(":", 0)
-	var base: String = {"qol_winter":"play_winter", "qol_grades":"grades", "qol_accounts":"accounts", "qol_seed":"market", "qol_guide":"guide_welcome", "qol_refused":"guide_grow", "qol_undo":"market_sell", "qol_sell":"market_sell", "qol_buyfeedback":"market"}.get(view, "play_spring")
+	var base: String = {"qol_tracks":"play_winter", "qol_winter":"play_winter", "qol_grades":"grades", "qol_accounts":"accounts", "qol_seed":"market", "qol_guide":"guide_welcome", "qol_refused":"guide_grow", "qol_undo":"market_sell", "qol_sell":"market_sell", "qol_buyfeedback":"market"}.get(view, "play_spring")
 	await super._present(base, ticket)
 	if ticket != request: return
 	is_ready = false
@@ -34,6 +34,22 @@ func _present_qol(action: String, ticket: int) -> void:
 		game.touch_controls.root.hide()
 		if view == "qol_locked": game.hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(game.state, 24))
 	if view == "qol_hotbar": game.hud.set_tool("harvest")
+	if view == "qol_tracks":
+		for i in range(24):
+			game.state._clear_crop(game.state.plots[i])
+			game.state.plots[i].unlocked = true
+			game.state.plots[i].tilled = true
+		game._on_state_changed()
+		var world = game.world
+		# Three short real walks: path, open snow, and the Home beds.
+		for start: Vector3 in [Vector3(-14.7,0,9),Vector3(-11,0,3),world.plot_positions[0]]:
+			world.player.position = world.clamp_walk_position(start)
+			for step in range(1,13): world.set_player_position(start+Vector3(0,0,float(step)*.5))
+		var camera: Camera3D = world.camera
+		camera.size = 48.0 if get_viewport().get_visible_rect().size.x < 600 else 30.0
+		camera.position = Vector3(-10,0,6) + camera.basis.z * 260.0
+		world.fit_camera_depth()
+		game.hud.root.hide(); game.touch_controls.root.hide()
 	if view == "qol_player":
 		game.world.set_player_position(Vector3(0,0,9))
 		game.world.fit_overview(false)
@@ -72,6 +88,7 @@ func _publish() -> void:
 	last_report.latency_armed = _latency_rect(armed) if is_instance_valid(armed) else []
 	last_report.hotbar = _rect(game.hud._hotbar)
 	last_report.hotbar_caption = _rect(game.hud._tool_caption)
+	last_report.footprints = {"count":game.world.visuals.print_count,"limit":game.world.visuals.PRINT_LIMIT,"winter":game.world.visuals.winter}
 	var body_screen: Vector2 = game.world.camera.unproject_position(game.world.player.global_position + Vector3.UP * game.world.FarmerAvatar.BODY_CENTER)
 	last_report.player_camera = {"player":[game.world.player.position.x,game.world.player.position.y,game.world.player.position.z],"body_screen":[body_screen.x,body_screen.y],"viewport":[game.farm_viewport.size.x,game.farm_viewport.size.y],"size":game.world.camera.size}
 	last_report.sell_rows = []

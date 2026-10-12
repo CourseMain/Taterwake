@@ -6,7 +6,7 @@ const fs=require('node:fs');
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal']});
  const reports=[],errors=[];
  try{
-  for(const [width,height,views] of [[1440,900,['qol_home','qol_low','qol_quests:0','qol_quests:1','qol_quests:2','qol_quests:3','qol_sell','qol_hotbar']],[390,844,['qol_rent','qol_locked','qol_winter','qol_grades','qol_accounts','qol_seed','qol_guide','qol_refused','qol_undo','qol_sell','qol_buyfeedback']]]){
+  for(const [width,height,views] of [[1440,900,['qol_home','qol_low','qol_quests:0','qol_quests:1','qol_quests:2','qol_quests:3','qol_sell','qol_hotbar','qol_tracks']],[390,844,['qol_rent','qol_locked','qol_winter','qol_grades','qol_accounts','qol_seed','qol_guide','qol_refused','qol_undo','qol_sell','qol_buyfeedback','qol_tracks']]]){
    if(process.env.QOL_VIEWS&&!views.some(key=>process.env.QOL_VIEWS.split(',').includes(key)))continue;
    const context=await browser.newContext({viewport:{width,height},hasTouch:width===390,isMobile:width===390});
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'||/SCRIPT ERROR:|ERROR:/.test(m.text()))errors.push(m.text())});

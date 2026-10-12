@@ -14,6 +14,7 @@ var sparkle_points: Array[Vector3] = []
 var sparkle_time := 0.0
 var winter_charm: Node3D
 var bed_snow: MultiMeshInstance3D
+var _bed_snow_surfaces: Array[Transform3D] = []
 var snow_ground: MeshInstance3D
 var snow_paths: MeshInstance3D
 var drift_specs: Array[Dictionary] = []
@@ -283,12 +284,15 @@ func _build_winter_charm() -> void:
 
 func update_bed_snow(plots: Array) -> void:
 	var count:=0
+	_bed_snow_surfaces.clear()
 	if winter:
 		for i in range(mini(plots.size(),world.plot_positions.size())):
 			if not plots[i].get("unlocked",true) or not world._ice_roots[i].visible: continue
 			for x in [-.56,0,.56]:
 				var p: Vector3=world.plot_positions[i]+Vector3(x,.32,0)
-				bed_snow.multimesh.set_instance_transform(count,Transform3D(Basis.IDENTITY.scaled(Vector3(.18,.11,.84)),p))
+				var transform := Transform3D(Basis.IDENTITY.scaled(Vector3(.18,.11,.84)),p)
+				bed_snow.multimesh.set_instance_transform(count,transform)
+				_bed_snow_surfaces.append(transform)
 				count+=1
 	bed_snow.multimesh.visible_instance_count=count
 
@@ -446,18 +450,42 @@ func walked(before: Vector3, after: Vector3) -> void:
 	var distance: float=before.distance_to(after)
 	if distance>2: walked_distance=0; return # Recenter/load is not a trail.
 	walked_distance+=distance
-	if walked_distance<.48 or not on_path(after): return
+	if walked_distance<.48: return
 	walked_distance=0
 	var direction: Vector3=(after-before).normalized()
 	for foot in [-1,1]:
 		var p: Vector3=after+direction.cross(Vector3.UP)*.18*foot+direction*.07*foot
-		p.y=world.ground_height(p.x,p.z)+.19
+		p.y=_footprint_height(p)
 		footprints.multimesh.set_instance_transform(print_cursor,Transform3D(Basis(Vector3.UP,atan2(direction.x,direction.z)).scaled_local(Vector3(.65,1,1.15)),p))
 		footprints.multimesh.set_instance_color(print_cursor,Color.WHITE)
 		print_ages[print_cursor]=0
 		print_cursor=(print_cursor+1)%PRINT_LIMIT
 		print_count=mini(PRINT_LIMIT,print_count+1)
 	footprints.multimesh.visible_instance_count=PRINT_LIMIT
+
+func _footprint_height(point: Vector3) -> float:
+	var height: float = world.ground_height(point.x,point.z)+.19
+	# Tracks sit on the existing bed surface as well as the open snow and road.
+	for i in range(world._soil_meshes.size()):
+		var soil: MeshInstance3D = world._soil_meshes[i]
+		var local: Vector3 = soil.to_local(point)
+		var bounds: AABB = soil.mesh.get_aabb()
+		if local.x < bounds.position.x or local.x > bounds.end.x or local.z < bounds.position.z or local.z > bounds.end.z: continue
+		var surfaces: Array = [soil]
+		surfaces.append_array(world._furrow_roots[i].get_children())
+		if world._ice_roots[i].get_child_count() > 0: surfaces.append(world._ice_roots[i].get_child(0))
+		for mesh in surfaces:
+			if not mesh is MeshInstance3D or not mesh.is_visible_in_tree(): continue
+			local = mesh.to_local(point); bounds = mesh.mesh.get_aabb()
+			if local.x >= bounds.position.x and local.x <= bounds.end.x and local.z >= bounds.position.z and local.z <= bounds.end.z:
+				height = maxf(height,mesh.to_global(Vector3(local.x,bounds.end.y,local.z)).y+.014)
+		break
+	for transform: Transform3D in _bed_snow_surfaces:
+		var local: Vector3 = transform.affine_inverse() * point
+		var radius_squared: float = local.x*local.x+local.z*local.z
+		if radius_squared <= 1.0:
+			height = maxf(height,transform.origin.y+transform.basis.y.length()*sqrt(1.0-radius_squared)+.014)
+	return height
 
 func break_ice(index: int) -> void:
 	for i in range(8):
