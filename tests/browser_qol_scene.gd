@@ -85,6 +85,7 @@ var armed: Button
 var tap_start: float = -1
 var visual_start: float = -1
 var baseline_scale: Vector2
+var baseline_rotation: float
 var baseline_pressed: bool
 var baseline_text: String
 
@@ -189,14 +190,14 @@ func _latency_target(index: int) -> void:
 		parent = parent.get_parent()
 	for frame in range(6): await get_tree().process_frame
 	tap_start = -1; visual_start = -1
-	baseline_scale = armed.scale; baseline_pressed = armed.is_pressed(); baseline_text = armed.text
+	baseline_scale = armed.scale; baseline_rotation = armed.rotation; baseline_pressed = armed.is_pressed(); baseline_text = armed.text
 	JavaScriptBridge.eval("window.qolTap=null",true)
 	is_ready = true
 	_publish()
 
 func _latency_paint() -> void:
 	if tap_start < 0 or visual_start >= 0: return
-	if not is_instance_valid(armed) or not armed.is_visible_in_tree() or armed.scale != baseline_scale or armed.is_pressed() != baseline_pressed or armed.text != baseline_text:
+	if not is_instance_valid(armed) or not armed.is_visible_in_tree() or armed.scale != baseline_scale or not is_equal_approx(armed.rotation,baseline_rotation) or armed.is_pressed() != baseline_pressed or armed.text != baseline_text:
 		visual_start = float(JavaScriptBridge.eval("performance.now()",true))
 		JavaScriptBridge.eval("window.qolTap=" + JSON.stringify({"input":tap_start,"paint":visual_start,"visual_ms":visual_start-tap_start}),true)
 
