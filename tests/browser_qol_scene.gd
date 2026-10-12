@@ -13,7 +13,7 @@ func command(args: Array) -> void:
 
 func _present_qol(action: String, ticket: int) -> void:
 	var view: String = action.get_slice(":", 0)
-	var base: String = {"qol_winter":"play_winter", "qol_grades":"grades", "qol_accounts":"accounts", "qol_seed":"market", "qol_guide":"guide_welcome", "qol_refused":"guide_grow", "qol_undo":"market_sell"}.get(view, "play_spring")
+	var base: String = {"qol_winter":"play_winter", "qol_grades":"grades", "qol_accounts":"accounts", "qol_seed":"market", "qol_guide":"guide_welcome", "qol_refused":"guide_grow", "qol_undo":"market_sell", "qol_sell":"market_sell", "qol_buyfeedback":"market"}.get(view, "play_spring")
 	await super._present(base, ticket)
 	if ticket != request: return
 	is_ready = false
@@ -44,6 +44,8 @@ func _present_qol(action: String, ticket: int) -> void:
 		page.select_variety("russet","Table")
 		page.quantity.set_value_no_signal(1)
 		page._sell()
+	if view == "qol_buyfeedback":
+		game.state.buy_seeds("russet",1)
 	if view == "qol_accounts":
 		var scroll: ScrollContainer = game.hud._body.get_parent()
 		scroll.scroll_vertical = 100000
@@ -57,8 +59,11 @@ func _publish() -> void:
 	for index in range(latency_buttons.size()):
 		var button: Button = latency_buttons[index]
 		if is_instance_valid(button):
-			last_report.latency_buttons.append({"index":index,"text":button.text,"action":button.get_meta("action",""),"rect":_rect(button),"disabled":button.disabled})
-	last_report.latency_armed = _rect(armed) if is_instance_valid(armed) else []
+			last_report.latency_buttons.append({"index":index,"text":button.text,"action":button.get_meta("action",""),"rect":_latency_rect(button),"disabled":button.disabled})
+	last_report.latency_armed = _latency_rect(armed) if is_instance_valid(armed) else []
+	last_report.sell_rows = []
+	if game.hud._refs.has("market_page") and game.hud._refs.market_page.selling:
+		for entry in game.hud._refs.market_page.sale_rows.values(): last_report.sell_rows.append({"rect":_rect(entry.card),"graph":_rect(entry.history),"buttons":[_rect(entry.sales[1]),_rect(entry.sales[5])]})
 	if not is_instance_valid(game): return
 	last_report.fixture = "qol"
 	last_report.quests = []
@@ -95,12 +100,20 @@ func _latency_prepare(view: String) -> void:
 	if base == "market_undo": base = "market_sell"
 	if base == "reset_confirm": base = "save_page"
 	if base == "epilogue": base = "run_summary"
-	if base == "farm_tip": game.hud._opened_farm_tip = game.state.farm_help.tip(game.state)
+	if base == "farm_tip": base = "help"
+	if base == "field_notes": base = "market_sell"
 	if base == "debug_locked": base = "debug"
 	game.hud._debug_unlocked = view == "debug"
 	await super._present(base,ticket)
 	is_ready = false
 	if view == "reset_confirm": game.hud._act("request_reset")
+	if view == "farm_tip":
+		game.state.farm_help.enable()
+		game.hud._opened_farm_tip = game.state.farm_help.tip(game.state)
+		game.hud.show_panel("farm_tip",game.state)
+	if view == "field_notes":
+		for button in game.hud._modal_card.find_children("*","Button",true,false):
+			if button.text == "?": button.pressed.emit(); break
 	if view.begins_with("npc:") and view.contains("/"):
 		game.conversation.show_page(view.get_slice("/",1))
 		game.conversation.reveal()
@@ -138,12 +151,16 @@ func _latency_prepare(view: String) -> void:
 	if view.begins_with("npc"): roots = [game.conversation]
 	if view == "epilogue": roots = [game.epilogue_screen]
 	if view == "foreclosure": roots = [game.hud._run_end]
+	if view == "field_notes": roots = game.hud.root.find_children("*","AcceptDialog",true,false)
 	if view == "title": roots = [game.title_scene]
-	for branch in roots: _latency_collect(branch)
+	for branch in roots:
+		if branch is AcceptDialog and branch.visible: latency_buttons.append(branch.get_ok_button())
+		else: _latency_collect(branch)
 	for button in latency_buttons:
 		button.gui_input.connect(func(event):
 			if button == armed and (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed or event is InputEventScreenTouch and event.pressed):
 				if tap_start < 0:
+					JavaScriptBridge.eval("window.qolSound=" + JSON.stringify({"registered":button.has_meta("tap_feedback"),"played":game.feedback_audio.played_count,"voices":game.feedback_audio.voices.size(),"muted":AudioServer.is_bus_mute(0)}),true)
 					tap_start = float(JavaScriptBridge.eval("performance.now()",true))
 		)
 	if not RenderingServer.frame_post_draw.is_connected(_latency_paint): RenderingServer.frame_post_draw.connect(_latency_paint)
@@ -184,3 +201,8 @@ func _process(delta: float) -> void:
 		game.hud._process(delta)
 		game._update_accounts_camera(delta)
 	else: super._process(delta)
+
+func _latency_rect(button: Control) -> Array:
+	var rect: Rect2 = button.get_global_rect()
+	if button.get_window() != get_tree().root: rect.position += Vector2(button.get_window().position)
+	return [rect.position.x,rect.position.y,rect.size.x,rect.size.y]

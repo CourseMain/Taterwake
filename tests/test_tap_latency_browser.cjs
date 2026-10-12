@@ -2,7 +2,7 @@ const {chromium}=require('playwright');
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const URL=process.argv[2],out=process.argv[3];
-const views=['tool_tiles','market','market_sell/russet','market_sell/giant','market_sell/golden','market_sell/sunburst','market_sell/icecap','market_undo','accounts','barn','inventory','tools','quests','menu','pause','calendar','grades','farmer','decorations','duck_patrol','dex','climate','help','farm_tip','graphics','save_page','reset_confirm','debug_locked','debug','measurement','sound','sleep_confirm','practice','sale_reveal','run_summary','foreclosure','epilogue','npc:mara','npc:nell','npc:bram','npc:tess','npc:pip','npc:iris','npc:edwin','npc:mara/story','npc:mara/reply','npc:mara/advice','npc:mara/weather','title',...Array.from({length:10},(_,i)=>'guide/'+i)];
+const views=['tool_tiles','market','market_sell/russet','market_sell/giant','market_sell/golden','market_sell/sunburst','market_sell/icecap','market_undo','field_notes','accounts','barn','inventory','tools','quests','menu','pause','calendar','grades','farmer','decorations','duck_patrol','dex','climate','help','farm_tip','graphics','save_page','reset_confirm','debug_locked','debug','measurement','sound','sleep_confirm','practice','sale_reveal','run_summary','foreclosure','epilogue','npc:mara','npc:nell','npc:bram','npc:tess','npc:pip','npc:iris','npc:edwin','npc:mara/story','npc:mara/reply','npc:mara/advice','npc:mara/weather','title',...Array.from({length:10},(_,i)=>'guide/'+i)];
 (async()=>{
  fs.mkdirSync(out,{recursive:true});
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--use-angle=metal','--autoplay-policy=no-user-gesture-required']});
@@ -18,6 +18,7 @@ const views=['tool_tiles','market','market_sell/russet','market_sell/giant','mar
      const silent=this.context.createGain();silent.gain.value=0;
      connect.call(this,analyser);connect.call(analyser,silent);connect.call(silent,this.context.destination);
      this.context.__qolAnalyser=analyser;
+     window.qolAudio.context=this.context;
      const samples=new Float32Array(256);
      setInterval(()=>{analyser.getFloatTimeDomainData(samples);let peak=0;for(const v of samples)peak=Math.max(peak,Math.abs(v));window.qolAudio.peak=peak;
       if(window.qolAudio.armed&&window.qolAudio.onset===null&&peak>0.00001)window.qolAudio.onset=performance.now();
@@ -52,10 +53,10 @@ const views=['tool_tiles','market','market_sell/russet','market_sell/giant','mar
     await page.evaluate(()=>{window.qolAudio.onset=null;window.qolAudio.armed=false;window.qolTap=null;window.qolDOMInput=null});
     await page.mouse.move(x,y);await page.mouse.down();await page.waitForTimeout(45);await page.mouse.up();
     await page.waitForTimeout(320);
-    const timing=await page.evaluate(()=>({tap:window.qolTap,dom:window.qolDOMInput,audio:window.qolAudio.onset,peak:window.qolAudio.peak}));
+    const timing=await page.evaluate(()=>({tap:window.qolTap,dom:window.qolDOMInput,audio:window.qolAudio.onset,peak:window.qolAudio.peak,state:window.qolAudio.context?.state,game:window.qolSound}));
     const visual=timing.tap?timing.tap.paint-timing.dom:null;
     const sound=timing.audio===null?null:timing.audio-timing.dom;
-    results.push({view,...target,visual_ms:visual,sound_ms:sound});
+    results.push({view,...target,visual_ms:visual,sound_ms:sound,diagnostic:timing});
     if(process.env.QOL_LATENCY_BASELINE!=='1'){
      assert(visual!==null&&visual>=0&&visual<=100,`${view} ${target.text}: visible feedback ${visual} ms`);
      assert(sound!==null&&sound>=0&&sound<=300,`${view} ${target.text}: audible feedback ${sound} ms`);
