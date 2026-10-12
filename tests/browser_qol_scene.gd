@@ -31,6 +31,7 @@ func _present_qol(action: String, ticket: int) -> void:
 		game.hud.root.visible = view == "qol_locked"
 		game.touch_controls.root.hide()
 		if view == "qol_locked": game.hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(game.state, 24))
+	if view == "qol_hotbar": game.hud.set_tool("harvest")
 	if view == "qol_refused":
 		game.state.tutorial_progress.step = 4
 		game.state.tutorial_progress.plot = 5
@@ -61,6 +62,8 @@ func _publish() -> void:
 		if is_instance_valid(button):
 			last_report.latency_buttons.append({"index":index,"text":button.text,"action":button.get_meta("action",""),"rect":_latency_rect(button),"disabled":button.disabled})
 	last_report.latency_armed = _latency_rect(armed) if is_instance_valid(armed) else []
+	last_report.hotbar = _rect(game.hud._hotbar)
+	last_report.hotbar_caption = _rect(game.hud._tool_caption)
 	last_report.sell_rows = []
 	if game.hud._refs.has("market_page") and game.hud._refs.market_page.selling:
 		for entry in game.hud._refs.market_page.sale_rows.values(): last_report.sell_rows.append({"rect":_rect(entry.card),"graph":_rect(entry.history),"buttons":[_rect(entry.sales[1]),_rect(entry.sales[5])]})
