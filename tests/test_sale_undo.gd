@@ -53,7 +53,7 @@ func run() -> void:
 	# The first guided sale must also remain on its button through Undo.
 	game.hud.close_panel(); farm.season_clock.year=1; farm.season_clock.season=1
 	farm.tutorial_progress={"version":3,"step":8,"completed":false,"plot":5,"tour_only":false,"choice":""}
-	farm.storage=farm.Stock.empty(); farm.Stock.add(farm.storage,"russet",2,90)
+	farm.storage=farm.Stock.empty(); farm.trading.held=farm.Stock.empty(); farm.Stock.add(farm.storage,"russet",2,90)
 	game.tutorial.start(); game.hud.show_market(true,farm)
 	var page = game.hud._refs.market_page
 	var guided_journal: Dictionary=farm.ledger.save_data()
@@ -66,7 +66,8 @@ func run() -> void:
 	check(game.tutorial.current_id()=="sell","guided Undo restores the sale instruction")
 	page.sale_rows.russet.sales[1].pressed.emit()
 	check(game.tutorial.current_id()=="winter" and page.sell_button.text=="Undo","a repeated guided sale can advance again")
-	page._undo_sale._deadline=Time.get_ticks_msec()-1; page._process(0)
+	if is_instance_valid(page._undo_sale): page._undo_sale._deadline=Time.get_ticks_msec()-1
+	page._process(0)
 	check(not game.hud.is_panel_open(),"guided view returns to farming after the Undo window")
 	check(await preload("res://tests/audio_fixture.gd").release(game,self),"audio releases before teardown")
 	game.queue_free(); for frame in range(8): await process_frame
