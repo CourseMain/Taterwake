@@ -1,0 +1,457 @@
+{
+  "results": [
+    {
+      "view": "decorations",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        497,
+        58.461540222168,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.299999997019768,
+      "sound_ms": 45.19999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 9958.5,
+          "paint": 9972.10000000894,
+          "visual_ms": 13.6000000089407
+        },
+        "dom": 9956.800000011921,
+        "audio": 10002,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "talk:bram",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        468.384613037109,
+        168.846160888672,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 17,
+      "sound_ms": 17.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 12398.5,
+          "paint": 12415,
+          "visual_ms": 16.5
+        },
+        "dom": 12398,
+        "audio": 12415.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        52.0000076293945,
+        402.461547851562,
+        493,
+        105
+      ],
+      "text": "At the gate",
+      "visual_ms": 16.60000000891887,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 14849,
+          "paint": 14864.8000000119,
+          "visual_ms": 15.8000000119209
+        },
+        "dom": 14848.20000000298,
+        "audio": 14865.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 3,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        52.0000076293945,
+        515.461547851562,
+        493,
+        146
+      ],
+      "text": "Buy ·  2,000",
+      "visual_ms": 15.200000002958404,
+      "sound_ms": 15.5,
+      "diagnostic": {
+        "tap": {
+          "input": 17300.1000000089,
+          "paint": 17314.3000000119,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 17299.10000000894,
+        "audio": 17314.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        52.0000076293945,
+        821.461547851562,
+        493,
+        105
+      ],
+      "text": "At the gate",
+      "visual_ms": 15.600000008900679,
+      "sound_ms": 15.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 19749.3000000119,
+          "paint": 19764.1000000089,
+          "visual_ms": 14.7999999970198
+        },
+        "dom": 19748.5,
+        "audio": 19764.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 6,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        52.0000076293945,
+        934.461547851562,
+        493,
+        146
+      ],
+      "text": "Buy ·  4,000",
+      "visual_ms": 16.70000000302025,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 22198.5,
+          "paint": 22214.400000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 22197.70000000298,
+        "audio": 22214.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 7,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        52.0000076293945,
+        1240.46154785156,
+        493,
+        105
+      ],
+      "text": "At the gate",
+      "visual_ms": 16.700000002940214,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 24631.5,
+          "paint": 24647.6000000089,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 24630.90000000596,
+        "audio": 24648.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 9,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        52.0000076293945,
+        1353.46154785156,
+        493,
+        146
+      ],
+      "text": "Buy ·  6,000",
+      "visual_ms": 16.899999991077493,
+      "sound_ms": 17.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 27065,
+          "paint": 27081.200000003,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 27064.30000001192,
+        "audio": 27081.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 10,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": true,
+      "index": 8,
+      "rect": [
+        52.0000076293945,
+        1659.46154785156,
+        493,
+        105
+      ],
+      "text": "Beside the barn",
+      "visual_ms": 15.699999988079071,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 29502.400000006,
+          "paint": 29517,
+          "visual_ms": 14.5999999940395
+        },
+        "dom": 29501.30000001192,
+        "audio": 29517.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 12,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        52.0000076293945,
+        1772.46154785156,
+        493,
+        146
+      ],
+      "text": "Buy ·  8,000",
+      "visual_ms": 16.299999997037958,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 31948,
+          "paint": 31963.700000003,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 31947.40000000596,
+        "audio": 31964,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 13,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": true,
+      "index": 10,
+      "rect": [
+        52.0000076293945,
+        2078.46142578125,
+        493,
+        105
+      ],
+      "text": "By the pond",
+      "visual_ms": 20.200000002936576,
+      "sound_ms": 20.5,
+      "diagnostic": {
+        "tap": {
+          "input": 34399.6000000089,
+          "paint": 34418.6000000089,
+          "visual_ms": 19
+        },
+        "dom": 34398.40000000596,
+        "audio": 34418.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 15,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        52.0000076293945,
+        2191.46142578125,
+        493,
+        146
+      ],
+      "text": "Buy ·  10,000",
+      "visual_ms": 15.800000011899101,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 36866.1000000089,
+          "paint": 36881.3000000119,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 36865.5,
+        "audio": 36881.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 16,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": true,
+      "index": 12,
+      "rect": [
+        52.0000076293945,
+        2497.46142578125,
+        493,
+        105
+      ],
+      "text": "At the gate",
+      "visual_ms": 19.900000005938637,
+      "sound_ms": 20.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 39333.3000000119,
+          "paint": 39352.3000000119,
+          "visual_ms": 19
+        },
+        "dom": 39332.40000000596,
+        "audio": 39352.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 18,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        52.0000076293945,
+        2610.46142578125,
+        493,
+        146
+      ],
+      "text": "Buy ·  12,000",
+      "visual_ms": 13.599999994039536,
+      "sound_ms": 13.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 41768,
+          "paint": 41781,
+          "visual_ms": 13
+        },
+        "dom": 41767.40000000596,
+        "audio": 41781.30000001192,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 19,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}

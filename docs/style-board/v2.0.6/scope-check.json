@@ -1,0 +1,16 @@
+{
+  "reference": "fba0f95",
+  "unchanged": [
+    "scripts/balance.gd",
+    "scripts/crop_table.gd",
+    "scripts/ledger.gd",
+    "docs/style-board/ui-kit.html"
+  ],
+  "public_export": "not published; docs root stays v2.0.5",
+  "sha256": {
+    "scripts/balance.gd": "e956cbc7f5a4119524bd0a8bccaf3108e47a39c356df540cc1296e3a62348947",
+    "scripts/crop_table.gd": "7baf02c7ec64afb29ad2c19d728cc4906fc0cc261e5f5213cdf80c0975880d1c",
+    "scripts/ledger.gd": "352185e5e1b9f7112ece53b723f36184427f8b80477e4dcaca12f40dc2c96d91",
+    "docs/style-board/ui-kit.html": "1b893595ef6e71168e2f70e10c366a5c2cc0d806170b16bee1174616738bacef"
+  }
+}

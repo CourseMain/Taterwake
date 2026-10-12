@@ -1,0 +1,19 @@
+[
+  {
+    "suite": "test_epilogue",
+    "status": "PASS",
+    "checks": 534,
+    "failures": 0,
+    "exit_code": 0,
+    "log": "test_epilogue-standalone.txt"
+  },
+  {
+    "suite": "test_tuning_bot",
+    "status": "STOPPED_BY_OWNER",
+    "checks": null,
+    "failures": null,
+    "exit_code": null,
+    "log": "test_tuning_bot-standalone.txt",
+    "reason": "Owner requested a quick finish and waived further thorough testing on 2026-10-12. The completed full suite already includes test_tuning_bot with 1,679 passing checks."
+  }
+]

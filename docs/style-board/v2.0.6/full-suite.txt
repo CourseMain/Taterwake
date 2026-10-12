@@ -1,0 +1,109 @@
+PASS    test_branding | TATERLAND BRANDING: 7 checks, 0 failures
+PASS    test_camera_hotbar | CAMERA HOTBAR: 28 checks, 0 failures
+PASS    test_clarity | CLARITY UPDATE: 14 checks, 0 failures
+PASS    test_climate | CLIMATE: 78 checks, 0 failures
+PASS    test_climate_curve | CLIMATE CURVE: 109 checks, 0 failures
+PASS    test_climate_game | CLIMATE GAME: 40 checks, 0 failures
+PASS    test_climate_lesson | CLIMATE LESSON: 36 checks, 0 failures
+PASS    test_climate_operations | CLIMATE OPERATIONS: 23 checks, 0 failures
+PASS    test_climate_projects | CLIMATE PROJECTS: 123 checks, 0 failures
+PASS    test_climate_visuals | CLIMATE VISUALS: 0 failures
+PASS    test_crop_growth | CROP GROWTH: 75 checks, 0 failures
+PASS    test_crop_table | CROP TABLE: 134 checks, 0 failures
+PASS    test_cute_snow | CUTE SNOW: 32 checks, 0 failures
+PASS    test_day_night | SEASON SKY: 327 checks, 0 failures
+PASS    test_debug_access_time | DEBUG ACCESS AND TIME: 39 checks, 0 failures
+PASS    test_debug_money_ui | DEBUG MONEY UI: 29 checks, 0 failures
+PASS    test_debug_recovery | DEBUG RECOVERY: 11 checks, 0 failures
+PASS    test_disaster_markets | DISASTER MARKETS: 24 checks, 0 failures
+PASS    test_diversification | DIVERSIFICATION: 89 checks, 0 failures
+PASS    test_economy_scale | ECONOMY SCALE: 170 checks, 0 failures
+PASS    test_epilogue_scene | Epilogue scene: 126 checks, 0 failures
+PASS    test_farm_alerts | FARM ALERTS: 16 checks, 0 failures
+PASS    test_farm_clarity | FARM CLARITY: 32 checks, 0 failures
+PASS    test_farm_help | FARM HELP: 23 checks, 0 failures
+PASS    test_farm_interaction | FARM INTERACTION: 18 checks, 0 failures
+PASS    test_farm_viewport | FARM VIEWPORT: 51 checks, 0 failures
+PASS    test_farm_visuals | FARM VISUALS: 165 checks, 0 failures
+PASS    test_feature_ui | FEATURE PRESENTATION: 2 checks, 0 failures
+PASS    test_feel | FEEL: 72 checks, 0 failures
+PASS    test_first_tester | FIRST TESTER: 615 checks, 0 failures
+PASS    test_frame_time_recorder | FRAME TIME RECORDER: 12 checks, 0 failures
+PASS    test_fullscreen_controls | NATIVE FULLSCREEN: 10 checks, 0 failures
+PASS    test_gacha_removal | GACHA REMOVAL: 18 checks, 0 failures
+PASS    test_game | SPUD VALLEY INTEGRATION: 47 checks, 0 failures
+PASS    test_grades | GRADES: 82 checks, 0 failures
+PASS    test_graphics_preferences | GRAPHICS PREFERENCES: 37 checks, 0 failures
+PASS    test_guidance_polish | GUIDANCE POLISH: 20 checks, 0 failures
+PASS    test_harvest_identity | HARVEST IDENTITY: 22 checks, 0 failures
+PASS    test_hud_layout | HUD LAYOUT: 43 checks, 0 failures
+PASS    test_interface_pages | INTERFACE PAGES: 298 checks, 0 failures
+PASS    test_island_activities | FARM DUCKS: 26 checks, 0 failures
+PASS    test_island_layout | ISLAND LAYOUT: 160 checks, 0 failures
+PASS    test_item_removal | ITEM REMOVAL: 16 checks, 0 failures
+PASS    test_keeper_greeting | KEEPER GREETINGS: 24 checks, 0 failures
+PASS    test_latest_game | LATEST GAME FEATURES: 42 checks, 0 failures
+PASS    test_ledger | LEDGER: 121 checks, 0 failures
+PASS    test_map_pan | MAP PAN: 39 checks, 0 failures
+PASS    test_map_zoom | MAP ZOOM: 18 checks, 0 failures
+PASS    test_market_decisions | MARKET DECISIONS: 128 checks, 0 failures
+PASS    test_market_dialogue | MARKET DIALOGUE: 21 checks, 0 failures
+PASS    test_npc_conversations | NPC CONVERSATIONS: 282 checks, 0 failures
+PASS    test_npc_prompts | NPC PROMPTS: 111 checks, 0 failures
+PASS    test_pace_and_land | Pace and land: 673 checks, 0 failures
+PASS    test_panel_motion | PANEL MOTION: 134 checks, 0 failures
+PASS    test_pest_audio | PEST AUDIO: 14 checks, 0 failures
+PASS    test_pest_schedule | Pest schedule: 10102 checks, 0 failures
+PASS    test_placeholder_market | PLACEHOLDER MARKET: 240 checks, 0 failures
+PASS    test_play_light | PLAY LIGHT: 32 checks, 0 failures
+PASS    test_playability_audit | PLAYABILITY AUDIT: 6 checks, 0 failures
+PASS    test_profession_removal | PROFESSION REMOVAL: 171 checks, 0 failures
+PASS    test_protection | PROTECTION: 245 checks, 0 failures
+PASS    test_purchase_activity_hud | PURCHASE + PATROL HUD: 23 checks, 0 failures
+PASS    test_purchase_game | PURCHASE GAME: 16 checks, 0 failures
+PASS    test_purchase_receipts | PURCHASE RECEIPTS: 292 checks, 0 failures
+PASS    test_purchase_world | PURCHASE WORLD: 93 checks, 0 failures
+PASS    test_qol_state | QOL STATE: 24 checks, 0 failures
+PASS    test_qol_update | QOL UPDATE: 40 checks, 0 failures
+PASS    test_quest_rewards_hud | QUEST REWARDS HUD: 8 checks, 0 failures
+PASS    test_refused_taps | REFUSED TAPS: 36 checks, 0 failures
+PASS    test_responsive_fit | RESPONSIVE FIT: 1317 checks, 0 failures
+PASS    test_round_avatar | ROUND AVATAR: 12 checks, 0 failures
+PASS    test_sale_undo | SALE UNDO: 53 checks, 0 failures
+PASS    test_save_safety | SAVE SAFETY: 28 checks, 0 failures
+PASS    test_seed_market | SEED MARKET: 181 checks, 0 failures
+PASS    test_sell_page | SELL PAGE: 103 checks, 0 failures
+PASS    test_shadow_casters | SHADOW CASTERS: 24 checks, 0 failures
+PASS    test_simulation | SPUD VALLEY SIMULATION: 54 checks, 0 failures
+PASS    test_single_farm | SINGLE FARM: 255 checks, 0 failures
+PASS    test_static_mesh_compiler | STATIC MESH COMPILER: 295 checks, 0 failures
+PASS    test_sun_icons | SUN AND ICONS: 119 checks, 0 failures
+PASS    test_surfaces | SURFACES: 48 checks, 0 failures
+PASS    test_tap_feedback | TAP FEEDBACK: 8 checks, 0 failures
+PASS    test_three_numbers | THREE NUMBERS: 82 checks, 0 failures
+PASS    test_title_launch | TITLE LAUNCH: 82 checks, 0 failures
+PASS    test_title_scene | FARM TITLE: 61 checks, 0 failures
+PASS    test_touch_controls | TOUCH CONTROLS: 248 checks, 0 failures
+PASS    test_tutorial_barn | TUTORIAL BARN: 33 checks, 0 failures
+PASS    test_tutorial_game | TUTORIAL SCENE: 71 checks, 0 failures
+PASS    test_tutorial_hud | TUTORIAL HUD: 67 checks, 0 failures
+PASS    test_tutorial_state | Tutorial state: 47 checks, 0 failures
+PASS    test_tutorial_world | TUTORIAL WORLD: 39 checks, 0 failures
+PASS    test_ui_audit | UI AUDIT: 795 checks, 0 failures
+PASS    test_ui_kit | UI KIT: 667 checks, 0 failures
+PASS    test_ui_polish | UI POLISH: 38 checks, 0 failures
+PASS    test_village_identity | VILLAGE IDENTITY: 74 checks, 0 failures
+PASS    test_water_loop_game | WATER LOOP GAME: 15 checks, 0 failures
+PASS    test_water_loop_state | CONNECTED WATER STATE: 75 checks, 0 failures
+PASS    test_weather_dashboard | WEATHER DASHBOARD: 82 checks, 0 failures
+PASS    test_weather_station | WEATHER STATION: 72 checks, 0 failures
+PASS    test_winter_lighting | WINTER LIGHTING: 16 checks, 0 failures
+PASS    test_world_feedback | WORLD FEEDBACK: 60 checks, 0 failures
+PASS    test_world_graphics_quality | WORLD GRAPHICS QUALITY: 15 checks, 0 failures
+PASS    test_world_rendering_optimization | WORLD RENDERING OPTIMIZATION: 97 checks, 0 failures
+PASS    test_world_signs | WORLD SIGNS: 118 checks, 0 failures
+PASS    test_epilogue | Epilogue: 534 checks, 0 failures
+PASS    test_farm_audio | FARM AUDIO: 145 checks, 0 failures
+PASS    test_season_clock | SEASON CLOCK: 125 checks, 0 failures
+PASS    test_tuning_bot | Tuning bot: 1679 checks, 0 failures
+Total: 108 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS | logs: artifacts/test-results

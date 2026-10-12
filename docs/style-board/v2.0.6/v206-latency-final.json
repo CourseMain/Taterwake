@@ -1,0 +1,6629 @@
+{
+  "results": [
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        186,
+        108,
+        368,
+        126
+      ],
+      "text": "Close controls",
+      "visual_ms": 12.700000002980232,
+      "sound_ms": 12.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 9256.79999999702,
+          "paint": 9267.90000000596,
+          "visual_ms": 11.1000000089407
+        },
+        "dom": 9255.20000000298,
+        "audio": 9268.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        186,
+        242,
+        180,
+        125.846153259277
+      ],
+      "text": "Hoe",
+      "visual_ms": 16.500000000040018,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 11632.799999997,
+          "paint": 11648.900000006,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 11632.40000000596,
+        "audio": 11649.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        374,
+        242,
+        180,
+        125.846153259277
+      ],
+      "text": "Seeds",
+      "visual_ms": 15.600000008900679,
+      "sound_ms": 15.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 14033,
+          "paint": 14048.1000000089,
+          "visual_ms": 15.1000000089407
+        },
+        "dom": 14032.5,
+        "audio": 14048.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 3,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        186,
+        375,
+        180,
+        125.846153259277
+      ],
+      "text": "Water",
+      "visual_ms": 16.30000001188091,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 16399.700000003,
+          "paint": 16415.6000000089,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 16399.29999999702,
+        "audio": 16415.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        374,
+        375,
+        180,
+        125.846153259277
+      ],
+      "text": "Harvest",
+      "visual_ms": 16.500000000040018,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 18749.900000006,
+          "paint": 18765.900000006,
+          "visual_ms": 16
+        },
+        "dom": 18749.40000000596,
+        "audio": 18766.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 5,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        186,
+        508,
+        180,
+        125.846153259277
+      ],
+      "text": "Sprayer",
+      "visual_ms": 16.600000008980714,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 21116.400000006,
+          "paint": 21132.400000006,
+          "visual_ms": 16
+        },
+        "dom": 21115.79999999702,
+        "audio": 21132.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 6,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        374,
+        508,
+        180,
+        125.846153259277
+      ],
+      "text": "Crop",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 23482.900000006,
+          "paint": 23499,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 23482.29999999702,
+        "audio": 23499.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 7,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        186,
+        641,
+        368,
+        126
+      ],
+      "text": "Zoom +",
+      "visual_ms": 14.600000008980714,
+      "sound_ms": 15,
+      "diagnostic": {
+        "tap": {
+          "input": 25851.200000003,
+          "paint": 25865.400000006,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 25850.79999999702,
+        "audio": 25865.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 8,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        186,
+        775,
+        368,
+        126
+      ],
+      "text": "Zoom −",
+      "visual_ms": 16.299999997059786,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 28199.6000000089,
+          "paint": 28215.400000006,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 28199.10000000894,
+        "audio": 28215.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 9,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        186,
+        909,
+        368,
+        126
+      ],
+      "text": "Recenter view",
+      "visual_ms": 16.299999997059786,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 30549.1000000089,
+          "paint": 30564.900000006,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 30548.60000000894,
+        "audio": 30565.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 10,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tool_tiles",
+      "action": "",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        186,
+        1043,
+        368,
+        126
+      ],
+      "text": "Cancel task",
+      "visual_ms": 16.899999991037475,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 32898.5,
+          "paint": 32914.799999997,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 32897.90000000596,
+        "audio": 32915,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 11,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        55.3846130371094,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 17.099999994039536,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 38766.1000000089,
+          "paint": 38782.5,
+          "visual_ms": 16.3999999910593
+        },
+        "dom": 38765.40000000596,
+        "audio": 38782.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 12,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        466.307708740234,
+        181.769226074219,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 18.099999994061363,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 41181.700000003,
+          "paint": 41199.200000003,
+          "visual_ms": 17.5
+        },
+        "dom": 41181.10000000894,
+        "audio": 41199.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 13,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        305.384613037109,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 14.20000000300206,
+      "sound_ms": 14.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 43584.400000006,
+          "paint": 43598.200000003,
+          "visual_ms": 13.7999999970198
+        },
+        "dom": 43584,
+        "audio": 43598.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 14,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        233.923095703125,
+        305.384613037109,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 15.700000003016612,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 45981.6000000089,
+          "paint": 45996.900000006,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 45981.20000000298,
+        "audio": 45997.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 15,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "crop:russet",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        52.3077011108398,
+        584.769226074219,
+        220,
+        68
+      ],
+      "text": "Russet",
+      "visual_ms": 16.099999994017708,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 48414.700000003,
+          "paint": 48430.299999997,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 48414.20000000298,
+        "audio": 48430.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 16,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:russet:1",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        52.3077011108398,
+        948.769226074219,
+        220,
+        69
+      ],
+      "text": "Buy 1",
+      "visual_ms": 16.299999997041596,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 50815.299999997,
+          "paint": 50831.200000003,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 50814.90000000596,
+        "audio": 50831.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 17,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:russet:5",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        52.3077011108398,
+        1021.76922607422,
+        220,
+        69
+      ],
+      "text": "Buy 5",
+      "visual_ms": 17.10000000889704,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 53196.900000006,
+          "paint": 53213.6000000089,
+          "visual_ms": 16.7000000029802
+        },
+        "dom": 53196.5,
+        "audio": 53213.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 19,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "crop:giant",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        319.307708740234,
+        584.769226074219,
+        220,
+        68
+      ],
+      "text": "Giant",
+      "visual_ms": 19.700000002936576,
+      "sound_ms": 19.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 55598.299999997,
+          "paint": 55617.6000000089,
+          "visual_ms": 19.3000000119209
+        },
+        "dom": 55597.90000000596,
+        "audio": 55617.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 21,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:giant:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        319.307708740234,
+        910.769226074219,
+        220,
+        69
+      ],
+      "text": "Buy 1",
+      "visual_ms": 16.599999994039536,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 57999.799999997,
+          "paint": 58016,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 57999.40000000596,
+        "audio": 58016.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 22,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:giant:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        319.307708740234,
+        983.769226074219,
+        220,
+        69
+      ],
+      "text": "Buy 5",
+      "visual_ms": 16.400000005996844,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 60465,
+          "paint": 60480.900000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 60464.5,
+        "audio": 60481.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 24,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "crop:golden",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        52.3077011108398,
+        1282.76928710938,
+        220,
+        68
+      ],
+      "text": "Golden",
+      "visual_ms": 16.300000011877273,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 62864.700000003,
+          "paint": 62880.6000000089,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 62864.29999999702,
+        "audio": 62880.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 26,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:golden:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        52.3077011108398,
+        1608.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 1",
+      "visual_ms": 19.900000005996844,
+      "sound_ms": 20.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 65265.5,
+          "paint": 65284.900000006,
+          "visual_ms": 19.4000000059605
+        },
+        "dom": 65265,
+        "audio": 65285.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 27,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:golden:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        52.3077011108398,
+        1681.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 5",
+      "visual_ms": 16.19999998806452,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 67682.200000003,
+          "paint": 67697.799999997,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 67681.60000000894,
+        "audio": 67698.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 29,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "crop:sunburst",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        319.307708740234,
+        1282.76928710938,
+        220,
+        68
+      ],
+      "text": "Sunburst",
+      "visual_ms": 16.100000008984352,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 70081.200000003,
+          "paint": 70096.900000006,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 70080.79999999702,
+        "audio": 70097.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 31,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:sunburst:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        319.307708740234,
+        1608.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 1",
+      "visual_ms": 16.500000000014552,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 72481.700000003,
+          "paint": 72497.700000003,
+          "visual_ms": 16
+        },
+        "dom": 72481.20000000298,
+        "audio": 72497.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 32,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:sunburst:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        319.307708740234,
+        1681.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 5",
+      "visual_ms": 16.200000002936576,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 74882.299999997,
+          "paint": 74898.1000000089,
+          "visual_ms": 15.8000000119209
+        },
+        "dom": 74881.90000000596,
+        "audio": 74898.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 34,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "crop:icecap",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        52.3077011108398,
+        1942.76928710938,
+        220,
+        68
+      ],
+      "text": "Icecap",
+      "visual_ms": 15.799999997019768,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 77280.1000000089,
+          "paint": 77295.5,
+          "visual_ms": 15.3999999910593
+        },
+        "dom": 77279.70000000298,
+        "audio": 77295.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 36,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:icecap:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        52.3077011108398,
+        2268.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 1",
+      "visual_ms": 19.90000000591681,
+      "sound_ms": 20.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 79680.6000000089,
+          "paint": 79700.1000000089,
+          "visual_ms": 19.5
+        },
+        "dom": 79680.20000000298,
+        "audio": 79700.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 37,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market",
+      "action": "buy:icecap:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        52.3077011108398,
+        2341.76928710938,
+        220,
+        69
+      ],
+      "text": "Buy 5",
+      "visual_ms": 17.499999999985448,
+      "sound_ms": 17.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 82079.200000003,
+          "paint": 82096.299999997,
+          "visual_ms": 17.0999999940395
+        },
+        "dom": 82078.79999999702,
+        "audio": 82096.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 39,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 20.500000000014552,
+      "sound_ms": 20.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 86281.700000003,
+          "paint": 86301.700000003,
+          "visual_ms": 20
+        },
+        "dom": 86281.20000000298,
+        "audio": 86301.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 41,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 15.799999997005216,
+      "sound_ms": 16.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 88748.400000006,
+          "paint": 88763.799999997,
+          "visual_ms": 15.3999999910593
+        },
+        "dom": 88748,
+        "audio": 88764.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 42,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 21.299999997019768,
+      "sound_ms": 21.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 91231.200000003,
+          "paint": 91252,
+          "visual_ms": 20.7999999970198
+        },
+        "dom": 91230.70000000298,
+        "audio": 91252.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 43,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 17.099999994024984,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 93697.700000003,
+          "paint": 93714.299999997,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 93697.20000000298,
+        "audio": 93714.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 44,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 17.69999998806452,
+      "sound_ms": 17.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 96164,
+          "paint": 96181.299999997,
+          "visual_ms": 17.2999999970198
+        },
+        "dom": 96163.60000000894,
+        "audio": 96181.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 45,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 16.099999994054087,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 98631.5,
+          "paint": 98647.200000003,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 98631.10000000894,
+        "audio": 98647.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 46,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 17,
+      "sound_ms": 17.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 101097.900000006,
+          "paint": 101114.5,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 101097.5,
+        "audio": 101114.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 47,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 16.40000000600412,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 103564.400000006,
+          "paint": 103580.400000006,
+          "visual_ms": 16
+        },
+        "dom": 103564,
+        "audio": 103580.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 48,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        297,
+        427.576934814453,
+        133,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.800000011979137,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 106048.200000003,
+          "paint": 106064.600000009,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 106047.79999999702,
+        "audio": 106064.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 49,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        437,
+        427.576934814453,
+        134,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 13.899999991044751,
+      "sound_ms": 14.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 108551.900000006,
+          "paint": 108565.299999997,
+          "visual_ms": 13.3999999910593
+        },
+        "dom": 108551.40000000596,
+        "audio": 108565.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 50,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.299999997005216,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 111031.400000006,
+          "paint": 111047.299999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 111031,
+        "audio": 111047.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 51,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        152.000015258789,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 12.299999997019768,
+      "sound_ms": 12.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 113502.5,
+          "paint": 113514.5,
+          "visual_ms": 12
+        },
+        "dom": 113502.20000000298,
+        "audio": 113514.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 52,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        365,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.29999999703432,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 115981.200000003,
+          "paint": 115997.200000003,
+          "visual_ms": 16
+        },
+        "dom": 115980.90000000596,
+        "audio": 115997.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 53,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 15.799999997019768,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 118464.600000009,
+          "paint": 118480,
+          "visual_ms": 15.3999999910593
+        },
+        "dom": 118464.20000000298,
+        "audio": 118480.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 54,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        152.000015258789,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 14.900000005975016,
+      "sound_ms": 15.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 120931.200000003,
+          "paint": 120945.700000003,
+          "visual_ms": 14.5
+        },
+        "dom": 120930.79999999702,
+        "audio": 120946,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 55,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        365,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.700000003023888,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 123413,
+          "paint": 123429.400000006,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 123412.70000000298,
+        "audio": 123429.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 56,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.900000005975016,
+      "sound_ms": 17.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 125879.200000003,
+          "paint": 125895.700000003,
+          "visual_ms": 16.5
+        },
+        "dom": 125878.79999999702,
+        "audio": 125895.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 57,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        152.000015258789,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 17.099999994054087,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 128346.600000009,
+          "paint": 128363.200000003,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 128346.10000000894,
+        "audio": 128363.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 58,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        365,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 15.79999999703432,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 130830.299999997,
+          "paint": 130845.700000003,
+          "visual_ms": 15.4000000059605
+        },
+        "dom": 130829.90000000596,
+        "audio": 130846,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 59,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 15.700000003009336,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 133331,
+          "paint": 133346.200000003,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 133330.5,
+        "audio": 133346.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 60,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        152.000015258789,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.40000000598957,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 135780.900000006,
+          "paint": 135796.900000006,
+          "visual_ms": 16
+        },
+        "dom": 135780.5,
+        "audio": 135797.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 61,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/russet",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        365,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 14.900000005989568,
+      "sound_ms": 15.300000011920929,
+      "diagnostic": {
+        "tap": {
+          "input": 138315.400000006,
+          "paint": 138329.700000003,
+          "visual_ms": 14.2999999970198
+        },
+        "dom": 138314.79999999702,
+        "audio": 138330.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 62,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 16.59999999401043,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 142646.799999997,
+          "paint": 142662.799999997,
+          "visual_ms": 16
+        },
+        "dom": 142646.20000000298,
+        "audio": 142663.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 63,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 12.900000005989568,
+      "sound_ms": 13.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 145117.299999997,
+          "paint": 145129.700000003,
+          "visual_ms": 12.4000000059605
+        },
+        "dom": 145116.79999999702,
+        "audio": 145129.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 64,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 15.599999994039536,
+      "sound_ms": 15.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 147597.400000006,
+          "paint": 147612.5,
+          "visual_ms": 15.0999999940395
+        },
+        "dom": 147596.90000000596,
+        "audio": 147612.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 65,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 16.699999988049967,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 150113.100000009,
+          "paint": 150129.299999997,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 150112.60000000894,
+        "audio": 150129.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 66,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 15.700000003009336,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 152579.900000006,
+          "paint": 152595.200000003,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 152579.5,
+        "audio": 152595.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 67,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 16.000000000029104,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 155047.200000003,
+          "paint": 155062.700000003,
+          "visual_ms": 15.5
+        },
+        "dom": 155046.70000000298,
+        "audio": 155063,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 68,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 17.20000000303844,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 157511.900000006,
+          "paint": 157528.600000009,
+          "visual_ms": 16.7000000029802
+        },
+        "dom": 157511.40000000596,
+        "audio": 157528.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 69,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 21,
+      "sound_ms": 21.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 159978.600000009,
+          "paint": 159999,
+          "visual_ms": 20.3999999910593
+        },
+        "dom": 159978,
+        "audio": 159999.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 70,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        297,
+        427.576934814453,
+        133,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 19.90000000598957,
+      "sound_ms": 20.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 162573.100000009,
+          "paint": 162591.700000003,
+          "visual_ms": 18.5999999940395
+        },
+        "dom": 162571.79999999702,
+        "audio": 162592.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 71,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        437,
+        427.576934814453,
+        134,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 20.399999991059303,
+      "sound_ms": 20.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 165095.5,
+          "paint": 165115.5,
+          "visual_ms": 20
+        },
+        "dom": 165095.10000000894,
+        "audio": 165115.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 72,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.799999997019768,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 167561.700000003,
+          "paint": 167578,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 167561.20000000298,
+        "audio": 167578.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 73,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        152.000015258789,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 170012.5,
+          "paint": 170028.100000009,
+          "visual_ms": 15.6000000089407
+        },
+        "dom": 170012,
+        "audio": 170028.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 74,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        365,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.09999999401043,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 172479.299999997,
+          "paint": 172494.799999997,
+          "visual_ms": 15.5
+        },
+        "dom": 172478.70000000298,
+        "audio": 172495.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 75,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.20000000303844,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 174944.700000003,
+          "paint": 174960.600000009,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 174944.40000000596,
+        "audio": 174960.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 76,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        152.000015258789,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 20.79999999704887,
+      "sound_ms": 21,
+      "diagnostic": {
+        "tap": {
+          "input": 177394.600000009,
+          "paint": 177414.900000006,
+          "visual_ms": 20.2999999970198
+        },
+        "dom": 177394.10000000894,
+        "audio": 177415.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 77,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        365,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.8999999910302,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 179861.299999997,
+          "paint": 179877.799999997,
+          "visual_ms": 16.5
+        },
+        "dom": 179860.90000000596,
+        "audio": 179878,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 78,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.59999999401043,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 182327.600000009,
+          "paint": 182343.799999997,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 182327.20000000298,
+        "audio": 182344.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 79,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        152.000015258789,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.999999999970896,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 184794.299999997,
+          "paint": 184810.799999997,
+          "visual_ms": 16.5
+        },
+        "dom": 184793.79999999702,
+        "audio": 184811,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 80,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        365,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 187278.100000009,
+          "paint": 187294,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 187277.70000000298,
+        "audio": 187294.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 81,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 12.400000005989568,
+      "sound_ms": 12.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 189764.799999997,
+          "paint": 189776.900000006,
+          "visual_ms": 12.1000000089407
+        },
+        "dom": 189764.5,
+        "audio": 189777.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 82,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        152.000015258789,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.700000003009336,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 192227.400000006,
+          "paint": 192243.700000003,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 192227,
+        "audio": 192243.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 83,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/giant",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        365,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 194711.200000003,
+          "paint": 194727,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 194710.70000000298,
+        "audio": 194727.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 84,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 16.300000011979137,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 198944.200000003,
+          "paint": 198960.100000009,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 198943.79999999702,
+        "audio": 198960.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 85,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 16.5,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 201410.900000006,
+          "paint": 201427,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 201410.5,
+        "audio": 201427.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 86,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 12.400000005989568,
+      "sound_ms": 12.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 203898.200000003,
+          "paint": 203910.200000003,
+          "visual_ms": 12
+        },
+        "dom": 203897.79999999702,
+        "audio": 203910.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 87,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 16.299999996990664,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 206377.299999997,
+          "paint": 206393.299999997,
+          "visual_ms": 16
+        },
+        "dom": 206377,
+        "audio": 206393.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 88,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 16.200000003009336,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 208844,
+          "paint": 208859.900000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 208843.70000000298,
+        "audio": 208860.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 89,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 16.29999999704887,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 211310.799999997,
+          "paint": 211326.700000003,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 211310.40000000596,
+        "audio": 211326.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 90,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 213777.200000003,
+          "paint": 213793.5,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 213776.79999999702,
+        "audio": 213793.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 91,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 14.799999997048872,
+      "sound_ms": 15,
+      "diagnostic": {
+        "tap": {
+          "input": 216243.900000006,
+          "paint": 216258.200000003,
+          "visual_ms": 14.2999999970198
+        },
+        "dom": 216243.40000000596,
+        "audio": 216258.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 92,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        297,
+        427.576934814453,
+        133,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.699999988049967,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 218710.5,
+          "paint": 218726.799999997,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 218710.10000000894,
+        "audio": 218727,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 93,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        437,
+        427.576934814453,
+        134,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 12.200000003009336,
+      "sound_ms": 12.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 221179.900000006,
+          "paint": 221191.700000003,
+          "visual_ms": 11.7999999970198
+        },
+        "dom": 221179.5,
+        "audio": 221191.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 94,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 17.799999997019768,
+      "sound_ms": 18.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 223675.600000009,
+          "paint": 223693,
+          "visual_ms": 17.3999999910593
+        },
+        "dom": 223675.20000000298,
+        "audio": 223693.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 95,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        152.000015258789,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.59999999401043,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 226143.600000009,
+          "paint": 226159.799999997,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 226143.20000000298,
+        "audio": 226160,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 96,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        365,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 20.40000000598957,
+      "sound_ms": 20.5,
+      "diagnostic": {
+        "tap": {
+          "input": 228610.299999997,
+          "paint": 228630.200000003,
+          "visual_ms": 19.9000000059605
+        },
+        "dom": 228609.79999999702,
+        "audio": 228630.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 97,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.59999999406864,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 231093.100000009,
+          "paint": 231109.200000003,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 231092.60000000894,
+        "audio": 231109.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 98,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        152.000015258789,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 17.200000003009336,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 233557.799999997,
+          "paint": 233574.700000003,
+          "visual_ms": 16.9000000059605
+        },
+        "dom": 233557.5,
+        "audio": 233575,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 99,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        365,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.700000003009336,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 236042.900000006,
+          "paint": 236059.200000003,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 236042.5,
+        "audio": 236059.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 100,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.29999999704887,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 238509.600000009,
+          "paint": 238525.400000006,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 238509.10000000894,
+        "audio": 238525.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 101,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        152.000015258789,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 20.59999999406864,
+      "sound_ms": 20.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 240959.5,
+          "paint": 240979.700000003,
+          "visual_ms": 20.2000000029802
+        },
+        "dom": 240959.10000000894,
+        "audio": 240979.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 102,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        365,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.299999996990664,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 243426.400000006,
+          "paint": 243442.299999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 243426,
+        "audio": 243442.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 103,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 20.700000003009336,
+      "sound_ms": 20.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 245892.5,
+          "paint": 245912.900000006,
+          "visual_ms": 20.4000000059605
+        },
+        "dom": 245892.20000000298,
+        "audio": 245913.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 104,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        152.000015258789,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.200000002980232,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 248359.700000003,
+          "paint": 248375.5,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 248359.29999999702,
+        "audio": 248375.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 105,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/golden",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        365,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 15.000000000058208,
+      "sound_ms": 15.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 250842.5,
+          "paint": 250857.100000009,
+          "visual_ms": 14.6000000089407
+        },
+        "dom": 250842.10000000894,
+        "audio": 250857.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 106,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 13.500000000029104,
+      "sound_ms": 13.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 255111.799999997,
+          "paint": 255124.900000006,
+          "visual_ms": 13.1000000089407
+        },
+        "dom": 255111.40000000596,
+        "audio": 255125.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 107,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 14.699999988049967,
+      "sound_ms": 14.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 257575.5,
+          "paint": 257589.799999997,
+          "visual_ms": 14.2999999970198
+        },
+        "dom": 257575.10000000894,
+        "audio": 257590,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 108,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 16.40000000598957,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 260042.100000009,
+          "paint": 260058.200000003,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 260041.79999999702,
+        "audio": 260058.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 109,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 16.19999998807907,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 262525.400000006,
+          "paint": 262541.299999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 262525.10000000894,
+        "audio": 262541.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 110,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 18.5,
+      "sound_ms": 18.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 264990.100000009,
+          "paint": 265008.200000003,
+          "visual_ms": 18.0999999940395
+        },
+        "dom": 264989.700000003,
+        "audio": 265008.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 111,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 15.5,
+      "sound_ms": 15.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 267425.5,
+          "paint": 267440.700000003,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 267425.200000003,
+        "audio": 267441,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 112,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 20.299999997019768,
+      "sound_ms": 20.5,
+      "diagnostic": {
+        "tap": {
+          "input": 269892.200000003,
+          "paint": 269912,
+          "visual_ms": 19.7999999970198
+        },
+        "dom": 269891.700000003,
+        "audio": 269912.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 113,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 272356.700000003,
+          "paint": 272372.900000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 272356.299999997,
+        "audio": 272373.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 114,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        297,
+        427.576934814453,
+        133,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 20.500000000058208,
+      "sound_ms": 20.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 274823.400000006,
+          "paint": 274843.600000009,
+          "visual_ms": 20.2000000029802
+        },
+        "dom": 274823.10000000894,
+        "audio": 274843.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 115,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        437,
+        427.576934814453,
+        134,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 277306.5,
+          "paint": 277322.5,
+          "visual_ms": 16
+        },
+        "dom": 277306.10000000894,
+        "audio": 277322.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 116,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 279789.900000006,
+          "paint": 279805.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 279789.5,
+        "audio": 279806.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 117,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        152.000015258789,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 22.600000008998904,
+      "sound_ms": 34.5,
+      "diagnostic": {
+        "tap": {
+          "input": 282256.200000003,
+          "paint": 282278.400000006,
+          "visual_ms": 22.2000000029802
+        },
+        "dom": 282255.799999997,
+        "audio": 282290.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 118,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        365,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 17.099999994039536,
+      "sound_ms": 17.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 284739.200000003,
+          "paint": 284756,
+          "visual_ms": 16.7999999970198
+        },
+        "dom": 284738.90000000596,
+        "audio": 284756.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 119,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 287222.900000006,
+          "paint": 287238.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 287222.5,
+        "audio": 287239.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 120,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        152.000015258789,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 289689.900000006,
+          "paint": 289705.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 289689.5,
+        "audio": 289706,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 121,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        365,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.400000005960464,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 292173.200000003,
+          "paint": 292189.200000003,
+          "visual_ms": 16
+        },
+        "dom": 292172.799999997,
+        "audio": 292189.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 122,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 11.600000008998904,
+      "sound_ms": 11.800000011920929,
+      "diagnostic": {
+        "tap": {
+          "input": 294644.200000003,
+          "paint": 294655.400000006,
+          "visual_ms": 11.2000000029802
+        },
+        "dom": 294643.799999997,
+        "audio": 294655.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 123,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        152.000015258789,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.000000000058208,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 297123,
+          "paint": 297138.600000009,
+          "visual_ms": 15.6000000089407
+        },
+        "dom": 297122.60000000894,
+        "audio": 297138.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 124,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        365,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 15.899999991059303,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 299623.5,
+          "paint": 299639,
+          "visual_ms": 15.5
+        },
+        "dom": 299623.10000000894,
+        "audio": 299639.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 125,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 20.20000000303844,
+      "sound_ms": 20.5,
+      "diagnostic": {
+        "tap": {
+          "input": 302089.200000003,
+          "paint": 302109.100000009,
+          "visual_ms": 19.9000000059605
+        },
+        "dom": 302088.90000000596,
+        "audio": 302109.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 126,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        152.000015258789,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.500000000058208,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 304539.400000006,
+          "paint": 304555.600000009,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 304539.10000000894,
+        "audio": 304555.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 127,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/sunburst",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        365,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.5,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 307039.400000006,
+          "paint": 307055.5,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 307039,
+        "audio": 307055.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 128,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 16.500000000058208,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 311272.5,
+          "paint": 311288.600000009,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 311272.10000000894,
+        "audio": 311288.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 129,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 17.20000000303844,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 313739.299999997,
+          "paint": 313756.100000009,
+          "visual_ms": 16.8000000119209
+        },
+        "dom": 313738.90000000596,
+        "audio": 313756.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 130,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 16.400000006018672,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 316222.400000006,
+          "paint": 316238.400000006,
+          "visual_ms": 16
+        },
+        "dom": 316222,
+        "audio": 316238.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 131,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 16.400000005960464,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 318705.799999997,
+          "paint": 318721.700000003,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 318705.299999997,
+        "audio": 318722,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 132,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 321172.299999997,
+          "paint": 321188.299999997,
+          "visual_ms": 16
+        },
+        "dom": 321172,
+        "audio": 321188.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 133,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 323638.900000006,
+          "paint": 323655,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 323638.60000000894,
+        "audio": 323655.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 134,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.900000006018672,
+      "sound_ms": 17.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 326122.5,
+          "paint": 326138.900000006,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 326122,
+        "audio": 326139.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 135,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 328589,
+          "paint": 328605,
+          "visual_ms": 16
+        },
+        "dom": 328588.60000000894,
+        "audio": 328605.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 136,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        297,
+        427.576934814453,
+        133,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 331055.900000006,
+          "paint": 331071.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 331055.40000000596,
+        "audio": 331072,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 137,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        437,
+        427.576934814453,
+        134,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.500000000058208,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 333539.100000009,
+          "paint": 333555.100000009,
+          "visual_ms": 16
+        },
+        "dom": 333538.60000000894,
+        "audio": 333555.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 138,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 336022.100000009,
+          "paint": 336038,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 336021.700000003,
+        "audio": 336038.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 139,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        152.000015258789,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 20.5,
+      "sound_ms": 20.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 338488.900000006,
+          "paint": 338509,
+          "visual_ms": 20.0999999940395
+        },
+        "dom": 338488.5,
+        "audio": 338509.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 140,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        365,
+        590.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.599999994039536,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 340972.100000009,
+          "paint": 340988.299999997,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 340971.700000003,
+        "audio": 340988.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 141,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.099999994039536,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 343455.100000009,
+          "paint": 343470.799999997,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 343454.700000003,
+        "audio": 343471,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 142,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        152.000015258789,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.400000006018672,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 345921.600000009,
+          "paint": 345937.600000009,
+          "visual_ms": 16
+        },
+        "dom": 345921.200000003,
+        "audio": 345937.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 143,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        365,
+        753.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.19999998807907,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 348388.600000009,
+          "paint": 348404.299999997,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 348388.10000000894,
+        "audio": 348404.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 144,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.599999994039536,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 350871.299999997,
+          "paint": 350887.5,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 350870.90000000596,
+        "audio": 350887.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 145,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        152.000015258789,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.599999994039536,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 353338.299999997,
+          "paint": 353354.5,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 353337.90000000596,
+        "audio": 353354.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 146,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        365,
+        916.576904296875,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 12.70000000303844,
+      "sound_ms": 13,
+      "diagnostic": {
+        "tap": {
+          "input": 355808.700000003,
+          "paint": 355821.100000009,
+          "visual_ms": 12.4000000059605
+        },
+        "dom": 355808.40000000596,
+        "audio": 355821.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 147,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 358271.200000003,
+          "paint": 358287.5,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 358270.799999997,
+        "audio": 358287.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 148,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        152.000015258789,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 360736.400000006,
+          "paint": 360752.600000009,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 360736,
+        "audio": 360752.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 149,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_sell/icecap",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        365,
+        1079.57690429688,
+        206,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.69999998807907,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 363221.5,
+          "paint": 363237.799999997,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 363221.10000000894,
+        "audio": 363238,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 150,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "talk:mara",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        492.153869628906,
+        157.730773925781,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 18.599999994039536,
+      "sound_ms": 18.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 367519.100000009,
+          "paint": 367537.299999997,
+          "visual_ms": 18.1999999880791
+        },
+        "dom": 367518.700000003,
+        "audio": 367537.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 151,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "market_mode:buy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Buy",
+      "visual_ms": 15.799999997019768,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 370020.700000003,
+          "paint": 370036,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 370020.200000003,
+        "audio": 370036.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 152,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "market_mode:sell",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        233.923095703125,
+        267.5,
+        185,
+        67.6923065185547
+      ],
+      "text": "Sell",
+      "visual_ms": 17.099999994039536,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 372536.100000009,
+          "paint": 372552.799999997,
+          "visual_ms": 16.6999999880791
+        },
+        "dom": 372535.700000003,
+        "audio": 372552.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 153,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        428.923095703125,
+        265.5,
+        67.6923217773438,
+        73
+      ],
+      "text": "?",
+      "visual_ms": 15.899999991059303,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 375053.299999997,
+          "paint": 375068.799999997,
+          "visual_ms": 15.5
+        },
+        "dom": 375052.90000000596,
+        "audio": 375069.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 154,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "close",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        506.923095703125,
+        265.5,
+        68,
+        73
+      ],
+      "text": "×",
+      "visual_ms": 17.000000000058208,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 377553.299999997,
+          "paint": 377569.900000006,
+          "visual_ms": 16.6000000089407
+        },
+        "dom": 377552.90000000596,
+        "audio": 377570.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 155,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:russet:Table",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        40.0000114440918,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Table",
+      "visual_ms": 16.19999998807907,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 380053.900000006,
+          "paint": 380069.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 380053.60000000894,
+        "audio": 380069.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 156,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:russet:Standard",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        112.000015258789,
+        427.576934814453,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.799999997077975,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 382535.5,
+          "paint": 382551.900000006,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 382535.10000000894,
+        "audio": 382552.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 157,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:russet:Feed",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        216.000015258789,
+        427.576934814453,
+        68,
+        67.6923065185547
+      ],
+      "text": "Feed",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 385019.700000003,
+          "paint": 385036,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 385019.299999997,
+        "audio": 385036.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 158,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:russet:1",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        291,
+        427.576934814453,
+        136,
+        68
+      ],
+      "text": "Undo",
+      "visual_ms": 16.299999997077975,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 387519.5,
+          "paint": 387535.400000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 387519.10000000894,
+        "audio": 387535.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 159,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:russet:5",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        434,
+        427.576934814453,
+        137,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.299999997077975,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 390002.900000006,
+          "paint": 390018.900000006,
+          "visual_ms": 16
+        },
+        "dom": 390002.60000000894,
+        "audio": 390019.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 160,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:giant:Standard",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        40.0000114440918,
+        590.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 392503.200000003,
+          "paint": 392519,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 392502.700000003,
+        "audio": 392519.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 161,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:giant:1",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        147.000015258789,
+        590.576904296875,
+        208,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 17.700000002980232,
+      "sound_ms": 18,
+      "diagnostic": {
+        "tap": {
+          "input": 395002.400000006,
+          "paint": 395019.700000003,
+          "visual_ms": 17.2999999970198
+        },
+        "dom": 395002,
+        "audio": 395020,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 162,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:giant:5",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        362,
+        590.576904296875,
+        209,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 397503.200000003,
+          "paint": 397519.5,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 397502.799999997,
+        "audio": 397519.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 163,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:golden:Standard",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        40.0000114440918,
+        753.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 400019.400000006,
+          "paint": 400035.100000009,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 400019,
+        "audio": 400035.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 164,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:golden:1",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        147.000015258789,
+        753.576904296875,
+        208,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 12.100000008998904,
+      "sound_ms": 12.300000011920929,
+      "diagnostic": {
+        "tap": {
+          "input": 402524.200000003,
+          "paint": 402535.900000006,
+          "visual_ms": 11.7000000029802
+        },
+        "dom": 402523.799999997,
+        "audio": 402536.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 165,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:golden:5",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        362,
+        753.576904296875,
+        209,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 405019.700000003,
+          "paint": 405035.900000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 405019.299999997,
+        "audio": 405036.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 166,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:sunburst:Standard",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        40.0000114440918,
+        916.576904296875,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 14.899999991059303,
+      "sound_ms": 15.199999988079071,
+      "diagnostic": {
+        "tap": {
+          "input": 407536,
+          "paint": 407550.5,
+          "visual_ms": 14.5
+        },
+        "dom": 407535.60000000894,
+        "audio": 407550.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 167,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:sunburst:1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        147.000015258789,
+        916.576904296875,
+        208,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 410035.100000009,
+          "paint": 410050.900000006,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 410034.799999997,
+        "audio": 410051.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 168,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:sunburst:5",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        362,
+        916.576904296875,
+        209,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.799999997019768,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 412535.400000006,
+          "paint": 412552,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 412535.200000003,
+        "audio": 412552.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 169,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "grade:icecap:Standard",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        40.0000114440918,
+        1079.57690429688,
+        100,
+        67.6923065185547
+      ],
+      "text": "Standard",
+      "visual_ms": 15,
+      "sound_ms": 15.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 415035.900000006,
+          "paint": 415050.5,
+          "visual_ms": 14.5999999940395
+        },
+        "dom": 415035.5,
+        "audio": 415050.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 170,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:icecap:1",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        147.000015258789,
+        1079.57690429688,
+        208,
+        68
+      ],
+      "text": "1 tonne",
+      "visual_ms": 18,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 417550.600000009,
+          "paint": 417568.200000003,
+          "visual_ms": 17.5999999940395
+        },
+        "dom": 417550.200000003,
+        "audio": 417568.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 171,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "market_undo",
+      "action": "sell_amount:icecap:5",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        362,
+        1079.57690429688,
+        209,
+        68
+      ],
+      "text": "5 tonnes",
+      "visual_ms": 16.799999997019768,
+      "sound_ms": 17.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 420085.799999997,
+          "paint": 420102.299999997,
+          "visual_ms": 16.5
+        },
+        "dom": 420085.5,
+        "audio": 420102.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 172,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "field_notes",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        218,
+        771,
+        74,
+        103
+      ],
+      "text": "Close",
+      "visual_ms": 19,
+      "sound_ms": 19.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 424286.299999997,
+          "paint": 424305,
+          "visual_ms": 18.7000000029802
+        },
+        "dom": 424286,
+        "audio": 424305.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 173,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        55.3846130371094,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.70000000303844,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 428782.799999997,
+          "paint": 428799.100000009,
+          "visual_ms": 16.3000000119209
+        },
+        "dom": 428782.40000000596,
+        "audio": 428799.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 176,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "talk:nell",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        466.307708740234,
+        -1492.23071289062,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 431201.799999997,
+          "paint": 431217.799999997,
+          "visual_ms": 16
+        },
+        "dom": 431201.40000000596,
+        "audio": 431218.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 178,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "land_bill_parts",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        -1118.61535644531,
+        329,
+        68
+      ],
+      "text": "Mortgage and land ›",
+      "visual_ms": 16.400000006018672,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 433618.400000006,
+          "paint": 433634.400000006,
+          "visual_ms": 16
+        },
+        "dom": 433618,
+        "audio": 433634.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 180,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "barn",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        36.9230880737305,
+        -898.615356445312,
+        518,
+        73
+      ],
+      "text": "Go to the barn",
+      "visual_ms": 16.799999997077975,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 436016.600000009,
+          "paint": 436032.900000006,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 436016.10000000894,
+        "audio": 436033.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 182,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "toggle_details:account_records",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        36.9230880737305,
+        -809.615356445312,
+        164,
+        130
+      ],
+      "text": "Records",
+      "visual_ms": 21.100000008998904,
+      "sound_ms": 21.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 438415.799999997,
+          "paint": 438436.400000006,
+          "visual_ms": 20.6000000089407
+        },
+        "dom": 438415.299999997,
+        "audio": 438436.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 184,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "toggle_details:account_leases",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        213.923095703125,
+        -809.615356445312,
+        164,
+        130
+      ],
+      "text": "Leases",
+      "visual_ms": 15.799999997019768,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 440799.600000009,
+          "paint": 440815,
+          "visual_ms": 15.3999999910593
+        },
+        "dom": 440799.200000003,
+        "audio": 440815.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 186,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "toggle_details:account_businesses",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        390.923095703125,
+        -809.615356445312,
+        164,
+        130
+      ],
+      "text": "Businesses",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 443198.900000006,
+          "paint": 443215.100000009,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 443198.5,
+        "audio": 443215.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 188,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "ledger_screenshot",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        50.9230880737305,
+        -188.615356445312,
+        490,
+        110
+      ],
+      "text": "Save screenshot",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 445598.400000006,
+          "paint": 445614.700000003,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 445598,
+        "audio": 445615,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 190,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "lease:low",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        50.9230880737305,
+        47.3846435546875,
+        490,
+        73
+      ],
+      "text": "Rent ·  55,000/year",
+      "visual_ms": 15.900000006018672,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 447982,
+          "paint": 447997.600000009,
+          "visual_ms": 15.6000000089407
+        },
+        "dom": 447981.700000003,
+        "audio": 447997.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 192,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "lease:hill",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        50.9230880737305,
+        170.384643554688,
+        490,
+        73
+      ],
+      "text": "Rent ·  9,000/year",
+      "visual_ms": 16.300000011979137,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 450381.700000003,
+          "paint": 450397.600000009,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 450381.299999997,
+        "audio": 450397.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 194,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        460.923095703125,
+        407.384643554688,
+        67.6923217773438,
+        68
+      ],
+      "text": "?",
+      "visual_ms": 16.099999994039536,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 452781.600000009,
+          "paint": 452797.299999997,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 452781.200000003,
+        "audio": 452797.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 196,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "diversify:shop",
+      "disabled": true,
+      "index": 11,
+      "rect": [
+        62.9230880737305,
+        523.384643554688,
+        466,
+        110
+      ],
+      "text": "Build ·  120,000",
+      "visual_ms": 12.700000002980232,
+      "sound_ms": 12.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 455186.5,
+          "paint": 455198.5,
+          "visual_ms": 12
+        },
+        "dom": 455185.799999997,
+        "audio": 455198.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 198,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        460.923095703125,
+        669.384643554688,
+        67.6923217773438,
+        68
+      ],
+      "text": "?",
+      "visual_ms": 16.299999997077975,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 457581.400000006,
+          "paint": 457597.400000006,
+          "visual_ms": 16
+        },
+        "dom": 457581.10000000894,
+        "audio": 457597.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 200,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "diversify:grower",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        62.9230880737305,
+        785.384643554688,
+        466,
+        110
+      ],
+      "text": "Enrol free",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 459981.5,
+          "paint": 459997.5,
+          "visual_ms": 16
+        },
+        "dom": 459981.200000003,
+        "audio": 459997.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 202,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        460.923095703125,
+        931.384643554688,
+        67.6923217773438,
+        68
+      ],
+      "text": "?",
+      "visual_ms": 17.20000000303844,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 462381.600000009,
+          "paint": 462398.400000006,
+          "visual_ms": 16.7999999970198
+        },
+        "dom": 462381.200000003,
+        "audio": 462398.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 204,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "accounts",
+      "action": "diversify:lodging",
+      "disabled": true,
+      "index": 15,
+      "rect": [
+        62.9230880737305,
+        1082.38464355469,
+        466,
+        110
+      ],
+      "text": "Build ·  100,000",
+      "visual_ms": 16.70000000303844,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 464781.5,
+          "paint": 464797.600000009,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 464780.90000000596,
+        "audio": 464797.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 206,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        55.3846130371094,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 468864.700000003,
+          "paint": 468880.900000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 468864.299999997,
+        "audio": 468881.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 209,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "talk:nell",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        466.307708740234,
+        -991.230712890625,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 16.20000000303844,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 471264.799999997,
+          "paint": 471280.600000009,
+          "visual_ms": 15.8000000119209
+        },
+        "dom": 471264.40000000596,
+        "audio": 471280.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 211,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "land_bill_parts",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        -617.615356445312,
+        329,
+        68
+      ],
+      "text": "Mortgage and land ›",
+      "visual_ms": 16.400000005960464,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 473666.299999997,
+          "paint": 473682.200000003,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 473665.799999997,
+        "audio": 473682.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 213,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "barn",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        36.9230880737305,
+        -397.615356445312,
+        518,
+        73
+      ],
+      "text": "Go to the barn",
+      "visual_ms": 14.600000008998904,
+      "sound_ms": 14.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 476049.200000003,
+          "paint": 476063.400000006,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 476048.799999997,
+        "audio": 476063.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 215,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "toggle_details:year_one_plan",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        36.9230880737305,
+        -308.615356445312,
+        518,
+        73
+      ],
+      "text": "Hide Year one plan",
+      "visual_ms": 16.500000000058208,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 478448.700000003,
+          "paint": 478464.900000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 478448.40000000596,
+        "audio": 478465.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 217,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "toggle_details:account_records",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        36.9230880737305,
+        107.384643554688,
+        164,
+        130
+      ],
+      "text": "Records",
+      "visual_ms": 18,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 480847.100000009,
+          "paint": 480864.700000003,
+          "visual_ms": 17.5999999940395
+        },
+        "dom": 480846.700000003,
+        "audio": 480865,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 219,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "toggle_details:account_leases",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        213.923095703125,
+        107.384643554688,
+        164,
+        130
+      ],
+      "text": "Leases",
+      "visual_ms": 20.800000011979137,
+      "sound_ms": 21.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 483248.200000003,
+          "paint": 483268.600000009,
+          "visual_ms": 20.4000000059605
+        },
+        "dom": 483247.799999997,
+        "audio": 483269,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 221,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "toggle_details:account_businesses",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        390.923095703125,
+        107.384643554688,
+        164,
+        130
+      ],
+      "text": "Businesses",
+      "visual_ms": 16.70000000303844,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 485647.700000003,
+          "paint": 485664.100000009,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 485647.40000000596,
+        "audio": 485664.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 223,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "ledger_screenshot",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        50.9230880737305,
+        728.384643554688,
+        490,
+        110
+      ],
+      "text": "Save screenshot",
+      "visual_ms": 16.099999994039536,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 488031.900000006,
+          "paint": 488047.700000003,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 488031.60000000894,
+        "audio": 488048,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 225,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "lease:low",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        50.9230880737305,
+        964.384643554688,
+        490,
+        73
+      ],
+      "text": "Rent ·  55,000/year",
+      "visual_ms": 17.799999997077975,
+      "sound_ms": 18.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 490447,
+          "paint": 490464.400000006,
+          "visual_ms": 17.4000000059605
+        },
+        "dom": 490446.60000000894,
+        "audio": 490464.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 227,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "year1_accounts",
+      "action": "lease:hill",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        50.9230880737305,
+        1087.38464355469,
+        490,
+        73
+      ],
+      "text": "Rent ·  9,000/year",
+      "visual_ms": 18.399999991059303,
+      "sound_ms": 18.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 492862.700000003,
+          "paint": 492880.799999997,
+          "visual_ms": 18.0999999940395
+        },
+        "dom": 492862.40000000596,
+        "audio": 492881.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 229,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "barn",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        252,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.20000000303844,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 496928.5,
+          "paint": 496944.400000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 496928.200000003,
+        "audio": 496944.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 230,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "barn",
+      "action": "talk:nell",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        474.307708740234,
+        378.384613037109,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 18.400000006018672,
+      "sound_ms": 18.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 499260.600000009,
+          "paint": 499278.600000009,
+          "visual_ms": 18
+        },
+        "dom": 499260.200000003,
+        "audio": 499278.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 231,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "barn",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        568,
+        67.6923065185547,
+        68
+      ],
+      "text": "?",
+      "visual_ms": 16.19999998807907,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 501595.900000006,
+          "paint": 501611.799999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 501595.60000000894,
+        "audio": 501612,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 232,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "barn",
+      "action": "contract_accept:0",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        58.9230880737305,
+        890,
+        239,
+        110
+      ],
+      "text": "ACCEPT ORDER",
+      "visual_ms": 18.799999997019768,
+      "sound_ms": 19.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 503929.200000003,
+          "paint": 503947.700000003,
+          "visual_ms": 18.5
+        },
+        "dom": 503928.90000000596,
+        "audio": 503948,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 233,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "inventory",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        502,
+        118,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 507980.700000003,
+          "paint": 507996.900000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 507980.299999997,
+        "audio": 507997.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 234,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "inventory",
+      "action": "crop:russet",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        46,
+        603,
+        500,
+        106
+      ],
+      "text": "Select",
+      "visual_ms": 17.70000000303844,
+      "sound_ms": 17.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 510347,
+          "paint": 510364.400000006,
+          "visual_ms": 17.4000000059605
+        },
+        "dom": 510346.700000003,
+        "audio": 510364.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 235,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        55.3846130371094,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 18.899999991059303,
+      "sound_ms": 19.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 514516.5,
+          "paint": 514535,
+          "visual_ms": 18.5
+        },
+        "dom": 514516.10000000894,
+        "audio": 514535.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 236,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "talk:bram",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        466.307708740234,
+        165.769226074219,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 14,
+      "sound_ms": 14.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 516919.100000009,
+          "paint": 516932.700000003,
+          "visual_ms": 13.5999999940395
+        },
+        "dom": 516918.700000003,
+        "audio": 516933,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 237,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "upgrade:hoe",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        58.9230880737305,
+        425.384613037109,
+        474,
+        110
+      ],
+      "text": "Upgrade ·  12,000",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 519350.200000003,
+          "paint": 519365.900000006,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 519349.799999997,
+        "audio": 519366.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 238,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "upgrade:water",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        58.9230880737305,
+        661.384643554688,
+        474,
+        110
+      ],
+      "text": "Upgrade ·  16,000",
+      "visual_ms": 16.200000002980232,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 521782.900000006,
+          "paint": 521798.700000003,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 521782.5,
+        "audio": 521799,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 240,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "upgrade:harvest",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        58.9230880737305,
+        897.384643554688,
+        474,
+        110
+      ],
+      "text": "Upgrade ·  20,000",
+      "visual_ms": 17.5,
+      "sound_ms": 17.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 524182.400000006,
+          "paint": 524199.5,
+          "visual_ms": 17.0999999940395
+        },
+        "dom": 524182,
+        "audio": 524199.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 242,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "upgrade:expansion:home",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        58.9230880737305,
+        1180.38464355469,
+        474,
+        110
+      ],
+      "text": "Open ·  48,000",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 526616.299999997,
+          "paint": 526632.200000003,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 526615.900000006,
+        "audio": 526632.400000006,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 244,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "upgrade:barn",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        48.9230880737305,
+        1458.38464355469,
+        494,
+        110
+      ],
+      "text": "Open ·  12,000",
+      "visual_ms": 16,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 529065.700000003,
+          "paint": 529081.299999997,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 529065.299999997,
+        "audio": 529081.6000000089,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 246,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "tools",
+      "action": "decorations",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        36.9230880737305,
+        1592.38464355469,
+        518,
+        110
+      ],
+      "text": "Decorations · from 2,000",
+      "visual_ms": 16.900000005960464,
+      "sound_ms": 17.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 531498.900000006,
+          "paint": 531515.400000006,
+          "visual_ms": 16.5
+        },
+        "dom": 531498.5,
+        "audio": 531515.6000000089,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 248,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        502,
+        118,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 42.900000005960464,
+      "sound_ms": 43.1000000089407,
+      "diagnostic": {
+        "tap": {
+          "input": 537378.799999997,
+          "paint": 537421.200000003,
+          "visual_ms": 42.4000000059605
+        },
+        "dom": 537378.299999997,
+        "audio": 537421.400000006,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 249,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "talk:tess",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        481.384613037109,
+        244.384613037109,
+        73,
+        68
+      ],
+      "text": "Talk",
+      "visual_ms": 41.69999998807907,
+      "sound_ms": 47.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 540914.100000009,
+          "paint": 540955.299999997,
+          "visual_ms": 41.1999999880791
+        },
+        "dom": 540913.6000000089,
+        "audio": 540960.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 250,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        30,
+        368,
+        265,
+        106
+      ],
+      "text": "Quests",
+      "visual_ms": null,
+      "sound_ms": 41.5,
+      "diagnostic": {
+        "tap": null,
+        "dom": 544462.200000003,
+        "audio": 544503.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 251,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}

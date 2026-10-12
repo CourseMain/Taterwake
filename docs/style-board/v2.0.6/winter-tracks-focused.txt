@@ -1,0 +1,4 @@
+PASS    test_farm_visuals | FARM VISUALS: 165 checks, 0 failures
+PASS    test_tap_feedback | TAP FEEDBACK: 8 checks, 0 failures
+PASS    test_winter_lighting | WINTER LIGHTING: 16 checks, 0 failures
+Total: 3 PASS, 0 FAIL, 0 TIMEOUT, 0 ERRORS | logs: artifacts/test-results

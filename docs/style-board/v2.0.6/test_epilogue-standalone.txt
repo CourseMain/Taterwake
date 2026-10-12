@@ -1,0 +1,6 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+naive: Drowned { &"solvency": 0.0, &"adaptation": 0.0, &"diversification": 0.0, &"land_health": 0.19597999358177 }, failure 4, cash -3558189.26409773
+cautious: Holding on { &"solvency": 0.87395731210551, &"adaptation": 0.10013763667123, &"diversification": 0.0, &"land_health": 0.33204463449561 }, failure 0, cash 1986617.40033452
+diversifier: The shop village { &"solvency": 0.91368594042735, &"adaptation": 0.09920893371808, &"diversification": 0.55982403928781, &"land_health": 0.33359240382656 }, failure 0, cash 3739389.45717029
+Epilogue: 534 checks, 0 failures

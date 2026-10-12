@@ -1,0 +1,6 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+naive: survived 0/30, median end year 4.0, mean cash -245170.12, max cash -201127.63, mean sales 388763.21
+cautious: survived 30/30, median end year 10.0, mean cash -26996.95, max cash 56594.15, mean sales 1372380.97
+
+Stopped at the owner's request on 2026-10-12. This extra rerun is incomplete; no passing result is claimed. The full suite already passed test_tuning_bot (1,679 checks).

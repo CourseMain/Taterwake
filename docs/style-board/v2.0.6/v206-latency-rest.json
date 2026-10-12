@@ -1,0 +1,4457 @@
+{
+  "results": [
+    {
+      "view": "duck_patrol",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 12.900000005920447,
+      "sound_ms": 13.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 10161.400000006,
+          "paint": 10173.1000000089,
+          "visual_ms": 11.7000000029802
+        },
+        "dom": 10160.20000000298,
+        "audio": 10173.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "duck_patrol",
+      "action": "activity:duck",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        50,
+        763,
+        492,
+        109.846160888672
+      ],
+      "text": "Hire +1 ·  20,000",
+      "visual_ms": 19.20000000300024,
+      "sound_ms": 19.5,
+      "diagnostic": {
+        "tap": {
+          "input": 12541.5,
+          "paint": 12560.200000003,
+          "visual_ms": 18.7000000029802
+        },
+        "dom": 12541,
+        "audio": 12560.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "duck_patrol",
+      "action": "activity:duck:speed",
+      "disabled": true,
+      "index": 2,
+      "rect": [
+        50,
+        1150,
+        492,
+        109.846160888672
+      ],
+      "text": "Hire a duck first",
+      "visual_ms": 17.900000006000482,
+      "sound_ms": 18.5,
+      "diagnostic": {
+        "tap": {
+          "input": 14909.900000006,
+          "paint": 14926.900000006,
+          "visual_ms": 17
+        },
+        "dom": 14909,
+        "audio": 14927.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "dex",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.300000011880911,
+      "sound_ms": 15.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 18958.900000006,
+          "paint": 18973.6000000089,
+          "visual_ms": 14.7000000029802
+        },
+        "dom": 18958.29999999702,
+        "audio": 18974,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 5,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        502,
+        118,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 18.599999994057725,
+      "sound_ms": 19,
+      "diagnostic": {
+        "tap": {
+          "input": 23458.1000000089,
+          "paint": 23476.200000003,
+          "visual_ms": 18.0999999940395
+        },
+        "dom": 23457.60000000894,
+        "audio": 23476.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 6,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "talk:iris",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        478.384613037109,
+        237.384613037109,
+        68,
+        82.461540222168
+      ],
+      "text": "Talk",
+      "visual_ms": 16.700000002980232,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 25908.799999997,
+          "paint": 25925,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 25908.29999999702,
+        "audio": 25925.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 7,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "climate_fund:rainwater",
+      "disabled": true,
+      "index": 2,
+      "rect": [
+        42,
+        843,
+        508,
+        110
+      ],
+      "text": "Build ·  36,000",
+      "visual_ms": 21.69999998806088,
+      "sound_ms": 22,
+      "diagnostic": {
+        "tap": {
+          "input": 28379.5,
+          "paint": 28399.799999997,
+          "visual_ms": 20.2999999970198
+        },
+        "dom": 28378.10000000894,
+        "audio": 28400.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 8,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "climate_fund:drainage",
+      "disabled": true,
+      "index": 3,
+      "rect": [
+        42,
+        1089,
+        508,
+        110
+      ],
+      "text": "Build ·  48,000",
+      "visual_ms": 18.299999997019768,
+      "sound_ms": 18.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 30793.400000006,
+          "paint": 30811,
+          "visual_ms": 17.5999999940395
+        },
+        "dom": 30792.70000000298,
+        "audio": 30811.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 9,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "climate_fund:windbreaks",
+      "disabled": true,
+      "index": 4,
+      "rect": [
+        42,
+        1335,
+        508,
+        110
+      ],
+      "text": "Build ·  60,000",
+      "visual_ms": 18.800000011877273,
+      "sound_ms": 19.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 33193,
+          "paint": 33211.1000000089,
+          "visual_ms": 18.1000000089407
+        },
+        "dom": 33192.29999999702,
+        "audio": 33211.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 10,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "climate_fund:frost",
+      "disabled": true,
+      "index": 5,
+      "rect": [
+        42,
+        1581,
+        508,
+        110
+      ],
+      "text": "Build ·  36,000",
+      "visual_ms": 17.299999997019768,
+      "sound_ms": 30.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 35629.799999997,
+          "paint": 35646,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 35628.70000000298,
+        "audio": 35658.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 11,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "climate_fund:irrigation",
+      "disabled": true,
+      "index": 6,
+      "rect": [
+        42,
+        1874,
+        508,
+        110
+      ],
+      "text": "Build ·  20,000",
+      "visual_ms": 18.099999994017708,
+      "sound_ms": 18.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 38043,
+          "paint": 38060.299999997,
+          "visual_ms": 17.2999999970198
+        },
+        "dom": 38042.20000000298,
+        "audio": 38060.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 12,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "insure",
+      "disabled": true,
+      "index": 7,
+      "rect": [
+        42,
+        2020,
+        428,
+        153
+      ],
+      "text": "○ Insurance this year ·  9,600",
+      "visual_ms": 20.499999999978172,
+      "sound_ms": 21,
+      "diagnostic": {
+        "tap": {
+          "input": 40475.700000003,
+          "paint": 40495.299999997,
+          "visual_ms": 19.5999999940395
+        },
+        "dom": 40474.79999999702,
+        "audio": 40495.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 13,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        482,
+        2020,
+        68,
+        153
+      ],
+      "text": "?",
+      "visual_ms": 16.499999999956344,
+      "sound_ms": 16.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 42909.1000000089,
+          "paint": 42925.1000000089,
+          "visual_ms": 16
+        },
+        "dom": 42908.60000000894,
+        "audio": 42925.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 14,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "climate",
+      "action": "station_upgrade",
+      "disabled": true,
+      "index": 9,
+      "rect": [
+        30,
+        2197,
+        262,
+        189
+      ],
+      "text": "Station ○○ · ±20  Upgrade  20,000",
+      "visual_ms": 24.499999999978172,
+      "sound_ms": 36.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 45324.299999997,
+          "paint": 45347.799999997,
+          "visual_ms": 23.5
+        },
+        "dom": 45323.29999999702,
+        "audio": 45360.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 15,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "help",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 18.900000005982292,
+      "sound_ms": 19.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 49421.900000006,
+          "paint": 49440.200000003,
+          "visual_ms": 18.2999999970198
+        },
+        "dom": 49421.29999999702,
+        "audio": 49440.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 16,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farm_tip",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 17.00000000003638,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 53439,
+          "paint": 53455.400000006,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 53438.40000000596,
+        "audio": 53455.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 17,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farm_tip",
+      "action": "farm_help:act",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36,
+        252,
+        528,
+        110
+      ],
+      "text": "Go farming",
+      "visual_ms": 16.20000000300206,
+      "sound_ms": 16.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 55805.700000003,
+          "paint": 55821.200000003,
+          "visual_ms": 15.5
+        },
+        "dom": 55805,
+        "audio": 55821.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 18,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farm_tip",
+      "action": "help",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36,
+        372,
+        528,
+        110
+      ],
+      "text": "Back to help",
+      "visual_ms": 16.000000000021828,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 58173.400000006,
+          "paint": 58188.700000003,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 58172.70000000298,
+        "audio": 58189.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 19,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 13.000000000021828,
+      "sound_ms": 13.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 62192.700000003,
+          "paint": 62205.200000003,
+          "visual_ms": 12.5
+        },
+        "dom": 62192.20000000298,
+        "audio": 62205.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 20,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "graphics:balanced",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        36,
+        252,
+        528,
+        146
+      ],
+      "text": "Balanced\nClear farm · gentle shadows",
+      "visual_ms": 20,
+      "sound_ms": 20.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 64555.900000006,
+          "paint": 64575,
+          "visual_ms": 19.0999999940395
+        },
+        "dom": 64555,
+        "audio": 64575.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 21,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "graphics:smooth",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36,
+        408,
+        528,
+        146
+      ],
+      "text": "Smooth\nFaster farm · shadows off",
+      "visual_ms": 17.10000000889704,
+      "sound_ms": 17.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 66921.700000003,
+          "paint": 66938.1000000089,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 66921,
+        "audio": 66938.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 22,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "graphics:crisp",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        36,
+        564,
+        528,
+        182
+      ],
+      "text": "Crisp\nSharpest farm · needs more power",
+      "visual_ms": 14.400000005916809,
+      "sound_ms": 14.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 70589.200000003,
+          "paint": 70603.1000000089,
+          "visual_ms": 13.9000000059605
+        },
+        "dom": 70588.70000000298,
+        "audio": 70603.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 23,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "shadows:2048",
+      "disabled": true,
+      "index": 4,
+      "rect": [
+        36,
+        802,
+        528,
+        68
+      ],
+      "text": "2048",
+      "visual_ms": 16.39999999104475,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 72973.5,
+          "paint": 72988.799999997,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 72972.40000000596,
+        "audio": 72989.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 24,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "graphics",
+      "action": "shadows:4096",
+      "disabled": true,
+      "index": 5,
+      "rect": [
+        36,
+        880,
+        528,
+        68
+      ],
+      "text": "4096",
+      "visual_ms": 17.499999999956344,
+      "sound_ms": 17.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 75355.5,
+          "paint": 75372.1000000089,
+          "visual_ms": 16.6000000089407
+        },
+        "dom": 75354.60000000894,
+        "audio": 75372.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 25,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "save_page",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        436.5,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 19.799999997063424,
+      "sound_ms": 20.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 79421.799999997,
+          "paint": 79440.900000006,
+          "visual_ms": 19.1000000089407
+        },
+        "dom": 79421.10000000894,
+        "audio": 79441.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 26,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "save_page",
+      "action": "save",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        586.5,
+        526,
+        73
+      ],
+      "text": "Save farm",
+      "visual_ms": 16.500000000014552,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 81805.200000003,
+          "paint": 81821.200000003,
+          "visual_ms": 16
+        },
+        "dom": 81804.70000000298,
+        "audio": 81821.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 27,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "save_page",
+      "action": "load",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        675.5,
+        526,
+        73
+      ],
+      "text": "Restore farm",
+      "visual_ms": 19.5,
+      "sound_ms": 19.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 84171.1000000089,
+          "paint": 84190,
+          "visual_ms": 18.8999999910593
+        },
+        "dom": 84170.5,
+        "audio": 84190.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 28,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "save_page",
+      "action": "request_reset",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        36.9230880737305,
+        764.5,
+        526,
+        73
+      ],
+      "text": "Plant a new farm",
+      "visual_ms": 15.799999997005216,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 86537.700000003,
+          "paint": 86552.799999997,
+          "visual_ms": 15.0999999940395
+        },
+        "dom": 86537,
+        "audio": 86553.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 29,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "reset_confirm",
+      "action": "cancel_reset",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        36.9230880737305,
+        525.307739257812,
+        526,
+        73
+      ],
+      "text": "Keep this farm",
+      "visual_ms": 16.000000000043656,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 90554.900000006,
+          "paint": 90570.400000006,
+          "visual_ms": 15.5
+        },
+        "dom": 90554.40000000596,
+        "audio": 90570.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 30,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "reset_confirm",
+      "action": "reset",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        614.307739257812,
+        526,
+        73
+      ],
+      "text": "Start again",
+      "visual_ms": 17.500000000043656,
+      "sound_ms": 18,
+      "diagnostic": {
+        "tap": {
+          "input": 92920.400000006,
+          "paint": 92937.400000006,
+          "visual_ms": 17
+        },
+        "dom": 92919.90000000596,
+        "audio": 92937.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 31,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug_locked",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.099999994054087,
+      "sound_ms": 15.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 97024.400000006,
+          "paint": 97036.700000003,
+          "visual_ms": 12.2999999970198
+        },
+        "dom": 97021.60000000894,
+        "audio": 97037.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 32,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug_locked",
+      "action": "measure_year",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        50,
+        268,
+        500,
+        110
+      ],
+      "text": "Measure a year",
+      "visual_ms": 17.200000002936576,
+      "sound_ms": 17.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 99388.299999997,
+          "paint": 99403.6000000089,
+          "visual_ms": 15.3000000119209
+        },
+        "dom": 99386.40000000596,
+        "audio": 99404.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 33,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug_locked",
+      "action": "debug_unlock",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36,
+        701,
+        528,
+        110
+      ],
+      "text": "Unlock debug",
+      "visual_ms": 18.39999999104475,
+      "sound_ms": 18.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 101771.200000003,
+          "paint": 101787.799999997,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 101769.40000000596,
+        "audio": 101788.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 34,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 14.899999991059303,
+      "sound_ms": 15.5,
+      "diagnostic": {
+        "tap": {
+          "input": 106001.900000006,
+          "paint": 106016,
+          "visual_ms": 14.0999999940395
+        },
+        "dom": 106001.10000000894,
+        "audio": 106016.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 35,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "measure_year",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        50,
+        -1231,
+        492,
+        110
+      ],
+      "text": "Recording…",
+      "visual_ms": 17.300000011979137,
+      "sound_ms": 17.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 108406.600000009,
+          "paint": 108423.100000009,
+          "visual_ms": 16.5
+        },
+        "dom": 108405.79999999702,
+        "audio": 108423.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 36,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_balance_preset:80000",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        50,
+        -850,
+        68,
+        253.846160888672
+      ],
+      "text": "Starter funds",
+      "visual_ms": 15.600000008998904,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 110806.5,
+          "paint": 110821.600000009,
+          "visual_ms": 15.1000000089407
+        },
+        "dom": 110806,
+        "audio": 110822,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 37,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_balance_preset:200000",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        125,
+        -850,
+        68,
+        253
+      ],
+      "text": "Tool funds",
+      "visual_ms": 17.500000000014552,
+      "sound_ms": 17.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 113206.400000006,
+          "paint": 113223.200000003,
+          "visual_ms": 16.7999999970198
+        },
+        "dom": 113205.70000000298,
+        "audio": 113223.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 38,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_balance_preset:400000",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        200,
+        -850,
+        68,
+        253
+      ],
+      "text": "Farm funds",
+      "visual_ms": 20.100000008984352,
+      "sound_ms": 33.5,
+      "diagnostic": {
+        "tap": {
+          "input": 115607.900000006,
+          "paint": 115627.400000006,
+          "visual_ms": 19.5
+        },
+        "dom": 115607.29999999702,
+        "audio": 115640.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 39,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_set_balance",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        50,
+        -553,
+        68,
+        253.846160888672
+      ],
+      "text": "Set balance",
+      "visual_ms": 13.499999999985448,
+      "sound_ms": 13.800000011920929,
+      "diagnostic": {
+        "tap": {
+          "input": 118011.900000006,
+          "paint": 118024.799999997,
+          "visual_ms": 12.8999999910593
+        },
+        "dom": 118011.29999999702,
+        "audio": 118025.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 40,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:time:1",
+      "disabled": true,
+      "index": 6,
+      "rect": [
+        50,
+        -151,
+        74,
+        109.846153259277
+      ],
+      "text": "1×",
+      "visual_ms": 15.79999999703432,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 120424.100000009,
+          "paint": 120439.200000003,
+          "visual_ms": 15.0999999940395
+        },
+        "dom": 120423.40000000596,
+        "audio": 120439.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 41,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:time:2",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        132,
+        -151,
+        74,
+        109.846153259277
+      ],
+      "text": "2×",
+      "visual_ms": 15.700000003023888,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 122823.700000003,
+          "paint": 122838.900000006,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 122823.20000000298,
+        "audio": 122839.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 42,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:time:5",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        214,
+        -151,
+        74,
+        109.846153259277
+      ],
+      "text": "5×",
+      "visual_ms": 16.900000006018672,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 125221.799999997,
+          "paint": 125238.100000009,
+          "visual_ms": 16.3000000119209
+        },
+        "dom": 125221.20000000298,
+        "audio": 125238.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 43,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:time:10",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        296,
+        -151,
+        74,
+        109.846153259277
+      ],
+      "text": "10×",
+      "visual_ms": 16.600000008984352,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 127655.200000003,
+          "paint": 127671.400000006,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 127654.79999999702,
+        "audio": 127671.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 44,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:time:30",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        378,
+        -151,
+        74,
+        109.846153259277
+      ],
+      "text": "30×",
+      "visual_ms": 16.299999997063424,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 130038,
+          "paint": 130053.900000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 130037.60000000894,
+        "audio": 130054.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 45,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:weather:drought",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        50,
+        108,
+        68,
+        289.846160888672
+      ],
+      "text": "Test drought",
+      "visual_ms": 16.79999999704887,
+      "sound_ms": 17.19999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 132421.600000009,
+          "paint": 132437.900000006,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 132421.10000000894,
+        "audio": 132438.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 46,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:weather:flood",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        126,
+        108,
+        68,
+        289
+      ],
+      "text": "Test flood",
+      "visual_ms": 14.900000006018672,
+      "sound_ms": 15.5,
+      "diagnostic": {
+        "tap": {
+          "input": 134822.799999997,
+          "paint": 134837.100000009,
+          "visual_ms": 14.3000000119209
+        },
+        "dom": 134822.20000000298,
+        "audio": 134837.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 47,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:weather:storm",
+      "disabled": false,
+      "index": 13,
+      "rect": [
+        202,
+        108,
+        68,
+        289
+      ],
+      "text": "Test storm",
+      "visual_ms": 16.3999999910302,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 137204.400000006,
+          "paint": 137220.299999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 137203.90000000596,
+        "audio": 137220.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 48,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:weather:freeze",
+      "disabled": false,
+      "index": 14,
+      "rect": [
+        278,
+        108,
+        68,
+        289
+      ],
+      "text": "Test freeze",
+      "visual_ms": 16.099999994039536,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 139587.900000006,
+          "paint": 139603.5,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 139587.40000000596,
+        "audio": 139604,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 49,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "toggle_details:debug_advanced",
+      "disabled": false,
+      "index": 15,
+      "rect": [
+        36,
+        489,
+        520,
+        110
+      ],
+      "text": "Hide money multiplier",
+      "visual_ms": 15.800000011979137,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 141971,
+          "paint": 141986.100000009,
+          "visual_ms": 15.1000000089407
+        },
+        "dom": 141970.29999999702,
+        "audio": 141986.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 50,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:0.01",
+      "disabled": false,
+      "index": 16,
+      "rect": [
+        50,
+        700,
+        68,
+        92
+      ],
+      "text": "×0.01",
+      "visual_ms": 14.900000005989568,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 144355.100000009,
+          "paint": 144369.400000006,
+          "visual_ms": 14.2999999970198
+        },
+        "dom": 144354.5,
+        "audio": 144369.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 51,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:0.1",
+      "disabled": false,
+      "index": 17,
+      "rect": [
+        122,
+        700,
+        68,
+        92
+      ],
+      "text": "×0.1",
+      "visual_ms": 16,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 146737.700000003,
+          "paint": 146753,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 146737,
+        "audio": 146753.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 52,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:1",
+      "disabled": false,
+      "index": 18,
+      "rect": [
+        194,
+        700,
+        68,
+        92
+      ],
+      "text": "×1",
+      "visual_ms": 15.70000000303844,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 149121.5,
+          "paint": 149136.600000009,
+          "visual_ms": 15.1000000089407
+        },
+        "dom": 149120.90000000596,
+        "audio": 149137.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 53,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:10",
+      "disabled": false,
+      "index": 19,
+      "rect": [
+        266,
+        700,
+        68,
+        92
+      ],
+      "text": "×10",
+      "visual_ms": 15.700000003009336,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 151504.900000006,
+          "paint": 151519.900000006,
+          "visual_ms": 15
+        },
+        "dom": 151504.20000000298,
+        "audio": 151520.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 54,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:100",
+      "disabled": false,
+      "index": 20,
+      "rect": [
+        338,
+        700,
+        68,
+        92
+      ],
+      "text": "×100",
+      "visual_ms": 16.799999996990664,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 153886.700000003,
+          "paint": 153902.799999997,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 153886,
+        "audio": 153903.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 55,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_money:1000",
+      "disabled": false,
+      "index": 21,
+      "rect": [
+        410,
+        700,
+        68,
+        92
+      ],
+      "text": "×1000",
+      "visual_ms": 15.000000000029104,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 156289,
+          "paint": 156303.200000003,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 156288.20000000298,
+        "audio": 156303.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 56,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug_apply",
+      "disabled": false,
+      "index": 22,
+      "rect": [
+        50,
+        838,
+        68,
+        325.846160888672
+      ],
+      "text": "Apply money once",
+      "visual_ms": 22.29999999704887,
+      "sound_ms": 35.8999999910593,
+      "diagnostic": {
+        "tap": {
+          "input": 158686.700000003,
+          "paint": 158708.200000003,
+          "visual_ms": 21.5
+        },
+        "dom": 158685.90000000596,
+        "audio": 158721.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 57,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:reset",
+      "disabled": true,
+      "index": 23,
+      "rect": [
+        127,
+        838,
+        68,
+        325
+      ],
+      "text": "Reset time",
+      "visual_ms": 14.900000005989568,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 161088.400000006,
+          "paint": 161102.400000006,
+          "visual_ms": 14
+        },
+        "dom": 161087.5,
+        "audio": 161102.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 58,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "debug",
+      "action": "debug:lock",
+      "disabled": false,
+      "index": 24,
+      "rect": [
+        36,
+        1286,
+        520,
+        110
+      ],
+      "text": "Lock debug · restore 1× time",
+      "visual_ms": 15.999999999970896,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 163520.299999997,
+          "paint": 163535.799999997,
+          "visual_ms": 15.5
+        },
+        "dom": 163519.79999999702,
+        "audio": 163536.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 59,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "measurement",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 15.599999994010432,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 167551.799999997,
+          "paint": 167566.799999997,
+          "visual_ms": 15
+        },
+        "dom": 167551.20000000298,
+        "audio": 167567.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 60,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "measurement",
+      "action": "measurement_copy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36,
+        700,
+        528,
+        110
+      ],
+      "text": "Copy",
+      "visual_ms": 15.299999997048872,
+      "sound_ms": 15.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 169935.799999997,
+          "paint": 169950.200000003,
+          "visual_ms": 14.4000000059605
+        },
+        "dom": 169934.90000000596,
+        "audio": 169950.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 61,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sound",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        489,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 12.100000008998904,
+      "sound_ms": 12.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 174005.5,
+          "paint": 174017.100000009,
+          "visual_ms": 11.6000000089407
+        },
+        "dom": 174005,
+        "audio": 174017.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 62,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sound",
+      "action": "quieter",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36.9230880737305,
+        639,
+        526,
+        146
+      ],
+      "text": "Quieter",
+      "visual_ms": 17.700000003009336,
+      "sound_ms": 18.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 176383.100000009,
+          "paint": 176400.200000003,
+          "visual_ms": 17.0999999940395
+        },
+        "dom": 176382.5,
+        "audio": 176400.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 63,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sleep_confirm",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.199999988049967,
+      "sound_ms": 16.69999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 180399.600000009,
+          "paint": 180415.299999997,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 180399.10000000894,
+        "audio": 180415.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 64,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sleep_confirm",
+      "action": "confirm_sleep_spring",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        36,
+        431,
+        528,
+        110
+      ],
+      "text": "Sleep until Spring",
+      "visual_ms": 15.499999999970896,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 182767.200000003,
+          "paint": 182781.799999997,
+          "visual_ms": 14.5999999940395
+        },
+        "dom": 182766.29999999702,
+        "audio": 182782.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 65,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "practice",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        220.5,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.600000008998904,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 186799.600000009,
+          "paint": 186815.600000009,
+          "visual_ms": 16
+        },
+        "dom": 186799,
+        "audio": 186816,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 66,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sale_reveal",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        267.5,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 16.5,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 196899.700000003,
+          "paint": 196915.5,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 196899,
+        "audio": 196915.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 67,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sale_reveal",
+      "action": "talk:nell",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        474.307708740234,
+        377.884613037109,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 18.09999999401043,
+      "sound_ms": 18.5,
+      "diagnostic": {
+        "tap": {
+          "input": 202282.900000006,
+          "paint": 202300.299999997,
+          "visual_ms": 17.3999999910593
+        },
+        "dom": 202282.20000000298,
+        "audio": 202300.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 68,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "sale_reveal",
+      "action": "barn",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36.9230880737305,
+        933.5,
+        526,
+        73
+      ],
+      "text": "Back to the barn",
+      "visual_ms": 16.200000002980232,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 207666.900000006,
+          "paint": 207682.5,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 207666.29999999702,
+        "audio": 207683,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 69,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "run_summary",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 22.999999999970896,
+      "sound_ms": 23.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 212272,
+          "paint": 212294.299999997,
+          "visual_ms": 22.2999999970198
+        },
+        "dom": 212271.29999999702,
+        "audio": 212294.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 70,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "run_summary",
+      "action": "measurement_copy",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        36,
+        700,
+        528,
+        110
+      ],
+      "text": "Copy",
+      "visual_ms": 24.000000000029104,
+      "sound_ms": 24.5,
+      "diagnostic": {
+        "tap": {
+          "input": 215112.5,
+          "paint": 215135.700000003,
+          "visual_ms": 23.2000000029802
+        },
+        "dom": 215111.70000000298,
+        "audio": 215136.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 71,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "foreclosure",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        36,
+        973,
+        190,
+        145
+      ],
+      "text": "TRY AGAIN",
+      "visual_ms": 22.79999999704887,
+      "sound_ms": 23.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 219671.400000006,
+          "paint": 219692.700000003,
+          "visual_ms": 21.2999999970198
+        },
+        "dom": 219669.90000000596,
+        "audio": 219693.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 72,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "foreclosure",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        236,
+        973,
+        190,
+        145.846160888672
+      ],
+      "text": "HIDE RUN SUMMARY",
+      "visual_ms": 21.000000000029104,
+      "sound_ms": 21.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 222346.400000006,
+          "paint": 222366.700000003,
+          "visual_ms": 20.2999999970198
+        },
+        "dom": 222345.70000000298,
+        "audio": 222367.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 73,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "foreclosure",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        36,
+        1127,
+        190,
+        145.846160888672
+      ],
+      "text": "DEBUG ACCESS",
+      "visual_ms": 20.500000000029104,
+      "sound_ms": 20.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 225045.600000009,
+          "paint": 225065.400000006,
+          "visual_ms": 19.7999999970198
+        },
+        "dom": 225044.90000000596,
+        "audio": 225065.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 74,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "epilogue",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        26,
+        1208,
+        194,
+        68
+      ],
+      "text": "Keep this picture",
+      "visual_ms": 17.099999994039536,
+      "sound_ms": 17.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 231885.200000003,
+          "paint": 231900.5,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 231883.40000000596,
+        "audio": 231901.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 75,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "epilogue",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        224,
+        1208,
+        181,
+        68
+      ],
+      "text": "Read the ledger",
+      "visual_ms": 15.70000000303844,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 236551.600000009,
+          "paint": 236566.600000009,
+          "visual_ms": 15
+        },
+        "dom": 236550.90000000596,
+        "audio": 236567.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 76,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "epilogue",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        409,
+        1208,
+        191,
+        68
+      ],
+      "text": "Plant a new farm",
+      "visual_ms": 16.999999999970896,
+      "sound_ms": 17.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 241300.5,
+          "paint": 241316.799999997,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 241299.79999999702,
+        "audio": 241317.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 77,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.6000000089698,
+      "sound_ms": 17.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 247334,
+          "paint": 247349.900000006,
+          "visual_ms": 15.9000000059605
+        },
+        "dom": 247333.29999999702,
+        "audio": 247350.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 78,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Buy and sell",
+      "visual_ms": 14.199999988049967,
+      "sound_ms": 14.699999988079071,
+      "diagnostic": {
+        "tap": {
+          "input": 249737.299999997,
+          "paint": 249750.799999997,
+          "visual_ms": 13.5
+        },
+        "dom": 249736.60000000894,
+        "audio": 249751.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 79,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "You mend all these bags?",
+      "visual_ms": 16.5,
+      "sound_ms": 16.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 252360.100000009,
+          "paint": 252375.5,
+          "visual_ms": 15.3999999910593
+        },
+        "dom": 252359,
+        "audio": 252375.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 80,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 17.29999999704887,
+      "sound_ms": 18,
+      "diagnostic": {
+        "tap": {
+          "input": 254888.400000006,
+          "paint": 254904.900000006,
+          "visual_ms": 16.5
+        },
+        "dom": 254887.60000000894,
+        "audio": 254905.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 81,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:nell",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 15.599999994010432,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 259102.400000006,
+          "paint": 259117.299999997,
+          "visual_ms": 14.8999999910593
+        },
+        "dom": 259101.70000000298,
+        "audio": 259117.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 82,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:nell",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Open the accounts",
+      "visual_ms": 13.900000005989568,
+      "sound_ms": 14.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 261555.400000006,
+          "paint": 261568.900000006,
+          "visual_ms": 13.5
+        },
+        "dom": 261555,
+        "audio": 261569.29999999702,
+        "peak": 0.008557802997529507,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 83,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:nell",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Who left the muddy boots?",
+      "visual_ms": 21.400000005960464,
+      "sound_ms": 21.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 264036,
+          "paint": 264056.700000003,
+          "visual_ms": 20.7000000029802
+        },
+        "dom": 264035.299999997,
+        "audio": 264057,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 85,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:nell",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 16.799999997019768,
+      "sound_ms": 17.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 266521.299999997,
+          "paint": 266537.5,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 266520.700000003,
+        "audio": 266538,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 86,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:bram",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.500000000058208,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 270752.100000009,
+          "paint": 270767.900000006,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 270751.40000000596,
+        "audio": 270768.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 87,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:bram",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Open the Tools shed",
+      "visual_ms": 17.799999997019768,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 273216.400000006,
+          "paint": 273233.5,
+          "visual_ms": 17.0999999940395
+        },
+        "dom": 273215.700000003,
+        "audio": 273234,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 88,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:bram",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Do you make everything here?",
+      "visual_ms": 15.799999997077975,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 275700.400000006,
+          "paint": 275715.400000006,
+          "visual_ms": 15
+        },
+        "dom": 275699.60000000894,
+        "audio": 275715.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 89,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:bram",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 15,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 278099.900000006,
+          "paint": 278114.200000003,
+          "visual_ms": 14.2999999970198
+        },
+        "dom": 278099.200000003,
+        "audio": 278114.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 90,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:tess",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 18.70000000303844,
+      "sound_ms": 19.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 282216.5,
+          "paint": 282234.600000009,
+          "visual_ms": 18.1000000089407
+        },
+        "dom": 282215.90000000596,
+        "audio": 282235.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 91,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:tess",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Open Tess's board",
+      "visual_ms": 15.800000011979137,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 284650.5,
+          "paint": 284665.600000009,
+          "visual_ms": 15.1000000089407
+        },
+        "dom": 284649.799999997,
+        "audio": 284666,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 92,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:tess",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Do you ever take a break?",
+      "visual_ms": 13.299999997019768,
+      "sound_ms": 13.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 287221,
+          "paint": 287233.700000003,
+          "visual_ms": 12.7000000029802
+        },
+        "dom": 287220.40000000596,
+        "audio": 287234.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 93,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:tess",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 15.799999997077975,
+      "sound_ms": 16.19999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 289650.200000003,
+          "paint": 289665.400000006,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 289649.60000000894,
+        "audio": 289665.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 94,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:pip",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 15.700000002980232,
+      "sound_ms": 16,
+      "diagnostic": {
+        "tap": {
+          "input": 293799.400000006,
+          "paint": 293814.5,
+          "visual_ms": 15.0999999940395
+        },
+        "dom": 293798.799999997,
+        "audio": 293814.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 95,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:pip",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Meet the ducks",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 296199.5,
+          "paint": 296215.299999997,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 296199,
+        "audio": 296215.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 96,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:pip",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "What's Button been doing?",
+      "visual_ms": 21.100000008998904,
+      "sound_ms": 21.5,
+      "diagnostic": {
+        "tap": {
+          "input": 298582.900000006,
+          "paint": 298603.600000009,
+          "visual_ms": 20.7000000029802
+        },
+        "dom": 298582.5,
+        "audio": 298604,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 97,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:pip",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 15.70000000303844,
+      "sound_ms": 30.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 300969.900000006,
+          "paint": 300984.900000006,
+          "visual_ms": 15
+        },
+        "dom": 300969.200000003,
+        "audio": 300999.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 98,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:iris",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 15,
+      "sound_ms": 15.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 305166.200000003,
+          "paint": 305180.700000003,
+          "visual_ms": 14.5
+        },
+        "dom": 305165.700000003,
+        "audio": 305181.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 99,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:iris",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Weather and protection",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 307566,
+          "paint": 307581.400000006,
+          "visual_ms": 15.4000000059605
+        },
+        "dom": 307565.299999997,
+        "audio": 307581.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 100,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:iris",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "What do the readings show?",
+      "visual_ms": 15.500000000058208,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 310052.5,
+          "paint": 310067.400000006,
+          "visual_ms": 14.9000000059605
+        },
+        "dom": 310051.90000000596,
+        "audio": 310068,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 101,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:iris",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 312534,
+          "paint": 312549.400000006,
+          "visual_ms": 15.4000000059605
+        },
+        "dom": 312533.299999997,
+        "audio": 312549.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 102,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:edwin",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 18.000000000058208,
+      "sound_ms": 18.5,
+      "diagnostic": {
+        "tap": {
+          "input": 316850.799999997,
+          "paint": 316867.900000006,
+          "visual_ms": 17.1000000089407
+        },
+        "dom": 316849.90000000596,
+        "audio": 316868.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 103,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:edwin",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Open the accounts",
+      "visual_ms": 17.299999997019768,
+      "sound_ms": 17.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 319461.100000009,
+          "paint": 319477.200000003,
+          "visual_ms": 16.0999999940395
+        },
+        "dom": 319459.90000000596,
+        "audio": 319477.799999997,
+        "peak": 0.008945687673985958,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 104,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:edwin",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Do people mind you visiting?",
+      "visual_ms": 27.299999997019768,
+      "sound_ms": 27.899999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 322098.700000003,
+          "paint": 322125.200000003,
+          "visual_ms": 26.5
+        },
+        "dom": 322097.90000000596,
+        "audio": 322125.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 106,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:edwin",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 20.700000002980232,
+      "sound_ms": 21.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 324886.5,
+          "paint": 324905.700000003,
+          "visual_ms": 19.2000000029802
+        },
+        "dom": 324885,
+        "audio": 324906.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 107,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/story",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 17.600000008998904,
+      "sound_ms": 18.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 329441.700000003,
+          "paint": 329458.400000006,
+          "visual_ms": 16.7000000029802
+        },
+        "dom": 329440.799999997,
+        "audio": 329458.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 108,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/story",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "I'll bring the empties back.",
+      "visual_ms": 16.799999997077975,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 332020.900000006,
+          "paint": 332036.900000006,
+          "visual_ms": 16
+        },
+        "dom": 332020.10000000894,
+        "audio": 332037.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 109,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/story",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Any planting advice?",
+      "visual_ms": 20.100000008998904,
+      "sound_ms": 21,
+      "diagnostic": {
+        "tap": {
+          "input": 334614.900000006,
+          "paint": 334634.400000006,
+          "visual_ms": 19.5
+        },
+        "dom": 334614.299999997,
+        "audio": 334635.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 110,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/story",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "Let's get back to work.",
+      "visual_ms": 16.100000008998904,
+      "sound_ms": 16.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 337186.400000006,
+          "paint": 337201.900000006,
+          "visual_ms": 15.5
+        },
+        "dom": 337185.799999997,
+        "audio": 337202.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 111,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/reply",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.399999991059303,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 341399.100000009,
+          "paint": 341414.799999997,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 341398.40000000596,
+        "audio": 341415.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 112,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/reply",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Any planting advice?",
+      "visual_ms": 16.000000000058208,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 343832.900000006,
+          "paint": 343848.100000009,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 343832.10000000894,
+        "audio": 343848.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 113,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/reply",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Can I ask you something else?",
+      "visual_ms": 16.000000000058208,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 346332.600000009,
+          "paint": 346347.900000006,
+          "visual_ms": 15.2999999970198
+        },
+        "dom": 346331.90000000596,
+        "audio": 346348.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 114,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/reply",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 17.200000002980232,
+      "sound_ms": 17.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 348895.600000009,
+          "paint": 348912,
+          "visual_ms": 16.3999999910593
+        },
+        "dom": 348894.799999997,
+        "audio": 348912.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 115,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/advice",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.599999994039536,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 353344.400000006,
+          "paint": 353360.299999997,
+          "visual_ms": 15.8999999910593
+        },
+        "dom": 353343.700000003,
+        "audio": 353360.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 116,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/advice",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Tell me about yourself.",
+      "visual_ms": 17.000000000058208,
+      "sound_ms": 17.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 355950.600000009,
+          "paint": 355966.600000009,
+          "visual_ms": 16
+        },
+        "dom": 355949.60000000894,
+        "audio": 355967.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 117,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/advice",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Can I ask you something else?",
+      "visual_ms": 18.900000005960464,
+      "sound_ms": 20,
+      "diagnostic": {
+        "tap": {
+          "input": 358670.400000006,
+          "paint": 358688.700000003,
+          "visual_ms": 18.2999999970198
+        },
+        "dom": 358669.799999997,
+        "audio": 358689.799999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 118,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/advice",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 17.099999994039536,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 361284.299999997,
+          "paint": 361300.700000003,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 361283.60000000894,
+        "audio": 361301.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 119,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/weather",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        422,
+        269.846160888672,
+        146,
+        109.846160888672
+      ],
+      "text": "Leave  ×",
+      "visual_ms": 16.69999998807907,
+      "sound_ms": 17.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 365633.5,
+          "paint": 365649.299999997,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 365632.60000000894,
+        "audio": 365649.700000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 120,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/weather",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        56,
+        838.184631347656,
+        480,
+        110
+      ],
+      "text": "Tell me about yourself.",
+      "visual_ms": 20.500000000058208,
+      "sound_ms": 21,
+      "diagnostic": {
+        "tap": {
+          "input": 368239.700000003,
+          "paint": 368259.400000006,
+          "visual_ms": 19.7000000029802
+        },
+        "dom": 368238.90000000596,
+        "audio": 368259.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 121,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/weather",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        56,
+        956.184631347656,
+        480,
+        110
+      ],
+      "text": "Can I ask you something else?",
+      "visual_ms": 15.000000000058208,
+      "sound_ms": 15.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 370699.200000003,
+          "paint": 370713.600000009,
+          "visual_ms": 14.4000000059605
+        },
+        "dom": 370698.60000000894,
+        "audio": 370714.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 122,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "npc:mara/weather",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        56,
+        1074.1845703125,
+        480,
+        110
+      ],
+      "text": "How's the weather looking?",
+      "visual_ms": 15.600000008998904,
+      "sound_ms": 16.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 373171.700000003,
+          "paint": 373186.400000006,
+          "visual_ms": 14.7000000029802
+        },
+        "dom": 373170.799999997,
+        "audio": 373186.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 123,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "title",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        40,
+        1093,
+        520,
+        95
+      ],
+      "text": "Continue · Year 3, Spring",
+      "visual_ms": 16.799999997019768,
+      "sound_ms": 17.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 377472.200000003,
+          "paint": 377488.5,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 377471.700000003,
+        "audio": 377488.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 124,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "title",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        40,
+        1202,
+        520,
+        68
+      ],
+      "text": "Start a new farm",
+      "visual_ms": 17.200000002980232,
+      "sound_ms": 17.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 379854.900000006,
+          "paint": 379871.5,
+          "visual_ms": 16.5999999940395
+        },
+        "dom": 379854.299999997,
+        "audio": 379872,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 125,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "front_page",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        46,
+        850,
+        68,
+        72
+      ],
+      "text": "?",
+      "visual_ms": 17.400000006018672,
+      "sound_ms": 17.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 384202.100000009,
+          "paint": 384218.600000009,
+          "visual_ms": 16.5
+        },
+        "dom": 384201.200000003,
+        "audio": 384219,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 126,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "front_page",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        46,
+        1172,
+        508,
+        80
+      ],
+      "text": "Start the year →",
+      "visual_ms": 17.20000000303844,
+      "sound_ms": 17.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 386823.700000003,
+          "paint": 386840.100000009,
+          "visual_ms": 16.4000000059605
+        },
+        "dom": 386822.90000000596,
+        "audio": 386840.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 127,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/0",
+      "action": "tutorial:next",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        28,
+        250.230773925781,
+        544,
+        124
+      ],
+      "text": "Meet Mara →",
+      "visual_ms": 16.69999998807907,
+      "sound_ms": 17.19999998807907,
+      "diagnostic": {
+        "tap": {
+          "input": 391029.200000003,
+          "paint": 391044.799999997,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 391028.10000000894,
+        "audio": 391045.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 128,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/1",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 15.5,
+      "sound_ms": 15.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 395163.200000003,
+          "paint": 395178,
+          "visual_ms": 14.7999999970198
+        },
+        "dom": 395162.5,
+        "audio": 395178.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 129,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/1",
+      "action": "tutorial:next",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        28,
+        367.230773925781,
+        544,
+        124
+      ],
+      "text": "Use my starter seeds →",
+      "visual_ms": 15.70000000303844,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 397562.900000006,
+          "paint": 397578.100000009,
+          "visual_ms": 15.2000000029802
+        },
+        "dom": 397562.40000000596,
+        "audio": 397578.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 130,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/2",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 14.400000006018672,
+      "sound_ms": 14.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 401695.900000006,
+          "paint": 401709.600000009,
+          "visual_ms": 13.7000000029802
+        },
+        "dom": 401695.200000003,
+        "audio": 401710.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 131,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/3",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 14.500000000058208,
+      "sound_ms": 15,
+      "diagnostic": {
+        "tap": {
+          "input": 405845.200000003,
+          "paint": 405858.900000006,
+          "visual_ms": 13.7000000029802
+        },
+        "dom": 405844.40000000596,
+        "audio": 405859.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 132,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/4",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 14.70000000303844,
+      "sound_ms": 15.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 409978.900000006,
+          "paint": 409993.100000009,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 409978.40000000596,
+        "audio": 409993.60000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 133,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/5",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 15.599999994039536,
+      "sound_ms": 16.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 414111.700000003,
+          "paint": 414126.700000003,
+          "visual_ms": 15
+        },
+        "dom": 414111.10000000894,
+        "audio": 414127.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 134,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/6",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        502,
+        118,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 43.69999998807907,
+      "sound_ms": 44.29999999701977,
+      "diagnostic": {
+        "tap": {
+          "input": 419223.400000006,
+          "paint": 419266.299999997,
+          "visual_ms": 42.8999999910593
+        },
+        "dom": 419222.60000000894,
+        "audio": 419266.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 135,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/6",
+      "action": "",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        30,
+        336,
+        265,
+        106
+      ],
+      "text": "Quests",
+      "visual_ms": 38.20000000298023,
+      "sound_ms": 38.6000000089407,
+      "diagnostic": {
+        "tap": {
+          "input": 422301.600000009,
+          "paint": 422339,
+          "visual_ms": 37.3999999910593
+        },
+        "dom": 422300.799999997,
+        "audio": 422339.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 136,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/6",
+      "action": "",
+      "disabled": true,
+      "index": 2,
+      "rect": [
+        305,
+        336,
+        265,
+        106
+      ],
+      "text": "Losses",
+      "visual_ms": 36.799999997077975,
+      "sound_ms": 37.29999999701977,
+      "diagnostic": {
+        "tap": {
+          "input": 425455.700000003,
+          "paint": 425491.900000006,
+          "visual_ms": 36.2000000029802
+        },
+        "dom": 425455.10000000894,
+        "audio": 425492.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 137,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/6",
+      "action": "tutorial:next",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        30,
+        502,
+        540,
+        120
+      ],
+      "text": "Harvest what remains →",
+      "visual_ms": 39.599999994039536,
+      "sound_ms": 40.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 428619.900000006,
+          "paint": 428658.700000003,
+          "visual_ms": 38.7999999970198
+        },
+        "dom": 428619.10000000894,
+        "audio": 428659.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 138,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/7",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        275.076934814453,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 15.700000002980232,
+      "sound_ms": 16.200000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 432758.900000006,
+          "paint": 432773.700000003,
+          "visual_ms": 14.7999999970198
+        },
+        "dom": 432758,
+        "audio": 432774.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 139,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/8",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        275.076934814453,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 15.900000005960464,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 436859.700000003,
+          "paint": 436874.700000003,
+          "visual_ms": 15
+        },
+        "dom": 436858.799999997,
+        "audio": 436875.200000003,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 140,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/8",
+      "action": "tutorial:next",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        28,
+        491.076934814453,
+        536,
+        124
+      ],
+      "text": "Store for Winter →",
+      "visual_ms": 13.200000002980232,
+      "sound_ms": 13.600000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 439260.5,
+          "paint": 439273,
+          "visual_ms": 12.5
+        },
+        "dom": 439259.799999997,
+        "audio": 439273.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 141,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide/9",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        151.230773925781,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 15.299999997077975,
+      "sound_ms": 15.699999988079071,
+      "diagnostic": {
+        "tap": {
+          "input": 443374.400000006,
+          "paint": 443388.900000006,
+          "visual_ms": 14.5
+        },
+        "dom": 443373.60000000894,
+        "audio": 443389.299999997,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 142,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}

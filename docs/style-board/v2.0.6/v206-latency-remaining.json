@@ -1,0 +1,1097 @@
+{
+  "results": [
+    {
+      "view": "quests",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        502,
+        118,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 57.69999998803905,
+      "sound_ms": 101.09999999403954,
+      "diagnostic": {
+        "tap": {
+          "input": 11171.200000003,
+          "paint": 11228.099999994,
+          "visual_ms": 56.8999999910593
+        },
+        "dom": 11170.40000000596,
+        "audio": 11271.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "talk:tess",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        481.384613037109,
+        244.384613037109,
+        73,
+        68
+      ],
+      "text": "Talk",
+      "visual_ms": 44.599999994039536,
+      "sound_ms": 44.8999999910593,
+      "diagnostic": {
+        "tap": {
+          "input": 14699.900000006,
+          "paint": 14744,
+          "visual_ms": 44.0999999940395
+        },
+        "dom": 14699.40000000596,
+        "audio": 14744.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        30,
+        368,
+        265,
+        106
+      ],
+      "text": "Quests",
+      "visual_ms": 47.79999999703796,
+      "sound_ms": 48,
+      "diagnostic": {
+        "tap": {
+          "input": 18227.400000006,
+          "paint": 18274.700000003,
+          "visual_ms": 47.2999999970198
+        },
+        "dom": 18226.90000000596,
+        "audio": 18274.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 3,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "quests",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        305,
+        368,
+        265,
+        106
+      ],
+      "text": "Losses 1",
+      "visual_ms": 43.00000000001819,
+      "sound_ms": 43.20000000298023,
+      "diagnostic": {
+        "tap": {
+          "input": 21963.700000003,
+          "paint": 22006.200000003,
+          "visual_ms": 42.5
+        },
+        "dom": 21963.20000000298,
+        "audio": 22006.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "farmer",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        40.0000076293945,
+        528.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Farmer",
+      "visual_ms": 16.099999994021346,
+      "sound_ms": 16.399999991059303,
+      "diagnostic": {
+        "tap": {
+          "input": 26075.599999994,
+          "paint": 26091.299999997,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 26075.20000000298,
+        "audio": 26091.59999999404,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 5,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "dex",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        219,
+        528.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Grown",
+      "visual_ms": 17.99999999998181,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 28458.200000003,
+          "paint": 28475.799999997,
+          "visual_ms": 17.5999999940395
+        },
+        "dom": 28457.79999999702,
+        "audio": 28476.09999999404,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 6,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "sound",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        398,
+        528.384643554688,
+        162,
+        150.769226074219
+      ],
+      "text": "Sound",
+      "visual_ms": 16.099999993999518,
+      "sound_ms": 16.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 30808.400000006,
+          "paint": 30824.099999994,
+          "visual_ms": 15.6999999880791
+        },
+        "dom": 30808,
+        "audio": 30824.29999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 7,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "graphics",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        40.0000076293945,
+        694.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Graphics",
+      "visual_ms": 14.799999997019768,
+      "sound_ms": 15,
+      "diagnostic": {
+        "tap": {
+          "input": 33160.599999994,
+          "paint": 33175,
+          "visual_ms": 14.4000000059605
+        },
+        "dom": 33160.20000000298,
+        "audio": 33175.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 8,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "save_page",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        219,
+        694.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Save",
+      "visual_ms": 15.999999999978172,
+      "sound_ms": 16.100000008940697,
+      "diagnostic": {
+        "tap": {
+          "input": 35508.700000003,
+          "paint": 35524.299999997,
+          "visual_ms": 15.5999999940395
+        },
+        "dom": 35508.29999999702,
+        "audio": 35524.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 9,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "menu",
+      "action": "close",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        398,
+        694.384643554688,
+        162,
+        150.769226074219
+      ],
+      "text": "Leave",
+      "visual_ms": 18.19999998804269,
+      "sound_ms": 18.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 37824.200000003,
+          "paint": 37842.099999994,
+          "visual_ms": 17.8999999910593
+        },
+        "dom": 37823.90000000596,
+        "audio": 37842.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 10,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "farmer",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        40.0000076293945,
+        528.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Farmer",
+      "visual_ms": 16.100000008962525,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 41776.200000003,
+          "paint": 41791.700000003,
+          "visual_ms": 15.5
+        },
+        "dom": 41775.59999999404,
+        "audio": 41791.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 11,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "dex",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        219,
+        528.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Grown",
+      "visual_ms": 16.70000000300206,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 44110,
+          "paint": 44126.200000003,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 44109.5,
+        "audio": 44126.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 12,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "sound",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        398,
+        528.384643554688,
+        162,
+        150.769226074219
+      ],
+      "text": "Sound",
+      "visual_ms": 15.00000000003638,
+      "sound_ms": 15.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 46442.200000003,
+          "paint": 46456.900000006,
+          "visual_ms": 14.7000000029802
+        },
+        "dom": 46441.90000000596,
+        "audio": 46457.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 13,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "graphics",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        40.0000076293945,
+        694.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Graphics",
+      "visual_ms": 16.200000002980232,
+      "sound_ms": 16.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 48758.700000003,
+          "paint": 48774.5,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 48758.29999999702,
+        "audio": 48774.70000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 14,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "save_page",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        219,
+        694.384643554688,
+        163,
+        150.769226074219
+      ],
+      "text": "Save",
+      "visual_ms": 16.30000001195731,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 51092.099999994,
+          "paint": 51107.900000006,
+          "visual_ms": 15.8000000119209
+        },
+        "dom": 51091.59999999404,
+        "audio": 51108.09999999404,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 15,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "pause",
+      "action": "close",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        398,
+        694.384643554688,
+        162,
+        150.769226074219
+      ],
+      "text": "Leave",
+      "visual_ms": 16.20000000300206,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 53423.900000006,
+          "paint": 53439.700000003,
+          "visual_ms": 15.7999999970198
+        },
+        "dom": 53423.5,
+        "audio": 53440,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 16,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "calendar",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        496,
+        124,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 14.500000000021828,
+      "sound_ms": 14.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 57375.099999994,
+          "paint": 57389.200000003,
+          "visual_ms": 14.1000000089407
+        },
+        "dom": 57374.70000000298,
+        "audio": 57389.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 17,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "grades",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        494.923095703125,
+        537.5,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 17.900000005960464,
+      "sound_ms": 18,
+      "diagnostic": {
+        "tap": {
+          "input": 61322.900000006,
+          "paint": 61340.5,
+          "visual_ms": 17.5999999940395
+        },
+        "dom": 61322.59999999404,
+        "audio": 61340.59999999404,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 18,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        36.9230880737305,
+        673.923095703125,
+        121,
+        108
+      ],
+      "text": "Straw",
+      "visual_ms": 16.399999991037475,
+      "sound_ms": 16.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 65341.299999997,
+          "paint": 65357.299999997,
+          "visual_ms": 16
+        },
+        "dom": 65340.90000000596,
+        "audio": 65357.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 19,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": true,
+      "index": 1,
+      "rect": [
+        170.923095703125,
+        673.923095703125,
+        122,
+        108
+      ],
+      "text": "Flower",
+      "visual_ms": 16.299999997019768,
+      "sound_ms": 16.5,
+      "diagnostic": {
+        "tap": {
+          "input": 67709.299999997,
+          "paint": 67725,
+          "visual_ms": 15.7000000029802
+        },
+        "dom": 67708.70000000298,
+        "audio": 67725.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 20,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": true,
+      "index": 2,
+      "rect": [
+        305.923095703125,
+        673.923095703125,
+        122,
+        108
+      ],
+      "text": "Scarf",
+      "visual_ms": 16.699999988035415,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 70057.900000006,
+          "paint": 70074.099999994,
+          "visual_ms": 16.1999999880791
+        },
+        "dom": 70057.40000000596,
+        "audio": 70074.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 21,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 3,
+      "rect": [
+        440.923095703125,
+        673.923095703125,
+        122,
+        108
+      ],
+      "text": "None",
+      "visual_ms": 13.700000002994784,
+      "sound_ms": 13.900000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 72411.400000006,
+          "paint": 72424.700000003,
+          "visual_ms": 13.2999999970198
+        },
+        "dom": 72411,
+        "audio": 72424.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 22,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 4,
+      "rect": [
+        36.9230880737305,
+        797.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.70000000296568,
+      "sound_ms": 17,
+      "diagnostic": {
+        "tap": {
+          "input": 74791.099999994,
+          "paint": 74807.299999997,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 74790.59999999404,
+        "audio": 74807.59999999404,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 23,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 5,
+      "rect": [
+        117.92308807373,
+        797.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 17.09999999399588,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 77157.900000006,
+          "paint": 77174.599999994,
+          "visual_ms": 16.6999999880791
+        },
+        "dom": 77157.5,
+        "audio": 77174.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 24,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 6,
+      "rect": [
+        198.923095703125,
+        797.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 14.499999999985448,
+      "sound_ms": 14.700000002980232,
+      "diagnostic": {
+        "tap": {
+          "input": 79525.099999994,
+          "paint": 79539.299999997,
+          "visual_ms": 14.2000000029802
+        },
+        "dom": 79524.79999999702,
+        "audio": 79539.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 25,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 7,
+      "rect": [
+        279.923095703125,
+        797.923095703125,
+        67.6923217773438,
+        68
+      ],
+      "text": "",
+      "visual_ms": 17.09999999399588,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 81907.900000006,
+          "paint": 81924.599999994,
+          "visual_ms": 16.6999999880791
+        },
+        "dom": 81907.5,
+        "audio": 81924.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 26,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 8,
+      "rect": [
+        36.9230880737305,
+        881.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 14.200000002994784,
+      "sound_ms": 14.5,
+      "diagnostic": {
+        "tap": {
+          "input": 84291.900000006,
+          "paint": 84305.700000003,
+          "visual_ms": 13.7999999970198
+        },
+        "dom": 84291.5,
+        "audio": 84306,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 27,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 9,
+      "rect": [
+        117.92308807373,
+        881.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 17.199999988035415,
+      "sound_ms": 17.5,
+      "diagnostic": {
+        "tap": {
+          "input": 86657.200000003,
+          "paint": 86674.099999994,
+          "visual_ms": 16.8999999910593
+        },
+        "dom": 86656.90000000596,
+        "audio": 86674.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 28,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 10,
+      "rect": [
+        198.923095703125,
+        881.923095703125,
+        67.6923065185547,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.60000000895525,
+      "sound_ms": 16.80000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 89039.900000006,
+          "paint": 89056.200000003,
+          "visual_ms": 16.2999999970198
+        },
+        "dom": 89039.59999999404,
+        "audio": 89056.40000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 29,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "",
+      "disabled": false,
+      "index": 11,
+      "rect": [
+        279.923095703125,
+        881.923095703125,
+        67.6923217773438,
+        68
+      ],
+      "text": "",
+      "visual_ms": 16.500000000014552,
+      "sound_ms": 16.799999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 91423.599999994,
+          "paint": 91439.700000003,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 91423.20000000298,
+        "audio": 91440,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 30,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "farmer",
+      "action": "close",
+      "disabled": false,
+      "index": 12,
+      "rect": [
+        36.9230880737305,
+        965.923095703125,
+        526,
+        73
+      ],
+      "text": "Walk out to the field",
+      "visual_ms": 14.799999997019768,
+      "sound_ms": 15.099999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 93808.099999994,
+          "paint": 93822.5,
+          "visual_ms": 14.4000000059605
+        },
+        "dom": 93807.70000000298,
+        "audio": 93822.79999999702,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 31,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "close",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        497,
+        58.461540222168,
+        68,
+        72
+      ],
+      "text": "×",
+      "visual_ms": 17.09999999399588,
+      "sound_ms": 17.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 97906.900000006,
+          "paint": 97923.599999994,
+          "visual_ms": 16.6999999880791
+        },
+        "dom": 97906.5,
+        "audio": 97923.90000000596,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 32,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "talk:bram",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        468.384613037109,
+        168.846160888672,
+        73,
+        67.6923065185547
+      ],
+      "text": "Talk",
+      "visual_ms": 14.100000008955249,
+      "sound_ms": 14.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 100325.5,
+          "paint": 100339.200000003,
+          "visual_ms": 13.7000000029802
+        },
+        "dom": 100325.09999999404,
+        "audio": 100339.5,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 33,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "decorations",
+      "action": "",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        52.0000076293945,
+        402.461547851562,
+        493,
+        105
+      ],
+      "text": "At the gate",
+      "visual_ms": 203.20000000299478,
+      "sound_ms": null,
+      "diagnostic": {
+        "tap": {
+          "input": 102724.900000006,
+          "paint": 102927.700000003,
+          "visual_ms": 202.79999999702
+        },
+        "dom": 102724.5,
+        "audio": null,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 34,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}

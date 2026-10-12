@@ -1,0 +1,2968 @@
+{
+  "reports": [
+    {
+      "backing_size": [
+        1440,
+        900
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            1144,
+            59,
+            44,
+            54
+          ],
+          "text": "×"
+        },
+        {
+          "action": "talk:mara",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 14,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            1131,
+            152,
+            47,
+            46
+          ],
+          "text": "Talk"
+        },
+        {
+          "action": "market_mode:buy",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            92,
+            237,
+            120,
+            46
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "market_mode:sell",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            224,
+            237,
+            120,
+            46
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            92,
+            330,
+            46,
+            46
+          ],
+          "text": "?"
+        },
+        {
+          "action": "market_crop:russet",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "crop": "russet",
+            "kind": "crop"
+          },
+          "rect": [
+            92,
+            390,
+            110,
+            82
+          ],
+          "text": "Russet"
+        },
+        {
+          "action": "market_crop:giant",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "crop": "giant",
+            "kind": "crop"
+          },
+          "rect": [
+            214,
+            390,
+            110,
+            82
+          ],
+          "text": "Giant"
+        },
+        {
+          "action": "market_crop:golden",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "crop": "golden",
+            "kind": "crop"
+          },
+          "rect": [
+            336,
+            390,
+            110,
+            82
+          ],
+          "text": "Golden"
+        },
+        {
+          "action": "market_crop:sunburst",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "crop": "sunburst",
+            "kind": "crop"
+          },
+          "rect": [
+            458,
+            390,
+            110,
+            82
+          ],
+          "text": "Sunburst"
+        },
+        {
+          "action": "market_crop:icecap",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "crop": "icecap",
+            "kind": "crop"
+          },
+          "rect": [
+            580,
+            390,
+            110,
+            82
+          ],
+          "text": "Icecap"
+        },
+        {
+          "action": "grade:russet:Table",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "Table",
+          "picture": {},
+          "rect": [
+            293,
+            555,
+            87,
+            46
+          ],
+          "text": "Table 12 t"
+        },
+        {
+          "action": "grade:russet:Standard",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "Standard",
+          "picture": {},
+          "rect": [
+            388,
+            555,
+            107,
+            46
+          ],
+          "text": "Standard 8 t"
+        },
+        {
+          "action": "grade:russet:Feed",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "Feed",
+          "picture": {},
+          "rect": [
+            503,
+            555,
+            75,
+            46
+          ],
+          "text": "Feed 4 t"
+        },
+        {
+          "action": "market_sell",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            106,
+            664,
+            114,
+            58
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "quantity_minus",
+          "disabled": true,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            234,
+            681,
+            46,
+            46
+          ],
+          "text": "−"
+        },
+        {
+          "action": "quantity_plus",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            374,
+            681,
+            46,
+            46
+          ],
+          "text": "+"
+        },
+        {
+          "action": "market_all",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            425,
+            681,
+            51,
+            46
+          ],
+          "text": "Max"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "qol",
+      "guide_icons": {
+        "fullscreen": false,
+        "graphics": false,
+        "smiley": false
+      },
+      "hotbar": [
+        386,
+        686,
+        508,
+        94
+      ],
+      "hotbar_caption": [
+        392,
+        670,
+        496,
+        19
+      ],
+      "labels": [
+        {
+          "font_size": 18,
+          "grade": "",
+          "rect": [
+            190,
+            137,
+            929,
+            26
+          ],
+          "text": "Mara"
+        },
+        {
+          "font_size": 16,
+          "grade": "",
+          "rect": [
+            190,
+            167,
+            929,
+            21
+          ],
+          "text": "Fresh seeds, Farmer. Start with one."
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            92,
+            297,
+            1096,
+            19
+          ],
+          "text": "Balance - 126,056"
+        },
+        {
+          "font_size": 16,
+          "grade": "",
+          "rect": [
+            168,
+            498,
+            113,
+            23
+          ],
+          "text": "Russet"
+        },
+        {
+          "font_size": 18,
+          "grade": "",
+          "rect": [
+            168,
+            525,
+            64,
+            24
+          ],
+          "text": " 432/t"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            240,
+            523,
+            41,
+            29
+          ],
+          "text": "+0%"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            234,
+            659,
+            242,
+            19
+          ],
+          "text": "AMOUNT (t)"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            490,
+            659,
+            684,
+            19
+          ],
+          "text": "YOU RECEIVE"
+        },
+        {
+          "font_size": 18,
+          "grade": "",
+          "rect": [
+            490,
+            680,
+            684,
+            24
+          ],
+          "text": " 432"
+        }
+      ],
+      "latency_armed": [],
+      "latency_buttons": [],
+      "logical_size": [
+        1280,
+        800
+      ],
+      "modal": [
+        80,
+        47,
+        1120,
+        706
+      ],
+      "modal_content_height": 706,
+      "modal_draw_alpha": 1,
+      "page": "qol_sell",
+      "panel_kind": "market",
+      "quests": [
+        [
+          499.416290283203,
+          511.625
+        ],
+        [
+          499.416290283203,
+          505.912292480469
+        ],
+        [
+          499.416290283203,
+          500.199584960938
+        ],
+        [
+          511.67236328125,
+          513.845581054688
+        ],
+        [
+          511.67236328125,
+          508.132843017578
+        ],
+        [
+          511.67236328125,
+          502.420135498047
+        ],
+        [
+          523.928527832031,
+          516.066162109375
+        ],
+        [
+          523.928527832031,
+          510.353424072266
+        ],
+        [
+          523.928527832031,
+          504.640716552734
+        ]
+      ],
+      "ready": true,
+      "request": 1,
+      "scroll": [
+        92,
+        127,
+        1096,
+        504
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "sell_rows": [],
+      "simulation_seconds": 0,
+      "sun": {
+        "ambient": 0.300000011920929,
+        "energy": 1.20000004768372,
+        "opacity": 0.75,
+        "probe_pixel": [
+          713.522155761719,
+          487.468444824219
+        ],
+        "rotation": [
+          -34.9999961853027,
+          180
+        ],
+        "screen": [
+          0.659830212593079,
+          0.100996755063534
+        ],
+        "viewport": [
+          1440,
+          900
+        ]
+      },
+      "surfaces": [
+        {
+          "fill": "fbf7e6ff",
+          "name": "@PanelContainer@6026",
+          "rect": [
+            80,
+            47,
+            1120,
+            706
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "5fb33aff",
+          "name": "PlaceHeader",
+          "rect": [
+            92,
+            127,
+            1096,
+            96
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "SaleRow_russet",
+          "rect": [
+            92,
+            486,
+            1096,
+            127
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffdf2ff",
+          "name": "@PanelContainer@7506",
+          "rect": [
+            92,
+            645,
+            1096,
+            96
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": false,
+      "version": "2.0.5",
+      "vibrancy": {
+        "adjustment_enabled": true,
+        "brightness": 1,
+        "contrast": 1,
+        "exposure": 1,
+        "ground_samples": [
+          {
+            "lit": [
+              404.541351318359,
+              442.916534423828
+            ],
+            "shade": [
+              368.958923339844,
+              436.469818115234
+            ],
+            "tree": [
+              -30,
+              -2
+            ]
+          },
+          {
+            "lit": [
+              383.212768554688,
+              481.936950683594
+            ],
+            "shade": [
+              347.63037109375,
+              475.490264892578
+            ],
+            "tree": [
+              -30,
+              4
+            ]
+          },
+          {
+            "lit": [
+              361.88427734375,
+              520.957397460938
+            ],
+            "shade": [
+              326.301849365234,
+              514.510681152344
+            ],
+            "tree": [
+              -30,
+              10
+            ]
+          }
+        ],
+        "hud_hidden": false,
+        "island_polygon": [
+          [
+            267.491638183594,
+            406.658020019531
+          ],
+          [
+            395.889556884766,
+            301.257751464844
+          ],
+          [
+            476.410339355469,
+            249.732421875
+          ],
+          [
+            496.603851318359,
+            236.810668945312
+          ],
+          [
+            716.714782714844,
+            276.689666748047
+          ],
+          [
+            1055.59411621094,
+            338.086791992188
+          ],
+          [
+            1117.56140136719,
+            349.313903808594
+          ],
+          [
+            1122.85791015625,
+            374.001342773438
+          ],
+          [
+            1135.90856933594,
+            434.831817626953
+          ],
+          [
+            1136.02014160156,
+            435.352416992188
+          ],
+          [
+            1159.552734375,
+            568.278930664062
+          ],
+          [
+            1159.552734375,
+            589.580688476562
+          ],
+          [
+            1124.73303222656,
+            611.861938476562
+          ],
+          [
+            959.338989257812,
+            717.697814941406
+          ],
+          [
+            930.440551757812,
+            736.189819335938
+          ],
+          [
+            394.042144775391,
+            639.006774902344
+          ],
+          [
+            382.746185302734,
+            636.960205078125
+          ],
+          [
+            314.970306396484,
+            624.680725097656
+          ],
+          [
+            309.483032226562,
+            623.6865234375
+          ],
+          [
+            308.972839355469,
+            621.308654785156
+          ],
+          [
+            307.377380371094,
+            613.872192382812
+          ],
+          [
+            304.186492919922,
+            598.999206542969
+          ],
+          [
+            285.041259765625,
+            509.761199951172
+          ],
+          [
+            270.682434082031,
+            442.832672119141
+          ],
+          [
+            267.491638183594,
+            427.959777832031
+          ],
+          [
+            267.491638183594,
+            406.658020019531
+          ]
+        ],
+        "lettering_polygon": [
+          [
+            550.817260742188,
+            514.870849609375
+          ],
+          [
+            631.018676757812,
+            529.401428222656
+          ],
+          [
+            631.018676757812,
+            544.203247070312
+          ],
+          [
+            550.817260742188,
+            529.672668457031
+          ],
+          [
+            550.817260742188,
+            514.870849609375
+          ]
+        ],
+        "paused": false,
+        "saturation": 1.10000002384186,
+        "tonemap": 2,
+        "white": 6
+      },
+      "world_animation_time": 3.70283333333333,
+      "year": 3,
+      "capture": "qol_sell-1440.png",
+      "css_size": [
+        1440,
+        900
+      ]
+    },
+    {
+      "backing_size": [
+        1440,
+        900
+      ],
+      "buttons": [
+        {
+          "action": "calendar",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            50,
+            6,
+            196,
+            52
+          ],
+          "text": "Spring · Year 3"
+        },
+        {
+          "action": "menu",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "id": "book",
+            "kind": "symbol"
+          },
+          "rect": [
+            1182,
+            6,
+            92,
+            92
+          ],
+          "text": "Menu"
+        },
+        {
+          "action": "climate",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {
+            "id": "cloud",
+            "kind": "forecast",
+            "warning": false
+          },
+          "rect": [
+            16,
+            76,
+            92,
+            92
+          ],
+          "text": "Weather"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            38,
+            192,
+            310,
+            89
+          ],
+          "text": "Spring plan −"
+        },
+        {
+          "action": "tool:hoe",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            393,
+            693,
+            92,
+            80
+          ],
+          "text": ""
+        },
+        {
+          "action": "tool:plant",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            491,
+            693,
+            92,
+            80
+          ],
+          "text": ""
+        },
+        {
+          "action": "tool:water",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            589,
+            693,
+            92,
+            80
+          ],
+          "text": ""
+        },
+        {
+          "action": "tool:harvest",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            687,
+            693,
+            92,
+            80
+          ],
+          "text": ""
+        },
+        {
+          "action": "tool:pest",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            785,
+            693,
+            92,
+            80
+          ],
+          "text": ""
+        },
+        {
+          "action": "market:sell",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 16,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            954,
+            691,
+            298,
+            89
+          ],
+          "text": "Sell · Russet 360/t"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "qol",
+      "guide_icons": {
+        "fullscreen": false,
+        "graphics": false,
+        "smiley": false
+      },
+      "hotbar": [
+        386,
+        686,
+        508,
+        94
+      ],
+      "hotbar_caption": [
+        392,
+        670,
+        496,
+        19
+      ],
+      "labels": [
+        {
+          "font_size": 24,
+          "grade": "",
+          "rect": [
+            645.857788085938,
+            7.05451393127441,
+            19,
+            50
+          ],
+          "text": ""
+        },
+        {
+          "font_size": 24,
+          "grade": "",
+          "rect": [
+            671,
+            7,
+            110,
+            50
+          ],
+          "text": "-126,056"
+        },
+        {
+          "font_size": 16,
+          "grade": "",
+          "rect": [
+            38,
+            285,
+            310,
+            63
+          ],
+          "text": "Winter bills    [color=#856023] 104,000[/color]\nTwo plantings    [color=#315d3e]≈  49,248[/color]\nShort by    [color=#954e40] 54,752[/color]"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            398,
+            745,
+            82,
+            29
+          ],
+          "text": "1  Hoe"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            496,
+            745,
+            82,
+            29
+          ],
+          "text": "2  Seeds"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            594,
+            745,
+            82,
+            29
+          ],
+          "text": "3  Water"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            637,
+            698,
+            42,
+            33
+          ],
+          "text": "16/16"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            692,
+            745,
+            87,
+            29
+          ],
+          "text": "4  Harvest"
+        },
+        {
+          "font_size": 14,
+          "grade": "",
+          "rect": [
+            790,
+            745,
+            94,
+            29
+          ],
+          "text": "5  Sprayer"
+        }
+      ],
+      "latency_armed": [],
+      "latency_buttons": [],
+      "logical_size": [
+        1280,
+        800
+      ],
+      "modal": [
+        250,
+        47,
+        780,
+        706
+      ],
+      "modal_content_height": 706,
+      "modal_draw_alpha": 1,
+      "page": "qol_hotbar",
+      "panel_kind": "",
+      "quests": [
+        [
+          499.416290283203,
+          511.625
+        ],
+        [
+          499.416290283203,
+          505.912292480469
+        ],
+        [
+          499.416290283203,
+          500.199584960938
+        ],
+        [
+          511.67236328125,
+          513.845581054688
+        ],
+        [
+          511.67236328125,
+          508.132843017578
+        ],
+        [
+          511.67236328125,
+          502.420135498047
+        ],
+        [
+          523.928527832031,
+          516.066162109375
+        ],
+        [
+          523.928527832031,
+          510.353424072266
+        ],
+        [
+          523.928527832031,
+          504.640716552734
+        ]
+      ],
+      "ready": true,
+      "request": 2,
+      "scroll": [
+        262,
+        127,
+        1096,
+        504
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "sell_rows": [],
+      "simulation_seconds": 0,
+      "sun": {
+        "ambient": 0.300000011920929,
+        "energy": 1.20000004768372,
+        "opacity": 0.75,
+        "probe_pixel": [
+          713.522155761719,
+          487.468444824219
+        ],
+        "rotation": [
+          -34.9999961853027,
+          180
+        ],
+        "screen": [
+          0.659830212593079,
+          0.100996755063534
+        ],
+        "viewport": [
+          1440,
+          900
+        ]
+      },
+      "surfaces": [
+        {
+          "fill": "ffffff00",
+          "name": "PlayHudBand",
+          "rect": [
+            0,
+            0,
+            1280,
+            64
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "ffffff00",
+          "name": "@PanelContainer@5875",
+          "rect": [
+            252,
+            6,
+            924,
+            52
+          ],
+          "type": "StyleBoxEmpty"
+        },
+        {
+          "fill": "e5efdbff",
+          "name": "SpringBreakEven",
+          "rect": [
+            28,
+            182,
+            330,
+            176
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "223d33ff",
+          "name": "ToolHotbar",
+          "rect": [
+            386,
+            686,
+            508,
+            94
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": false,
+      "version": "2.0.5",
+      "vibrancy": {
+        "adjustment_enabled": true,
+        "brightness": 1,
+        "contrast": 1,
+        "exposure": 1,
+        "ground_samples": [
+          {
+            "lit": [
+              404.541351318359,
+              442.916534423828
+            ],
+            "shade": [
+              368.958923339844,
+              436.469818115234
+            ],
+            "tree": [
+              -30,
+              -2
+            ]
+          },
+          {
+            "lit": [
+              383.212768554688,
+              481.936950683594
+            ],
+            "shade": [
+              347.63037109375,
+              475.490264892578
+            ],
+            "tree": [
+              -30,
+              4
+            ]
+          },
+          {
+            "lit": [
+              361.88427734375,
+              520.957397460938
+            ],
+            "shade": [
+              326.301849365234,
+              514.510681152344
+            ],
+            "tree": [
+              -30,
+              10
+            ]
+          }
+        ],
+        "hud_hidden": false,
+        "island_polygon": [
+          [
+            267.491638183594,
+            406.658020019531
+          ],
+          [
+            395.889556884766,
+            301.257751464844
+          ],
+          [
+            476.410339355469,
+            249.732421875
+          ],
+          [
+            496.603851318359,
+            236.810668945312
+          ],
+          [
+            716.714782714844,
+            276.689666748047
+          ],
+          [
+            1055.59411621094,
+            338.086791992188
+          ],
+          [
+            1117.56140136719,
+            349.313903808594
+          ],
+          [
+            1122.85791015625,
+            374.001342773438
+          ],
+          [
+            1135.90856933594,
+            434.831817626953
+          ],
+          [
+            1136.02014160156,
+            435.352416992188
+          ],
+          [
+            1159.552734375,
+            568.278930664062
+          ],
+          [
+            1159.552734375,
+            589.580688476562
+          ],
+          [
+            1124.73303222656,
+            611.861938476562
+          ],
+          [
+            959.338989257812,
+            717.697814941406
+          ],
+          [
+            930.440551757812,
+            736.189819335938
+          ],
+          [
+            394.042144775391,
+            639.006774902344
+          ],
+          [
+            382.746185302734,
+            636.960205078125
+          ],
+          [
+            314.970306396484,
+            624.680725097656
+          ],
+          [
+            309.483032226562,
+            623.6865234375
+          ],
+          [
+            308.972839355469,
+            621.308654785156
+          ],
+          [
+            307.377380371094,
+            613.872192382812
+          ],
+          [
+            304.186492919922,
+            598.999206542969
+          ],
+          [
+            285.041259765625,
+            509.761199951172
+          ],
+          [
+            270.682434082031,
+            442.832672119141
+          ],
+          [
+            267.491638183594,
+            427.959777832031
+          ],
+          [
+            267.491638183594,
+            406.658020019531
+          ]
+        ],
+        "lettering_polygon": [
+          [
+            550.817260742188,
+            514.870849609375
+          ],
+          [
+            631.018676757812,
+            529.401428222656
+          ],
+          [
+            631.018676757812,
+            544.203247070312
+          ],
+          [
+            550.817260742188,
+            529.672668457031
+          ],
+          [
+            550.817260742188,
+            514.870849609375
+          ]
+        ],
+        "paused": false,
+        "saturation": 1.10000002384186,
+        "tonemap": 2,
+        "white": 6
+      },
+      "world_animation_time": 5.51969999999999,
+      "year": 3,
+      "capture": "qol_hotbar-1440.png",
+      "css_size": [
+        1440,
+        900
+      ]
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            494.923095703125,
+            55.3846130371094,
+            68,
+            72
+          ],
+          "text": "×"
+        },
+        {
+          "action": "talk:mara",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            466.307708740234,
+            181.769226074219,
+            73,
+            68
+          ],
+          "text": "Talk"
+        },
+        {
+          "action": "market_mode:buy",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            36.9230880737305,
+            305.384613037109,
+            185,
+            68
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "market_mode:sell",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            233.923095703125,
+            305.384613037109,
+            185,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            36.9230880737305,
+            429.384613037109,
+            68,
+            68
+          ],
+          "text": "?"
+        },
+        {
+          "action": "market_crop:russet",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 25,
+          "grade": "",
+          "picture": {
+            "crop": "russet",
+            "kind": "crop"
+          },
+          "rect": [
+            36.9230880737305,
+            510.384613037109,
+            169.230773925781,
+            116.923080444336
+          ],
+          "text": "Russet"
+        },
+        {
+          "action": "market_crop:giant",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 25,
+          "grade": "",
+          "picture": {
+            "crop": "giant",
+            "kind": "crop"
+          },
+          "rect": [
+            217.923095703125,
+            510.384613037109,
+            169.230773925781,
+            116.923080444336
+          ],
+          "text": "Giant"
+        },
+        {
+          "action": "market_crop:golden",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 25,
+          "grade": "",
+          "picture": {
+            "crop": "golden",
+            "kind": "crop"
+          },
+          "rect": [
+            36.9230880737305,
+            634.384643554688,
+            169.230773925781,
+            116.923080444336
+          ],
+          "text": "Golden"
+        },
+        {
+          "action": "market_crop:sunburst",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 25,
+          "grade": "",
+          "picture": {
+            "crop": "sunburst",
+            "kind": "crop"
+          },
+          "rect": [
+            217.923095703125,
+            634.384643554688,
+            169.230773925781,
+            116.923080444336
+          ],
+          "text": "Sunburst"
+        },
+        {
+          "action": "market_crop:icecap",
+          "disabled": false,
+          "drawn": true,
+          "font_size": 25,
+          "grade": "",
+          "picture": {
+            "crop": "icecap",
+            "kind": "crop"
+          },
+          "rect": [
+            36.9230880737305,
+            758.384643554688,
+            169.230773925781,
+            116.923095703125
+          ],
+          "text": "Icecap"
+        },
+        {
+          "action": "quantity_minus",
+          "disabled": true,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            50.9230880737305,
+            1079.38464355469,
+            68,
+            68
+          ],
+          "text": "−"
+        },
+        {
+          "action": "quantity_plus",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            238.923095703125,
+            1079.38464355469,
+            68,
+            68
+          ],
+          "text": "+"
+        },
+        {
+          "action": "market_all",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            311.923095703125,
+            1079.38464355469,
+            68,
+            68
+          ],
+          "text": "Max"
+        },
+        {
+          "action": "market_sell",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            50.9230880737305,
+            1157.38464355469,
+            114,
+            68
+          ],
+          "text": "Sell"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "qol",
+      "guide_icons": {
+        "fullscreen": false,
+        "graphics": false,
+        "smiley": false
+      },
+      "hotbar": [
+        46,
+        1184,
+        508,
+        94
+      ],
+      "hotbar_caption": [
+        52,
+        1168,
+        496,
+        28
+      ],
+      "labels": [
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            158.307708740234,
+            156.769226074219,
+            289,
+            48
+          ],
+          "text": "Mara"
+        },
+        {
+          "font_size": 25,
+          "grade": "",
+          "rect": [
+            158.307708740234,
+            208.769226074219,
+            289,
+            67
+          ],
+          "text": "Fresh seeds, Farmer. Start with one."
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            36.9230880737305,
+            387.384613037109,
+            518,
+            28
+          ],
+          "text": "Balance - 126,056"
+        },
+        {
+          "font_size": 25,
+          "grade": "",
+          "rect": [
+            112.92308807373,
+            901.384643554688,
+            430,
+            36
+          ],
+          "text": "Russet"
+        },
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            112.92308807373,
+            939.384643554688,
+            119,
+            43
+          ],
+          "text": " 432/t"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            239.923095703125,
+            941.384643554688,
+            58,
+            38
+          ],
+          "text": "+0%"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            50.9230880737305,
+            1048.38464355469,
+            329,
+            28
+          ],
+          "text": "AMOUNT (t)"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            178.923095703125,
+            1155.38464355469,
+            370,
+            28
+          ],
+          "text": "YOU RECEIVE"
+        },
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            178.923095703125,
+            1185.38464355469,
+            370,
+            43
+          ],
+          "text": " 432"
+        }
+      ],
+      "latency_armed": [],
+      "latency_buttons": [],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        18.4615478515625,
+        36.9230766296387,
+        563.076904296875,
+        1224.15380859375
+      ],
+      "modal_content_height": 1366.92307662964,
+      "modal_draw_alpha": 1,
+      "page": "qol_sell",
+      "panel_kind": "market",
+      "quests": [
+        [
+          -11.613374710083,
+          479.222076416016
+        ],
+        [
+          -11.613374710083,
+          473.871154785156
+        ],
+        [
+          -11.613374710083,
+          468.520263671875
+        ],
+        [
+          -0.133523941040039,
+          481.302001953125
+        ],
+        [
+          -0.133523941040039,
+          475.951110839844
+        ],
+        [
+          -0.133523941040039,
+          470.600189208984
+        ],
+        [
+          11.3464317321777,
+          483.381958007812
+        ],
+        [
+          11.3464317321777,
+          478.031036376953
+        ],
+        [
+          11.3464317321777,
+          472.680145263672
+        ]
+      ],
+      "ready": true,
+      "request": 1,
+      "scroll": [
+        36.9230880737305,
+        141.384613037109,
+        526,
+        879
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "sell_rows": [],
+      "simulation_seconds": 0,
+      "sun": {
+        "ambient": 0.300000011920929,
+        "energy": 1.20000004768372,
+        "opacity": 0.75,
+        "probe_pixel": [
+          188.932434082031,
+          456.595428466797
+        ],
+        "rotation": [
+          -34.9999961853027,
+          180
+        ],
+        "screen": [
+          0.659830212593079,
+          0.100996755063534
+        ],
+        "viewport": [
+          390,
+          843
+        ]
+      },
+      "surfaces": [
+        {
+          "fill": "fbf7e6ff",
+          "name": "@PanelContainer@6026",
+          "rect": [
+            18.4615478515625,
+            36.9230766296387,
+            563.076904296875,
+            1224.15380859375
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "5fb33aff",
+          "name": "PlaceHeader",
+          "rect": [
+            36.9230880737305,
+            141.384613037109,
+            518,
+            150
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "SaleRow_russet",
+          "rect": [
+            36.9230880737305,
+            889.384643554688,
+            518,
+            250
+          ],
+          "type": "StyleBoxTexture"
+        },
+        {
+          "fill": "fffdf2ff",
+          "name": "@PanelContainer@7512",
+          "rect": [
+            36.9230880737305,
+            1034.38464355469,
+            526,
+            208
+          ],
+          "type": "StyleBoxTexture"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.5",
+      "vibrancy": {
+        "adjustment_enabled": true,
+        "brightness": 1,
+        "contrast": 1,
+        "exposure": 1,
+        "ground_samples": [
+          {
+            "lit": [
+              -100.479553222656,
+              414.865142822266
+            ],
+            "shade": [
+              -133.80842590332,
+              408.826751708984
+            ],
+            "tree": [
+              -30,
+              -2
+            ]
+          },
+          {
+            "lit": [
+              -120.457305908203,
+              451.414276123047
+            ],
+            "shade": [
+              -153.786178588867,
+              445.375885009766
+            ],
+            "tree": [
+              -30,
+              4
+            ]
+          },
+          {
+            "lit": [
+              -140.435043334961,
+              487.963439941406
+            ],
+            "shade": [
+              -173.763900756836,
+              481.925018310547
+            ],
+            "tree": [
+              -30,
+              10
+            ]
+          }
+        ],
+        "hud_hidden": false,
+        "island_polygon": [
+          [
+            -228.84944152832,
+            380.903015136719
+          ],
+          [
+            -108.583396911621,
+            282.178131103516
+          ],
+          [
+            -108.012596130371,
+            281.812866210938
+          ],
+          [
+            -41.3159446716309,
+            239.133605957031
+          ],
+          [
+            -33.1622886657715,
+            233.916076660156
+          ],
+          [
+            -14.247706413269,
+            221.812683105469
+          ],
+          [
+            33.2143020629883,
+            230.411697387695
+          ],
+          [
+            509.33984375,
+            316.674652099609
+          ],
+          [
+            567.382446289062,
+            327.190704345703
+          ],
+          [
+            567.8603515625,
+            329.417999267578
+          ],
+          [
+            578.321105957031,
+            378.176635742188
+          ],
+          [
+            584.567626953125,
+            407.29248046875
+          ],
+          [
+            584.672180175781,
+            407.780090332031
+          ],
+          [
+            606.71435546875,
+            532.287902832031
+          ],
+          [
+            606.71435546875,
+            552.240539550781
+          ],
+          [
+            574.099853515625,
+            573.110656738281
+          ],
+          [
+            419.180816650391,
+            672.243591308594
+          ],
+          [
+            402.873565673828,
+            682.678527832031
+          ],
+          [
+            392.112640380859,
+            689.564392089844
+          ],
+          [
+            386.972808837891,
+            688.633178710938
+          ],
+          [
+            334.070007324219,
+            679.048461914062
+          ],
+          [
+            -120.894378662109,
+            596.619384765625
+          ],
+          [
+            -154.752227783203,
+            590.485107421875
+          ],
+          [
+            -184.377777099609,
+            585.117614746094
+          ],
+          [
+            -189.517547607422,
+            584.186340332031
+          ],
+          [
+            -189.995391845703,
+            581.959106445312
+          ],
+          [
+            -194.478622436523,
+            561.062561035156
+          ],
+          [
+            -212.41130065918,
+            477.476318359375
+          ],
+          [
+            -224.366333007812,
+            421.752197265625
+          ],
+          [
+            -225.860717773438,
+            414.78662109375
+          ],
+          [
+            -228.84944152832,
+            400.855651855469
+          ],
+          [
+            -228.84944152832,
+            380.903015136719
+          ]
+        ],
+        "lettering_polygon": [
+          [
+            36.5321998596191,
+            482.262329101562
+          ],
+          [
+            111.654182434082,
+            495.872650146484
+          ],
+          [
+            111.654182434082,
+            509.737030029297
+          ],
+          [
+            36.5321998596191,
+            496.126708984375
+          ],
+          [
+            36.5321998596191,
+            482.262329101562
+          ]
+        ],
+        "paused": false,
+        "saturation": 1.10000002384186,
+        "tonemap": 2,
+        "white": 6
+      },
+      "world_animation_time": 3.5767898989899,
+      "year": 3,
+      "capture": "qol_sell-390.png",
+      "css_size": [
+        390,
+        844
+      ]
+    },
+    {
+      "backing_size": [
+        390,
+        844
+      ],
+      "buttons": [
+        {
+          "action": "close",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            494.923095703125,
+            55.3846130371094,
+            68,
+            72
+          ],
+          "text": "×"
+        },
+        {
+          "action": "talk:mara",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            466.307708740234,
+            181.769226074219,
+            73,
+            68
+          ],
+          "text": "Talk"
+        },
+        {
+          "action": "market_mode:buy",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            36.9230880737305,
+            305.384613037109,
+            185,
+            68
+          ],
+          "text": "Buy"
+        },
+        {
+          "action": "market_mode:sell",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 25,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            233.923095703125,
+            305.384613037109,
+            185,
+            68
+          ],
+          "text": "Sell"
+        },
+        {
+          "action": "crop:russet",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 34,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            52.3077011108398,
+            584.769226074219,
+            220,
+            68
+          ],
+          "text": "Russet"
+        },
+        {
+          "action": "buy:russet:1",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            52.3077011108398,
+            948.769226074219,
+            220,
+            69
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:russet:5",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            52.3077011108398,
+            1021.76922607422,
+            220,
+            69
+          ],
+          "text": "Buy 5"
+        },
+        {
+          "action": "crop:giant",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 34,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            319.307708740234,
+            584.769226074219,
+            220,
+            68
+          ],
+          "text": "Giant"
+        },
+        {
+          "action": "buy:giant:1",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            319.307708740234,
+            910.769226074219,
+            220,
+            69
+          ],
+          "text": "Buy 1"
+        },
+        {
+          "action": "buy:giant:5",
+          "disabled": false,
+          "drawn": false,
+          "font_size": 22,
+          "grade": "",
+          "picture": {},
+          "rect": [
+            319.307708740234,
+            983.769226074219,
+            220,
+            69
+          ],
+          "text": "Buy 5"
+        }
+      ],
+      "content_fits_width": true,
+      "fixture": "qol",
+      "guide_icons": {
+        "fullscreen": false,
+        "graphics": false,
+        "smiley": false
+      },
+      "hotbar": [
+        46,
+        1184,
+        508,
+        94
+      ],
+      "hotbar_caption": [
+        52,
+        1168,
+        496,
+        28
+      ],
+      "labels": [
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            158.307708740234,
+            156.769226074219,
+            289,
+            48
+          ],
+          "text": "Mara"
+        },
+        {
+          "font_size": 25,
+          "grade": "",
+          "rect": [
+            158.307708740234,
+            208.769226074219,
+            289,
+            67
+          ],
+          "text": "Fresh seeds, Farmer. Start with one."
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            36.9230880737305,
+            387.384613037109,
+            518,
+            28
+          ],
+          "text": "+1 Russet seeds · − 270"
+        },
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            52.3077011108398,
+            662.769226074219,
+            220,
+            48
+          ],
+          "text": " 270"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            52.3077011108398,
+            720.769226074219,
+            220,
+            28
+          ],
+          "text": "Per seed"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            52.3077011108398,
+            758.769226074219,
+            220,
+            28
+          ],
+          "text": "1 season · 3 t"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            183.307708740234,
+            796.769226074219,
+            89,
+            28
+          ],
+          "text": "Thirst"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            183.307708740234,
+            834.769226074219,
+            89,
+            28
+          ],
+          "text": "Heat"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            183.307708740234,
+            872.769226074219,
+            89,
+            28
+          ],
+          "text": "Cold"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            52.3077011108398,
+            910.769226074219,
+            220,
+            28
+          ],
+          "text": "13 seeds owned"
+        },
+        {
+          "font_size": 34,
+          "grade": "",
+          "rect": [
+            319.307708740234,
+            662.769226074219,
+            220,
+            48
+          ],
+          "text": " 360"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            319.307708740234,
+            720.769226074219,
+            220,
+            28
+          ],
+          "text": "Per seed"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            319.307708740234,
+            758.769226074219,
+            220,
+            28
+          ],
+          "text": "1 season · 5 t"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            450.307708740234,
+            796.769226074219,
+            89,
+            28
+          ],
+          "text": "Thirst"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            450.307708740234,
+            834.769226074219,
+            89,
+            28
+          ],
+          "text": "Heat"
+        },
+        {
+          "font_size": 22,
+          "grade": "",
+          "rect": [
+            450.307708740234,
+            872.769226074219,
+            89,
+            28
+          ],
+          "text": "Cold"
+        }
+      ],
+      "latency_armed": [],
+      "latency_buttons": [],
+      "logical_size": [
+        600,
+        1298
+      ],
+      "modal": [
+        18.4615478515625,
+        36.9230766296387,
+        563.076904296875,
+        1224.15380859375
+      ],
+      "modal_content_height": 2430.92307662964,
+      "modal_draw_alpha": 1,
+      "page": "qol_buyfeedback",
+      "panel_kind": "market",
+      "quests": [
+        [
+          -11.613374710083,
+          479.222076416016
+        ],
+        [
+          -11.613374710083,
+          473.871154785156
+        ],
+        [
+          -11.613374710083,
+          468.520263671875
+        ],
+        [
+          -0.133523941040039,
+          481.302001953125
+        ],
+        [
+          -0.133523941040039,
+          475.951110839844
+        ],
+        [
+          -0.133523941040039,
+          470.600189208984
+        ],
+        [
+          11.3464317321777,
+          483.381958007812
+        ],
+        [
+          11.3464317321777,
+          478.031036376953
+        ],
+        [
+          11.3464317321777,
+          472.680145263672
+        ]
+      ],
+      "ready": true,
+      "request": 2,
+      "scroll": [
+        36.9230880737305,
+        141.384613037109,
+        526,
+        1101
+      ],
+      "scroll_top": 0,
+      "season": "Spring",
+      "sell_rows": [],
+      "simulation_seconds": 0,
+      "sun": {
+        "ambient": 0.300000011920929,
+        "energy": 1.20000004768372,
+        "opacity": 0.75,
+        "probe_pixel": [
+          188.932434082031,
+          456.595428466797
+        ],
+        "rotation": [
+          -34.9999961853027,
+          180
+        ],
+        "screen": [
+          0.659830212593079,
+          0.100996755063534
+        ],
+        "viewport": [
+          390,
+          843
+        ]
+      },
+      "surfaces": [
+        {
+          "fill": "fbf7e6ff",
+          "name": "@PanelContainer@6026",
+          "rect": [
+            18.4615478515625,
+            36.9230766296387,
+            563.076904296875,
+            1224.15380859375
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "5fb33aff",
+          "name": "PlaceHeader",
+          "rect": [
+            36.9230880737305,
+            141.384613037109,
+            518,
+            150
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "RussetSeedPacket",
+          "rect": [
+            36.9230880737305,
+            429.384613037109,
+            251,
+            676.769226074219
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7652",
+          "rect": [
+            87.3077011108398,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "eee8d2ff",
+          "name": "@Panel@7653",
+          "rect": [
+            118.30770111084,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "eee8d2ff",
+          "name": "@Panel@7654",
+          "rect": [
+            149.307708740234,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7658",
+          "rect": [
+            87.3077011108398,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7659",
+          "rect": [
+            118.30770111084,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7660",
+          "rect": [
+            149.307708740234,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7664",
+          "rect": [
+            87.3077011108398,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7665",
+          "rect": [
+            118.30770111084,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "b8803fff",
+          "name": "@Panel@7666",
+          "rect": [
+            149.307708740234,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "GiantSeedPacket",
+          "rect": [
+            303.923095703125,
+            429.384613037109,
+            251,
+            676
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7680",
+          "rect": [
+            354.307708740234,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "eee8d2ff",
+          "name": "@Panel@7681",
+          "rect": [
+            385.307708740234,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "eee8d2ff",
+          "name": "@Panel@7682",
+          "rect": [
+            416.307708740234,
+            803.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7686",
+          "rect": [
+            354.307708740234,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7687",
+          "rect": [
+            385.307708740234,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7688",
+          "rect": [
+            416.307708740234,
+            841.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7692",
+          "rect": [
+            354.307708740234,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "d98a4fff",
+          "name": "@Panel@7693",
+          "rect": [
+            385.307708740234,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "eee8d2ff",
+          "name": "@Panel@7694",
+          "rect": [
+            416.307708740234,
+            879.769226074219,
+            27,
+            12.3076934814453
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "GoldenSeedPacket",
+          "rect": [
+            36.9230880737305,
+            1127.38464355469,
+            251,
+            638.769226074219
+          ],
+          "type": "StyleBoxFlat"
+        },
+        {
+          "fill": "fbf7e6ff",
+          "name": "SunburstSeedPacket",
+          "rect": [
+            303.923095703125,
+            1127.38464355469,
+            251,
+            638.769226074219
+          ],
+          "type": "StyleBoxFlat"
+        }
+      ],
+      "title_available": true,
+      "touch": true,
+      "version": "2.0.5",
+      "vibrancy": {
+        "adjustment_enabled": true,
+        "brightness": 1,
+        "contrast": 1,
+        "exposure": 1,
+        "ground_samples": [
+          {
+            "lit": [
+              -100.479553222656,
+              414.865142822266
+            ],
+            "shade": [
+              -133.80842590332,
+              408.826751708984
+            ],
+            "tree": [
+              -30,
+              -2
+            ]
+          },
+          {
+            "lit": [
+              -120.457305908203,
+              451.414276123047
+            ],
+            "shade": [
+              -153.786178588867,
+              445.375885009766
+            ],
+            "tree": [
+              -30,
+              4
+            ]
+          },
+          {
+            "lit": [
+              -140.435043334961,
+              487.963439941406
+            ],
+            "shade": [
+              -173.763900756836,
+              481.925018310547
+            ],
+            "tree": [
+              -30,
+              10
+            ]
+          }
+        ],
+        "hud_hidden": false,
+        "island_polygon": [
+          [
+            -228.84944152832,
+            380.903015136719
+          ],
+          [
+            -108.583396911621,
+            282.178131103516
+          ],
+          [
+            -108.012596130371,
+            281.812866210938
+          ],
+          [
+            -41.3159446716309,
+            239.133605957031
+          ],
+          [
+            -33.1622886657715,
+            233.916076660156
+          ],
+          [
+            -14.247706413269,
+            221.812683105469
+          ],
+          [
+            33.2143020629883,
+            230.411697387695
+          ],
+          [
+            509.33984375,
+            316.674652099609
+          ],
+          [
+            567.382446289062,
+            327.190704345703
+          ],
+          [
+            567.8603515625,
+            329.417999267578
+          ],
+          [
+            578.321105957031,
+            378.176635742188
+          ],
+          [
+            584.567626953125,
+            407.29248046875
+          ],
+          [
+            584.672180175781,
+            407.780090332031
+          ],
+          [
+            606.71435546875,
+            532.287902832031
+          ],
+          [
+            606.71435546875,
+            552.240539550781
+          ],
+          [
+            574.099853515625,
+            573.110656738281
+          ],
+          [
+            419.180816650391,
+            672.243591308594
+          ],
+          [
+            402.873565673828,
+            682.678527832031
+          ],
+          [
+            392.112640380859,
+            689.564392089844
+          ],
+          [
+            386.972808837891,
+            688.633178710938
+          ],
+          [
+            334.070007324219,
+            679.048461914062
+          ],
+          [
+            -120.894378662109,
+            596.619384765625
+          ],
+          [
+            -154.752227783203,
+            590.485107421875
+          ],
+          [
+            -184.377777099609,
+            585.117614746094
+          ],
+          [
+            -189.517547607422,
+            584.186340332031
+          ],
+          [
+            -189.995391845703,
+            581.959106445312
+          ],
+          [
+            -194.478622436523,
+            561.062561035156
+          ],
+          [
+            -212.41130065918,
+            477.476318359375
+          ],
+          [
+            -224.366333007812,
+            421.752197265625
+          ],
+          [
+            -225.860717773438,
+            414.78662109375
+          ],
+          [
+            -228.84944152832,
+            400.855651855469
+          ],
+          [
+            -228.84944152832,
+            380.903015136719
+          ]
+        ],
+        "lettering_polygon": [
+          [
+            36.5321998596191,
+            482.262329101562
+          ],
+          [
+            111.654182434082,
+            495.872650146484
+          ],
+          [
+            111.654182434082,
+            509.737030029297
+          ],
+          [
+            36.5321998596191,
+            496.126708984375
+          ],
+          [
+            36.5321998596191,
+            482.262329101562
+          ]
+        ],
+        "paused": false,
+        "saturation": 1.10000002384186,
+        "tonemap": 2,
+        "white": 6
+      },
+      "world_animation_time": 5.49648888888889,
+      "year": 3,
+      "capture": "qol_buyfeedback-390.png",
+      "css_size": [
+        390,
+        844
+      ]
+    }
+  ],
+  "errors": []
+}

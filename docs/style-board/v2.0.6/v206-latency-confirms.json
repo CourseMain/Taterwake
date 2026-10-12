@@ -1,0 +1,169 @@
+{
+  "results": [
+    {
+      "view": "title_confirm",
+      "action": "",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        62,
+        608,
+        476,
+        81
+      ],
+      "text": "Keep my farm",
+      "visual_ms": 8.099999994039536,
+      "sound_ms": 8.400000005960464,
+      "diagnostic": {
+        "tap": {
+          "input": 9039.60000000894,
+          "paint": 9046.5,
+          "visual_ms": 6.8999999910593
+        },
+        "dom": 9038.40000000596,
+        "audio": 9046.800000011921,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 1,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "title_confirm",
+      "action": "",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        62,
+        707,
+        476,
+        68
+      ],
+      "text": "Start a new farm",
+      "visual_ms": 16.399999991079312,
+      "sound_ms": 17.299999997019768,
+      "diagnostic": {
+        "tap": {
+          "input": 11364,
+          "paint": 11380.200000003,
+          "visual_ms": 16.2000000029802
+        },
+        "dom": 11363.800000011921,
+        "audio": 11381.10000000894,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 2,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide_exit",
+      "action": "tutorial:exit",
+      "disabled": false,
+      "index": 0,
+      "rect": [
+        504,
+        275.076934814453,
+        68,
+        68
+      ],
+      "text": "×",
+      "visual_ms": 17.399999991059303,
+      "sound_ms": 17.599999994039536,
+      "diagnostic": {
+        "tap": {
+          "input": 15567.200000003,
+          "paint": 15584,
+          "visual_ms": 16.7999999970198
+        },
+        "dom": 15566.60000000894,
+        "audio": 15584.20000000298,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 3,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide_exit",
+      "action": "tutorial:stay",
+      "disabled": false,
+      "index": 1,
+      "rect": [
+        28,
+        606.076904296875,
+        544,
+        124
+      ],
+      "text": "Keep learning →",
+      "visual_ms": 16.8000000118991,
+      "sound_ms": 17.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 17939.200000003,
+          "paint": 17955.3000000119,
+          "visual_ms": 16.1000000089407
+        },
+        "dom": 17938.5,
+        "audio": 17955.80000001192,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 4,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    },
+    {
+      "view": "guide_exit",
+      "action": "tutorial:skip",
+      "disabled": false,
+      "index": 2,
+      "rect": [
+        28,
+        738.076904296875,
+        544,
+        124
+      ],
+      "text": "Skip guided year",
+      "visual_ms": 15.800000011899101,
+      "sound_ms": 16.30000001192093,
+      "diagnostic": {
+        "tap": {
+          "input": 20322.5,
+          "paint": 20337.8000000119,
+          "visual_ms": 15.3000000119209
+        },
+        "dom": 20322,
+        "audio": 20338.30000001192,
+        "peak": 0,
+        "state": "running",
+        "game": {
+          "muted": false,
+          "played": 5,
+          "registered": true,
+          "voices": 4
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "limits_ms": {
+    "visual": 100,
+    "sound": 300
+  }
+}
