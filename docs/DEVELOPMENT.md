@@ -1404,3 +1404,9 @@ The fresh Godot **4.7.2** release export passes production fresh/Continue at **3
 
 
 Owner's decision · **2026-10-11**: “no need extra just quickly”. Stop the additional standalone rerun and publish the current green build. The complete **103-suite / 23,762-check** full run already includes standalone epilogue **534 checks** and tuning bot **1,679 checks**, with **0 failures, timeouts or errors**. The extra epilogue rerun passed **534 checks**; the unfinished extra bot process was stopped at the owner's request. No test, suite, assertion or runner check was skipped, disabled or deleted to obtain a green result. The public development playtest is **v2.0.5**; its four browser image gates pass. The stamp-colour choice remains documented and unchanged.
+
+
+Owner's decision · **2026-10-12**: Add the requested Sell layout to Segment 21j and v2.0.6: all five crops, all price graphs and their sale controls on one page without scrolling; buttons spell out “1 tonne” and “5 tonnes”; purchases get gentle interface animations with no added camera shake. The owner will request further work later. Existing prices, grade choices, stock accounting and the three-second Undo remain. This extends the nine-item scope only by the named layout and purchase feedback.
+
+
+Owner's decision · **2026-10-12**: The follow-up asks for long horizontal graphs, all five sale prices visible together, camera movement with the player, and correctly aligned inventory/tool hotbar controls. Include these named changes in the current Segment 21j work. The Sell page uses five full-width rows on desktop and phone. Palette, balance and the remaining deferred features stay outside this scope.
