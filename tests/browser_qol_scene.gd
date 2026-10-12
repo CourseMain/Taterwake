@@ -214,7 +214,13 @@ func _latency_target(index: int) -> void:
 	_publish()
 
 func _latency_paint() -> void:
-	if tap_start < 0 or visual_start >= 0: return
+	if tap_start < 0:
+		# Hover happens before pointer-down; only a later press counts.
+		if is_instance_valid(armed):
+			baseline_draw_mode = armed.get_draw_mode()
+			baseline_focus = armed.has_focus()
+		return
+	if visual_start >= 0: return
 	if not is_instance_valid(armed) or not armed.is_visible_in_tree() or armed.scale != baseline_scale or not is_equal_approx(armed.rotation,baseline_rotation) or armed.is_pressed() != baseline_pressed or armed.get_draw_mode() != baseline_draw_mode or armed.has_focus() != baseline_focus or armed.text != baseline_text:
 		visual_start = float(JavaScriptBridge.eval("performance.now()",true))
 		JavaScriptBridge.eval("window.qolTap=" + JSON.stringify({"input":tap_start,"paint":visual_start,"visual_ms":visual_start-tap_start}),true)
