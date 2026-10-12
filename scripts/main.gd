@@ -60,7 +60,7 @@ var _camera_home_position := Vector3.ZERO
 var _camera_home_size: float = 38.0
 var _camera_home_id: int = 0
 var _camera_pan_offset := Vector3.ZERO
-var _camera_follow_player := Vector3.ZERO
+var _camera_player_distance: float = 260.0
 var _map_drag_origin := Vector2.ZERO
 var _map_drag_distance := Vector2.ZERO
 var _map_drag_moved := false
@@ -674,18 +674,18 @@ func _reset_camera_view(new_overview: bool = false) -> void:
 		_recenter_camera()
 		world.camera.size = _camera_home_size
 		return
-	_camera_follow_player = world.player.position
 	_camera_home_id = world.camera.get_instance_id()
 	_camera_home_position = world.camera.global_position
 	_camera_home_size = world.camera.size
+	_camera_player_distance = world.camera.global_basis.z.dot(world.camera.global_position - _player_camera_focus())
 	_camera_pan_offset = Vector3.ZERO
 	_reset_camera_zoom()
+	_update_player_camera(false)
 
 func _recenter_camera() -> void:
-	_camera_follow_player = world.player.position
 	_cancel_map_drag()
 	_camera_pan_offset = Vector3.ZERO
-	world.camera.global_position = _camera_home_position
+	world.camera.global_position = _player_camera_focus() + world.camera.global_basis.z * _camera_player_distance
 	world.fit_camera_depth()
 	_zoom_target_size = clampf(_camera_home_size, CAMERA_ZOOM_MIN, _camera_zoom_max())
 
@@ -697,8 +697,7 @@ func _stop_map_navigation() -> void:
 	# Title cinematics do not belong to the farm's pan destination. Embedded
 	# windows can lose focus or resize before Continue restores the farm camera.
 	if title_active(): return
-	if is_instance_valid(world) and is_instance_valid(world.camera):
-		_camera_pan_offset = world.camera.global_position - _camera_home_position
+	_camera_pan_offset = Vector3.ZERO
 
 func _cancel_map_drag() -> void:
 	if _map_drag_button != 0: Input.set_default_cursor_shape(Input.CURSOR_ARROW)
@@ -719,7 +718,7 @@ func _handle_map_pan(event: InputEvent) -> bool:
 		return true
 	if event is InputEventPanGesture:
 		if not event.delta.is_finite(): return false
-		_pan_camera_by(-event.delta * CAMERA_TRACKPAD_PAN)
+		_zoom_by_log_amount(event.delta.y * CAMERA_SCROLL_STEP)
 		return true
 	return false
 
@@ -728,44 +727,25 @@ func _camera_pan_limit() -> Vector2:
 	return (Vector2(28, 22) if world.current_island == 3 else (Vector2(23, 18) if world.current_island == 2 else Vector2(39, 17))) * world.LAND_SPACING
 
 func _pan_camera_by(screen_delta: Vector2) -> void:
-	if not screen_delta.is_finite() or screen_delta.is_zero_approx() or not is_instance_valid(world.camera): return
-	# Ground-plane projection preserves the angle/height and tracks the pointer
-	# exactly, including when the 3D viewport renders below display resolution.
-	var center: Vector2 = get_viewport().get_visible_rect().size * 0.5
-	var from: Vector2 = farm_viewport.to_farm_position(center)
-	var to: Vector2 = farm_viewport.to_farm_position(center + screen_delta)
-	var ground := Plane(Vector3.UP, 0.0)
-	var start: Variant = ground.intersects_ray(world.camera.project_ray_origin(from), world.camera.project_ray_normal(from))
-	var finish: Variant = ground.intersects_ray(world.camera.project_ray_origin(to), world.camera.project_ray_normal(to))
-	if start == null or finish == null: return
-	_camera_pan_offset += Vector3(start) - Vector3(finish)
-	var limit: Vector2 = _camera_pan_limit()
-	_camera_pan_offset.x = clampf(_camera_pan_offset.x, -limit.x, limit.x)
-	_camera_pan_offset.y = 0.0
-	_camera_pan_offset.z = clampf(_camera_pan_offset.z, -limit.y, limit.y)
+	# Keep drag ownership so a release cannot accidentally work a bed. The
+	# player's body remains the view's centre; wheel/pinch controls its size.
+	if not screen_delta.is_finite(): return
+	_camera_pan_offset = Vector3.ZERO
 
-func _update_player_camera(moving: bool) -> void:
-	var displacement: Vector3 = world.player.position - _camera_follow_player
-	_camera_follow_player = world.player.position
-	if not moving or not _map_navigation_allowed() or _map_drag_button != 0: return
-	displacement.y = 0
-	_camera_pan_offset += displacement
-	var limit: Vector2 = _camera_pan_limit()
-	_camera_pan_offset.x = clampf(_camera_pan_offset.x,-limit.x,limit.x)
-	_camera_pan_offset.z = clampf(_camera_pan_offset.z,-limit.y,limit.y)
+func _player_camera_focus() -> Vector3:
+	return world.player.global_position + Vector3.UP * world.FarmerAvatar.BODY_CENTER
+
+func _update_player_camera(_moving: bool) -> void:
+	if not _map_navigation_allowed(): return
+	world.camera.global_position = _player_camera_focus() + world.camera.global_basis.z * _camera_player_distance
+	world.fit_camera_depth()
 
 func _update_camera_pan(delta: float) -> void:
 	if not is_instance_valid(world.camera) or not is_finite(delta) or delta <= 0.0: return
 	if not _map_navigation_allowed():
 		_stop_map_navigation()
 		return
-	# Input sets the destination; rendered frames follow it smoothly. Exponential
-	# damping is frame-rate independent and cannot overshoot a release or reversal.
-	var target: Vector3 = _camera_home_position + _camera_pan_offset
-	world.camera.global_position = world.camera.global_position.lerp(target, 1.0 - exp(-CAMERA_PAN_RESPONSE * minf(delta, 0.1)))
-	if world.camera.global_position.distance_squared_to(target) < 0.00000001:
-		world.camera.global_position = target
-	world.fit_camera_depth()
+	_update_player_camera(false)
 
 func _handle_map_zoom(event: InputEvent) -> bool:
 	if event is InputEventMagnifyGesture:

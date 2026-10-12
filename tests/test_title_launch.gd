@@ -59,7 +59,7 @@ func run() -> void:
 			var camera: Camera3D = game.world.camera
 			check(is_equal_approx(camera.size,game.world.entry_size(true)),"fresh guided size ignores stale title snapshot at " + str(size))
 			check(camera.position.y > 0 and camera.position.x < 100,"fresh overview position ignores stale title snapshot")
-			check(game._camera_home_position.is_equal_approx(camera.global_position) and is_equal_approx(game._camera_home_size,camera.size),"fresh Home and zoom defaults adopt the fitted overview")
+			check(camera.unproject_position(game._player_camera_focus()).distance_to(Vector2(game.farm_viewport.size)*.5) < .01 and is_equal_approx(game._camera_home_size,camera.size),"fresh view centres the farmer and adopts the fitted zoom")
 			var entered: Transform3D = camera.transform
 			game._process(.1)
 			check(camera.transform.is_equal_approx(entered),"the next gameplay frame cannot pull the camera back to its stale Home position")

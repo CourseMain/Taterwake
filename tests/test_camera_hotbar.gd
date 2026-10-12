@@ -20,7 +20,7 @@ func run() -> void:
 	Input.action_release("move_right")
 	var travelled: Vector3 = game.world.player.position-player; travelled.y = 0
 	check(travelled.length() > 1,"real movement moves the player")
-	check(game._camera_pan_offset.distance_to(travelled) < .01,"camera destination follows the same ground displacement")
+	check(game.world.camera.global_position.distance_to(camera.origin+travelled) < .01,"camera follows the exact ground displacement in the same frame")
 	check(game.world.camera.global_position.distance_to(camera.origin) > .5,"camera visibly follows during movement")
 	check(game.world.camera.global_basis.is_equal_approx(camera.basis),"follow retains the play-camera angle")
 	game.hud.show_panel("inventory",game.state)
@@ -28,7 +28,15 @@ func run() -> void:
 	game.world.set_player_position(game.world.player.position+Vector3(1,0,0)); game._update_player_camera(true)
 	check(game._camera_pan_offset == held,"an open card holds its farm view")
 	game.hud.close_panel(); game._recenter_camera()
-	check(game._camera_pan_offset == Vector3.ZERO and game.world.camera.global_position == game._camera_home_position,"recenter retains its original island view")
+	check(game._camera_pan_offset == Vector3.ZERO,"recenter cannot retain a free pan offset")
+	var centre: Vector2 = Vector2(game.farm_viewport.size)*.5
+	check(game.world.camera.unproject_position(game._player_camera_focus()).distance_to(centre) < .01,"recenter places the farmer body exactly in the middle")
+	game.world.set_player_position(game.world.player.position+Vector3(2,0,1)); game._update_player_camera(false)
+	check(game.world.camera.unproject_position(game._player_camera_focus()).distance_to(centre) < .01,"an idle position change still locks the view onto the farmer")
+	game._zoom_by_log_amount(-.5)
+	for frame in range(30): game._update_camera_zoom(1.0/60.0)
+	check(game.world.camera.unproject_position(game._player_camera_focus()).distance_to(centre) < .01,"scrolling changes the view size around the farmer")
+	check(game.world.camera.size < game._camera_home_size,"the locked camera retains useful zoom")
 	game.hud.set_tool("hoe"); game.hud._layout_hotbar()
 	for frame in range(12): await process_frame
 	var previous: Rect2

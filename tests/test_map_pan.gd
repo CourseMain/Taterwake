@@ -78,26 +78,22 @@ func run() -> void:
 	var plot: Vector3 = game.world.plot_positions[4]
 	var before: Vector2 = camera.unproject_position(plot)
 	game._pan_camera_by(Vector2(100, 50))
-	check(camera.global_position == original.origin, "drag input never teleports the rendered camera")
-	var destination: Vector3 = game._camera_home_position + game._camera_pan_offset
+	check(camera.global_position == original.origin, "drag input cannot displace the player-centred view")
 	game._update_camera_pan(1.0 / 60.0)
-	check(camera.global_position != original.origin and camera.global_position.distance_to(destination) > 0.1, "first rendered frame moves only partway toward the drag target")
-	var remaining: float = camera.global_position.distance_to(destination)
-	var smooth := true
+	check(camera.unproject_position(game._player_camera_focus()).distance_to(Vector2(game.farm_viewport.size) * .5) < .01, "the farmer's body is at the viewport centre")
+	var locked := true
 	for i in range(30):
 		game._update_camera_pan(1.0 / 60.0)
-		var next: float = camera.global_position.distance_to(destination)
-		smooth = smooth and next <= remaining
-		remaining = next
-	check(smooth and remaining < 0.001, "camera eases continuously to release without overshoot")
-	check_shadow_depth("eased pan")
+		locked = locked and camera.global_position == original.origin
+	check(locked, "the idle view stays locked without easing away")
+	check_shadow_depth("locked view")
 	home()
 	var screen_delta := Vector2(85, 40)
 	mouse_button(MOUSE_BUTTON_RIGHT, true)
 	check(game._map_drag_button == MOUSE_BUTTON_RIGHT, "right mouse starts camera drag through the real input pipeline")
 	mouse_drag(screen_delta)
 	var projected_delta: Vector2 = (camera.unproject_position(plot) - before) * root.get_visible_rect().size / Vector2(game.farm_viewport.size)
-	check(projected_delta.distance_to(screen_delta) < 0.01, "map follows pointer in both axes at the farm render resolution")
+	check(projected_delta.length() < 0.01, "right drag preserves the farmer-centred map at the farm render resolution")
 	check(camera.global_basis.is_equal_approx(original.basis) and is_equal_approx(camera.global_position.y, original.origin.y), "pan retains the angled view and camera height")
 	mouse_button(MOUSE_BUTTON_LEFT, true)
 	mouse_button(MOUSE_BUTTON_LEFT, false)
@@ -108,13 +104,13 @@ func run() -> void:
 	mouse_drag(Vector2(100, 0))
 	check(camera.global_position == stopped, "motion after release cannot keep panning")
 	home()
-	check(camera.global_transform.is_equal_approx(original), "Home restores the original island view")
+	check(camera.global_transform.is_equal_approx(original), "Home restores the player-centred view")
 	check_shadow_depth("recenter")
 	mouse_button(MOUSE_BUTTON_LEFT, true)
 	check(not game.walking and game.pending_plot == -1, "left press waits to distinguish a tap from a pan")
 	mouse_drag(Vector2(90, 40), MOUSE_BUTTON_LEFT)
 	mouse_button(MOUSE_BUTTON_LEFT, false, Vector2(690, 390))
-	check(camera.global_position != original.origin and not game.walking and game.pending_plot == -1, "left drag pans without farming or walking")
+	check(camera.global_position == original.origin and not game.walking and game.pending_plot == -1, "left drag preserves the centred view without farming or walking")
 	home()
 	mouse_button(MOUSE_BUTTON_LEFT, true)
 	# Embedded/native input can omit a held-button mask on a motion event.
@@ -126,7 +122,7 @@ func run() -> void:
 		var prior: Vector3 = game._camera_pan_offset
 		root.push_input(held_motion, true)
 		check(game._map_drag_button == MOUSE_BUTTON_LEFT, "held drag survives a motion event without a button mask")
-		check(delta == Vector2.ZERO or game._camera_pan_offset != prior, "held drag continues moving without another press")
+		check(game._camera_pan_offset == prior and prior == Vector3.ZERO, "held drag cannot move the view away from the farmer")
 		settle_pan()
 	mouse_button(MOUSE_BUTTON_LEFT, false, Vector2(640, 370))
 	check(game._map_drag_button == 0 and not game.walking and game.pending_plot == -1, "explicit release ends a maskless drag without a farm tap")
@@ -134,18 +130,20 @@ func run() -> void:
 	await physics_frame
 	# Find a genuinely empty ground target rather than assuming screen coordinates.
 	var found_ground := false
-	for x in range(200, 1000, 30):
-		var point := Vector2(x, 580)
-		var hit: Dictionary = game.world.pick(game.farm_viewport.to_farm_position(point))
-		if hit.has("ground") and not hit.has("plot_index") and not hit.has("station"):
-			mouse_button(MOUSE_BUTTON_LEFT, true, point)
-			mouse_button(MOUSE_BUTTON_LEFT, false, point)
-			found_ground = true
-			break
+	for y in range(240, 600, 30):
+		for x in range(200, 1000, 30):
+			var point := Vector2(x, y)
+			var hit: Dictionary = game.world.pick(game.farm_viewport.to_farm_position(point))
+			if hit.has("ground") and not hit.has("plot_index") and not hit.has("station"):
+				mouse_button(MOUSE_BUTTON_LEFT, true, point)
+				mouse_button(MOUSE_BUTTON_LEFT, false, point)
+				found_ground = true
+				break
+		if found_ground: break
 	check(found_ground and not game.walking, "clicking empty island ground does not move the farmer")
 	mouse_button(MOUSE_BUTTON_MIDDLE, true)
 	mouse_drag(Vector2(-40, -30), MOUSE_BUTTON_MIDDLE)
-	check(camera.global_position != original.origin, "middle drag also pans")
+	check(camera.global_position == original.origin, "middle drag also preserves the centred view")
 	mouse_button(MOUSE_BUTTON_MIDDLE, false)
 	var target_zoom: float = game._zoom_target_size
 	var scroll := InputEventPanGesture.new()
@@ -153,7 +151,7 @@ func run() -> void:
 	stopped = camera.global_position
 	game._unhandled_input(scroll)
 	settle_pan()
-	check(camera.global_position != stopped and game._zoom_target_size == target_zoom, "two-finger trackpad scrolling pans instead of changing zoom")
+	check(camera.global_position == stopped and game._zoom_target_size < target_zoom, "two-finger trackpad scrolling zooms while retaining the centre")
 	game._pan_camera_by(Vector2(1e8, -1e8))
 	var limit: Vector2 = game._camera_pan_limit()
 	check(absf(game._camera_pan_offset.x) <= limit.x and absf(game._camera_pan_offset.z) <= limit.y, "large drags stop at the island bounds")
@@ -207,16 +205,16 @@ func run() -> void:
 		finger(1, a, true)
 		drag(1, a + motion)
 		finger(1, a + motion, false)
-		check(game.world.camera.global_position != stopped and not game.walking and game.pending_plot == -1, "single-finger island drag pans without a farm action")
+		check(game.world.camera.global_position == stopped and not game.walking and game.pending_plot == -1, "single-finger drag retains the player centre without a farm action")
 		stopped = game.world.camera.global_position
 		finger(2, a, true)
 		finger(3, b, true)
 		drag(2, a + motion)
 		drag(3, b + motion)
-		check(game.world.camera.global_position != stopped, "two-finger touch drag pans the map")
+		check(game.world.camera.global_position == stopped, "two-finger touch drag retains the player centre")
 		check(is_equal_approx(game._zoom_target_size, target_zoom), "parallel two-finger movement does not change the final zoom")
 		drag(3, b + motion + Vector2(80, 0))
-		check(game._zoom_target_size < target_zoom, "spreading fingers still zooms while panning")
+		check(game._zoom_target_size < target_zoom, "spreading fingers still zooms while the centre stays locked")
 		finger(2, a + motion, false)
 		finger(3, b + motion + Vector2(80, 0), false)
 		check(not game.walking and game.pending_plot == -1 and game.touch_controls.world_fingers.is_empty(), "pan and pinch releases never become a farm tap")
