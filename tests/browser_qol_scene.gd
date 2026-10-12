@@ -12,6 +12,8 @@ func command(args: Array) -> void:
 	else: super.command(args)
 
 func _present_qol(action: String, ticket: int) -> void:
+	latency_mode = false
+	live_player = false
 	var view: String = action.get_slice(":", 0)
 	var base: String = {"qol_winter":"play_winter", "qol_grades":"grades", "qol_accounts":"accounts", "qol_seed":"market", "qol_guide":"guide_welcome", "qol_refused":"guide_grow", "qol_undo":"market_sell", "qol_sell":"market_sell", "qol_buyfeedback":"market"}.get(view, "play_spring")
 	await super._present(base, ticket)
@@ -32,6 +34,12 @@ func _present_qol(action: String, ticket: int) -> void:
 		game.touch_controls.root.hide()
 		if view == "qol_locked": game.hud.show_farm_hint(preload("res://scripts/farm_advice.gd").locked(game.state, 24))
 	if view == "qol_hotbar": game.hud.set_tool("harvest")
+	if view == "qol_player":
+		game.world.set_player_position(Vector3(0,0,9))
+		game.world.fit_overview(false)
+		game._reset_camera_view(true)
+		game._update_player_camera(false)
+		live_player = true
 	if view == "qol_refused":
 		game.state.tutorial_progress.step = 4
 		game.state.tutorial_progress.plot = 5
@@ -64,6 +72,8 @@ func _publish() -> void:
 	last_report.latency_armed = _latency_rect(armed) if is_instance_valid(armed) else []
 	last_report.hotbar = _rect(game.hud._hotbar)
 	last_report.hotbar_caption = _rect(game.hud._tool_caption)
+	var body_screen: Vector2 = game.world.camera.unproject_position(game.world.player.global_position + Vector3.UP * game.world.FarmerAvatar.BODY_CENTER)
+	last_report.player_camera = {"player":[game.world.player.position.x,game.world.player.position.y,game.world.player.position.z],"body_screen":[body_screen.x,body_screen.y],"viewport":[game.farm_viewport.size.x,game.farm_viewport.size.y],"size":game.world.camera.size}
 	last_report.sell_rows = []
 	if game.hud._refs.has("market_page") and game.hud._refs.market_page.selling:
 		var rows = game.hud._refs.market_page.get("sale_rows")
@@ -84,6 +94,7 @@ func _publish() -> void:
 
 var latency_buttons: Array[Button] = []
 var latency_mode: bool = false
+var live_player: bool = false
 var armed: Button
 var tap_start: float = -1
 var visual_start: float = -1
@@ -93,6 +104,7 @@ var baseline_pressed: bool
 var baseline_text: String
 
 func _latency_prepare(view: String) -> void:
+	live_player = false
 	request += 1
 	var ticket: int = request
 	latency_mode = false
@@ -205,7 +217,9 @@ func _latency_paint() -> void:
 		JavaScriptBridge.eval("window.qolTap=" + JSON.stringify({"input":tap_start,"paint":visual_start,"visual_ms":visual_start-tap_start}),true)
 
 func _process(delta: float) -> void:
-	if latency_mode:
+	if live_player:
+		game._process(delta)
+	elif latency_mode:
 		game.hud._process(delta)
 		game._update_accounts_camera(delta)
 	else: super._process(delta)
