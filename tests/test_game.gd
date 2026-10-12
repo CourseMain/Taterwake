@@ -99,8 +99,13 @@ func _run() -> void:
 	check(game.hud._panel_kind == "market" and game.hud._market_selling, "Mara opens the shared Sell page")
 	var sale = game.hud._refs.market_page
 	press("grade:russet:" + sale.selected_grade)
-	press("market_all")
-	press("market_sell")
+	check(game.hud._refs.market_page.sale_rows.russet.sales[5].text == "5 tonnes", "five-tonne option is on the same page")
+	for sale_index in range(game.state.stock_count("russet")):
+		if not game.hud.is_panel_open(): game._on_action("market:sell")
+		var current = game.hud._refs.market_page
+		press("sell_amount:russet:1")
+		if is_instance_valid(current._undo_sale):
+			current._undo_sale._deadline = Time.get_ticks_msec()-1; current._process(0.0)
 	check(Stock.count(game.state.storage, "russet") == 0, "Mara Sell opens a grade sale that consumes held crops")
 	check(game.state.coins > before_coins, "Mara sale pays farming proceeds")
 	game.hud.close_panel()

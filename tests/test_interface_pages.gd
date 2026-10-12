@@ -145,11 +145,11 @@ func run() -> void:
 				game.hud._refs.market_page.tabs.get_child(1).pressed.emit(); await settle()
 				var sale = game.hud._refs.market_page
 				check(sale.selling and sale.tabs.get_child(1).button_pressed and sale.tabs.get_child_count() == 2, "Mara has one Buy tab and one Sell tab")
-				check(sale.trade_open and sale.footer.is_visible_in_tree(), "one current stock has one amount stepper")
+				check(sale.trade_open and sale.sale_rows.size() == 5 and not sale.quantity.is_visible_in_tree(), "all five stocks have direct amount buttons")
 				for crop in sale.sale_rows:
-					check(sale.sale_rows[crop].card.visible == (crop == sale.selected), "only the selected stock is shown")
+					check(sale.sale_rows[crop].card.visible, "every stock is shown together")
 					for grade in sale.sale_rows[crop].grades:
-						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0), "grade stamp matches actual current stock")
+						check(sale.sale_rows[crop].grades[grade].visible == (sale.stock(crop, grade) > 0 or grade == sale.sale_rows[crop].grade), "grade stamp matches actual current stock")
 				sale.tabs.get_child(0).pressed.emit(); await settle()
 				check(not game.hud._refs.market_page.selling, "Buy returns to seeds within Mara’s page")
 	game.queue_free(); await settle(); await create_timer(.25).timeout

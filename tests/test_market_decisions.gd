@@ -231,8 +231,8 @@ func ui_checks() -> void:
 	game.hud.show_market(true, game.state)
 	var before: float = game.state.coins
 	game.hud._refs.market_page.select_variety("russet", "Standard")
-	game.hud._refs.market_page.maximum.pressed.emit()
-	game.hud._refs.market_page.sell_button.pressed.emit()
+	game.hud._refs.market_page.quantity.value = game.hud._refs.market_page.stock("russet","Standard")
+	game.hud._refs.market_page._sell()
 	check(game.state.coins > before and Stock.count(game.state.trading.held, "russet") == 0, "Winter barn button sells at the live stored price")
 	game.queue_free()
 	await process_frame

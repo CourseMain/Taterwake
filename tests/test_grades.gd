@@ -209,7 +209,7 @@ func ui_checks() -> void:
 	var page = game.hud._refs.market_page
 	check(page.grade_buttons.size() == 3, "Sell Potatoes lists each grade")
 	page.grade_buttons.Feed.pressed.emit()
-	check(page.selected_grade == "Feed" and page.crop_quote.text == game.state.market_money(game.state.market.russet.sell * 0.5) + "/t", "grade selection updates the sale price")
+	check(page.selected_grade == "Feed" and page.crop_quote.text == game.state.market_money(game.state.market.russet.sell * 0.5) + "/tonne", "grade selection updates the sale price")
 	page.quantity.value = 1; page._sell()
 	check(game.state.stock_count("russet","Feed") == 3, "grade sale control sells only the chosen grade")
 	for size in [Vector2i(1280,800), Vector2i(390,844)]:

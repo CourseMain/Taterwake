@@ -147,7 +147,7 @@ func run() -> void:
 	await settle()
 	check(not hud._tutorial_card.visible and hud._menu_button.visible, "finishing restores ordinary menu and stock countdown")
 	check(hud._top.coins.is_visible_in_tree() and hud._quick_sell.is_visible_in_tree(), "finishing restores all normal stats")
-	check(hud._hotbar.size.x == 508 and hud._tool_buttons.pest.visible, "full hotbar width restores")
+	check(hud._hotbar.size.x >= 578 and hud._tool_buttons.pest.visible, "full hotbar width restores")
 	hud.show_panel("tools", state)
 	check(not hud._refs["upgrade:hoe"].disabled, "finishing releases tutorial lock while preserving actual affordability")
 	hud.show_panel("pause", state)

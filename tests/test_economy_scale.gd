@@ -107,12 +107,12 @@ func ui_checks() -> void:
 		page.quantity.set_value_no_signal(3)
 		page.refresh()
 		for frame in range(8): await process_frame
-		check(page.crop_quote.text == "\uE000 1,200/t" and page.payout.text == "\uE000 3,600" and page.crop_quote.tooltip_text.contains("per tonne"), "sell page shows grouped integer quotes and totals")
-		check(page.grade_buttons.Standard.text.contains(" t") and page.crop_owned.text.contains("fresh tonnes"), "sell cards identify tonnes")
+		check(page.crop_quote.text == "\uE000 1,200/tonne" and page.payout.text == "\uE000 3,600" and page.crop_quote.tooltip_text.contains("per tonne"), "sell page shows grouped integer quotes and totals")
+		check(page.sale_rows.icecap.sales[1].text == "1 tonne" and page.crop_owned.text.contains("tonnes"), "sell cards identify tonnes")
 		check(game.hud.root.get_global_rect().grow(1).encloses(game.hud._modal_card.get_global_rect()), "market fits desktop and phone")
 		await capture("sell-%d" % size.x)
 		page._sold({"id":"icecap","quantity":3,"total":3600})
-		check(page.status.text.contains("3 t sold") and page.status.text.contains("3,600"), "sale receipt carries tonnes and grouped money")
+		check(page.status.text.contains("3 tonnes sold") and page.status.text.contains("3,600"), "sale receipt carries tonnes and grouped money")
 		page.quantity.text = ""
 		page.quantity.text_changed.emit("")
 		page.refresh()

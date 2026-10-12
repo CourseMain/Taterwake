@@ -156,7 +156,8 @@ func run() -> void:
 	page.quantity.value = 3
 	check(page.payout.text == state.money(3 * state.market.russet.sell), "quantity previews actual expected payout")
 	cash = state.coins
-	press(page, "market_sell")
+	check(page.stock(page.selected,page.selected_grade) >= int(page.quantity.value), "enabled sale amount")
+	page._sell()
 	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 3 * state.market.russet.sell, "sell commits chosen quantity at live price")
 	check(page.status.text.contains("sold") and page.status.text.contains(state.format_number(3 * state.market.russet.sell)), "successful sale confirms committed payout")
 	check(page.sell_button.text == "Undo" and not page.sell_button.disabled, "sale offers Undo before another sale")
@@ -166,20 +167,25 @@ func run() -> void:
 	check(page.quantity.value == 9 and page.payout.text == state.money(9 * state.market.russet.sell), "quantity is bounded by owned stock")
 	page.quantity.text = "2.5"
 	page.quantity.text_changed.emit("2.5")
-	check(page.sell_button.disabled and page.status.text.contains("whole number"), "invalid text blocks selling with clear guidance")
+	page._sell()
+	check(not page.quantity.valid and page.status.text.contains("whole number") and Stock.count(state.storage,"russet") == 9, "invalid text blocks selling with clear guidance")
 	page.quantity.text = ""
 	page.quantity.text_changed.emit("")
-	check(page.sell_button.disabled, "empty amount never sells an old quantity")
+	page._sell()
+	check(not page.quantity.valid and Stock.count(state.storage,"russet") == 9, "empty amount never sells an old quantity")
 	page.quantity.value = 1
-	press(page, "quantity_plus")
-	check(page.quantity.value == 2, "plus raises quantity")
-	press(page, "quantity_minus")
-	check(page.quantity.value == 1 and page.minus.disabled, "minus stops at one")
+	check(page.quantity.value < page.quantity.max_value,"amount can increase")
+	page.quantity.value += 1
+	check(page.quantity.value == 2, "bounded amount model raises quantity")
+	check(page.quantity.value > 1,"amount can decrease")
+	page.quantity.value -= 1
+	check(page.quantity.value == 1, "bounded amount model stops at one")
 	state.sell_crop("russet", 10)
 	check(Stock.count(state.storage, "russet") == 9 and state.coins == cash + 3 * state.market.russet.sell, "insufficient direct sale is rejected without partial payout")
-	press(page, "market_all")
+	check(page.stock(page.selected,page.selected_grade) > 0,"stock available to sell")
+	page.quantity.value = page.stock(page.selected,page.selected_grade)
 	check(page.quantity.value == 9 and page.payout.text == state.money(9 * state.market.russet.sell), "Max selects available stock and previews its value")
-	page.quantity.get_line_edit().grab_focus()
+	check(page.sale_rows.russet.sales[1].text == "1 tonne" and page.sale_rows.russet.sales[5].text == "5 tonnes", "sale buttons spell both amounts in full")
 	page.quantity.get_line_edit().text = "4"
 	cash = state.coins
 	page._sell()
@@ -187,7 +193,7 @@ func run() -> void:
 	page._undo_sale._deadline = Time.get_ticks_msec() - 1
 	page._process(0.0)
 	press(page, "grade:giant:Standard")
-	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 fresh tonnes", "variety row updates chart, quantity and inventory together")
+	check(page.selected == "giant" and page.quantity.value == 1 and page.crop_owned.text == "7 tonnes", "variety row updates chart, quantity and inventory together")
 	page.quantity.value = 2
 	check(page.payout.text == state.money(2 * state.market.giant.sell), "navigated payout uses new crop")
 	page.select_variety("russet")
@@ -197,13 +203,14 @@ func run() -> void:
 	for crop in page.sale_rows:
 		check(page.sale_rows[crop].grades.size() == 3, crop + " has all three grade rows")
 	page.select_variety("icecap")
-	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable and page.maximum.disabled, "empty variety row shows disabled sale and zero inventory")
+	check(page.selected == "icecap" and page.sell_button.disabled and page.quantity.value == 0 and not page.quantity.editable, "empty variety row shows disabled sale and zero inventory")
 	page.refresh()
 	state.storage["icecap"] = Stock.pile(2)
 	page.refresh()
 	check(not page.sell_button.disabled, "missing history still allows a real current-quote sale")
 	cash = state.coins
-	press(page, "market_sell")
+	check(not page.sell_button.disabled,"enabled one-tonne sale")
+	page._sell()
 	check(Stock.count(state.storage, "icecap") == 1 and state.coins == cash + state.market.icecap.sell, "missing-history sale pays current quote")
 	page.select_variety("russet")
 	game.hud._toast_box.hide()

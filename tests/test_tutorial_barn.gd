@@ -36,14 +36,19 @@ func walk_plot(tool: String, index: int = 4) -> void:
 func check_crops() -> void:
 	check(game.hud._panel_kind == "market" and game.hud._market_selling and game.hud._refs.market_page.selling, "first sale opens the Mara’s Sell page")
 	check(not game.hud._refs.has("tab:tools"), "no Tools tab can trap the first sale")
-	check(button("market_all") != null and not button("market_all").disabled, "real sale controls remain enabled")
+	check(button("sell_amount:russet:1") != null and not button("sell_amount:russet:1").disabled, "real sale controls remain enabled")
 
 func sell_harvest() -> void:
 	var coins_before: float = game.state.coins
 	var sales_before: float = game.state.lifetime_sales
 	check(Stock.count(game.state.storage, "russet") > 0, "real harvest stored before selling")
-	press("market_all")
-	press("market_sell")
+	check(game.hud._refs.market_page.sale_rows.russet.sales[5].text == "5 tonnes", "five-tonne option is on the same page")
+	for sale_index in range(game.state.stock_count("russet")):
+		if not game.hud.is_panel_open(): game._on_action("market:sell")
+		var current = game.hud._refs.market_page
+		press("sell_amount:russet:1")
+		if is_instance_valid(current._undo_sale):
+			current._undo_sale._deadline = Time.get_ticks_msec()-1; current._process(0.0)
 	check(Stock.count(game.state.storage, "russet") == 0, "sale clears harvested Russets")
 	check(game.state.coins > coins_before and game.state.lifetime_sales > sales_before, "sale credits coins")
 	check(game.tutorial.current_id() == "winter" and not game.state.tutorial_progress.completed, "barn sale continues to Winter accounts")
@@ -63,6 +68,7 @@ func run() -> void:
 	walk_plot("hoe")
 	walk_plot("plant")
 	walk_plot("water")
+	game.hud.close_panel()
 	game._process(1000)
 	game._process(40)
 	check(game.tutorial.current_id() == "loss", "Summer loss precedes harvest")
@@ -76,6 +82,7 @@ func run() -> void:
 	await settle()
 	check_crops()
 	sell_harvest()
+	game.hud.close_panel()
 	# Existing saves resume at the sale; no tutorial restart or lost crop.
 	check(game.state.load_game(path), "reload unfinished first sale")
 	game.tutorial.start()
@@ -88,7 +95,8 @@ func run() -> void:
 		for index in range(game.state.plots.size()):
 			if int(game.state.plots[index].stage) == 3: walk_plot("harvest", index)
 		if game.state.accounts_open: break
-		game._process(1000)
+		game.hud.close_panel()
+	game._process(1000)
 	while game.hud.accounts_building: await process_frame
 	check(game.state.accounts_open and not game.tutorial.active, "barn choice reaches first accounts after reload")
 	check(game.state.season_clock.autumn_loss == 0, "resumed barn lesson harvests starters before Autumn Cold")

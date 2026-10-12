@@ -68,11 +68,11 @@ static func fit(hud) -> void:
 	var target: float = {"farmer":600, "menu":780, "pause":780, "accounts":960, "market":1120, "barn":900, "grades":760, "practice":900, "sale_reveal":780}.get(hud._panel_kind, 780) if wide else 390
 	var width: float = minf(target * u, view.x - (64 if wide else 24) * u)
 	var scroll: ScrollContainer = hud._body.get_parent()
-	var card_only: bool = hud._panel_kind in ["farmer", "menu", "pause", "grades", "practice", "sale_reveal"]
+	var card_only: bool = hud._panel_kind in ["farmer", "menu", "pause", "grades", "practice", "sale_reveal"] or hud._panel_kind == "market" and hud._market_selling
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if card_only else ScrollContainer.SCROLL_MODE_AUTO
 	hud._body.custom_minimum_size.x = maxf(0, width - 30 * u)
 	var height: float = minf(view.y - 48 * u, hud.modal_content_height())
-	var receipt_space: float = hud._purchase_box.size.y + 24 if wide and not hud._purchase_receipt.is_empty() else 0
+	var receipt_space: float = hud._purchase_box.size.y + 24 if wide and hud._purchase_box.is_visible_in_tree() and not hud._purchase_receipt.is_empty() else 0
 	var notice_space: float = hud._toast_box.get_combined_minimum_size().y + 32 if wide and hud._toast_box.visible else 0
 	height = minf(height, view.y - receipt_space - notice_space - 48 * u)
 	if hud._panel_kind == "farmer": height = minf(view.y - 32 * u, (620 if wide else 470) * u)

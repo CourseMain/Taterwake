@@ -39,17 +39,13 @@ var crop_change: Label
 var crop_history: Control
 var storage_note: Label
 var crop_owned: Label
-var minus: Button
-var plus: Button
-var maximum: Button
 var wallet: Label
-var _trade_row: BoxContainer
-var _mobile_actions: HBoxContainer
-var _amount_box: VBoxContainer
-var _total_box: VBoxContainer
 var _receipt_left: float = 0.0
 var _receipt: String = ""
 var _undo_sale: RefCounted
+var _undo_button: Button
+var _guided_close: bool = false
+var _guided_sale_baseline: float = 0.0
 var _body_font: FontVariation = Type.face(Type.BODY, 600)
 var _title_font: FontVariation = Type.face(Type.DISPLAY, 650)
 
@@ -75,8 +71,8 @@ func setup(owner_hud, sell_page: bool) -> void:
 	else: _build_buy()
 	var header = find_child("PlaceHeader", false, false)
 	if header: move_child(header, 0)
-	move_child(tabs, 1)
-	wallet.visible = true
+	if not selling: move_child(tabs, 1)
+	wallet.visible = not selling
 	hud._state.purchase_completed.connect(_purchased)
 	hud._state.sale_completed.connect(_sold)
 	resized.connect(_layout)
@@ -107,52 +103,86 @@ func _build_buy() -> void:
 	Seeds.build(self)
 
 func _build_sell() -> void:
+	var u: float = Kit.unit(hud)
+	add_theme_constant_override("separation", ceili(2 * u))
 	Place.header(hud, self, "Mara", ACCENT, "mara")
-	var help_row := HBoxContainer.new(); add_child(help_row)
-	storage_note = _label("", 14, Kit.MUTED)
-	storage_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL; help_row.add_child(storage_note)
-	Place.help(hud, help_row, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote. Charts zoom to recent prices. An arrow marks a Winter target outside the labelled range." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
-	var varieties := GridContainer.new(); varieties.columns = 5 if Kit.desktop(hud) else 2
-	varieties.add_theme_constant_override("h_separation", 12); varieties.add_theme_constant_override("v_separation", 8); add_child(varieties)
-	for crop in crops:
-		var pick := _local_button(hud._crop_name(crop), "market_crop:" + crop, func(): select_variety(crop))
-		pick.picture = {"kind":"crop", "crop":crop}; pick.picture_pixels = 38
-		for variant in ["font_color", "font_hover_color", "font_pressed_color"]:
-			pick.add_theme_color_override(variant, Kit.CROPS[crop])
-		pick.set_meta("plain_control", false)
-		pick.custom_minimum_size = Vector2(110, 76) * Kit.unit(hud); varieties.add_child(pick)
+	find_child("PlaceHeader",false,false).add_theme_stylebox_override("panel",Kit.skin(ACCENT,ACCENT,6,12,u,false))
+	# The close and field-notes controls share the navigation row on this page.
+	hud._modal_close.get_parent().hide()
+	var navigation := HBoxContainer.new(); navigation.name = "SaleNavigation"; navigation.add_theme_constant_override("separation", ceili(6 * u)); add_child(navigation)
+	tabs.reparent(navigation); tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	storage_note = _label("Stored prices rise until Winter ends.", 14, Kit.MUTED)
+	storage_note.hide(); add_child(storage_note)
+	Place.help(hud, navigation, "Tonnes left in the barn at Winter start become stores. Storage costs a flat %s, spoils 5%% and lowers quality by 10. Store prices rise through Winter; the dashed sparkline marker is the late-Winter quote. Charts zoom to recent prices. An arrow marks a Winter target outside the labelled range." % hud._state.money(State.MarketDecisions.STORAGE_FEE))
+	navigation.add_child(Kit.button(hud, "×", "close", Kit.PAPER))
 	selected = hud._sell_crop if hud._sell_crop in crops else str(hud._state.selected_crop)
 	if selected not in crops: selected = crops[0]
 	_choose_grade()
+	grid = GridContainer.new(); grid.columns = 1
+	grid.add_theme_constant_override("h_separation", ceili(8 * u)); grid.add_theme_constant_override("v_separation", ceili(4 * u)); add_child(grid)
 	for crop: String in crops:
 		var card := PanelContainer.new(); card.name = "SaleRow_" + crop
-		card.add_theme_stylebox_override("panel", Place.skin()); add_child(card)
-		var column := BoxContainer.new(); column.add_theme_constant_override("separation", 12); card.add_child(column)
-		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 10); column.add_child(row)
-		row.add_child(hud._icon({"kind": "crop", "crop": crop}, 54))
-		var words: VBoxContainer = hud._vbox(2); words.size_flags_horizontal = Control.SIZE_EXPAND_FILL; row.add_child(words)
-		var title := _label(hud._crop_name(crop), 20, Kit.CROPS[crop], true); words.add_child(title)
-		var quotes := HBoxContainer.new(); quotes.add_theme_constant_override("separation", 8); words.add_child(quotes)
-		var price := _label("", 22, Kit.CROPS[crop]); price.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quotes.add_child(price)
-		var change := _label("", 14); change.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN; change.autowrap_mode = TextServer.AUTOWRAP_OFF; change.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		change.add_theme_stylebox_override("normal", Place.skin(Place.PAPER, 5, 100)); quotes.add_child(change)
-		var tail: VBoxContainer = hud._vbox(5); tail.size_flags_horizontal = Control.SIZE_EXPAND_FILL; column.add_child(tail)
-		var history := _sparkline(tail); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL; history.custom_minimum_size.y = 52
-		var grades := HFlowContainer.new(); grades.add_theme_constant_override("h_separation", 8); tail.add_child(grades)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_stylebox_override("panel", Kit.skin(Kit.PAPER, Kit.RULE, 2, 8, u, false)); grid.add_child(card)
+		var column := VBoxContainer.new(); column.add_theme_constant_override("separation", 0); card.add_child(column)
+		var top := BoxContainer.new(); top.add_theme_constant_override("separation", ceili(6 * u)); column.add_child(top)
+		var names := VBoxContainer.new(); names.custom_minimum_size.x = 86 * u; names.add_theme_constant_override("separation", 0); top.add_child(names)
+		var picture: Control = hud._icon({"kind":"crop", "crop":crop}, 22 * u); picture.size_flags_horizontal = Control.SIZE_SHRINK_CENTER; names.add_child(picture)
+		var caption := HBoxContainer.new(); caption.add_theme_constant_override("separation",ceili(4*u)); names.add_child(caption)
+		var title := _label(hud._crop_name(crop), 14, Kit.CROPS[crop], true); title.autowrap_mode = TextServer.AUTOWRAP_OFF; caption.add_child(title)
+		var owned := _label("", 14); owned.autowrap_mode = TextServer.AUTOWRAP_OFF; caption.add_child(owned)
+		var quotes := VBoxContainer.new(); quotes.size_flags_horizontal = Control.SIZE_EXPAND_FILL; quotes.add_theme_constant_override("separation", 0); top.add_child(quotes)
+		var quote_row := HBoxContainer.new(); quotes.add_child(quote_row)
+		var price := _label("", 14, Kit.INK, true); price.size_flags_horizontal = Control.SIZE_EXPAND_FILL; price.autowrap_mode = TextServer.AUTOWRAP_OFF; quote_row.add_child(price)
+		var change := _label("", 14); change.autowrap_mode = TextServer.AUTOWRAP_OFF; quote_row.add_child(change)
+		var history := _sparkline(quotes); history.custom_minimum_size = Vector2(0, 32 * u); history.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var actions := BoxContainer.new(); actions.add_theme_constant_override("separation", ceili(4 * u)); column.add_child(actions)
+		var grades := HBoxContainer.new(); grades.add_theme_constant_override("separation", ceili(2 * u)); actions.add_child(grades)
 		var buttons: Dictionary = {}
 		for word in State.Quality.GRADES:
 			var button := _local_button(word, "grade:" + crop + ":" + word, func(): select_variety(crop, word))
-			button.toggle_mode = true; button.set_meta("plain_control", true); grades.add_child(button); buttons[word] = button
-		var owned := _label("", 13, MUTED); column.add_child(owned); owned.hide()
-		sale_rows[crop] = {"card": card, "title": title, "price": price, "change": change, "history": history, "grades": buttons, "owned": owned}
-	_build_trade_bar()
+			button.toggle_mode = true; button.set_meta("text_tier", 14); button.custom_minimum_size = Vector2(44,44) * u
+			grades.add_child(button); buttons[word] = button
+		var sales := HBoxContainer.new(); sales.size_flags_horizontal = Control.SIZE_EXPAND_FILL; sales.add_theme_constant_override("separation", ceili(4 * u)); actions.add_child(sales)
+		var sale_buttons: Dictionary = {}
+		for amount: int in [1,5]:
+			var button := Kit.button(hud, "1 tonne" if amount == 1 else "5 tonnes", "", ACCENT, {"kind":"crop", "crop":crop})
+			for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
+			button.set_meta("action", "sell_amount:%s:%d" % [crop,amount]); button.set_meta("hud_action", "sell_amount:%s:%d" % [crop,amount]); button.set_meta("text_tier",14)
+			button.picture_pixels = 14
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			for variant in ["normal","hover","pressed","disabled"]: button.add_theme_stylebox_override(variant, Kit.skin(ACCENT, ACCENT, 3, 8, u, false))
+			button.pressed.connect(func(): _sell_amount(crop,amount))
+			sales.add_child(button); sale_buttons[amount] = button
+		sale_rows[crop] = {"card":card,"top":top,"actions":actions,"title":title,"price":price,"change":change,"history":history,"grades":buttons,"owned":owned,"sales":sale_buttons,"grade":_grade_for(crop)}
+	_build_quantity_model()
 	trade_open = true
-	seed_button = _local_button("Keep 1 t as seed", "market_keep_seed", func(): hud._act("keep_seed:" + selected + ":" + selected_grade))
-	footer.get_child(0).add_child(seed_button)
-	var seed_capacity: Label = _label("", 14, MUTED)
-	seed_capacity.name = "CropSeedCapacity"
-	footer.get_child(0).add_child(seed_capacity)
-	seed_button.set_meta("capacity_label", seed_capacity)
+	footer = hud._card(PAPER, 0); footer.add_theme_stylebox_override("panel",StyleBoxEmpty.new()); hud._modal_trade_footer.add_child(footer)
+	var seed_row := HBoxContainer.new(); footer.add_child(seed_row)
+	seed_button = Kit.button(hud,"Keep 1 tonne as seed","",Kit.PAPER,{"kind":"crop","crop":selected})
+	seed_button.set_meta("text_tier",14); seed_button.picture_pixels = 14
+	for variant in ["normal","hover","pressed","disabled"]: seed_button.add_theme_stylebox_override(variant,Kit.skin(Kit.PAPER,Kit.RULE,3,8,u,false))
+	for connection in seed_button.pressed.get_connections(): seed_button.pressed.disconnect(connection.callable)
+	seed_button.pressed.connect(func(): hud._act("keep_seed:" + selected + ":" + selected_grade))
+	seed_row.add_child(seed_button)
+	var seed_capacity: Label = _label("",14); seed_row.add_child(seed_capacity); seed_capacity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	seed_button.set_meta("capacity_label",seed_capacity)
+
+func _grade_for(crop: String) -> String:
+	for grade: String in State.Quality.GRADES:
+		if stock(crop,grade) > 0: return grade
+	return "Standard"
+
+func _sell_amount(crop: String, amount: int) -> void:
+	var target: Button = sale_rows[crop].sales[amount]
+	if target.disabled:
+		hud.show_refusal("Not enough tonnes.",target); return
+	if target == _undo_button and is_instance_valid(_undo_sale) and _undo_sale.available(hud._state):
+		_sell(); return
+	select_variety(crop,str(sale_rows[crop].grade))
+	quantity.set_value_no_signal(amount)
+	_undo_button = target
+	_sell()
 
 func stock(crop: String, grade: String = "") -> int:
 	return hud._state.stock_count(crop, grade)
@@ -186,6 +216,7 @@ func select_variety(crop: String, grade: String = "") -> void:
 	trade_open = true
 	if grade.is_empty(): _choose_grade()
 	else: selected_grade = grade
+	if sale_rows.has(crop): sale_rows[crop].grade = selected_grade
 	quantity.set_value_no_signal(1)
 	_receipt_left = 0
 	refresh()
@@ -210,54 +241,13 @@ func _show_price_change(label: Label, crop: String, grade: String) -> void:
 		label.add_theme_color_override("font_color", GAIN if percent > 0 else (LOSS if percent < 0 else INK))
 	label.tooltip_text = "Change from this grade’s base quote"
 
-func _build_trade_bar() -> void:
-	footer = hud._card(PAPER, 12)
-	footer.add_theme_stylebox_override("panel", Place.skin(PAPER, 14, 8))
-	hud._modal_trade_footer.add_child(footer)
-	hud._modal_trade_footer.show()
-	var content: VBoxContainer = hud._vbox(8)
-	footer.add_child(content)
-	_trade_row = hud._hbox(14)
-	content.add_child(_trade_row)
-	sell_button = _local_button("Sell", "market_sell", _sell, true)
-	sell_button.custom_minimum_size = Vector2(114, 58)
-	sell_button.add_theme_font_size_override("font_size", 23)
-	_trade_row.add_child(sell_button)
-	_amount_box = hud._vbox(3)
-	_trade_row.add_child(_amount_box)
-	_amount_box.add_child(_label("AMOUNT (t)", 11, MUTED))
-	var amount_row := HBoxContainer.new()
-	amount_row.add_theme_constant_override("separation", 5)
-	_amount_box.add_child(amount_row)
-	minus = _local_button("−", "quantity_minus", func() -> void: quantity.value -= 1)
-	amount_row.add_child(minus)
-	quantity = Quantity.new()
-	quantity.custom_minimum_size = Vector2(84, 46)
-	quantity.add_theme_stylebox_override("normal", hud.Cozy.box(PAPER, 8, 3, FRAME))
-	quantity.add_theme_stylebox_override("focus", hud.Cozy.box(PRICE_TAG, 8, 3, INK))
-	quantity.add_theme_stylebox_override("read_only", hud.Cozy.box(Color("cbbb92"), 8, 3, FRAME))
-	quantity.add_theme_color_override("font_color", INK)
-	quantity.add_theme_color_override("font_uneditable_color", MUTED)
-	quantity.add_theme_font_override("font", _body_font)
-	quantity.add_theme_font_size_override("font_size", 21)
-	amount_row.add_child(quantity)
-	plus = _local_button("+", "quantity_plus", func() -> void: quantity.value += 1)
-	amount_row.add_child(plus)
-	maximum = _local_button("Max", "market_all", func() -> void: quantity.value = stock(selected, selected_grade))
-	amount_row.add_child(maximum)
-	quantity.value_changed.connect(func(_value: float) -> void: refresh())
-	_total_box = hud._vbox(2)
-	_total_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_trade_row.add_child(_total_box)
-	_total_box.add_child(_label("YOU RECEIVE", 11, MUTED))
-	payout = _label("", 29, GAIN)
-	_total_box.add_child(payout)
-	_mobile_actions = HBoxContainer.new()
-	_mobile_actions.add_theme_constant_override("separation", 14)
-	content.add_child(_mobile_actions)
-	_mobile_actions.hide()
-	status = _label("", 13, MUTED)
-	content.add_child(status)
+func _build_quantity_model() -> void:
+	# The bounded amount parser is also used by transaction checks. The page's
+	# visible controls send the owner's two explicit amounts to this model.
+	quantity = Quantity.new(); quantity.hide(); add_child(quantity)
+	quantity.value_changed.connect(func(_value: float): refresh())
+	payout = _label("",14); payout.hide(); add_child(payout)
+	status = _label("",14); status.hide(); add_child(status)
 
 func _local_button(caption: String, key: String, callback: Callable, primary: bool = false) -> Button:
 	var button: Button = hud._button(caption, "", primary)
@@ -275,37 +265,31 @@ func _local_button(caption: String, key: String, callback: Callable, primary: bo
 
 func _layout() -> void:
 	if not is_inside_tree() or is_queued_for_deletion() or not is_instance_valid(hud): return
-	var touch: bool = is_instance_valid(hud.get_parent().get("touch_controls")) and hud.get_parent().touch_controls.enabled
-	var available_width: float = minf(size.x, hud.root.size.x - 88.0)
-	var narrow: bool = available_width < 650
-	for button: Node in tabs.get_children():
-		button.custom_minimum_size.y = hud.touch_target() if touch else 46
-		button.add_theme_font_override("font", _body_font)
+	var u: float = Kit.unit(hud)
+	for button in tabs.get_children():
+		button.custom_minimum_size.y = 44*u
+		button.add_theme_font_size_override("font_size",Kit.pixels(hud,14))
 	if not selling:
-		Seeds.layout(self, available_width, touch)
-	else:
-		for entry in sale_rows.values():
-			entry.card.get_child(0).vertical = narrow
-			entry.history.custom_minimum_size.y = 60 if touch else 52
-		if narrow and sell_button.get_parent() != _mobile_actions:
-			sell_button.reparent(_mobile_actions)
-			_total_box.reparent(_mobile_actions)
-		elif not narrow and sell_button.get_parent() != _trade_row:
-			sell_button.reparent(_trade_row)
-			_trade_row.move_child(sell_button, 0)
-			_total_box.reparent(_trade_row)
-		_mobile_actions.visible = narrow
-		for control: Control in [quantity, minus, plus, maximum]: control.custom_minimum_size.y = hud.touch_target() if touch else 46
-		for control: Control in [minus, plus, maximum]: control.custom_minimum_size.x = hud.touch_target() if touch else 46
-		quantity.custom_minimum_size.x = 110 if touch else 84
-	# Clear, compact numerals and controls; display face stays on headings only.
-	for button: Node in find_children("*", "Button", true, false) + hud._modal_trade_footer.find_children("*", "Button", true, false):
-		if not button.get_meta("kit_type", false): button.add_theme_font_override("font", _body_font)
-		button.custom_minimum_size.y = maxf(button.custom_minimum_size.y, hud.touch_target() if touch else 46)
-		button.custom_minimum_size.x = maxf(button.custom_minimum_size.x, hud.touch_target() if touch else 46)
-		if touch: button.add_theme_font_size_override("font_size", maxi(22 if button.has_meta("grade_stamp") else 20, button.get_theme_font_size("font_size")))
-	for label: Node in find_children("*", "Label", true, false) + hud._modal_trade_footer.find_children("*", "Label", true, false):
-		if touch: label.add_theme_font_size_override("font_size", maxi(18, label.get_theme_font_size("font_size")))
+		Seeds.layout(self,minf(size.x,hud.root.size.x-88),not Kit.desktop(hud))
+		return
+	var short: bool = hud.root.size.y < 600*u and hud.root.size.x > hud.root.size.y
+	grid.columns = 5 if short else 1
+	var seed_row: Control = seed_button.get_parent()
+	var navigation: Control = find_child("SaleNavigation",false,false)
+	if short and seed_row.get_parent() != navigation: seed_row.reparent(navigation)
+	elif not short and seed_row.get_parent() != footer: seed_row.reparent(footer)
+	footer.visible = seed_button.visible and not short
+	hud._modal_trade_footer.visible = footer.visible
+	storage_note.visible = stored_mode and not short
+	for entry in sale_rows.values():
+		entry.top.vertical = short
+		entry.actions.vertical = short
+		for button in entry.grades.values():
+			preload("res://scripts/grade_stamp.gd").apply(button,button.get_meta("grade_word"))
+			button.add_theme_font_size_override("font_size",Kit.pixels(hud,14))
+			button.custom_minimum_size = Vector2(44,44) * u
+			for variant in ["normal","hover","pressed","disabled"]:
+				var style = button.get_theme_stylebox(variant).duplicate(); style.content_margin_left = 2*u; style.content_margin_right = 2*u; button.add_theme_stylebox_override(variant,style)
 
 func refresh() -> void:
 	if not is_instance_valid(hud._state): return
@@ -315,55 +299,49 @@ func refresh() -> void:
 		Seeds.refresh(self)
 		return
 	hud._sell_crop = selected
+	sale_rows[selected].grade = selected_grade
+	var can_undo: bool = is_instance_valid(_undo_sale) and _undo_sale.available(state)
 	for crop in sale_rows:
 		var entry: Dictionary = sale_rows[crop]
-		entry.card.visible = crop == selected
-		entry.price.text = state.market_money(price_for(crop, selected_grade if crop == selected else "Standard")) + "/t"
+		var grade: String = entry.grade
+		entry.card.show()
+		entry.price.text = state.market_money(price_for(crop,grade)) + "/tonne"
 		entry.price.tooltip_text = "Sale price per tonne"
-		_show_price_change(entry.change, crop, selected_grade if crop == selected else "Standard")
-		entry.card.add_theme_stylebox_override("panel", Place.skin())
+		_show_price_change(entry.change,crop,grade)
 		for word in entry.grades:
-			entry.grades[word].text = "%s %d t" % [word, stock(crop, word)]
-			entry.grades[word].visible = stock(crop, word) > 0
-			entry.grades[word].set_pressed_no_signal(crop == selected and word == selected_grade)
-			preload("res://scripts/grade_stamp.gd").apply(entry.grades[word], word)
-		entry.history.set_history(price_history(crop, selected_grade if crop == selected else "Standard"), Kit.CROPS[crop])
-		entry.history.set_expected_price(state.trading.peak_price(crop, selected_grade if crop == selected else "Standard"))
-		entry.owned.text = "%d fresh tonnes" % stock(crop)
+			var button: Button = entry.grades[word]
+			button.text = word; button.visible = stock(crop,word) > 0 or word == grade
+			button.set_pressed_no_signal(word == grade)
+			preload("res://scripts/grade_stamp.gd").apply(button,word); button.set_meta("grade_word",word)
+		entry.history.set_history(price_history(crop,grade),Kit.CROPS[crop])
+		entry.history.set_expected_price(state.trading.peak_price(crop,grade))
+		entry.owned.text = "%d tonnes" % stock(crop,grade)
+		for amount: int in entry.sales:
+			var button: Button = entry.sales[amount]
+			var undo: bool = can_undo and button == _undo_button
+			button.text = "Undo" if undo else "1 tonne" if amount == 1 else "5 tonnes"
+			button.disabled = not undo and (stock(crop,grade) < amount or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [crop,amount]))
 	var chosen: Dictionary = sale_rows[selected]
-	crop_quote = chosen.price
-	crop_change = chosen.change
-	crop_history = chosen.history
-	crop_owned = chosen.owned
-	grade_buttons = chosen.grades
-	var quote: Dictionary = state.market.get(selected, {})
-	var price: float = price_for(selected, selected_grade)
-	var owned: int = stock(selected, selected_grade)
-	quantity.set_available(owned)
+	crop_quote = chosen.price; crop_change = chosen.change; crop_history = chosen.history; crop_owned = chosen.owned; grade_buttons = chosen.grades
+	sell_button = chosen.sales[1]
+	quantity.set_available(stock(selected,selected_grade))
 	var amount: int = int(quantity.value)
-	storage_note.text = "Stored prices rise until Winter ends."
-	storage_note.visible = state.season_clock.season == 3
-	hud._modal_trade_footer.visible = trade_open
-	seed_button.visible = state.season_clock.season == 3 and selected_grade != "Feed" and state.stock_count(selected, selected_grade) > 0
-	var seed_capacity: Label = seed_button.get_meta("capacity_label")
-	seed_capacity.visible = seed_button.visible
-	seed_capacity.text = "%s: keep up to %d t" % [State.CropTable.CROPS[selected].name.trim_suffix(" Potato"), preload("res://scripts/farm_advice.gd").seed_capacity(state, selected)]
+	payout.text = state.market_money(price_for(selected,selected_grade,amount)*amount) if quantity.valid and amount > 0 else state.money(0)
+	status.text = "Enter a whole number." if not quantity.valid else (_receipt if _receipt_left > 0 else "No potatoes to sell." if stock(selected,selected_grade) == 0 else "")
+	seed_button.visible = state.season_clock.season == 3 and selected_grade != "Feed" and stock(selected,selected_grade) > 0
+	seed_button.picture = {"kind":"crop","crop":selected}
+	var capacity: Label = seed_button.get_meta("capacity_label")
+	capacity.visible = seed_button.visible; capacity.text = "Keep up to %d tonnes." % preload("res://scripts/farm_advice.gd").seed_capacity(state,selected)
 	seed_button.disabled = state.seed_inventory[selected] + state.trading.kept_seed[selected] >= State.MAX_INVENTORY
-	payout.text = state.market_money(price_for(selected, selected_grade, amount) * amount) if quantity.valid and amount > 0 else state.money(0)
-	var can_undo: bool = is_instance_valid(_undo_sale) and _undo_sale.available(state)
-	sell_button.text = "Undo" if can_undo else "Sell"
-	sell_button.disabled = not can_undo and (not quantity.valid or amount < 1 or owned < amount or price <= 0 or state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected, amount]))
-	minus.disabled = not quantity.valid or amount <= 1
-	plus.disabled = not quantity.valid or amount >= owned
-	maximum.disabled = owned == 0
-	status.text = "Enter a whole number." if not quantity.valid else (_receipt if _receipt_left > 0 else ("No potatoes to sell." if owned == 0 else ""))
-	status.visible = not status.text.is_empty()
-	status.add_theme_color_override("font_color", LOSS if not quantity.valid else (GAIN if _receipt_left > 0 else MUTED))
+	hud._modal_trade_footer.visible = seed_button.visible; footer.visible = seed_button.visible
+	storage_note.visible = state.season_clock.season == 3
 	_layout.call_deferred()
 
 func _sell() -> void:
-	if is_instance_valid(_undo_sale) and _undo_sale.available(hud._state):
+	if is_instance_valid(_undo_sale) and _undo_sale.available(hud._state) and (not is_instance_valid(_undo_button) or _undo_button.text == "Undo"):
 		if _undo_sale.undo(hud._state):
+			if _guided_close: hud.get_parent().tutorial.sale_baseline = _guided_sale_baseline
+			_guided_close = false
 			_receipt_left = 0
 			if hud.get_parent().tutorial.active: hud.get_parent().tutorial.refresh()
 			refresh()
@@ -373,7 +351,11 @@ func _sell() -> void:
 		refresh()
 		return
 	refresh()
-	if sell_button.disabled: return
+	if not quantity.valid or quantity.value < 1 or stock(selected,selected_grade) < int(quantity.value) or hud._state.run_over or not hud._tutorial_allows("sell:%s:%d" % [selected,int(quantity.value)]): return
+	if not is_instance_valid(_undo_button): _undo_button = sell_button
+	var guide = hud.get_parent().get("tutorial")
+	_guided_close = is_instance_valid(guide) and guide.active and guide.current_id() == "sell"
+	_guided_sale_baseline = guide.sale_baseline if is_instance_valid(guide) else 0
 	var reversal: RefCounted = SaleUndo.new(hud._state)
 	hud._act("current_sell:%s:%d:%s" % [selected, int(quantity.value), selected_grade])
 	_undo_sale = reversal if reversal.commit(hud._state) else null
@@ -381,7 +363,7 @@ func _sell() -> void:
 
 func _sold(receipt: Dictionary) -> void:
 	if not selling or not is_visible_in_tree() or str(receipt.id) != selected: return
-	_receipt = "+%s · %s t sold" % [hud._state.market_money(receipt.total), hud._state.format_number(receipt.quantity)]
+	_receipt = "+%s · %s tonnes sold" % [hud._state.market_money(receipt.total), hud._state.format_number(receipt.quantity)]
 	_receipt_left = 2.8
 	hud._toast_box.hide()
 	refresh()
@@ -391,10 +373,22 @@ func _purchased(receipt: Dictionary) -> void:
 	_receipt = "+%d %s seeds · −%s" % [receipt.quantity, hud._crop_name(receipt.id), hud._state.market_money(receipt.cost)]
 	_receipt_left = 2.8
 	refresh()
+	var card: Control = seed_cards.get(str(receipt.id))
+	if is_instance_valid(card):
+		card.pivot_offset = card.size * .5
+		var old = card.get_meta("purchase_tween") if card.has_meta("purchase_tween") else null
+		if old is Tween and old.is_valid(): old.kill()
+		card.scale = Vector2(.985,.985)
+		var tween := card.create_tween(); card.set_meta("purchase_tween",tween)
+		tween.tween_property(card,"scale",Vector2(1.015,1.015),.10)
+		tween.tween_property(card,"scale",Vector2.ONE,.18)
 
 func _process(delta: float) -> void:
 	if is_instance_valid(_undo_sale) and not _undo_sale.available(hud._state):
 		_undo_sale = null
+		_undo_button = null
+		if _guided_close and hud.get_parent().tutorial.active and hud.get_parent().tutorial.current_id() == "winter":
+			hud.close_panel(); return
 		refresh()
 	if _receipt_left > 0:
 		_receipt_left = maxf(0, _receipt_left - delta)

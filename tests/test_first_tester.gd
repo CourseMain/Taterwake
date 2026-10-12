@@ -100,8 +100,10 @@ func run() -> void:
 	check(not row[0].get_global_rect().intersects(row[1].get_global_rect()), "long Winter label clears negative money")
 	game.state.coins = 80000
 	check(game.hud.root.find_child("FarmWordmark", true, false) == null, "the wordmark lives on the gate, not in the HUD")
-	for page in ["market", "barn", "inventory", "tools", "decorations", "accounts", "climate", "quests", "pause", "farmer", "grades", "calendar"]:
-		game.hud.show_panel(page, game.state); await settle()
+	for page in ["market", "barn", "inventory", "tools", "decorations", "accounts", "climate", "quests", "pause", "farmer", "grades", "calendar", "market_sell"]:
+		if page == "market_sell": game.hud.show_market(true,game.state)
+		else: game.hud.show_panel(page, game.state)
+		await settle()
 		typography(game.hud.root, scale, page)
 	game.hud.close_panel()
 	game.state.season_clock.season = 0

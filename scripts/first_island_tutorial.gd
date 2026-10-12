@@ -82,7 +82,8 @@ func _plot_index() -> int:
 func _enter_step() -> void:
 	visited = false
 	game._cancel_walk()
-	game.hud.close_panel()
+	# A first sale keeps its existing page through the three-second Undo window.
+	if not (current_id() == "winter" and game.hud._panel_kind == "market" and game.hud._market_selling and game.hud.is_panel_open()): game.hud.close_panel()
 	sale_baseline = game.state.lifetime_sales
 	if not _tour_only() and current_id() in ["plant", "sell"]:
 		game.state.select_crop("russet")

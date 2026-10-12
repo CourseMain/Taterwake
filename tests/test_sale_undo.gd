@@ -39,7 +39,7 @@ func run() -> void:
 			check(farm.ledger.save_data()==journal,"Undo restores the identical ledger")
 			check(farm.storage==stock and farm.trading.held==held,"Undo restores exact fresh and Winter cohorts")
 			check(farm.lifetime_sales==sales and farm.quest_progress==quests,"Undo reverses sale progress")
-			check(page.sell_button.text=="Sell","Undo returns to Sell")
+			check(page.sell_button.text=="1 tonne","Undo returns to the sale amount")
 	farm.season_clock.season=0; game.hud.close_panel()
 	var command: RefCounted=Reversal.new(farm)
 	farm.sell_crop("russet",1,"Standard"); check(command.commit(farm),"capture a committed sale")
@@ -50,6 +50,24 @@ func run() -> void:
 	command=Reversal.new(farm); farm.sell_crop("russet",1,"Standard"); command.commit(farm)
 	var sold: Dictionary=farm.ledger.save_data(); command._deadline=Time.get_ticks_msec()-1
 	check(not command.undo(farm) and farm.ledger.save_data()==sold,"expired Undo cannot alter a sale")
+	# The first guided sale must also remain on its button through Undo.
+	game.hud.close_panel(); farm.season_clock.year=1; farm.season_clock.season=1
+	farm.tutorial_progress={"version":3,"step":8,"completed":false,"plot":5,"tour_only":false,"choice":""}
+	farm.storage=farm.Stock.empty(); farm.Stock.add(farm.storage,"russet",2,90)
+	game.tutorial.start(); game.hud.show_market(true,farm)
+	var page = game.hud._refs.market_page
+	var guided_journal: Dictionary=farm.ledger.save_data()
+	var guided_stock: Dictionary=farm.storage.duplicate(true)
+	page.sale_rows.russet.sales[1].pressed.emit()
+	check(game.hud.is_panel_open() and game.hud._refs.market_page == page and page.sell_button.text == "Undo","guided sale keeps its visible Undo button")
+	check(game.tutorial.current_id() == "winter","guided sale still records its progress immediately")
+	page.sale_rows.russet.sales[1].pressed.emit()
+	check(farm.ledger.save_data()==guided_journal and farm.storage==guided_stock,"guided Undo restores the identical ledger and stock")
+	check(game.tutorial.current_id()=="sell","guided Undo restores the sale instruction")
+	page.sale_rows.russet.sales[1].pressed.emit()
+	check(game.tutorial.current_id()=="winter" and page.sell_button.text=="Undo","a repeated guided sale can advance again")
+	page._undo_sale._deadline=Time.get_ticks_msec()-1; page._process(0)
+	check(not game.hud.is_panel_open(),"guided view returns to farming after the Undo window")
 	check(await preload("res://tests/audio_fixture.gd").release(game,self),"audio releases before teardown")
 	game.queue_free(); for frame in range(8): await process_frame
 	print("SALE UNDO: %d checks, %d failures" % [checks,failures]); quit(1 if failures else 0)

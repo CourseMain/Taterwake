@@ -119,9 +119,15 @@ func run() -> void:
 		if decision == "sell":
 			game._on_action("market:sell")
 			await settle()
-			press("market_all")
-			press("market_sell")
+			check(game.hud._refs.market_page.sale_rows.russet.sales[5].text == "5 tonnes", "five-tonne option is on the same page")
+			for sale_index in range(game.state.stock_count("russet")):
+				if not game.hud.is_panel_open(): game._on_action("market:sell")
+				var current = game.hud._refs.market_page
+				press("sell_amount:russet:1")
+				if is_instance_valid(current._undo_sale):
+					current._undo_sale._deadline = Time.get_ticks_msec()-1; current._process(0.0)
 		else: press("tutorial:next")
+		game.hud.close_panel()
 		lesson("winter")
 		check(not game.state.tutorial_progress.completed and game.state.tutorial_progress.choice == decision, "choice saved without ending guide: " + decision)
 		var autumn_before: float = game.state.elapsed
