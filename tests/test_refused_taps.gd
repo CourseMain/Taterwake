@@ -27,6 +27,17 @@ func run() -> void:
 	game.hud.show_refusal("Can empty", game.hud._tutorial_next)
 	check(game.hud._context.text == "Water this bed.", "farm instruction remains above refusal")
 	check(game.hud._refusal_caption.visible and game.hud._refusal_caption.text == "Can empty. Fill it at the tank.", "farm refusal has its own line")
+	game.hud.clear_farm_hint(); game.hud.set_context("")
+	root.min_size = Vector2i.ZERO; root.size = Vector2i(390,844)
+	game.touch_controls.enabled = true; game.touch_controls._build_touch_sheets(); game.touch_controls.resize()
+	game.touch_controls.root.hide()
+	game.hud.show_farm_hint("Low Field · for rent at the Winter accounts, 55,000 a year")
+	for frame in range(8): await process_frame
+	game.touch_controls.root.show(); game.touch_controls.sell_button.show(); game.touch_controls.tools_button.show()
+	game.hud._update_context()
+	for frame in range(8): await process_frame
+	var controls_top: float = minf(game.touch_controls.sell_button.get_global_rect().position.y,game.touch_controls.tools_button.get_global_rect().position.y)
+	check(game.hud._context_box.get_global_rect().end.y <= controls_top-11, "rental direction clears phone controls that appear after its first layout")
 	for cause in ["Can empty","Frozen beds","Sprayer empty","No pests","Barn full","Nothing to harvest","Still growing","Water this","No seeds","Already planted","Till the soil","Plant a seed","Ready to harvest","Already watered","Soil ready","Not enough Spudions","tank water","Can is full","Not enough tonnes","whole number","Autumn","Spring","Run over","guided","glowing","collected"]:
 		check(Refusal.caption(cause).split(" ",false).size() <= 8, "eight-word refusal: " + cause)
 	check(await preload("res://tests/audio_fixture.gd").release(game,self), "audio releases")

@@ -1421,8 +1421,10 @@ func _update_context() -> void:
 	if touch_enabled:
 		_context_box.visible = _context_box.visible and (warning or _refusal_caption.visible or text.begins_with("Ready in ") or _context_box.get_meta("grade", false))
 	var seed_row: bool = is_instance_valid(_crop_row) and _crop_row.visible
-	var layout_key: String = "%s|%s|%s|%s" % [text, root.size.x, touch_enabled, seed_row]
-	if layout_key == _context_layout_key: return
+	var layout_key: String = "%s|%s|%s|%s" % [text, root.size, touch_enabled, seed_row]
+	if layout_key == _context_layout_key:
+		if touch_enabled: _fit_refusal_height()
+		return
 	_context_layout_key = layout_key
 	_context_layout_passes += 1
 	# Measure at the displayed font size; reflow only when the hint or layout changes.
@@ -1445,13 +1447,14 @@ func _update_context() -> void:
 
 func _fit_refusal_height() -> void:
 	var touch = get_parent().get("touch_controls")
+	var bottom: float = _context_box.offset_bottom
 	if is_instance_valid(touch) and touch.enabled and _context_box.is_visible_in_tree():
-		var highest: float = root.size.y
 		for control in [touch.tools_button,touch.sell_button]:
-			if control.is_visible_in_tree(): highest = minf(highest,control.get_global_rect().position.y)
-		_context_box.offset_top = minf(_context_box.offset_top,highest-root.size.y-_context_box.get_combined_minimum_size().y-12)
+			if control.is_visible_in_tree(): bottom = minf(bottom,control.get_global_rect().position.y-root.size.y-12)
 	if _refusal_caption.visible and _hotbar.is_visible_in_tree():
-		_context_box.offset_top = minf(_context_box.offset_top, _hotbar.get_global_rect().position.y - root.size.y - _context_box.get_combined_minimum_size().y - 12)
+		bottom = minf(bottom,_hotbar.get_global_rect().position.y-root.size.y-12)
+	_context_box.offset_bottom = bottom
+	_context_box.offset_top = bottom-_context_box.get_combined_minimum_size().y
 
 func _notice_is_warning(text: String) -> bool:
 	var lower := text.to_lower()
