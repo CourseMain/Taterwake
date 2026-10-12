@@ -85,6 +85,7 @@ var climate_shake: float = 0.0
 var farm_viewport: SubViewport
 var touch_controls
 var conversation
+var pedlar_cart
 var epilogue_screen: Control
 var epilogue_result: Dictionary = {}
 var title_scene: CanvasLayer
@@ -138,6 +139,9 @@ func _ready() -> void:
 	conversation_layer.add_child(conversation)
 	hud._conversation = conversation
 	conversation.finished.connect(_finish_conversation)
+	pedlar_cart = preload("res://scripts/pedlar_cart.gd").new()
+	world.add_child(pedlar_cart)
+	pedlar_cart.setup(self)
 	_apply_graphics_quality("balanced" if test_mode else GraphicsPreferences.load_mode())
 	_set_shadow_size((2048 if touch_controls.enabled else 4096) if test_mode else GraphicsPreferences.load_shadow_size(touch_controls.enabled))
 	frame_recorder = preload("res://scripts/frame_time_recorder.gd").new()
@@ -610,6 +614,7 @@ func _tap_world(point: Vector2) -> void:
 
 func _interact_station(station: String) -> void:
 	if title_active(): return
+	if station == "pedlar" and state.pedlar.presence(state) != "parked": return
 	hud.set_panel_source(station)
 	if station.begins_with("project:"):
 		_queue_project(station.trim_prefix("project:"))
@@ -624,9 +629,9 @@ func _on_user_action(action: String) -> void:
 	if conversation.visible:
 		if conversation.before_shop and action == conversation.service: conversation.finish(true)
 		return
-	if action in ["market", "market:sell", "barn", "tools", "duck_patrol", "climate", "quests", "accounts"]:
+	if action in ["market", "market:sell", "barn", "tools", "duck_patrol", "climate", "quests", "accounts", "pedlar"]:
 		if _tutorial_active() and not tutorial.allows_action(action): return
-		var keeper: String = {"market":"mara", "market:sell":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell"}[action]
+		var keeper: String = {"market":"mara", "market:sell":"mara", "barn":"nell", "tools":"bram", "duck_patrol":"pip", "climate":"iris", "quests":"tess", "accounts":"nell", "pedlar":"fennick"}[action]
 		_start_conversation(keeper, action, true)
 		return
 	_on_action(action)
@@ -805,6 +810,7 @@ func _cancel_walk() -> void:
 	walk_waypoints.clear()
 	hover_plot = -1
 	if world != null:
+		if is_instance_valid(pedlar_cart): pedlar_cart.sync_state()
 		world.highlight_tiles(NO_TILES)
 
 func _select_tool(tool: String) -> void:
@@ -1190,7 +1196,7 @@ func _on_action(action: String) -> void:
 			elif parts.size() == 1:
 				_cancel_walk()
 				hud.show_panel("graphics", state)
-		"menu", "calendar", "grades", "market", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "duck_patrol", "debug", "climate", "accounts", "run_summary":
+		"menu", "calendar", "grades", "market", "barn", "inventory", "tools", "help", "pause", "dex", "quests", "duck_patrol", "debug", "climate", "accounts", "run_summary", "pedlar":
 			if parts[0] == "debug" and parts.size() > 1:
 				_debug_action(parts)
 				return
@@ -1341,6 +1347,7 @@ func _on_climate_changed(phase: String) -> void:
 	_save_checkpoint.call_deferred()
 
 func _on_season_changed() -> void:
+	if hud._panel_kind == "pedlar" and state.pedlar.presence(state) == "absent": hud.close_panel()
 	_title_returned = false
 	if state.season_clock.season == 0 and not state.run_over and not test_mode: _show_year_start()
 	if state.season_clock.season == 3 and not state.run_over:

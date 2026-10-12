@@ -87,6 +87,7 @@ func present(ending: Dictionary) -> void:
 	var upper := VBoxContainer.new()
 	top.add_child(upper)
 	upper.add_child(_label("50 years on · " + str(ending.outcome), 28, true))
+	upper.add_child(_label(str(ending.get("farmer_appearance", {}).get("farm_name", "Taterland")) + " · " + str(ending.get("farmer_appearance", {}).get("name", "Farmer")), 16))
 	var strip = preload("res://scripts/climate_strip.gd").new()
 	strip.setup_future(ending.records)
 	upper.add_child(strip)

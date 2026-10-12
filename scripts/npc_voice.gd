@@ -2,7 +2,7 @@ extends Node
 ## One soft chirp when a page opens, never during individual lines.
 const Mix = preload("res://scripts/sound_mix.gd")
 const CLIPS: Array[AudioStream] = [preload("res://assets/audio/keeper-chirp-1.wav"), preload("res://assets/audio/keeper-chirp-2.wav"), preload("res://assets/audio/keeper-chirp-3.wav")]
-const PROFILES := {"mara": 1.12, "bram": .90, "nell": 1.04, "tess": 1.18, "pip": 1.30, "iris": 1.20, "edwin": 1.02}
+const PROFILES := {"mara": 1.12, "bram": .90, "nell": 1.04, "tess": 1.18, "pip": 1.30, "iris": 1.20, "edwin": 1.02, "fennick": 1.0}
 var player: AudioStreamPlayer
 var speaker: String = ""
 var last_clip: int = -1

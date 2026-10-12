@@ -164,6 +164,7 @@ func start(id: String, farm, return_service: String, touch: bool = false, shop_g
 	_source_offset = game.hud.panel_source_position(return_service) - size * .5
 	layout()
 	show_page("greeting",Roster.service_greeting(id,state) if before_shop else Roster.greeting(id,state,true))
+	if before_shop and id == "fennick" and state.season_clock.year == 2 and state.season_clock.season == 0: state.pedlar.data.gate_greeted = true
 	voice.begin_page(id)
 	_update_entrance()
 	close_button.grab_focus()

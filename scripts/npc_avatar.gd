@@ -30,6 +30,10 @@ func configure(id: String) -> void:
 		_bar(brow, Vector3(-.075,0,0), Vector3(.075,.008,0), .023 if id == "bram" else .014, Color("69503e"))
 		_brows.append(brow)
 	match str(p.detail):
+		"patches":
+			_sphere(accessories, _front(-.21,.82,.07), Vector3(.13,.11,.026), Color("6a4430"))
+			for y: float in [.76,.82,.88]: _bar(accessories,_front(-.33,y,.10),_front(-.28,y+.02,.10),.009,Color("eee8d2"))
+			_sphere(accessories, _front(.24,.94,.06), Vector3(.10,.075,.027), Color("1b4332"))
 		"glasses", "spectacles":
 			var y: float = 1.36
 			var z: float = .489
@@ -68,6 +72,8 @@ func configure(id: String) -> void:
 			_bar(accessories,Vector3(.49,1.39,.06),Vector3(.30,1.22,.49),.017,Color("5f9fd6"))
 			_sphere(accessories,Vector3(.29,1.22,.49),Vector3(.065,.028,.03),Color("5f9fd6"))
 	set_expression("exact" if id == "nell" else ("practical" if id in ["tess", "bram"] else "beaming" if id == "mara" else "uncertain"))
+	if id == "fennick":
+		set_expression("crooked")
 	_cast_props(accessories)
 	talk_mouth = _sphere(_head,Vector3(0,1.137,.493),Vector3(.081,.055,.014),Color("644638"))
 	talk_mouth.hide()
@@ -174,7 +180,7 @@ func dress(style: String, color: Color, hat_style: String) -> void:
 	_build_pants(costume, {"main": Color("454f50"), "trim": Color("ebcb7b")})
 	_build_boots(costume, {"main": Color("695347"), "trim": Color("ebcb7b")})
 	if not hat_style.is_empty():
-		var tint: Color = {"straw": Color("e8c06c"), "cap": Color("6da067"), "visor": Color("73aec6"), "worklamp": Color("e0a34f")}[hat_style]
+		var tint: Color = {"straw": Color("e8c06c"), "cap": Color("a2703f") if npc_id == "fennick" else Color("6da067"), "visor": Color("73aec6"), "worklamp": Color("e0a34f")}[hat_style]
 		_build_hat(costume, hat_style, tint, Color("f3da92"))
 
 func set_expression(value: String) -> void:
@@ -184,8 +190,8 @@ func set_expression(value: String) -> void:
 	for index in range(8):
 		var a: float = -1.0 + index / 4.0
 		var b: float = -1.0 + (index + 1) / 4.0
-		var curve: float = -.04 if value in ["beaming", "pleased", "warm"] else (.035 if value in ["concerned", "uncertain"] else 0.0)
-		_bar(_mouth, Vector3(a * .11, 1.15 + curve * (1 - a * a), .50), Vector3(b * .11, 1.15 + curve * (1 - b * b), .50), .012, Color("17382d"))
+		var curve: float = -.04 if value in ["beaming", "pleased", "warm", "crooked"] else (.035 if value in ["concerned", "uncertain"] else 0.0)
+		_bar(_mouth, Vector3(a * .11, 1.15 + curve * (1 - a * a) + (a*.03 if value == "crooked" else 0.0), .50), Vector3(b * .11, 1.15 + curve * (1 - b * b) + (b*.03 if value == "crooked" else 0.0), .50), .012, Color("17382d"))
 
 func _cast_props(parent: Node3D) -> void:
 	if npc_id == "nell":

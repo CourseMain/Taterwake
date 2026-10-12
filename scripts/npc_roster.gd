@@ -3,6 +3,7 @@ extends RefCounted
 const YEAR_ONE_ACCOUNTS: String = preload("res://scripts/farm_advice.gd").YEAR_ONE
 const GUIDED_CREDIT_LINE: String = "Dad's harvest paid this year. Next year: yours."
 const PEOPLE := {
+
 	"mara": {"name":"Mara", "role":"Seed seller", "service":"market", "service_label":"Browse seeds", "color":"5fb33a", "skin":"dbab78", "shape":Vector3(1.0,1.0,1.0), "hat":"straw", "detail":"flower",
 		"first":"Golden's fussy but it pays.",
 		"daily":["Twelve in the pouch. Start with one.", "Fresh seed. I stitched the bags myself."],
@@ -54,7 +55,14 @@ const PEOPLE := {
 		"topic":"Do people mind you visiting?", "story":"Mother says ask about your day first.",
 		"reply":"Well, how was your day?", "answer":"Quite nice. Saw ducklings by the pier.",
 		"help":"What does the limit mean?", "advice":"Below the limit, the farm is foreclosed.",
-		"thanks":"Afternoon. How's your day been?", "weather":"Less stock. Let's check the remaining balance."}
+		"thanks":"Afternoon. How's your day been?", "weather":"Less stock. Let's check the remaining balance."},
+	"fennick": {"name":"Fennick", "role":"Pedlar", "service":"pedlar", "service_label":"Pedlar", "color":"a2703f", "skin":"dbab78", "shape":Vector3(.94,1.02,.98), "hat":"cap", "detail":"patches",
+		"first":"Three packs. One's good.",
+		"daily":["No refunds. Lovely weather.", "Back next Spring. Probably."],
+		"topic":"Three packs. One's good.", "story":"No refunds. Lovely weather.",
+		"reply":"Back next Spring. Probably.", "answer":"Three packs. One's good.",
+		"help":"Three packs. One's good.", "advice":"No refunds. Lovely weather.",
+		"thanks":"Back next Spring. Probably.", "weather":"No refunds. Lovely weather.", "voice":"cheerful, never quite honest", "costume":"patched coat", "prop":"cart with a bell"}
 }
 
 static func for_station(station: String) -> String:
@@ -63,6 +71,7 @@ static func for_station(station: String) -> String:
 	return ""
 
 static func available(id: String, state = null) -> bool:
+	if id == "fennick" and state != null: return state.pedlar.presence(state) == "parked"
 	return PEOPLE.has(id) and (id != "edwin" or state == null or state.coins < state.bankruptcy_limit() * 0.5)
 
 static func ledger_lines(state) -> String:
@@ -97,6 +106,7 @@ static func weather_line(id: String, state) -> String:
 	if id == "iris" and state.guided_first_year(): return "A small storm is coming."
 	return str(PEOPLE[id].weather) if state.climate.data.phase != "calm" else str(PEOPLE[id].daily[0])
 static func expression(id: String, state, line: String = "") -> String:
+	if id == "fennick": return "crooked"
 	if id == "nell":
 		if line == "A profit. Write the date down.": return "pleased"
 		return "concerned" if state.ledger.total(state.season_clock.year) < 0 else "exact"
@@ -116,6 +126,7 @@ static func valid_history(raw: Variant) -> bool:
 	return true
 
 const SEASON_GREETINGS := {
+	"fennick":["Three packs. One's good.","No refunds. Lovely weather.","Back next Spring. Probably.","Back next Spring. Probably."],
 	"mara": ["Fresh seeds, {name}. Start with one.", "Golden's fussy but it pays, {name}.", "Lovely harvest, {name}. Mind the bags.", "Spring's seed is ready, {name}."],
 	"nell": ["{name}, the bills don't care about weather.", "Unsold potatoes aren't income, {name}.", "Bring the receipts, {name}.", "Same bills, {name}. Let's count."],
 	"tess": ["{name}, one bed. Then the next.", "Get them in, {name}.", "Count the damage, {name}. Then clear it.", "Ice first, {name}. Hoe."],
@@ -126,7 +137,10 @@ const SEASON_GREETINGS := {
 }
 static func service_greeting(id: String, state) -> String:
 	var farmer: String = str(state.farmer_appearance.get("name", "Farmer")).split(" ")[0]
-	return str(SEASON_GREETINGS[id][state.season_clock.season]).replace("{name}", farmer)
+	var line: String = str(SEASON_GREETINGS[id][state.season_clock.season]).replace("{name}", farmer)
+	if id == "fennick" and state.season_clock.year == 2 and state.season_clock.season == 0 and not state.pedlar.data.gate_greeted:
+		line += "\nThat one on your gate? Keep it. Lovely weather."
+	return line
 
 static func claim_service_greeting(id: String, state) -> bool:
 	var stamp: int = state.season_clock.year * 4 + state.season_clock.season
