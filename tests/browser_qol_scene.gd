@@ -68,7 +68,8 @@ func _publish() -> void:
 	if game.hud._refs.has("market_page") and game.hud._refs.market_page.selling:
 		var rows = game.hud._refs.market_page.get("sale_rows")
 		if rows is Dictionary:
-			for entry in rows.values(): last_report.sell_rows.append({"rect":_rect(entry.card),"graph":_rect(entry.history),"buttons":[_rect(entry.sales[1]),_rect(entry.sales[5])]})
+			for entry in rows.values():
+				if entry.has("sales"): last_report.sell_rows.append({"rect":_rect(entry.card),"graph":_rect(entry.history),"buttons":[_rect(entry.sales[1]),_rect(entry.sales[5])]})
 	if not is_instance_valid(game): return
 	last_report.fixture = "qol"
 	last_report.quests = []
