@@ -102,6 +102,22 @@ p{max-width:65ch}
 .dont{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .dont .x{border:2px solid var(--rule);border-radius:10px;padding:10px;font-size:.95rem}
 .dont .x b{color:var(--red)}
+/* market board */
+.board-m{width:100%;max-width:390px;background:var(--paper);border:3px solid var(--wood);border-radius:14px;padding:10px;color:var(--ink);box-shadow:0 8px 0 var(--wood2),0 14px 20px rgba(0,0,0,.4)}
+.mrow{display:grid;grid-template-columns:34px 62px 1fr 74px;gap:8px;align-items:center;padding:7px 6px;border-radius:10px;border:2px solid transparent}
+.mrow.on{background:var(--cream);border-color:var(--money)}
+.mrow .nm{font-family:var(--display);font-size:.95rem;line-height:1}
+.mrow .held{font-size:.75rem;color:var(--muted)}
+.mrow svg.spark{width:100%;height:34px;display:block}
+.mrow .px{text-align:right;font-family:var(--display);font-size:1.05rem;line-height:1;font-variant-numeric:tabular-nums}
+.mrow .px small{display:block;font-family:var(--body);font-size:.72rem;font-weight:700}
+.up{color:#2f8a3e}.dn{color:var(--red)}
+.boom{display:inline-block;font-family:var(--display);font-size:.7rem;background:var(--money);color:#3a2a06;border-radius:6px;padding:1px 6px;transform:rotate(-3deg);margin-left:4px}
+.sellbar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:10px;background:var(--cream);border:2px solid var(--rule);border-radius:12px;padding:8px 10px}
+.sellbar .amt{display:flex;gap:6px;align-items:center;font-family:var(--display)}
+.sellbar .amt span{background:var(--paper2);border-radius:8px;padding:6px 10px}
+.sellbar .go{font-family:var(--display);background:var(--mara);color:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 4px 0 #3f7a2a}
+.mhint{font-size:.78rem;color:var(--muted);margin:6px 4px 0}
 </style>
 
 <div class="wrap">
@@ -134,7 +150,7 @@ p{max-width:65ch}
     <div style="background:var(--paper);color:var(--ink);border-color:var(--common)">Common<small>sage edge</small></div>
     <div style="background:var(--paper);color:var(--ink);border-color:var(--uncommon)">Uncommon<small>gold edge</small></div>
     <div style="background:var(--paper);color:var(--ink);border-color:var(--rare)">Rare<small>clay-red edge</small></div>
-    <div style="background:var(--paper);color:var(--ink);border-color:var(--found)">Found<small>sky-blue edge · seen in play</small></div>
+    <div style="background:var(--paper);color:var(--ink);border-color:var(--found)">New<small>sky-blue edge · seen for the first time this run</small></div>
   </div>
 
   <h2>Two typefaces, pick the display face</h2>
@@ -145,6 +161,29 @@ p{max-width:65ch}
     <div class="s"><b style="font-family:'Gaegu',cursive">Nell's books · 104,000</b><span>C. Gaegu bold. Handwritten with a pen. Loosest, friendliest, least sign-like.</span></div>
   </div>
   <p style="margin-top:8px">Body in all three: <b>Atkinson Hyperlegible</b>, 16 px, with 14 px captions and 22 px headings. Nothing smaller on a phone.</p>
+
+  <h2>Quiet pages, one pop</h2>
+  <p>Tester 1: "too many things pop out." Every page has one theme colour, its keeper's or its place's, used quietly, and exactly one element at full chroma: the thing to tap next. A result may add a second pop when it lands. Everything else is paper, ink and muted. Squint at the page: if more than two things still stand out, it is wrong.</p>
+  <div class="felt" style="align-items:stretch">
+    <div class="page" style="max-width:300px">
+      <div class="khead" style="background:color-mix(in srgb,var(--mara) 30%,var(--paper));color:var(--ink)"><div class="face" style="border-color:var(--mara)"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#dbab78"/><circle cx="14" cy="20" r="2" fill="#333"/><circle cx="26" cy="20" r="2" fill="#333"/><path d="M14 28q6 5 12 0" stroke="#333" stroke-width="2" fill="none"/></svg></div><div><div class="who">Mara</div><div class="say">Fresh seeds. Start with one.</div></div></div>
+      <div class="row"><span style="color:var(--muted)">Russet · 12 t held</span><b style="color:var(--muted)">376</b></div>
+      <div class="row" style="background:var(--cream);border-left:4px solid color-mix(in srgb,var(--mara) 40%,transparent);padding-left:8px"><span>Golden · 4 t held</span><b>1,096</b></div>
+      <div class="row"><span style="color:var(--muted)">Icecap · 0 t</span><b style="color:var(--muted)">1,358</b></div>
+      <div class="btn go" style="margin-top:14px">Sell · 4,384</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:8px;text-align:center">Right: one theme tint, one pop.</div>
+    </div>
+    <div class="page" style="max-width:300px;outline:3px dashed var(--red);outline-offset:4px">
+      <div class="khead" style="background:var(--mara)"><div class="face"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#dbab78"/><circle cx="14" cy="20" r="2" fill="#333"/><circle cx="26" cy="20" r="2" fill="#333"/></svg></div><div><div class="who">Mara</div><div class="say">Fresh seeds. Start with one.</div></div><div style="margin-left:auto;background:#fff;color:var(--ink);padding:6px 10px;border-radius:999px;font-family:var(--display)">Talk</div></div>
+      <div class="row"><span style="color:var(--russet);font-family:var(--display)">Russet</span><b class="money">376</b><span class="stamp standard">Standard</span></div>
+      <div class="btn go" style="margin-top:6px;background:var(--mara)">1 tonne</div>
+      <div class="btn go" style="margin-top:6px;background:var(--mara)">5 tonnes</div>
+      <div class="row"><span style="color:var(--golden);font-family:var(--display)">Golden</span><b class="money">1,096</b><span class="stamp table">Table</span></div>
+      <div class="btn go" style="margin-top:6px;background:var(--mara)">1 tonne</div>
+      <div style="font-size:.78rem;color:var(--red);margin-top:8px;text-align:center">Wrong: nine things pop, nothing leads.</div>
+    </div>
+  </div>
+  <p>How to apply it: theme tint = the page colour mixed 30% into paper for the header, 40% for the selected row's edge. Full chroma only on the primary button, a landed result, or a selected item. Potato colours on a board are thin lines and small drawings, not fills. Keeper headers lose their saturated fill and keep their colour as the tint and the portrait frame.</p>
 
   <h2>The practice tile</h2>
   <p>One drawing, a name of at most three words, one line of at most eight words. A practice changes a rule, never a number. Hover tilts; tap settles.</p>
@@ -158,16 +197,16 @@ p{max-width:65ch}
     <div class="card tile rare"><span class="rar">rare</span>
       <svg class="draw" viewBox="0 0 84 84"><ellipse cx="40" cy="52" rx="24" ry="16" fill="#f3d27a"/><circle cx="58" cy="36" r="11" fill="#f3d27a"/><path d="M66 36l10 3-10 3z" fill="#e8893a"/><circle cx="60" cy="33" r="2" fill="#222"/><path d="M20 54c-6 2-10-2-8-6" stroke="#f3d27a" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="18" cy="70" r="4" fill="#5a3a2a"/><circle cx="30" cy="72" r="4" fill="#5a3a2a"/></svg>
       <div class="name">Duck patrol</div><div class="line">Ducks eat the first pest wave.</div></div>
-    <div class="card tile found"><span class="rar">found</span>
+    <div class="card tile found"><span class="rar">new</span>
       <svg class="draw" viewBox="0 0 84 84"><ellipse cx="42" cy="48" rx="26" ry="20" fill="#9fd8f0" stroke="#5f9fd6" stroke-width="3"/><circle cx="34" cy="44" r="3" fill="#1f3a2f"/><circle cx="50" cy="52" r="3" fill="#1f3a2f"/><path d="M26 22l6 8M58 22l-6 8M42 16v10" stroke="#5f9fd6" stroke-width="4" stroke-linecap="round"/></svg>
-      <div class="name">Blue Pearl</div><div class="line">Found. Tolerates frost. Sells like Golden.</div></div>
+      <div class="name">Blue Pearl</div><div class="line">New. Tolerates frost. Sells like Golden.</div></div>
   </div>
 
   <h2>The sale reveal</h2>
   <p>Selling is the hand. Each step pops in with a soft note; the money comes last. Under four seconds, tap to skip, same money as now. The practice that fired lights up as its tile, not as a word.</p>
   <div class="felt phone">
     <div class="page">
-      <div class="khead" style="background:var(--nell)"><div class="face"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#edc797"/><circle cx="14" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><circle cx="26" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><path d="M19 20h2" stroke="#333" stroke-width="2"/><path d="M14 30h12" stroke="#333" stroke-width="2"/></svg></div><div><div class="who">Nell</div><div class="say">Winter price. Write it down.</div></div></div>
+      <div class="khead" style="background:color-mix(in srgb,var(--nell) 30%,var(--paper));color:var(--ink)"><div class="face"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#edc797"/><circle cx="14" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><circle cx="26" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><path d="M19 20h2" stroke="#333" stroke-width="2"/><path d="M14 30h12" stroke="#333" stroke-width="2"/></svg></div><div><div class="who">Nell</div><div class="say">Winter price. Write it down.</div></div></div>
       <div class="reveal" style="margin-top:10px">
         <div class="step"><svg width="28" height="28" viewBox="0 0 28 28"><path d="M6 10h16l-2 14H8z" fill="#a87b45"/><path d="M10 10V6h8v4" stroke="#5a3a2a" stroke-width="2" fill="none"/></svg> 14 sacks <b>14 t</b></div>
         <div class="step"><span class="stamp table">Table</span> best, sells for more <b>×1.2</b></div>
@@ -215,7 +254,7 @@ p{max-width:65ch}
   <p>Tapping a keeper opens their service. Their colour is the header, their line is the header text, their face matches the line. The chat lives behind Talk.</p>
   <div class="felt phone">
     <div class="page">
-      <div class="khead" style="background:var(--nell)"><div class="face"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#edc797"/><circle cx="14" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><circle cx="26" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><path d="M19 20h2" stroke="#333" stroke-width="2"/><path d="M14 30h12" stroke="#333" stroke-width="2"/><path d="M10 14l6-2M30 14l-6-2" stroke="#333" stroke-width="2"/></svg></div><div><div class="who">Nell</div><div class="say">The bills don't care about the weather.</div></div><div style="margin-left:auto;font-family:var(--display);font-size:.9rem;background:rgba(255,255,255,.2);padding:6px 10px;border-radius:999px">Talk</div></div>
+      <div class="khead" style="background:color-mix(in srgb,var(--nell) 30%,var(--paper));color:var(--ink)"><div class="face"><svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="14" ry="16" fill="#edc797"/><circle cx="14" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><circle cx="26" cy="20" r="5" fill="none" stroke="#333" stroke-width="2"/><path d="M19 20h2" stroke="#333" stroke-width="2"/><path d="M14 30h12" stroke="#333" stroke-width="2"/><path d="M10 14l6-2M30 14l-6-2" stroke="#333" stroke-width="2"/></svg></div><div><div class="who">Nell</div><div class="say">The bills don't care about the weather.</div></div><div style="margin-left:auto;font-family:var(--display);font-size:.9rem;background:rgba(255,255,255,.2);padding:6px 10px;border-radius:999px">Talk</div></div>
       <div style="font-family:var(--display);font-size:2rem;margin:12px 4px 0" class="neg">−102,056</div>
       <div style="color:var(--muted);margin:0 4px 8px">Net for year 3</div>
       <div class="row"><span>Crop sales</span><b class="money">5,184</b></div>
@@ -247,6 +286,46 @@ p{max-width:65ch}
     <div style="text-align:center;color:var(--cream)"><span class="stamp feed">Feed</span><div style="font-size:.85rem;margin-top:6px">damaged, half price</div></div>
   </div>
 
+  <h2>The market board</h2>
+  <p>All five potatoes at once, one row each, on Mara's Sell page and on the pier board. A row is a drawing, the name, how many tonnes you hold, a jagged 90-second line, and the current price with the last tick's arrow. Tap a row to pick it; one sell bar at the bottom serves the picked row. No button inside a row, no page per potato. A boom stamps its multiplier beside the name.</p>
+  <div class="felt phone">
+    <div class="board-m">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 6px 6px"><span style="font-family:var(--display);font-size:1.1rem">Market · Summer, Year 3</span><span class="mhint" style="margin:0">last 90 s</span></div>
+      <div class="mrow on">
+        <svg viewBox="0 0 34 34" style="width:34px;height:34px"><ellipse cx="17" cy="19" rx="12" ry="9" fill="#b8803f"/><circle cx="13" cy="17" r="1.6" fill="#333"/><circle cx="21" cy="19" r="1.6" fill="#333"/></svg>
+        <div><div class="nm" style="color:#b8803f">Russet</div><div class="held">12 t held</div></div>
+        <svg class="spark" viewBox="0 0 200 34" preserveAspectRatio="none"><polyline fill="none" stroke="#b8803f" stroke-width="2.5" stroke-linejoin="round" points="0,22 14,20 28,24 42,18 56,21 70,15 84,19 98,17 112,22 126,16 140,13 154,17 168,12 182,15 200,11"/><line x1="0" y1="30" x2="200" y2="30" stroke="#cdbf9f" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="px">376<small class="up">▲ +4</small></div>
+      </div>
+      <div class="mrow">
+        <svg viewBox="0 0 34 34" style="width:34px;height:34px"><ellipse cx="17" cy="19" rx="12" ry="9" fill="#d98a4f"/><circle cx="13" cy="17" r="1.6" fill="#333"/><circle cx="21" cy="19" r="1.6" fill="#333"/></svg>
+        <div><div class="nm" style="color:#d98a4f">Giant</div><div class="held">0 t</div></div>
+        <svg class="spark" viewBox="0 0 200 34" preserveAspectRatio="none"><polyline fill="none" stroke="#d98a4f" stroke-width="2.5" stroke-linejoin="round" points="0,18 14,21 28,17 42,23 56,20 70,25 84,22 98,27 112,24 126,28 140,25 154,29 168,26 182,30 200,27"/><line x1="0" y1="30" x2="200" y2="30" stroke="#cdbf9f" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="px">501<small class="dn">▼ −2</small></div>
+      </div>
+      <div class="mrow">
+        <svg viewBox="0 0 34 34" style="width:34px;height:34px"><ellipse cx="17" cy="19" rx="12" ry="9" fill="#d9a800"/><circle cx="13" cy="17" r="1.6" fill="#333"/><circle cx="21" cy="19" r="1.6" fill="#333"/></svg>
+        <div><div class="nm" style="color:#d9a800">Golden<span class="boom">1.5x</span></div><div class="held">4 t held</div></div>
+        <svg class="spark" viewBox="0 0 200 34" preserveAspectRatio="none"><polyline fill="none" stroke="#d9a800" stroke-width="2.5" stroke-linejoin="round" points="0,26 14,24 28,27 42,22 56,25 70,19 84,22 98,14 112,10 126,12 140,8 154,11 168,6 182,9 200,5"/><line x1="0" y1="30" x2="200" y2="30" stroke="#cdbf9f" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="px">1,096<small class="up">▲ +9</small></div>
+      </div>
+      <div class="mrow">
+        <svg viewBox="0 0 34 34" style="width:34px;height:34px"><ellipse cx="17" cy="19" rx="12" ry="9" fill="#ff9f1c"/><circle cx="13" cy="17" r="1.6" fill="#333"/><circle cx="21" cy="19" r="1.6" fill="#333"/></svg>
+        <div><div class="nm" style="color:#ff9f1c">Sunburst</div><div class="held">0 t</div></div>
+        <svg class="spark" viewBox="0 0 200 34" preserveAspectRatio="none"><polyline fill="none" stroke="#ff9f1c" stroke-width="2.5" stroke-linejoin="round" points="0,15 14,19 28,16 42,21 56,18 70,22 84,19 98,24 112,21 126,25 140,22 154,26 168,23 182,27 200,24"/><line x1="0" y1="30" x2="200" y2="30" stroke="#cdbf9f" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="px">1,032<small class="dn">▼ −1</small></div>
+      </div>
+      <div class="mrow">
+        <svg viewBox="0 0 34 34" style="width:34px;height:34px"><ellipse cx="17" cy="19" rx="12" ry="9" fill="#3fb8e0"/><circle cx="13" cy="17" r="1.6" fill="#333"/><circle cx="21" cy="19" r="1.6" fill="#333"/></svg>
+        <div><div class="nm" style="color:#3fb8e0">Icecap</div><div class="held">0 t</div></div>
+        <svg class="spark" viewBox="0 0 200 34" preserveAspectRatio="none"><polyline fill="none" stroke="#3fb8e0" stroke-width="2.5" stroke-linejoin="round" points="0,20 14,17 28,21 42,16 56,19 70,14 84,18 98,13 112,16 126,12 140,15 154,11 168,14 182,10 200,13"/><line x1="0" y1="30" x2="200" y2="30" stroke="#cdbf9f" stroke-width="1" stroke-dasharray="3 3"/></svg>
+        <div class="px">1,358<small class="up">▲ +3</small></div>
+      </div>
+      <div class="sellbar"><div class="amt">Russet <span>−</span> 5 t <span>+</span> <span>Max</span></div><div class="go">Sell · 1,880</div></div>
+      <p class="mhint">Golden: chip shop opens in Shores. Up 1.5x for a while.</p>
+    </div>
+  </div>
+
   <h2>The cast, in their colours</h2>
   <div class="cast">
     <div class="k" style="background:var(--nell)"><b>Nell</b><i>Accountant. Cold, exact, only money. Slate cardigan, round glasses, mouth a line. Smiles once: the first profitable year.</i><q>Store it if you like. Spoilage is your side of the ledger.</q></div>
@@ -266,5 +345,6 @@ p{max-width:65ch}
     <div class="x"><b>A third typeface.</b></div>
     <div class="x"><b>A keeper line out of voice</b> or longer than eight words.</div>
     <div class="x"><b>A preview that crops the farmer.</b></div>
+    <div class="x"><b>More than two things that pop</b> on one page when you squint.</div>
   </div>
 </div>

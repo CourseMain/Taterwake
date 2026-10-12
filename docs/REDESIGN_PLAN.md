@@ -1901,8 +1901,8 @@ A. The kit (reference page, matched not interpreted):
       Tess brick, Iris sky, the toolsmith iron) used on their page
       header, their portrait frame and their lines on the Winter card.
    3. Rarity colour, for practices, varieties and clothing: common
-      sage edge, uncommon gold edge, rare clay-red edge, found sky-blue
-      edge; always the card edge, never a label.
+      sage edge, uncommon gold edge, rare clay-red edge, new sky-blue
+      edge (a thing seen for the first time this run); always the card edge, never a label.
    4. Cards are chunky: 3 px wood edge, radius 12, a 2 px paper inner
       line, a drop shadow; they tilt two degrees on hover and settle on
       tap. Numbers and names in the display face, large. One drawing
@@ -2035,7 +2035,7 @@ F. Vibrancy, second pass. The first pass came back neon: lime grass,
      b8803f · giant d98a4f · golden ffd23f · sunburst ff9f1c · icecap
      7fe3ff · nell 4f8fa8 · mara 5fb33a · tess e0583a · iris 3fa9ff ·
      oda 7a7f8c · common 7fc47a · uncommon f0b429 · rare e0583a ·
-     found 3fa9ff.
+     new 3fa9ff.
    Gates, measured on the Spring noon Web screenshot at 1440x900 with
    the HUD hidden (add the measurement to tests/ as a browser check):
      - fewer than 0.5% of pixels at or above 250 in all three
@@ -2166,6 +2166,16 @@ The simplicity contract (every part below is bound by it):
   Hand, Oswald, Nunito Sans) go. The rounded-blob display look reads
   as generated and is out. Owner picks the pair from three printed
   samples on a phone before any screen is built.
+- Quiet theme, one pop (from tester 1: "too many things pop out").
+  Every page has one theme colour, its keeper's or its place's, used
+  quietly: a tint at about 30% strength on the header band, the card
+  edge and the selected row, never on fills. Everything else is paper,
+  ink and muted. Exactly one element on a page is at full chroma, the
+  one thing to tap next; at most one more may join it when a result
+  lands (a stamp, a won card, a boom). Rows, chips, lines and icons
+  that are not the pop use the muted version of their colour. The
+  farm behind a page stays at 70% light. Rule of thumb: squint at the
+  screen; if more than two things still stand out, it fails.
 - No new number on the HUD. The bill and the purse are the only money
   shown outside a page. Multipliers are never shown as digits larger
   than 3 and never as a running total.
@@ -2325,6 +2335,14 @@ V4. The Exchange: a live market board, all year. The owner's call,
       at the right, and an arrow for the last change. One tap on a
       line selects that potato for selling; no separate page per
       potato. The board is one concept: "the market".
+      The chart must show change, not a flat line: each row's
+      vertical scale fits its own last 90 s (18 ticks at five
+      seconds), with a minimum span of 8% of the mean (so a 2% tick is
+      a quarter of the row's height) and a maximum of 60% (so a boom
+      still fits). Draw it as a stepped line, one step per tick, the
+      last step thicker, with the window's low and high as tiny
+      labels at the ends. Never a fixed 0 to 3x axis, never a smooth
+      curve. The kit's "The market board" mockup is the layout.
    4. The HUD keeps only the selected potato's price on the Sell
       button; the board is behind one tap. No other number joins the
       play screen.
