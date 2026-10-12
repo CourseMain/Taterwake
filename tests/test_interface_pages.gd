@@ -17,7 +17,7 @@ func run() -> void:
 	await settle(); game.set_process(false); game.hud.set_process(false)
 	game.state.tutorial_progress.completed = true; game.hud.set_tutorial({})
 	game.state.season_clock.year = 3; game.state.coins = 80000
-	for crop in game.state.CROP_IDS: game.state.storage[crop] = game.state.Stock.pile(12)
+	for crop in game.state.CropTable.MARA_IDS: game.state.storage[crop] = game.state.Stock.pile(12)
 	game.state.ledger.post_fixed_costs(2)
 	game.state.ledger.post_fixed_costs(3)
 	game.state.ledger.post(3, 2, "sales", "Table Russet · 12 t", 5184)
@@ -43,7 +43,7 @@ func run() -> void:
 				game.state.elapsed = 18.0; game.state._refresh_market()
 			if kind == "barn":
 				game.state.season_clock.seconds = 140
-				for crop in game.state.CROP_IDS: game.state.trading.held[crop] = game.state.Stock.pile(8)
+				for crop in game.state.CropTable.MARA_IDS: game.state.trading.held[crop] = game.state.Stock.pile(8)
 			if kind == "foreclosure":
 				var saved_ledger: Dictionary = game.state.ledger.save_data()
 				game.hud.close_panel(); game.state.coins = -210000; game.state.run_outcome = "foreclosed"; game.state.run_over = true; game.state.climate.capture_collapse(game.state)

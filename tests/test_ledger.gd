@@ -17,6 +17,7 @@ func fresh():
 	var farm = State.new()
 	root.add_child(farm)
 	farm.rng.seed = 6
+	empty_barn(farm)
 	return farm
 func winter(farm) -> void:
 	farm.season_clock.season = 2
@@ -79,13 +80,13 @@ func run() -> void:
 	farm.claim_quest("starter_crash")
 	check(farm.ledger.total(1, "other") == other_before + farm.QUEST_REWARD, "quest cash is journaled")
 	purse(farm)
-	farm.reset_game()
+	reset_fixture(farm)
 	farm.storage["russet"] = Stock.pile(20000)
 	farm.sell_crop("russet")
 	check(farm.coins == Ledger.STARTING_CASH + 20000 * State.CropTable.CROPS.russet.base and farm.ledger.total(1, "sales") == 20000 * State.CropTable.CROPS.russet.base, "sales never silently cap proceeds outside the journal")
 	purse(farm)
 	check(farm.save_game(SAVE) and farm.load_game(SAVE) and farm.coins == Ledger.STARTING_CASH + 20000 * State.CropTable.CROPS.russet.base, "uncapped receipts round-trip through the journal")
-	farm.reset_game()
+	reset_fixture(farm)
 	farm.coins = -200000
 	var count: int = farm.ledger.entries.size()
 	farm.buy_seeds("russet", 1)
@@ -174,6 +175,7 @@ func ui_checks() -> void:
 	root.add_child(game)
 	game.set_process(false)
 	game.state.rng.seed = 6
+	empty_barn(game.state)
 	game.state.boundary_save_path = SAVE
 	game.state.update(450)
 	await process_frame
@@ -210,7 +212,7 @@ func ui_checks() -> void:
 	check(game.hud._run_end._balance.size.x >= 265, "foreclosure balance stays legible on narrow screens")
 	check(not game.touch_controls.fullscreen.visible, "foreclosure hides fullscreen chrome")
 	if "--capture" in OS.get_cmdline_user_args(): await capture("foreclosure")
-	game.state.reset_game()
+	reset_fixture(game.state)
 	for year in range(1, 11):
 		game.state.post_money("sales", "Harvest receipts", 200000)
 		game.state.update(450)
@@ -230,3 +232,12 @@ func capture(label: String) -> void:
 	await create_timer(0.8).timeout
 	RenderingServer.force_draw()
 	root.get_texture().get_image().save_png("res://artifacts/ledger-" + label + ".png")
+
+func empty_barn(farm) -> void:
+	# Journal fixtures isolate ordinary receipts and fixed charges from the Twin.
+	farm.storage = Stock.empty()
+	for oddity in farm.pedlar.data.oddities: oddity.held = false
+
+func reset_fixture(farm) -> void:
+	farm.reset_game()
+	empty_barn(farm)

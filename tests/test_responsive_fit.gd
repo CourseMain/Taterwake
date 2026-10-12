@@ -119,7 +119,7 @@ func paper_pages() -> void:
 	game.state.tutorial_progress.completed = true
 	game.state.tutorial_active = false
 	game.hud.set_tutorial({})
-	for crop in game.state.CROP_IDS:
+	for crop in game.state.CropTable.MARA_IDS:
 		game.state.storage[crop] = game.state.Stock.pile(12, 90)
 	game.state.season_clock.year = 3
 	game.state.update(450)
@@ -131,7 +131,7 @@ func paper_pages() -> void:
 	game.state.plots[1].crop = "icecap"
 	game.state.plots[1].stage = 3
 	game.state.plots[1].yield_total = 2
-	for crop in game.state.CROP_IDS:
+	for crop in game.state.CropTable.MARA_IDS:
 		game.state.Stock.add(game.state.storage, crop, 6, 90)
 		game.state.Stock.add(game.state.storage, crop, 4, 60)
 		game.state.Stock.add(game.state.storage, crop, 2, 30)

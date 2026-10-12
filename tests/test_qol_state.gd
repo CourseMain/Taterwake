@@ -18,6 +18,9 @@ func check(condition: bool, message: String) -> void:
 func clean_farm() -> void:
 	farm.reset_game()
 	farm.rng.seed = 61622
+	# Pest yields are measured from an explicitly empty barn.
+	farm.storage = Stock.empty()
+	for oddity in farm.pedlar.data.oddities: oddity.held = false
 
 	for plot in farm.plots:
 		farm._clear_crop(plot)

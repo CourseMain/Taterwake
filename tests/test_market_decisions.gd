@@ -12,6 +12,9 @@ func fresh():
 	var farm = State.new()
 	root.add_child(farm)
 	farm.rng.seed = 6
+	# These fixtures measure ordinary cohorts and their storage bills.
+	farm.storage = Stock.empty()
+	for oddity in farm.pedlar.data.oddities: oddity.held = false
 	for plot in farm.plots: farm._clear_crop(plot)
 	return farm
 func winter(farm) -> void:

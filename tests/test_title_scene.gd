@@ -45,12 +45,12 @@ func run() -> void:
 	check(title.walk.text == "Walk to the farm" and not title.resume.visible, "fresh title shows one action and no second line")
 	check(title.resume.disabled, "a missing save cannot be continued")
 	check(not game.hud.root.visible and not game.touch_controls.root.visible, "title hides gameplay controls")
-	check(game.world.title_gate.get_node("GateWordmark").text == "TATERLAND", "the name is painted on a world gate")
+	check(game.world.title_gate.get_node("GateWordmark").text == "Taterland", "the name is painted on a world gate")
 	check(game.world.title_gate.get_node("GateWordmark").billboard == BaseMaterial3D.BILLBOARD_DISABLED, "gate name faces with its wood instead of following the camera")
 	var visible_words: Array[String] = []
 	for label: Label3D in label_visibility:
 		if label.is_visible_in_tree(): visible_words.append(label.text)
-	check(visible_words == ["TATERLAND"], "the gate name is the only world lettering on the title")
+	check(visible_words == ["Taterland"], "the gate name is the only world lettering on the title")
 	check(game.world._lease_boards.all(func(board): return not board.visible), "To Let boards wait until the player enters")
 	check(game.world.visuals.grade_batches.values().all(func(marker): return not marker.visible) and not game.world.visuals.water_markers.visible, "crop grade and water markers stay out of the welcome")
 	check(title.walk.get_theme_stylebox("normal").bg_color == preload("res://scripts/ui_kit.gd").INK, "the large title action is an ink surface")

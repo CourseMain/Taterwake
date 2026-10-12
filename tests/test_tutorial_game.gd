@@ -108,7 +108,7 @@ func run() -> void:
 	lesson("sell")
 	check(game.hud._panel_kind == "grades", "first graded harvest opens the illustrated grade guide")
 	game.hud.close_panel()
-	check(game.state.stock_count("russet") == 2, "harvest puts the actual survivor in the barn")
+	check(game.state.stock_count("russet") == 3, "harvest adds two actual survivors beside the donated Twin")
 	var choice: Dictionary = game.state._save_data().duplicate(true)
 	# Both choices start from the same earned harvest; neither completes early.
 	for decision: String in ["sell", "store"]:
@@ -123,6 +123,11 @@ func run() -> void:
 			for sale_index in range(game.state.stock_count("russet")):
 				if not game.hud.is_panel_open(): game._on_action("market:sell")
 				var current = game.hud._refs.market_page
+				if game.state.stock_count("russet", current.sale_rows.russet.grade) == 0:
+					for word in game.state.Quality.GRADES:
+						if game.state.stock_count("russet", word) > 0:
+							press("grade:russet:" + word)
+							break
 				press("sell_amount:russet:1")
 				if is_instance_valid(current._undo_sale):
 					current._undo_sale._deadline = Time.get_ticks_msec()-1; current._process(0.0)
@@ -143,7 +148,7 @@ func run() -> void:
 		check(game.state.tutorial_progress.completed and not game.tutorial.active, "guidance ends at accounts: " + decision)
 		check(game.state.ledger.is_closed(1) and game.state.ledger.guided_credit(1) == game.state.ledger.fixed_cost_total() and is_equal_approx(game.state.ledger.total(1), game.state.ledger.total(1, "sales") + game.state.ledger.total(1, "storage")), "normal bills and guided credit reconcile with sales and storage: " + decision)
 		check(game.hud._refs.accountant.text == "Nell: " + game.state.NpcRoster.GUIDED_CREDIT_LINE and game.hud._refs.accountant.tooltip_text == game.state.NpcRoster.ledger_lines(game.state), "accountant explains the covered first bills and current ledger")
-		check(game.state.stock_count("russet") == (13 if decision == "store" else 11), "choice determines stock after normal five-percent Winter spoilage")
+		check(game.state.stock_count("russet") == (14 if decision == "store" else 11), "choice determines stock, including the Twin, after normal five-percent Winter spoilage")
 		check(game.state.season_clock.autumn_loss == 0, "guided year loses no crop the player could not harvest")
 		check(game.state._valid_save(game.state._save_data()), "first accounts save valid: " + decision)
 		stopped = game.state._save_data().duplicate(true)

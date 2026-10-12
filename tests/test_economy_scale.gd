@@ -40,6 +40,7 @@ func run() -> void:
 	farm.coins = -200000
 	check(not farm.run_over, "exact overdraft boundary remains playable")
 	farm.coins = farm.OVERDRAFT_LIMIT + farm.ledger.fixed_cost_total() - 1
+	empty_barn(farm)
 	farm.season_clock.season = 2
 	farm.season_clock.seconds = 149.75
 	farm.update(0.25)
@@ -93,6 +94,7 @@ func ui_checks() -> void:
 	root.add_child(game)
 	game.set_process(false)
 	var farm = game.state
+	empty_barn(farm)
 	farm.Stock.add(farm.storage, "icecap", 20, 60)
 	for size in [Vector2i(1280,800), Vector2i(390,844)]:
 		root.size = size
@@ -125,6 +127,7 @@ func ui_checks() -> void:
 			if entry.kind == "crop": check(barn._item_quantities[entry.id].text.ends_with(" t"), "crop bins use tonnes")
 	game.hud.close_panel()
 	farm.reset_game()
+	empty_barn(farm)
 	farm.update(450)
 	for size in [Vector2i(1280,800), Vector2i(390,844)]:
 		root.size = size
@@ -138,6 +141,11 @@ func ui_checks() -> void:
 	await process_frame
 	# Let the audio mixer release the accountant's stopped voice playback.
 	await create_timer(0.4).timeout
+
+func empty_barn(farm) -> void:
+	# These checks isolate ordinary stock and fixed costs from V1's gifted Twin.
+	farm.storage = farm.Stock.empty()
+	for oddity in farm.pedlar.data.oddities: oddity.held = false
 
 func capture(label: String) -> void:
 	if "--capture" not in OS.get_cmdline_user_args(): return

@@ -55,7 +55,7 @@ func _run() -> void:
 	for index in range(4): restored.interact_plot(index, "harvest")
 	restored.update(3600)
 	check(restored.season_clock.season == 3 and restored.ledger.is_closed(1), "state alone reaches settled first accounts")
-	check(restored.stock_count("russet") == 13 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and charges fee")
+	check(restored.stock_count("russet") == 14 and restored.ledger.total(1, "storage") < 0, "storage keeps crop and the Twin and charges fee")
 	check(restored.season_clock.autumn_loss == 0, "no unmanageable guided crops die to Autumn Cold")
 	check(restored.climate.year_count(1) == 1, "no second guided disaster")
 	check(restored._valid_save(restored._save_data()), "Winter guide state valid before controller completes")
@@ -125,7 +125,7 @@ func _run() -> void:
 	skipped.season_clock.season = 3
 	skipped._season_boundary()
 	check(skipped.ledger.guided_credit(1) == 0 and skipped.ledger.total(1, "other") == 0, "skipped guide gets no credit")
-	check(skipped.coins == State.Ledger.STARTING_CASH - skipped.ledger.fixed_cost_total(), "skipped year pays the full fixed bills")
+	check(skipped.coins == State.Ledger.STARTING_CASH - skipped.ledger.fixed_cost_total() + skipped.ledger.total(1, "storage"), "skipped year pays the full fixed bills and ordinary storage")
 	check(skipped._valid_save(skipped._save_data()), "skipped first accounts remain valid")
 	var tour = State.new(); root.add_child(tour)
 	tour.tutorial_progress.tour_only = true

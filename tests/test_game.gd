@@ -103,6 +103,12 @@ func _run() -> void:
 	for sale_index in range(game.state.stock_count("russet")):
 		if not game.hud.is_panel_open(): game._on_action("market:sell")
 		var current = game.hud._refs.market_page
+		# A fresh farm also holds the Standard-grade Twin; sell every grade.
+		if game.state.stock_count("russet", current.sale_rows.russet.grade) == 0:
+			for word in game.state.Quality.GRADES:
+				if game.state.stock_count("russet", word) > 0:
+					press("grade:russet:" + word)
+					break
 		press("sell_amount:russet:1")
 		if is_instance_valid(current._undo_sale):
 			current._undo_sale._deadline = Time.get_ticks_msec()-1; current._process(0.0)

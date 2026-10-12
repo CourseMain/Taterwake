@@ -50,7 +50,7 @@ func run() -> void:
 	await settle()
 	game.set_process(false)
 	game.state.coins = 8.92e+18
-	for crop: String in game.state.CROP_IDS:
+	for crop: String in game.state.CropTable.MARA_IDS:
 		game.state.seed_inventory[crop] = 30
 		game.state.storage[crop] = Stock.pile(10)
 	game.hud.update_state(game.state)

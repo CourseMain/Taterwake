@@ -25,6 +25,8 @@ func prepare_winter(farm, seconds: float = 25.0) -> void:
 	farm.season_clock.year = 2
 	farm.season_clock.season = 3
 	farm.storage.russet = Stock.pile(30, 100)
+	# The sleep fixture replaces the whole Russet cohort, including the Twin.
+	for oddity in farm.pedlar.data.oddities: oddity.held = false
 	farm._season_boundary()
 	farm.accounts_open = false
 	farm.season_clock.seconds = seconds

@@ -30,9 +30,10 @@ func run() -> void:
 	for plot in farm.plots:
 		check(not plot.has("cultivated") and not plot.has("variety"), "no build traits on beds")
 	farm.reset_game()
+	var stored_before: int = Stock.count(farm.storage, "russet")
 	farm.plots[0].merge({"tilled": true, "stage": 3, "crop": "russet", "watered": true, "elapsed": 10.0}, true)
 	farm.interact_plot(0, "harvest")
-	check(Stock.count(farm.storage, "russet") == 3, "ordinary first harvest has no build bonus")
+	check(Stock.count(farm.storage, "russet") == stored_before + 3, "ordinary first harvest has no build bonus")
 	check(farm.affected_tiles(0, "hoe").size() == 1 and farm.crop_growth_speed("russet") == 1.0, "base tools and growth have no build bonus")
 	for island in [1]:
 		check(game.world.find_child("WashAndSortWorkshop", true, false) == null, "island %d has no workshop" % island)

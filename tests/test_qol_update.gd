@@ -26,8 +26,8 @@ func run() -> void:
 	game.set_process(false)
 	var state = game.state
 	var expected: Array = [60, 110, 90, 160, 200]
-	for index: int in range(state.CROP_IDS.size()):
-		var crop: String = state.CROP_IDS[index]
+	for index: int in range(state.CropTable.MARA_IDS.size()):
+		var crop: String = state.CropTable.MARA_IDS[index]
 		check(state.CropTable.CROPS[crop].grow == expected[index] and state.crop_grow_time(crop) <= 225.0, crop + " uses balanced base growth")
 	game._on_action("dex")
 	check(game.hud._body.find_children("DexPicture_*", "Control", true, false).size() == 5, "crop tab illustrates all five varieties")
@@ -46,7 +46,7 @@ func run() -> void:
 	state.climate.begin_warning(state, "drought", 1.0)
 	state.climate.data.phase = "active"
 	state.climate.data.timer = 30.0
-	for crop: String in state.CROP_IDS:
+	for crop: String in state.CropTable.MARA_IDS:
 		check(state.crop_grow_time(crop) <= state.MAX_GROW_SECONDS + 0.000001, crop + " weather slowdown is bounded")
 	game.queue_free()
 	await process_frame

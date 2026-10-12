@@ -105,13 +105,14 @@ func run() -> void:
 	# A calm first Spring permits a complete second sowing without a cooldown.
 	farm = State.new(); farm.rng.seed = 6
 	for p in farm.plots: farm._clear_crop(p)
+	var stored_before: int = farm.stock_count("russet")
 	for cycle in range(2):
 		for action in ["hoe", "plant", "water"]: farm.interact_plot(5, action)
 		farm.plots[5].pest_checked = true
 		farm.update(60)
 		farm.interact_plot(5, "harvest")
 		check(farm.plots[5].stage == 0 and not farm.plots[5].tilled, "harvest leaves an immediately tillable bed")
-	check(farm.stock_count("russet") == 6 and farm.season_clock.season == 0, "two Russet harvests fit Spring")
+	check(farm.stock_count("russet") == stored_before + 6 and farm.season_clock.season == 0, "two Russet harvests fit Spring")
 	# A flock can reach shore and hill targets using the ordinary patrol policy.
 	farm.season_clock.season = 3; farm._season_boundary()
 	farm.rent_field("low"); farm.rent_field("hill")

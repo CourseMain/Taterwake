@@ -27,6 +27,7 @@ func run() -> void:
 		check(clip.get_length() >= .15 and clip.get_length() <= 1.0, "potato takes are short, nonempty audio clips")
 	var looks: Array = []
 	for id: String in Roster.PEOPLE:
+		if id == "fennick": farm.season_clock.year = 2; farm.season_clock.season = 0
 		farm.climate.data.phase = "calm"
 		if id == "edwin": farm.coins = farm.bankruptcy_limit() * 0.5 - 1
 		var expected_greeting: String = Roster.greeting(id, farm)
@@ -157,6 +158,7 @@ func run() -> void:
 	check(talk.visible and talk.npc_id == "iris", "weather observer is available on the valley")
 	talk.finish()
 	# First Winter adds the arithmetic once; later reports keep the two account lines.
+	farm.season_clock.year = 1
 	farm.climate.end_working_year()
 	farm.season_clock.season = 3
 	farm.ledger.post_fixed_costs(1)

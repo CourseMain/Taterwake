@@ -15,7 +15,7 @@ func run() -> void:
 	game.tutorial.active = false; game.state.tutorial_progress.completed = true
 	game.state.set_tutorial_active(false); game.hud.set_tutorial({})
 	game.state.coins = 500000
-	for crop in game.state.CROP_IDS:
+	for crop in game.state.CropTable.MARA_IDS:
 		game.state.storage[crop] = game.state.Stock.pile(12,90)
 		game.state.Stock.add(game.state.storage,crop,8,60)
 		game.state.Stock.add(game.state.storage,crop,4,20)

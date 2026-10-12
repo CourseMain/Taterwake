@@ -12,6 +12,9 @@ func check(ok: bool, note: String) -> void:
 func fresh():
 	var farm = State.new()
 	farm.rng.seed = 6
+	# Business-only fixtures carry no stores or Winter storage fee.
+	farm.storage = farm.Stock.empty()
+	farm.pedlar.data.oddities[0].held = false
 	for plot in farm.plots: farm._clear_crop(plot)
 	farm.coins = 1200000
 	return farm

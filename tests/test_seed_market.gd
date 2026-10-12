@@ -106,11 +106,14 @@ func run() -> void:
 	capture = "--capture" in OS.get_cmdline_user_args()
 	check_chart_scaling()
 	var expected: Array[String] = ["russet", "giant", "golden", "sunburst", "icecap"]
-	check(State.crops_by_base_price(State.CROP_IDS) == expected, "fixed ascending base order")
+	check(State.crops_by_base_price(State.CropTable.MARA_IDS) == expected, "fixed ascending base order")
 	game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
 	# Begin calmly so explicit weather/practice scenarios own the fixture.
 	game.state.rng.seed = 6
+	# Ordinary-market fixtures carry no donated or pack oddities.
+	game.state.storage = Stock.empty()
+	for oddity in game.state.pedlar.data.oddities: oddity.held = false
 	await settle()
 	game.set_process(false)
 	game.hud.set_process(false)
@@ -122,7 +125,7 @@ func run() -> void:
 	var empty_page = game.hud._refs.market_page
 	check(empty_page.quantity.text == "0" and not empty_page.quantity.editable and empty_page.sell_button.disabled, "fresh empty inventory shows a disabled zero amount")
 	state.coins = 400000
-	for crop: String in State.CROP_IDS:
+	for crop: String in State.CropTable.MARA_IDS:
 		check(State.CropTable.CROPS[crop].seed > 0 and State.CropTable.CROPS[crop].seed <= State.CropTable.CROPS[crop].base, "base seed " + crop)
 		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "initial seed ratio " + crop)
 	game._on_action("market")
@@ -227,7 +230,7 @@ func run() -> void:
 	state.climate.begin_warning(state, "storm", 1.0)
 	state.climate._impact(state)
 	state._refresh_market()
-	for crop: String in State.CROP_IDS:
+	for crop: String in State.CropTable.MARA_IDS:
 		check(state.market[crop].seed == State.CropTable.CROPS[crop].seed, "disaster seeds follow final quote " + crop)
 	game.hud.show_panel("market", state)
 	check(game.hud._refs.market_page.crops == State.crops_by_base_price(state.available_crops()), "buy preserves local island availability")
