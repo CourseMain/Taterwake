@@ -2233,8 +2233,11 @@ J. Superstitions: the game's passives (never called jokers in-game: a
    two-note cue; never a running total. When two cards touch the same
    number, adds fire before multipliers, in that order of pops: a
    three-tonne bed with Second Sowing and Lucky Boot gives eight.
-   Noticeability rule: every card fires visibly at least once a year
-   on an ordinary farm; a card that would not is redefined. Three are drawn on the farm
+   Noticeability rule: a card fires visibly every time its real
+   condition occurs, and no card gains extra effects to force a fire.
+   The check: a ten-year cautious run with all twelve owned, one fixed
+   seed, counts the fires per card; every card fires at least three
+   times in the ten years, or it is redefined. Three are drawn on the farm
    while owned: the scarecrow in the field, the cat by the barn, the
    mug on Iris's station. Found in Superstition packs only for now;
    Tess's Winter offer of three moves to Segment 23. The starting card
