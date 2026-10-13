@@ -1554,3 +1554,11 @@ Each pack is rolled 10,000 times with fixed seeds; every printed outcome frequen
 Final validation · **2026-10-13**: `tools/run_tests.sh -j 2` passes **109/109 suites**, **27,820 reported checks**, with **0 failures, timeouts or errors**. The required additional standalone runs pass **test_epilogue: 537 checks** and **test_tuning_bot: 2,266 checks**, each with zero failures. The new Pedlar suite passes **932 checks**. No test was skipped, disabled or deleted. The standalone bot table matches the full-suite table exactly. The 390×844 Web feedback check passes **39 real taps**, with **0 browser errors**; slowest visible response **66.90 ms**, sound **18.00 ms**. The merged working copy imports and boots without script errors, with all local owner edits preserved.
 
 Left undone: the non-gamer five-second card review was not performed; the owner explicitly requested finishing without waiting. No human pass is inferred. The three full fresh-player sessions remain scheduled after V3. Hanging/swapping and superstition effects belong to J, and no later part or public docs-root export is included.
+
+## Restore Debug access · 2026-10-13
+
+Owner's decision · **2026-10-13**: “can u add back debug”. Restore the existing Debug workshop through Menu → Debug. The access code, session lock, balance controls, recovery and time controls retain their existing behavior.
+
+The Menu now includes a seventh drawn tile, Debug, before Leave. It grows to fit its content and allows scrolling only when a short screen cannot hold the tiles. The existing sliders drawing is reused. The entrance map names Menu as Debug's home and retains the existing foreclosure recovery link. This follow-up does not add superstition effects, change the economy, move the v2.1.0 tag or publish the public build.
+
+Focused validation: **7/7 suites**, **2,210 checks**, **0 failures, timeouts or errors**: debug access/time, debug money UI, debug recovery, UI kit, feel, surfaces and responsive fit. The access test now clicks the real Menu tile before testing the existing code gate and controls. The 390×844 Web fixture also clicks Menu → Debug, with one drawn entrance and zero browser/script errors; the settled Menu and access page are captured in `artifacts/v210-preview/debug-menu-390.png` and `debug-access-390.png`.

@@ -2364,7 +2364,7 @@ func _build_pause() -> void:
 	menu.add_theme_constant_override("h_separation", ceili(10 * Kit.unit(self)))
 	menu.add_theme_constant_override("v_separation", ceili(10 * Kit.unit(self)))
 	_body.add_child(menu)
-	for entry in [["Farmer", "farmer", "farmer"], ["Grown", "dex", "book"], ["Sound", "sound", "sound"], ["Graphics", "graphics", "sun"], ["Save", "save_page", "save"], ["Leave", "close", "leave"]]:
+	for entry in [["Farmer", "farmer", "farmer"], ["Grown", "dex", "book"], ["Sound", "sound", "sound"], ["Graphics", "graphics", "sun"], ["Save", "save_page", "save"], ["Debug", "debug", "debug"], ["Leave", "close", "leave"]]:
 		var tile: Button = Kit.button(self, entry[0], entry[1], Kit.PAPER, {"kind":"kit_menu", "id":"save" if entry[1] == "save_page" else entry[1]})
 		tile.name = "MenuTile_" + entry[1]; tile.set_meta("text_tier", 14)
 		tile.custom_minimum_size = Vector2(180, 130) * Kit.unit(self) if Kit.desktop(self) else Vector2(96, 98) * Kit.unit(self)

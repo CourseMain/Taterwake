@@ -11,6 +11,7 @@ Segment 21f gives each service a home. The entrance assertions in `test_ui_audit
 | Quests and loss records | Tess's board | None |
 | Tool upgrades, Home expansion, barn extension, decorations | Tools shed | None |
 | Spring packs | Fennick’s cart beside the gate, from Year 2 | None; the Year 1 passing cart cannot be tapped |
+| Debug test controls | Menu → Debug | Foreclosure recovery keeps its existing Debug link |
 
 Inventory lists potatoes by grade and seeds, without a Tools tab or selling. The tray equips tools. Winter stores are facts; use Sell or walk to Mara. Menu’s Save tile holds Save, Restore and New Farm. The owner’s later instruction restores Buy/Sell tabs inside Mara’s page, replacing the earlier barn-only selling rule. Sell uses one selected crop and one current stock, including fresh and held Winter sacks at their respective prices. The barn has no stock-selling controls.
 

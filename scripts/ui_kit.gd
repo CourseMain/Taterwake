@@ -76,7 +76,9 @@ static func fit(hud) -> void:
 	var notice_space: float = hud._toast_box.get_combined_minimum_size().y + 32 if wide and hud._toast_box.visible else 0
 	height = minf(height, view.y - receipt_space - notice_space - 48 * u)
 	if hud._panel_kind == "farmer": height = minf(view.y - 32 * u, (668 if wide else 518) * u)
-	elif hud._panel_kind in ["menu", "pause"]: height = (350 if wide else 268) * u
+	elif hud._panel_kind in ["menu", "pause"]:
+		height = minf(view.y - 48 * u, maxf((350 if wide else 268) * u, hud.modal_content_height()))
+		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if hud.modal_content_height() <= height + .5 else ScrollContainer.SCROLL_MODE_AUTO
 	var rect := Rect2((view - Vector2(width, height)) * .5, Vector2(width, height))
 	rect.position.y = receipt_space + (view.y - receipt_space - notice_space - height) * .5
 	hud._modal_card.set_anchors_preset(Control.PRESET_TOP_LEFT)

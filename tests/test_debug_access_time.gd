@@ -70,7 +70,11 @@ func run() -> void:
 	game.set_process(false)
 	game.state.coins = 40000.0
 	game.state.apply_debug(1.0)
-	game._on_action("debug")
+	game._on_action("menu")
+	var debug_tile: Button = game.hud._body.find_child("MenuTile_debug",true,false)
+	check(is_instance_valid(debug_tile) and debug_tile.has_picture(), "Menu exposes the drawn Debug entrance")
+	if is_instance_valid(debug_tile): await click_button(debug_tile)
+	check(game.hud._panel_kind == "debug", "the Menu tile opens the existing Debug page")
 	check(not game.debug_unlocked and game.debug_time_multiplier == 1.0, "session starts locked at normal speed despite saved debug effects")
 	check(game.hud._refs.has("debug_code") and not game.hud._refs.has("debug_apply") and game.hud._refs.debug_code.secret, "locked page only exposes a masked access field")
 	await shot("locked")

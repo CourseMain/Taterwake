@@ -409,6 +409,7 @@ static func _kit_menu(c: CanvasItem, id: String) -> void:
 			_poly(c,[Vector2(-28,-8),Vector2(-12,-8),Vector2(7,-28),Vector2(7,28),Vector2(-12,8),Vector2(-28,8)],kit.KEEPERS.iris)
 			c.draw_arc(Vector2(6,0),27,-.7,.7,20,kit.KEEPERS.iris,5,true)
 		"graphics": _metric(c, "sun")
+		"debug": _activity(c, "debug")
 		"save":
 			c.draw_style_box(_box(kit.WOOD,4),Rect2(-28,-28,56,56))
 			c.draw_rect(Rect2(-16,-28,32,20),kit.PAPER); c.draw_rect(Rect2(-18,4,36,20),kit.PAPER)

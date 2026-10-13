@@ -82,7 +82,7 @@ func run() -> void:
 			for hat in ["flower", "scarf"]: check(game.hud._body.find_child("FarmerChoice_hat_"+hat,true,false).disabled, "unearned clothing is shown and locked")
 		elif page == "menu":
 			var tiles: Array = game.hud._body.find_children("MenuTile_*", "Button", true, false)
-			check(tiles.size() == 6, "Menu has exactly six picture tiles")
+			check(tiles.size() == 7, "Menu has seven picture tiles including restored Debug")
 			for tile in tiles: check(tile.has_picture(), "Menu tile has a drawing above its name")
 		elif page == "practice":
 			for tile in game.hud._body.find_children("*", "PanelContainer", true, false):

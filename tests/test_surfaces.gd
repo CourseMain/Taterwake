@@ -71,7 +71,7 @@ func run() -> void:
 			var tiles: Array = game.hud._body.find_children("MenuTile_*", "Button", true, false)
 			for tile in tiles:
 				check(tile.get_theme_color("font_color").get_luminance() < .3, "menu caption remains ink on paper: " + tile.text)
-			check(tiles.size() == 6, "menu contrast covers all six picture tiles")
+			check(tiles.size() == 7, "menu contrast covers all seven picture tiles including Debug")
 			var badge: Label = game.hud._badge("Ready", "ready")
 			game.hud._body.add_child(badge)
 			var badge_ink: Color = badge.get_theme_color("font_color")
