@@ -2092,6 +2092,24 @@ V1. The Pedlar (Spring). A travelling potato with a cart, Fennick,
    "gambler" strategy that buys every pack every Spring and report its
    distribution under the variance rule above.
 
+V1b. The cart redrawn. The owner's verdict on v2.1.0 was "looks bad
+   and complicated". Kit section "Fennick's cart". Three packs drawn
+   as things on a wooden shelf: a paper seed bag with a potato printed
+   on it, a card wrapper with a horseshoe, a grey sack with a question
+   mark and eyes. Under each, the name and the price, nothing else.
+   Tap a pack and it lifts and turns to show its back: the printed
+   odds as rows (drawing, outcome, fraction) and the one Buy button,
+   the page's only full-chroma element. Tap outside and it goes back.
+   The Mystery pack wobbles once every few seconds and is the only
+   thing that moves. A sold pack lies flat, muted, and reads Sold.
+   Fennick's header band is copper at 30%. The reveal keeps its
+   wind-up and lands as the card in J. The collection page is called
+   Collection; its tabs are Varieties (a potato) and Superstitions (a
+   horseshoe), never the same drawing twice; the Superstitions tab
+   shows all twelve, owned cards drawn, unowned as silhouettes with no
+   name. On phone the "E" badge never appears: Interact is the one
+   route. The Spring plan card opens collapsed from year two.
+
 V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    Summer and a betting slip. One weather rumour ("Storm this
    Summer?"), one price rumour ("Golden up by Winter?"), one farm
@@ -2158,26 +2176,64 @@ V4. The Exchange: a live market board, all year. The owner's call,
       gold, Nell saying "Sell. Now." The Pub's price rumour pays out
       here.
 
-J. Superstitions (the game's jokers, never called that in-game: a superstition is
-   a thing country folk swear by, hung on the gate; Tess offers them
-   with "Folk swear by it."). The practices become superstitions: absurd
-   names, real rule changes, a face on every card. Twelve at launch, four unlocked:
-     Lucky Boot ........ the first bed hoed each Spring yields double.
-     Nell's Cat ........ pests skip the bed nearest the barn.
-     Haunted Scarecrow . no pests ever; the ducks will not come.
-     Second Sowing ..... a bed planted twice gives one more tonne.
-     Cold Store ........ stored potatoes don't age in a storm year.
-     Seed Saver ........ kept seed ignores gluts and spikes.
-     Early Riser ....... the ripe window lasts twice as long.
-     Windbreak Rows .... Hill Field counts as sheltered.
-     Oda's Spare Hoe ... hoeing costs no time in Winter.
-     Iris's Mug ........ Iris is right eight times in ten.
-     Fennick's Thumb ... one extra pack on the cart each Spring.
-     The Cursed One .... every harvest is one grade worse; every sale
-                         pays double. (rare)
-   Five slots, drawn on the gate sign. Offered three at a time by Tess
-   each Winter, keep one; also found in Superstition packs. A superstition changes a
-   rule, never adds a digit on the HUD.
+J. Superstitions: the game's passives (never called jokers in-game: a
+   superstition is a thing country folk swear by, hung on the gate).
+   Balatro's jokers are easy because they are passive: you own it, it
+   works, one line says what it does, and it looks funny. A
+   superstition is the same thing. Every superstition you own works
+   from the moment its card lands. There is no inert state, no "takes
+   effect next Winter", no hanging or swapping; the gate sign shows
+   the first five owned, in order, and the collection shows all
+   twelve. A superstition changes a rule or adds a plain number, never
+   a digit on the HUD. Each card is one drawing with a face, a name of
+   at most three words and one effect line of at most eight words.
+   The reveal card adds the folk line above the effect, as the cause
+   ("Nobody put it there." then "No pests, ever."); collection and
+   gate cards show the name and the effect only. Kit section: "A
+   superstition is a passive".
+   The twelve, exact. Rarity, name, effect line, folk line, and where
+   it fires visibly:
+     common · Second Sowing · First bed planted twice a year: +1
+       tonne. · "Same hole. Twice." · "+1 t" over that bed at harvest.
+     common · Early Riser · Ripe potatoes wait twice as long. · "The
+       potatoes, not you." · no pop; the ripe window is longer.
+     common · Windbreak Rows · Storms take half as much. · "Three
+       trees and a rumour." · "half" on the storm card's loss line.
+     common · Oda's Spare Hoe · Hoeing takes half the time. ·
+       "Sharper than the first one." · no pop.
+     common · Nell's Cat · Pests skip the bed nearest the barn. ·
+       "She's not yours. She decided." · the cat's face over that bed
+       when pests roll.
+     uncommon · Lucky Boot · First bed hoed each Spring: double
+       yield. · "Left boot. Never the right." · "x2" over that bed at
+       harvest.
+     uncommon · Cold Store · Stored potatoes lose nothing over
+       Winter. · "It's a cold shed. Folk swear by it." · "kept" on
+       the Winter stores line.
+     uncommon · Seed Saver · Every harvest gives one seed back. ·
+       "One in every sack, somehow." · "+1 seed" over the bed.
+     uncommon · Iris's Mug · Iris is right eight times in ten. ·
+       "Tea leaves, mostly." · no pop; the mug sits on her station.
+     uncommon · Fennick's Thumb · A free Mystery pack every Spring. ·
+       "On the scales, usually." · a fourth pack on the cart, with a
+       thumbprint.
+     rare · Haunted Scarecrow · No pests, ever. · "Nobody put it
+       there." · no pop; the scarecrow stands in the field.
+     rare · The Cursed One · Every sale pays double. Every grade one
+       worse. · "Don't look at it." · "x2" and the worse grade stamp
+       on every sale.
+   A firing pop is the card's drawing, its name and its number, for
+   one second, at the place it happened, one at a time, with the
+   two-note cue; never a running total. Three are drawn on the farm
+   while owned: the scarecrow in the field, the cat by the barn, the
+   mug on Iris's station. Found in Superstition packs only for now;
+   Tess's Winter offer of three moves to Segment 23. The starting card
+   is Second Sowing, which is why its effect is small enough for every
+   honest bot to carry. The variance rule's upside gate (at least 3
+   of 30 gambler seeds above tidy's mean) is asserted from J; the
+   foreclosure gate belongs to the punter from V2. Tuning lever if the
+   upside gate fails: the effect sizes of uncommon and rare cards,
+   never the pack odds, the prices or the honest farm.
 
 R. The sale reveal, with fire. Sacks, stamp, season price, each superstition
    lighting up with a pop, then the money. When three superstitions fire the
