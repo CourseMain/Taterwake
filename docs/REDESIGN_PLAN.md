@@ -2107,8 +2107,10 @@ V1b. The cart redrawn. The owner's verdict on v2.1.0 was "looks bad
    Collection; its tabs are Varieties (a potato) and Superstitions (a
    horseshoe), never the same drawing twice; the Superstitions tab
    shows all twelve, owned cards drawn, unowned as silhouettes with no
-   name. On phone the "E" badge never appears: Interact is the one
-   route. The Spring plan card opens collapsed from year two.
+   name. Menu opens Collection on the Varieties tab; the gate sign
+   opens it on the Superstitions tab; both tabs work from either. On
+   phone the "E" badge never appears: Interact is the one route. The
+   Spring plan card opens collapsed from year two.
 
 V2. The Pub (Summer). A chalkboard by the pond with three rumours each
    Summer and a betting slip. One weather rumour ("Storm this
@@ -2196,11 +2198,15 @@ J. Superstitions: the game's passives (never called jokers in-game: a
      common · Second Sowing · First bed planted twice a year: +1
        tonne. · "Same hole. Twice." · "+1 t" over that bed at harvest.
      common · Early Riser · Ripe potatoes wait twice as long. · "The
-       potatoes, not you." · no pop; the ripe window is longer.
+       potatoes, not you." · the existing 30-second grace before a
+       ripe bed loses quality becomes 60; one pop, "still fresh", the
+       moment a ripe bed passes the old 30 seconds unharmed.
      common · Windbreak Rows · Storms take half as much. · "Three
        trees and a rumour." · "half" on the storm card's loss line.
-     common · Oda's Spare Hoe · Hoeing takes half the time. ·
-       "Sharper than the first one." · no pop.
+     common · Oda's Spare Hoe · One tap hoes two beds. · "Sharper
+       than the first one." · the nearest unhoed bed turns over too,
+       with the pop on it. (Hoeing has no time cost to halve; a card
+       the player cannot notice is redefined, never kept.)
      common · Nell's Cat · Pests skip the bed nearest the barn. ·
        "She's not yours. She decided." · the cat's face over that bed
        when pests roll.
@@ -2224,7 +2230,11 @@ J. Superstitions: the game's passives (never called jokers in-game: a
        on every sale.
    A firing pop is the card's drawing, its name and its number, for
    one second, at the place it happened, one at a time, with the
-   two-note cue; never a running total. Three are drawn on the farm
+   two-note cue; never a running total. When two cards touch the same
+   number, adds fire before multipliers, in that order of pops: a
+   three-tonne bed with Second Sowing and Lucky Boot gives eight.
+   Noticeability rule: every card fires visibly at least once a year
+   on an ordinary farm; a card that would not is redefined. Three are drawn on the farm
    while owned: the scarecrow in the field, the cat by the barn, the
    mug on Iris's station. Found in Superstition packs only for now;
    Tess's Winter offer of three moves to Segment 23. The starting card
