@@ -1562,3 +1562,11 @@ Owner's decision · **2026-10-13**: “can u add back debug”. Restore the exis
 The Menu now includes a seventh drawn tile, Debug, before Leave. It grows to fit its content and allows scrolling only when a short screen cannot hold the tiles. The existing sliders drawing is reused. The entrance map names Menu as Debug's home and retains the existing foreclosure recovery link. This follow-up does not add superstition effects, change the economy, move the v2.1.0 tag or publish the public build.
 
 Focused validation: **7/7 suites**, **2,210 checks**, **0 failures, timeouts or errors**: debug access/time, debug money UI, debug recovery, UI kit, feel, surfaces and responsive fit. The access test now clicks the real Menu tile before testing the existing code gate and controls. The 390×844 Web fixture also clicks Menu → Debug, with one drawn entrance and zero browser/script errors; the settled Menu and access page are captured in `artifacts/v210-preview/debug-menu-390.png` and `debug-access-390.png`.
+
+## Publish v2.1.0 · 2026-10-13
+
+Owner's decision · **2026-10-13**: “upload github”, clarified as “as actual public”. Publish the new game at the existing GitHub Pages address. This supersedes the V1 publication hold and authorizes updating the docs-root export.
+
+The production build is exported from clean source `75282f0`, including restored Menu → Debug. Owner-local edits are preserved outside this publication. The pack is **5,109,756 bytes**, below 6 MB; the shell reports **2.1.0**, and the service-worker cache version changes with the build. The source tag `v2.1.0` remains at `2f9e4ee`; no tag is moved. GitHub Pages serves `main:/docs`, so the public build and development branch are pushed together. Classic and web-template sources remain unchanged.
+
+Fresh and Continue checks on the actual production export pass at **390×844** and **1440×900**, with no QA bridge and zero browser/script errors. The earlier V1 full suite and additional standalone runs are green; the Debug follow-up's seven focused suites are green. Publication notes and file hashes are in [RELEASE_v2.1.0.md](RELEASE_v2.1.0.md) and [the export manifest](style-board/v2.1.0/public-export-manifest.json). Superstition effects and hanging/swapping still wait for J; the waived human card review remains unperformed.

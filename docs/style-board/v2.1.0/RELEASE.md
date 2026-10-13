@@ -55,3 +55,7 @@ Gambler: **min −79,688.57 / mean −33,917.73 / max 7,696.63**; above tidy's m
 ## Left undone
 
 The non-gamer five-second review was not performed. The owner said “nah just do it” and authorized finishing without waiting; [PLAYTEST_22.md](../../PLAYTEST_22.md) records the unperformed check without claiming a human pass. The three full fresh-player sessions remain scheduled after V3. All requested V1 implementation is complete; later parts and public docs-root publication are outside this release.
+
+## Public follow-up · 2026-10-13
+
+The owner subsequently requested publication “as actual public”. The current **v2.1.0** Web export includes the Debug restoration at `75282f0`; the original tag remains at `2f9e4ee`. The [public release notes](../../RELEASE_v2.1.0.md) record this separate publication step. Fresh and Continue production checks pass at 390×844 and 1440×900, with no QA bridge or browser/script errors. The pack is 5,109,756 bytes. The non-gamer review remains unperformed; no later superstition effects are included.
